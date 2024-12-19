@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:17
+    restart: on-failure
+    ports:
+      - "7653:5432"
+    volumes:
+      - db-ready2race-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: sql
+      POSTGRES_DB: ready2race
+  build-db:
+    image: postgres:17
+    restart: on-failure
+    ports:
+      - "7652:5432"
+    volumes:
+      - db-ready2race-build-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: developer
+      POSTGRES_PASSWORD: sql
+      POSTGRES_DB: ready2race-build
+
+volumes:
+  db-ready2race-data:
+    driver: local
+  db-ready2race-build-data:
+    driver: local

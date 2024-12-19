@@ -1,0 +1,19 @@
+stages:
+  - build
+
+build:
+  stage: build
+  tags:
+    - deploy
+  resource_group: docker
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+        - target/failsafe-reports/TEST-*.xml
+  script:
+    - docker compose up -d
+    - ./mvnw flyway:clean clean package failsafe:integration-test failsafe:verify --update-snapshots --quiet -Dflyway.mixed=true -Dflyway.cleanDisabled=false
+  after_script:
+    - docker compose down

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration
+    status="info"
+    name="ready2race"
+    monitorInterval="10"
+    shutdownHook="enable"
+>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <!-- Spring logging pattern layout -->
+            <PatternLayout pattern="%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}} %highlight{${LOG_LEVEL_PATTERN:-%5p}}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=green, DEBUG=green bold, TRACE=blue} %style{%pid}{magenta} [%19.19t] %style{%-60.60C{1.}}{cyan} : %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%throwable}"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- SQL execution logging is logged to the LoggerListener logger at DEBUG level -->
+        <Logger name="de.lambda9.ready2race.backend.database.JooqQueryPrinter" level="debug" />
+        <Logger name="de.lambda9.ready2race.backend.plugins.KIOKt" level="debug" />
+
+        <!-- All other messages that come from third-party code, libraries etc. -->
+        <!-- MUST NOT BE REMOVED! -->
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>

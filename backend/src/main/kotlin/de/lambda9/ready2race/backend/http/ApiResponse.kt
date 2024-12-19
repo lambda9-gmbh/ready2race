@@ -1,0 +1,46 @@
+package de.lambda9.ready2race.backend.http
+
+import de.lambda9.ready2race.backend.app.App
+import io.ktor.http.*
+
+sealed class ApiResponse(
+    @Transient val statusCode: HttpStatusCode = HttpStatusCode.OK,
+    @Transient val contentType: ContentType? = ContentType.Application.Json,
+) {
+
+    data object NoData : ApiResponse(statusCode = HttpStatusCode.NoContent, contentType = null)
+
+    data class Dto<T: Any>(
+        val dto: T,
+    ): ApiResponse()
+
+    data class DtoCreated<T: Any>(
+        val dto: T,
+    ): ApiResponse(statusCode = HttpStatusCode.Created)
+
+    data class Page<T: Any, S: Sortable>(
+        override val data: List<T>,
+        override val pagination: Pagination<S>,
+    ): ApiResponse(), LimitedResult<T, S>
+
+    data class Pdf(
+        val bytes: ByteArray,
+    ): ApiResponse(contentType = ContentType.Application.Pdf) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Pdf
+
+            return bytes.contentEquals(other.bytes)
+        }
+
+        override fun hashCode(): Int {
+            return bytes.contentHashCode()
+        }
+    }
+
+    companion object {
+        val noData get() = App.ok(NoData)
+    }
+}

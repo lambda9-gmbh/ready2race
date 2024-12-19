@@ -1,0 +1,181 @@
+openapi: 3.1.0
+
+info:
+  title: Ready2Race Application API
+  description: REST-like API for CSR application Ready2Race
+  version: 0.0.1
+
+paths:
+  /login:
+    post:
+      operationId: userLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        200:
+          description: Successfully logged in, returns relevant user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+
+components:
+
+  parameters:
+
+    limit:
+      name: limit
+      in: query
+      description: Page size for pagination
+      required: true
+      schema:
+        type: integer
+
+    offset:
+      name: offset
+      in: query
+      description: Result offset for pagination
+      required: true
+      schema:
+        type: integer
+
+    sort:
+      name: sort
+      in: query
+      description: "Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination"
+      required: true
+      schema:
+        type: string
+
+    search:
+      name: search
+      in: query
+      description: Filter result with space-separated search terms for pagination
+      required: false
+      schema:
+        type: string
+
+  responses:
+
+    204:
+      description: No Content
+
+    400:
+      description: Bad Request
+      content:
+        text/plain:
+          schema:
+            type: string
+
+    401:
+      description: Unauthorized
+      content:
+        text/plain:
+          schema:
+            type: string
+
+    404:
+      description: Not Found
+      content:
+        text/plain:
+          schema:
+            type: string
+
+    409:
+      description: Conflict
+      content:
+        text/plain:
+          schema:
+            type: string
+
+    500:
+      description: Server Error
+      content:
+        text/plain:
+          schema:
+            type: string
+
+  schemas:
+
+  # enums
+
+    Privilege:
+      type: string
+      enum:
+        - USER_VIEW
+        - USER_EDIT
+        - ROLE_VIEW
+        - ROLE_EDIT
+
+  # authentication
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      required:
+        - privilegesGlobal
+        - privilegesBound
+      properties:
+        privilegesGlobal:
+          type: array
+          items:
+            $ref: '#/components/schemas/Privilege'
+        privilegesBound:
+          type: array
+          items:
+            $ref: '#/components/schemas/Privilege'
+
+  # user
+
+    AppUserProperties:
+      type: object
+      required:
+        - email
+        - firstname
+        - lastname
+        - roles
+      properties:
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    AppUserResponse:
+      type: object
+      required:
+        - id
+        - properties
+      properties:
+        id:
+          type: string
+          format: uuid
+        properties:
+          $ref: '#/components/schemas/AppUserProperties'
+

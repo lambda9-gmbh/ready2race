@@ -1,0 +1,7 @@
+# Ignore artifacts:
+api-specs
+build
+gen
+logs
+node_modules
+public
