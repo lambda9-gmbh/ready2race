@@ -59,20 +59,17 @@ suspend fun ApplicationCall.respondKIO(
             ))
         },
         onSuccess = { apiResponse ->
-            response.status(apiResponse.statusCode)
+            response.status(apiResponse.status)
             when (apiResponse) {
                 ApiResponse.NoData -> { }
                 is ApiResponse.Dto<*> -> {
                     respond(apiResponse.dto)
                 }
-                is ApiResponse.DtoCreated<*> -> {
-                    respond(apiResponse.dto)
-                }
                 is ApiResponse.Page<*,*> -> {
                     respond(apiResponse)
                 }
-                is ApiResponse.Pdf -> {
-                    respondBytes(apiResponse.bytes, contentType = ContentType.Application.Pdf)
+                is ApiResponse.File -> {
+                    respondBytes(apiResponse.bytes, contentType = apiResponse.contentType)
                 }
             }
         }

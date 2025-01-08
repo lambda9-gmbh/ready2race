@@ -4,33 +4,30 @@ import de.lambda9.ready2race.backend.app.App
 import io.ktor.http.*
 
 sealed class ApiResponse(
-    @Transient val statusCode: HttpStatusCode = HttpStatusCode.OK,
-    @Transient val contentType: ContentType? = ContentType.Application.Json,
+    open val status: HttpStatusCode = HttpStatusCode.OK
 ) {
 
-    data object NoData : ApiResponse(statusCode = HttpStatusCode.NoContent, contentType = null)
+    data object NoData : ApiResponse(HttpStatusCode.NoContent)
 
     data class Dto<T: Any>(
         val dto: T,
-    ): ApiResponse()
-
-    data class DtoCreated<T: Any>(
-        val dto: T,
-    ): ApiResponse(statusCode = HttpStatusCode.Created)
+        override val status: HttpStatusCode = HttpStatusCode.OK
+    ): ApiResponse(status)
 
     data class Page<T: Any, S: Sortable>(
         override val data: List<T>,
         override val pagination: Pagination<S>,
     ): ApiResponse(), LimitedResult<T, S>
 
-    data class Pdf(
+    data class File(
         val bytes: ByteArray,
-    ): ApiResponse(contentType = ContentType.Application.Pdf) {
+        val contentType: ContentType
+    ): ApiResponse() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
-            other as Pdf
+            other as File
 
             return bytes.contentEquals(other.bytes)
         }
