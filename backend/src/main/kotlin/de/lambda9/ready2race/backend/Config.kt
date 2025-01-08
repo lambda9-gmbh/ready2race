@@ -9,6 +9,7 @@ data class Config(
     val database: Database,
     val smtp: Smtp,
     val security: Security,
+    val admin: Admin,
 ) {
 
     enum class Mode {
@@ -56,6 +57,11 @@ data class Config(
         val pepper: String
     )
 
+    data class Admin(
+        val email: String,
+        val password: String,
+    )
+
     companion object {
 
         fun Dotenv.parseConfig(): Config = Config(
@@ -78,6 +84,10 @@ data class Config(
             ),
             security = Security(
                 pepper = get("SECURITY_PEPPER"),
+            ),
+            admin = Admin(
+                email = get("ADMIN_EMAIL"),
+                password = get("ADMIN_PASSWORD")
             )
         )
     }

@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
-import de.lambda9.ready2race.backend.accessConfig
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.control.AppUserSessionRepo
@@ -9,7 +8,6 @@ import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.auth.entity.PrivilegeScope
-import de.lambda9.ready2race.backend.app.isAdmin
 import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.http.ApiError
@@ -47,9 +45,9 @@ object AuthService {
 
         val user = !AppUserRepo.getWithPrivilegesByEmail(request.email).orDie().onNullFail { AuthError.CredentialsIncorrect }
 
-        val config = !accessConfig()
+        val credentialsOk = !PasswordUtilities.check(request.password, user.password!!)
 
-        if (PasswordUtilities.check(request.password, user.password!!, config.security.pepper)) {
+        if (credentialsOk) {
 
             val token = RandomUtilities.alphanumerical(tokenLength)
 

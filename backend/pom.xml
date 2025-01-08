@@ -41,7 +41,7 @@
         <tailwind.version>1.0.2-SNAPSHOT</tailwind.version>
         <testcontainers.version>1.20.4</testcontainers.version>
         <simple.mail.version>8.8.1</simple.mail.version>
-        <bcrypt.version>0.4</bcrypt.version>
+        <password4j.version>1.8.2</password4j.version>
     </properties>
     <dependencies>
         <dependency>
@@ -214,9 +214,9 @@
             <version>${kotlin.dotenv.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.mindrot</groupId>
-            <artifactId>jbcrypt</artifactId>
-            <version>${bcrypt.version}</version>
+            <groupId>com.password4j</groupId>
+            <artifactId>password4j</artifactId>
+            <version>${password4j.version}</version>
         </dependency>
     </dependencies>
     <build>

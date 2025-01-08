@@ -1,27 +1,30 @@
 package de.lambda9.ready2race.backend.security
 
-import de.lambda9.ready2race.backend.toBase64
-import org.mindrot.jbcrypt.BCrypt
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
+import com.password4j.Password
+import de.lambda9.ready2race.backend.app.App
+import de.lambda9.tailwind.core.KIO
 
 object PasswordUtilities {
 
-    private val sha256Instance = MessageDigest.getInstance("SHA-256")
+    fun hash(plain: String): App<Nothing, String> = KIO.access { env ->
 
-    fun hash(plain: String, pepper: String): String =
-        BCrypt.hashpw(preHash(plain, pepper), BCrypt.gensalt(10))
+        Password
+            .hash(plain)
+            .addRandomSalt()
+            .addPepper(env.env.config.security.pepper)
+            .withArgon2()
+            .result
+    }
 
-    fun check(plain: String, passwort: String, pepper: String): Boolean =
-        BCrypt.checkpw(preHash(plain, pepper), passwort)
+    fun check(plain: String, password: String): App<Nothing, Boolean> = KIO.access { env ->
+
+         Password
+             .check(plain, password)
+             .addPepper(env.env.config.security.pepper)
+             .withArgon2()
+    }
 
     fun generate(): String =
         RandomUtilities.alphanumerical(10, fixLength = false)
-
-    private fun preHash(plain: String, pepper: String): String {
-        val pepperedInput = "$pepper$plain".toByteArray(StandardCharsets.UTF_8)
-        val result = sha256Instance.digest(pepperedInput)
-        return result.toBase64()
-    }
 
 }

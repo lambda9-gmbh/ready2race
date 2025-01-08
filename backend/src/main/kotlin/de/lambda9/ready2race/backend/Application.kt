@@ -16,6 +16,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecor
 import de.lambda9.ready2race.backend.schedule.configureScheduling
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
+import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNullLogError
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -25,6 +26,7 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.flywaydb.core.Flyway
+import java.time.LocalDateTime
 
 fun main(args: Array<String>) {
     val config = dotenv {
@@ -57,25 +59,37 @@ fun Application.module(env: JEnv) {
 
 private fun initializeApplication(env: JEnv) {
 
-    App.comprehension {
+    KIO.comprehension {
 
         // Add admin
 
         val adminUserExisting = !AppUserRepo.exists(SYSTEM_USER).orDie()
         val adminRoleExisting = !RoleRepo.exists(ADMIN_ROLE).orDie()
 
+        val admin = env.env.config.admin
+
+        val hashedPw = !PasswordUtilities.hash(admin.password)
+
         if (!adminUserExisting) {
+
             !AppUserRepo.create(
                 AppUserRecord(
                     id = SYSTEM_USER,
-                    email = "admin",
+                    email = admin.email,
                     firstname = "System",
                     lastname = "User",
-                    password = PasswordUtilities.hash("admin", env.env.config.security.pepper),
+                    password = hashedPw,
                     createdBy = SYSTEM_USER,
                     updatedBy = SYSTEM_USER,
                 )
             ).orDie()
+        } else {
+
+            !AppUserRepo.update(SYSTEM_USER) {
+                email = admin.email
+                password = hashedPw
+                updatedAt = LocalDateTime.now()
+            }
         }
 
         if (!adminRoleExisting) {
