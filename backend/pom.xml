@@ -26,7 +26,7 @@
         <maven.compiler.source>17</maven.compiler.source>
 
         <!-- DEPENDENCY VERSIONS -->
-        <ktor.version>3.0.2</ktor.version>
+        <ktor.version>3.0.3</ktor.version>
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.version>2.0.21</kotlin.version>
         <slf4j.version>2.0.12</slf4j.version>
@@ -110,6 +110,11 @@
             <version>${ktor.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-rate-limit-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>${jackson.version}</version>
@@ -127,6 +132,11 @@
         <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-server-netty-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-double-receive-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>
         <dependency>

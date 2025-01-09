@@ -13,7 +13,7 @@ import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
-import de.lambda9.ready2race.backend.schedule.configureScheduling
+import de.lambda9.ready2race.backend.schedule.schedulingJobs
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
@@ -41,20 +41,18 @@ fun main(args: Array<String>) {
     ).migrate()
 
     initializeApplication(env)
+    schedulingJobs(env)
 
     embeddedServer(Netty, port = config.http.port, host = config.http.host, module = { module(env) })
         .start(wait = true)
 }
 
 fun Application.module(env: JEnv) {
+    configureAdministration()
     configureKIO(env)
     configureHTTP(env.env.config.mode)
-    configureSerialization()
-    configureValidation()
-    configureAdministration()
-    configureSession()
+    configurePayload()
     configureRouting()
-    configureScheduling(env)
 }
 
 private fun initializeApplication(env: JEnv) {

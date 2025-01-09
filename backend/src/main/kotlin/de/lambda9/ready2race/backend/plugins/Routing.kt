@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.user.boundary.user
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
@@ -15,6 +16,7 @@ fun Application.configureRouting() {
         }
     }
     routing {
+        swaggerUI(path = "openapi")
         route("/api") {
             auth()
             user()

@@ -1,22 +1,27 @@
 package de.lambda9.ready2race.backend.plugins
 
-import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer
+import de.lambda9.ready2race.backend.validation.Validatable
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.doublereceive.*
+import io.ktor.server.plugins.requestvalidation.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 
-fun Application.configureSerialization() {
+fun Application.configurePayload() {
+
+    install(DoubleReceive)
+
     install(ContentNegotiation) {
         jackson {
             registerModules(JavaTimeModule().apply {
@@ -60,4 +65,11 @@ fun Application.configureSerialization() {
             })
         }
     }
+
+    install(RequestValidation) {
+        validate<Validatable> { validatable ->
+            validatable.validate()
+        }
+    }
+
 }

@@ -11,7 +11,7 @@ import kotlin.time.Duration
  *
  */
 @OptIn(DelicateCoroutinesApi::class)
-fun configureScheduling(env: JEnv) = GlobalScope.launch(Dispatchers.IO) {
+fun schedulingJobs(env: JEnv) = GlobalScope.launch(Dispatchers.IO) {
 
 
 }
