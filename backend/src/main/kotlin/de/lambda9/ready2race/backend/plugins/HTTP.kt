@@ -7,7 +7,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
-import io.ktor.server.plugins.doublereceive.*
 import io.ktor.server.plugins.forwardedheaders.*
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
@@ -43,7 +42,9 @@ fun Application.configureHTTP(mode: Config.Mode) {
 
     install(Sessions) {
         cookie<UserSession>("user-session") {
-
+            cookie.sameSite = "strict"
+            cookie.secure = true
+            cookie.httpOnly = true
         }
     }
 }
