@@ -16,7 +16,6 @@ const LoginPage = () => {
         })
         if (data !== undefined) {
             login(data)
-            console.log(data)
         } else {
             console.log(error)
         }

@@ -4,15 +4,17 @@ import {
     createRouter,
     ParsedLocation,
     redirect,
+    SearchSchemaInput,
 } from '@tanstack/react-router'
 import {User} from './contexts/user/UserContext.ts'
 import MainLayout from './layouts/MainLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
+import {Privilege} from './api'
 
 const checkAuth = (
     context: User,
     location: ParsedLocation,
-    privilege?: any,
+    privilege?: Privilege,
     globalOnly: boolean = false,
 ) => {
     if (!context.loggedIn) {
@@ -30,6 +32,18 @@ export const rootRoute = createRootRouteWithContext<User>()({
     component: () => <MainLayout />,
 })
 
+export const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    beforeLoad: ({context}) => {
+        throw redirect({to: context.loggedIn ? '/dashboard' : '/login'})
+    },
+})
+
+type LoginSearch = {
+    redirect?: string
+}
+
 export const loginRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'login',
@@ -39,6 +53,9 @@ export const loginRoute = createRoute({
             throw redirect({to: '/dashboard'})
         }
     },
+    validateSearch: ({redirect}: {redirect?: string} & SearchSchemaInput): LoginSearch => ({
+        redirect,
+    }),
 })
 
 export const dashboardRoute = createRoute({
@@ -50,7 +67,7 @@ export const dashboardRoute = createRoute({
     },
 })
 
-const routeTree = rootRoute.addChildren([loginRoute, dashboardRoute])
+const routeTree = rootRoute.addChildren([indexRoute, loginRoute, dashboardRoute])
 
 export const router = createRouter({
     routeTree,

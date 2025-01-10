@@ -1,7 +1,8 @@
-import {PropsWithChildren, useState} from 'react'
+import {PropsWithChildren, useEffect, useRef, useState} from 'react'
 import {User, UserContext} from './UserContext.ts'
-import {LoginResponse, Privilege} from '../../api'
+import {client, LoginResponse, Privilege} from '../../api'
 import {PrivilegeScope} from '../../utils/types.ts'
+import {router} from '../../routes.tsx'
 
 type UserData = LoginResponse & {loggedIn: boolean}
 
@@ -13,6 +14,30 @@ const defaultUserData: UserData = {
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [userData, setUserData] = useState(defaultUserData)
+    const prevLoggedIn = useRef(userData.loggedIn)
+
+    const navigate = router.navigate
+
+    useEffect(() => {
+        const f = async (res: Response) => {
+            if (res.status === 401) {
+                logout()
+            }
+            return res
+        }
+
+        client.interceptors.response.use(f)
+        return () => client.interceptors.response.eject(f)
+    }, [client])
+
+    useEffect(() => {
+        if (prevLoggedIn.current !== userData.loggedIn) {
+            prevLoggedIn.current = userData.loggedIn
+            const redirect = router.state.resolvedLocation.search.redirect
+            console.log(redirect)
+            navigate({to: userData.loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+        }
+    }, [userData])
 
     const login = (data: LoginResponse) => setUserData({...data, loggedIn: true})
 
@@ -30,7 +55,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         login,
         logout,
         getAuthorization,
-        association: userData.association,
+        association: undefined,
     }
 
     return <UserContext.Provider value={userValue}>{children}</UserContext.Provider>
