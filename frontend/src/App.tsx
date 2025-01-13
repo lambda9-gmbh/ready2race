@@ -1,10 +1,11 @@
+import './i18n/config'
 import './App.css'
-import {useUser} from './contexts/user/UserContext.ts'
+import {useUser} from './contexts/user/UserContext'
 import {RouterProvider} from '@tanstack/react-router'
-import {router} from './routes.tsx'
+import {router} from './routes'
 import {client} from './api'
-import Config from './Config.ts'
-import {muiTheme} from './theme.ts'
+import Config from './Config'
+import {muiTheme} from './theme'
 import {ThemeProvider} from '@mui/material'
 
 client.setConfig({

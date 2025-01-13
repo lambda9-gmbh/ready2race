@@ -1,0 +1,22 @@
+{
+  "translation": {
+    "common": {
+      "ok": "Ok"
+    },
+    "error": {
+      "unexpected": "Ein unerwarteter Fehler ist aufgetreten."
+    },
+    "form": {
+      "required": "Diese Feld ist erforderlich."
+    },
+    "navigation": {
+      "titles": {
+        "login": "Login"
+      }
+    },
+    "login": {
+      "email": "E-Mail",
+      "password": "Passwort"
+    }
+  }
+}

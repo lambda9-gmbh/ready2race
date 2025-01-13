@@ -1,9 +1,11 @@
 import {useUser} from '../contexts/user/UserContext.ts'
 import {useState} from 'react'
 import {LoginRequest, userLogin} from '../api'
+import {useTranslation} from 'react-i18next'
 
 const LoginPage = () => {
     const {login} = useUser()
+    const {t} = useTranslation()
 
     const [formData, setFormData] = useState<LoginRequest>({
         email: '',
@@ -24,7 +26,7 @@ const LoginPage = () => {
     return (
         <form>
             <label>
-                email
+                {t('login.email')}
                 <input
                     type={'email'}
                     value={formData.email}
@@ -32,7 +34,7 @@ const LoginPage = () => {
                 />
             </label>
             <label>
-                password
+                {t('login.password')}
                 <input
                     type={'password'}
                     value={formData.password}
