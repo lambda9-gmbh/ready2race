@@ -1,0 +1,20 @@
+{
+  "common": {
+    "ok": "Ok"
+  },
+  "error": {
+    "unexpected": "An unexpected error occurred."
+  },
+  "form": {
+    "required": "This field is required."
+  },
+  "navigation": {
+    "titles": {
+      "login": "Login"
+    }
+  },
+  "login": {
+    "email": "Email",
+    "password": "Password"
+  }
+}

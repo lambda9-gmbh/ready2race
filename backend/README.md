@@ -8,6 +8,10 @@ Add `.env` to the backend root with adequate keys/values. You can copy `template
 You can use any other name für your local Env-File, you just need to add its name as first Argument when
 starting the application. Without the argument, `.env` will be used.
 
+### Ktor Plugins
+
+Before adding new server features, please make sure there isn't already a usable ktor plugin for the job.
+
 ## Running
 
 ### Configure application

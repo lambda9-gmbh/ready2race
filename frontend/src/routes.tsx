@@ -21,7 +21,7 @@ const checkAuth = (
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
     if (privilege) {
-        const privilegeScope = context.getAuthorization(privilege)
+        const privilegeScope = context.getPrivilegeScope(privilege)
         if (!privilegeScope || (globalOnly && privilegeScope !== 'global')) {
             throw redirect({to: '/dashboard'})
         }

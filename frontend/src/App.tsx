@@ -1,5 +1,4 @@
 import './i18n/config'
-import './App.css'
 import {useUser} from './contexts/user/UserContext'
 import {RouterProvider} from '@tanstack/react-router'
 import {router} from './routes'

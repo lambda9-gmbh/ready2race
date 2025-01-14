@@ -28,6 +28,26 @@ paths:
           $ref: '#/components/responses/401'
         500:
           $ref: '#/components/responses/500'
+    get:
+      operationId: checkUserLogin
+      responses:
+        200:
+          description: Already logged in, returns relevant user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        204:
+          $ref: '#/components/responses/204'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: userLogout
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 

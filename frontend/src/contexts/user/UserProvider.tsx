@@ -34,7 +34,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
         if (prevLoggedIn.current !== userData.loggedIn) {
             prevLoggedIn.current = userData.loggedIn
             const redirect = router.state.resolvedLocation.search.redirect
-            console.log(redirect)
             navigate({to: userData.loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
         }
     }, [userData])
@@ -54,7 +53,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         loggedIn: userData.loggedIn,
         login,
         logout,
-        getAuthorization,
+        getPrivilegeScope: getAuthorization,
         association: undefined,
     }
 

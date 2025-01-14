@@ -6,7 +6,7 @@ export type User = {
     loggedIn: boolean
     login: (data: LoginResponse) => void
     logout: () => void
-    getAuthorization: (privilege: Privilege) => PrivilegeScope | null
+    getPrivilegeScope: (privilege: Privilege) => PrivilegeScope | null
     association: string | undefined
 }
 
