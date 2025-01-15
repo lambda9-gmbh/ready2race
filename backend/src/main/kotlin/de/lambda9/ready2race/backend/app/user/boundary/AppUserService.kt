@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.user.entity.AppUserWithRolesSort
 import de.lambda9.ready2race.backend.http.ApiResponse
 import de.lambda9.ready2race.backend.http.PaginationParameters
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.orDie
 
 object AppUserService {
@@ -18,11 +19,11 @@ object AppUserService {
         val total = !AppUserRepo.countWithRoles(params.search).orDie()
         val page = !AppUserRepo.pageWithRoles(params).orDie()
 
-        KIO.ok(
+        page.forEachM { it.appUserDto() }.map {
             ApiResponse.Page(
-                data = page.map { it.appUserDto() },
+                data = it,
                 pagination = params.toPagination(total)
             )
-        )
+        }
     }
 }
