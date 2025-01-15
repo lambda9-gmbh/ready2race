@@ -19,7 +19,7 @@ import java.io.PrintWriter
 val logger = KotlinLogging.logger {}
 
 suspend fun ApplicationCall.respondKIO(
-    f: () -> KIO<JEnv, ServiceError, ApiResponse>,
+    f: suspend () -> KIO<JEnv, ServiceError, ApiResponse>,
 ) {
     val exit = f().transact().unsafeRunSync(kioEnv)
     exit.fold(

@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
+import de.lambda9.ready2race.backend.app.auth.control.loginDto
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
+import de.lambda9.ready2race.backend.http.ApiResponse
 import de.lambda9.ready2race.backend.http.UserSession
 import de.lambda9.ready2race.backend.http.authenticate
 import de.lambda9.ready2race.backend.plugins.respondKIO
@@ -14,8 +16,8 @@ fun Route.auth() {
     route("/login") {
         rateLimit(RateLimitName("login")) {
             post {
-                val login = call.receive<LoginRequest>()
                 call.respondKIO {
+                    val login = call.receive<LoginRequest>()
                     AuthService.login(login) { token ->
                         call.sessions.set(UserSession(token))
                     }
@@ -24,11 +26,19 @@ fun Route.auth() {
         }
 
         get {
-
+            call.respondKIO {
+                val token = call.sessions.get<UserSession>()?.token
+                AuthService.checkLogin(token)
+            }
         }
 
         delete {
-
+            call.respondKIO {
+                val token = call.sessions.get<UserSession>()?.token
+                AuthService.logout(token) {
+                    call.sessions.clear<UserSession>()
+                }
+            }
         }
     }
 }

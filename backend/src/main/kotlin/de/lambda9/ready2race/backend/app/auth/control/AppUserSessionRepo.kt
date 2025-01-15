@@ -22,6 +22,7 @@ object AppUserSessionRepo {
                     .set(TOKEN, token)
                     .set(LAST_USED, now)
                     .set(CREATED_AT, now)
+                    .execute()
             }
         }
     }
@@ -37,6 +38,16 @@ object AppUserSessionRepo {
                 .and(LAST_USED.ge(tokenLifetime.beforeNow()))
                 .returning()
                 .fetchOne()
+        }
+    }
+
+    fun delete(
+        token: String?
+    ): JIO<Unit> = Jooq.query {
+        with(APP_USER_SESSION) {
+            deleteFrom(this)
+                .where(TOKEN.eq(token))
+                .execute()
         }
     }
 }

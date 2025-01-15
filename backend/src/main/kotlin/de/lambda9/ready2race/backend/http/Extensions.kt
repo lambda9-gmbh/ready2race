@@ -5,9 +5,9 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
-import de.lambda9.ready2race.backend.app.auth.boundary.AuthService.validatePrivilege
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.auth.entity.PrivilegeScope
+import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.serialization.jsonMapper
 import de.lambda9.tailwind.core.KIO
@@ -43,6 +43,16 @@ fun ApplicationCall.authenticate(
     val privilegeScope = !user.validatePrivilege(privilege)
 
     thenDo(user, privilegeScope)
+}
+
+fun ApplicationCall.authenticate(
+    thenDo: KIO.ComprehensionScope<JEnv, ServiceError>.(AppUserWithPrivilegesRecord) -> App<ServiceError, ApiResponse>
+): App<ServiceError, ApiResponse> = KIO.comprehension {
+
+    val userSession = sessions.get<UserSession>()
+    val user = !AuthService.getAppUserByToken(userSession?.token)
+
+    thenDo(user)
 }
 
 inline fun <reified T> ApplicationCall.queryParam(

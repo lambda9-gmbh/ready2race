@@ -6,15 +6,15 @@ import de.lambda9.ready2race.backend.app.auth.control.AppUserSessionRepo
 import de.lambda9.ready2race.backend.app.auth.control.loginDto
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
-import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.auth.entity.PrivilegeScope
 import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.http.ApiError
 import de.lambda9.ready2race.backend.http.ApiResponse
+import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.catchError
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*
@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.minutes
 
 object AuthService {
 
-    private val tokenLength = 30
+    private const val TOKEN_LENGTH = 30
     private val tokenLifetime = 30.minutes
 
     enum class AuthError: ServiceError {
@@ -49,7 +49,7 @@ object AuthService {
 
         if (credentialsOk) {
 
-            val token = RandomUtilities.alphanumerical(tokenLength)
+            val token = RandomUtilities.alphanumerical(TOKEN_LENGTH)
 
             !AppUserSessionRepo.create(user.id!!, token).orDie()
             onSuccess(token)
@@ -60,6 +60,25 @@ object AuthService {
         } else {
             KIO.fail(AuthError.CredentialsIncorrect)
         }
+    }
+
+    fun checkLogin(
+        token: String?
+    ): App<AuthError, ApiResponse> = KIO.comprehension {
+
+        val user = !getAppUserByToken(token).catchError { KIO.ok(null) }
+
+        user?.loginDto()?.map { ApiResponse.Dto(it) } ?: noData
+    }
+
+    fun logout(
+        token: String?,
+        onSuccess: () -> Unit
+    ): App<AuthError, ApiResponse.NoData> = KIO.comprehension {
+
+        !AppUserSessionRepo.delete(token).orDie()
+        onSuccess()
+        noData
     }
 
     fun getAppUserByToken(
@@ -73,15 +92,5 @@ object AuthService {
         val valid = !AppUserSessionRepo.useAndGet(token, tokenLifetime).orDie().onNullFail { AuthError.TokenInvalid }
 
         AppUserRepo.getWithPrivileges(valid.appUser!!).orDie().onNullFail { AuthError.TokenInvalid }
-    }
-
-    fun AppUserWithPrivilegesRecord.validatePrivilege(
-        privilege: Privilege
-    ): App<AuthError, PrivilegeScope> = KIO.comprehension {
-        when {
-            privilegesGlobal?.contains(privilege.name) == true -> App.ok(PrivilegeScope.GLOBAL)
-            privilegesBound?.contains(privilege.name) == true -> App.ok(PrivilegeScope.ASSOCIATION_BOUND)
-            else -> KIO.fail(AuthError.PrivilegeMissing)
-        }
     }
 }

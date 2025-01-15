@@ -20,6 +20,7 @@ const LoginPage = () => {
             login(data)
         } else {
             console.log(error)
+            //TODO: error-handling
         }
     }
 

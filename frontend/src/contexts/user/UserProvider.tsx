@@ -1,8 +1,9 @@
 import {PropsWithChildren, useEffect, useRef, useState} from 'react'
 import {User, UserContext} from './UserContext.ts'
-import {client, LoginResponse, Privilege} from '../../api'
+import {checkUserLogin, client, LoginResponse, Privilege, userLogout} from '../../api'
 import {PrivilegeScope} from '../../utils/types.ts'
 import {router} from '../../routes.tsx'
+import {useFetch} from '../../utils/hooks.ts'
 
 type UserData = LoginResponse & {loggedIn: boolean}
 
@@ -21,7 +22,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
     useEffect(() => {
         const f = async (res: Response) => {
             if (res.status === 401) {
-                logout()
+                await logout()
             }
             return res
         }
@@ -38,9 +39,23 @@ const UserProvider = ({children}: PropsWithChildren) => {
         }
     }, [userData])
 
+    //TODO: error-handling
+    useFetch(signal => checkUserLogin({signal}), {
+        onResponse: ({data, response}) => {
+            if (response.status === 200 && data !== undefined) {
+                login(data)
+            }
+        },
+    })
+
     const login = (data: LoginResponse) => setUserData({...data, loggedIn: true})
 
-    const logout = () => setUserData(defaultUserData)
+    const logout = async () => {
+        const {error} = await userLogout()
+        if (error === undefined) {
+            setUserData(defaultUserData)
+        }
+    }
 
     const getAuthorization = (privilege: Privilege): PrivilegeScope | null =>
         userData.privilegesGlobal.includes(privilege)

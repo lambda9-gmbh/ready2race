@@ -51,3 +51,11 @@ export type UserLoginData = {
 export type UserLoginResponse = LoginResponse
 
 export type UserLoginError = string
+
+export type CheckUserLoginResponse = LoginResponse | void
+
+export type CheckUserLoginError = string
+
+export type UserLogoutResponse = void
+
+export type UserLogoutError = string
