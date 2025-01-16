@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.http
 
 import de.lambda9.ready2race.backend.app.App
 import io.ktor.http.*
+import java.util.*
 
 sealed class ApiResponse(
     open val status: HttpStatusCode = HttpStatusCode.OK
@@ -36,6 +37,11 @@ sealed class ApiResponse(
             return bytes.contentHashCode()
         }
     }
+
+    data class ID(
+        val id: UUID,
+        override val status: HttpStatusCode = HttpStatusCode.OK
+    ): ApiResponse(status)
 
     companion object {
         val noData get() = App.ok(NoData)

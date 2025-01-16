@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.plugins
 
 import de.lambda9.ready2race.backend.app.auth.boundary.auth
+import de.lambda9.ready2race.backend.app.event.boundary.event
 import de.lambda9.ready2race.backend.app.user.boundary.user
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -20,6 +21,7 @@ fun Application.configureRouting() {
         route("/api") {
             auth()
             user()
+            event()
         }
     }
 }
