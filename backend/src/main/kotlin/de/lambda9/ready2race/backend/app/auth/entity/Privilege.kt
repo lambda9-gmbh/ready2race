@@ -12,4 +12,7 @@ enum class Privilege {
 
     ROLE_VIEW,
     ROLE_EDIT,
+
+    EVENT_VIEW,
+    EVENT_EDIT
 }

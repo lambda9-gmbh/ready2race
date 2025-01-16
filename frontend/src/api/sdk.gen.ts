@@ -9,6 +9,9 @@ import type {
     CheckUserLoginResponse,
     UserLogoutError,
     UserLogoutResponse,
+    AddEventData,
+    AddEventError,
+    AddEventResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -41,5 +44,14 @@ export const userLogout = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<UserLogoutResponse, UserLogoutError, ThrowOnError>({
         ...options,
         url: '/login',
+    })
+}
+
+export const addEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddEventResponse, AddEventError, ThrowOnError>({
+        ...options,
+        url: '/event',
     })
 }

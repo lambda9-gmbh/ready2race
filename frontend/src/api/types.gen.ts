@@ -12,6 +12,20 @@ export type AppUserResponse = {
     properties: AppUserProperties
 }
 
+export type EventProperties = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    paymentDueDate?: string
+    invoicePrefix?: string
+}
+
+export type EventRequest = {
+    properties: EventProperties
+}
+
 export type LoginRequest = {
     email: string
     password: string
@@ -42,7 +56,7 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
-export type Privilege = 'USER_VIEW' | 'USER_EDIT' | 'ROLE_VIEW' | 'ROLE_EDIT'
+export type Privilege = 'USER_VIEW' | 'USER_EDIT' | 'ROLE_VIEW' | 'ROLE_EDIT' | 'EVENT_EDIT'
 
 export type UserLoginData = {
     body: LoginRequest
@@ -59,3 +73,11 @@ export type CheckUserLoginError = string
 export type UserLogoutResponse = void
 
 export type UserLogoutError = string
+
+export type AddEventData = {
+    body: EventRequest
+}
+
+export type AddEventResponse = string
+
+export type AddEventError = string

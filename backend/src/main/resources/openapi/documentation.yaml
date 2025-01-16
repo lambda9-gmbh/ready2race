@@ -48,6 +48,31 @@ paths:
           $ref: '#/components/responses/204'
         500:
           $ref: '#/components/responses/500'
+  /event:
+    post:
+      operationId: addEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRequest'
+      responses:
+        201:
+          description: Event successfully created, returns event id
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/400'
+        500:
+          $ref: '#/components/responses/400'
+
+
 
 components:
 
@@ -136,6 +161,7 @@ components:
         - USER_EDIT
         - ROLE_VIEW
         - ROLE_EDIT
+        - EVENT_EDIT
 
   # authentication
 
@@ -199,3 +225,34 @@ components:
         properties:
           $ref: '#/components/schemas/AppUserProperties'
 
+  # event
+    EventRequest:
+      type: object
+      required:
+        - properties
+      properties:
+        properties:
+          $ref: '#/components/schemas/EventProperties'
+
+    EventProperties:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        registrationAvailableFrom:
+          type: string
+          format: date-time
+        registrationAvailableTo:
+          type: string
+          format: date-time
+        paymentDueDate:
+          type: string
+          format: date-time
+        invoicePrefix:
+          type: string
