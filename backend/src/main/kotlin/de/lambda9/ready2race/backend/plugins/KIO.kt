@@ -71,7 +71,7 @@ suspend fun ApplicationCall.respondKIO(
                 is ApiResponse.File -> {
                     respondBytes(apiResponse.bytes, contentType = apiResponse.contentType)
                 }
-                is ApiResponse.ID -> {
+                is ApiResponse.Created -> {
                     respondText(text = apiResponse.id.toString(), status = apiResponse.status)
                 }
             }

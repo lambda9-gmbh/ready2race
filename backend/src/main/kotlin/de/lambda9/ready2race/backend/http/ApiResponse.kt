@@ -38,10 +38,9 @@ sealed class ApiResponse(
         }
     }
 
-    data class ID(
-        val id: UUID,
-        override val status: HttpStatusCode = HttpStatusCode.OK
-    ): ApiResponse(status)
+    data class Created(
+        val id: UUID
+    ): ApiResponse(HttpStatusCode.Created)
 
     companion object {
         val noData get() = App.ok(NoData)

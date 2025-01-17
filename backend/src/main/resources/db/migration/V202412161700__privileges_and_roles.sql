@@ -2,7 +2,7 @@ set search_path to ready2race, pg_catalog, public;
 
 create table role
 (
-    id uuid primary key,
+    id uuid primary key default gen_random_uuid(),
     name text not null,
     description text,
     static boolean not null default false,

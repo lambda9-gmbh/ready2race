@@ -1,9 +1,8 @@
-import {useTranslation} from 'react-i18next'
-import {addEvent} from '../api'
+import {addEvent, deleteEvent, getEvent, getEvents, updateEvent} from '../api'
+import {Box} from '@mui/material'
+import {useFetch} from '../utils/hooks.ts'
 
 const EventPage = () => {
-    const {t} = useTranslation()
-
     async function onAddEvent() {
         const {data, error} = await addEvent({
             body: {
@@ -23,14 +22,78 @@ const EventPage = () => {
             console.error(error)
             return
         }
-        if (data === undefined) {
-            return
-        }
-        const eventId = data
-        console.log(`Event created (${eventId})`)
+        if (data === undefined) return
+
+        console.log(`Event created (${data})`)
     }
 
-    return <button onClick={onAddEvent}>Add Event</button>
+    const initialSort = '[{"field": "NAME", "direction": "ASC"}]'
+    useFetch(signal => getEvents({signal, query: {limit: 4, offset: 0, sort: initialSort}}), {
+        onResponse: ({data, response}) => {
+            if (response.status === 200 && data !== undefined) {
+                console.log('Events retrieved: ')
+                console.log(data)
+            }
+        },
+    })
+
+    useFetch(
+        signal => getEvent({signal, path: {eventId: 'afd50d38-9273-4e3d-9a91-f40effd96e56'}}),
+        {
+            onResponse: ({data, response}) => {
+                if (response.status === 200 && data !== undefined) {
+                    console.log('Event retrieved: ')
+                    console.log(data)
+                }
+            },
+        },
+    )
+
+    async function onUpdateEvent() {
+        const {data, error} = await updateEvent({
+            path: {eventId: '1040c7a6-059b-49f0-9b31-ae3ad2574266'},
+            body: {
+                properties: {
+                    name: 'TestEvent',
+                    description: 'This is the event iteration B',
+                    location: 'Flensburg',
+                    registrationAvailableFrom: new Date('2025-01-16T12:00:00').toISOString(),
+                    registrationAvailableTo: new Date('2025-01-31T23:59:59').toISOString(),
+                    paymentDueDate: undefined,
+                    invoicePrefix: 'TEv',
+                },
+            },
+        })
+
+        if (error) {
+            console.error(error)
+            return
+        }
+        if (data === undefined) return
+
+        console.log(`Event updated (${data})`)
+    }
+
+    async function onDeleteEvent() {
+        const {error} = await deleteEvent({
+            path: {eventId: '1040c7a6-059b-49f0-9b31-ae3ad2574266'},
+        })
+
+        if (error) {
+            console.error(error)
+            return
+        }
+
+        console.log(`Event deleted`)
+    }
+
+    return (
+        <Box>
+            <button onClick={onAddEvent}>Add Event</button>
+            <button onClick={onUpdateEvent}>Update Event</button>
+            <button onClick={onDeleteEvent}>Delete Event</button>
+        </Box>
+    )
 }
 
 export default EventPage

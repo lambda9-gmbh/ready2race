@@ -12,6 +12,11 @@ export type AppUserResponse = {
     properties: AppUserProperties
 }
 
+export type EventDto = {
+    id: string
+    properties: EventProperties
+}
+
 export type EventProperties = {
     name: string
     description?: string
@@ -26,6 +31,15 @@ export type EventRequest = {
     properties: EventProperties
 }
 
+export type GetEventPageResponse = {
+    data: Array<EventDto>
+    pagination: Pagination
+}
+
+export type GetEventResponse = {
+    dto: EventDto
+}
+
 export type LoginRequest = {
     email: string
     password: string
@@ -34,6 +48,20 @@ export type LoginRequest = {
 export type LoginResponse = {
     privilegesGlobal: Array<Privilege>
     privilegesBound: Array<Privilege>
+}
+
+export type Order = {
+    field?: string
+    direction?: 'ASC' | 'DESC'
+}
+
+export type direction = 'ASC' | 'DESC'
+
+export type Pagination = {
+    total: number
+    limit: number
+    offset: number
+    sort: Array<unknown>
 }
 
 /**
@@ -81,3 +109,40 @@ export type AddEventData = {
 export type AddEventResponse = string
 
 export type AddEventError = string
+
+export type GetEventsData = {
+    query: {
+        /**
+         * Page size for pagination
+         */
+        limit: number
+        /**
+         * Result offset for pagination
+         */
+        offset: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort: string
+    }
+}
+
+export type GetEventsResponse = GetEventPageResponse
+
+export type GetEventsError = string
+
+export type GetEventResponse2 = GetEventResponse
+
+export type GetEventError = string
+
+export type UpdateEventResponse = void
+
+export type UpdateEventError = string
+
+export type DeleteEventResponse = void
+
+export type DeleteEventError = string

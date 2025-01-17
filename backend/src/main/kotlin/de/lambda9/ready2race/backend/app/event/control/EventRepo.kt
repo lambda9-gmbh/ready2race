@@ -63,4 +63,14 @@ object EventRepo {
                 ?.update()
         }
     }
+
+    fun delete(
+        id: UUID
+    ): JIO<Int> = Jooq.query {
+        with(EVENT) {
+            deleteFrom(this)
+                .where(ID.eq(id))
+                .execute()
+        }
+    }
 }

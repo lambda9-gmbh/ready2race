@@ -68,9 +68,70 @@ paths:
         400:
           $ref: '#/components/responses/400'
         401:
-          $ref: '#/components/responses/400'
+          $ref: '#/components/responses/401'
         500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getEvents
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Event page successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEventPageResponse'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}:
+    get:
+      operationId: getEvent
+      responses:
+        200:
+          description: Event successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEventResponse'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateEvent
+      responses:
+        204:
+          description: Event successfully updated
+        400:
           $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteEvent
+      responses:
+        204:
+          description: Event successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 
 
 
@@ -152,7 +213,7 @@ components:
 
   schemas:
 
-  # enums
+    # enums
 
     Privilege:
       type: string
@@ -163,7 +224,7 @@ components:
         - ROLE_EDIT
         - EVENT_EDIT
 
-  # authentication
+    # authentication
 
     LoginRequest:
       type: object
@@ -191,7 +252,7 @@ components:
           items:
             $ref: '#/components/schemas/Privilege'
 
-  # user
+    # user
 
     AppUserProperties:
       type: object
@@ -225,14 +286,41 @@ components:
         properties:
           $ref: '#/components/schemas/AppUserProperties'
 
-  # event
-    EventRequest:
+    # pagination
+
+    Pagination:
       type: object
       required:
-        - properties
+        - total
+        - limit
+        - offset
+        - sort
+        - search
       properties:
-        properties:
-          $ref: '#/components/schemas/EventProperties'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        sort:
+          type: array
+          items:
+            $ref:
+
+    Order:
+      type: object
+      properties:
+        field:
+          type: string
+        direction:
+          type: string
+          enum:
+            - ASC
+            - DESC
+
+
+    # event
 
     EventProperties:
       type: object
@@ -256,3 +344,46 @@ components:
           format: date-time
         invoicePrefix:
           type: string
+
+    EventDto:
+      type: object
+      required:
+        - id
+        - properties
+      properties:
+        id:
+          type: string
+          format: uuid
+        properties:
+          $ref: '#/components/schemas/EventProperties'
+
+    EventRequest:
+      type: object
+      required:
+        - properties
+      properties:
+        properties:
+          $ref: '#/components/schemas/EventProperties'
+
+    GetEventPageResponse:
+      type:
+        object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDto'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    GetEventResponse:
+      type:
+        object
+      required:
+        - dto
+      properties:
+        dto:
+          $ref: '#/components/schemas/EventDto'

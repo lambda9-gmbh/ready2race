@@ -7,7 +7,7 @@ create table race_category
 
 create table participant_count
 (
-    id               uuid primary key,
+    id               uuid primary key default gen_random_uuid(),
     count_males      integer not null default 0,
     count_females    integer not null default 0,
     count_non_binary integer not null default 0,
@@ -17,7 +17,7 @@ create table participant_count
 
 create table race_properties
 (
-    id                uuid primary key,
+    id                uuid primary key default gen_random_uuid(),
     identifier        text           not null,
     name              text           not null,
     short_name        text,
@@ -45,7 +45,7 @@ create table race_properties_named_participant_role
 
 create table race_template
 (
-    id         uuid primary key,
+    id         uuid primary key default gen_random_uuid(),
     note       text,
     properties uuid      not null references race_properties on delete cascade on update cascade,
     created_at timestamp not null default now(),
@@ -57,7 +57,7 @@ create index on race_template (properties);
 
 create table event
 (
-    id                          uuid primary key,
+    id                          uuid primary key default gen_random_uuid(),
     name                        text      not null,
     description                 text,
     location                    text,
@@ -73,7 +73,7 @@ create table event
 
 create table event_day
 (
-    id          uuid primary key,
+    id          uuid primary key default gen_random_uuid(),
     event       uuid      not null references event on delete cascade on update cascade,
     date        date      not null,
     name        text,
@@ -87,7 +87,7 @@ create index on event_day (event);
 
 create table race_registration_offer
 (
-    id         uuid primary key,
+    id         uuid primary key default gen_random_uuid(),
     event      uuid not null references event on delete cascade on update cascade,
     properties uuid not null references race_properties on delete cascade on update cascade,
     template   uuid references race_template on delete set null on update set null

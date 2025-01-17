@@ -16,14 +16,12 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
-import java.time.LocalDateTime.now
+import java.time.LocalDateTime
 import java.util.*
 
 object EventService {
 
-    private val logger = KotlinLogging.logger {}
 
     enum class EventError : ServiceError {
         EventNotFound;
@@ -36,16 +34,9 @@ object EventService {
     fun addEvent(
         request: EventRequest,
         userId: UUID
-    ): App<Nothing, ApiResponse.ID> = KIO.comprehension {
-        val id = !EventRepo.create(
-            EventDto(
-                id = UUID.randomUUID(),
-                properties = request.properties
-            ).record(userId)
-        ).orDie()
-        KIO.ok(
-            ApiResponse.ID(id)
-        )
+    ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+        val id = !EventRepo.create(request.record(userId)).orDie()
+        KIO.ok(ApiResponse.Created(id))
     }
 
     fun page(
@@ -74,7 +65,7 @@ object EventService {
         eventId: UUID,
         userId: UUID,
     ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
-        !EventRepo.update(eventId){
+        !EventRepo.update(eventId) {
             name = request.properties.name
             description = request.properties.description
             location = request.properties.location
@@ -83,9 +74,21 @@ object EventService {
             paymentDueDate = request.properties.paymentDueDate
             invoicePrefix = request.properties.invoicePrefix
             updatedBy = userId
-            updatedAt = now() // todo: this "now()"?
-        }.orDie() // todo: Not very useful to use a empty function here
+            updatedAt = LocalDateTime.now()
+        }.orDie()
 
         noData
+    }
+
+    fun deleteEvent(
+        id: UUID
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+        val deleted = !EventRepo.delete(id).orDie()
+
+        if (deleted < 1) {
+            KIO.fail(EventError.EventNotFound)
+        } else {
+            noData
+        }
     }
 }
