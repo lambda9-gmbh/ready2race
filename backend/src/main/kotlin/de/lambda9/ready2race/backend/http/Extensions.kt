@@ -62,6 +62,10 @@ fun <T> ApplicationCall.pathParam(
     parameters[key]?.let(f)
 }.mapError { RequestError.ParameterUnparsable(key) }.onNullFail { RequestError.MissingRequiredParameter(key) }
 
+fun ApplicationCall.pathParam(
+    key: String,
+): App<ServiceError, String> = pathParam(key) { it }
+
 fun <T> ApplicationCall.optionalQueryParam(
     key: String,
     f: (String) -> T,
@@ -69,11 +73,19 @@ fun <T> ApplicationCall.optionalQueryParam(
     request.queryParameters[key]?.let(f)
 }.mapError { RequestError.ParameterUnparsable(key) }
 
+fun ApplicationCall.optionalQueryParam(
+    key: String,
+): App<ServiceError, String?> = optionalQueryParam(key) { it }
+
 fun <T> ApplicationCall.queryParam(
     key: String,
     f: (String) -> T,
 ): App<ServiceError, T> =
     optionalQueryParam(key, f).onNullFail { RequestError.MissingRequiredParameter(key) }
+
+fun ApplicationCall.queryParam(
+    key: String,
+): App<ServiceError, String> = queryParam(key) { it }
 
 inline fun <reified S> ApplicationCall.pagination(): App<ServiceError, PaginationParameters<S>>
     where S : Sortable, S : Enum<S> = KIO.comprehension {
@@ -81,7 +93,7 @@ inline fun <reified S> ApplicationCall.pagination(): App<ServiceError, Paginatio
     val limit = !queryParam("limit") { it.toInt() }
     val offset = !queryParam("offset") { it.toInt() }
     val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
-    val search = !optionalQueryParam("search") { it }
+    val search = !optionalQueryParam("search")
 
     if (limit < 1 || offset < 0) return@comprehension KIO.fail(RequestError.InvalidPagination)
 
