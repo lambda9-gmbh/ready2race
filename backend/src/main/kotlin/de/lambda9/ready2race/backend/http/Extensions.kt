@@ -9,26 +9,24 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.auth.entity.PrivilegeScope
 import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.plugins.logger
 import de.lambda9.ready2race.backend.serialization.jsonMapper
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.catchError
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.sessions.*
-import java.util.*
 
-sealed interface RequestError : ServiceError {
+sealed interface RequestError: ServiceError {
 
-    data class MissingRequiredQueryParameter(val key: String) : RequestError
-    data class ParameterUnparsable(val key: String) : RequestError
-    data object InvalidPagination : RequestError
+    data class MissingRequiredParameter(val key: String): RequestError
+    data class ParameterUnparsable(val key: String): RequestError
+    data object InvalidPagination: RequestError
 
     override fun respond(): ApiError =
         ApiError(
             status = HttpStatusCode.BadRequest,
             message = when (this) {
-                is MissingRequiredQueryParameter -> "Missing required query parameter $key"
+                is MissingRequiredParameter -> "Missing required query parameter $key"
                 is ParameterUnparsable -> "Query parameter $key could not be parsed"
                 InvalidPagination -> "Invalid pagination parameters (limit must be bigger than '0', offset must not be negative)"
             }
@@ -37,7 +35,7 @@ sealed interface RequestError : ServiceError {
 
 fun ApplicationCall.authenticate(
     privilege: Privilege,
-    thenDo: KIO.ComprehensionScope<JEnv, ServiceError>.(AppUserWithPrivilegesRecord, PrivilegeScope) -> App<ServiceError, ApiResponse>
+    thenDo:  KIO.ComprehensionScope<JEnv, ServiceError>.(AppUserWithPrivilegesRecord, PrivilegeScope) -> App<ServiceError, ApiResponse>
 ): App<ServiceError, ApiResponse> = KIO.comprehension {
 
     val userSession = sessions.get<UserSession>()
@@ -57,53 +55,33 @@ fun ApplicationCall.authenticate(
     thenDo(user)
 }
 
-fun ApplicationCall.pathParam(
+fun <T> ApplicationCall.pathParam(
     key: String,
-): App<ServiceError, UUID> = KIO.comprehension {
-    val param = parameters[key]!!
-    try {
-        KIO.ok(UUID.fromString(param))
-    } catch (e: Exception) {
-        KIO.fail(RequestError.ParameterUnparsable(key))
-    }
-}
+    f: (String) -> T,
+): App<ServiceError, T> = KIO.effect {
+    parameters[key]?.let(f)
+}.mapError { RequestError.ParameterUnparsable(key) }.onNullFail { RequestError.MissingRequiredParameter(key) }
 
-inline fun <reified T> ApplicationCall.queryParam(
+fun <T> ApplicationCall.optionalQueryParam(
     key: String,
-): App<ServiceError, T> = KIO.comprehension {
-    val param = request.queryParameters[key]
-        ?: return@comprehension KIO.fail(RequestError.MissingRequiredQueryParameter(key))
-    try {
-        KIO.ok(jsonMapper.readValue<T>(param))
-    } catch (e: Exception) {
-        KIO.fail(RequestError.ParameterUnparsable(key))
-    }
-}
+    f: (String) -> T,
+): App<ServiceError, T?> = KIO.effect {
+    request.queryParameters[key]?.let(f)
+}.mapError { RequestError.ParameterUnparsable(key) }
 
-inline fun <reified T> ApplicationCall.optionalQueryParam(
+fun <T> ApplicationCall.queryParam(
     key: String,
-): App<Nothing, T?> = queryParam<T>(key).catchError { App.ok(null) }
-
-inline fun <reified T> ApplicationCall.queryParamList(
-    key: String,
-): App<ServiceError, List<T>> = KIO.comprehension {
-    val params = request.queryParameters.getAll(key) ?: emptyList()
-    try {
-        KIO.ok(params.map {
-            jsonMapper.readValue<T>(it)
-        })
-    } catch (e: Exception) {
-        KIO.fail(RequestError.ParameterUnparsable(key))
-    }
-}
+    f: (String) -> T,
+): App<ServiceError, T> =
+    optionalQueryParam(key, f).onNullFail { RequestError.MissingRequiredParameter(key) }
 
 inline fun <reified S> ApplicationCall.pagination(): App<ServiceError, PaginationParameters<S>>
     where S : Sortable, S : Enum<S> = KIO.comprehension {
 
-    val limit = !queryParam<Int>("limit")
-    val offset = !queryParam<Int>("offset")
-    val sort = !queryParam<List<Order<S>>>("sort")
-    val search = !optionalQueryParam<String>("search")
+    val limit = !queryParam("limit") { it.toInt() }
+    val offset = !queryParam("offset") { it.toInt() }
+    val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
+    val search = !optionalQueryParam("search") { it }
 
     if (limit < 1 || offset < 0) return@comprehension KIO.fail(RequestError.InvalidPagination)
 
