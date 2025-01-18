@@ -32,7 +32,7 @@
         <slf4j.version>2.0.12</slf4j.version>
         <log4j2.version>2.23.1</log4j2.version>
         <postgres.version>42.7.3</postgres.version>
-        <flyway.version>10.11.0</flyway.version>
+        <flyway.version>11.2.0</flyway.version>
         <jooq.version>3.19.7</jooq.version>
         <jackson.version>2.17.0</jackson.version>
         <kotlinx.coroutines.debug>1.8.0</kotlinx.coroutines.debug>

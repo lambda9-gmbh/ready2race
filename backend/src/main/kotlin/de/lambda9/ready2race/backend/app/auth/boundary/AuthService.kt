@@ -41,7 +41,7 @@ object AuthService {
     fun login(
         request: LoginRequest,
         onSuccess: (String) -> Unit
-    ): App<ServiceError, ApiResponse.Dto<LoginDto>> = KIO.comprehension {
+    ): App<AuthError, ApiResponse.Dto<LoginDto>> = KIO.comprehension {
 
         val user = !AppUserRepo.getWithPrivilegesByEmail(request.email).orDie().onNullFail { AuthError.CredentialsIncorrect }
 

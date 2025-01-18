@@ -1,8 +1,5 @@
 package de.lambda9.ready2race.backend.app
 
-import de.lambda9.ready2race.backend.http.ApiError
+import de.lambda9.ready2race.backend.http.ToApiError
 
-interface ServiceError {
-
-    fun respond(): ApiError
-}
+interface ServiceError : ToApiError
