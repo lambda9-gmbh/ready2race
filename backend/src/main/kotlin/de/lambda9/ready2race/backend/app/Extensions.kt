@@ -16,8 +16,8 @@ fun AppUserWithPrivilegesRecord.validatePrivilege(
     privilege: Privilege
 ): App<AuthError, PrivilegeScope> = KIO.comprehension {
     when {
-        privilegesGlobal?.contains(privilege.name) == true -> App.ok(PrivilegeScope.GLOBAL)
-        privilegesBound?.contains(privilege.name) == true -> App.ok(PrivilegeScope.ASSOCIATION_BOUND)
+        privilegesGlobal?.contains(privilege.name) == true -> KIO.ok(PrivilegeScope.GLOBAL)
+        privilegesBound?.contains(privilege.name) == true -> KIO.ok(PrivilegeScope.ASSOCIATION_BOUND)
         else -> KIO.fail(AuthError.PrivilegeMissing)
     }
 }
