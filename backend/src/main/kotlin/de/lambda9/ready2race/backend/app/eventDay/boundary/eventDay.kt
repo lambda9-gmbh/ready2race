@@ -30,8 +30,9 @@ fun Route.eventDay() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.EVENT_VIEW)
+                    val eventId = !call.pathParam("eventId") { UUID.fromString(it) }
                     val params = !call.pagination<EventDaySort>()
-                    EventDayService.page(params)
+                    EventDayService.page(eventId, params)
                 }
             }
         }
