@@ -131,7 +131,89 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-
+  /event/{eventId}/eventDay:
+    post:
+      operationId: addEventDay
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDayRequest'
+      responses:
+        201:
+          description: EventDay successfully created, returns event id
+          content:
+            text/plain:
+              schema:
+                type: string
+                format: uuid
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getEventDays
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: EventDay page successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEventDayPageResponse'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/eventDay/{eventDayId}:
+    get:
+      operationId: getEventDay
+      responses:
+        200:
+          description: EventDay successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEventDayResponse'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateEventDay
+      responses:
+        204:
+          description: EventDay successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteEventDay
+      responses:
+        204:
+          description: EventDay successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
 
 
@@ -223,6 +305,7 @@ components:
         - ROLE_VIEW
         - ROLE_EDIT
         - EVENT_EDIT
+        - EVENT_VIEW
 
     # authentication
 
@@ -387,3 +470,67 @@ components:
       properties:
         dto:
           $ref: '#/components/schemas/EventDto'
+
+
+    # eventDay
+
+    EventDayProperties:
+      type: object
+      required:
+        - date
+      properties:
+        date:
+          type: string
+          format: date
+        name:
+          type: string
+        description:
+          type: string
+
+
+    EventDayDto:
+      type: object
+      required:
+        - id
+        - event
+        - properties
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        properties:
+          $ref: '#/components/schemas/EventDayProperties'
+
+    EventDayRequest:
+      type: object
+      required:
+        - properties
+      properties:
+        properties:
+          $ref: '#/components/schemas/EventDayProperties'
+
+    GetEventDayPageResponse:
+      type:
+        object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventDayDto'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+    GetEventDayResponse:
+      type:
+        object
+      required:
+        - dto
+      properties:
+        dto:
+          $ref: '#/components/schemas/EventDayDto'

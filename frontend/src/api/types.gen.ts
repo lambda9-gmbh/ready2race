@@ -12,6 +12,22 @@ export type AppUserResponse = {
     properties: AppUserProperties
 }
 
+export type EventDayDto = {
+    id: string
+    eventId?: string
+    properties: EventDayProperties
+}
+
+export type EventDayProperties = {
+    date: string
+    name?: string
+    description?: string
+}
+
+export type EventDayRequest = {
+    properties: EventDayProperties
+}
+
 export type EventDto = {
     id: string
     properties: EventProperties
@@ -29,6 +45,15 @@ export type EventProperties = {
 
 export type EventRequest = {
     properties: EventProperties
+}
+
+export type GetEventDayPageResponse = {
+    data: Array<EventDayDto>
+    pagination: Pagination
+}
+
+export type GetEventDayResponse = {
+    dto: EventDayDto
 }
 
 export type GetEventPageResponse = {
@@ -84,7 +109,13 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
-export type Privilege = 'USER_VIEW' | 'USER_EDIT' | 'ROLE_VIEW' | 'ROLE_EDIT' | 'EVENT_EDIT'
+export type Privilege =
+    | 'USER_VIEW'
+    | 'USER_EDIT'
+    | 'ROLE_VIEW'
+    | 'ROLE_EDIT'
+    | 'EVENT_EDIT'
+    | 'EVENT_VIEW'
 
 export type UserLoginData = {
     body: LoginRequest
@@ -146,3 +177,48 @@ export type UpdateEventError = string
 export type DeleteEventResponse = void
 
 export type DeleteEventError = string
+
+export type AddEventDayData = {
+    body: EventDayRequest
+}
+
+export type AddEventDayResponse = string
+
+export type AddEventDayError = string
+
+export type GetEventDaysData = {
+    query: {
+        /**
+         * Page size for pagination
+         */
+        limit: number
+        /**
+         * Result offset for pagination
+         */
+        offset: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort: string
+    }
+}
+
+export type GetEventDaysResponse = GetEventDayPageResponse
+
+export type GetEventDaysError = string
+
+export type GetEventDayResponse2 = GetEventDayResponse
+
+export type GetEventDayError = string
+
+export type UpdateEventDayResponse = void
+
+export type UpdateEventDayError = string
+
+export type DeleteEventDayResponse = void
+
+export type DeleteEventDayError = string

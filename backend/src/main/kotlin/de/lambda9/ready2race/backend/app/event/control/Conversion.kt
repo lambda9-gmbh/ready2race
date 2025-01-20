@@ -21,18 +21,17 @@ fun EventRequest.record(userId: UUID) = EventRecord(
     updatedBy = userId,
 )
 
-fun EventRecord.eventDto(): App<Nothing, EventDto> =
-    KIO.ok(
-        EventDto(
-            id = id!!,
-            properties = EventProperties(
-                name = name!!,
-                description = description,
-                location = location,
-                registrationAvailableFrom = registrationAvailableFrom,
-                registrationAvailableTo = registrationAvailableTo,
-                paymentDueDate = paymentDueDate,
-                invoicePrefix = invoicePrefix,
-            )
+fun EventRecord.eventDto(): App<Nothing, EventDto> = KIO.ok(
+    EventDto(
+        id = id!!,
+        properties = EventProperties(
+            name = name!!,
+            description = description,
+            location = location,
+            registrationAvailableFrom = registrationAvailableFrom,
+            registrationAvailableTo = registrationAvailableTo,
+            paymentDueDate = paymentDueDate,
+            invoicePrefix = invoicePrefix,
         )
     )
+)

@@ -21,6 +21,18 @@ import type {
     UpdateEventResponse,
     DeleteEventError,
     DeleteEventResponse,
+    AddEventDayData,
+    AddEventDayError,
+    AddEventDayResponse,
+    GetEventDaysData,
+    GetEventDaysError,
+    GetEventDaysResponse,
+    GetEventDayError,
+    GetEventDayResponse2,
+    UpdateEventDayError,
+    UpdateEventDayResponse,
+    DeleteEventDayError,
+    DeleteEventDayResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -98,5 +110,58 @@ export const deleteEvent = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<DeleteEventResponse, DeleteEventError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}',
+    })
+}
+
+export const addEventDay = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddEventDayData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddEventDayResponse, AddEventDayError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay',
+    })
+}
+
+export const getEventDays = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetEventDaysResponse, GetEventDaysError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay',
+    })
+}
+
+export const getEventDay = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetEventDayResponse2, GetEventDayError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}',
+    })
+}
+
+export const updateEventDay = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateEventDayResponse,
+        UpdateEventDayError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}',
+    })
+}
+
+export const deleteEventDay = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteEventDayResponse,
+        DeleteEventDayError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}',
     })
 }

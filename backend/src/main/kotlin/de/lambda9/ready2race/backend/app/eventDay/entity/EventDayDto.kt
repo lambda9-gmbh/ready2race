@@ -1,0 +1,9 @@
+package de.lambda9.ready2race.backend.app.eventDay.entity
+
+import java.util.*
+
+data class EventDayDto (
+    val id: UUID,
+    val event: UUID,
+    val properties: EventDayProperties
+)

@@ -13,7 +13,7 @@ import java.util.UUID
 
 object EventRepo {
 
-    private fun Event.searchFields() = listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO)
+    private fun Event.searchFields() = listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
 
     fun create(
         record: EventRecord,

@@ -7,7 +7,7 @@ const EventPage = () => {
         const {data, error} = await addEvent({
             body: {
                 properties: {
-                    name: 'TestEvent',
+                    name: 'ABCD TestEvent',
                     description: 'This is a test event :)',
                     location: 'Flensburg',
                     registrationAvailableFrom: new Date('2025-01-16T12:00:00').toISOString(),
@@ -28,7 +28,7 @@ const EventPage = () => {
     }
 
     const initialSort = '[{"field": "NAME", "direction": "ASC"}]'
-    useFetch(signal => getEvents({signal, query: {limit: 4, offset: 0, sort: initialSort}}), {
+    useFetch(signal => getEvents({signal, query: {limit: 20, offset: 0, sort: initialSort, search: 'ABCD ZZZ'}}), {
         onResponse: ({data, response}) => {
             if (response.status === 200 && data !== undefined) {
                 console.log('Events retrieved: ')

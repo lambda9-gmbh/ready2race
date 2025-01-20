@@ -1,9 +1,8 @@
-package de.lambda9.ready2race.backend.app.event.boundary
+package de.lambda9.ready2race.backend.app.eventDay.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.event.entity.EventRequest
-import de.lambda9.ready2race.backend.app.event.entity.EventSort
-import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
+import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
+import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.plugins.authenticate
 import de.lambda9.ready2race.backend.plugins.pagination
 import de.lambda9.ready2race.backend.plugins.pathParam
@@ -13,15 +12,16 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import java.util.*
 
-fun Route.event() {
-    route("/event") {
+fun Route.eventDay() {
+    route("/event-day") {
 
         post {
-            val params = call.receive<EventRequest>()
+            val params = call.receive<EventDayRequest>()
             call.respondKIO {
                 KIO.comprehension {
                     val user = !authenticate(Privilege.EVENT_EDIT)
-                    EventService.addEvent(params, user.first.id!!)
+                    val eventId = !call.pathParam("eventId") { UUID.fromString(it) }
+                    EventDayService.addEventDay(params, user.first.id!!, eventId)
                 }
             }
         }
@@ -30,33 +30,31 @@ fun Route.event() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.EVENT_VIEW)
-                    val params = !call.pagination<EventSort>()
-                    EventService.page(params)
+                    val params = !call.pagination<EventDaySort>()
+                    EventDayService.page(params)
                 }
             }
         }
 
-        route("/{eventId}") {
-
-            eventDay()
-
+        route("/{eventDayId}") {
             get {
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.EVENT_VIEW)
-                        val id = !call.pathParam("eventId") { UUID.fromString(it) }
-                        EventService.getEventById(id)
+                        val eventDayId = !call.pathParam("eventDayId") { UUID.fromString(it) }
+                        EventDayService.getEventDayById(eventDayId)
                     }
                 }
             }
 
             put {
-                val params = call.receive<EventRequest>()
+                val params = call.receive<EventDayRequest>()
                 call.respondKIO {
                     KIO.comprehension {
                         val user = !authenticate(Privilege.EVENT_EDIT)
-                        val id = !call.pathParam("eventId") { UUID.fromString(it) }
-                        EventService.updateEvent(params, id, user.first.id!!)
+                        val eventDayId = !call.pathParam("eventDayId") { UUID.fromString(it) }
+                        val eventId = !call.pathParam("eventId") { UUID.fromString(it) }
+                        EventDayService.updateEvent(params, eventDayId, eventId, user.first.id!!)
                     }
                 }
             }
@@ -65,8 +63,8 @@ fun Route.event() {
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.EVENT_EDIT)
-                        val id = !call.pathParam("eventId") { UUID.fromString(it) }
-                        EventService.deleteEvent(id)
+                        val eventDayId = !call.pathParam("eventDayId") { UUID.fromString(it) }
+                        EventDayService.deleteEvent(eventDayId)
                     }
                 }
             }
