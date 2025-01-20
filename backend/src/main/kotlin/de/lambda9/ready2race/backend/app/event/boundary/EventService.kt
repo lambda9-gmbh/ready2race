@@ -8,15 +8,23 @@ import de.lambda9.ready2race.backend.app.event.control.record
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
+import de.lambda9.ready2race.backend.app.participantCount.entity.ParticipantCountDto
+import de.lambda9.ready2race.backend.app.race.boundary.RaceService
+import de.lambda9.ready2race.backend.app.race.entity.RaceRequest
+import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesDto
+import de.lambda9.ready2race.backend.app.racePropertiesHasNamedParticipant.entity.RacePropertiesHasNamedParticipantDto
 import de.lambda9.ready2race.backend.http.ApiError
 import de.lambda9.ready2race.backend.http.ApiResponse
 import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.http.PaginationParameters
+import de.lambda9.ready2race.backend.plugins.logger
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
 
@@ -36,6 +44,54 @@ object EventService {
         userId: UUID
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val id = !EventRepo.create(request.record(userId)).orDie()
+
+
+
+        val deleteLater = !RaceService.addRace(
+            RaceRequest(
+                raceProperties = RacePropertiesDto(
+                    identifier = "Identi",
+                    name = "Name of the Race",
+                    shortName = "NofR",
+                    description = "Description of the Race",
+                    participantCount = ParticipantCountDto(
+                        countMales = 0,
+                        countFemales = 2,
+                        countNonBinary = 0,
+                        countMixed = 1
+                    ),
+                    participationFee = BigDecimal(20.50),
+                    rentalFee = BigDecimal(0),
+                    raceCategory = "Sprint",
+                ),
+                template = null,
+                namedParticipantList = listOf(
+                    RacePropertiesHasNamedParticipantDto(
+                        namedParticipant = "Ansage",
+                        participantCount = ParticipantCountDto(
+                            countMales = 0,
+                            countFemales = 0,
+                            countNonBinary = 0,
+                            countMixed = 1
+                        )
+                    ), RacePropertiesHasNamedParticipantDto(
+                        namedParticipant = "Steuer",
+                        participantCount = ParticipantCountDto(
+                            countMales = 0,
+                            countFemales = 0,
+                            countNonBinary = 1,
+                            countMixed = 0
+                        )
+                    )
+                )
+            ),
+            userId = UUID.randomUUID(),
+            eventId = id
+        )
+
+        logger.info { "Created Race: ${deleteLater}" }
+
+
         KIO.ok(ApiResponse.Created(id))
     }
 
@@ -57,6 +113,8 @@ object EventService {
         id: UUID
     ): App<EventError, ApiResponse> = KIO.comprehension {
         val event = !EventRepo.getEvent(id).orDie().onNullFail { EventError.EventNotFound }
+
+
         event.eventDto().map { ApiResponse.Dto(it) }
     }
 

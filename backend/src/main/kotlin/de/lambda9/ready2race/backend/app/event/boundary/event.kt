@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
+import de.lambda9.ready2race.backend.app.race.boundary.race
 import de.lambda9.ready2race.backend.plugins.authenticate
 import de.lambda9.ready2race.backend.plugins.pagination
 import de.lambda9.ready2race.backend.plugins.pathParam
@@ -20,8 +21,8 @@ fun Route.event() {
             val params = call.receive<EventRequest>()
             call.respondKIO {
                 KIO.comprehension {
-                    val user = !authenticate(Privilege.EVENT_EDIT)
-                    EventService.addEvent(params, user.first.id!!)
+                    val (user, _) = !authenticate(Privilege.EVENT_EDIT)
+                    EventService.addEvent(params, user.id!!)
                 }
             }
         }
@@ -30,7 +31,7 @@ fun Route.event() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.EVENT_VIEW)
-                    val params = !call.pagination<EventSort>()
+                    val params = !pagination<EventSort>()
                     EventService.page(params)
                 }
             }
@@ -39,12 +40,13 @@ fun Route.event() {
         route("/{eventId}") {
 
             eventDay()
+            race()
 
             get {
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.EVENT_VIEW)
-                        val id = !call.pathParam("eventId") { UUID.fromString(it) }
+                        val id = !pathParam("eventId") { UUID.fromString(it) }
                         EventService.getEventById(id)
                     }
                 }
@@ -54,9 +56,9 @@ fun Route.event() {
                 val params = call.receive<EventRequest>()
                 call.respondKIO {
                     KIO.comprehension {
-                        val user = !authenticate(Privilege.EVENT_EDIT)
-                        val id = !call.pathParam("eventId") { UUID.fromString(it) }
-                        EventService.updateEvent(params, id, user.first.id!!)
+                        val (user, _) = !authenticate(Privilege.EVENT_EDIT)
+                        val id = !pathParam("eventId") { UUID.fromString(it) }
+                        EventService.updateEvent(params, id, user.id!!)
                     }
                 }
             }
@@ -65,7 +67,7 @@ fun Route.event() {
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.EVENT_EDIT)
-                        val id = !call.pathParam("eventId") { UUID.fromString(it) }
+                        val id = !pathParam("eventId") { UUID.fromString(it) }
                         EventService.deleteEvent(id)
                     }
                 }

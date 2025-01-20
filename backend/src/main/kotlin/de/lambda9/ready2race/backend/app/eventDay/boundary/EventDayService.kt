@@ -64,11 +64,9 @@ object EventDayService {
     fun updateEvent(
         request: EventDayRequest,
         eventDayId: UUID,
-        eventId: UUID,
         userId: UUID,
     ): App<EventDayError, ApiResponse.NoData> = KIO.comprehension {
         !EventDayRepo.update(eventDayId) {
-            event = eventId
             date = request.properties.date
             name = request.properties.name
             description = request.properties.description

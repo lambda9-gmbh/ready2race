@@ -21,7 +21,11 @@ object EventDayRepo {
         record: EventDayRecord
     ): JIO<UUID> = Jooq.query {
         with(EVENT_DAY) {
-            insertInto(this).set(record).returningResult(ID).fetchOne()!!.value1()!!
+            insertInto(this)
+                .set(record)
+                .returningResult(ID)
+                .fetchOne()!!
+                .value1()!!
         }
     }
 

@@ -22,7 +22,7 @@ create table race_properties
     name              text           not null,
     short_name        text,
     description       text,
-    participants      uuid references participant_count on delete cascade on update cascade,
+    participant_count uuid references participant_count on delete cascade on update cascade,
     participation_fee decimal(10, 2) not null default 0,
     rental_fee        decimal(10, 2) not null default 0,
     race_category     text references race_category on delete set null on update cascade
@@ -37,23 +37,23 @@ create table named_participant
 
 create table race_properties_has_named_participant
 (
-    properties        uuid not null references race_properties on delete cascade on update cascade,
+    race_properties        uuid not null references race_properties on delete cascade on update cascade,
     named_participant text not null references named_participant on delete cascade on update cascade,
     participant_count uuid not null references participant_count on delete cascade on update cascade,
-    primary key (properties, named_participant)
+    primary key (race_properties, named_participant)
 );
 
 create table race_template
 (
     id         uuid primary key   default gen_random_uuid(),
     note       text,
-    properties uuid      not null references race_properties on delete cascade on update cascade,
+    race_properties uuid      not null references race_properties on delete cascade on update cascade,
     created_at timestamp not null default now(),
     created_by uuid references app_user on update cascade,
     updated_at timestamp not null default now(),
     updated_by uuid references app_user on update cascade
 );
-create index on race_template (properties);
+create index on race_template (race_properties);
 
 create table event
 (
@@ -89,7 +89,7 @@ create table race
 (
     id         uuid primary key   default gen_random_uuid(),
     event      uuid      not null references event on delete cascade on update cascade,
-    properties uuid      not null references race_properties on delete cascade on update cascade,
+    race_properties uuid      not null references race_properties on delete cascade on update cascade,
     template   uuid references race_template on delete set null on update cascade,
     created_at timestamp not null default now(),
     created_by uuid references app_user on update cascade,
@@ -100,7 +100,7 @@ create index on race (event);
 
 create table event_day_has_race
 (
-    event_day          uuid not null references event_day on delete cascade on update cascade,
-    race uuid not null references race on delete cascade on update cascade,
+    event_day uuid not null references event_day on delete cascade on update cascade,
+    race      uuid not null references race on delete cascade on update cascade,
     primary key (event_day, race)
 );
