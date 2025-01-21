@@ -1,33 +1,35 @@
 package de.lambda9.ready2race.backend.app.raceProperties.control
 
-import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
-import de.lambda9.ready2race.backend.app.participantCount.entity.ParticipantCountDto
+import de.lambda9.ready2race.backend.app.racePropertiesHasNamedParticipant.entity.NamedParticipantWithCountDto
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.RacePropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RacePropertiesWithNamedParticipantRecord
 import java.util.*
 
-fun RacePropertiesDto.record(participantCountId: UUID?) = RacePropertiesRecord(
+fun RacePropertiesDto.record(raceId: UUID?, raceTemplateId: UUID?) = RacePropertiesRecord(
     id = UUID.randomUUID(),
+    race = raceId,
+    raceTemplate = raceTemplateId,
     identifier = identifier,
     name = name,
     shortName = shortName,
     description = description,
-    participantCount = participantCountId,
+    countMales = countMales,
+    countFemales = countFemales,
+    countNonBinary = countNonBinary,
+    countMixed = countMixed,
     participationFee = participationFee,
     rentalFee = rentalFee,
     raceCategory = raceCategory,
 )
 
 
-fun RacePropertiesWithNamedParticipantRecord.namedParticipant() = NamedParticipantDto(
+fun RacePropertiesWithNamedParticipantRecord.namedParticipant() = NamedParticipantWithCountDto(
     name = name!!,
     description = description,
     required = required!!,
-    participantCount = ParticipantCountDto(
-        countMales = countMales!!,
-        countFemales = countFemales!!,
-        countNonBinary = countNonBinary!!,
-        countMixed = countMixed!!
-    )
+    countMales = countMales!!,
+    countFemales = countFemales!!,
+    countNonBinary = countNonBinary!!,
+    countMixed = countMixed!!
 )

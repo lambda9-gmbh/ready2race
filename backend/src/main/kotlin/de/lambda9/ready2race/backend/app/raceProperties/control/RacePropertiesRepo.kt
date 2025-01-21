@@ -19,4 +19,29 @@ object RacePropertiesRepo {
                 .value1()!!
         }
     }
+
+    fun updateByRaceOrTemplate(
+        raceId: UUID?,
+        raceTemplateId: UUID?,
+        f: RacePropertiesRecord.() -> Unit
+    ): JIO<Unit> = Jooq.query {
+        with(RACE_PROPERTIES){
+            selectFrom(this)
+                .where(if(raceId != null) RACE.eq(raceId) else RACE_TEMPLATE.eq(raceTemplateId))
+                .fetchOne()
+                ?.apply(f)
+                ?.update()
+        }
+    }
+
+    fun getIdByRaceId(
+        raceId: UUID)
+    : JIO<UUID?> = Jooq.query {
+        with(RACE_PROPERTIES){
+            select(ID)
+                .from(this)
+                .where(RACE.eq(raceId))
+                .fetchOneInto(UUID::class.java)
+        }
+    }
 }

@@ -32,7 +32,7 @@ fun Route.eventDay() {
                     !authenticate(Privilege.EVENT_VIEW)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
                     val params = !pagination<EventDaySort>()
-                    EventDayService.page(eventId, params)
+                    EventDayService.pageByEvent(eventId, params)
                 }
             }
         }
@@ -55,7 +55,7 @@ fun Route.eventDay() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.EVENT_EDIT)
                         val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
-                        EventDayService.updateEvent(params, eventDayId, user.id!!)
+                        EventDayService.updateEvent(params, user.id!!, eventDayId)
                     }
                 }
             }

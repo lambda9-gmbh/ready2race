@@ -30,7 +30,7 @@ object EventDayRepo {
     }
 
 
-    fun count(
+    fun countByEvent(
         eventId: UUID,
         search: String?
     ): JIO<Int> = Jooq.query {
@@ -39,7 +39,7 @@ object EventDayRepo {
         }
     }
 
-    fun page(
+    fun pageByEvent(
         eventId: UUID,
         params: PaginationParameters<EventDaySort>
     ): JIO<List<EventDayRecord>> = Jooq.query {

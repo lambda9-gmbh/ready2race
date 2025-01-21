@@ -39,12 +39,12 @@ object EventDayService {
         KIO.ok(ApiResponse.Created(id))
     }
 
-    fun page(
+    fun pageByEvent(
         eventId: UUID,
         params: PaginationParameters<EventDaySort>
     ): App<Nothing, ApiResponse.Page<EventDayDto, EventDaySort>> = KIO.comprehension {
-        val total = !EventDayRepo.count(eventId, params.search).orDie()
-        val page = !EventDayRepo.page(eventId, params).orDie()
+        val total = !EventDayRepo.countByEvent(eventId, params.search).orDie()
+        val page = !EventDayRepo.pageByEvent(eventId, params).orDie()
 
         page.forEachM { it.eventDayDto() }.map {
             ApiResponse.Page(
@@ -63,8 +63,8 @@ object EventDayService {
 
     fun updateEvent(
         request: EventDayRequest,
-        eventDayId: UUID,
         userId: UUID,
+        eventDayId: UUID,
     ): App<EventDayError, ApiResponse.NoData> = KIO.comprehension {
         !EventDayRepo.update(eventDayId) {
             date = request.properties.date

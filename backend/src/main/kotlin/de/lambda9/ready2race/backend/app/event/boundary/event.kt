@@ -4,11 +4,9 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
+import de.lambda9.ready2race.backend.app.race.boundary.RaceService
 import de.lambda9.ready2race.backend.app.race.boundary.race
-import de.lambda9.ready2race.backend.plugins.authenticate
-import de.lambda9.ready2race.backend.plugins.pagination
-import de.lambda9.ready2race.backend.plugins.pathParam
-import de.lambda9.ready2race.backend.plugins.respondKIO
+import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
@@ -58,7 +56,7 @@ fun Route.event() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.EVENT_EDIT)
                         val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.updateEvent(params, id, user.id!!)
+                        EventService.updateEvent(params, user.id!!, id)
                     }
                 }
             }

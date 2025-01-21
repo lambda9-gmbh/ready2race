@@ -38,7 +38,7 @@ const EventPage = () => {
     })
 
     useFetch(
-        signal => getEvent({signal, path: {eventId: 'afd50d38-9273-4e3d-9a91-f40effd96e56'}}),
+        signal => getEvent({signal, path: {eventId: '979ee6ed-281f-411c-b3b9-883822f7ca64'}}),
         {
             onResponse: ({data, response}) => {
                 if (response.status === 200 && data !== undefined) {
@@ -76,7 +76,7 @@ const EventPage = () => {
 
     async function onDeleteEvent() {
         const {error} = await deleteEvent({
-            path: {eventId: '1040c7a6-059b-49f0-9b31-ae3ad2574266'},
+            path: {eventId: '979ee6ed-281f-411c-b3b9-883822f7ca64'},
         })
 
         if (error) {

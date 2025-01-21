@@ -49,16 +49,15 @@ group by au.id;
 
 create view race_properties_with_named_participant as
 select rphnp.race_properties,
+       rphnp.count_males,
+       rphnp.count_females,
+       rphnp.count_non_binary,
+       rphnp.count_mixed,
        np.name,
        np.description,
-       np.required,
-       pc.count_males,
-       pc.count_females,
-       pc.count_non_binary,
-       pc.count_mixed
+       np.required
 from race_properties_has_named_participant rphnp
-         left join named_participant np on rphnp.named_participant = np.name
-         left join participant_count pc on rphnp.participant_count = pc.id;
+         left join named_participant np on rphnp.named_participant = np.name;
 
 
 create view race_with_properties as
@@ -69,16 +68,15 @@ select r.id,
        rp.name,
        rp.short_name,
        rp.description,
+       rp.count_males,
+       rp.count_females,
+       rp.count_non_binary,
+       rp.count_mixed,
        rp.participation_fee,
        rp.rental_fee,
        rp.race_category,
-       pc.count_males,
-       pc.count_females,
-       pc.count_non_binary,
-       pc.count_mixed,
        coalesce(array_agg(rpwnp), '{}') as named_participant_list
 from race r
-         left join race_properties rp on r.race_properties = rp.id
-         left join participant_count pc on rp.participant_count = pc.id
+         left join race_properties rp on r.id = rp.race
          left join race_properties_with_named_participant rpwnp on rp.id = rpwnp.race_properties
-group by r.id, rp.id, pc.id;
+group by r.id, rp.id;
