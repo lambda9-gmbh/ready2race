@@ -19,7 +19,11 @@ object EventRepo {
         record: EventRecord,
     ): JIO<UUID> = Jooq.query {
         with(EVENT) {
-            insertInto(this).set(record).returningResult(ID).fetchOne()!!.value1()!!
+            insertInto(this)
+                .set(record)
+                .returningResult(ID)
+                .fetchOne()!!
+                .value1()!!
         }
     }
 

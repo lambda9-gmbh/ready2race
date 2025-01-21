@@ -17,6 +17,7 @@ import type {
     GetEventsResponse,
     GetEventError,
     GetEventResponse2,
+    UpdateEventData,
     UpdateEventError,
     UpdateEventResponse,
     DeleteEventError,
@@ -29,10 +30,35 @@ import type {
     GetEventDaysResponse,
     GetEventDayError,
     GetEventDayResponse2,
+    UpdateEventDayData,
     UpdateEventDayError,
     UpdateEventDayResponse,
     DeleteEventDayError,
     DeleteEventDayResponse,
+    AddRaceData,
+    AddRaceError,
+    AddRaceResponse,
+    GetRacesData,
+    GetRacesError,
+    GetRacesResponse,
+    GetRaceError,
+    GetRaceResponse2,
+    UpdateRaceData,
+    UpdateRaceError,
+    UpdateRaceResponse,
+    DeleteRaceError,
+    DeleteRaceResponse,
+    AddNamedParticipantData,
+    AddNamedParticipantError,
+    AddNamedParticipantResponse,
+    GetNamedParticipantsData,
+    GetNamedParticipantsError,
+    GetNamedParticipantsResponse,
+    UpdateNamedParticipantData,
+    UpdateNamedParticipantError,
+    UpdateNamedParticipantResponse,
+    DeleteNamedParticipantError,
+    DeleteNamedParticipantResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -96,7 +122,7 @@ export const getEvent = <ThrowOnError extends boolean = false>(
 }
 
 export const updateEvent = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<UpdateEventData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<UpdateEventResponse, UpdateEventError, ThrowOnError>({
         ...options,
@@ -141,7 +167,7 @@ export const getEventDay = <ThrowOnError extends boolean = false>(
 }
 
 export const updateEventDay = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<UpdateEventDayData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
         UpdateEventDayResponse,
@@ -163,5 +189,102 @@ export const deleteEventDay = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDay/{eventDayId}',
+    })
+}
+
+export const addRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddRaceResponse, AddRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race',
+    })
+}
+
+export const getRaces = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRacesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetRacesResponse, GetRacesError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race',
+    })
+}
+
+export const getRace = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetRaceResponse2, GetRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const updateRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateRaceResponse, UpdateRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const deleteRace = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteRaceResponse, DeleteRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const addNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddNamedParticipantResponse,
+        AddNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant',
+    })
+}
+
+export const getNamedParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetNamedParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetNamedParticipantsResponse,
+        GetNamedParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant',
+    })
+}
+
+export const updateNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateNamedParticipantResponse,
+        UpdateNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant/{name}',
+    })
+}
+
+export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteNamedParticipantResponse,
+        DeleteNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant/{name}',
     })
 }

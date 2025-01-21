@@ -42,6 +42,7 @@ sealed class ApiResponse(
         val id: UUID
     ): ApiResponse(HttpStatusCode.Created)
 
+
     companion object {
         val noData get() = App.ok(NoData)
     }

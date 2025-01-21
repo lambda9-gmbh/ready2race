@@ -65,6 +65,15 @@ export type GetEventResponse = {
     dto: EventDto
 }
 
+export type GetRacePageResponse = {
+    data: Array<RaceDto>
+    pagination: Pagination
+}
+
+export type GetRaceResponse = {
+    dto: RaceDto
+}
+
 export type LoginRequest = {
     email: string
     password: string
@@ -73,6 +82,22 @@ export type LoginRequest = {
 export type LoginResponse = {
     privilegesGlobal: Array<Privilege>
     privilegesBound: Array<Privilege>
+}
+
+export type NamedParticipantDto = {
+    name: string
+    description?: string
+    required: boolean
+}
+
+export type NamedParticipantWithCountDto = {
+    name: string
+    description?: string
+    required: boolean
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
 }
 
 export type Order = {
@@ -116,6 +141,46 @@ export type Privilege =
     | 'ROLE_EDIT'
     | 'EVENT_EDIT'
     | 'EVENT_VIEW'
+
+export type RaceDto = {
+    id: string
+    event: string
+    raceProperties: RacePropertiesWithNamedParticipantListDto
+    template?: string
+}
+
+export type RacePropertiesDto = {
+    identifier: string
+    name: string
+    shortName?: string
+    description?: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+    participationFee: number
+    rentalFee: number
+    raceCategory?: string
+}
+
+export type RacePropertiesHasNamedParticipantDto = {
+    namedParticipant: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+}
+
+export type RacePropertiesWithNamedParticipantListDto = {
+    raceProperties: RacePropertiesDto
+    namedParticipantList: Array<NamedParticipantWithCountDto>
+}
+
+export type RaceRequest = {
+    raceProperties: RacePropertiesDto
+    template?: string
+    namedParticipantList: Array<RacePropertiesHasNamedParticipantDto>
+}
 
 export type UserLoginData = {
     body: LoginRequest
@@ -170,6 +235,10 @@ export type GetEventResponse2 = GetEventResponse
 
 export type GetEventError = string
 
+export type UpdateEventData = {
+    body: EventRequest
+}
+
 export type UpdateEventResponse = void
 
 export type UpdateEventError = string
@@ -215,6 +284,10 @@ export type GetEventDayResponse2 = GetEventDayResponse
 
 export type GetEventDayError = string
 
+export type UpdateEventDayData = {
+    body: EventDayRequest
+}
+
 export type UpdateEventDayResponse = void
 
 export type UpdateEventDayError = string
@@ -222,3 +295,97 @@ export type UpdateEventDayError = string
 export type DeleteEventDayResponse = void
 
 export type DeleteEventDayError = string
+
+export type AddRaceData = {
+    body: RaceRequest
+}
+
+export type AddRaceResponse = string
+
+export type AddRaceError = string
+
+export type GetRacesData = {
+    query: {
+        /**
+         * Page size for pagination
+         */
+        limit: number
+        /**
+         * Result offset for pagination
+         */
+        offset: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort: string
+    }
+}
+
+export type GetRacesResponse = GetRacePageResponse
+
+export type GetRacesError = string
+
+export type GetRaceResponse2 = GetRaceResponse
+
+export type GetRaceError = string
+
+export type UpdateRaceData = {
+    body: RaceRequest
+}
+
+export type UpdateRaceResponse = void
+
+export type UpdateRaceError = string
+
+export type DeleteRaceResponse = void
+
+export type DeleteRaceError = string
+
+export type AddNamedParticipantData = {
+    body: NamedParticipantDto
+}
+
+export type AddNamedParticipantResponse = void
+
+export type AddNamedParticipantError = string
+
+export type GetNamedParticipantsData = {
+    query: {
+        /**
+         * Page size for pagination
+         */
+        limit: number
+        /**
+         * Result offset for pagination
+         */
+        offset: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort: string
+    }
+}
+
+export type GetNamedParticipantsResponse = Array<NamedParticipantDto>
+
+export type GetNamedParticipantsError = string
+
+export type UpdateNamedParticipantData = {
+    body: NamedParticipantDto
+}
+
+export type UpdateNamedParticipantResponse = void
+
+export type UpdateNamedParticipantError = string
+
+export type DeleteNamedParticipantResponse = void
+
+export type DeleteNamedParticipantError = string
