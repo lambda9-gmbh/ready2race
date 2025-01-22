@@ -326,7 +326,7 @@ paths:
               $ref: '#/components/schemas/NamedParticipantDto'
       responses:
         204:
-          description: NamedParticipant successfully created, returns event id
+          description: NamedParticipant successfully created
         400:
           $ref: '#/components/responses/400'
         401:
@@ -335,11 +335,6 @@ paths:
           $ref: '#/components/responses/500'
     get:
       operationId: getNamedParticipants
-      parameters:
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-        - $ref: '#/components/parameters/sort'
-        - $ref: '#/components/parameters/search'
       responses:
         200:
           description: NamedParticipant list successfully retrieved
@@ -384,6 +379,73 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /raceCategory:
+    put:
+      operationId: addRaceCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        204:
+          description: RaceCategory successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getRaceCategory
+      responses:
+        200:
+          description: RaceCategory list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+  /raceCategory/{name}:
+    put:
+      operationId: updateRaceCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        204:
+          description: RaceCategory successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteRaceCategory
+      responses:
+        204:
+          description: RaceCategory successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+
+
 
 
 
@@ -560,7 +622,7 @@ components:
         sort:
           type: array
           items:
-            $ref:
+            $ref: '#/components/schemas/Order'
 
     Order:
       type: object

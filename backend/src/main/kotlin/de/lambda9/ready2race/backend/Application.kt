@@ -51,8 +51,9 @@ fun Application.module(env: JEnv) {
     configureAdministration()
     configureKIO(env)
     configureHTTP(env.env.config.mode)
-    configurePayload()
+    configureSerialization()
     configureRouting()
+    configureValidation()
 }
 
 private fun initializeApplication(env: JEnv) {

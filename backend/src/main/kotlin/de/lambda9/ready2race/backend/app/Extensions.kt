@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app
 
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.auth.entity.PrivilegeScope
 import de.lambda9.ready2race.backend.app.user.control.AppUserHasRoleRepo
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
@@ -13,11 +12,16 @@ fun AppUserWithPrivilegesRecord.isAdmin(): App<Nothing, Boolean> =
     AppUserHasRoleRepo.exists(this.id!!, ADMIN_ROLE).orDie()
 
 fun AppUserWithPrivilegesRecord.validatePrivilege(
-    privilege: Privilege
-): App<AuthError, PrivilegeScope> = KIO.comprehension {
-    when {
-        privilegesGlobal?.contains(privilege.name) == true -> KIO.ok(PrivilegeScope.GLOBAL)
-        privilegesBound?.contains(privilege.name) == true -> KIO.ok(PrivilegeScope.ASSOCIATION_BOUND)
-        else -> KIO.fail(AuthError.PrivilegeMissing)
-    }
+    action: Privilege.Action,
+    resource: Privilege.Resource,
+): App<AuthError, Privilege.Scope> = KIO.comprehension {
+
+    privileges!!
+        .filter { it!!.action == action.name && it.resource == resource.name }
+        .map { Privilege.Scope.valueOf(it!!.scope!!) }
+        .maxByOrNull { it.level }
+        ?.let {
+            KIO.ok(it)
+        } ?: KIO.fail(AuthError.PrivilegeMissing)
+
 }

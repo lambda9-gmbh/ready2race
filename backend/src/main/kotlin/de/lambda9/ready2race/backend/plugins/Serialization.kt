@@ -6,21 +6,19 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer
-import de.lambda9.ready2race.backend.validation.Validatable
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.doublereceive.*
-import io.ktor.server.plugins.requestvalidation.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 
-fun Application.configurePayload() {
+val jsonMapper = jacksonObjectMapper()
 
-    install(DoubleReceive)
+fun Application.configureSerialization() {
 
     install(ContentNegotiation) {
         jackson {
@@ -63,12 +61,6 @@ fun Application.configurePayload() {
                     )
                 )
             })
-        }
-    }
-
-    install(RequestValidation) {
-        validate<Validatable> { validatable ->
-            validatable.validate()
         }
     }
 

@@ -62,6 +62,8 @@ object RaceRepo {
         }
     }
 
+    fun getWith
+
     fun update(
         id: UUID,
         f: RaceRecord.() -> Unit

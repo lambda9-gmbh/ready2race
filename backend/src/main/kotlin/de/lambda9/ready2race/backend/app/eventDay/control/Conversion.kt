@@ -24,8 +24,8 @@ fun EventDayRecord.eventDayDto(): App<Nothing, EventDayDto> = KIO.ok(
         event = event!!,
         properties = EventDayProperties(
             date = date!!,
-            name = name!!,
-            description = description!!,
+            name = name,
+            description = description,
         )
     )
 )

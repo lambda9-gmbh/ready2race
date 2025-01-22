@@ -1,16 +1,17 @@
-package de.lambda9.ready2race.backend.app.namedParticipant.control
+package de.lambda9.ready2race.backend.app.raceCategory.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.RaceCategoryRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.NAMED_PARTICIPANT
+import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_CATEGORY
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 
-object NamedParticipantRepo {
-
+object RaceCategoryRepo {
     fun create(
-        record: NamedParticipantRecord
+        record: RaceCategoryRecord,
     ): JIO<String> = Jooq.query {
-        with(NAMED_PARTICIPANT) {
+        with(RACE_CATEGORY){
             insertInto(this)
                 .set(record)
                 .returningResult(NAME)
@@ -19,18 +20,18 @@ object NamedParticipantRepo {
         }
     }
 
-    fun getMany(): JIO<List<NamedParticipantRecord>> = Jooq.query {
-        with(NAMED_PARTICIPANT) {
+    fun getMany(): JIO<List<String>> = Jooq.query {
+        with(RACE_CATEGORY) {
             selectFrom(this)
-                .fetch()
+                .fetchInto(String::class.java)
         }
     }
 
     fun update(
         prevName: String,
-        f: NamedParticipantRecord.() -> Unit
+        f: RaceCategoryRecord.() -> Unit
     ): JIO<Unit> = Jooq.query {
-        with(NAMED_PARTICIPANT) {
+        with(RACE_CATEGORY) {
             selectFrom(this)
                 .where(NAME.eq(prevName))
                 .fetchOne()
@@ -40,13 +41,12 @@ object NamedParticipantRepo {
     }
 
     fun delete(
-        name: String,
+        name: String
     ): JIO<Int> = Jooq.query {
-        with(NAMED_PARTICIPANT) {
+        with(RACE_CATEGORY){
             deleteFrom(this)
                 .where(NAME.eq(name))
                 .execute()
         }
     }
-
 }

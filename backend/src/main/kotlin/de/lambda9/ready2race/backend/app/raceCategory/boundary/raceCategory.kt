@@ -1,0 +1,55 @@
+package de.lambda9.ready2race.backend.app.raceCategory.boundary
+
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.plugins.authenticate
+import de.lambda9.ready2race.backend.plugins.pathParam
+import de.lambda9.ready2race.backend.plugins.respondKIO
+import de.lambda9.tailwind.core.KIO
+import io.ktor.server.request.*
+import io.ktor.server.routing.*
+
+fun Route.raceCategory() {
+    route("/raceCategory") {
+        post {
+            val params = call.receive<String>()
+            call.respondKIO {
+                KIO.comprehension {
+                    !authenticate(Privilege.EVENT_EDIT)// todo: Other rights?
+                    RaceCategoryService.addRaceCategory(params)
+                }
+            }
+        }
+
+        get {
+            call.respondKIO {
+                KIO.comprehension {
+                    !authenticate(Privilege.EVENT_VIEW) // todo: Other rights?
+                    RaceCategoryService.getRaceCategoryList()
+                }
+            }
+        }
+
+        route("/{name}") {
+            put{
+                val params = call.receive<String>()
+                call.respondKIO {
+                    KIO.comprehension {
+                        !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
+                        val prevName = !pathParam("name") { it }
+                        RaceCategoryService.updateRaceCategory(prevName, params)
+                    }
+                }
+            }
+
+            delete {
+                call.respondKIO {
+                    KIO.comprehension {
+                        !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
+                        val prevName = !pathParam("name") { it }
+                        RaceCategoryService.deleteRaceCategory(prevName)
+                    }
+                }
+            }
+        }
+    }
+}

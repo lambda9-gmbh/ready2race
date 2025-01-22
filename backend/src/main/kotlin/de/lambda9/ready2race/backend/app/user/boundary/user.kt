@@ -13,7 +13,7 @@ fun Route.user() {
         get {
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.USER_VIEW)
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.USER)
                     val params = !pagination<AppUserWithRolesSort>()
                     AppUserService.page(params)
                 }

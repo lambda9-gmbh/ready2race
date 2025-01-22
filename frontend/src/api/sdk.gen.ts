@@ -51,7 +51,6 @@ import type {
     AddNamedParticipantData,
     AddNamedParticipantError,
     AddNamedParticipantResponse,
-    GetNamedParticipantsData,
     GetNamedParticipantsError,
     GetNamedParticipantsResponse,
     UpdateNamedParticipantData,
@@ -59,6 +58,16 @@ import type {
     UpdateNamedParticipantResponse,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
+    AddRaceCategoryData,
+    AddRaceCategoryError,
+    AddRaceCategoryResponse,
+    GetRaceCategoryError,
+    GetRaceCategoryResponse,
+    UpdateRaceCategoryData,
+    UpdateRaceCategoryError,
+    UpdateRaceCategoryResponse,
+    DeleteRaceCategoryError,
+    DeleteRaceCategoryResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -251,7 +260,7 @@ export const addNamedParticipant = <ThrowOnError extends boolean = false>(
 }
 
 export const getNamedParticipants = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetNamedParticipantsData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
         GetNamedParticipantsResponse,
@@ -286,5 +295,57 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/namedParticipant/{name}',
+    })
+}
+
+export const addRaceCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AddRaceCategoryResponse,
+        AddRaceCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceCategory',
+    })
+}
+
+export const getRaceCategory = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceCategoryResponse,
+        GetRaceCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceCategory',
+    })
+}
+
+export const updateRaceCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRaceCategoryResponse,
+        UpdateRaceCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceCategory/{name}',
+    })
+}
+
+export const deleteRaceCategory = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteRaceCategoryResponse,
+        DeleteRaceCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceCategory/{name}',
     })
 }

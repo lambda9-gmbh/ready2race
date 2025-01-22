@@ -6,11 +6,9 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.auth.entity.PrivilegeScope
 import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.http.*
-import de.lambda9.ready2race.backend.serialization.jsonMapper
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.fold
@@ -115,12 +113,13 @@ suspend fun ApplicationCall.respondKIO(
 }
 
 fun ApplicationCall.authenticate(
-    privilege: Privilege,
-): App<AuthService.AuthError, Pair<AppUserWithPrivilegesRecord, PrivilegeScope>> = KIO.comprehension {
+    action: Privilege.Action,
+    resource: Privilege.Resource,
+): App<AuthService.AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>> = KIO.comprehension {
 
     val userSession = sessions.get<UserSession>()
     val user = !AuthService.getAppUserByToken(userSession?.token)
-    user.validatePrivilege(privilege).map {
+    user.validatePrivilege(action, resource).map {
         user to it
     }
 }

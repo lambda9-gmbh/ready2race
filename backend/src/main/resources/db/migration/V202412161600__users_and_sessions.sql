@@ -8,9 +8,9 @@ create table app_user
     firstname text not null,
     lastname text not null,
     created_at timestamp not null default now(),
-    created_by uuid not null references app_user on update cascade,
+    created_by uuid references app_user on delete set null,
     updated_at timestamp not null default now(),
-    updated_by uuid not null references app_user on update cascade
+    updated_by uuid references app_user on delete set null
 );
 
 create index on app_user (email);
@@ -18,7 +18,7 @@ create index on app_user (email);
 create table app_user_session
 (
     token char(30) primary key,
-    app_user uuid not null references app_user on delete cascade on update cascade,
+    app_user uuid not null references app_user on delete cascade,
     last_used timestamp not null default now(),
     created_at timestamp not null default now()
 );
