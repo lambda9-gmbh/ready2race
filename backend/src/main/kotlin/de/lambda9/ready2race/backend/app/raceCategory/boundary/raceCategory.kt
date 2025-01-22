@@ -14,7 +14,7 @@ fun Route.raceCategory() {
             val params = call.receive<String>()
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.EVENT_EDIT)// todo: Other rights?
+                    !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)// todo: Other rights?
                     RaceCategoryService.addRaceCategory(params)
                 }
             }
@@ -23,19 +23,19 @@ fun Route.raceCategory() {
         get {
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.EVENT_VIEW) // todo: Other rights?
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT) // todo: Other rights?
                     RaceCategoryService.getRaceCategoryList()
                 }
             }
         }
 
-        route("/{name}") {
+        route("/{raceCategoryId}") {
             put{
                 val params = call.receive<String>()
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
-                        val prevName = !pathParam("name") { it }
+                        !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT) // todo: Other rights?
+                        val prevName = !pathParam("raceCategoryId") { it }
                         RaceCategoryService.updateRaceCategory(prevName, params)
                     }
                 }
@@ -44,7 +44,7 @@ fun Route.raceCategory() {
             delete {
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
+                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT) // todo: Other rights?
                         val prevName = !pathParam("name") { it }
                         RaceCategoryService.deleteRaceCategory(prevName)
                     }

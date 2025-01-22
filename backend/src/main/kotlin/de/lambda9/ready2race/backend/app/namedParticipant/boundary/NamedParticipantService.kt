@@ -47,7 +47,6 @@ object NamedParticipantService {
         !NamedParticipantRepo.update(prevName) {
             name = request.name
             description = request.description
-            required = request.required
         }.orDie()
 
         noData

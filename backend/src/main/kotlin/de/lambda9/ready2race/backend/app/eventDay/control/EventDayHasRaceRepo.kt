@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.app.eventDayHasRace.control
+package de.lambda9.ready2race.backend.app.eventDay.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_RACE

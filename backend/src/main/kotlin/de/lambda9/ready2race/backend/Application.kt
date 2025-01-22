@@ -111,8 +111,17 @@ private fun initializeApplication(env: JEnv) {
 
         // Add missing privileges
 
-        val privileges = !PrivilegeRepo.all()
-        !PrivilegeRepo.create(Privilege.entries.filter { p -> !privileges.contains(p) })
+        val privilegeRecords = !PrivilegeRepo.all()
+        !PrivilegeRepo.create(
+            Privilege.entries
+                .filter { p ->
+                    privilegeRecords.none {
+                        it.action == p.action.name
+                            && it.resource == p.resource.name
+                            && it.scope == p.scope.name
+                    }
+                }
+        )
 
         App.unit
     }

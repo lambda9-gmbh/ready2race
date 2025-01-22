@@ -69,9 +69,9 @@ select r.id,
        rp.count_mixed,
        rp.participation_fee,
        rp.rental_fee,
-       rc.name                          as category_name,
-       rc.description                   as category_description,
-       coalesce(array_agg(npfrp), '{}') as named_participants
+       rc.name                                                                             as category_name,
+       rc.description                                                                      as category_description,
+       coalesce(array_agg(npfrp) filter ( where npfrp.race_properties is not null ), '{}') as named_participants
 from race r
          left join race_properties rp on r.id = rp.race
          left join named_participant_for_race_properties npfrp on rp.id = npfrp.race_properties

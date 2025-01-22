@@ -1,6 +1,6 @@
-package de.lambda9.ready2race.backend.app.racePropertiesHasNamedParticipant.entity
+package de.lambda9.ready2race.backend.app.raceProperties.entity
 
-data class NamedParticipantWithCountDto(
+data class NamedParticipantForRaceDto(
     val name: String,
     val description: String?,
     val required: Boolean,
@@ -9,3 +9,4 @@ data class NamedParticipantWithCountDto(
     val countNonBinary: Int,
     val countMixed: Int,
 )
+

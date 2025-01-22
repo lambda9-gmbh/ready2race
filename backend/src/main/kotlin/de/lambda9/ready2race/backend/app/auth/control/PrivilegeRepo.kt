@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Privilege
 import de.lambda9.ready2race.backend.database.generated.tables.references.PRIVILEGE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import java.util.*
 
 object PrivilegeRepo {
 
@@ -14,17 +15,19 @@ object PrivilegeRepo {
         batchInsert(
             privileges.map {
                 PrivilegeRecord(
-                    name = it.name
+                    id = UUID.randomUUID(),
+                    action = it.action.name,
+                    resource = it.resource.name,
+                    scope = it.scope.name,
                 )
             }
         ).execute().size
     }
 
-    fun all(): JIO<List<Privilege>> = Jooq.query {
+    fun all(): JIO<List<PrivilegeRecord>> = Jooq.query {
         with(PRIVILEGE) {
-            select(NAME)
-                .from(this)
-                .fetch { Privilege.valueOf(it.value1()!!) }
+            selectFrom(this)
+                .fetch()
         }
     }
 }

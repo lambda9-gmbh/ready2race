@@ -8,10 +8,9 @@ import de.lambda9.ready2race.backend.app.race.control.record
 import de.lambda9.ready2race.backend.app.race.entity.RaceDto
 import de.lambda9.ready2race.backend.app.race.entity.RaceRequest
 import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
-import de.lambda9.ready2race.backend.app.racePropertiesHasNamedParticipant.control.RacePropertiesHasNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.record
-import de.lambda9.ready2race.backend.app.racePropertiesHasNamedParticipant.control.record
 import de.lambda9.ready2race.backend.http.ApiError
 import de.lambda9.ready2race.backend.http.ApiResponse
 import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
@@ -44,7 +43,7 @@ object RaceService {
 
         val raceId = !RaceRepo.create(request.record(userId, eventId)).orDie()
         val racePropertiesId = !RacePropertiesRepo.create(request.raceProperties.record(raceId, null)).orDie()
-        RacePropertiesHasNamedParticipantRepo.createMany(request.namedParticipantList.map { it.record(racePropertiesId) })
+        RacePropertiesHasNamedParticipantRepo.createMany(request.raceProperties.namedParticipants.map { it.record(racePropertiesId) })
 
         KIO.ok(ApiResponse.Created(raceId))
     }
@@ -83,7 +82,7 @@ object RaceService {
             updatedAt = LocalDateTime.now()
         }.orDie()
 
-        !RacePropertiesRepo.updateByRaceOrTemplate(raceId, null) {
+        !RacePropertiesRepo.updateByRaceOrTemplate(raceId) {
             identifier = request.raceProperties.identifier
             name = request.raceProperties.name
             shortName = request.raceProperties.shortName
@@ -102,7 +101,7 @@ object RaceService {
 
         // delete and re-add the named participant entries
         !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
-        RacePropertiesHasNamedParticipantRepo.createMany(request.namedParticipantList.map { it.record(racePropertiesId) })
+        RacePropertiesHasNamedParticipantRepo.createMany(request.raceProperties.namedParticipants.map { it.record(racePropertiesId) })
 
         noData
     }

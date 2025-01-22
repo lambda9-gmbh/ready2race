@@ -21,13 +21,12 @@ object RacePropertiesRepo {
     }
 
     fun updateByRaceOrTemplate(
-        raceId: UUID?,
-        raceTemplateId: UUID?,
+        id: UUID,
         f: RacePropertiesRecord.() -> Unit
     ): JIO<Unit> = Jooq.query {
         with(RACE_PROPERTIES){
             selectFrom(this)
-                .where(if(raceId != null) RACE.eq(raceId) else RACE_TEMPLATE.eq(raceTemplateId))
+                .where(RACE.eq(id).or(RACE_TEMPLATE.eq(id)))
                 .fetchOne()
                 ?.apply(f)
                 ?.update()

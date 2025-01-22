@@ -15,7 +15,7 @@ fun Route.namedParticipant() {
             val params = call.receive<NamedParticipantDto>()
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
+                    !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT) // todo: Other rights?
                     NamedParticipantService.addNamedParticipant(params)
                 }
             }
@@ -24,7 +24,7 @@ fun Route.namedParticipant() {
         get {
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.EVENT_VIEW) // todo: Other rights?
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT) // todo: Other rights?
                     NamedParticipantService.getNamedParticipantList()
                 }
             }
@@ -35,7 +35,7 @@ fun Route.namedParticipant() {
                 val params = call.receive<NamedParticipantDto>()
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
+                        !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT) // todo: Other rights?
                         val prevName = !pathParam("name") { it }
                         NamedParticipantService.updateNamedParticipant(params, prevName)
                     }
@@ -45,7 +45,7 @@ fun Route.namedParticipant() {
             delete{
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.EVENT_EDIT) // todo: Other rights?
+                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT) // todo: Other rights?
                         val prevName = !pathParam("name") { it }
                         NamedParticipantService.deleteNamedParticipant(prevName)
                     }

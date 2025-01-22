@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.race.entity
 
-import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_WITH_PROPERTIES
+import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS
 import de.lambda9.ready2race.backend.http.Sortable
 import org.jooq.Field
 
@@ -14,11 +14,11 @@ enum class RaceWithPropertiesSort : Sortable {
 
 
     override fun toField(): Field<*> = when (this) {
-        ID -> RACE_WITH_PROPERTIES.ID
-        EVENT -> RACE_WITH_PROPERTIES.EVENT
-        NAME -> RACE_WITH_PROPERTIES.NAME
-        SHORT_NAME -> RACE_WITH_PROPERTIES.SHORT_NAME
-        IDENTIFIER -> RACE_WITH_PROPERTIES.IDENTIFIER
-        RACE_CATEGORY -> RACE_WITH_PROPERTIES.RACE_CATEGORY
+        ID ->  RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS.ID
+        EVENT -> RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS.EVENT
+        NAME -> RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS.NAME
+        SHORT_NAME -> RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS.SHORT_NAME
+        IDENTIFIER -> RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS.IDENTIFIER
+        RACE_CATEGORY -> RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS.CATEGORY_NAME
     }
 }

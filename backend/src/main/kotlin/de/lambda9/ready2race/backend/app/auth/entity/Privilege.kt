@@ -34,5 +34,12 @@ sealed class Privilege(
     data object UserCreateGlobal: Privilege(Resource.USER, Action.CREATE, Scope.GLOBAL)
     data object UserReadGlobal: Privilege(Resource.USER, Action.READ, Scope.GLOBAL)
 
-}
+    data object EventCreateGlobal: Privilege(Resource.EVENT, Action.CREATE, Scope.GLOBAL)
+    data object EventReadGlobal: Privilege(Resource.EVENT, Action.READ, Scope.GLOBAL)
+    data object EventUpdateGlobal: Privilege(Resource.EVENT, Action.UPDATE, Scope.GLOBAL)
+    data object EventDeleteGlobal: Privilege(Resource.EVENT, Action.DELETE, Scope.GLOBAL)
 
+    companion object {
+        val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }
+    }
+}

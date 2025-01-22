@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.app.racePropertiesHasNamedParticipant.control
+package de.lambda9.ready2race.backend.app.raceProperties.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.RacePropertiesHasNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_PROPERTIES_HAS_NAMED_PARTICIPANT

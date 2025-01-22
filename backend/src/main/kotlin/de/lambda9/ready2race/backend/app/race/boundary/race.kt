@@ -19,7 +19,7 @@ fun Route.race() {
             val params = call.receive<RaceRequest>()
             call.respondKIO {
                 KIO.comprehension {
-                    val (user, _) = !authenticate(Privilege.EVENT_EDIT)
+                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
                     RaceService.addRace(params, user.id!!, eventId)
                 }
@@ -29,7 +29,7 @@ fun Route.race() {
         get {
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.EVENT_VIEW)
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
                     val params = !pagination<RaceWithPropertiesSort>()
                     RaceService.pageWithPropertiesByEvent(eventId, params)
@@ -42,7 +42,7 @@ fun Route.race() {
             get {
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.EVENT_VIEW)
+                        !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                         val raceId = !pathParam("raceId") { UUID.fromString(it) }
                         RaceService.getRaceWithPropertiesById(raceId)
                     }
@@ -53,7 +53,7 @@ fun Route.race() {
                 val params = call.receive<RaceRequest>()
                 call.respondKIO {
                     KIO.comprehension {
-                        val (user, _) = !authenticate(Privilege.EVENT_EDIT)
+                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceId = !pathParam("raceId") { UUID.fromString(it) }
                         RaceService.updateRace(params, user.id!!, raceId)
                     }
@@ -63,7 +63,7 @@ fun Route.race() {
             delete {
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.EVENT_EDIT)
+                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
                         val id = !pathParam("raceId") { UUID.fromString(it) }
                         RaceService.deleteRace(id)
                     }
