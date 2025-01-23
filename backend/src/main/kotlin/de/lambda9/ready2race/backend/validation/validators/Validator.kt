@@ -1,5 +1,6 @@
-package de.lambda9.ready2race.backend.validation
+package de.lambda9.ready2race.backend.validation.validators
 
+import de.lambda9.ready2race.backend.validation.StructuredValidationResult
 import kotlin.reflect.KProperty0
 
 fun interface Validator<T> {

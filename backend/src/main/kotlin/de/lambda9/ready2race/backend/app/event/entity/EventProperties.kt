@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.event.entity
 
 import de.lambda9.ready2race.backend.validation.StructuredValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import java.time.LocalDateTime
 
 data class EventProperties (
@@ -13,5 +15,8 @@ data class EventProperties (
     val paymentDueDate: LocalDateTime?,
     val invoicePrefix: String?,
 ): Validatable {
-    override fun validate(): StructuredValidationResult = StructuredValidationResult.Valid
+    override fun validate(): StructuredValidationResult =
+        StructuredValidationResult.allOf(
+            this::name.validate { notBlank },
+        )
 }
