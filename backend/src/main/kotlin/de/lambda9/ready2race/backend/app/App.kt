@@ -6,8 +6,6 @@ import de.lambda9.ready2race.backend.Config
 import de.lambda9.ready2race.backend.database.JooqQueryPrinter
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
-import de.lambda9.tailwind.jooq.config.DatabaseConfig
-import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
 import java.io.PrintWriter

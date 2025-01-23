@@ -12,7 +12,6 @@ import de.lambda9.ready2race.backend.http.ApiError
 import de.lambda9.ready2race.backend.http.ApiResponse
 import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.http.PaginationParameters
-import de.lambda9.ready2race.backend.plugins.logger
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail

@@ -1,10 +1,10 @@
 package de.lambda9.ready2race.backend.app.eventDay.entity
 
+import de.lambda9.ready2race.backend.plugins.StructuredValidationResult
 import de.lambda9.ready2race.backend.plugins.Validatable
-import io.ktor.server.plugins.requestvalidation.*
 
 data class EventDayRequest(
     val properties: EventDayProperties,
 ): Validatable {
-    override fun validate(): ValidationResult = ValidationResult.Valid // todo: test()
+    override fun validate(): StructuredValidationResult = StructuredValidationResult.Valid
 }

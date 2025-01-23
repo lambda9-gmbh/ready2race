@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.plugins
 
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
-import io.ktor.server.response.*
 
 fun Application.configureAdministration() {
     install(ShutDownUrl.ApplicationCallPlugin) {

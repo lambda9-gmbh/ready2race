@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.event.entity
 
+import de.lambda9.ready2race.backend.plugins.StructuredValidationResult
 import de.lambda9.ready2race.backend.plugins.Validatable
-import io.ktor.server.plugins.requestvalidation.*
 import java.time.LocalDateTime
 
 data class EventProperties (
@@ -13,5 +13,5 @@ data class EventProperties (
     val paymentDueDate: LocalDateTime?,
     val invoicePrefix: String?,
 ): Validatable {
-    override fun validate(): ValidationResult = ValidationResult.Valid
+    override fun validate(): StructuredValidationResult = StructuredValidationResult.Valid
 }
