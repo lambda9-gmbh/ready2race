@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.http
+package de.lambda9.ready2race.backend.responses
 
 import io.ktor.http.*
 

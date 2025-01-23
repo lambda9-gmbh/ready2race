@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.race.entity
 
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS
-import de.lambda9.ready2race.backend.http.Sortable
+import de.lambda9.ready2race.backend.pagination.Sortable
 import org.jooq.Field
 
 enum class RaceWithPropertiesSort : Sortable {

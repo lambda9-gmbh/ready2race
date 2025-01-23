@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.raceProperties.entity
 
-import de.lambda9.ready2race.backend.plugins.StructuredValidationResult
-import de.lambda9.ready2race.backend.plugins.Validatable
+import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.Validatable
 import java.math.BigDecimal
 import java.util.*
 

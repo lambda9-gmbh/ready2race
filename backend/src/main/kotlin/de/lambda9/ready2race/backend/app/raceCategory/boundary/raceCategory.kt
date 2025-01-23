@@ -1,9 +1,9 @@
 package de.lambda9.ready2race.backend.app.raceCategory.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.plugins.authenticate
-import de.lambda9.ready2race.backend.plugins.pathParam
-import de.lambda9.ready2race.backend.plugins.respondKIO
+import de.lambda9.ready2race.backend.requests.authenticate
+import de.lambda9.ready2race.backend.requests.pathParam
+import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.request.*
 import io.ktor.server.routing.*

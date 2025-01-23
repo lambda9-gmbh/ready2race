@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.app.race.entity
 
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesRequestDto
-import de.lambda9.ready2race.backend.plugins.StructuredValidationResult
-import de.lambda9.ready2race.backend.plugins.Validatable
+import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.Validatable
 import java.util.*
 
 data class RaceRequest (

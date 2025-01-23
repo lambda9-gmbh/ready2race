@@ -1,8 +1,9 @@
 package de.lambda9.ready2race.backend.app.auth.entity
 
-import de.lambda9.ready2race.backend.plugins.*
-import de.lambda9.ready2race.backend.plugins.Validators.Companion.allOf
-import de.lambda9.ready2race.backend.plugins.Validators.Companion.notBlank
+import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.ready2race.backend.validation.Validators.Companion.notBlank
+import de.lambda9.ready2race.backend.validation.validate
 
 data class LoginRequest(
     val email: String,
@@ -10,7 +11,7 @@ data class LoginRequest(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
-            this::email.validate { allOf(notBlank, notNull) },
+            this::email.validate { notBlank },
             this::password.validate { notBlank }
         )
 }

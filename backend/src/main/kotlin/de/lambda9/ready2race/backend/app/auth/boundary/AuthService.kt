@@ -8,9 +8,9 @@ import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
 import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.http.ApiError
-import de.lambda9.ready2race.backend.http.ApiResponse
-import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.responses.ApiResponse
+import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO

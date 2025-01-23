@@ -14,7 +14,6 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
-        swaggerUI(path = "openapi")
         route("/api") {
             auth()
             user()

@@ -48,12 +48,13 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module(env: JEnv) {
-    configureAdministration()
     configureKIO(env)
     configureHTTP(env.env.config.mode)
     configureSerialization()
+    configureSessions()
+    configureRequests()
+    configureResponses()
     configureRouting()
-    configureValidation()
 }
 
 private fun initializeApplication(env: JEnv) {

@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
-import de.lambda9.ready2race.backend.http.UserSession
-import de.lambda9.ready2race.backend.plugins.respondKIO
+import de.lambda9.ready2race.backend.responses.respondKIO
+import de.lambda9.ready2race.backend.sessions.UserSession
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*

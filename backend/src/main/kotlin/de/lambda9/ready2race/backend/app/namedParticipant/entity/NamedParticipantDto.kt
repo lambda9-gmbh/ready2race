@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.entity
 
-import de.lambda9.ready2race.backend.plugins.StructuredValidationResult
-import de.lambda9.ready2race.backend.plugins.Validatable
+import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.Validatable
 
 data class NamedParticipantDto(
     val name: String,
