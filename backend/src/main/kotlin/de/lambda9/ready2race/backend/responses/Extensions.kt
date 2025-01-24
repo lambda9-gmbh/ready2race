@@ -27,11 +27,7 @@ suspend fun ApplicationCall.respondKIO(
             apiError.headers.forEach { entry ->
                 response.headers.append(entry.key, entry.value)
             }
-            respond(apiError.status, mapOf(
-                "message" to apiError.message,
-                "details" to apiError.details,
-            )
-            )
+            respond(apiError.status, apiError)
         },
         onDefect = { defect ->
             logger.error(defect) { "An internal error occurred" }

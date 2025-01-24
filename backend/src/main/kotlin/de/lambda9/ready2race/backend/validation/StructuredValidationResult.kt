@@ -1,7 +1,9 @@
 package de.lambda9.ready2race.backend.validation
 
 import com.fasterxml.jackson.annotation.JsonValue
+import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.serialization.jsonMapper
+import io.ktor.http.*
 import io.ktor.server.plugins.requestvalidation.*
 
 sealed interface StructuredValidationResult {
@@ -17,12 +19,20 @@ sealed interface StructuredValidationResult {
         data class BadCollectionElements(val errorPositions: Map<Int, Invalid>) : Invalid
         data class PatternMismatch(val value: String, val pattern: Regex) : Invalid
 
-        data class AllOf(val errors: List<Invalid>) : Invalid
-        data class OneOf(val errors: List<Invalid>) : Invalid
+        data class AllOf(val allOf: List<Invalid>) : Invalid
+        data class OneOf(val oneOf: List<Invalid>) : Invalid
     }
 
     fun toValidationResult(): ValidationResult = when (this) {
-        is Invalid -> ValidationResult.Invalid(jsonMapper.writeValueAsString(this))
+        is Invalid -> ValidationResult.Invalid(
+            jsonMapper.writeValueAsString(
+                ApiError(
+                    status = HttpStatusCode.BadRequest,
+                    message = "Validation of request payload failed.",
+                    details = mapOf("errors" to this)
+                )
+            )
+        )
         Valid -> ValidationResult.Valid
     }
 
