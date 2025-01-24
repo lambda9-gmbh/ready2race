@@ -17,6 +17,6 @@ data class EventProperties (
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
-            this::name.validate { notBlank },
+            this::name validate notBlank,
         )
 }

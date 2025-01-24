@@ -10,5 +10,5 @@ data class NamedParticipantDto(
     val description: String?,
 ): Validatable {
     override fun validate(): StructuredValidationResult =
-        this::name.validate { notBlank }
+        this::name validate notBlank
 }

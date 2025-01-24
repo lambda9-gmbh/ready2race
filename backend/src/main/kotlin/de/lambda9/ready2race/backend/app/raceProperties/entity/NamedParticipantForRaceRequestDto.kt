@@ -16,9 +16,9 @@ data class NamedParticipantForRaceRequestDto(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
-            this::countMales.validate { notNegative },
-            this::countFemales.validate { notNegative },
-            this::countNonBinary.validate { notNegative },
-            this::countMixed.validate { notNegative },
+            this::countMales validate notNegative,
+            this::countFemales validate notNegative,
+            this::countNonBinary validate notNegative,
+            this::countMixed validate notNegative,
         )
 }

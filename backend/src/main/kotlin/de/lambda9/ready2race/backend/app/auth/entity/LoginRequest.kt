@@ -11,7 +11,7 @@ data class LoginRequest(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
-            this::email.validate { notBlank },
-            this::password.validate { notBlank }
+            this::email validate notBlank,
+            this::password validate notBlank,
         )
 }

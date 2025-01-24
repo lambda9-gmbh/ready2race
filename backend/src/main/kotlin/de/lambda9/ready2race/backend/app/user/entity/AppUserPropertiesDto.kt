@@ -13,8 +13,8 @@ data class AppUserPropertiesDto(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
-            this::firstname.validate { notBlank },
-            this::lastname.validate { notBlank },
-            this::email.validate { pattern(emailPattern) },
+            this::firstname validate notBlank,
+            this::lastname validate notBlank,
+            this::email validate pattern(emailPattern),
         )
 }
