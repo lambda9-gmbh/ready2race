@@ -45,7 +45,7 @@ object AuthService {
 
         val user = !AppUserRepo.getWithPrivilegesByEmail(request.email).orDie().onNullFail { AuthError.CredentialsIncorrect }
 
-        val credentialsOk = !PasswordUtilities.check(request.password ?: "", user.password!!)
+        val credentialsOk = !PasswordUtilities.check(request.password, user.password!!)
 
         if (credentialsOk) {
 

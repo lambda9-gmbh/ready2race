@@ -39,7 +39,7 @@ fun <T> ApplicationCall.pathParam(
     f: (String) -> T,
 ): App<RequestError, T> = KIO.effect {
     parameters[key]?.let(f)
-}.mapError { RequestError.ParameterUnparsable(key) }.onNullFail { RequestError.MissingRequiredParameter(key) }
+}.mapError { RequestError.ParameterUnparsable(key) }.onNullFail { RequestError.PathParameterUnknown(key) }
 
 fun ApplicationCall.pathParam(
     key: String,
@@ -60,7 +60,7 @@ fun <T> ApplicationCall.queryParam(
     key: String,
     f: (String) -> T,
 ): App<RequestError, T> =
-    optionalQueryParam(key, f).onNullFail { RequestError.MissingRequiredParameter(key) }
+    optionalQueryParam(key, f).onNullFail { RequestError.RequiredQueryParameterMissing(key) }
 
 fun ApplicationCall.queryParam(
     key: String,
@@ -74,11 +74,13 @@ inline fun <reified S> ApplicationCall.pagination(): App<RequestError, Paginatio
     val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
     val search = !optionalQueryParam("search")
 
-    if (limit < 1 || offset < 0) return@comprehension KIO.fail(RequestError.InvalidPagination)
-
-    KIO.ok(
-        PaginationParameters(
-            limit, offset, sort, search
+    if (limit < 1 || offset < 0) {
+        KIO.fail(RequestError.InvalidPagination)
+    } else {
+        KIO.ok(
+            PaginationParameters(
+                limit, offset, sort, search
+            )
         )
-    )
+    }
 }
