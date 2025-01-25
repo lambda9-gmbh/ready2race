@@ -6,6 +6,7 @@ import {client} from './api'
 import Config from './Config'
 import {muiTheme} from './theme'
 import {ThemeProvider} from '@mui/material'
+import {SnackbarProvider} from 'notistack'
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
@@ -19,7 +20,9 @@ function App() {
 
     return (
         <ThemeProvider theme={theme}>
-            <RouterProvider router={router} context={user}></RouterProvider>
+            <SnackbarProvider maxSnack={3} anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}>
+                <RouterProvider router={router} context={user}></RouterProvider>
+            </SnackbarProvider>
         </ThemeProvider>
     )
 }
