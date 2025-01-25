@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.validation.validators.Validators.selfValida
 import kotlin.reflect.KProperty0
 
 fun Collection<StructuredValidationResult>.allOf() = StructuredValidationResult.allOf(*this.toTypedArray())
-fun Collection<StructuredValidationResult>.oneOf() = StructuredValidationResult.oneOf(*this.toTypedArray())
+fun Collection<StructuredValidationResult>.anyOf() = StructuredValidationResult.anyOf(*this.toTypedArray())
 
 infix fun <V> KProperty0<V>.validate(validator: Validator<V?>) = when (val result = validator(this)) {
     StructuredValidationResult.Valid -> StructuredValidationResult.Valid

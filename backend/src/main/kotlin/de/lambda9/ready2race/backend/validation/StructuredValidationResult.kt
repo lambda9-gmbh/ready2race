@@ -20,7 +20,7 @@ sealed interface StructuredValidationResult {
         data class PatternMismatch(val value: String, val pattern: Regex) : Invalid
 
         data class AllOf(val allOf: List<Invalid>) : Invalid
-        data class OneOf(val oneOf: List<Invalid>) : Invalid
+        data class AnyOf(val anyOf: List<Invalid>) : Invalid
     }
 
     fun toValidationResult(): ValidationResult = when (this) {
@@ -37,9 +37,9 @@ sealed interface StructuredValidationResult {
     }
 
     companion object {
-        fun oneOf(vararg results: StructuredValidationResult) =
+        fun anyOf(vararg results: StructuredValidationResult) =
             if (results.none { it == Valid }) {
-                Invalid.OneOf(results.filterIsInstance<Invalid>())
+                Invalid.AnyOf(results.filterIsInstance<Invalid>())
             } else {
                 Valid
             }

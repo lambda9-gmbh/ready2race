@@ -16,8 +16,8 @@ object Validators {
     fun <T> allOf(vararg validators: Validator<T>) = Validator<T> { value ->
         validators.map { it(value) }.allOf()
     }
-    fun <T> oneOf(vararg validators: Validator<T>) = Validator<T> { value ->
-        validators.map { it(value) }.oneOf()
+    fun <T> anyOf(vararg validators: Validator<T>) = Validator<T> { value ->
+        validators.map { it(value) }.anyOf()
     }
 
     fun <T, C : Collection<T?>> collection(validator: Validator<T?>) = Validator<C?> { collection ->
