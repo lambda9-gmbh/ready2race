@@ -6,7 +6,14 @@ import de.lambda9.ready2race.backend.validation.validate
 
 data class EventDayRequest(
     val properties: EventDayProperties,
-): Validatable {
+) : Validatable {
     override fun validate(): StructuredValidationResult =
         this::properties.validate()
+
+    companion object {
+        val example
+            get() = EventDayRequest(
+                properties = EventDayProperties.example
+            )
+    }
 }

@@ -19,4 +19,14 @@ data class EventProperties (
         StructuredValidationResult.allOf(
             this::name validate notBlank,
         )
-}
+    companion object{
+        val example get() = EventProperties(
+            name = "Name",
+            description = "Description",
+            location = "Town",
+            registrationAvailableFrom = LocalDateTime.now(),
+            registrationAvailableTo = LocalDateTime.now().plusDays(7),
+            paymentDueDate = LocalDateTime.now().plusDays(8),
+            invoicePrefix = "Invoice-Prefix"
+        )
+    }}

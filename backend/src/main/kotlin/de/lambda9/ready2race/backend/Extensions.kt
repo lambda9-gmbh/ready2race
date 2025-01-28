@@ -16,3 +16,12 @@ fun Duration.beforeNow(): LocalDateTime =
     LocalDateTime.now().minusSeconds(this.inWholeSeconds)
 
 fun accessConfig(): KIO<JEnv, Nothing, Config> = KIO.access<JEnv>().map { it.env.config }
+
+fun <R, E : E1, E1, A> KIO<R, E, A>.failOn(predicate: (A) -> Boolean, error: () -> E1): KIO<R, E1, Unit> =
+    KIO.failOnM(this.map { predicate(it) }, error)
+
+fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnTrue(error: () -> E1): KIO<R, E1, Unit> =
+    this.failOn(predicate = { it }, error)
+
+fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnFalse(error: () -> E1): KIO<R, E1, Unit> =
+    this.failOn(predicate = { !it }, error)

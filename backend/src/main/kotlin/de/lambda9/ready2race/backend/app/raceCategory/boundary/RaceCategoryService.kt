@@ -3,13 +3,17 @@ package de.lambda9.ready2race.backend.app.raceCategory.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
-import de.lambda9.ready2race.backend.database.generated.tables.records.RaceCategoryRecord
+import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDtoList
+import de.lambda9.ready2race.backend.app.raceCategory.control.record
+import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
+import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*
+import java.util.UUID
 
 object RaceCategoryService {
 
@@ -25,39 +29,40 @@ object RaceCategoryService {
     }
 
     fun addRaceCategory(
-        request: String
-    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
-        RaceCategoryRepo.create(
-            RaceCategoryRecord(
-                name = request
-            )
-        )
-        noData
+        request: RaceCategoryDto
+    ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+        val raceCategoryId = !RaceCategoryRepo.create(request.record()).orDie()
+        KIO.ok(ApiResponse.Created(raceCategoryId))
     }
 
-    fun getRaceCategoryList(): App<Nothing, ApiResponse.Dto<List<String>>> = KIO.comprehension {
+    fun getRaceCategoryList(): App<Nothing, ApiResponse.Dto<List<RaceCategoryDto>>> = KIO.comprehension {
         val raceCategoryList = !RaceCategoryRepo.getMany().orDie()
 
-        KIO.ok(ApiResponse.Dto(raceCategoryList))
+        raceCategoryList.raceCategoryDtoList().map{ ApiResponse.Dto(it) }
     }
 
-    // updates in the RaceProperties with "on cascade update" -- todo: should there also be "on cascade set null"?
+
     fun updateRaceCategory(
-        prevName: String,
-        newName: String
+        request: RaceCategoryDto,
+        raceCategoryId: UUID
     ): App<RaceCategoryError, ApiResponse.NoData> = KIO.comprehension {
-        !RaceCategoryRepo.update(prevName) {
-            name = newName
-        }.orDie()
+        !RaceCategoryRepo.update(raceCategoryId) {
+            name = request.name
+            description = request.description
+        }.orDie().failOnFalse { RaceCategoryError.RaceCategoryNotFound }
 
         noData
     }
 
     fun deleteRaceCategory(
-        name: String
+        raceCategoryId: UUID
     ): App<RaceCategoryError, ApiResponse.NoData> = KIO.comprehension {
-        RaceCategoryRepo.delete(name)
-        noData
+        val deleted = !RaceCategoryRepo.delete(raceCategoryId).orDie()
+        if(deleted < 1) {
+            KIO.fail(RaceCategoryError.RaceCategoryNotFound)
+        } else{
+            noData
+        }
     }
 
 }

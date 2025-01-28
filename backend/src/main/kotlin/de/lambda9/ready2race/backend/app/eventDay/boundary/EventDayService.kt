@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.record
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
+import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -60,7 +61,7 @@ object EventDayService {
         }
     }
 
-    fun getEventDayById(
+    fun getEventDay(
         eventDayId: UUID
     ): App<EventDayError, ApiResponse> = KIO.comprehension {
         val eventDay = !EventDayRepo.getEventDay(eventDayId).orDie().onNullFail { EventDayError.EventDayNotFound }
@@ -78,7 +79,7 @@ object EventDayService {
             description = request.properties.description
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie()
+        }.orDie().failOnFalse { EventDayError.EventDayNotFound }
 
         noData
     }

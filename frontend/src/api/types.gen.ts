@@ -87,10 +87,9 @@ export type LoginResponse = {
 export type NamedParticipantDto = {
     name: string
     description?: string
-    required: boolean
 }
 
-export type NamedParticipantWithCountDto = {
+export type NamedParticipantForRaceDto = {
     name: string
     description?: string
     required: boolean
@@ -142,10 +141,15 @@ export type Privilege =
     | 'EVENT_EDIT'
     | 'EVENT_VIEW'
 
+export type RaceCategoryDto = {
+    name: string
+    description?: string
+}
+
 export type RaceDto = {
     id: string
     event: string
-    raceProperties: RacePropertiesWithNamedParticipantListDto
+    raceProperties: RacePropertiesDto
     template?: string
 }
 
@@ -160,26 +164,13 @@ export type RacePropertiesDto = {
     countMixed: number
     participationFee: number
     rentalFee: number
-    raceCategory?: string
-}
-
-export type RacePropertiesHasNamedParticipantDto = {
-    namedParticipant: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-}
-
-export type RacePropertiesWithNamedParticipantListDto = {
-    raceProperties: RacePropertiesDto
-    namedParticipantList: Array<NamedParticipantWithCountDto>
+    raceCategory?: RaceCategoryDto
+    namedParticipants: Array<NamedParticipantForRaceDto>
 }
 
 export type RaceRequest = {
     raceProperties: RacePropertiesDto
     template?: string
-    namedParticipantList: Array<RacePropertiesHasNamedParticipantDto>
 }
 
 export type UserLoginData = {
@@ -353,7 +344,7 @@ export type AddNamedParticipantData = {
     body: NamedParticipantDto
 }
 
-export type AddNamedParticipantResponse = void
+export type AddNamedParticipantResponse = string
 
 export type AddNamedParticipantError = string
 
@@ -374,14 +365,14 @@ export type DeleteNamedParticipantResponse = void
 export type DeleteNamedParticipantError = string
 
 export type AddRaceCategoryData = {
-    body: string
+    body: RaceCategoryDto
 }
 
-export type AddRaceCategoryResponse = void
+export type AddRaceCategoryResponse = string
 
 export type AddRaceCategoryError = string
 
-export type GetRaceCategoryResponse = Array<string>
+export type GetRaceCategoryResponse = Array<RaceCategoryDto>
 
 export type GetRaceCategoryError = string
 

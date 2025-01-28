@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.race.boundary.race
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
+import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.request.*
@@ -18,7 +19,7 @@ fun Route.event() {
     route("/event") {
 
         post {
-            val params = call.receive<EventRequest>()
+            val params = call.receiveV(EventRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
@@ -47,13 +48,13 @@ fun Route.event() {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                         val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.getEventById(id)
+                        EventService.getEvent(id)
                     }
                 }
             }
 
             put {
-                val params = call.receive<EventRequest>()
+                val params = call.receiveV(EventRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)

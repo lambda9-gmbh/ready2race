@@ -11,4 +11,11 @@ data class RaceCategoryDto(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         this::name validate notBlank
+
+    companion object{
+        val example get() = RaceCategoryDto(
+            name = "Name",
+            description = "Description",
+        )
+    }
 }

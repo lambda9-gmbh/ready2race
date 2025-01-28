@@ -8,7 +8,7 @@ import java.util.*
 
 object RacePropertiesHasNamedParticipantRepo {
 
-    fun createMany(
+    fun create(
         records: List<RacePropertiesHasNamedParticipantRecord>
     ): JIO<Int> = Jooq.query {
         batchInsert(records)

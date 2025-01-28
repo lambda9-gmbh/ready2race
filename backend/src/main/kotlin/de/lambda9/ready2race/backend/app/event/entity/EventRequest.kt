@@ -9,4 +9,10 @@ data class EventRequest(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         this::properties.validate()
+
+    companion object{
+        val example get() = EventRequest(
+            properties = EventProperties.example
+        )
+    }
 }

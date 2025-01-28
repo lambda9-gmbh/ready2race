@@ -14,9 +14,9 @@ import {useFetch} from '../utils/hooks.ts'
 
 const EventPage = () => {
 
-    const testEventId = "c96d6d61-57d3-47a4-b411-83c7394bdd69"
-    const testEventDayId = "ba19553d-bacf-4514-917d-9c1592796208"
-    const testRaceId = "todo"
+    const testEventId = "684fe2e4-3237-43e3-a2ec-bffd9ae67407"
+    const testEventDayId = "2ceb8a2c-368b-4876-b060-bee69e34b0a2"
+    const testRaceId = "125c3be2-a140-42b1-ad2a-7ba8b0506109"
 
     async function onAddEvent() {
         const {data, error} = await addEvent({

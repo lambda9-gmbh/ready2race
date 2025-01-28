@@ -21,4 +21,15 @@ data class NamedParticipantForRaceRequestDto(
             this::countNonBinary validate notNegative,
             this::countMixed validate notNegative,
         )
+
+    companion object{
+        val example get() = NamedParticipantForRaceRequestDto(
+            namedParticipant = UUID.randomUUID(),
+            required = true,
+            countMales = 0,
+            countFemales = 0,
+            countNonBinary = 0,
+            countMixed = 1,
+        )
+    }
 }

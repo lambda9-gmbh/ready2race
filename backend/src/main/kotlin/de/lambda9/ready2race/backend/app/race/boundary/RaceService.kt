@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.record
+import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -43,7 +44,7 @@ object RaceService {
 
         val raceId = !RaceRepo.create(request.record(userId, eventId)).orDie()
         val racePropertiesId = !RacePropertiesRepo.create(request.raceProperties.record(raceId, null)).orDie()
-        RacePropertiesHasNamedParticipantRepo.createMany(request.raceProperties.namedParticipants.map { it.record(racePropertiesId) })
+        !RacePropertiesHasNamedParticipantRepo.create(request.raceProperties.namedParticipants.map { it.record(racePropertiesId) }).orDie()
 
         KIO.ok(ApiResponse.Created(raceId))
     }
@@ -63,7 +64,7 @@ object RaceService {
         }
     }
 
-    fun getRaceWithPropertiesById(
+    fun getRaceWithProperties(
         raceId: UUID
     ): App<RaceError, ApiResponse> = KIO.comprehension {
         val race = !RaceRepo.getWithProperties(raceId).orDie().onNullFail { RaceError.RaceNotFound }
@@ -80,7 +81,7 @@ object RaceService {
             template = request.template
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie()
+        }.orDie().failOnFalse { RaceError.RaceNotFound }
 
         !RacePropertiesRepo.updateByRaceOrTemplate(raceId) {
             identifier = request.raceProperties.identifier
@@ -94,14 +95,14 @@ object RaceService {
             participationFee = request.raceProperties.participationFee
             rentalFee = request.raceProperties.rentalFee
             raceCategory = request.raceProperties.raceCategory
-        }.orDie()
+        }.orDie().failOnFalse { RaceError.RacePropertiesNotFound }
 
-        // todo: can the racePropertiesID be returned by the prev. method?
+
         val racePropertiesId = !RacePropertiesRepo.getIdByRaceId(raceId).orDie().onNullFail { RaceError.RacePropertiesNotFound }
 
         // delete and re-add the named participant entries
         !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
-        RacePropertiesHasNamedParticipantRepo.createMany(request.raceProperties.namedParticipants.map { it.record(racePropertiesId) })
+        !RacePropertiesHasNamedParticipantRepo.create(request.raceProperties.namedParticipants.map { it.record(racePropertiesId) }).orDie()
 
         noData
     }

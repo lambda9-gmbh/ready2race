@@ -1,20 +1,24 @@
 package de.lambda9.ready2race.backend.app.raceCategory.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pathParam
+import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import java.util.*
 
+// todo: Specific rights?
 fun Route.raceCategory() {
     route("/raceCategory") {
         post {
-            val params = call.receive<String>()
+            val params = call.receiveV(RaceCategoryDto.example)
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)// todo: Other rights?
+                    !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     RaceCategoryService.addRaceCategory(params)
                 }
             }
@@ -23,7 +27,7 @@ fun Route.raceCategory() {
         get {
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT) // todo: Other rights?
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     RaceCategoryService.getRaceCategoryList()
                 }
             }
@@ -31,12 +35,12 @@ fun Route.raceCategory() {
 
         route("/{raceCategoryId}") {
             put{
-                val params = call.receive<String>()
+                val params = call.receiveV(RaceCategoryDto.example)
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT) // todo: Other rights?
-                        val prevName = !pathParam("raceCategoryId") { it }
-                        RaceCategoryService.updateRaceCategory(prevName, params)
+                        !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                        val raceCategoryId = !pathParam("raceCategoryId") { UUID.fromString(it) }
+                        RaceCategoryService.updateRaceCategory(params, raceCategoryId)
                     }
                 }
             }
@@ -44,9 +48,9 @@ fun Route.raceCategory() {
             delete {
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT) // todo: Other rights?
-                        val prevName = !pathParam("name") { it }
-                        RaceCategoryService.deleteRaceCategory(prevName)
+                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                        val raceCategoryId = !pathParam("raceCategoryId") { UUID.fromString(it) }
+                        RaceCategoryService.deleteRaceCategory(raceCategoryId)
                     }
                 }
             }

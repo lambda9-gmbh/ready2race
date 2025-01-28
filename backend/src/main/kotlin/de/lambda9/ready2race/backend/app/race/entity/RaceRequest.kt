@@ -12,4 +12,12 @@ data class RaceRequest (
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         this::raceProperties.validate()
+
+    companion object{
+        val example get() = RaceRequest(
+            raceProperties = RacePropertiesRequestDto.example,
+            template = UUID.randomUUID(),
+        )
+
+    }
 }

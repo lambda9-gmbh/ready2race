@@ -281,7 +281,7 @@ export const updateNamedParticipant = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/namedParticipant/{name}',
+        url: '/namedParticipant/{namedParticipantId}',
     })
 }
 
@@ -294,7 +294,7 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/namedParticipant/{name}',
+        url: '/namedParticipant/{namedParticipantId}',
     })
 }
 
@@ -333,7 +333,7 @@ export const updateRaceCategory = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/raceCategory/{name}',
+        url: '/raceCategory/{raceCategoryId}',
     })
 }
 
@@ -346,6 +346,6 @@ export const deleteRaceCategory = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/raceCategory/{name}',
+        url: '/raceCategory/{raceCategoryId}',
     })
 }

@@ -59,12 +59,7 @@ paths:
               $ref: '#/components/schemas/EventRequest'
       responses:
         201:
-          description: Event successfully created, returns event id
-          content:
-            text/plain:
-              schema:
-                type: string
-                format: uuid
+          $ref: '#/components/responses/201'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -148,12 +143,7 @@ paths:
               $ref: '#/components/schemas/EventDayRequest'
       responses:
         201:
-          description: EventDay successfully created, returns event id
-          content:
-            text/plain:
-              schema:
-                type: string
-                format: uuid
+          $ref: '#/components/responses/201'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -244,12 +234,7 @@ paths:
               $ref: '#/components/schemas/RaceRequest'
       responses:
         201:
-          description: Race successfully created, returns event id
-          content:
-            text/plain:
-              schema:
-                type: string
-                format: uuid
+          $ref: '#/components/responses/201'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -332,8 +317,8 @@ paths:
             schema:
               $ref: '#/components/schemas/NamedParticipantDto'
       responses:
-        204:
-          description: NamedParticipant successfully created
+        201:
+          $ref: '#/components/responses/201'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -355,7 +340,7 @@ paths:
           $ref: '#/components/responses/401'
         500:
           $ref: '#/components/responses/500'
-  /namedParticipant/{name}:
+  /namedParticipant/{namedParticipantId}:
     put:
       operationId: updateNamedParticipant
       requestBody:
@@ -394,10 +379,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceCategory'
+              $ref: '#/components/schemas/RaceCategoryDto'
       responses:
-        204:
-          description: RaceCategory successfully created
+        201:
+          $ref: '#/components/responses/201'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -414,12 +399,12 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
+                  $ref: '#/components/schemas/RaceCategoryDto'
         401:
           $ref: '#/components/responses/401'
         500:
           $ref: '#/components/responses/500'
-  /raceCategory/{name}:
+  /raceCategory/{raceCategoryId}:
     put:
       operationId: updateRaceCategory
       requestBody:
@@ -494,6 +479,14 @@ components:
         type: string
 
   responses:
+
+    201:
+      description: Entity successfully created, returns the id
+      content:
+        application/json:
+          schema:
+            type: string
+            format: uuid
 
     204:
       description: No Content
@@ -778,16 +771,6 @@ components:
 
     # race
 
-    RaceCategory:
-      type: object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-
     RacePropertiesDto:
       type: object
       required:
@@ -799,6 +782,7 @@ components:
         - countMixed
         - participationFee
         - rentalFee
+        - namedParticipants
       properties:
         identifier:
           type: string
@@ -821,65 +805,12 @@ components:
         rentalFee:
           type: number
         raceCategory:
-          $ref: '#/components/schemas/RaceCategory'
-
-    RacePropertiesHasNamedParticipantDto:
-      type: object
-      required:
-        - namedParticipant
-        - countMales
-        - countFemales
-        - countNonBinary
-        - countMixed
-      properties:
-        namedParticipant:
-          type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
-
-    NamedParticipantWithCountDto:
-      type: object
-      required:
-        - name
-        - required
-        - countMales
-        - countFemales
-        - countNonBinary
-        - countMixed
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        required:
-          type: boolean
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
-
-    RacePropertiesWithNamedParticipantListDto:
-      type: object
-      required:
-        - raceProperties
-        - namedParticipantList
-      properties:
-        raceProperties:
-          $ref: '#/components/schemas/RacePropertiesDto'
-        namedParticipantList:
+          $ref: '#/components/schemas/RaceCategoryDto'
+        namedParticipants:
           type: array
           items:
-            $ref: '#/components/schemas/NamedParticipantWithCountDto'
+            $ref: '#/components/schemas/NamedParticipantForRaceDto'
+
 
     RaceDto:
       type: object
@@ -895,7 +826,7 @@ components:
           type: string
           format: uuid
         raceProperties:
-          $ref: '#/components/schemas/RacePropertiesWithNamedParticipantListDto'
+          $ref: '#/components/schemas/RacePropertiesDto'
         template:
           type: string
           format: uuid
@@ -912,10 +843,6 @@ components:
         template:
           type: string
           format: uuid
-        namedParticipantList:
-          type: array
-          items:
-            $ref: '#/components/schemas/RacePropertiesHasNamedParticipantDto'
 
     GetRacePageResponse:
       type:
@@ -948,7 +875,22 @@ components:
         object
       required:
         - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+
+    NamedParticipantForRaceDto:
+      type: object
+      required:
+        - name
         - required
+        - countMales
+        - countFemales
+        - countNonBinary
+        - countMixed
       properties:
         name:
           type: string
@@ -956,3 +898,26 @@ components:
           type: string
         required:
           type: boolean
+        countMales:
+          type: integer
+        countFemales:
+          type: integer
+        countNonBinary:
+          type: integer
+        countMixed:
+          type: integer
+
+
+
+    # raceCategory
+
+    RaceCategoryDto:
+      type:
+        object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string

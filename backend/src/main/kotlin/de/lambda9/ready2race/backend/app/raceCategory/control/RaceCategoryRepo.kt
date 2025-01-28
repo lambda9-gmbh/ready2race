@@ -4,46 +4,48 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.RaceCateg
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_CATEGORY
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import java.util.UUID
 
 object RaceCategoryRepo {
     fun create(
         record: RaceCategoryRecord,
-    ): JIO<String> = Jooq.query {
+    ): JIO<UUID> = Jooq.query {
         with(RACE_CATEGORY){
             insertInto(this)
                 .set(record)
-                .returningResult(NAME)
+                .returningResult(ID)
                 .fetchOne()!!
                 .value1()!!
         }
     }
 
-    fun getMany(): JIO<List<String>> = Jooq.query {
+    fun getMany(): JIO<List<RaceCategoryRecord>> = Jooq.query {
         with(RACE_CATEGORY) {
             selectFrom(this)
-                .fetchInto(String::class.java)
+                .fetch()
         }
     }
 
     fun update(
-        prevName: String,
+        raceCategoryId: UUID,
         f: RaceCategoryRecord.() -> Unit
-    ): JIO<Unit> = Jooq.query {
+    ): JIO<Boolean> = Jooq.query {
         with(RACE_CATEGORY) {
-            selectFrom(this)
-                .where(NAME.eq(prevName))
-                .fetchOne()
-                ?.apply(f)
-                ?.update()
+            (selectFrom(this)
+                .where(ID.eq(raceCategoryId))
+                .fetchOne() ?: return@query false)
+                .apply(f)
+                .update()
         }
+        true
     }
 
     fun delete(
-        name: String
+        raceCategoryId: UUID
     ): JIO<Int> = Jooq.query {
         with(RACE_CATEGORY){
             deleteFrom(this)
-                .where(NAME.eq(name))
+                .where(ID.eq(raceCategoryId))
                 .execute()
         }
     }

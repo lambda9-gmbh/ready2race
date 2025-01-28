@@ -65,14 +65,15 @@ object RaceRepo {
     fun update(
         id: UUID,
         f: RaceRecord.() -> Unit
-    ): JIO<Unit> = Jooq.query {
+    ): JIO<Boolean> = Jooq.query {
         with(RACE){
-            selectFrom(this)
+            (selectFrom(this)
                 .where(ID.eq(id))
-                .fetchOne()
-                ?.apply(f)
-                ?.update()
+                .fetchOne() ?: return@query false)
+                .apply(f)
+                .update()
         }
+        true
     }
 
     fun delete(

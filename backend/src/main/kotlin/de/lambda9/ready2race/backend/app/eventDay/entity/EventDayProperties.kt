@@ -10,4 +10,12 @@ data class EventDayProperties(
     val description: String?,
 ): Validatable {
     override fun validate(): StructuredValidationResult = StructuredValidationResult.Valid
+
+    companion object{
+        val example get() = EventDayProperties(
+            date = LocalDate.now(),
+            name = "Name",
+            description = "Description",
+        )
+    }
 }

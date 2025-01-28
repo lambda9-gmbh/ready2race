@@ -6,12 +6,15 @@ import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipa
 import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
 import de.lambda9.ready2race.backend.app.namedParticipant.control.record
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
+import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.responses.logger
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*
+import java.util.UUID
 
 object NamedParticipantService {
 
@@ -28,9 +31,9 @@ object NamedParticipantService {
 
     fun addNamedParticipant(
         request: NamedParticipantDto
-    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
-        NamedParticipantRepo.create(request.record())
-        noData
+    ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+        val namedParticipantId = !NamedParticipantRepo.create(request.record()).orDie()
+        KIO.ok(ApiResponse.Created(namedParticipantId))
     }
 
 
@@ -42,20 +45,20 @@ object NamedParticipantService {
 
     fun updateNamedParticipant(
         request: NamedParticipantDto,
-        prevName: String
+        namedParticipantId: UUID
     ): App<NamedParticipantError, ApiResponse.NoData> = KIO.comprehension {
-        !NamedParticipantRepo.update(prevName) {
+        !NamedParticipantRepo.update(namedParticipantId) {
             name = request.name
             description = request.description
-        }.orDie()
+        }.orDie().failOnFalse { NamedParticipantError.NamedParticipantNotFound }
 
         noData
     }
 
     fun deleteNamedParticipant(
-        prevName: String,
+        namedParticipantId: UUID,
     ): App<NamedParticipantError, ApiResponse.NoData> = KIO.comprehension {
-        val deleted = !NamedParticipantRepo.delete(prevName).orDie()
+        val deleted = !NamedParticipantRepo.delete(namedParticipantId).orDie()
 
         if (deleted < 1) {
             KIO.fail(NamedParticipantError.NamedParticipantNotFound)

@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
+import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.request.*
@@ -16,7 +17,7 @@ fun Route.race() {
     route("/race") {
 
         post {
-            val params = call.receive<RaceRequest>()
+            val params = call.receiveV(RaceRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
@@ -44,13 +45,13 @@ fun Route.race() {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                         val raceId = !pathParam("raceId") { UUID.fromString(it) }
-                        RaceService.getRaceWithPropertiesById(raceId)
+                        RaceService.getRaceWithProperties(raceId)
                     }
                 }
             }
 
             put {
-                val params = call.receive<RaceRequest>()
+                val params = call.receiveV(RaceRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)

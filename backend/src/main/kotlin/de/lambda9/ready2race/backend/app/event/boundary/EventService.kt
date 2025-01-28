@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.event.control.record
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
+import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -53,7 +54,7 @@ object EventService {
         }
     }
 
-    fun getEventById(
+    fun getEvent(
         id: UUID
     ): App<EventError, ApiResponse> = KIO.comprehension {
         val event = !EventRepo.getEvent(id).orDie().onNullFail { EventError.EventNotFound }
@@ -75,7 +76,7 @@ object EventService {
             invoicePrefix = request.properties.invoicePrefix
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie()
+        }.orDie().failOnFalse { EventError.EventNotFound }
 
         noData
     }

@@ -4,16 +4,17 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.NamedPart
 import de.lambda9.ready2race.backend.database.generated.tables.references.NAMED_PARTICIPANT
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import java.util.*
 
 object NamedParticipantRepo {
 
     fun create(
         record: NamedParticipantRecord
-    ): JIO<String> = Jooq.query {
+    ): JIO<UUID> = Jooq.query {
         with(NAMED_PARTICIPANT) {
             insertInto(this)
                 .set(record)
-                .returningResult(NAME)
+                .returningResult(ID)
                 .fetchOne()!!
                 .value1()!!
         }
@@ -27,24 +28,25 @@ object NamedParticipantRepo {
     }
 
     fun update(
-        prevName: String,
+        namedParticipantId: UUID,
         f: NamedParticipantRecord.() -> Unit
-    ): JIO<Unit> = Jooq.query {
+    ): JIO<Boolean> = Jooq.query {
         with(NAMED_PARTICIPANT) {
-            selectFrom(this)
-                .where(NAME.eq(prevName))
-                .fetchOne()
-                ?.apply(f)
-                ?.update()
+            (selectFrom(this)
+                .where(ID.eq(namedParticipantId))
+                .fetchOne() ?: return@query false)
+                .apply(f)
+                .update()
         }
+        true
     }
 
     fun delete(
-        name: String,
+        namedParticipantId: UUID,
     ): JIO<Int> = Jooq.query {
         with(NAMED_PARTICIPANT) {
             deleteFrom(this)
-                .where(NAME.eq(name))
+                .where(ID.eq(namedParticipantId))
                 .execute()
         }
     }
