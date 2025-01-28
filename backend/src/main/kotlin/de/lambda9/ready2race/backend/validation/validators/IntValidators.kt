@@ -10,4 +10,12 @@ object IntValidators {
             StructuredValidationResult.Valid
         }
     }
+
+    fun min(min: Int) = Validator<Int?> {
+        if (it != null && it < min) {
+            StructuredValidationResult.Invalid.Message { "is less than $min" }
+        } else {
+            StructuredValidationResult.Valid
+        }
+    }
 }

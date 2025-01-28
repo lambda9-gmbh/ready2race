@@ -11,10 +11,20 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.serialization.jsonMapper
 import de.lambda9.ready2race.backend.sessions.UserSession
+import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.sessions.*
+
+suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V): V =
+    runCatching { receive<V>() }.fold(
+        onSuccess = { it },
+        onFailure = { throw ExtendedBadRequestException(RequestError.BodyUnparsable(example)) }
+    )
 
 fun ApplicationCall.authenticate(
     action: Privilege.Action,
@@ -74,13 +84,11 @@ inline fun <reified S> ApplicationCall.pagination(): App<RequestError, Paginatio
     val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
     val search = !optionalQueryParam("search")
 
-    if (limit < 1 || offset < 0) {
-        KIO.fail(RequestError.InvalidPagination)
-    } else {
-        KIO.ok(
-            PaginationParameters(
-                limit, offset, sort, search
-            )
-        )
-    }
+    StructuredValidationResult.allOf(
+        IntValidators.notNegative(offset),
+        IntValidators.min(1)(limit)
+    ).fold(
+        onValid = { KIO.ok(PaginationParameters(limit, offset, sort, search)) },
+        onInvalid = { KIO.fail(RequestError.InvalidPagination(it)) }
+    )
 }

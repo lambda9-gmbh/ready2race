@@ -1,5 +1,7 @@
 package de.lambda9.ready2race.backend.plugins
 
+import de.lambda9.ready2race.backend.requests.ExtendedBadRequestException
+import de.lambda9.ready2race.backend.responses.respondError
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -11,6 +13,9 @@ fun Application.configureResponses() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
             when(cause) {
+                is ExtendedBadRequestException -> {
+                    call.respondError(cause.requestError)
+                }
                 is BadRequestException -> {
                     call.respondText(text = "400: Could not parse payload to expected Type. Please make sure, no required fields are missing in your request body.", status = HttpStatusCode.BadRequest)
                 }

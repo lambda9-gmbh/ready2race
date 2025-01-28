@@ -23,6 +23,14 @@ sealed interface StructuredValidationResult {
         data class AnyOf(val anyOf: List<Invalid>) : Invalid
     }
 
+    fun <A> fold(
+        onValid: () -> A,
+        onInvalid: (Invalid) -> A,
+    ): A = when (this) {
+        is Invalid -> onInvalid(this)
+        Valid -> onValid()
+    }
+
     fun toValidationResult(): ValidationResult = when (this) {
         is Invalid -> ValidationResult.Invalid(
             jsonMapper.writeValueAsString(

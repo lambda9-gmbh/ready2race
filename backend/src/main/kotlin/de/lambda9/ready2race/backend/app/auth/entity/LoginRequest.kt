@@ -14,4 +14,11 @@ data class LoginRequest(
             this::email validate notBlank,
             this::password validate notBlank,
         )
+
+    companion object {
+        val example get() = LoginRequest(
+            email = "john.doe@example.com",
+            password = "1$=jj9kTp",
+        )
+    }
 }
