@@ -14,7 +14,6 @@ import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.plugins.*
-import de.lambda9.ready2race.backend.schedule.Policy
 import de.lambda9.ready2race.backend.schedule.Scheduler
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
@@ -30,7 +29,6 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
-import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
