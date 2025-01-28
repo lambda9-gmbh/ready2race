@@ -13,8 +13,9 @@ import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
-import de.lambda9.ready2race.backend.schedule.schedulingJobs
 import de.lambda9.ready2race.backend.plugins.*
+import de.lambda9.ready2race.backend.schedule.Policy
+import de.lambda9.ready2race.backend.schedule.Scheduler
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
@@ -22,13 +23,18 @@ import de.lambda9.tailwind.core.extensions.exit.getOrNullLogError
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.seconds
 
-fun main(args: Array<String>) {
+private val logger = KotlinLogging.logger {}
+
+fun main(args: Array<String>): Unit = runBlocking {
     val config = dotenv {
         filename = args.getOrNull(0) ?: ".env"
     }.parseConfig()
@@ -41,7 +47,7 @@ fun main(args: Array<String>) {
     ).migrate()
 
     initializeApplication(env)
-    schedulingJobs(env)
+    scheduleJobs(env)
 
     embeddedServer(Netty, port = config.http.port, host = config.http.host, module = { module(env) })
         .start(wait = true)
@@ -129,4 +135,16 @@ private fun initializeApplication(env: JEnv) {
         .transact()
         .unsafeRunSync(env)
         .getOrNullLogError { }
+}
+
+private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
+    launch(Dispatchers.IO) {
+        supervisorScope {
+            logger.info { "Scheduling jobs ..." }
+
+            // add jobs with schedule function
+
+            logger.info { "Scheduling done."}
+        }
+    }
 }
