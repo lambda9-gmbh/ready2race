@@ -111,7 +111,7 @@ export type Pagination = {
     total: number
     limit: number
     offset: number
-    sort: Array<unknown>
+    sort: Array<Order>
 }
 
 /**
@@ -265,6 +265,10 @@ export type GetEventDaysData = {
          * Result offset for pagination
          */
         offset: number
+        /**
+         * Optional parameter that filters by raceId
+         */
+        raceId?: string
         /**
          * Filter result with space-separated search terms for pagination
          */

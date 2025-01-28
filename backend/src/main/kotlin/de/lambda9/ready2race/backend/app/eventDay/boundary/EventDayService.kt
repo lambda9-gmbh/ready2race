@@ -12,7 +12,6 @@ import de.lambda9.ready2race.backend.http.ApiError
 import de.lambda9.ready2race.backend.http.ApiResponse
 import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.http.PaginationParameters
-import de.lambda9.ready2race.backend.plugins.logger
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -42,10 +41,16 @@ object EventDayService {
 
     fun pageByEvent(
         eventId: UUID,
-        params: PaginationParameters<EventDaySort>
+        params: PaginationParameters<EventDaySort>,
+        raceId: UUID?
     ): App<Nothing, ApiResponse.Page<EventDayDto, EventDaySort>> = KIO.comprehension {
-        val total = !EventDayRepo.countByEvent(eventId, params.search).orDie()
-        val page = !EventDayRepo.pageByEvent(eventId, params).orDie()
+        val total =
+            if (raceId == null) !EventDayRepo.countByEvent(eventId, params.search).orDie()
+            else !EventDayRepo.countByEventAndRace(eventId, raceId, params.search).orDie()
+
+        val page =
+            if (raceId == null) !EventDayRepo.pageByEvent(eventId, params).orDie()
+            else !EventDayRepo.pageByEventAndRace(eventId, raceId, params).orDie()
 
         page.forEachM { it.eventDayDto() }.map {
             ApiResponse.Page(

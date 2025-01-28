@@ -167,6 +167,13 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - name: raceId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Optional parameter that filters by raceId
+          required: false
       responses:
         200:
           description: EventDay page successfully retrieved
@@ -387,7 +394,7 @@ paths:
         content:
           application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/RaceCategory'
       responses:
         204:
           description: RaceCategory successfully created
@@ -771,6 +778,16 @@ components:
 
     # race
 
+    RaceCategory:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
     RacePropertiesDto:
       type: object
       required:
@@ -804,7 +821,7 @@ components:
         rentalFee:
           type: number
         raceCategory:
-          type: string
+          $ref: '#/components/schemas/RaceCategory'
 
     RacePropertiesHasNamedParticipantDto:
       type: object

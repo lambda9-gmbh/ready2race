@@ -1,21 +1,21 @@
 import {
     addEvent,
     addEventDay, addRace,
-    deleteEvent, deleteEventDay,
+    deleteEvent, deleteEventDay, deleteRace,
     getEvent,
     getEventDay,
     getEventDays,
     getEvents,
     updateEvent,
-    updateEventDay
+    updateEventDay, updateRace
 } from '../api'
 import {Box} from '@mui/material'
 import {useFetch} from '../utils/hooks.ts'
 
 const EventPage = () => {
 
-    const testEventId = "d3c761b9-33f9-4754-928e-18f9727f2b87"
-    const testEventDayId = "421e5e59-088d-4eb0-a7bf-c945ac3f350e"
+    const testEventId = "c96d6d61-57d3-47a4-b411-83c7394bdd69"
+    const testEventDayId = "ba19553d-bacf-4514-917d-9c1592796208"
     const testRaceId = "todo"
 
     async function onAddEvent() {
@@ -141,7 +141,7 @@ const EventPage = () => {
         signal =>
             getEventDays({
                 signal,
-                query: {limit: 20, offset: 0, sort: initialEventDaySort},
+                query: {limit: 20, offset: 0, sort: initialEventDaySort, raceId: testRaceId},
                 path: {eventId: testEventId},
             }),
         {
@@ -240,7 +240,7 @@ const EventPage = () => {
         console.log(`Race created (${data})`)
     }
 
-    const initialEventDaySort = '[{"field": "DATE", "direction": "ASC"}]'
+    const initialRaceSort = '[{"field": "TODO", "direction": "ASC"}]'
     useFetch(
         signal =>
             getEventDays({
@@ -272,8 +272,8 @@ const EventPage = () => {
         },
     )
 
-    async function onUpdateEventDay() {
-        const {data, error} = await updateEventDay({
+    async function onUpdateRace() {
+        const {data, error} = await updateRace({
             path: {eventId: testEventId, eventDayId: testEventDayId},
             body: {
                 properties: {
@@ -290,8 +290,8 @@ const EventPage = () => {
         console.log(`Event Day updated`)
     }
 
-    async function onDeleteEventDay() {
-        const {error} = await deleteEventDay({
+    async function onDeleteRace() {
+        const {error} = await deleteRace({
             path: {eventId: testEventId, eventDayId: testEventDayId},
         })
         if (error) {
