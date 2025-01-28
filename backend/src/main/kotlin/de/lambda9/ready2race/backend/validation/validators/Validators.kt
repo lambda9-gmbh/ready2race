@@ -21,10 +21,10 @@ object Validators {
     }
 
     fun <T, C : Collection<T?>> collection(validator: Validator<T?>) = Validator<C?> { collection ->
-        collection?.mapIndexed { index, item -> index to validator(item) }
-            ?.filterIsInstance<Pair<Int, StructuredValidationResult.Invalid>>()
+        (collection?.mapIndexed { index, item -> index to validator(item) }
+            ?.filter { it.second is StructuredValidationResult.Invalid } as List<Pair<Int, StructuredValidationResult.Invalid>>?)
             ?.takeIf { it.isNotEmpty() }
-            ?.let { StructuredValidationResult.Invalid.BadCollectionElements(it.toMap()) }
+            ?.let { StructuredValidationResult.Invalid.BadCollectionElements((it ).toMap()) }
             ?: StructuredValidationResult.Valid
     }
 
