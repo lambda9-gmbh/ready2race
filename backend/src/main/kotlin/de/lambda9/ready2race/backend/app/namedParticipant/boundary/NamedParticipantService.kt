@@ -6,9 +6,9 @@ import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipa
 import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
 import de.lambda9.ready2race.backend.app.namedParticipant.control.record
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
-import de.lambda9.ready2race.backend.http.ApiError
-import de.lambda9.ready2race.backend.http.ApiResponse
-import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.responses.ApiResponse
+import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*

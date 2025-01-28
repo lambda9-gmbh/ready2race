@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.user.entity
 
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
-import de.lambda9.ready2race.backend.http.Sortable
+import de.lambda9.ready2race.backend.pagination.Sortable
 import org.jooq.Field
 
 enum class AppUserWithRolesSort: Sortable {

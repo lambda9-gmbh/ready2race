@@ -1,6 +1,9 @@
-package de.lambda9.ready2race.backend.http
+package de.lambda9.ready2race.backend.responses
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.pagination.Pagination
+import de.lambda9.ready2race.backend.pagination.ResponsePage
+import de.lambda9.ready2race.backend.pagination.Sortable
 import io.ktor.http.*
 import java.util.*
 
@@ -18,7 +21,7 @@ sealed class ApiResponse(
     data class Page<T: Any, S: Sortable>(
         override val data: List<T>,
         override val pagination: Pagination<S>,
-    ): ApiResponse(), LimitedResult<T, S>
+    ): ApiResponse(), ResponsePage<T, S>
 
     data class File(
         val bytes: ByteArray,

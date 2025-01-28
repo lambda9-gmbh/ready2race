@@ -4,6 +4,10 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.plugins.*
+import de.lambda9.ready2race.backend.requests.authenticate
+import de.lambda9.ready2race.backend.requests.pagination
+import de.lambda9.ready2race.backend.requests.pathParam
+import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.request.*
 import io.ktor.server.routing.*

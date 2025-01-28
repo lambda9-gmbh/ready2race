@@ -2,10 +2,12 @@ import {useUser} from '../contexts/user/UserContext.ts'
 import {useState} from 'react'
 import {LoginRequest, userLogin} from '../api'
 import {useTranslation} from 'react-i18next'
+import {useFeedback} from '../utils/hooks.ts'
 
 const LoginPage = () => {
     const {login} = useUser()
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const [formData, setFormData] = useState<LoginRequest>({
         email: '',
@@ -19,8 +21,7 @@ const LoginPage = () => {
         if (data !== undefined) {
             login(data)
         } else {
-            console.log(error)
-            //TODO: error-handling
+            feedback.error(error)
         }
     }
 

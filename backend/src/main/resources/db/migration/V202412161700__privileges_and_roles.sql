@@ -40,3 +40,4 @@ create table app_user_has_role
 );
 
 create index on app_user_has_role (app_user);
+create index on app_user_has_role (role);

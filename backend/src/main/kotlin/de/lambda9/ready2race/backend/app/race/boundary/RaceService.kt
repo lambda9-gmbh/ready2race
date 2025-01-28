@@ -11,10 +11,10 @@ import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.record
-import de.lambda9.ready2race.backend.http.ApiError
-import de.lambda9.ready2race.backend.http.ApiResponse
-import de.lambda9.ready2race.backend.http.ApiResponse.Companion.noData
-import de.lambda9.ready2race.backend.http.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.responses.ApiResponse
+import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail

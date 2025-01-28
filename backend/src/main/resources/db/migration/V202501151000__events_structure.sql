@@ -64,6 +64,9 @@ create table event_day_has_race
     primary key (event_day, race)
 );
 
+create index on event_day_has_race (event_day);
+create index on event_day_has_race (race);
+
 create table race_category
 (
     id          uuid primary key   default gen_random_uuid(),
@@ -120,3 +123,5 @@ create table race_properties_has_named_participant
     primary key (race_properties, named_participant),
     constraint chk_count_sum_greater_0 check (count_males + count_females + count_non_binary + count_mixed > 0)
 );
+
+create index on race_properties_has_named_participant (race_properties);

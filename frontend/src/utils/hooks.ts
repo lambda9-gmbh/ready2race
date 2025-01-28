@@ -1,5 +1,6 @@
 import {RequestResult} from '@hey-api/client-fetch'
 import {DependencyList, useEffect, useState} from 'react'
+import {useSnackbar} from 'notistack'
 
 type UseFetchOptions<T, E> = {
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
@@ -81,4 +82,15 @@ export const useFetch = <T, E>(
     }, [...(deps ?? [])])
 
     return result
+}
+
+export const useFeedback = () => {
+    const {enqueueSnackbar} = useSnackbar()
+
+    return {
+        success: (msg: string) => enqueueSnackbar(msg, {variant: 'success'}),
+        warning: (msg: string) => enqueueSnackbar(msg, {variant: 'warning'}),
+        error: (msg: string) => enqueueSnackbar(msg, {variant: 'error'}),
+        info: (msg: string) => enqueueSnackbar(msg, {variant: 'info'}),
+    }
 }
