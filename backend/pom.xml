@@ -379,7 +379,7 @@
                             <directory>target/generated-sources/jooq</directory>
                         </target>
                         <generate>
-                            <pojos>true</pojos>
+                            <pojos>false</pojos>
                             <pojosAsKotlinDataClasses>true</pojosAsKotlinDataClasses>
                             <daos>false</daos>
                             <validationAnnotations>false</validationAnnotations>

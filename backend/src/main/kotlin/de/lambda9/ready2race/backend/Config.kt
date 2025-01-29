@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend
 
 import io.github.cdimascio.dotenv.Dotenv
 import org.simplejavamail.api.mailer.config.TransportStrategy
+import org.simplejavamail.mailer.MailerBuilder
 
 data class Config(
     val mode: Mode,
@@ -51,7 +52,22 @@ data class Config(
         val user: String,
         val password: String,
         val strategy: TransportStrategy,
-    )
+        val from: From,
+        val replyTo: String?
+    ) {
+        data class From(
+            val name: String?,
+            val address: String,
+        )
+
+        fun createMailer() = MailerBuilder
+            .withSMTPServerHost(host)
+            .withSMTPServerPort(port)
+            .withSMTPServerUsername(user)
+            .withSMTPServerPassword(password)
+            .withTransportStrategy(strategy)
+            .buildMailer()
+    }
 
     data class Security(
         val pepper: String
@@ -81,6 +97,11 @@ data class Config(
                 user = get("SMTP_USER"),
                 password = get("SMTP_PASSWORD"),
                 strategy = TransportStrategy.valueOf(get("SMTP_STRATEGY")),
+                from = Smtp.From(
+                    name = get("SMTP_FROM_NAME", null),
+                    address = get("SMTP_FROM_ADDRESS")
+                ),
+                replyTo = get("SMTP_REPLY", null),
             ),
             security = Security(
                 pepper = get("SECURITY_PEPPER"),

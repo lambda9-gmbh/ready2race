@@ -13,16 +13,10 @@ sealed class Privilege(
         DELETE
     }
 
-    enum class Scope {
-        OWN,
-        GROUP,
-        GLOBAL;
-
-        val level get () = when (this) {
-            OWN -> 1
-            GROUP -> 2
-            GLOBAL -> 3
-        }
+    enum class Scope(val level: Int) {
+        OWN(1),
+        GROUP(2),
+        GLOBAL(3);
     }
 
     enum class Resource {
