@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.auth.control.PrivilegeRepo
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.user.control.AppUserHasRoleRepo
 import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
@@ -14,11 +15,14 @@ import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.plugins.*
+import de.lambda9.ready2race.backend.schedule.JobQueueState
 import de.lambda9.ready2race.backend.schedule.Scheduler
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNullLogError
+import de.lambda9.tailwind.core.extensions.kio.catchError
+import de.lambda9.tailwind.core.extensions.kio.or
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
@@ -29,6 +33,8 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
 
@@ -140,7 +146,25 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
         supervisorScope {
             logger.info { "Scheduling jobs ..." }
 
-            // add jobs with schedule function
+            scheduleDynamic(10.seconds) {
+                EmailService.sendNext()
+                    .map { JobQueueState.PROCESSED }
+                    .catchError { error ->
+                        KIO.ok(
+                            when (error) {
+                                EmailService.EmailError.NoEmailsToSend -> JobQueueState.EMPTY
+                                is EmailService.EmailError.SendingFailed -> {
+                                    logger.warn(error.cause) { "Error sending email ${error.emailId}" }
+                                    JobQueueState.PROCESSED
+                                }
+                            }
+                        )
+                    }
+            }
+
+            /*scheduleFixed(1.hours) {
+                EmailService.deleteSent()
+            }*/
 
             logger.info { "Scheduling done."}
         }

@@ -111,7 +111,7 @@ export type Pagination = {
     total: number
     limit: number
     offset: number
-    sort: Array<unknown>
+    sort: Array<Order>
 }
 
 /**
