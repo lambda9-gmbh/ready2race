@@ -50,7 +50,7 @@ data class Env(
 
             val configuration = DefaultConfiguration()
                 .set(ds)
-                .set(JooqQueryPrinter())
+                /*.set(JooqQueryPrinter())*/
                 .set(config.dialect)
 
             return Jooq(

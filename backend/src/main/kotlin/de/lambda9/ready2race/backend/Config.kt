@@ -98,10 +98,10 @@ data class Config(
                 password = get("SMTP_PASSWORD"),
                 strategy = TransportStrategy.valueOf(get("SMTP_STRATEGY")),
                 from = Smtp.From(
-                    name = get("SMTP_FROM_NAME", null),
+                    name = get("SMTP_FROM_NAME"),
                     address = get("SMTP_FROM_ADDRESS")
                 ),
-                replyTo = get("SMTP_REPLY", null),
+                replyTo = get("SMTP_REPLY"),
             ),
             security = Security(
                 pepper = get("SECURITY_PEPPER"),

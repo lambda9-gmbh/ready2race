@@ -17,7 +17,7 @@ fun Application.configureResponses() {
                     call.respondError(cause.requestError)
                 }
                 is BadRequestException -> {
-                    call.respondText(text = "400: Could not parse payload to expected Type. Please make sure, no required fields are missing in your request body.", status = HttpStatusCode.BadRequest)
+                    call.respondText(text = "400: $cause", status = HttpStatusCode.BadRequest)
                 }
                 is RequestValidationException -> {
                     call.respondText(contentType = ContentType.Application.Json, text = cause.reasons.firstOrNull() ?: "", status = HttpStatusCode.BadRequest)
