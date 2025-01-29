@@ -1,11 +1,17 @@
 package de.lambda9.ready2race.backend.app.raceProperties.control
 
+import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
+import de.lambda9.ready2race.backend.app.race.boundary.RaceService.RaceError
 import de.lambda9.ready2race.backend.app.raceProperties.entity.NamedParticipantForRaceDto
 import de.lambda9.ready2race.backend.app.raceProperties.entity.NamedParticipantForRaceRequestDto
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesRequestDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantForRacePropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RacePropertiesHasNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RacePropertiesRecord
+import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.util.*
 
 fun RacePropertiesRequestDto.record(raceId: UUID?, raceTemplateId: UUID?) = RacePropertiesRecord(

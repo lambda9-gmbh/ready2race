@@ -223,6 +223,24 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/eventDay/{eventDayId}/races:
+    put:
+      operationId: assignRacesToEventDay
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRacesToDayRequest'
+      responses:
+        204:
+          description: Races successfully assigned to day
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/race:
     post:
       operationId: addRace
@@ -248,6 +266,13 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - name: eventDayId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Optional parameter that filters by eventDayId
+          required: false
       responses:
         200:
           description: Race page successfully retrieved
@@ -305,6 +330,24 @@ paths:
           $ref: '#/components/responses/401'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/race/{raceId}/days:
+    put:
+      operationId: assignDaysToRace
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignDaysToRaceRequest'
+      responses:
+        204:
+          description: Days successfully assigned to race
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
         500:
           $ref: '#/components/responses/500'
   /namedParticipant:
@@ -768,6 +811,18 @@ components:
         dto:
           $ref: '#/components/schemas/EventDayDto'
 
+    AssignRacesToDayRequest:
+      type:
+        object
+      required:
+        - races
+      properties:
+        races:
+          type: array
+          items:
+            type: string
+            format: uuid
+
 
     # race
 
@@ -866,6 +921,18 @@ components:
       properties:
         dto:
           $ref: '#/components/schemas/RaceDto'
+
+    AssignDaysToRaceRequest:
+      type:
+        object
+      required:
+        - days
+      properties:
+        days:
+          type: array
+          items:
+            type: string
+            format: uuid
 
 
     # namedParticipant

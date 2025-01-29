@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.plugins
 
 import de.lambda9.ready2race.backend.requests.ExtendedBadRequestException
 import de.lambda9.ready2race.backend.responses.respondError
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -9,6 +10,8 @@ import io.ktor.server.plugins.requestvalidation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 
+
+private val logger = KotlinLogging.logger {}
 fun Application.configureResponses() {
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -22,8 +25,10 @@ fun Application.configureResponses() {
                 is RequestValidationException -> {
                     call.respondText(contentType = ContentType.Application.Json, text = cause.reasons.firstOrNull() ?: "", status = HttpStatusCode.BadRequest)
                 }
-                else -> call.respondText(text = "500: $cause", status = HttpStatusCode.InternalServerError)
-            }
+                else -> {
+                    logger.error { "500: $cause" }
+                    call.respondText(text = "An unexpected error has occurred", status = HttpStatusCode.InternalServerError)
+            }}
         }
     }
 }

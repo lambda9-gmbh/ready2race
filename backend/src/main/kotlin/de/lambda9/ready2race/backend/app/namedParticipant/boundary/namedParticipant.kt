@@ -5,10 +5,8 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipan
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pathParam
 import de.lambda9.ready2race.backend.requests.receiveV
-import de.lambda9.ready2race.backend.responses.logger
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import java.util.*
 

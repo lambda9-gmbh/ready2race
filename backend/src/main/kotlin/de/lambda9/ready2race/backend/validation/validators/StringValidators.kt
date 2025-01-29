@@ -18,4 +18,12 @@ object StringValidators {
             StructuredValidationResult.Invalid.PatternMismatch(value, regex)
         }
     }
+
+    fun maxLength(max: Int) = Validator<String?> { value ->
+        if(value == null || value.length <= max) {
+            StructuredValidationResult.Valid
+        } else {
+            StructuredValidationResult.Invalid.Message { "is too long" }
+        }
+    }
 }

@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventDay.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.eventDay.entity.AssignRacesToDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.requests.*
@@ -70,6 +71,20 @@ fun Route.eventDay() {
                         val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
                         EventDayService.deleteEvent(eventDayId)
+                    }
+                }
+            }
+
+            route("/races"){
+
+                put {
+                    val params = call.receive<AssignRacesToDayRequest>()
+                    call.respondKIO {
+                        KIO.comprehension {
+                            val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                            val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
+                            EventDayService.updateEventDayHasRace(params, user.id!!, eventDayId)
+                        }
                     }
                 }
             }

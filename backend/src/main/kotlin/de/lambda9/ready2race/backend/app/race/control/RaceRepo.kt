@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
 import de.lambda9.ready2race.backend.database.generated.tables.RaceToPropertiesWithNamedParticipants
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceToPropertiesWithNamedParticipantsRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_RACE
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACE
 import de.lambda9.ready2race.backend.database.generated.tables.references.RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS
 import de.lambda9.ready2race.backend.database.metaSearch
@@ -16,7 +17,8 @@ import java.util.*
 
 object RaceRepo {
 
-    private fun RaceToPropertiesWithNamedParticipants.searchFields() = listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
+    private fun RaceToPropertiesWithNamedParticipants.searchFields() =
+        listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     fun create(
         record: RaceRecord,
@@ -30,6 +32,15 @@ object RaceRepo {
         }
     }
 
+
+    fun exists(
+        id: UUID
+    ): JIO<Boolean> = Jooq.query {
+        with(RACE) {
+            fetchExists(this, ID.eq(id))
+        }
+    }
+
     fun countWithPropertiesByEvent(
         eventId: UUID,
         search: String?
@@ -39,14 +50,55 @@ object RaceRepo {
         }
     }
 
+    fun countWithPropertiesByEventAndEventDay(
+        eventId: UUID,
+        eventDayId: UUID,
+        search: String?
+    ): JIO<Int> = Jooq.query {
+        with(RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+            fetchCount(
+                this, DSL.and(
+                    EVENT.eq(eventId).and(
+                        ID.`in`(
+                            select(EVENT_DAY_HAS_RACE.RACE)
+                                .from(EVENT_DAY_HAS_RACE)
+                                .where(EVENT_DAY_HAS_RACE.EVENT_DAY.eq(eventDayId))
+                        )
+                    ), search.metaSearch(searchFields())
+                )
+            )
+        }
+    }
+
     fun pageWithPropertiesByEvent(
         eventId: UUID,
         params: PaginationParameters<RaceWithPropertiesSort>
     ): JIO<List<RaceToPropertiesWithNamedParticipantsRecord>> = Jooq.query {
         with(RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
             selectFrom(this)
-                .page(params, searchFields()){
+                .page(params, searchFields()) {
                     EVENT.eq(eventId)
+                }
+                .fetch()
+        }
+    }
+
+    fun pageWithPropertiesByEventAndEventDay(
+        eventId: UUID,
+        eventDayId: UUID,
+        params: PaginationParameters<RaceWithPropertiesSort>
+    ): JIO<List<RaceToPropertiesWithNamedParticipantsRecord>> = Jooq.query {
+        with(RACE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+            selectFrom(this)
+                .page(params, searchFields()) {
+                    EVENT.eq(eventId)
+                        .and(
+                            ID.`in`(
+                                select(EVENT_DAY_HAS_RACE.RACE)
+                                    .from(EVENT_DAY_HAS_RACE)
+                                    .where(EVENT_DAY_HAS_RACE.EVENT_DAY.eq(eventDayId))
+                            )
+                        )
                 }
                 .fetch()
         }
@@ -66,7 +118,7 @@ object RaceRepo {
         id: UUID,
         f: RaceRecord.() -> Unit
     ): JIO<Boolean> = Jooq.query {
-        with(RACE){
+        with(RACE) {
             (selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne() ?: return@query false)
@@ -79,10 +131,22 @@ object RaceRepo {
     fun delete(
         id: UUID
     ): JIO<Int> = Jooq.query {
-        with(RACE){
+        with(RACE) {
             deleteFrom(this)
                 .where(ID.eq(id))
                 .execute()
         }
+    }
+
+    fun findUnknown(
+        races: List<UUID>
+    ): JIO<List<UUID>> = Jooq.query {
+        val found = with(RACE) {
+            select(ID)
+                .from(this)
+                .where(DSL.or(races.map { ID.eq(it) }))
+                .fetch { it.value1() }
+        }
+        races.filter { !found.contains(it) }
     }
 }

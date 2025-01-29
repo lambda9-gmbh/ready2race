@@ -2,34 +2,36 @@ package de.lambda9.ready2race.backend.app.eventDay.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_RACE
+import de.lambda9.ready2race.backend.database.generated.tables.references.RACE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object EventDayHasRaceRepo {
 
-    fun createMany(
+    fun create(
         records: List<EventDayHasRaceRecord>
-    ): JIO<Int> = Jooq.query{
+    ): JIO<Int> = Jooq.query {
         batchInsert(records)
             .execute()
             .size
     }
 
-    fun deleteManyByEventDay(
+    fun deleteByEventDay(
         eventDayId: UUID,
     ): JIO<Int> = Jooq.query {
-        with(EVENT_DAY_HAS_RACE){
+        with(EVENT_DAY_HAS_RACE) {
             deleteFrom(this)
                 .where(EVENT_DAY.eq(eventDayId))
                 .execute()
         }
     }
 
-    fun deleteManyByRace(
+    fun deleteByRace(
         raceId: UUID,
     ): JIO<Int> = Jooq.query {
-        with(EVENT_DAY_HAS_RACE){
+        with(EVENT_DAY_HAS_RACE) {
             deleteFrom(this)
                 .where(RACE.eq(raceId))
                 .execute()

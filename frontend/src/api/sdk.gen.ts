@@ -35,6 +35,9 @@ import type {
     UpdateEventDayResponse,
     DeleteEventDayError,
     DeleteEventDayResponse,
+    AssignRacesToEventDayData,
+    AssignRacesToEventDayError,
+    AssignRacesToEventDayResponse,
     AddRaceData,
     AddRaceError,
     AddRaceResponse,
@@ -48,6 +51,9 @@ import type {
     UpdateRaceResponse,
     DeleteRaceError,
     DeleteRaceResponse,
+    AssignDaysToRaceData,
+    AssignDaysToRaceError,
+    AssignDaysToRaceResponse,
     AddNamedParticipantData,
     AddNamedParticipantError,
     AddNamedParticipantResponse,
@@ -201,6 +207,19 @@ export const deleteEventDay = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const assignRacesToEventDay = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignRacesToEventDayData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignRacesToEventDayResponse,
+        AssignRacesToEventDayError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDay/{eventDayId}/races',
+    })
+}
+
 export const addRace = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddRaceData, ThrowOnError>,
 ) => {
@@ -243,6 +262,19 @@ export const deleteRace = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<DeleteRaceResponse, DeleteRaceError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const assignDaysToRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignDaysToRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignDaysToRaceResponse,
+        AssignDaysToRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}/days',
     })
 }
 

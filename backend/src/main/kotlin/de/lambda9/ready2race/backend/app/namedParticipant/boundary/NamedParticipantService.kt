@@ -10,7 +10,6 @@ import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
-import de.lambda9.ready2race.backend.responses.logger
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*

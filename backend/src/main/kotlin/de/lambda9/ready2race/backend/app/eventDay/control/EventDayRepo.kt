@@ -30,6 +30,13 @@ object EventDayRepo {
         }
     }
 
+    fun exists(
+        id: UUID
+    ): JIO<Boolean> = Jooq.query {
+        with(EVENT_DAY) {
+            fetchExists(this, ID.eq(id))
+        }
+    }
 
     fun countByEvent(
         eventId: UUID,
@@ -126,5 +133,17 @@ object EventDayRepo {
                 .where(ID.eq(eventDayId))
                 .execute()
         }
+    }
+
+    fun findUnknown(
+        eventDays: List<UUID>
+    ): JIO<List<UUID>> = Jooq.query {
+        val found = with(EVENT_DAY) {
+            select(ID)
+                .from(this)
+                .where(DSL.or(eventDays.map { ID.eq(it) }))
+                .fetch { it.value1() }
+        }
+        eventDays.filter { !found.contains(it) }
     }
 }

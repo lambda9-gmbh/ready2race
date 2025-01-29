@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.NamedPart
 import de.lambda9.ready2race.backend.database.generated.tables.references.NAMED_PARTICIPANT
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object NamedParticipantRepo {
@@ -51,4 +52,15 @@ object NamedParticipantRepo {
         }
     }
 
+    fun findUnknown(
+        namedParticipants: List<UUID>
+    ): JIO<List<UUID>> = Jooq.query {
+        val found = with(NAMED_PARTICIPANT) {
+            select(ID)
+                .from(this)
+                .where(DSL.or(namedParticipants.map { ID.eq(it) }))
+                .fetch { it.value1() }
+        }
+        namedParticipants.filter { !found.contains(it) }
+    }
 }

@@ -59,8 +59,6 @@ create table event_day_has_race
     race       uuid      not null references race on delete cascade,
     created_at timestamp not null default now(),
     created_by uuid      references app_user on delete set null,
-    updated_at timestamp not null default now(),
-    updated_by uuid      references app_user on delete set null,
     primary key (event_day, race)
 );
 

@@ -14,7 +14,7 @@ import io.ktor.server.response.*
 import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
 
-val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {}
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,
@@ -50,7 +50,7 @@ suspend fun ApplicationCall.respondDefect(
 
     respond(
         HttpStatusCode.InternalServerError, mapOf(
-            "message" to "Ein technischer Fehler ist aufgetreten. Bitte kommen Sie später wieder.",
+            "message" to "An unexpected error has occurred.",
             "details" to details,
         )
     )

@@ -19,6 +19,14 @@ object RaceCategoryRepo {
         }
     }
 
+    fun exists(
+        id: UUID
+    ): JIO<Boolean> = Jooq.query {
+        with(RACE_CATEGORY) {
+            fetchExists(this, ID.eq(id))
+        }
+    }
+
     fun getMany(): JIO<List<RaceCategoryRecord>> = Jooq.query {
         with(RACE_CATEGORY) {
             selectFrom(this)

@@ -12,6 +12,14 @@ export type AppUserResponse = {
     properties: AppUserProperties
 }
 
+export type AssignDaysToRaceRequest = {
+    days: Array<string>
+}
+
+export type AssignRacesToDayRequest = {
+    races: Array<string>
+}
+
 export type EventDayDto = {
     id: string
     eventId?: string
@@ -291,6 +299,14 @@ export type DeleteEventDayResponse = void
 
 export type DeleteEventDayError = string
 
+export type AssignRacesToEventDayData = {
+    body: AssignRacesToDayRequest
+}
+
+export type AssignRacesToEventDayResponse = void
+
+export type AssignRacesToEventDayError = string
+
 export type AddRaceData = {
     body: RaceRequest
 }
@@ -301,6 +317,10 @@ export type AddRaceError = string
 
 export type GetRacesData = {
     query: {
+        /**
+         * Optional parameter that filters by eventDayId
+         */
+        eventDayId?: string
         /**
          * Page size for pagination
          */
@@ -339,6 +359,14 @@ export type UpdateRaceError = string
 export type DeleteRaceResponse = void
 
 export type DeleteRaceError = string
+
+export type AssignDaysToRaceData = {
+    body: AssignDaysToRaceRequest
+}
+
+export type AssignDaysToRaceResponse = void
+
+export type AssignDaysToRaceError = string
 
 export type AddNamedParticipantData = {
     body: NamedParticipantDto

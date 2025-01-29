@@ -17,5 +17,4 @@ fun List<NamedParticipantRecord>.namedParticipantDtoList(): App<Nothing, List<Na
             description = it.description,
         )
     }
-
 )

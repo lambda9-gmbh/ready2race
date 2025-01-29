@@ -2,12 +2,16 @@ package de.lambda9.ready2race.backend.app.eventDay.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.control.record
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
+import de.lambda9.ready2race.backend.app.eventDay.entity.AssignRacesToDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
+import de.lambda9.ready2race.backend.app.race.control.RaceRepo
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
 import de.lambda9.ready2race.backend.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
@@ -23,11 +27,15 @@ import java.util.*
 
 object EventDayService {
 
-    enum class EventDayError : ServiceError {
-        EventDayNotFound;
+
+    sealed interface EventDayError : ServiceError {
+        data object EventDayNotFound : EventDayError
+
+        data class RacesNotFound(val races: List<UUID>) : EventDayError
 
         override fun respond(): ApiError = when (this) {
-            EventDayNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "EventDay Not Found")
+            is EventDayNotFound -> ApiError(HttpStatusCode.NotFound, message = "EventDay not found")
+            is RacesNotFound -> ApiError(HttpStatusCode.BadRequest, message = "Races not found", details = mapOf("unknownIds" to races))
         }
     }
 
@@ -95,6 +103,28 @@ object EventDayService {
             noData
         }
     }
+
+    fun updateEventDayHasRace(
+        request: AssignRacesToDayRequest,
+        userId: UUID,
+        eventDayId: UUID
+    ): App<EventDayError, ApiResponse.NoData> = KIO.comprehension {
+
+        val eventDayExists = !EventDayRepo.exists(eventDayId).orDie()
+        if (!eventDayExists) KIO.fail(EventDayError.EventDayNotFound)
+
+        val unknownRaces = !RaceRepo.findUnknown(request.races).orDie()
+        if (unknownRaces.isNotEmpty()) KIO.fail(EventDayError.RacesNotFound(unknownRaces))
+
+        !EventDayHasRaceRepo.deleteByEventDay(eventDayId).orDie()
+        !EventDayHasRaceRepo.create(request.races.map {
+            EventDayHasRaceRecord(
+                eventDay = eventDayId,
+                race = it,
+                createdBy = userId
+            )
+        }).orDie()
+
+        noData
+    }
 }
-
-
