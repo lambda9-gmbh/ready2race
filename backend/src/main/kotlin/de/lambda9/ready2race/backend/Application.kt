@@ -22,7 +22,6 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrNullLogError
 import de.lambda9.tailwind.core.extensions.kio.catchError
-import de.lambda9.tailwind.core.extensions.kio.or
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
@@ -33,7 +32,6 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
