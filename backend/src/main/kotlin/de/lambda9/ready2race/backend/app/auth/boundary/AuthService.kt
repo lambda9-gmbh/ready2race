@@ -78,4 +78,7 @@ object AuthService {
 
         AppUserRepo.getWithPrivileges(valid.appUser!!).orDie().onNullFail { AuthError.TokenInvalid }
     }
+
+    fun deleteExpiredTokens(): App<Nothing, Int> =
+        AppUserSessionRepo.deleteExpired(tokenLifetime).orDie()
 }

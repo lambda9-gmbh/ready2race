@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.Config.Companion.parseConfig
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
+import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.control.PrivilegeRepo
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
@@ -32,6 +33,7 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 private val logger = KotlinLogging.logger {}
@@ -161,8 +163,16 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             }
 
             /*scheduleFixed(1.hours) {
-                EmailService.deleteSent()
+                EmailService.deleteSent().map {
+                    logger.info { "${"sent email".count(it)} deleted" }
+                }
             }*/
+
+            scheduleFixed(5.minutes) {
+                AuthService.deleteExpiredTokens().map {
+                    logger.info { "${"expired session".count(it)} deleted" }
+                }
+            }
 
             logger.info { "Scheduling done."}
         }

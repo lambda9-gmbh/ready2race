@@ -138,9 +138,7 @@ object EmailService {
         KIO.unit
     }
 
-    fun deleteSent(): App<Nothing, Unit> =
-        EmailRepo.deleteSent().orDie().map {
-            logger.info { "${"sent email".count(it)} deleted" }
-        }
+    fun deleteSent(): App<Nothing, Int> =
+        EmailRepo.deleteSent().orDie()
 
 }
