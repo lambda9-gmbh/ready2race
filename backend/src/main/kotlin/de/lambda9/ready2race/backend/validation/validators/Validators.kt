@@ -3,7 +3,7 @@ package de.lambda9.ready2race.backend.validation.validators
 import de.lambda9.ready2race.backend.validation.*
 
 object Validators {
-    fun <A: Any?> notNull() = Validator<A> {
+    fun <A : Any?> notNull() = Validator<A> {
         if (it == null) {
             StructuredValidationResult.Invalid.Message { "is null" }
         } else {
@@ -11,7 +11,7 @@ object Validators {
         }
     }
 
-    fun <V: Validatable?> selfValidator() = Validator<V> { it?.validate() ?: StructuredValidationResult.Valid }
+    fun <V : Validatable?> selfValidator() = Validator<V> { it?.validate() ?: StructuredValidationResult.Valid }
 
     fun <T> allOf(vararg validators: Validator<T>) = Validator<T> { value ->
         validators.map { it(value) }.allOf()
@@ -28,6 +28,6 @@ object Validators {
             ?: StructuredValidationResult.Valid
     }
 
-    fun <V: Validatable?, C : Collection<V>?> collection() = collection<V, C>(selfValidator())
+    fun <V : Validatable?, C : Collection<V>?> collection() = collection<V, C>(selfValidator())
 }
 
