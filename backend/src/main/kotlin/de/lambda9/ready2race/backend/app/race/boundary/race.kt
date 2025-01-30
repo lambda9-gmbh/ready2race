@@ -74,12 +74,12 @@ fun Route.race() {
             route("/days"){
 
                 put {
-                    val params = call.receive<AssignDaysToRaceRequest>()
+                    val params = call.receiveV(AssignDaysToRaceRequest.example)
                     call.respondKIO {
                         KIO.comprehension {
                             val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                             val raceId = !pathParam("raceId") { UUID.fromString(it) }
-                            RaceService.updateEventDayHasRace(params, user.id!!, raceId)
+                            RaceService.updateEventDayHasRace(params.getOrThrow(), user.id!!, raceId)
                         }
                     }
                 }

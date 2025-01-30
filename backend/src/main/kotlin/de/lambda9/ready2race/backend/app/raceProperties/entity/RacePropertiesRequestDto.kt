@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.ready2race.backend.validation.validators.ListValidators.noNamedParticipantDuplicates
 import de.lambda9.ready2race.backend.validation.validators.ListValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import de.lambda9.ready2race.backend.validation.validators.Validators.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validators.collection
 import java.math.BigDecimal
 import java.util.*
@@ -38,8 +39,7 @@ data class RacePropertiesRequestDto(
             this::countMixed validate IntValidators.notNegative,
             this::participationFee validate BigDecimalValidators.notNegative,
             this::rentalFee validate BigDecimalValidators.notNegative,
-            this::namedParticipants validate collection,
-            this::namedParticipants validate noNamedParticipantDuplicates, // todo: Combine with the one above (equals method)
+            this::namedParticipants validate allOf(collection(), noNamedParticipantDuplicates),
             StructuredValidationResult.anyOf(
                 this::countMales validate IntValidators.min(1),
                 this::countFemales validate IntValidators.min(1),

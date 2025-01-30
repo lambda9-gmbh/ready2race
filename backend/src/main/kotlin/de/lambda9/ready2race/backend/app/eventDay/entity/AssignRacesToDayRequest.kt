@@ -4,9 +4,17 @@ import de.lambda9.ready2race.backend.validation.StructuredValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import java.util.*
 
-
 data class AssignRacesToDayRequest(
     val races: List<UUID>
 ): Validatable {
     override fun validate(): StructuredValidationResult = StructuredValidationResult.Valid
+
+    companion object {
+        val example get() = AssignRacesToDayRequest(
+            races = listOf(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+            )
+        )
+    }
 }
