@@ -23,7 +23,7 @@ sealed interface RequestError: ToApiError {
             )
         is InvalidPagination ->
             ApiError(
-                status = HttpStatusCode.BadRequest,
+                status = HttpStatusCode.UnprocessableEntity,
                 message = "Invalid pagination parameters",
                 details = mapOf("errors" to result)
             )

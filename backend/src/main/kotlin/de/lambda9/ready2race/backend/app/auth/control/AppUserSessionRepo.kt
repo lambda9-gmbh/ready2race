@@ -50,4 +50,14 @@ object AppUserSessionRepo {
                 .execute()
         }
     }
+
+    fun deleteExpired(
+        tokenLifetime: Duration,
+    ): JIO<Int> = Jooq.query {
+        with(APP_USER_SESSION) {
+            deleteFrom(this)
+                .where(LAST_USED.lt(tokenLifetime.beforeNow()))
+                .execute()
+        }
+    }
 }

@@ -3,7 +3,7 @@ set search_path to ready2race, pg_catalog, public;
 create table app_user
 (
     id uuid primary key default gen_random_uuid(),
-    email text not null unique,
+    email text not null,
     password text not null,
     firstname text not null,
     lastname text not null,
@@ -13,7 +13,7 @@ create table app_user
     updated_by uuid references app_user on delete set null
 );
 
-create index on app_user (email);
+create unique index on app_user (email);
 
 create table app_user_session
 (

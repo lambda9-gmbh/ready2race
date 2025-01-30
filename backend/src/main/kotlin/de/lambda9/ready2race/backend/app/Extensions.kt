@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app
 
-import de.lambda9.ready2race.backend.app.auth.boundary.AuthService.AuthError
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.user.control.AppUserHasRoleRepo
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE

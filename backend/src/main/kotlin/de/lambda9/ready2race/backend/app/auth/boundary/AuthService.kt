@@ -1,14 +1,13 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.control.AppUserSessionRepo
 import de.lambda9.ready2race.backend.app.auth.control.loginDto
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
 import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
@@ -17,26 +16,12 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.catchError
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import kotlin.time.Duration.Companion.minutes
 
 object AuthService {
 
     private const val TOKEN_LENGTH = 30
     private val tokenLifetime = 30.minutes
-
-    enum class AuthError: ServiceError {
-
-        CredentialsIncorrect,
-        TokenInvalid,
-        PrivilegeMissing;
-
-        override fun respond(): ApiError = when (this) {
-            CredentialsIncorrect -> ApiError(status = HttpStatusCode.Unauthorized, message = "Incorrect credentials")
-            TokenInvalid -> ApiError(status = HttpStatusCode.Unauthorized, message = "Invalid session token")
-            PrivilegeMissing -> ApiError(status = HttpStatusCode.Unauthorized, message = "Missing privilege")
-        }
-    }
 
     fun login(
         request: LoginRequest,
@@ -93,4 +78,7 @@ object AuthService {
 
         AppUserRepo.getWithPrivileges(valid.appUser!!).orDie().onNullFail { AuthError.TokenInvalid }
     }
+
+    fun deleteExpiredTokens(): App<Nothing, Int> =
+        AppUserSessionRepo.deleteExpired(tokenLifetime).orDie()
 }
