@@ -14,7 +14,7 @@ fun Route.auth() {
             post {
                 val login = call.receiveV(LoginRequest.example)
                 call.respondKIO {
-                    AuthService.login(login) { token ->
+                    AuthService.login(login.getOrThrow()) { token ->
                         sessions.set(UserSession(token))
                     }
                 }

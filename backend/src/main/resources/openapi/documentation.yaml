@@ -698,9 +698,6 @@ components:
         registrationAvailableTo:
           type: string
           format: date-time
-        paymentDueDate:
-          type: string
-          format: date-time
         invoicePrefix:
           type: string
 

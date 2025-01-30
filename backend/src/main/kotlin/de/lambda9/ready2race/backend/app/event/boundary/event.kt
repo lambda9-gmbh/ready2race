@@ -11,7 +11,6 @@ import de.lambda9.ready2race.backend.requests.pathParam
 import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import java.util.*
 
@@ -23,7 +22,7 @@ fun Route.event() {
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    EventService.addEvent(params, user.id!!)
+                    EventService.addEvent(params.getOrThrow(), user.id!!)
                 }
             }
         }
@@ -59,7 +58,7 @@ fun Route.event() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.updateEvent(params, user.id!!, id)
+                        EventService.updateEvent(params.getOrThrow(), user.id!!, id)
                     }
                 }
             }

@@ -72,7 +72,6 @@ object EventService {
             location = request.properties.location
             registrationAvailableFrom = request.properties.registrationAvailableFrom
             registrationAvailableTo = request.properties.registrationAvailableTo
-            paymentDueDate = request.properties.paymentDueDate
             invoicePrefix = request.properties.invoicePrefix
             updatedBy = userId
             updatedAt = LocalDateTime.now()

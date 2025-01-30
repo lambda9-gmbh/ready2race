@@ -21,7 +21,7 @@ object PrivilegeRepo {
                     scope = it.scope.name,
                 )
             }
-        ).execute().size
+        ).execute().sum()
     }
 
     fun all(): JIO<List<PrivilegeRecord>> = Jooq.query {

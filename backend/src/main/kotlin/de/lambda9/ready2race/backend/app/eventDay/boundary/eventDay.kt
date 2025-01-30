@@ -21,7 +21,7 @@ fun Route.eventDay() {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
 
-                    EventDayService.addEventDay(params, user.id!!, eventId)
+                    EventDayService.addEventDay(params.getOrThrow(), user.id!!, eventId)
                 }
             }
         }
@@ -59,7 +59,7 @@ fun Route.eventDay() {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                        EventDayService.updateEvent(params, user.id!!, eventDayId)
+                        EventDayService.updateEvent(params.getOrThrow(), user.id!!, eventDayId)
                     }
                 }
             }

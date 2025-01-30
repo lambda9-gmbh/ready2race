@@ -1,6 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
-drop view if exists event_day_with_races;
+
+drop view if exists race_template_to_properties_with_named_participants;
 drop view if exists race_to_properties_with_named_participants;
 drop view if exists named_participant_for_race_properties;
 drop view if exists app_user_with_privileges;
@@ -77,3 +78,25 @@ from race r
          left join named_participant_for_race_properties npfrp on rp.id = npfrp.race_properties
          left join race_category rc on rp.race_category = rc.id
 group by r.id, rp.id, rc.id;
+
+
+create view race_template_to_properties_with_named_participants as
+select rt.id,
+       rp.identifier,
+       rp.name,
+       rp.short_name,
+       rp.description,
+       rp.count_males,
+       rp.count_females,
+       rp.count_non_binary,
+       rp.count_mixed,
+       rp.participation_fee,
+       rp.rental_fee,
+       rc.name                                                                             as category_name,
+       rc.description                                                                      as category_description,
+       coalesce(array_agg(npfrp) filter ( where npfrp.race_properties is not null ), '{}') as named_participants
+from race_template rt
+         left join race_properties rp on rt.id = rp.race_template
+         left join named_participant_for_race_properties npfrp on rp.id = npfrp.race_properties
+         left join race_category rc on rp.race_category = rc.id
+group by rt.id, rp.id, rc.id;

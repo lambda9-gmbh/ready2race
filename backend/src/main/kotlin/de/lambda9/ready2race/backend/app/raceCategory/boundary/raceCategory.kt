@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.requests.pathParam
 import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import java.util.*
 
@@ -19,7 +18,7 @@ fun Route.raceCategory() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    RaceCategoryService.addRaceCategory(params)
+                    RaceCategoryService.addRaceCategory(params.getOrThrow())
                 }
             }
         }
@@ -40,7 +39,7 @@ fun Route.raceCategory() {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceCategoryId = !pathParam("raceCategoryId") { UUID.fromString(it) }
-                        RaceCategoryService.updateRaceCategory(params, raceCategoryId)
+                        RaceCategoryService.updateRaceCategory(params.getOrThrow(), raceCategoryId)
                     }
                 }
             }

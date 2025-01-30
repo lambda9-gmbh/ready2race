@@ -8,7 +8,6 @@ create table event
     location                    text,
     registration_available_from timestamp,
     registration_available_to   timestamp,
-    payment_due_date            timestamp,
     invoice_prefix              text,
     created_at                  timestamp not null default now(),
     created_by                  uuid      references app_user on delete set null,
@@ -118,7 +117,7 @@ create table race_properties_has_named_participant
     count_females     integer not null default 0,
     count_non_binary  integer not null default 0,
     count_mixed       integer not null default 0,
-    primary key (race_properties, named_participant),
+    primary key (race_properties, named_participant, required),
     constraint chk_count_sum_greater_0 check (count_males + count_females + count_non_binary + count_mixed > 0)
 );
 

@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.race.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.eventDay.entity.AssignRacesToDayRequest
 import de.lambda9.ready2race.backend.app.race.entity.AssignDaysToRaceRequest
 import de.lambda9.ready2race.backend.app.race.entity.RaceRequest
 import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
@@ -21,7 +20,7 @@ fun Route.race() {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                    RaceService.addRace(params, user.id!!, eventId)
+                    RaceService.addRace(params.getOrThrow(), user.id!!, eventId)
                 }
             }
         }
@@ -57,7 +56,7 @@ fun Route.race() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceId = !pathParam("raceId") { UUID.fromString(it) }
-                        RaceService.updateRace(params, user.id!!, raceId)
+                        RaceService.updateRace(params.getOrThrow(), user.id!!, raceId)
                     }
                 }
             }
@@ -66,8 +65,8 @@ fun Route.race() {
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                        val id = !pathParam("raceId") { UUID.fromString(it) }
-                        RaceService.deleteRace(id)
+                        val raceId = !pathParam("raceId") { UUID.fromString(it) }
+                        RaceService.deleteRace(raceId)
                     }
                 }
             }

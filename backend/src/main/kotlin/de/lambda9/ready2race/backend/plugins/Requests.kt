@@ -15,7 +15,7 @@ fun Application.configureRequests() {
         register(RateLimitName("login")) {
             rateLimiter(limit = 3, refillPeriod = 5.minutes)
             requestKey { call ->
-                call.receiveV(LoginRequest.example).email
+                call.receiveV(LoginRequest.example).getOrThrow().email
             }
         }
     }

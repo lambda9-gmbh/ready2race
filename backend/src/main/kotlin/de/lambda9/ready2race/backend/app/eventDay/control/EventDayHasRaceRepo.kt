@@ -2,10 +2,8 @@ package de.lambda9.ready2race.backend.app.eventDay.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_RACE
-import de.lambda9.ready2race.backend.database.generated.tables.references.RACE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
-import org.jooq.impl.DSL
 import java.util.*
 
 object EventDayHasRaceRepo {

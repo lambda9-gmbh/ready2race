@@ -5,10 +5,9 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.BigDecimalValidators
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
-import de.lambda9.ready2race.backend.validation.validators.ListValidators
-import de.lambda9.ready2race.backend.validation.validators.StringValidators.maxLength
+import de.lambda9.ready2race.backend.validation.validators.ListValidators.noNamedParticipantDuplicates
+import de.lambda9.ready2race.backend.validation.validators.ListValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
-import de.lambda9.ready2race.backend.validation.validators.Validators.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validators.collection
 import java.math.BigDecimal
 import java.util.*
@@ -29,9 +28,9 @@ data class RacePropertiesRequestDto(
 ): Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
-            this::identifier validate allOf(notBlank, maxLength(100)),
-            this::name validate allOf(notBlank, maxLength(100)),
-            this::shortName validate allOf(notBlank, maxLength(100)),
+            this::identifier validate notBlank,
+            this::name validate notBlank,
+            this::shortName validate notBlank,
             this::description validate notBlank,
             this::countMales validate IntValidators.notNegative,
             this::countFemales validate IntValidators.notNegative,
@@ -40,12 +39,13 @@ data class RacePropertiesRequestDto(
             this::participationFee validate BigDecimalValidators.notNegative,
             this::rentalFee validate BigDecimalValidators.notNegative,
             this::namedParticipants validate collection,
+            this::namedParticipants validate noNamedParticipantDuplicates, // todo: Combine with the one above (equals method)
             StructuredValidationResult.anyOf(
                 this::countMales validate IntValidators.min(1),
                 this::countFemales validate IntValidators.min(1),
                 this::countNonBinary validate IntValidators.min(1),
                 this::countMixed validate IntValidators.min(1),
-                this::namedParticipants validate ListValidators.notEmpty
+                this::namedParticipants validate notEmpty
             )
         )
 

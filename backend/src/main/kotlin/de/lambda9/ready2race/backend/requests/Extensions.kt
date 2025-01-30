@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.mapFailure
 import de.lambda9.ready2race.backend.pagination.Order
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.pagination.Sortable
@@ -17,14 +18,17 @@ import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.sessions.*
 
-suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V): V =
-    runCatching { receive<V>() }.fold(
-        onSuccess = { it },
-        onFailure = { throw ExtendedBadRequestException(RequestError.BodyUnparsable(example)) }
-    )
+suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V): Result<V> =
+    runCatching { receive<V>() }.mapFailure {
+        when (it) {
+            is BadRequestException -> ExtendedBadRequestException(RequestError.BodyUnparsable(example))
+            else -> it
+        }
+    }
 
 fun ApplicationCall.authenticate(
     action: Privilege.Action,

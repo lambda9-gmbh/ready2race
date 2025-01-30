@@ -34,15 +34,15 @@ object RacePropertiesRepo {
         true
     }
 
-    fun getIdByRaceId(
-        raceId: UUID
-    )
-        : JIO<UUID?> = Jooq.query {
+    fun getIdByRaceOrTemplateId(
+        id: UUID
+    ): JIO<UUID?> = Jooq.query {
         with(RACE_PROPERTIES) {
             select(ID)
                 .from(this)
-                .where(RACE.eq(raceId))
+                .where(RACE.eq(id).or(RACE_TEMPLATE.eq(id)))
                 .fetchOneInto(UUID::class.java)
         }
     }
+
 }

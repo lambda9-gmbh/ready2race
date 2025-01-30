@@ -4,11 +4,18 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.tailwind.core.Exit
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.exit.fold
+import de.lambda9.tailwind.core.extensions.kio.andThen
+import de.lambda9.tailwind.core.extensions.kio.orIf
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration
 
 fun String.count(count: Int) = "$count $this${if (count == 1) "" else "s"}"
+
+fun <T> Result<T>.mapFailure(f: (Throwable) -> Throwable): Result<T> = when (val exception = exceptionOrNull()) {
+    null -> this
+    else -> Result.failure(f(exception))
+}
 
 fun <A, B> A.applyNotNull(value: B?, block: A.(B) -> Unit): A = apply {
     if (value != null) block(value)
@@ -54,11 +61,28 @@ fun <E, A> Exit<E, A>.onDefect(
 
 fun accessConfig(): KIO<JEnv, Nothing, Config> = KIO.access<JEnv>().map { it.env.config }
 
-fun <R, E : E1, E1, A> KIO<R, E, A>.failOn(predicate: (A) -> Boolean, error: () -> E1): KIO<R, E1, Unit> =
-    KIO.failOnM(this.map { predicate(it) }, error)
+// todo: Use from library
+fun <R, E : E1, E1, A> KIO<R, E, A>.failIf(condition: (A) -> Boolean, then: (A) -> E1): KIO<R, E1, A> =
+    andThen {
+        if (condition(it))
+            KIO.fail(then(it))
+        else
+            KIO.ok(it)
+    }
 
-fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnTrue(error: () -> E1): KIO<R, E1, Unit> =
-    this.failOn(predicate = { it }, error)
+fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnTrue(then: () -> E1): KIO<R, E1, Unit> =
+    andThen {
+        if (it)
+            KIO.fail(then())
+        else
+            KIO.unit
+    }
 
-fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnFalse(error: () -> E1): KIO<R, E1, Unit> =
-    this.failOn(predicate = { !it }, error)
+fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnFalse(then: () -> E1): KIO<R, E1, Unit> =
+    andThen {
+        if (!it)
+            KIO.fail(then())
+        else
+            KIO.unit
+    }
+
