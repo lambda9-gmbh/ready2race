@@ -1,9 +1,10 @@
 package de.lambda9.ready2race.backend.validation.validators
 
+import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.validation.*
 
 object Validators {
-    fun <A: Any?> notNull() = Validator<A?> {
+    fun <A: Any?> notNull() = Validator<A> {
         if (it == null) {
             StructuredValidationResult.Invalid.Message { "is null" }
         } else {
@@ -20,7 +21,7 @@ object Validators {
         validators.map { it(value) }.anyOf()
     }
 
-    fun <T, C : Collection<T?>> collection(validator: Validator<T?>) = Validator<C?> { collection ->
+    fun <T, C : Collection<T>> collection(validator: Validator<T>) = Validator<C?> { collection ->
         (collection?.mapIndexed { index, item -> index to validator(item) }
             ?.filter { it.second is StructuredValidationResult.Invalid } as List<Pair<Int, StructuredValidationResult.Invalid>>?)
             ?.takeIf { it.isNotEmpty() }
@@ -28,6 +29,6 @@ object Validators {
             ?: StructuredValidationResult.Valid
     }
 
-    val collection get() = collection(selfValidator())
+    fun <V: Validatable?> collection() = collection(selfValidator<V>())
 }
 
