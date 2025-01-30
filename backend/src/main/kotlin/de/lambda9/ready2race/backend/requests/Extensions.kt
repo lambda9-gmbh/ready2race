@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.requests
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
@@ -33,7 +34,7 @@ suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V)
 fun ApplicationCall.authenticate(
     action: Privilege.Action,
     resource: Privilege.Resource,
-): App<AuthService.AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>> = KIO.comprehension {
+): App<AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>> = KIO.comprehension {
 
     val userSession = sessions.get<UserSession>()
     val user = !AuthService.getAppUserByToken(userSession?.token)
@@ -42,7 +43,7 @@ fun ApplicationCall.authenticate(
     }
 }
 
-fun ApplicationCall.authenticate(): App<AuthService.AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
+fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
 
     val userSession = sessions.get<UserSession>()
     AuthService.getAppUserByToken(userSession?.token)
