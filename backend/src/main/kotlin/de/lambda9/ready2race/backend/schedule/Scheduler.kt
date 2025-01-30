@@ -12,8 +12,6 @@ import kotlin.time.Duration.Companion.minutes
 
 class Scheduler(val env: JEnv) {
 
-    private val logger = KotlinLogging.logger {}
-
     fun CoroutineScope.scheduleFixed(
         interval: Duration,
         block: suspend CoroutineScope.() -> App<Nothing, Any?>
@@ -49,5 +47,9 @@ class Scheduler(val env: JEnv) {
                 onSuccess = { it }
             )
         }
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger {}
     }
 }
