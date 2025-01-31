@@ -33,7 +33,6 @@ object EmailService {
         data object NoEmailsToSend : EmailError
     }
 
-    private val logger = KotlinLogging.logger {}
     private val retryAfterError = 5.minutes
 
     fun enqueue(

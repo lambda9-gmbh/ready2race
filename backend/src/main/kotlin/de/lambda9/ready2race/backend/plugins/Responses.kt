@@ -3,12 +3,9 @@ package de.lambda9.ready2race.backend.plugins
 import de.lambda9.ready2race.backend.requests.RequestError
 import de.lambda9.ready2race.backend.responses.respondDefect
 import de.lambda9.ready2race.backend.responses.respondError
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
-
-private val logger = KotlinLogging.logger {}
 
 fun Application.configureResponses() {
     install(StatusPages) {

@@ -6,11 +6,6 @@ import kotlin.time.Duration
 
 fun String.count(count: Int) = "$count $this${if (count == 1) "" else "s"}"
 
-fun <T> Result<T>.mapFailure(f: (Throwable) -> Throwable): Result<T> = when (val exception = exceptionOrNull()) {
-    null -> this
-    else -> Result.failure(f(exception))
-}
-
 fun <A, B> A.applyNotNull(value: B?, block: A.(B) -> Unit): A = apply {
     if (value != null) block(value)
 }
