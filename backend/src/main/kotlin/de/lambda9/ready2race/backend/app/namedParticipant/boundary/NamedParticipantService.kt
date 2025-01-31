@@ -9,7 +9,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipan
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
 import de.lambda9.ready2race.backend.count
-import de.lambda9.ready2race.backend.failOnFalse
+import de.lambda9.ready2race.backend.kio.failOnFalse
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -72,14 +72,13 @@ object NamedParticipantService {
     fun updateNamedParticipant(
         request: NamedParticipantDto,
         namedParticipantId: UUID
-    ): App<NamedParticipantError, ApiResponse.NoData> = KIO.comprehension {
-        !NamedParticipantRepo.update(namedParticipantId) {
+    ): App<NamedParticipantError, ApiResponse.NoData> =
+        NamedParticipantRepo.update(namedParticipantId) {
             name = request.name
             description = request.description
-        }.orDie().failOnFalse { NamedParticipantError.NamedParticipantNotFound }
-
-        noData
-    }
+        }.orDie()
+            .failOnFalse { NamedParticipantError.NamedParticipantNotFound }
+            .map { ApiResponse.NoData }
 
     fun deleteNamedParticipant(
         namedParticipantId: UUID,

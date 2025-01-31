@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
 import de.lambda9.ready2race.backend.count
-import de.lambda9.ready2race.backend.failIf
+import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie

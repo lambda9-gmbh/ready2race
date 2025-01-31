@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
 import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDtoList
 import de.lambda9.ready2race.backend.app.raceCategory.control.record
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
-import de.lambda9.ready2race.backend.failOnFalse
+import de.lambda9.ready2race.backend.kio.failOnFalse
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData

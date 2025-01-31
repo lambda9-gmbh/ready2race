@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.raceTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.race.boundary.RaceService.RaceError
 import de.lambda9.ready2race.backend.app.raceProperties.boundary.RacePropertiesService
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
@@ -15,7 +14,7 @@ import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateRequest
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.count
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceTemplateRecord
-import de.lambda9.ready2race.backend.failOnFalse
+import de.lambda9.ready2race.backend.kio.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse

@@ -2,8 +2,8 @@ package de.lambda9.ready2race.backend.schedule
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
-import de.lambda9.ready2race.backend.fold
-import de.lambda9.ready2race.backend.onDefect
+import de.lambda9.ready2race.backend.kio.fold
+import de.lambda9.ready2race.backend.kio.onDefect
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*

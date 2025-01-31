@@ -19,7 +19,7 @@ import de.lambda9.ready2race.backend.app.raceProperties.control.toRecordFunction
 import de.lambda9.ready2race.backend.app.raceTemplate.control.RaceTemplateRepo
 import de.lambda9.ready2race.backend.count
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
-import de.lambda9.ready2race.backend.failOnFalse
+import de.lambda9.ready2race.backend.kio.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -78,13 +78,13 @@ object RaceService {
             !RaceTemplateRepo.exists(request.template).orDie().failOnFalse { RaceError.RaceTemplateUnknown }
         }
 
-        RacePropertiesService.checkNamedParticipantsExisting(request.raceProperties.namedParticipants.map { it.namedParticipant })
-        RacePropertiesService.checkRaceCategoryExisting(request.raceProperties.raceCategory)
+        RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
+        RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
 
 
         val raceId = !RaceRepo.create(request.record(userId, eventId)).orDie()
-        val racePropertiesId = !RacePropertiesRepo.create(request.raceProperties.record(raceId, null)).orDie()
-        val foo = !RacePropertiesHasNamedParticipantRepo.create(request.raceProperties.namedParticipants.map {
+        val racePropertiesId = !RacePropertiesRepo.create(request.properties.record(raceId, null)).orDie()
+        val foo = !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
             it.record(
                 racePropertiesId
             )
@@ -133,8 +133,8 @@ object RaceService {
             !RaceTemplateRepo.exists(request.template).orDie().failOnFalse { RaceError.RaceTemplateUnknown }
         }
 
-        !RacePropertiesService.checkNamedParticipantsExisting(request.raceProperties.namedParticipants.map { it.namedParticipant })
-        !RacePropertiesService.checkRaceCategoryExisting(request.raceProperties.raceCategory)
+        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
+        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
 
         !RaceRepo.update(raceId) {
             template = request.template
@@ -143,7 +143,7 @@ object RaceService {
         }.orDie().failOnFalse { RaceError.RaceNotFound }
 
         // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
-        !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.raceProperties.toRecordFunction())
+        !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toRecordFunction())
             .orDie()
             .failOnFalse { RaceError.RacePropertiesNotFound }
 
@@ -152,7 +152,7 @@ object RaceService {
 
         // delete and re-add the named participant entries
         !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
-        !RacePropertiesHasNamedParticipantRepo.create(request.raceProperties.namedParticipants.map {
+        !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
             it.record(
                 racePropertiesId
             )

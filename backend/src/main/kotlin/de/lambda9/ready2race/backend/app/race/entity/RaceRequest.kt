@@ -7,15 +7,15 @@ import de.lambda9.ready2race.backend.validation.validate
 import java.util.*
 
 data class RaceRequest (
-    val raceProperties: RacePropertiesRequestDto,
+    val properties: RacePropertiesRequestDto,
     val template: UUID?,
 ): Validatable {
     override fun validate(): StructuredValidationResult =
-        this::raceProperties.validate()
+        this::properties.validate()
 
     companion object{
         val example get() = RaceRequest(
-            raceProperties = RacePropertiesRequestDto.example,
+            properties = RacePropertiesRequestDto.example,
             template = UUID.randomUUID(),
         )
 

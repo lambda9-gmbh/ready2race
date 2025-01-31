@@ -12,7 +12,7 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
-import de.lambda9.ready2race.backend.failOnFalse
+import de.lambda9.ready2race.backend.kio.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -80,17 +80,16 @@ object EventDayService {
         request: EventDayRequest,
         userId: UUID,
         eventDayId: UUID,
-    ): App<EventDayError, ApiResponse.NoData> = KIO.comprehension {
-        !EventDayRepo.update(eventDayId) {
+    ): App<EventDayError, ApiResponse.NoData> =
+        EventDayRepo.update(eventDayId) {
             date = request.properties.date
             name = request.properties.name
             description = request.properties.description
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().failOnFalse { EventDayError.EventDayNotFound }
-
-        noData
-    }
+        }.orDie()
+            .failOnFalse { EventDayError.EventDayNotFound }
+            .map { ApiResponse.NoData }
 
     fun deleteEvent(
         id: UUID
