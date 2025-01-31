@@ -4,5 +4,8 @@ import java.util.*
 
 data class AppUserDto(
     val id: UUID,
-    val properties: AppUserPropertiesDto
+    val firstname: String,
+    val lastname: String,
+    val email: String,
+    val roles: List<UUID>,
 )

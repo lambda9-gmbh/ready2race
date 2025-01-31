@@ -12,18 +12,26 @@ object StringValidators {
     }
 
     fun pattern(regex: Regex) = Validator<String?> { value ->
-        if (value == null || regex.matches(value)) {
-            StructuredValidationResult.Valid
-        } else {
+        if (value != null && !regex.matches(value)) {
             StructuredValidationResult.Invalid.PatternMismatch(value, regex)
+        } else {
+            StructuredValidationResult.Valid
         }
     }
 
     fun maxLength(max: Int) = Validator<String?> { value ->
-        if(value == null || value.length <= max) {
-            StructuredValidationResult.Valid
-        } else {
+        if(value != null && value.length > max) {
             StructuredValidationResult.Invalid.Message { "is too long" }
+        } else {
+            StructuredValidationResult.Valid
+        }
+    }
+
+    fun minLength(min: Int) = Validator<String?> { value ->
+        if (value != null && value.length < min) {
+            StructuredValidationResult.Invalid.Message { "is too short" }
+        } else {
+            StructuredValidationResult.Valid
         }
     }
 }
