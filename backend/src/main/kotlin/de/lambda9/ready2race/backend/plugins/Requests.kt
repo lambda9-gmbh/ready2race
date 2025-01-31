@@ -1,12 +1,13 @@
 package de.lambda9.ready2race.backend.plugins
 
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
+import de.lambda9.ready2race.backend.plugins.requests.validation.ValidatableValidation
 import de.lambda9.ready2race.backend.requests.receiveV
-import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
+import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import io.ktor.server.application.*
 import io.ktor.server.plugins.doublereceive.*
 import io.ktor.server.plugins.ratelimit.*
-import io.ktor.server.plugins.requestvalidation.*
 import kotlin.time.Duration.Companion.minutes
 
 fun Application.configureRequests() {
@@ -15,14 +16,10 @@ fun Application.configureRequests() {
         register(RateLimitName("login")) {
             rateLimiter(limit = 3, refillPeriod = 5.minutes)
             requestKey { call ->
-                call.receiveV(LoginRequest.example).getOrThrow().email
+                call.receiveV(LoginRequest.example).unsafeRunSync().getOrThrow()
             }
         }
     }
 
-    install(RequestValidation) {
-        validate<Validatable> { validatable ->
-            validatable.validate().toValidationResult()
-        }
-    }
+    install(ValidatableValidation)
 }

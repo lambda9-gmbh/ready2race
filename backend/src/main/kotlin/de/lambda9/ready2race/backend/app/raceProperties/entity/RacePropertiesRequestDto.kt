@@ -4,9 +4,9 @@ import de.lambda9.ready2race.backend.validation.StructuredValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.BigDecimalValidators
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
-import de.lambda9.ready2race.backend.validation.validators.ListValidators.noNamedParticipantDuplicates
-import de.lambda9.ready2race.backend.validation.validators.ListValidators.notEmpty
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validators.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validators.collection
@@ -26,7 +26,7 @@ data class RacePropertiesRequestDto(
     val rentalFee: BigDecimal,
     val raceCategory: UUID?,
     val namedParticipants: List<NamedParticipantForRaceRequestDto>
-): Validatable {
+) : Validatable {
     override fun validate(): StructuredValidationResult =
         StructuredValidationResult.allOf(
             this::identifier validate notBlank,
@@ -39,7 +39,13 @@ data class RacePropertiesRequestDto(
             this::countMixed validate IntValidators.notNegative,
             this::participationFee validate BigDecimalValidators.notNegative,
             this::rentalFee validate BigDecimalValidators.notNegative,
-            this::namedParticipants validate allOf(collection(), noNamedParticipantDuplicates),
+            this::namedParticipants validate allOf(
+                collection,
+                noDuplicates(
+                    NamedParticipantForRaceRequestDto::namedParticipant,
+                    NamedParticipantForRaceRequestDto::required,
+                )
+            ),
             StructuredValidationResult.anyOf(
                 this::countMales validate IntValidators.min(1),
                 this::countFemales validate IntValidators.min(1),
@@ -49,20 +55,21 @@ data class RacePropertiesRequestDto(
             )
         )
 
-    companion object{
-        val example get() = RacePropertiesRequestDto(
-            identifier = "001",
-            name = "Name",
-            shortName = "N",
-            description = "Description of name",
-            countMales = 0,
-            countFemales = 0,
-            countNonBinary = 0,
-            countMixed = 1,
-            participationFee = BigDecimal(10),
-            rentalFee = BigDecimal(1),
-            raceCategory = UUID.randomUUID(),
-            namedParticipants = listOf(NamedParticipantForRaceRequestDto.example)
-        )
+    companion object {
+        val example
+            get() = RacePropertiesRequestDto(
+                identifier = "001",
+                name = "Name",
+                shortName = "N",
+                description = "Description of name",
+                countMales = 0,
+                countFemales = 0,
+                countNonBinary = 0,
+                countMixed = 1,
+                participationFee = BigDecimal(10),
+                rentalFee = BigDecimal(1),
+                raceCategory = UUID.randomUUID(),
+                namedParticipants = listOf(NamedParticipantForRaceRequestDto.example)
+            )
     }
 }

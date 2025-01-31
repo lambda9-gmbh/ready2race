@@ -14,11 +14,11 @@ import java.util.*
 fun Route.raceCategory() {
     route("/raceCategory") {
         post {
-            val params = call.receiveV(RaceCategoryDto.example)
+            val payload = call.receiveV(RaceCategoryDto.example)
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    RaceCategoryService.addRaceCategory(params.getOrThrow())
+                    RaceCategoryService.addRaceCategory(!payload)
                 }
             }
         }
@@ -34,12 +34,12 @@ fun Route.raceCategory() {
 
         route("/{raceCategoryId}") {
             put{
-                val params = call.receiveV(RaceCategoryDto.example)
+                val payload = call.receiveV(RaceCategoryDto.example)
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceCategoryId = !pathParam("raceCategoryId") { UUID.fromString(it) }
-                        RaceCategoryService.updateRaceCategory(params.getOrThrow(), raceCategoryId)
+                        RaceCategoryService.updateRaceCategory(!payload, raceCategoryId)
                     }
                 }
             }

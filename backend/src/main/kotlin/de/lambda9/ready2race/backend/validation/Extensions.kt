@@ -12,4 +12,4 @@ infix fun <V> KProperty0<V>.validate(validator: Validator<V?>) = when (val resul
     is StructuredValidationResult.Invalid -> StructuredValidationResult.Invalid.Field(name, result)
 }
 
-fun <V : Validatable?> KProperty0<V>.validate() = this validate selfValidator()
+fun <V : Validatable?> KProperty0<V>.validate() = this validate selfValidator

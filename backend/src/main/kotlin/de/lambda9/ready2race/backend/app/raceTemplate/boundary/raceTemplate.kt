@@ -1,8 +1,6 @@
 package de.lambda9.ready2race.backend.app.raceTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.race.boundary.RaceService
-import de.lambda9.ready2race.backend.app.race.entity.RaceRequest
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateRequest
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.requests.authenticate
@@ -19,12 +17,12 @@ import java.util.*
 fun Route.raceTemplate() {
     route("/raceTemplate") {
         post {
-            val params = call.receiveV(RaceTemplateRequest.example)
+            val payload = call.receiveV(RaceTemplateRequest.example)
 
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    RaceTemplateService.addRaceTemplate(params.getOrThrow(), user.id!!)
+                    RaceTemplateService.addRaceTemplate(!payload, user.id!!)
                 }
             }
         }
@@ -50,12 +48,12 @@ fun Route.raceTemplate() {
                 }
             }
             put {
-                val params = call.receiveV(RaceTemplateRequest.example)
+                val payload = call.receiveV(RaceTemplateRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceTemplateId = !pathParam("raceTemplateId") { UUID.fromString(it) }
-                        RaceTemplateService.updateRaceTemplate(params.getOrThrow(), user.id!!, raceTemplateId)
+                        RaceTemplateService.updateRaceTemplate(!payload, user.id!!, raceTemplateId)
                     }
                 }
             }

@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import java.util.*
 
@@ -15,13 +14,13 @@ fun Route.eventDay() {
     route("/eventDay") {
 
         post {
-            val params = call.receiveV(EventDayRequest.example)
+            val payload = call.receiveV(EventDayRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
 
-                    EventDayService.addEventDay(params.getOrThrow(), user.id!!, eventId)
+                    EventDayService.addEventDay(!payload, user.id!!, eventId)
                 }
             }
         }
@@ -53,13 +52,13 @@ fun Route.eventDay() {
             }
 
             put {
-                val params = call.receiveV(EventDayRequest.example)
+                val payload = call.receiveV(EventDayRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                        EventDayService.updateEvent(params.getOrThrow(), user.id!!, eventDayId)
+                        EventDayService.updateEvent(!payload, user.id!!, eventDayId)
                     }
                 }
             }
@@ -78,12 +77,12 @@ fun Route.eventDay() {
             route("/races"){
 
                 put {
-                    val params = call.receiveV(AssignRacesToDayRequest.example)
+                    val payload = call.receiveV(AssignRacesToDayRequest.example)
                     call.respondKIO {
                         KIO.comprehension {
                             val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                             val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
-                            EventDayService.updateEventDayHasRace(params.getOrThrow(), user.id!!, eventDayId)
+                            EventDayService.updateEventDayHasRace(!payload, user.id!!, eventDayId)
                         }
                     }
                 }

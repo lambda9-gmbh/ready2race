@@ -14,11 +14,11 @@ import java.util.*
 fun Route.namedParticipant() {
     route("/namedParticipant") {
         post {
-            val params = call.receiveV(NamedParticipantDto.example)
+            val payload = call.receiveV(NamedParticipantDto.example)
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    NamedParticipantService.addNamedParticipant(params.getOrThrow())
+                    NamedParticipantService.addNamedParticipant(!payload)
                 }
             }
         }
@@ -34,12 +34,12 @@ fun Route.namedParticipant() {
 
         route("/{namedParticipantId}"){
             put{
-                val params = call.receiveV(NamedParticipantDto.example)
+                val payload = call.receiveV(NamedParticipantDto.example)
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val namedParticipantId = !pathParam("namedParticipantId") { UUID.fromString(it) }
-                        NamedParticipantService.updateNamedParticipant(params.getOrThrow(), namedParticipantId)
+                        NamedParticipantService.updateNamedParticipant(!payload, namedParticipantId)
                     }
                 }
             }

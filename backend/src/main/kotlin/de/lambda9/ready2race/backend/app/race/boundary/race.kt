@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
 import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import java.util.*
 
@@ -15,12 +14,12 @@ fun Route.race() {
     route("/race") {
 
         post {
-            val params = call.receiveV(RaceRequest.example)
+            val payload = call.receiveV(RaceRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                    RaceService.addRace(params.getOrThrow(), user.id!!, eventId)
+                    RaceService.addRace(!payload, user.id!!, eventId)
                 }
             }
         }
@@ -51,12 +50,12 @@ fun Route.race() {
             }
 
             put {
-                val params = call.receiveV(RaceRequest.example)
+                val payload = call.receiveV(RaceRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceId = !pathParam("raceId") { UUID.fromString(it) }
-                        RaceService.updateRace(params.getOrThrow(), user.id!!, raceId)
+                        RaceService.updateRace(!payload, user.id!!, raceId)
                     }
                 }
             }
@@ -74,12 +73,12 @@ fun Route.race() {
             route("/days"){
 
                 put {
-                    val params = call.receiveV(AssignDaysToRaceRequest.example)
+                    val payload = call.receiveV(AssignDaysToRaceRequest.example)
                     call.respondKIO {
                         KIO.comprehension {
                             val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                             val raceId = !pathParam("raceId") { UUID.fromString(it) }
-                            RaceService.updateEventDayHasRace(params.getOrThrow(), user.id!!, raceId)
+                            RaceService.updateEventDayHasRace(!payload, user.id!!, raceId)
                         }
                     }
                 }

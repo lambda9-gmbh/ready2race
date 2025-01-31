@@ -12,7 +12,10 @@ sealed interface RequestError: ToApiError {
     data class PathParameterUnknown(val key: String): RequestError
     data class ParameterUnparsable(val key: String): RequestError
     data class BodyUnparsable(val example: Validatable): RequestError
+    data class BodyValidationFailed(val reason: StructuredValidationResult.Invalid) : RequestError
     data class InvalidPagination(val result: StructuredValidationResult.Invalid): RequestError
+
+    data class Other(val cause: Throwable): RequestError
 
     override fun respond(): ApiError = when (this) {
         is BodyUnparsable ->
@@ -20,6 +23,12 @@ sealed interface RequestError: ToApiError {
                 status = HttpStatusCode.BadRequest,
                 message = "Request body is not parsable, probably missing required fields.",
                 details = mapOf("example" to example)
+            )
+        is BodyValidationFailed ->
+            ApiError(
+                status = HttpStatusCode.UnprocessableEntity,
+                message = "Validation of request payload failed.",
+                details = mapOf("errors" to reason)
             )
         is InvalidPagination ->
             ApiError(
@@ -41,6 +50,11 @@ sealed interface RequestError: ToApiError {
             ApiError(
                 status = HttpStatusCode.BadRequest,
                 message = "Missing required query parameter $key"
+            )
+        is Other ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = cause.toString()
             )
     }
 }

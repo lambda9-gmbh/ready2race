@@ -18,11 +18,11 @@ fun Route.event() {
     route("/event") {
 
         post {
-            val params = call.receiveV(EventRequest.example)
+            val payload = call.receiveV(EventRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    EventService.addEvent(params.getOrThrow(), user.id!!)
+                    EventService.addEvent(!payload, user.id!!)
                 }
             }
         }
@@ -53,12 +53,12 @@ fun Route.event() {
             }
 
             put {
-                val params = call.receiveV(EventRequest.example)
+                val payload = call.receiveV(EventRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.updateEvent(params.getOrThrow(), user.id!!, id)
+                        EventService.updateEvent(!payload, user.id!!, id)
                     }
                 }
             }

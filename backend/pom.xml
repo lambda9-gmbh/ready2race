@@ -91,11 +91,6 @@
         </dependency>
         <dependency>
             <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-request-validation-jvm</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
             <artifactId>ktor-serialization-jackson-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>

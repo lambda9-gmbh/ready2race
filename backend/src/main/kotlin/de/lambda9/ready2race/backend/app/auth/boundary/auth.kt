@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.ready2race.backend.sessions.UserSession
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
@@ -12,10 +13,12 @@ fun Route.auth() {
     route("/login") {
         rateLimit(RateLimitName("login")) {
             post {
-                val login = call.receiveV(LoginRequest.example)
+                val payload = call.receiveV(LoginRequest.example)
                 call.respondKIO {
-                    AuthService.login(login.getOrThrow()) { token ->
-                        sessions.set(UserSession(token))
+                    payload.andThen {
+                        AuthService.login(it) { token ->
+                            sessions.set(UserSession(token))
+                        }
                     }
                 }
             }
