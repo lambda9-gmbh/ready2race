@@ -7,5 +7,5 @@ data class ApiError(
     val status: HttpStatusCode,
     val message: String,
     @JsonIgnore val headers: Map<String, String> = emptyMap(),
-    val details: Map<String, Any?> = emptyMap(),
+    val details: Map<String, Any?>? = null,
 )

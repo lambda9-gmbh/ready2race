@@ -15,7 +15,6 @@ import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.activation.MimetypesFileTypeMap
 import jakarta.mail.util.ByteArrayDataSource
 import org.simplejavamail.api.email.AttachmentResource

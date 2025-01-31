@@ -11,15 +11,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import java.io.ByteArrayOutputStream
 import java.io.PrintWriter
+import java.io.StringWriter
 
 private val logger = KotlinLogging.logger {}
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,
 ) {
-    logger.debug { "respondKIO{error=${error}}" }
     val apiError = error.respond()
     apiError.headers.forEach { entry ->
         response.headers.append(entry.key, entry.value)
@@ -34,19 +33,24 @@ suspend fun ApplicationCall.respondDefect(
     val details = when {
         kioEnv.env.config.mode != Config.Mode.PROD -> {
             try {
-                val out = ByteArrayOutputStream()
-                val writer = PrintWriter(out)
-                defect.printStackTrace(writer)
-                mapOf("error" to out.toString(Charsets.UTF_8))
+                val sw = StringWriter()
+                val pw = PrintWriter(sw)
+                defect.printStackTrace(pw)
+                mapOf("error" to sw.toString())
             } catch (t: Throwable) {
-                // Ignore error since this is optional anyway.
-                emptyMap<String, Any>()
+                null
             }
         }
 
         else ->
-            emptyMap()
+            null
     }
+
+    val apiError = ApiError(
+        status = HttpStatusCode.InternalServerError,
+        message = "An unexpected error has occurred.",
+        details = details
+    )
 
     respond(
         HttpStatusCode.InternalServerError, mapOf(

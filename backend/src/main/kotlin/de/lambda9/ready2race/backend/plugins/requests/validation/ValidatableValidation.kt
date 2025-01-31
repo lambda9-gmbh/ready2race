@@ -15,7 +15,6 @@ val ValidatableValidation : RouteScopedPlugin<Unit> = createRouteScopedPlugin("V
             }
         }
     }
-
 }
 
 

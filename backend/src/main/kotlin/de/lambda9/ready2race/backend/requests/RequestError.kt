@@ -22,13 +22,13 @@ sealed interface RequestError: ToApiError {
             ApiError(
                 status = HttpStatusCode.BadRequest,
                 message = "Request body is not parsable, probably missing required fields.",
-                details = mapOf("example" to example)
+                details = mapOf("validExample" to example)
             )
         is BodyValidationFailed ->
             ApiError(
                 status = HttpStatusCode.UnprocessableEntity,
                 message = "Validation of request payload failed.",
-                details = mapOf("errors" to reason)
+                details = mapOf("reason" to reason)
             )
         is InvalidPagination ->
             ApiError(
