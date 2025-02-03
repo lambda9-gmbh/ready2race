@@ -47,7 +47,6 @@ export type EventProperties = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
-    paymentDueDate?: string
     invoicePrefix?: string
 }
 
@@ -82,6 +81,15 @@ export type GetRaceResponse = {
     dto: RaceDto
 }
 
+export type GetRaceTemplatePageResponse = {
+    data: Array<RaceTemplateDto>
+    pagination: Pagination
+}
+
+export type GetRaceTemplateResponse = {
+    dto: RaceTemplateDto
+}
+
 export type LoginRequest = {
     email: string
     password: string
@@ -100,6 +108,15 @@ export type NamedParticipantDto = {
 export type NamedParticipantForRaceDto = {
     name: string
     description?: string
+    required: boolean
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+}
+
+export type NamedParticipantForRaceRequestDto = {
+    namedParticipant: string
     required: boolean
     countMales: number
     countFemales: number
@@ -176,9 +193,33 @@ export type RacePropertiesDto = {
     namedParticipants: Array<NamedParticipantForRaceDto>
 }
 
+export type RacePropertiesRequestDto = {
+    identifier: string
+    name: string
+    shortName?: string
+    description?: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+    participationFee: number
+    rentalFee: number
+    raceCategory?: string
+    namedParticipants: Array<NamedParticipantForRaceRequestDto>
+}
+
 export type RaceRequest = {
-    raceProperties: RacePropertiesDto
+    raceProperties: RacePropertiesRequestDto
     template?: string
+}
+
+export type RaceTemplateDto = {
+    id: string
+    properties: RacePropertiesDto
+}
+
+export type RaceTemplateRequest = {
+    properties: RacePropertiesRequestDto
 }
 
 export type UserLoginData = {
@@ -367,6 +408,55 @@ export type AssignDaysToRaceData = {
 export type AssignDaysToRaceResponse = void
 
 export type AssignDaysToRaceError = string
+
+export type AddRaceTemplateData = {
+    body: RaceTemplateRequest
+}
+
+export type AddRaceTemplateResponse = string
+
+export type AddRaceTemplateError = string
+
+export type GetRaceTemplatesData = {
+    query: {
+        /**
+         * Page size for pagination
+         */
+        limit: number
+        /**
+         * Result offset for pagination
+         */
+        offset: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort: string
+    }
+}
+
+export type GetRaceTemplatesResponse = GetRaceTemplatePageResponse
+
+export type GetRaceTemplatesError = string
+
+export type GetRaceTemplateResponse2 = GetRaceTemplateResponse
+
+export type GetRaceTemplateError = string
+
+export type UpdateRaceTemplateData = {
+    body: RaceTemplateRequest
+}
+
+export type UpdateRaceTemplateResponse = void
+
+export type UpdateRaceTemplateError = string
+
+export type DeleteRaceTemplateResponse = void
+
+export type DeleteRaceTemplateError = string
 
 export type AddNamedParticipantData = {
     body: NamedParticipantDto

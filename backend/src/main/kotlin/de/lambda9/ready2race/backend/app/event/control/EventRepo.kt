@@ -27,6 +27,14 @@ object EventRepo {
         }
     }
 
+    fun exists(
+        id: UUID
+    ): JIO<Boolean> = Jooq.query {
+        with(EVENT) {
+            fetchExists(this, ID.eq(id))
+        }
+    }
+
     fun count(
         search: String?
     ): JIO<Int> = Jooq.query {

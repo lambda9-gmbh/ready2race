@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.eventDay.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
@@ -34,8 +36,12 @@ object EventDayService {
         data class RacesNotFound(val races: List<UUID>) : EventDayError
 
         override fun respond(): ApiError = when (this) {
-            is EventDayNotFound -> ApiError(HttpStatusCode.NotFound, message = "EventDay not found")
-            is RacesNotFound -> ApiError(HttpStatusCode.BadRequest, message = "Races not found", details = mapOf("unknownIds" to races))
+            EventDayNotFound -> ApiError(HttpStatusCode.NotFound, message = "EventDay not found")
+            is RacesNotFound -> ApiError(
+                HttpStatusCode.BadRequest,
+                message = "Races not found",
+                details = mapOf("unknownIds" to races)
+            )
         }
     }
 
@@ -44,6 +50,9 @@ object EventDayService {
         userId: UUID,
         eventId: UUID
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+
+        EventService.checkEventExisting(eventId)
+
         val id = !EventDayRepo.create(request.record(userId, eventId)).orDie()
         KIO.ok(ApiResponse.Created(id))
     }
@@ -52,7 +61,10 @@ object EventDayService {
         eventId: UUID,
         params: PaginationParameters<EventDaySort>,
         raceId: UUID?
-    ): App<Nothing, ApiResponse.Page<EventDayDto, EventDaySort>> = KIO.comprehension {
+    ): App<EventDayError, ApiResponse.Page<EventDayDto, EventDaySort>> = KIO.comprehension {
+
+        EventService.checkEventExisting(eventId)
+
         val total =
             if (raceId == null) !EventDayRepo.countByEvent(eventId, params.search).orDie()
             else !EventDayRepo.countByEventAndRace(eventId, raceId, params.search).orDie()

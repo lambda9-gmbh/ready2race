@@ -66,7 +66,7 @@ object RaceTemplateService {
     fun addRaceTemplate(
         request: RaceTemplateRequest,
         userId: UUID,
-    ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
         val raceTemplateId = !RaceTemplateRepo.create(
             RaceTemplateRecord(
                 createdBy = userId,
@@ -74,12 +74,12 @@ object RaceTemplateService {
             )
         ).orDie()
 
-        RacePropertiesService.checkNamedParticipantsExisting(request.raceProperties.namedParticipants.map { it.namedParticipant })
-        RacePropertiesService.checkRaceCategoryExisting(request.raceProperties.raceCategory)
+        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
+        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
 
-        val racePropertiesId = !RacePropertiesRepo.create(request.raceProperties.record(null, raceTemplateId)).orDie()
+        val racePropertiesId = !RacePropertiesRepo.create(request.properties.record(null, raceTemplateId)).orDie()
 
-        !RacePropertiesHasNamedParticipantRepo.create(request.raceProperties.namedParticipants.map {
+        !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
             it.record(
                 racePropertiesId
             )
@@ -114,10 +114,10 @@ object RaceTemplateService {
         request: RaceTemplateRequest,
         userId: UUID,
         templateId: UUID
-    ): App<RaceTemplateError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        RacePropertiesService.checkNamedParticipantsExisting(request.raceProperties.namedParticipants.map { it.namedParticipant })
-        RacePropertiesService.checkRaceCategoryExisting(request.raceProperties.raceCategory)
+        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
+        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
 
 
         !RaceTemplateRepo.update(templateId) {
@@ -125,9 +125,9 @@ object RaceTemplateService {
             updatedAt = LocalDateTime.now()
         }.orDie().failOnFalse { RaceTemplateError.RaceTemplateNotFound }
 
-        // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
+        // In theory the RacePropertiesRepo functions can't fail because there has to be a "properties" for the "race" to exist
         !RacePropertiesRepo
-            .updateByRaceOrTemplate(templateId, request.raceProperties.toRecordFunction())
+            .updateByRaceOrTemplate(templateId, request.properties.toRecordFunction())
             .orDie()
             .failOnFalse { RaceTemplateError.RacePropertiesNotFound }
 
@@ -138,7 +138,7 @@ object RaceTemplateService {
 
         // delete and re-add the named participant entries
         !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
-        !RacePropertiesHasNamedParticipantRepo.create(request.raceProperties.namedParticipants.map {
+        !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
             it.record(
                 racePropertiesId
             )

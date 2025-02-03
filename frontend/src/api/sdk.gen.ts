@@ -54,6 +54,19 @@ import type {
     AssignDaysToRaceData,
     AssignDaysToRaceError,
     AssignDaysToRaceResponse,
+    AddRaceTemplateData,
+    AddRaceTemplateError,
+    AddRaceTemplateResponse,
+    GetRaceTemplatesData,
+    GetRaceTemplatesError,
+    GetRaceTemplatesResponse,
+    GetRaceTemplateError,
+    GetRaceTemplateResponse2,
+    UpdateRaceTemplateData,
+    UpdateRaceTemplateError,
+    UpdateRaceTemplateResponse,
+    DeleteRaceTemplateError,
+    DeleteRaceTemplateResponse,
     AddNamedParticipantData,
     AddNamedParticipantError,
     AddNamedParticipantResponse,
@@ -275,6 +288,71 @@ export const assignDaysToRace = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/race/{raceId}/days',
+    })
+}
+
+export const addRaceTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddRaceTemplateResponse,
+        AddRaceTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceTemplate',
+    })
+}
+
+export const getRaceTemplates = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRaceTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceTemplatesResponse,
+        GetRaceTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceTemplate',
+    })
+}
+
+export const getRaceTemplate = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRaceTemplateResponse2,
+        GetRaceTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceTemplate/{raceTemplateId}',
+    })
+}
+
+export const updateRaceTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRaceTemplateResponse,
+        UpdateRaceTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceTemplate/{raceTemplateId}',
+    })
+}
+
+export const deleteRaceTemplate = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteRaceTemplateResponse,
+        DeleteRaceTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/raceTemplate/{raceTemplateId}',
     })
 }
 

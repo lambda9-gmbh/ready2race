@@ -64,6 +64,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -82,8 +84,8 @@ paths:
                 $ref: '#/components/schemas/GetEventPageResponse'
         401:
           $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}:
@@ -98,6 +100,8 @@ paths:
                 $ref: '#/components/schemas/GetEventResponse'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -117,6 +121,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -128,6 +134,8 @@ paths:
           description: Event successfully deleted
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -148,6 +156,10 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -173,6 +185,8 @@ paths:
                 $ref: '#/components/schemas/GetEventDayPageResponse'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -189,6 +203,8 @@ paths:
                 $ref: '#/components/schemas/GetEventDayResponse'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -208,6 +224,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -219,6 +237,8 @@ paths:
           description: EventDay successfully deleted
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -239,6 +259,10 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/race:
@@ -257,6 +281,10 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -282,6 +310,8 @@ paths:
                 $ref: '#/components/schemas/GetRacePageResponse'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -298,6 +328,8 @@ paths:
                 $ref: '#/components/schemas/GetRaceResponse'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -317,6 +349,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -328,6 +362,8 @@ paths:
           description: Race successfully deleted
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -348,6 +384,102 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /raceTemplate:
+    post:
+      operationId: addRaceTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceTemplateRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getRaceTemplates
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: RaceTemplate page successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRaceTemplatePageResponse'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /raceTemplate/{raceTemplateId}:
+    get:
+      operationId: getRaceTemplate
+      responses:
+        200:
+          description: RaceTemplate successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetRaceTemplateResponse'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateRaceTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RaceTemplateRequest'
+      responses:
+        204:
+          description: RaceTemplate successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteRaceTemplate
+      responses:
+        204:
+          description: RaceTemplate successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   /namedParticipant:
@@ -366,6 +498,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -381,6 +515,8 @@ paths:
                   $ref: '#/components/schemas/NamedParticipantDto'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
   /namedParticipant/{namedParticipantId}:
@@ -399,6 +535,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -410,8 +548,12 @@ paths:
           description: NamedParticipant successfully deleted
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
   /raceCategory:
@@ -430,6 +572,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -445,6 +589,8 @@ paths:
                   $ref: '#/components/schemas/RaceCategoryDto'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
   /raceCategory/{raceCategoryId}:
@@ -463,6 +609,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -474,6 +622,8 @@ paths:
           description: RaceCategory successfully deleted
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:
@@ -543,6 +693,13 @@ components:
 
     401:
       description: Unauthorized
+      content:
+        text/plain:
+          schema:
+            type: string
+
+    403:
+      description: Forbidden
       content:
         text/plain:
           schema:
@@ -821,7 +978,8 @@ components:
             format: uuid
 
 
-    # race
+
+    # raceProperties
 
     RacePropertiesDto:
       type: object
@@ -864,88 +1022,6 @@ components:
             $ref: '#/components/schemas/NamedParticipantForRaceDto'
 
 
-    RaceDto:
-      type: object
-      required:
-        - id
-        - event
-        - raceProperties
-      properties:
-        id:
-          type: string
-          format: uuid
-        event:
-          type: string
-          format: uuid
-        raceProperties:
-          $ref: '#/components/schemas/RacePropertiesDto'
-        template:
-          type: string
-          format: uuid
-
-
-    RaceRequest:
-      type: object
-      required:
-        - raceProperties
-        - namedParticipantList
-      properties:
-        raceProperties:
-          $ref: '#/components/schemas/RacePropertiesDto'
-        template:
-          type: string
-          format: uuid
-
-    GetRacePageResponse:
-      type:
-        object
-      required:
-        - data
-        - pagination
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/RaceDto'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-
-    GetRaceResponse:
-      type:
-        object
-      required:
-        - dto
-      properties:
-        dto:
-          $ref: '#/components/schemas/RaceDto'
-
-    AssignDaysToRaceRequest:
-      type:
-        object
-      required:
-        - days
-      properties:
-        days:
-          type: array
-          items:
-            type: string
-            format: uuid
-
-
-    # namedParticipant
-
-    NamedParticipantDto:
-      type:
-        object
-      required:
-        - name
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-
-
     NamedParticipantForRaceDto:
       type: object
       required:
@@ -970,6 +1046,210 @@ components:
           type: integer
         countMixed:
           type: integer
+
+
+    RacePropertiesRequestDto:
+      type: object
+      required:
+        - identifier
+        - name
+        - countMales
+        - countFemales
+        - countNonBinary
+        - countMixed
+        - participationFee
+        - rentalFee
+        - namedParticipants
+      properties:
+        identifier:
+          type: string
+        name:
+          type: string
+        shortName:
+          type: string
+        description:
+          type: string
+        countMales:
+          type: integer
+        countFemales:
+          type: integer
+        countNonBinary:
+          type: integer
+        countMixed:
+          type: integer
+        participationFee:
+          type: number
+        rentalFee:
+          type: number
+        raceCategory:
+          type: string
+          format: uuid
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedParticipantForRaceRequestDto'
+
+
+    NamedParticipantForRaceRequestDto:
+      type: object
+      required:
+        - namedParticipant
+        - required
+        - countMales
+        - countFemales
+        - countNonBinary
+        - countMixed
+      properties:
+        namedParticipant:
+          type: string
+          format: uuid
+        required:
+          type: boolean
+        countMales:
+          type: integer
+        countFemales:
+          type: integer
+        countNonBinary:
+          type: integer
+        countMixed:
+          type: integer
+
+
+
+    # race
+
+    RaceDto:
+      type: object
+      required:
+        - id
+        - event
+        - raceProperties
+      properties:
+        id:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+        raceProperties:
+          $ref: '#/components/schemas/RacePropertiesDto'
+        template:
+          type: string
+          format: uuid
+
+
+    RaceRequest:
+      type: object
+      required:
+        - raceProperties
+      properties:
+        raceProperties:
+          $ref: '#/components/schemas/RacePropertiesRequestDto'
+        template:
+          type: string
+          format: uuid
+
+
+    GetRacePageResponse:
+      type:
+        object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RaceDto'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+
+    GetRaceResponse:
+      type:
+        object
+      required:
+        - dto
+      properties:
+        dto:
+          $ref: '#/components/schemas/RaceDto'
+
+
+    AssignDaysToRaceRequest:
+      type:
+        object
+      required:
+        - days
+      properties:
+        days:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+
+
+    # raceTemplate
+
+    RaceTemplateDto:
+      type: object
+      required:
+        - id
+        - properties
+      properties:
+        id:
+          type: string
+          format: uuid
+        properties:
+          $ref: '#/components/schemas/RacePropertiesDto'
+
+
+    RaceTemplateRequest:
+      type: object
+      required:
+        - properties
+      properties:
+        properties:
+          $ref: '#/components/schemas/RacePropertiesRequestDto'
+
+
+    GetRaceTemplatePageResponse:
+      type:
+        object
+      required:
+        - data
+        - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RaceTemplateDto'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
+
+
+    GetRaceTemplateResponse:
+      type:
+        object
+      required:
+        - dto
+      properties:
+        dto:
+          $ref: '#/components/schemas/RaceTemplateDto'
+
+
+    # namedParticipant
+
+    NamedParticipantDto:
+      type:
+        object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
 
 
 

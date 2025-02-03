@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.event.control.record
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
+import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.kio.failOnFalse
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
@@ -90,4 +91,12 @@ object EventService {
             noData
         }
     }
+
+    fun checkEventExisting(
+        eventId: UUID
+    ): App<EventError, Unit> = EventRepo.exists(eventId)
+        .orDie()
+        .failIf(condition = { !it }) {
+            EventError.EventNotFound
+        }.map {}
 }

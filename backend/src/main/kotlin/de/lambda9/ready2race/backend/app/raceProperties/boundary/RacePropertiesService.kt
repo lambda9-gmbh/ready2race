@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import java.util.*
 
@@ -55,7 +56,7 @@ object RacePropertiesService {
             KIO.unit
         } else {
             RaceCategoryRepo.exists(raceCategory).orDie()
-                .failIf(condition = { true }) {
+                .failIf(condition = { !it }) {
                     RacePropertiesError.RaceCategoryUnknown
                 }.map {}
         }

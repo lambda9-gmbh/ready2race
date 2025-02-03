@@ -6,14 +6,14 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 
 data class RaceTemplateRequest(
-    val raceProperties: RacePropertiesRequestDto
+    val properties: RacePropertiesRequestDto
 ): Validatable {
     override fun validate(): StructuredValidationResult =
-        this::raceProperties.validate()
+        this::properties.validate()
 
     companion object{
         val example get() = RaceTemplateRequest(
-            raceProperties = RacePropertiesRequestDto.example
+            properties = RacePropertiesRequestDto.example
         )
     }
 }
