@@ -174,7 +174,7 @@ export type RaceCategoryDto = {
 export type RaceDto = {
     id: string
     event: string
-    raceProperties: RacePropertiesDto
+    properties?: RacePropertiesDto
     template?: string
 }
 
@@ -209,7 +209,7 @@ export type RacePropertiesRequestDto = {
 }
 
 export type RaceRequest = {
-    raceProperties: RacePropertiesRequestDto
+    properties: RacePropertiesRequestDto
     template?: string
 }
 
