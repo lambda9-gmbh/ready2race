@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.eventDay.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
-import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto

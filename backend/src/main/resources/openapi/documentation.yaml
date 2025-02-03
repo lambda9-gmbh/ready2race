@@ -1131,7 +1131,7 @@ components:
         event:
           type: string
           format: uuid
-        raceProperties:
+        properties:
           $ref: '#/components/schemas/RacePropertiesDto'
         template:
           type: string
@@ -1141,9 +1141,9 @@ components:
     RaceRequest:
       type: object
       required:
-        - raceProperties
+        - properties
       properties:
-        raceProperties:
+        properties:
           $ref: '#/components/schemas/RacePropertiesRequestDto'
         template:
           type: string
