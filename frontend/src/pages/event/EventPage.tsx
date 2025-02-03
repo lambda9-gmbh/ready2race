@@ -8,9 +8,9 @@ import {
     getEvents,
     updateEvent,
     updateEventDay, updateRace
-} from '../api'
+} from '../../api'
 import {Box} from '@mui/material'
-import {useFetch} from '../utils/hooks.ts'
+import {useFetch} from '../../utils/hooks.ts'
 
 const EventPage = () => {
 
@@ -27,7 +27,6 @@ const EventPage = () => {
                     location: 'Flensburg',
                     registrationAvailableFrom: new Date('2025-01-16T12:00:00').toISOString(),
                     registrationAvailableTo: new Date('2025-01-31T23:59:59').toISOString(),
-                    paymentDueDate: undefined,
                     invoicePrefix: 'TEv',
                 },
             },
@@ -83,7 +82,6 @@ const EventPage = () => {
                     location: 'Flensburg',
                     registrationAvailableFrom: new Date('2025-01-16T12:00:00').toISOString(),
                     registrationAvailableTo: new Date('2025-01-31T23:59:59').toISOString(),
-                    paymentDueDate: undefined,
                     invoicePrefix: 'TEv',
                 },
             },
@@ -207,37 +205,14 @@ const EventPage = () => {
         const {data, error} = await addRace({
             path: {eventId: testEventId},
             body: {
-                raceProperties: {
-                    identifier: 'A1',
-                    name: 'Sprint 1er M 1000m',
-                    shortName: "S1M",
-                    description: 'Der 1er Sprint der Männer über 1000m',
-                    countMales: 1,
-                    countFemales: 0,
-                    countNonBinary: 0,
-                    countMixed: 0,
-                    participationFee: 12.50,
-                    rentalFee: 9.99,
-                    raceCategory: "Sprint"
-                },
-                template: undefined,
-                namedParticipantList: [{
-                    namedParticipant: "Steuer R",
-                    countMales: 0,
-                    countFemales: 0,
-                    countNonBinary: 0,
-                    countMixed: 1
-                }]
+
             },
         })
-
         if (error) {
             console.error(error)
             return
         }
         if (data === undefined) return
-
-        console.log(`Race created (${data})`)
     }
 
     const initialRaceSort = '[{"field": "TODO", "direction": "ASC"}]'

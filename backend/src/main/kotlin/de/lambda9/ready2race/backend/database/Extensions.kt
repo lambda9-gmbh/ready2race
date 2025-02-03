@@ -26,6 +26,6 @@ fun <R : Record, S : Sortable> SelectWhereStep<R>.page(
     this
         .where(where())
         .and(paginationParameter.search.metaSearch(searchFields))
-        .orderBy(paginationParameter.sort.toOrderBy())
+        .orderBy(paginationParameter.sort.orders.toOrderBy())
         .limit(paginationParameter.limit)
         .offset(paginationParameter.offset)

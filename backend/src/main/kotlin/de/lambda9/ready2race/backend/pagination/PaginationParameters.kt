@@ -3,7 +3,7 @@ package de.lambda9.ready2race.backend.pagination
 data class PaginationParameters<S: Sortable>(
     val limit: Int,
     val offset: Int,
-    val sort: List<Order<S>>,
+    val sort: Sort<S>,
     val search: String?,
 ) {
 

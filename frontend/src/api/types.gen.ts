@@ -125,17 +125,22 @@ export type NamedParticipantForRaceRequestDto = {
 }
 
 export type Order = {
-    field?: string
-    direction?: 'ASC' | 'DESC'
+    field: string
+    direction: 'ASC' | 'DESC'
 }
 
 export type direction = 'ASC' | 'DESC'
+
+export type Orders = {
+    orders: Array<Order>
+}
 
 export type Pagination = {
     total: number
     limit: number
     offset: number
-    sort: Array<Order>
+    sort: Orders
+    search: string
 }
 
 /**
@@ -156,7 +161,7 @@ export type Parametersearch = string
 /**
  * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
  */
-export type Parametersort = string
+export type Parametersort = Orders
 
 export type Privilege =
     | 'USER_VIEW'
@@ -263,7 +268,7 @@ export type GetEventsData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort: Orders
     }
 }
 
@@ -316,7 +321,7 @@ export type GetEventDaysData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort: Orders
     }
 }
 
@@ -377,7 +382,7 @@ export type GetRacesData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort: Orders
     }
 }
 
@@ -434,7 +439,7 @@ export type GetRaceTemplatesData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort: Orders
     }
 }
 

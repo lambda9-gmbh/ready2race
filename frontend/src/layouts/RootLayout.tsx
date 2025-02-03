@@ -6,7 +6,7 @@ import Sidebar from '../components/sidebar/Sidebar.tsx'
 import SidebarItem from '../components/sidebar/SidebarItem.tsx'
 import UserWidget from '../components/appbar/UserWidget.tsx'
 
-const MainLayout = () => {
+const RootLayout = () => {
     const [drawerExpanded, setDrawerExpanded] = useState(false)
 
     return (
@@ -50,4 +50,4 @@ const MainLayout = () => {
     )
 }
 
-export default MainLayout
+export default RootLayout

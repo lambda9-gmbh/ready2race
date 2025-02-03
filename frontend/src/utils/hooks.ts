@@ -1,6 +1,7 @@
 import {RequestResult} from '@hey-api/client-fetch'
 import {DependencyList, useEffect, useState} from 'react'
 import {useSnackbar} from 'notistack'
+import {GridValidRowModel} from "@mui/x-data-grid";
 
 type UseFetchOptions<T, E> = {
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
@@ -84,6 +85,51 @@ export const useFetch = <T, E>(
     return result
 }
 
+export type ParamDialogState<T> = [boolean, (params?: T) => void, () => void, props: T | undefined]
+
+export const useParamDialogState = <T>(defaultOpen: boolean): ParamDialogState<T> => {
+    const [dialogOpen, setDialogOpen] = useState(defaultOpen)
+    const [props, setProps] = useState<T>()
+
+    return [
+        dialogOpen,
+        (props?: T) => {
+            setDialogOpen(true)
+            setProps(props)
+        },
+        () => setDialogOpen(false),
+        props,
+    ]
+}
+
+export type EntityAdministration<T> = {
+    dialogIsOpen: boolean
+    openDialog: (entity?: T) => void
+    closeDialog: () => void
+    entity?: T
+    lastRequested: number
+    reloadData: () => void
+}
+
+export const useEntityAdministration = <
+    T extends GridValidRowModel | undefined = undefined,
+>(): EntityAdministration<T> => {
+    const [dialogIsOpen, openDialog, closeDialog, entity] = useParamDialogState<T>(false)
+
+    const [lastRequested, setLastRequested] = useState(Date.now())
+
+    return {
+        dialogIsOpen,
+        openDialog,
+        closeDialog,
+        entity,
+        lastRequested,
+        reloadData: () => {
+            setLastRequested(Date.now())
+        },
+    }
+}
+
 export const useFeedback = () => {
     const {enqueueSnackbar} = useSnackbar()
 
@@ -93,4 +139,18 @@ export const useFeedback = () => {
         error: (msg: string) => enqueueSnackbar(msg, {variant: 'error'}),
         info: (msg: string) => enqueueSnackbar(msg, {variant: 'info'}),
     }
+}
+
+export const useDebounce = <T>(value: T, delay?: number) => {
+    const [debounced, setDebounced] = useState<T>(value)
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebounced(value), delay ?? 500)
+
+        return () => {
+            clearTimeout(timer)
+        }
+    }, [value, delay])
+
+    return debounced
 }

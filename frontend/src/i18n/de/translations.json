@@ -1,6 +1,14 @@
 {
   "common": {
-    "ok": "Ok"
+    "cancel": "Abbrechen",
+    "confirmation": {
+      "title": "Bestätigung erforderlich",
+      "content": "Bitte bestätigen Sie das Ausführen der gewählten Aktion"
+    },
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "ok": "Ok",
+    "search": "Suchen"
   },
   "error": {
     "unexpected": "Ein unerwarteter Fehler ist aufgetreten."
@@ -16,5 +24,23 @@
   "login": {
     "email": "E-Mail",
     "password": "Passwort"
+  },
+  "event": {
+    "action": {
+      "add": "Veranstaltung anlegen",
+      "delete": {
+        "success": "Veranstaltung gelöscht"
+      }
+    },
+    "description": "Beschreibung",
+    "invoice": {
+      "prefix": "Rechnungspräfix"
+    },
+    "location": "Ort",
+    "name": "Name",
+    "registrationAvailable": {
+      "from": "Anmeldezeitraum von",
+      "to": "Anmeldezeitraum bis"
+    }
   }
 }

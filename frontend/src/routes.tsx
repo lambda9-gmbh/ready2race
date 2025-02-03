@@ -7,10 +7,10 @@ import {
     SearchSchemaInput,
 } from '@tanstack/react-router'
 import {User} from './contexts/user/UserContext.ts'
-import MainLayout from './layouts/MainLayout.tsx'
+import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import {Privilege} from './api'
-import EventPage from "./pages/EventPage.tsx";
+import EventsPage from "./pages/event/EventsPage.tsx";
 
 const checkAuth = (
     context: User,
@@ -30,7 +30,7 @@ const checkAuth = (
 }
 
 export const rootRoute = createRootRouteWithContext<User>()({
-    component: () => <MainLayout />,
+    component: () => <RootLayout />,
 })
 
 export const indexRoute = createRoute({
@@ -71,7 +71,7 @@ export const dashboardRoute = createRoute({
 export const eventRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'event',
-    component: () => <EventPage/>,
+    component: () => <EventsPage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     }

@@ -7,6 +7,7 @@ import Config from './Config'
 import {muiTheme} from './theme'
 import {ThemeProvider} from '@mui/material'
 import {SnackbarProvider} from 'notistack'
+import {ConfirmationProvider} from './contexts/confirmation/ConfirmationProvider.tsx'
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
@@ -15,13 +16,15 @@ client.setConfig({
 
 const theme = muiTheme()
 
-function App() {
+const App = () => {
     const user = useUser()
 
     return (
         <ThemeProvider theme={theme}>
             <SnackbarProvider maxSnack={3} anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}>
-                <RouterProvider router={router} context={user}></RouterProvider>
+                <ConfirmationProvider>
+                    <RouterProvider router={router} context={user}></RouterProvider>
+                </ConfirmationProvider>
             </SnackbarProvider>
         </ThemeProvider>
     )

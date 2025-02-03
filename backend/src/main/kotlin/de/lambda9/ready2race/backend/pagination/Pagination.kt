@@ -4,6 +4,6 @@ data class Pagination<S: Sortable> (
     val total: Int,
     val limit: Int,
     val offset: Int,
-    val sort: List<Order<S>>,
+    val sort: Sort<S>,
     val search: String?,
 )

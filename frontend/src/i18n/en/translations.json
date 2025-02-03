@@ -1,6 +1,14 @@
 {
   "common": {
-    "ok": "Ok"
+    "cancel": "Cancel",
+    "confirmation": {
+      "title": "Confirmation required",
+      "content": "Please confirm the execution of the selected action"
+    },
+    "delete": "Delete",
+    "edit": "Edit",
+    "ok": "Ok",
+    "search": "Search"
   },
   "error": {
     "unexpected": "An unexpected error occurred."
@@ -16,5 +24,23 @@
   "login": {
     "email": "Email",
     "password": "Password"
+  },
+  "event": {
+    "action": {
+      "add": "Add event",
+      "delete": {
+        "success": "Event deleted"
+      }
+    },
+    "description": "Description",
+    "invoice": {
+      "prefix": "Invoice prefix"
+    },
+    "location": "Location",
+    "name": "Name",
+    "registrationAvailable": {
+      "from": "Registration period start",
+      "to": "Registration period end"
+    }
   }
 }
