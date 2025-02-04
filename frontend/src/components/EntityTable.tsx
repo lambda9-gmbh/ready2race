@@ -26,7 +26,7 @@ type EntityTableProps<Entity extends GridValidRowModel, Error> = BaseEntityTable
     ExtendedEntityTableProps<Entity, Error> &
     (
         | {
-              deleteRequest: (entity: Entity) => RequestResult<void>
+              deleteRequest: (entity: Entity) => RequestResult<void, string, false>// todo: specific error type
               onDelete: () => void
               deletableWhen?: (entity: Entity) => boolean
           }
@@ -47,7 +47,7 @@ type ExtendedEntityTableProps<Entity extends GridValidRowModel, Error> = {
         changeScope: PrivilegeScope | null,
     ) => ReactElement<GridActionsCellItemProps>[]
     jumpToColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
-    addLabel?: string
+    entityName?: string
     gridProps?: Partial<DataGridProps>
     readPermission: Privilege
     changePermission: Privilege
@@ -61,7 +61,7 @@ type PageResponse<E> = {
 
 const EntityTable = <Entity extends GridValidRowModel, Error>({
     jumpToColumn,
-    addLabel,
+    entityName,
     ...props
 }: EntityTableProps<Entity, Error>) => {
     //todo: Change PrivilegeScope
@@ -73,6 +73,8 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
     const {confirmAction} = useConfirmation()
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
+
+    const entityTitle = entityName ?? t('entity.entity')
 
     const columns: GridColDef<Entity>[] = [
         ...(jumpToColumn
@@ -127,23 +129,19 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                               icon={<Delete />}
                               label={t('common.delete')}
                               onClick={() => {
-                                  confirmAction(() => {
+                                  confirmAction(async () => {
                                       setIsDeletingRow(true)
-                                      props
-                                          .deleteRequest(params.row)
-                                          .then(() => {
-                                              setIsDeletingRow(false)
-                                              props.reloadData()
-                                              props.onDelete()
-                                          })
-                                          .catch(_error => {
-                                              setIsDeletingRow(false)
-                                              //if (error instanceof ApiError) {
-                                              //    feedback.error(t('common.error.api'))
-                                              //} else {
-                                              feedback.error(t('error.unexpected'))
-                                              //}
-                                          })
+                                      const {error} = await props.deleteRequest(params.row)
+                                      setIsDeletingRow(false)
+                                      if(error){
+                                          // todo better error display with specific error types
+                                          console.log(error)
+                                          feedback.error(t('entity.delete.error', {entity: entityTitle}))
+                                      } else {
+                                          props.reloadData()
+                                          props.onDelete()
+                                          feedback.success(t('entity.delete.success', {entity: entityTitle}))
+                                      }
                                   })
                               }}
                               showInMenu={true}
@@ -154,6 +152,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
         },
     ]
 
+
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>(
         props.initialPagination,
     )
@@ -162,14 +161,13 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
     const [searchInput, setSearchInput] = useState<string>('')
     const debouncedSearchInput = useDebounce(searchInput, 700)
 
+
     const {data, pending} = useFetch(signal =>
         props.dataRequest(
             signal,
             paginationParameters(paginationModel, sortModel, debouncedSearchInput),
         ),
     )
-
-    console.log(sortModel)
 
     return (
         <Box>
@@ -186,12 +184,12 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                         }}
                     />
                 )}
-                {changePermitted && addLabel && (
+                {changePermitted && (
                     <Button
                         variant={'outlined'}
                         startIcon={<Add />}
                         onClick={() => props.openDialog()}>
-                        {addLabel}
+                        {t('entity.add.action', {entity: entityTitle ?? t('entity.entity')})}
                     </Button>
                 )}
             </Box>

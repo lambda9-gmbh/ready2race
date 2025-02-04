@@ -1,10 +1,9 @@
 import {GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {Order} from '../api'
 
 export type PaginationParameters = {
     limit: number
     offset: number
-    sort: {orders: Order[]}
+    sort: string
     search?: string
 }
 
@@ -34,12 +33,9 @@ export const paginationParameters = (
     return {
         limit: pageModel.pageSize,
         offset: pageModel.pageSize * pageModel.page,
-        sort: {orders: sortModel.map(v => {
-            return {
-                field: toSnakeCase(v.field).toUpperCase(),
-                direction: v.sort === 'desc' ? 'DESC' : 'ASC',
-            }
-        })},
-        search: searchString
+        sort: JSON.stringify(sortModel.map((v) => {
+            return {field: toSnakeCase(v.field).toUpperCase(), direction: v.sort === 'desc' ? 'DESC' : 'ASC'}
+        })),
+        search: searchString !== "" ? searchString : undefined
     }
 }

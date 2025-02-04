@@ -8,8 +8,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.kio.toKio
+import de.lambda9.ready2race.backend.pagination.Order
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.pagination.Sort
 import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.plugins.requests.validation.ValidatableValidationException
 import de.lambda9.ready2race.backend.serialization.jsonMapper
@@ -89,7 +89,7 @@ inline fun <reified S> ApplicationCall.pagination(): App<RequestError, Paginatio
 
     val limit = !queryParam("limit") { it.toInt() }
     val offset = !queryParam("offset") { it.toInt() }
-    val sort = !queryParam("sort") { jsonMapper.readValue<Sort<S>>(it) }
+    val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
     val search = !optionalQueryParam("search")
 
     StructuredValidationResult.allOf(

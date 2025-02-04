@@ -7,14 +7,35 @@
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "form": {
+      "required": "Bitte füllen Sie dieses Feld aus.",
+      "number": {
+        "invalid": {
+          "pattern": "Bitte geben Sie eine gültige Zahl ein.",
+          "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
+        }
+      }
+    },
     "ok": "Ok",
+    "save": "Speichern",
     "search": "Suchen"
   },
-  "error": {
-    "unexpected": "Ein unerwarteter Fehler ist aufgetreten."
-  },
-  "form": {
-    "required": "Diese Feld ist erforderlich."
+  "entity": {
+    "add": {
+      "action": "{{entity}} anlegen",
+      "success": "{{entity}} angelegt",
+      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht angelegt"
+    },
+    "delete": {
+      "success": "{{entity}} gelöscht",
+      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
+    },
+    "edit": {
+      "action": "{{entity}} bearbeiten",
+      "success": "{{entity}} aktualisiert",
+      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
+    },
+    "entity": "Objekt"
   },
   "navigation": {
     "titles": {
@@ -33,6 +54,7 @@
       }
     },
     "description": "Beschreibung",
+    "event": "Veranstaltung",
     "invoice": {
       "prefix": "Rechnungspräfix"
     },

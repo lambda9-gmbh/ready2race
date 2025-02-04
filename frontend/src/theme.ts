@@ -1,4 +1,9 @@
 import {createTheme, Theme, ThemeOptions} from '@mui/material'
+import {deDE, enUS} from '@mui/material/locale'
+import {enUS as enDataGrid} from '@mui/x-data-grid/locales/enUS'
+import {enUS as enDatePicker} from '@mui/x-date-pickers/locales/enUS'
+import {deDE as deDataGrid} from '@mui/x-data-grid/locales/deDE'
+import {deDE as deDatePicker} from '@mui/x-date-pickers/locales/deDE'
 
 const baseThemeOptions: ThemeOptions = {}
 
@@ -14,7 +19,17 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
     },
 })
 
-export const muiTheme = (): Theme => {
+export const muiTheme = (language: string): Theme => {
     const theme = createTheme(baseThemeOptions)
-    return createTheme(theme, componentOverrides(theme))
+
+    const loc =
+        language === 'en' ? [enUS, enDataGrid, enDatePicker] : [deDE, deDataGrid, deDatePicker]
+
+    return createTheme(
+        {
+            ...theme,
+            ...componentOverrides(theme),
+        },
+        ...loc,
+    )
 }

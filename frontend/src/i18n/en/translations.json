@@ -7,14 +7,35 @@
     },
     "delete": "Delete",
     "edit": "Edit",
+    "form": {
+      "required": "Please fill in this field.",
+      "number": {
+        "invalid": {
+          "pattern": "Please enter a valid number.",
+          "range": "Please enter a number between {{min}} and {{max}}."
+        }
+      }
+    },
     "ok": "Ok",
+    "save": "Save",
     "search": "Search"
   },
-  "error": {
-    "unexpected": "An unexpected error occurred."
-  },
-  "form": {
-    "required": "This field is required."
+  "entity": {
+    "add": {
+      "action": "Add {{entity}}",
+      "success": "{{entity}} added",
+      "error": "An error occurred when adding the {{entity}}"
+    },
+    "delete": {
+      "success": "{{entity}} deleted",
+      "error": "An error occurred when deleting the {{entity}}"
+    },
+    "edit": {
+      "action": "Edit {{entity}}",
+      "success": "{{entity}} updated",
+      "error": "An error occurred when updating the {{entity}}"
+    },
+    "entity": "Object"
   },
   "navigation": {
     "titles": {
@@ -33,6 +54,7 @@
       }
     },
     "description": "Description",
+    "event": "Event",
     "invoice": {
       "prefix": "Invoice prefix"
     },
