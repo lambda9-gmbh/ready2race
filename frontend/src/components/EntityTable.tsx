@@ -181,7 +181,6 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
         [paginationModel, sortModel, debouncedSearchInput],
     )
 
-
     return (
         <Box>
             {props.title && <Typography variant={'h6'}>{props.title}</Typography>}
@@ -207,35 +206,38 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                 )}
             </Box>
             {triggerReloadRows !== undefined && ( // todo: better solution? This fixes a bug where sometimes after deleting a search entry the rows would not be displayed
-                <DataGrid
-                    isRowSelectable={() => false}
-                    paginationMode="server"
-                    pageSizeOptions={[
-                        ...props.pageSizeOptions,
-                        ...(props.pageSizeOptions.includes(props.initialPagination.pageSize)
-                            ? []
-                            : [props.initialPagination.pageSize]),
-                    ]}
-                    disableColumnFilter={true}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    sortingMode="server"
-                    sortModel={sortModel}
-                    onSortModelChange={setSortModel}
-                    columns={columns}
-                    rows={data?.data ?? []}
-                    rowCount={data?.pagination?.total ?? 0}
-                    loading={pending || isDeletingRow}
-                    autoHeight={true}
-                    density={'compact'}
-                    getRowHeight={() => 'auto'}
-                    sx={{
-                        '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
-                        '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
-                        '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {py: '22px'},
-                    }}
-                    {...props.gridProps}
-                />
+                <Box sx={{display: 'flex', flexDirection: 'column'}}>
+                    <DataGrid
+                        isRowSelectable={() => false}
+                        paginationMode="server"
+                        pageSizeOptions={[
+                            ...props.pageSizeOptions,
+                            ...(props.pageSizeOptions.includes(props.initialPagination.pageSize)
+                                ? []
+                                : [props.initialPagination.pageSize]),
+                        ]}
+                        disableColumnFilter={true}
+                        paginationModel={paginationModel}
+                        onPaginationModelChange={setPaginationModel}
+                        sortingMode="server"
+                        sortModel={sortModel}
+                        onSortModelChange={setSortModel}
+                        columns={columns}
+                        rows={data?.data ?? []}
+                        rowCount={data?.pagination?.total ?? 0}
+                        loading={pending || isDeletingRow}
+                        density={'compact'}
+                        getRowHeight={() => 'auto'}
+                        sx={{
+                            '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
+                            '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
+                            '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
+                                py: '22px',
+                            },
+                        }}
+                        {...props.gridProps}
+                    />
+                </Box>
             )}
         </Box>
     )

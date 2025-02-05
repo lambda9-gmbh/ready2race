@@ -19,6 +19,9 @@
         "invalid": "Please select a valid date and time."
       }
     },
+    "load": {
+      "error": "{{entity}} could not be loaded"
+    },
     "ok": "Ok",
     "save": "Save",
     "search": "Search"
@@ -50,12 +53,6 @@
     "password": "Password"
   },
   "event": {
-    "action": {
-      "add": "Add event",
-      "delete": {
-        "success": "Event deleted"
-      }
-    },
     "description": "Description",
     "event": "Event",
     "invoice": {

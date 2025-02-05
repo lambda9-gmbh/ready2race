@@ -1,42 +1,32 @@
-import {
-    addEvent,
-    addEventDay, addRace,
-    deleteEvent, deleteEventDay, deleteRace,
-    getEvent,
-    getEventDay,
-    getEventDays,
-    getEvents,
-    updateEvent,
-    updateEventDay, updateRace
-} from '../../api'
+import {getEvent} from '../../api'
 import {Box} from '@mui/material'
-import {useFetch} from '../../utils/hooks.ts'
+import {useFeedback, useFetch} from '../../utils/hooks.ts'
+import {eventRoute} from '../../routes.tsx'
+import {useTranslation} from 'react-i18next'
 
 const EventPage = () => {
+    const {t} = useTranslation()
+    const feedback = useFeedback()
 
-    const testEventId = "684fe2e4-3237-43e3-a2ec-bffd9ae67407"
+    const {eventId} = eventRoute.useParams()
 
-    useFetch(
-        signal => getEvent({signal, path: {eventId: testEventId}}),
+    const {data, pending} = useFetch(
+        signal => getEvent({signal, path: {eventId: eventId}}),
         {
-            onResponse: ({data, response}) => {
-                if (response.status === 200 && data !== undefined) {
-                    console.log('Event retrieved: ')
-                    console.log(data)
-                } else{
-                    console.error("Event not found")
+            onResponse: result => {
+                console.log("Event response")
+                if(result.error){
+                    feedback.error(t('common.load.error', {entity: t('event.event')}))
+                    console.log(result.error)
+                } else if(result.data){
+                    console.log(result.data)
                 }
-            },
+            }
         },
+        [eventId],
     )
 
-
-
-
-    return (
-        <Box sx={{display: 'flex', flexDirection: 'column'}}>
-        </Box>
-    )
+    return <Box sx={{display: 'flex', flexDirection: 'column'}}></Box>
 }
 
 export default EventPage

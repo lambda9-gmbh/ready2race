@@ -11,6 +11,7 @@ import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import {Privilege} from './api'
 import EventsPage from "./pages/event/EventsPage.tsx";
+import EventPage from "./pages/event/EventPage.tsx";
 
 const checkAuth = (
     context: User,
@@ -68,16 +69,45 @@ export const dashboardRoute = createRoute({
     },
 })
 
-export const eventRoute = createRoute({
+export const eventsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'event',
+})
+
+export const eventsIndexRoute = createRoute({
+    getParentRoute: () => eventsRoute,
+    path: '/',
     component: () => <EventsPage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     }
 })
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, dashboardRoute, eventRoute])
+export const eventRoute = createRoute({
+    getParentRoute: () => eventsRoute,
+    path: '$eventId',
+})
+
+export const eventIndexRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: '/',
+    component: () => <EventPage/>,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    }
+})
+
+const routeTree = rootRoute.addChildren([
+    indexRoute,
+    loginRoute,
+    dashboardRoute,
+    eventsRoute.addChildren([
+        eventsIndexRoute,
+        eventRoute.addChildren([
+            eventIndexRoute
+        ])
+    ]),
+])
 
 export const router = createRouter({
     routeTree,

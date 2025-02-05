@@ -19,6 +19,9 @@
         "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
       }
     },
+    "load": {
+      "error": "{{entity}} konnte nicht geladen werden"
+    },
     "ok": "Ok",
     "save": "Speichern",
     "search": "Suchen"
@@ -50,12 +53,6 @@
     "password": "Passwort"
   },
   "event": {
-    "action": {
-      "add": "Veranstaltung anlegen",
-      "delete": {
-        "success": "Veranstaltung gelöscht"
-      }
-    },
     "description": "Beschreibung",
     "event": "Veranstaltung",
     "invoice": {

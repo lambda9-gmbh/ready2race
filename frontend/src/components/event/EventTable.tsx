@@ -56,8 +56,8 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             columns={columns}
             dataRequest={dataRequest}
             jumpToColumn={entity => ({
-                to: '/event',
-                params: {regattaId: entity.id},
+                to: '/event/$eventId',
+                params: {eventId: entity.id},
             })}
             entityName={t('event.event')}
             deleteRequest={deleteRequest}
