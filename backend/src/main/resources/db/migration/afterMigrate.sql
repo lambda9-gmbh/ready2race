@@ -50,6 +50,7 @@ select rphnp.race_properties,
        rphnp.count_females,
        rphnp.count_non_binary,
        rphnp.count_mixed,
+       np.id,
        np.name,
        np.description
 from race_properties_has_named_participant rphnp
@@ -70,6 +71,7 @@ select r.id,
        rp.count_mixed,
        rp.participation_fee,
        rp.rental_fee,
+       rc.id                                                                               as category_id,
        rc.name                                                                             as category_name,
        rc.description                                                                      as category_description,
        coalesce(array_agg(npfrp) filter ( where npfrp.race_properties is not null ), '{}') as named_participants
@@ -92,6 +94,7 @@ select rt.id,
        rp.count_mixed,
        rp.participation_fee,
        rp.rental_fee,
+       rc.id                                                                               as category_id,
        rc.name                                                                             as category_name,
        rc.description                                                                      as category_description,
        coalesce(array_agg(npfrp) filter ( where npfrp.race_properties is not null ), '{}') as named_participants

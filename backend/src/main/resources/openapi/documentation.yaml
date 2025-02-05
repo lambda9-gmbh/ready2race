@@ -1013,6 +1013,7 @@ components:
     NamedParticipantForRaceDto:
       type: object
       required:
+        - id
         - name
         - required
         - countMales
@@ -1020,6 +1021,9 @@ components:
         - countNonBinary
         - countMixed
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
         description:
@@ -1111,7 +1115,7 @@ components:
       required:
         - id
         - event
-        - raceProperties
+        - properties
       properties:
         id:
           type: string
@@ -1227,8 +1231,12 @@ components:
       type:
         object
       required:
+        - id
         - name
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
         description:

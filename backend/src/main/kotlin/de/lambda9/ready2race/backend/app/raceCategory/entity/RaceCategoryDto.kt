@@ -4,8 +4,10 @@ import de.lambda9.ready2race.backend.validation.StructuredValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import java.util.UUID
 
 data class RaceCategoryDto(
+    val id: UUID,
     val name: String,
     val description: String?,
 ): Validatable {
@@ -17,6 +19,7 @@ data class RaceCategoryDto(
 
     companion object{
         val example get() = RaceCategoryDto(
+            id = UUID.randomUUID(),
             name = "Name",
             description = "Description",
         )

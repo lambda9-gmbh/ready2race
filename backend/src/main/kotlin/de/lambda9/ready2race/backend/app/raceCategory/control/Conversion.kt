@@ -15,6 +15,7 @@ fun RaceCategoryDto.record() = RaceCategoryRecord(
 fun List<RaceCategoryRecord>.raceCategoryDtoList(): App<Nothing, List<RaceCategoryDto>> = KIO.ok(
     this.map{
         RaceCategoryDto(
+            id = it.id!!,
             name = it.name!!,
             description = it.description
         )

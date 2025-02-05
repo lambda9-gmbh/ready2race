@@ -104,7 +104,7 @@ const routeTree = rootRoute.addChildren([
     eventsRoute.addChildren([
         eventsIndexRoute,
         eventRoute.addChildren([
-            eventIndexRoute
+            eventIndexRoute,
         ])
     ]),
 ])

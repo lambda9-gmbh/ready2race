@@ -90,6 +90,7 @@ export type NamedParticipantDto = {
 }
 
 export type NamedParticipantForRaceDto = {
+    id: string
     name: string
     description?: string
     required: boolean
@@ -152,6 +153,7 @@ export type Privilege =
     | 'EVENT_VIEW'
 
 export type RaceCategoryDto = {
+    id: string
     name: string
     description?: string
 }
@@ -159,7 +161,7 @@ export type RaceCategoryDto = {
 export type RaceDto = {
     id: string
     event: string
-    properties?: RacePropertiesDto
+    properties: RacePropertiesDto
     template?: string
 }
 

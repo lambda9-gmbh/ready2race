@@ -5,6 +5,7 @@ import {useTranslation} from 'react-i18next'
 import EntityTable from '../EntityTable.tsx'
 import {PaginationParameters} from '../../utils/ApiUtils.ts'
 
+
 const initialPagination: GridPaginationModel = {
     page: 0,
     pageSize: 10,

@@ -38,6 +38,7 @@ fun RaceToPropertiesWithNamedParticipantsRecord.toDto(): App<Nothing, RaceDto> =
                 participationFee = participationFee!!,
                 rentalFee = rentalFee!!,
                 raceCategory = RaceCategoryDto(
+                    id = categoryId!!,
                     name = categoryName!!,
                     description = categoryDescription
                 ),

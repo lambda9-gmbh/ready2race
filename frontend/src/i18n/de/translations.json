@@ -8,16 +8,19 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "form": {
-      "required": "Bitte füllen Sie dieses Feld aus.",
+      "currency": {
+        "invalid": "Bitte geben Sie einen gültigen Betrag ein."
+      },
+      "dateTime":{
+        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
+      },
       "number": {
         "invalid": {
           "pattern": "Bitte geben Sie eine gültige Zahl ein.",
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
         }
       },
-      "dateTime":{
-        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
-      }
+      "required": "Bitte füllen Sie dieses Feld aus."
     },
     "load": {
       "error": "{{entity}} konnte nicht geladen werden"
@@ -60,6 +63,27 @@
     },
     "location": "Ort",
     "name": "Name",
+    "race": {
+      "category": "Kategorie",
+      "count": {
+        "males": "Anzahl Männer",
+        "females": "Anzahl Frauen",
+        "nonBinary": "Anzahl nichtbinäre Personen",
+        "mixed": "Anzahl Beliebige"
+      },
+      "description": "Beschreibung",
+      "identifier": "Kennung",
+      "name": "Name",
+      "namedParticipant": {
+        "description": "Beschreibung",
+        "name": "Name"
+      },
+      "participationFee": "Meldegebühr",
+      "race": "Rennen",
+      "rentalFee": "Leihgebühr",
+      "shortName": "Kürzel",
+      "template": "Vorlage"
+    },
     "registrationAvailable": {
       "from": "Anmeldezeitraum von",
       "to": "Anmeldezeitraum bis"

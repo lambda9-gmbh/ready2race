@@ -39,6 +39,7 @@ fun NamedParticipantForRaceRequestDto.record(propertiesId: UUID) = RacePropertie
 
 fun NamedParticipantForRacePropertiesRecord.toDto(): App<Nothing, NamedParticipantForRaceDto> = KIO.ok(
     NamedParticipantForRaceDto(
+        id = id!!,
         name = name!!,
         description = description,
         required = required!!,

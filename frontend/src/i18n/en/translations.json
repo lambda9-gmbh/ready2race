@@ -8,16 +8,19 @@
     "delete": "Delete",
     "edit": "Edit",
     "form": {
-      "required": "Please fill in this field.",
+      "currency": {
+        "invalid": "Please select a valid amount."
+      },
+      "dateTime":{
+        "invalid": "Please select a valid date and time."
+      },
       "number": {
         "invalid": {
           "pattern": "Please enter a valid number.",
           "range": "Please enter a number between {{min}} and {{max}}."
         }
       },
-      "dateTime":{
-        "invalid": "Please select a valid date and time."
-      }
+      "required": "Please fill in this field."
     },
     "load": {
       "error": "{{entity}} could not be loaded"
@@ -60,6 +63,27 @@
     },
     "location": "Location",
     "name": "Name",
+    "race": {
+      "category": "Category",
+      "count": {
+        "males": "Number of men",
+        "females": "Number of women",
+        "nonBinary": "Number of non-binary",
+        "mixed": "Number of any"
+      },
+      "description": "Description",
+      "identifier": "Identifier",
+      "name": "Name",
+      "namedParticipant": {
+        "description": "Description",
+        "name": "Name"
+      },
+      "participationFee": "Registration fee",
+      "race": "Race",
+      "rentalFee": "Rental fee",
+      "shortName": "Short name",
+      "template": "Template"
+    },
     "registrationAvailable": {
       "from": "Registration period start",
       "to": "Registration period end"
