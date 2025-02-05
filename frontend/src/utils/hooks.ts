@@ -51,8 +51,8 @@ export const useFetch = <T, E>(
                 try {
                     const result = await req(controller.signal)
                     const {data, error, response} = result
+                    options?.onResponse?.(result)
                     if (data !== undefined) {
-                        options?.onResponse?.(result)
                         setResult({
                             pending: false,
                             error: null,

@@ -14,7 +14,7 @@ const EventPage = () => {
         signal => getEvent({signal, path: {eventId: eventId}}),
         {
             onResponse: result => {
-                console.log("Event response")
+                console.log("Event response:")
                 if(result.error){
                     feedback.error(t('common.load.error', {entity: t('event.event')}))
                     console.log(result.error)
