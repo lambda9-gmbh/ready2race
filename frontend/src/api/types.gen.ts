@@ -59,17 +59,9 @@ export type GetEventDayPageResponse = {
     pagination: Pagination
 }
 
-export type GetEventDayResponse = {
-    dto: EventDayDto
-}
-
 export type GetEventPageResponse = {
     data: Array<EventDto>
     pagination: Pagination
-}
-
-export type GetEventResponse = {
-    dto: EventDto
 }
 
 export type GetRacePageResponse = {
@@ -77,17 +69,9 @@ export type GetRacePageResponse = {
     pagination: Pagination
 }
 
-export type GetRaceResponse = {
-    dto: RaceDto
-}
-
 export type GetRaceTemplatePageResponse = {
     data: Array<RaceTemplateDto>
     pagination: Pagination
-}
-
-export type GetRaceTemplateResponse = {
-    dto: RaceTemplateDto
 }
 
 export type LoginRequest = {
@@ -272,7 +256,7 @@ export type GetEventsResponse = GetEventPageResponse
 
 export type GetEventsError = string
 
-export type GetEventResponse2 = GetEventResponse
+export type GetEventResponse = EventDto
 
 export type GetEventError = string
 
@@ -325,7 +309,7 @@ export type GetEventDaysResponse = GetEventDayPageResponse
 
 export type GetEventDaysError = string
 
-export type GetEventDayResponse2 = GetEventDayResponse
+export type GetEventDayResponse = EventDayDto
 
 export type GetEventDayError = string
 
@@ -386,7 +370,7 @@ export type GetRacesResponse = GetRacePageResponse
 
 export type GetRacesError = string
 
-export type GetRaceResponse2 = GetRaceResponse
+export type GetRaceResponse = RaceDto
 
 export type GetRaceError = string
 
@@ -443,7 +427,7 @@ export type GetRaceTemplatesResponse = GetRaceTemplatePageResponse
 
 export type GetRaceTemplatesError = string
 
-export type GetRaceTemplateResponse2 = GetRaceTemplateResponse
+export type GetRaceTemplateResponse = RaceTemplateDto
 
 export type GetRaceTemplateError = string
 

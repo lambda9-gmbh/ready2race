@@ -97,7 +97,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetEventResponse'
+                $ref: '#/components/schemas/EventDto'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -200,7 +200,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetEventDayResponse'
+                $ref: '#/components/schemas/EventDayDto'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -325,7 +325,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetRaceResponse'
+                $ref: '#/components/schemas/RaceDto'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -439,7 +439,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetRaceTemplateResponse'
+                $ref: '#/components/schemas/RaceTemplateDto'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -897,15 +897,6 @@ components:
         pagination:
           $ref: '#/components/schemas/Pagination'
 
-    GetEventResponse:
-      type:
-        object
-      required:
-        - dto
-      properties:
-        dto:
-          $ref: '#/components/schemas/EventDto'
-
 
     # eventDay
 
@@ -961,14 +952,6 @@ components:
         pagination:
           $ref: '#/components/schemas/Pagination'
 
-    GetEventDayResponse:
-      type:
-        object
-      required:
-        - dto
-      properties:
-        dto:
-          $ref: '#/components/schemas/EventDayDto'
 
     AssignRacesToDayRequest:
       type:
@@ -1170,16 +1153,6 @@ components:
           $ref: '#/components/schemas/Pagination'
 
 
-    GetRaceResponse:
-      type:
-        object
-      required:
-        - dto
-      properties:
-        dto:
-          $ref: '#/components/schemas/RaceDto'
-
-
     AssignDaysToRaceRequest:
       type:
         object
@@ -1231,16 +1204,6 @@ components:
             $ref: '#/components/schemas/RaceTemplateDto'
         pagination:
           $ref: '#/components/schemas/Pagination'
-
-
-    GetRaceTemplateResponse:
-      type:
-        object
-      required:
-        - dto
-      properties:
-        dto:
-          $ref: '#/components/schemas/RaceTemplateDto'
 
 
     # namedParticipant

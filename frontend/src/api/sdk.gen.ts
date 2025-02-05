@@ -16,7 +16,7 @@ import type {
     GetEventsError,
     GetEventsResponse,
     GetEventError,
-    GetEventResponse2,
+    GetEventResponse,
     UpdateEventData,
     UpdateEventError,
     UpdateEventResponse,
@@ -29,7 +29,7 @@ import type {
     GetEventDaysError,
     GetEventDaysResponse,
     GetEventDayError,
-    GetEventDayResponse2,
+    GetEventDayResponse,
     UpdateEventDayData,
     UpdateEventDayError,
     UpdateEventDayResponse,
@@ -45,7 +45,7 @@ import type {
     GetRacesError,
     GetRacesResponse,
     GetRaceError,
-    GetRaceResponse2,
+    GetRaceResponse,
     UpdateRaceData,
     UpdateRaceError,
     UpdateRaceResponse,
@@ -61,7 +61,7 @@ import type {
     GetRaceTemplatesError,
     GetRaceTemplatesResponse,
     GetRaceTemplateError,
-    GetRaceTemplateResponse2,
+    GetRaceTemplateResponse,
     UpdateRaceTemplateData,
     UpdateRaceTemplateError,
     UpdateRaceTemplateResponse,
@@ -143,7 +143,7 @@ export const getEvents = <ThrowOnError extends boolean = false>(
 export const getEvent = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).get<GetEventResponse2, GetEventError, ThrowOnError>({
+    return (options?.client ?? client).get<GetEventResponse, GetEventError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}',
     })
@@ -188,7 +188,7 @@ export const getEventDays = <ThrowOnError extends boolean = false>(
 export const getEventDay = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).get<GetEventDayResponse2, GetEventDayError, ThrowOnError>({
+    return (options?.client ?? client).get<GetEventDayResponse, GetEventDayError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}/eventDay/{eventDayId}',
     })
@@ -254,7 +254,7 @@ export const getRaces = <ThrowOnError extends boolean = false>(
 export const getRace = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).get<GetRaceResponse2, GetRaceError, ThrowOnError>({
+    return (options?.client ?? client).get<GetRaceResponse, GetRaceError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}/race/{raceId}',
     })
@@ -321,7 +321,7 @@ export const getRaceTemplate = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetRaceTemplateResponse2,
+        GetRaceTemplateResponse,
         GetRaceTemplateError,
         ThrowOnError
     >({
