@@ -26,7 +26,7 @@ type EntityTableProps<Entity extends GridValidRowModel, Error> = BaseEntityTable
     ExtendedEntityTableProps<Entity, Error> &
     (
         | {
-              deleteRequest: (entity: Entity) => RequestResult<void, string, false>// todo: specific error type
+              deleteRequest: (entity: Entity) => RequestResult<void, string, false> // todo: specific error type
               onDelete: () => void
               deletableWhen?: (entity: Entity) => boolean
           }
@@ -40,7 +40,10 @@ type ExtendedEntityTableProps<Entity extends GridValidRowModel, Error> = {
     columns:
         | GridColDef<Entity>[]
         | ((readScope: PrivilegeScope, changeScope: PrivilegeScope | null) => GridColDef<Entity>[])
-    dataRequest: (signal: AbortSignal, paginationParameters: PaginationParameters) => RequestResult<PageResponse<Entity>, Error, false>
+    dataRequest: (
+        signal: AbortSignal,
+        paginationParameters: PaginationParameters,
+    ) => RequestResult<PageResponse<Entity>, Error, false>
     omitEditAction?: boolean
     customActions?: (
         entity: Entity,
@@ -133,14 +136,18 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                                       setIsDeletingRow(true)
                                       const {error} = await props.deleteRequest(params.row)
                                       setIsDeletingRow(false)
-                                      if(error){
+                                      if (error) {
                                           // todo better error display with specific error types
                                           console.log(error)
-                                          feedback.error(t('entity.delete.error', {entity: entityTitle}))
+                                          feedback.error(
+                                              t('entity.delete.error', {entity: entityTitle}),
+                                          )
                                       } else {
                                           props.reloadData()
                                           props.onDelete()
-                                          feedback.success(t('entity.delete.success', {entity: entityTitle}))
+                                          feedback.success(
+                                              t('entity.delete.success', {entity: entityTitle}),
+                                          )
                                       }
                                   })
                               }}
@@ -152,7 +159,6 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
         },
     ]
 
-
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>(
         props.initialPagination,
     )
@@ -161,13 +167,20 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
     const [searchInput, setSearchInput] = useState<string>('')
     const debouncedSearchInput = useDebounce(searchInput, 700)
 
+    const [triggerReloadRows, setTriggerReloadRows] = useState(false)
 
-    const {data, pending} = useFetch(signal =>
-        props.dataRequest(
-            signal,
-            paginationParameters(paginationModel, sortModel, debouncedSearchInput),
-        ),
+    const {data, pending} = useFetch(
+        signal =>
+            props.dataRequest(
+                signal,
+                paginationParameters(paginationModel, sortModel, debouncedSearchInput),
+            ),
+        {
+            onResponse: _ => setTriggerReloadRows(!triggerReloadRows),
+        },
+        [paginationModel, sortModel, debouncedSearchInput],
     )
+
 
     return (
         <Box>
@@ -193,35 +206,37 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                     </Button>
                 )}
             </Box>
-            <DataGrid
-                isRowSelectable={() => false}
-                paginationMode="server"
-                pageSizeOptions={[
-                    ...props.pageSizeOptions,
-                    ...(props.pageSizeOptions.includes(props.initialPagination.pageSize)
-                        ? []
-                        : [props.initialPagination.pageSize]),
-                ]}
-                disableColumnFilter={true}
-                paginationModel={paginationModel}
-                onPaginationModelChange={setPaginationModel}
-                sortingMode="server"
-                sortModel={sortModel}
-                onSortModelChange={setSortModel}
-                columns={columns}
-                rows={data?.data ?? []}
-                rowCount={data?.pagination?.total ?? 0}
-                loading={pending || isDeletingRow}
-                autoHeight={true}
-                density={'compact'}
-                getRowHeight={() => 'auto'}
-                sx={{
-                    '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
-                    '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
-                    '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {py: '22px'},
-                }}
-                {...props.gridProps}
-            />
+            {triggerReloadRows !== undefined && ( // todo: better solution? This fixes a bug where sometimes after deleting a search entry the rows would not be displayed
+                <DataGrid
+                    isRowSelectable={() => false}
+                    paginationMode="server"
+                    pageSizeOptions={[
+                        ...props.pageSizeOptions,
+                        ...(props.pageSizeOptions.includes(props.initialPagination.pageSize)
+                            ? []
+                            : [props.initialPagination.pageSize]),
+                    ]}
+                    disableColumnFilter={true}
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
+                    sortingMode="server"
+                    sortModel={sortModel}
+                    onSortModelChange={setSortModel}
+                    columns={columns}
+                    rows={data?.data ?? []}
+                    rowCount={data?.pagination?.total ?? 0}
+                    loading={pending || isDeletingRow}
+                    autoHeight={true}
+                    density={'compact'}
+                    getRowHeight={() => 'auto'}
+                    sx={{
+                        '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
+                        '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
+                        '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {py: '22px'},
+                    }}
+                    {...props.gridProps}
+                />
+            )}
         </Box>
     )
 }

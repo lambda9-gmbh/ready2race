@@ -8,6 +8,7 @@ import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
 
 type EventForm = EventProperties
 
+
 const addAction = (formData: EventForm) => {
     return addEvent({
         body: {
@@ -28,7 +29,9 @@ const editAction = (formData: EventForm, entity: EventDto) => {
 const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     const {t} = useTranslation()
 
-    const values: EventForm | undefined = props.entity ? {...props.entity.properties} : undefined
+    const defaultValues: EventForm = {name: ''}
+
+    const values: EventForm = props.entity ? {...props.entity.properties} : defaultValues
 
     const entityNameKey = {entity: t('event.event')}
 
@@ -36,7 +39,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         <EntityDialog
             {...props}
             values={values}
-            defaultValues={{name: ""}}
             title={action =>
                 action === 'add'
                     ? t('entity.add.action', entityNameKey)

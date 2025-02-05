@@ -2,7 +2,7 @@ import {RefAttributes, useEffect} from 'react'
 import {useTranslation} from 'react-i18next'
 import {DateTimePickerElement, DateTimePickerElementProps} from 'react-hook-form-mui/date-pickers'
 import dayjs from 'dayjs'
-import {useFormContext} from "react-hook-form-mui";
+import {useFormContext} from 'react-hook-form-mui'
 
 type FormInputDateTimeProps = DateTimePickerElementProps & RefAttributes<HTMLDivElement>
 
@@ -18,6 +18,7 @@ const FormInputDateTime = (props: FormInputDateTimeProps) => {
         }
     }, [])
 
+    // todo? "overwriteErrorMessages" to translate "Date is invalid" if the Input is invalid
     return (
         <DateTimePickerElement
             {...props}
@@ -25,7 +26,9 @@ const FormInputDateTime = (props: FormInputDateTimeProps) => {
             rules={{
                 ...props.rules,
                 ...(props.required &&
-                    !props.rules?.required && {required: t('common.form.required')}),
+                    !props.rules?.required && {
+                        required: t('common.form.required'),
+                    })
             }}
         />
     )

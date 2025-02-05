@@ -24,8 +24,7 @@ type ExtendedEntityDialogProps<
     F extends FieldValues = FieldValues,
     R = void,
 > = {
-    values?: F
-    defaultValues?: F
+    values: F
     title: (action: 'add' | 'edit') => string
     addAction?: (formData: F) => RequestResult<R, string, false> // todo: specific error type
     editAction: (formData: F, entity: E) => RequestResult<void, string, false> // todo: specific error type
@@ -45,11 +44,9 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
     const formContext = useForm<F>({values: props.values})
 
     const handleClose = () => {
-        formContext.reset(props.defaultValues)
+        formContext.reset()
         props.closeDialog()
     }
-
-    //todo search
 
     const entityTitle = props.entityName ?? t('entity.entity')
 

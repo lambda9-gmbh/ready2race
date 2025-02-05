@@ -14,6 +14,9 @@
           "pattern": "Bitte geben Sie eine gültige Zahl ein.",
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
         }
+      },
+      "dateTime":{
+        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
       }
     },
     "ok": "Ok",
