@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.plugins.requests.validation
 
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -10,7 +10,7 @@ val ValidatableValidation : RouteScopedPlugin<Unit> = createRouteScopedPlugin("V
     on(RequestBodyTransformed) { content ->
         if (content is Validatable) {
             val result = content.validate()
-            if (result is StructuredValidationResult.Invalid) {
+            if (result is ValidationResult.Invalid) {
                 throw ValidatableValidationException(content, result)
             }
         }

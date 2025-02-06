@@ -14,7 +14,7 @@ import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.plugins.requests.validation.ValidatableValidationException
 import de.lambda9.ready2race.backend.serialization.jsonMapper
 import de.lambda9.ready2race.backend.sessions.UserSession
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.tailwind.core.IO
@@ -56,8 +56,8 @@ fun <T> ApplicationCall.pathParam(
     key: String,
     f: (String) -> T,
 ): App<RequestError, T> = KIO.effect {
-    parameters[key]?.let(f)
-}.mapError { RequestError.ParameterUnparsable(key) }.onNullFail { RequestError.PathParameterUnknown(key) }
+    parameters[key]!!.let(f)
+}.mapError { RequestError.ParameterUnparsable(key) }
 
 fun ApplicationCall.pathParam(
     key: String,
@@ -92,7 +92,7 @@ inline fun <reified S> ApplicationCall.pagination(): App<RequestError, Paginatio
     val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
     val search = !optionalQueryParam("search")
 
-    StructuredValidationResult.allOf(
+    ValidationResult.allOf(
         IntValidators.notNegative(offset),
         IntValidators.min(1)(limit)
     ).fold(

@@ -1,6 +1,6 @@
-package de.lambda9.ready2race.backend.app.user.control
+package de.lambda9.ready2race.backend.app.appuser.control
 
-import de.lambda9.ready2race.backend.app.user.entity.AppUserWithRolesSort
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
@@ -24,6 +24,14 @@ object AppUserRepo {
     ): JIO<Boolean> = Jooq.query {
         with(APP_USER) {
             fetchExists(this, ID.eq(id))
+        }
+    }
+
+    fun existsByEmail(
+        email: String,
+    ): JIO<Boolean> = Jooq.query {
+        with(APP_USER) {
+            fetchExists(this, EMAIL.equalIgnoreCase(email))
         }
     }
 

@@ -12,7 +12,7 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
-import de.lambda9.ready2race.backend.kio.failOnFalse
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -88,7 +88,7 @@ object EventDayService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
-            .failOnFalse { EventDayError.EventDayNotFound }
+            .onFalseFail { EventDayError.EventDayNotFound }
             .map { ApiResponse.NoData }
 
     fun deleteEvent(

@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend
 
 import io.github.cdimascio.dotenv.Dotenv
+import org.simplejavamail.api.mailer.Mailer
 import org.simplejavamail.api.mailer.config.TransportStrategy
 import org.simplejavamail.mailer.MailerBuilder
 
@@ -53,19 +54,23 @@ data class Config(
         val password: String,
         val strategy: TransportStrategy,
         val from: From,
-        val replyTo: String?
+        val replyTo: String?,
+        val localhost: String?,
     ) {
         data class From(
             val name: String?,
             val address: String,
         )
 
-        fun createMailer() = MailerBuilder
+        fun createMailer(): Mailer = MailerBuilder
             .withSMTPServerHost(host)
             .withSMTPServerPort(port)
             .withSMTPServerUsername(user)
             .withSMTPServerPassword(password)
             .withTransportStrategy(strategy)
+            .applyNotNull(localhost) {
+                withProperties(mapOf("mail.smtp.localhost" to it))
+            }
             .buildMailer()
     }
 
@@ -102,6 +107,7 @@ data class Config(
                     address = get("SMTP_FROM_ADDRESS")
                 ),
                 replyTo = get("SMTP_REPLY"),
+                localhost = get("SMTP_LOCALHOST")
             ),
             security = Security(
                 pepper = get("SECURITY_PEPPER"),

@@ -4,13 +4,16 @@ import de.lambda9.ready2race.backend.Config.Companion.parseConfig
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
+import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.control.PrivilegeRepo
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
-import de.lambda9.ready2race.backend.app.user.control.AppUserHasRoleRepo
-import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserHasRoleRepo
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.email.entity.EmailError
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
@@ -21,7 +24,7 @@ import de.lambda9.ready2race.backend.schedule.Scheduler
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
-import de.lambda9.tailwind.core.extensions.exit.getOrNullLogError
+import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.catchError
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.transact
@@ -33,6 +36,7 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -69,6 +73,9 @@ fun Application.module(env: JEnv) {
 
 private fun initializeApplication(env: JEnv) {
 
+    // instantiate now, so template files get read and checked
+    EmailService
+
     KIO.comprehension {
 
         // Add admin
@@ -89,6 +96,7 @@ private fun initializeApplication(env: JEnv) {
                     firstname = "System",
                     lastname = "User",
                     password = hashedPw,
+                    language = EmailLanguage.DE.name,
                     createdBy = SYSTEM_USER,
                     updatedBy = SYSTEM_USER,
                 )
@@ -138,7 +146,7 @@ private fun initializeApplication(env: JEnv) {
     }
         .transact()
         .unsafeRunSync(env)
-        .getOrNullLogError { }
+        .getOrThrow()
 }
 
 private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
@@ -152,8 +160,8 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                     .catchError { error ->
                         KIO.ok(
                             when (error) {
-                                EmailService.EmailError.NoEmailsToSend -> JobQueueState.EMPTY
-                                is EmailService.EmailError.SendingFailed -> {
+                                EmailError.NoEmailsToSend -> JobQueueState.EMPTY
+                                is EmailError.SendingFailed -> {
                                     logger.warn(error.cause) { "Error sending email ${error.emailId}" }
                                     JobQueueState.PROCESSED
                                 }
@@ -171,6 +179,12 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             scheduleFixed(5.minutes) {
                 AuthService.deleteExpiredTokens().map {
                     logger.info { "${"expired session".count(it)} deleted" }
+                }
+            }
+
+            scheduleFixed(1.hours) {
+                AppUserService.deleteExpiredRegistrations().map {
+                    logger.info { "${"expired registration".count(it)} deleted" }
                 }
             }
 

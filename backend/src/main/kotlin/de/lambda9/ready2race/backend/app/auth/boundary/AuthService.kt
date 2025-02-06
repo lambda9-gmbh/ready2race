@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.auth.control.loginDto
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
-import de.lambda9.ready2race.backend.app.user.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -20,7 +20,6 @@ import kotlin.time.Duration.Companion.minutes
 
 object AuthService {
 
-    private const val TOKEN_LENGTH = 30
     private val tokenLifetime = 30.minutes
 
     fun login(
@@ -34,7 +33,7 @@ object AuthService {
 
         if (credentialsOk) {
 
-            val token = RandomUtilities.alphanumerical(TOKEN_LENGTH)
+            val token = RandomUtilities.alphanumerical()
 
             !AppUserSessionRepo.create(user.id!!, token).orDie()
             onSuccess(token)

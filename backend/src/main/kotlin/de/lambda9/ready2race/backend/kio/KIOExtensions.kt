@@ -11,7 +11,7 @@ fun <T> Result<T>.toKio(): Task<T> = fold(
     onFailure = { KIO.fail(it) }
 )
 
-fun accessConfig(): KIO<JEnv, Nothing, Config> = KIO.access<JEnv>().map { it.env.config }
+fun accessConfig(): KIO<JEnv, Nothing, Config> = KIO.access { it.env.config }
 
 // todo: Use from library
 fun <R, E : E1, E1, A> KIO<R, E, A>.failIf(condition: (A) -> Boolean, then: (A) -> E1): KIO<R, E1, A> =
@@ -22,7 +22,7 @@ fun <R, E : E1, E1, A> KIO<R, E, A>.failIf(condition: (A) -> Boolean, then: (A) 
             KIO.ok(it)
     }
 
-fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnTrue(then: () -> E1): KIO<R, E1, Unit> =
+fun <R, E : E1, E1> KIO<R, E, Boolean>.onTrueFail(then: () -> E1): KIO<R, E1, Unit> =
     andThen {
         if (it)
             KIO.fail(then())
@@ -30,7 +30,7 @@ fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnTrue(then: () -> E1): KIO<R, E1, Un
             KIO.unit
     }
 
-fun <R, E : E1, E1> KIO<R, E, Boolean>.failOnFalse(then: () -> E1): KIO<R, E1, Unit> =
+fun <R, E : E1, E1> KIO<R, E, Boolean>.onFalseFail(then: () -> E1): KIO<R, E1, Unit> =
     andThen {
         if (!it)
             KIO.fail(then())

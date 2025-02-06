@@ -2,18 +2,17 @@ package de.lambda9.ready2race.backend.requests
 
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ToApiError
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import io.ktor.http.*
 
 sealed interface RequestError: ToApiError {
 
     data class RequiredQueryParameterMissing(val key: String): RequestError
-    data class PathParameterUnknown(val key: String): RequestError
     data class ParameterUnparsable(val key: String): RequestError
     data class BodyUnparsable(val example: Validatable): RequestError
-    data class BodyValidationFailed(val reason: StructuredValidationResult.Invalid) : RequestError
-    data class InvalidPagination(val result: StructuredValidationResult.Invalid): RequestError
+    data class BodyValidationFailed(val reason: ValidationResult.Invalid) : RequestError
+    data class InvalidPagination(val result: ValidationResult.Invalid): RequestError
 
     data class Other(val cause: Throwable): RequestError
 
@@ -40,11 +39,6 @@ sealed interface RequestError: ToApiError {
             ApiError(
                 status = HttpStatusCode.BadRequest,
                 message = "Parameter $key could not be parsed"
-            )
-        is PathParameterUnknown ->
-            ApiError(
-                status = HttpStatusCode.InternalServerError,
-                message = "Requested path parameter $key does not exist"
             )
         is RequiredQueryParameterMissing ->
             ApiError(
