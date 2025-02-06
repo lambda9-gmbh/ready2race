@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.raceProperties.entity
 
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
@@ -15,13 +15,13 @@ data class NamedParticipantForRaceRequestDto(
     val countNonBinary: Int,
     val countMixed: Int,
 ): Validatable {
-    override fun validate(): StructuredValidationResult =
-        StructuredValidationResult.allOf(
+    override fun validate(): ValidationResult =
+        ValidationResult.allOf(
             this::countMales validate notNegative,
             this::countFemales validate notNegative,
             this::countNonBinary validate notNegative,
             this::countMixed validate notNegative,
-            StructuredValidationResult.anyOf(
+            ValidationResult.anyOf(
                 this::countMales validate IntValidators.min(1),
                 this::countFemales validate IntValidators.min(1),
                 this::countNonBinary validate IntValidators.min(1),

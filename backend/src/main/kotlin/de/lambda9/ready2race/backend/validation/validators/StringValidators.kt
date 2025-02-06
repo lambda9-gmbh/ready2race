@@ -1,37 +1,20 @@
 package de.lambda9.ready2race.backend.validation.validators
 
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 
-object StringValidators {
-    val notBlank get() = Validator<String?> {
-        if (it?.isBlank() == true) {
-            StructuredValidationResult.Invalid.Message { "is blank" }
-        } else {
-            StructuredValidationResult.Valid
-        }
-    }
+object StringValidators : Validators<String?>() {
+    val notBlank
+        get() = simple("is blank") { it.isNotBlank() }
 
     fun pattern(regex: Regex) = Validator<String?> { value ->
         if (value != null && !regex.matches(value)) {
-            StructuredValidationResult.Invalid.PatternMismatch(value, regex)
+            ValidationResult.Invalid.PatternMismatch(value, regex)
         } else {
-            StructuredValidationResult.Valid
+            ValidationResult.Valid
         }
     }
 
-    fun maxLength(max: Int) = Validator<String?> { value ->
-        if(value != null && value.length > max) {
-            StructuredValidationResult.Invalid.Message { "is too long" }
-        } else {
-            StructuredValidationResult.Valid
-        }
-    }
+    fun maxLength(max: Int) = simple("is too long") { it.length <= max }
 
-    fun minLength(min: Int) = Validator<String?> { value ->
-        if (value != null && value.length < min) {
-            StructuredValidationResult.Invalid.Message { "is too short" }
-        } else {
-            StructuredValidationResult.Valid
-        }
-    }
+    fun minLength(min: Int) = simple("is too short") { it.length >= min }
 }

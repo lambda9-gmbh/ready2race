@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.raceProperties.entity
 
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.BigDecimalValidators
@@ -8,8 +8,8 @@ import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
-import de.lambda9.ready2race.backend.validation.validators.Validators.allOf
-import de.lambda9.ready2race.backend.validation.validators.Validators.collection
+import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.collection
 import java.math.BigDecimal
 import java.util.*
 
@@ -27,8 +27,8 @@ data class RacePropertiesRequestDto(
     val raceCategory: UUID?,
     val namedParticipants: List<NamedParticipantForRaceRequestDto>
 ) : Validatable {
-    override fun validate(): StructuredValidationResult =
-        StructuredValidationResult.allOf(
+    override fun validate(): ValidationResult =
+        ValidationResult.allOf(
             this::identifier validate notBlank,
             this::name validate notBlank,
             this::shortName validate notBlank,
@@ -46,7 +46,7 @@ data class RacePropertiesRequestDto(
                     NamedParticipantForRaceRequestDto::required,
                 )
             ),
-            StructuredValidationResult.anyOf(
+            ValidationResult.anyOf(
                 this::countMales validate IntValidators.min(1),
                 this::countFemales validate IntValidators.min(1),
                 this::countNonBinary validate IntValidators.min(1),

@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.raceProperties.boundary.RacePropertiesS
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.record
-import de.lambda9.ready2race.backend.app.raceProperties.control.toRecordFunction
+import de.lambda9.ready2race.backend.app.raceProperties.control.toUpdateFunction
 import de.lambda9.ready2race.backend.app.raceTemplate.control.RaceTemplateRepo
 import de.lambda9.ready2race.backend.app.raceTemplate.control.toDto
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateDto
@@ -14,7 +14,7 @@ import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateRequest
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.count
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceTemplateRecord
-import de.lambda9.ready2race.backend.kio.failOnFalse
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -123,13 +123,13 @@ object RaceTemplateService {
         !RaceTemplateRepo.update(templateId) {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().failOnFalse { RaceTemplateError.RaceTemplateNotFound }
+        }.orDie().onFalseFail { RaceTemplateError.RaceTemplateNotFound }
 
         // In theory the RacePropertiesRepo functions can't fail because there has to be a "properties" for the "race" to exist
         !RacePropertiesRepo
-            .updateByRaceOrTemplate(templateId, request.properties.toRecordFunction())
+            .updateByRaceOrTemplate(templateId, request.properties.toUpdateFunction())
             .orDie()
-            .failOnFalse { RaceTemplateError.RacePropertiesNotFound }
+            .onFalseFail { RaceTemplateError.RacePropertiesNotFound }
 
         val racePropertiesId =
             !RacePropertiesRepo.getIdByRaceOrTemplateId(templateId)

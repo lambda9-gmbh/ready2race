@@ -7,6 +7,7 @@ create table app_user
     password text not null,
     firstname text not null,
     lastname text not null,
+    language char(2) not null,
     created_at timestamp not null default now(),
     created_by uuid references app_user on delete set null,
     updated_at timestamp not null default now(),

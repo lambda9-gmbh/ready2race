@@ -16,11 +16,11 @@ import de.lambda9.ready2race.backend.app.raceProperties.boundary.RacePropertiesS
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.record
-import de.lambda9.ready2race.backend.app.raceProperties.control.toRecordFunction
+import de.lambda9.ready2race.backend.app.raceProperties.control.toUpdateFunction
 import de.lambda9.ready2race.backend.app.raceTemplate.control.RaceTemplateRepo
 import de.lambda9.ready2race.backend.count
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
-import de.lambda9.ready2race.backend.kio.failOnFalse
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -75,7 +75,7 @@ object RaceService {
         EventService.checkEventExisting(eventId)
 
         if (request.template != null) {
-            !RaceTemplateRepo.exists(request.template).orDie().failOnFalse { RaceError.RaceTemplateUnknown }
+            !RaceTemplateRepo.exists(request.template).orDie().onFalseFail { RaceError.RaceTemplateUnknown }
         }
 
         RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
@@ -130,7 +130,7 @@ object RaceService {
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         if (request.template != null) {
-            !RaceTemplateRepo.exists(request.template).orDie().failOnFalse { RaceError.RaceTemplateUnknown }
+            !RaceTemplateRepo.exists(request.template).orDie().onFalseFail { RaceError.RaceTemplateUnknown }
         }
 
         !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
@@ -140,12 +140,12 @@ object RaceService {
             template = request.template
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().failOnFalse { RaceError.RaceNotFound }
+        }.orDie().onFalseFail { RaceError.RaceNotFound }
 
         // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
-        !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toRecordFunction())
+        !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toUpdateFunction())
             .orDie()
-            .failOnFalse { RaceError.RacePropertiesNotFound }
+            .onFalseFail { RaceError.RacePropertiesNotFound }
 
         val racePropertiesId =
             !RacePropertiesRepo.getIdByRaceOrTemplateId(raceId).orDie().onNullFail { RaceError.RacePropertiesNotFound }

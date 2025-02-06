@@ -1,0 +1,23 @@
+{
+  "footer": [
+    "P.S.: Hinweis: Diese E-Mail wurde automatisch erzeugt und versendet."
+  ],
+  "templates": [
+    {
+      "key": "VERIFY_REGISTRATION",
+      "subject": "Ready2Race - Registrierung abschließen",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "unter dieser E-Mail-Adresse soll ein Nutzerkonto für Ready2Race erstellt werden.",
+        "Solltest du dies nicht selbst veranlasst haben, ignoriere diese E-Mail bitte!",
+        "",
+        "Um deine Registrierung abzuschließen, klicke bitte auf den folgenden Link oder kopiere ihn in die Adressleiste deines Web-Browsers.",
+        "",
+        "##link##",
+        "",
+        "Bitte beachte dabei, dass ein Abschluss der Registrierung nur 24 Stunden lang möglich ist!"
+      ]
+    }
+  ]
+}

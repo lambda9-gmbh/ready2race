@@ -2,9 +2,9 @@ package de.lambda9.ready2race.backend.validation
 
 import com.fasterxml.jackson.annotation.JsonValue
 
-sealed interface StructuredValidationResult {
-    data object Valid : StructuredValidationResult
-    sealed interface Invalid : StructuredValidationResult {
+sealed interface ValidationResult {
+    data object Valid : ValidationResult
+    sealed interface Invalid : ValidationResult {
 
         fun interface Message : Invalid {
             @JsonValue
@@ -31,14 +31,14 @@ sealed interface StructuredValidationResult {
 
     companion object {
 
-        fun anyOf(vararg results: StructuredValidationResult) =
+        fun anyOf(vararg results: ValidationResult) =
             if (results.none { it == Valid }) {
                 Invalid.AnyOf(results.map { it as Invalid })
             } else {
                 Valid
             }
 
-        fun allOf(vararg results: StructuredValidationResult) =
+        fun allOf(vararg results: ValidationResult) =
             results.filterIsInstance<Invalid>()
                 .takeIf { it.isNotEmpty() }
                 ?.let {

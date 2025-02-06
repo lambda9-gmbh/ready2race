@@ -27,3 +27,17 @@ create table email_attachment
     name  text  not null,
     data  bytea not null
 );
+
+create table email_individual_template
+(
+    key text not null,
+    language char(2) not null,
+    subject text not null,
+    body text not null,
+    body_is_html boolean not null default false,
+    created_at timestamp not null default now(),
+    created_by uuid references app_user on delete set null,
+    updated_at timestamp not null default now(),
+    updated_by uuid references app_user on delete set null,
+    primary key (key, language)
+);

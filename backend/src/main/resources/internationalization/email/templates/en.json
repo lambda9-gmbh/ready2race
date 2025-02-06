@@ -1,0 +1,23 @@
+{
+  "footer": [
+    "P.S.: Note: This email was automatically generated and sent."
+  ],
+  "templates": [
+    {
+      "key": "VERIFY_REGISTRATION",
+      "subject": "Ready2Race - Complete registration",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "A user account for Ready2Race should be created under this email address.",
+        "If you did not initiate this yourself, please ignore this email!",
+        "",
+        "To complete your registration, please click on the following link or copy it into the address bar of your web browser.",
+        "",
+        "##link##",
+        "",
+        "Please note that registration can only be completed within 24 hours!"
+      ]
+    }
+  ]
+}

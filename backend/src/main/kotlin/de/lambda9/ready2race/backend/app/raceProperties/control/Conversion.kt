@@ -50,16 +50,18 @@ fun NamedParticipantForRacePropertiesRecord.toDto(): App<Nothing, NamedParticipa
     )
 )
 
-fun RacePropertiesRequestDto.toRecordFunction(): RacePropertiesRecord.() -> Unit = let{ {
-    identifier = it.identifier
-    name = it.name
-    shortName = it.shortName
-    description = it.description
-    countMales = it.countMales
-    countFemales = it.countFemales
-    countNonBinary = it.countNonBinary
-    countMixed = it.countMixed
-    participationFee = it.participationFee
-    rentalFee = it.rentalFee
-    raceCategory = it.raceCategory
-}}
+fun RacePropertiesRequestDto.toUpdateFunction(): RacePropertiesRecord.() -> Unit = let {
+    {
+        identifier = it.identifier
+        name = it.name
+        shortName = it.shortName
+        description = it.description
+        countMales = it.countMales
+        countFemales = it.countFemales
+        countNonBinary = it.countNonBinary
+        countMixed = it.countMixed
+        participationFee = it.participationFee
+        rentalFee = it.rentalFee
+        raceCategory = it.raceCategory
+    }
+}

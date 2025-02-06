@@ -1,17 +1,11 @@
 package de.lambda9.ready2race.backend.validation.validators
 
-import de.lambda9.ready2race.backend.validation.StructuredValidationResult
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import kotlin.reflect.KProperty1
 
-object CollectionValidators {
+object CollectionValidators : Validators<Collection<Any?>?>() {
     val notEmpty
-        get() = Validator<Collection<*>?> {
-            if (it != null && it.isEmpty()) {
-                StructuredValidationResult.Invalid.Message { "is empty" }
-            } else {
-                StructuredValidationResult.Valid
-            }
-        }
+        get() = simple("is empty") { it.isNotEmpty() }
 
     private fun <T, K> noDuplicatesImpl(
         keySelector: (T & Any) -> K,
@@ -23,13 +17,13 @@ object CollectionValidators {
             ?.filter { it.value > 1 }
             ?.takeIf { it.isNotEmpty() }
             ?.map {
-                StructuredValidationResult.Invalid.Duplicate(
+                ValidationResult.Invalid.Duplicate(
                     value = it.key,
                     count = it.value
                 )
             }
-            ?.let { StructuredValidationResult.Invalid.Duplicates(it) }
-            ?: StructuredValidationResult.Valid
+            ?.let { ValidationResult.Invalid.Duplicates(it) }
+            ?: ValidationResult.Valid
     }
 
     fun <T> noDuplicates(field: KProperty1<T, Any?>, vararg fields: KProperty1<T, Any?>) =

@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.app.user.control
+package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_HAS_ROLE
