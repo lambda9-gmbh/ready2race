@@ -8,6 +8,10 @@
     "delete": "Delete",
     "edit": "Edit",
     "form": {
+      "autocomplete": {
+        "noOptions": "No options",
+        "add": "Add {{entity}}"
+      },
       "currency": {
         "invalid": "Please select a valid amount."
       },
@@ -76,7 +80,11 @@
       "name": "Name",
       "namedParticipant": {
         "description": "Description",
-        "name": "Name"
+        "name": "Name",
+        "namedParticipant": "Named Participant",
+        "namedParticipants": "Named Participants",
+        "required": "Required",
+        "role": "Role"
       },
       "participationFee": "Registration fee",
       "race": "Race",

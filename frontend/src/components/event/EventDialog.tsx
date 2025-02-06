@@ -5,6 +5,7 @@ import EntityDialog from '../EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
+import {useForm} from "react-hook-form-mui";
 
 type EventForm = EventProperties
 
@@ -29,16 +30,23 @@ const editAction = (formData: EventForm, entity: EventDto) => {
 const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     const {t} = useTranslation()
 
+
+
     const defaultValues: EventForm = {name: ''}
 
-    const values: EventForm = props.entity ? {...props.entity.properties} : defaultValues
+    const values: EventForm | undefined = props.entity ? {...props.entity.properties} : undefined
+
+    const formContext = useForm<EventForm>({
+        defaultValues: defaultValues,
+        values: values
+    })
 
     const entityNameKey = {entity: t('event.event')}
 
     return (
         <EntityDialog
             {...props}
-            values={values}
+            formContext={formContext}
             title={action =>
                 action === 'add'
                     ? t('entity.add.action', entityNameKey)

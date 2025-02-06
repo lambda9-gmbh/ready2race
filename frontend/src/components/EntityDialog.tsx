@@ -1,6 +1,6 @@
-import {ReactNode, useState} from 'react'
+import {PropsWithChildren, useState} from 'react'
 import {useTranslation} from 'react-i18next'
-import {FieldValues, FormContainer, useForm, UseFormReturn} from 'react-hook-form-mui'
+import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
 import {RequestResult} from '@hey-api/client-fetch'
 import {BaseEntityDialogProps, PartialRequired} from '../utils/types.ts'
@@ -24,24 +24,23 @@ type ExtendedEntityDialogProps<
     F extends FieldValues = FieldValues,
     R = void,
 > = {
-    values: F
+    formContext: UseFormReturn<F>
     title: (action: 'add' | 'edit') => string
     addAction?: (formData: F) => RequestResult<R, string, false> // todo: specific error type
     editAction: (formData: F, entity: E) => RequestResult<void, string, false> // todo: specific error type
     onSuccess: (res: R | void) => void
-    children: ((formContext: UseFormReturn<F>) => ReactNode) | ReactNode
     entityName?: string
 }
 
 const EntityDialog = <E extends object | undefined, F extends FieldValues = FieldValues, R = void>(
-    props: EntityDialogProps<E, F, R>,
+    props: PropsWithChildren<EntityDialogProps<E, F, R>>,
 ) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
     const [submitting, setSubmitting] = useState(false)
 
-    const formContext = useForm<F>({values: props.values})
+    const formContext = props.formContext
 
     const handleClose = () => {
         formContext.reset()
@@ -85,9 +84,7 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
                 <DialogTitle>{props.title(props.entity ? 'edit' : 'add')}</DialogTitle>
                 <DialogCloseButton onClose={handleClose} />
                 <DialogContent>
-                    {typeof props.children === 'function'
-                        ? props.children(formContext)
-                        : props.children}
+                    {props.children}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose} disabled={submitting}>

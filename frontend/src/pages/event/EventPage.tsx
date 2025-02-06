@@ -1,4 +1,4 @@
-import {EventDayDto, EventDto, getEvent, RaceDto} from '../../api'
+import {EventDayDto, getEvent, RaceDto} from '../../api'
 import {Box, Typography} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '../../utils/hooks.ts'
 import {eventRoute} from '../../routes.tsx'

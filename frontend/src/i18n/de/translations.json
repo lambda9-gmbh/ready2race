@@ -8,6 +8,10 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "form": {
+      "autocomplete": {
+        "noOptions": "Keine Auswahl",
+        "add": "{{entity}} hinzufügen"
+      },
       "currency": {
         "invalid": "Bitte geben Sie einen gültigen Betrag ein."
       },
@@ -76,7 +80,11 @@
       "name": "Name",
       "namedParticipant": {
         "description": "Beschreibung",
-        "name": "Name"
+        "name": "Name",
+        "namedParticipant": "Spezifizierter Teilnehmer",
+        "namedParticipants": "Spezifizierte Teilnehmer",
+        "required": "Verpflichtend",
+        "role": "Rolle"
       },
       "participationFee": "Meldegebühr",
       "race": "Rennen",

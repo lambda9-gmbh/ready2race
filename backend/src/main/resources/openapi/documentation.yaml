@@ -999,9 +999,11 @@ components:
         countMixed:
           type: integer
         participationFee:
-          type: number
+          type: string
+          format: decimal
         rentalFee:
-          type: number
+          type: string
+          format: decimal
         raceCategory:
           $ref: '#/components/schemas/RaceCategoryDto'
         namedParticipants:
@@ -1070,9 +1072,11 @@ components:
         countMixed:
           type: integer
         participationFee:
-          type: number
+          type: string
+          format: decimal
         rentalFee:
-          type: number
+          type: string
+          format: decimal
         raceCategory:
           type: string
           format: uuid

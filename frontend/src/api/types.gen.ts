@@ -174,8 +174,8 @@ export type RacePropertiesDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
-    participationFee: number
-    rentalFee: number
+    participationFee: string
+    rentalFee: string
     raceCategory?: RaceCategoryDto
     namedParticipants: Array<NamedParticipantForRaceDto>
 }
@@ -189,8 +189,8 @@ export type RacePropertiesRequestDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
-    participationFee: number
-    rentalFee: number
+    participationFee: string
+    rentalFee: string
     raceCategory?: string
     namedParticipants: Array<NamedParticipantForRaceRequestDto>
 }

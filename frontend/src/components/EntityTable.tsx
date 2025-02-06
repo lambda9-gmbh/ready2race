@@ -182,7 +182,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
     )
 
     return (
-        <Box>
+        <>
             {props.title && <Typography variant={'h6'}>{props.title}</Typography>}
             <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
                 {!props.hideSearch && (
@@ -239,7 +239,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                     />
                 </Box>
             )}
-        </Box>
+        </>
     )
 }
 

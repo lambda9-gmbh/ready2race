@@ -15,13 +15,17 @@ const FormInputNumber = (props: FormInputNumberProps) => {
                     message: t('common.form.number.invalid.range', {min: props.min, max: props.max, })
                 } : undefined,
                 max: props.max ? {
-                    value: 100,
+                    value: props.max,
                     message: t('common.form.number.invalid.range', {min: props.min, max: props.max, })
                 } : undefined,
                 pattern: {
                     value: formRegexNumber,
                     message: t('common.form.number.invalid.pattern')
                 },
+            }}
+            transform={{
+                input: (foo) => String(foo),
+                output: (foo) => Number(foo.currentTarget.value),
             }}
         />
     )
