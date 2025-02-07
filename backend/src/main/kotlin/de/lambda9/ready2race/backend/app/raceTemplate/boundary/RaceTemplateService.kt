@@ -68,10 +68,15 @@ object RaceTemplateService {
         userId: UUID,
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
         val raceTemplateId = !RaceTemplateRepo.create(
-            RaceTemplateRecord(
-                createdBy = userId,
-                updatedBy = userId
-            )
+            LocalDateTime.now().let { now ->
+                RaceTemplateRecord(
+                    id = UUID.randomUUID(),
+                    createdAt = now,
+                    createdBy = userId,
+                    updatedAt = now,
+                    updatedBy = userId
+                )
+            }
         ).orDie()
 
         !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
@@ -111,19 +116,18 @@ object RaceTemplateService {
     }
 
     fun updateRaceTemplate(
+        templateId: UUID,
         request: RaceTemplateRequest,
         userId: UUID,
-        templateId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
         !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
 
-
         !RaceTemplateRepo.update(templateId) {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().onFalseFail { RaceTemplateError.RaceTemplateNotFound }
+        }.orDie().onNullFail { RaceTemplateError.RaceTemplateNotFound }
 
         // In theory the RacePropertiesRepo functions can't fail because there has to be a "properties" for the "race" to exist
         !RacePropertiesRepo

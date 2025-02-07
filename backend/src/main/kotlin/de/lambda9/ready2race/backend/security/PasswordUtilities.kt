@@ -6,6 +6,8 @@ import de.lambda9.tailwind.core.KIO
 
 object PasswordUtilities {
 
+    const val DEFAULT_PASSWORD_MIN_LENGTH = 10
+
     fun hash(plain: String): App<Nothing, String> = KIO.access { env ->
 
         Password
@@ -25,6 +27,6 @@ object PasswordUtilities {
     }
 
     fun generate(): String =
-        RandomUtilities.alphanumerical(10, fixLength = false)
+        RandomUtilities.alphanumerical(DEFAULT_PASSWORD_MIN_LENGTH)
 
 }

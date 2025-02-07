@@ -5,16 +5,18 @@ import java.security.SecureRandom
 object RandomUtilities {
 
     private const val URL_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    private const val DEFAULT_LENGTH = 30
+    private const val DEFAULT_TOKEN_LENGTH = 30
 
-    fun alphanumerical(length: Int = DEFAULT_LENGTH, fixLength: Boolean = true) =
+    fun token() = alphanumerical(DEFAULT_TOKEN_LENGTH)
+
+    fun alphanumerical(length: Int, deviation: Int? = null) =
         SecureRandom().run {
             nextString(
                 URL_CHARS.toCharArray(),
-                if (fixLength) {
+                if (deviation == null) {
                     length
                 } else {
-                    length + nextInt(4)
+                    length + nextInt(deviation)
                 }
             )
         }

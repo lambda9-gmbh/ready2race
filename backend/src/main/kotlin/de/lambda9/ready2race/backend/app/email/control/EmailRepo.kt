@@ -50,13 +50,15 @@ object EmailRepo {
     fun update(
         id: UUID,
         f: EmailRecord.() -> Unit
-    ): JIO<Unit> = Jooq.query {
+    ): JIO<EmailRecord?> = Jooq.query {
         with(EMAIL) {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
-                ?.apply(f)
-                ?.update()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
     }
 

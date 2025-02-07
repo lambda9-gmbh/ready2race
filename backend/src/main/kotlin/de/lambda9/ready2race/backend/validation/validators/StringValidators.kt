@@ -17,4 +17,6 @@ object StringValidators : Validators<String?>() {
     fun maxLength(max: Int) = simple("is too long") { it.length <= max }
 
     fun minLength(min: Int) = simple("is too short") { it.length >= min }
+
+    fun length(length: Int) = simple("is not $length characters long") { it.length == length }
 }

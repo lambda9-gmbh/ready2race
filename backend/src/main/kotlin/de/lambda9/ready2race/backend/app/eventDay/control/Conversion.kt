@@ -6,24 +6,32 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayProperties
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 import de.lambda9.tailwind.core.KIO
+import java.time.LocalDateTime
 import java.util.*
 
-fun EventDayRequest.record(userId: UUID, eventId: UUID) = EventDayRecord(
-    id = UUID.randomUUID(),
-    event = eventId,
-    date = properties.date,
-    name = properties.name,
-    description = properties.description,
-    createdBy = userId,
-    updatedBy = userId,
-)
+fun EventDayRequest.toRecord(userId: UUID, eventId: UUID): App<Nothing, EventDayRecord> =
+    KIO.ok(
+        LocalDateTime.now().let { now ->
+            EventDayRecord(
+                id = UUID.randomUUID(),
+                event = eventId,
+                date = properties.date,
+                name = properties.name,
+                description = properties.description,
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+            )
+        }
+    )
 
 fun EventDayRecord.eventDayDto(): App<Nothing, EventDayDto> = KIO.ok(
     EventDayDto(
-        id = id!!,
-        event = event!!,
+        id = id,
+        event = event,
         properties = EventDayProperties(
-            date = date!!,
+            date = date,
             name = name,
             description = description,
         )

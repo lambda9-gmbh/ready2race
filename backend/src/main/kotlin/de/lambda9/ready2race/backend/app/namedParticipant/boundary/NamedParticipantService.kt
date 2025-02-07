@@ -4,19 +4,20 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
-import de.lambda9.ready2race.backend.app.namedParticipant.control.record
+import de.lambda9.ready2race.backend.app.namedParticipant.control.toRecord
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
 import de.lambda9.ready2race.backend.count
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*
+import java.time.LocalDateTime
 import java.util.UUID
 
 object NamedParticipantService {
@@ -57,12 +58,14 @@ object NamedParticipantService {
     }
 
     fun addNamedParticipant(
-        request: NamedParticipantRequest
+        request: NamedParticipantRequest,
+        userId: UUID,
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
-        val namedParticipantId = !NamedParticipantRepo.create(request.record()).orDie()
-        KIO.ok(ApiResponse.Created(namedParticipantId))
+        val record = !request.toRecord(userId)
+        NamedParticipantRepo.create(record).orDie().map {
+            ApiResponse.Created(it)
+        }
     }
-
 
     fun getNamedParticipantList(): App<Nothing, ApiResponse.Dto<List<NamedParticipantDto>>> = KIO.comprehension {
         val namedParticipantList = !NamedParticipantRepo.getMany().orDie()
@@ -71,14 +74,17 @@ object NamedParticipantService {
     }
 
     fun updateNamedParticipant(
+        namedParticipantId: UUID,
         request: NamedParticipantRequest,
-        namedParticipantId: UUID
+        userId: UUID,
     ): App<NamedParticipantError, ApiResponse.NoData> =
         NamedParticipantRepo.update(namedParticipantId) {
             name = request.name
             description = request.description
+            updatedAt = LocalDateTime.now()
+            updatedBy = userId
         }.orDie()
-            .onFalseFail { NamedParticipantError.NamedParticipantNotFound }
+            .onNullFail { NamedParticipantError.NamedParticipantNotFound }
             .map { ApiResponse.NoData }
 
     fun deleteNamedParticipant(

@@ -4,7 +4,7 @@
   ],
   "templates": [
     {
-      "key": "VERIFY_REGISTRATION",
+      "key": "USER_REGISTRATION",
       "subject": "Ready2Race - Complete registration",
       "body": [
         "Hello ##recipient##,",
@@ -17,6 +17,21 @@
         "##link##",
         "",
         "Please note that registration can only be completed within 24 hours!"
+      ]
+    },
+    {
+      "key": "USER_INVITATION",
+      "subject": "Ready2Race - Invitation",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "You have been invited by ##sender## to use Ready2Race.",
+        "",
+        "To accept your invitation, please click on the following link or copy it into the address bar of your web browser.",
+        "",
+        "##link##",
+        "",
+        "Please note that accepting the invitation is only possible for 7 days!"
       ]
     }
   ]

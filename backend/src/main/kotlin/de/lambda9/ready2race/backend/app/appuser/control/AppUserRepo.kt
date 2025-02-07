@@ -27,14 +27,6 @@ object AppUserRepo {
         }
     }
 
-    fun existsByEmail(
-        email: String,
-    ): JIO<Boolean> = Jooq.query {
-        with(APP_USER) {
-            fetchExists(this, EMAIL.equalIgnoreCase(email))
-        }
-    }
-
     fun countWithRoles(
         search: String?
     ): JIO<Int> = Jooq.query {
@@ -84,13 +76,15 @@ object AppUserRepo {
     fun update(
         id: UUID,
         f: AppUserRecord.() -> Unit,
-    ): JIO<Unit> = Jooq.query {
+    ): JIO<AppUserRecord?> = Jooq.query {
         with(APP_USER) {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
-                ?.apply(f)
-                ?.update()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
     }
 }

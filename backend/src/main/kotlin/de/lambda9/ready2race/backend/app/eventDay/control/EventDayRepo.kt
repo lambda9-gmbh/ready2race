@@ -114,15 +114,16 @@ object EventDayRepo {
     fun update(
         eventDayId: UUID,
         f: EventDayRecord.() -> Unit
-    ): JIO<Boolean> = Jooq.query {
+    ): JIO<EventDayRecord?> = Jooq.query {
         with(EVENT_DAY) {
-            (selectFrom(this)
+            selectFrom(this)
                 .where(ID.eq(eventDayId))
-                .fetchOne() ?: return@query false)
-                .apply(f)
-                .update()
+                .fetchOne()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
-        true
     }
 
     fun delete(

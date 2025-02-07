@@ -18,8 +18,8 @@ fun Route.raceCategory() {
             val payload = call.receiveV(RaceCategoryRequest.example)
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    RaceCategoryService.addRaceCategory(!payload)
+                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                    RaceCategoryService.addRaceCategory(!payload, user.id!!)
                 }
             }
         }
@@ -38,9 +38,9 @@ fun Route.raceCategory() {
                 val payload = call.receiveV(RaceCategoryRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceCategoryId = !pathParam("raceCategoryId") { UUID.fromString(it) }
-                        RaceCategoryService.updateRaceCategory(!payload, raceCategoryId)
+                        RaceCategoryService.updateRaceCategory(raceCategoryId, !payload, user.id!!)
                     }
                 }
             }

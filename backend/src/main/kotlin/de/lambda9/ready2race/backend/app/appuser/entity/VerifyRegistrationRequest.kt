@@ -12,7 +12,7 @@ data class VerifyRegistrationRequest(
     companion object {
         val example
             get() = VerifyRegistrationRequest(
-                token = "abcde12345..."
+                token = "abcde12345...",
             )
     }
 }

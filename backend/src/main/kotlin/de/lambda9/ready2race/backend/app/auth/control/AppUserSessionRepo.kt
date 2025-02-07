@@ -12,32 +12,30 @@ import kotlin.time.Duration
 object AppUserSessionRepo {
 
     fun create(
-        appUserId: UUID,
-        token: String,
-    ): JIO<Unit> = Jooq.query {
+        record: AppUserSessionRecord,
+    ): JIO<String> = Jooq.query {
         with(APP_USER_SESSION) {
-            LocalDateTime.now().let { now ->
-                insertInto(this)
-                    .set(APP_USER, appUserId)
-                    .set(TOKEN, token)
-                    .set(LAST_USED, now)
-                    .set(CREATED_AT, now)
-                    .execute()
-            }
+            insertInto(this)
+                .set(record)
+                .returningResult(TOKEN)
+                .fetchOne()!!
+                .value1()!!
         }
     }
 
-    fun useAndGet(
+    fun update(
         token: String,
-        tokenLifetime: Duration,
+        f: AppUserSessionRecord.() -> Unit
     ): JIO<AppUserSessionRecord?> = Jooq.query {
         with(APP_USER_SESSION) {
-            update(this)
-                .set(LAST_USED, LocalDateTime.now())
-                .where(TOKEN.equalIgnoreCase(token))
-                .and(LAST_USED.ge(tokenLifetime.beforeNow()))
-                .returning()
+            selectFrom(this)
+                .where(TOKEN.eq(token))
+                .and(EXPIRES_AT.gt(LocalDateTime.now()))
                 .fetchOne()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
     }
 
@@ -51,12 +49,10 @@ object AppUserSessionRepo {
         }
     }
 
-    fun deleteExpired(
-        tokenLifetime: Duration,
-    ): JIO<Int> = Jooq.query {
+    fun deleteExpired(): JIO<Int> = Jooq.query {
         with(APP_USER_SESSION) {
             deleteFrom(this)
-                .where(LAST_USED.lt(tokenLifetime.beforeNow()))
+                .where(EXPIRES_AT.le(LocalDateTime.now()))
                 .execute()
         }
     }

@@ -31,15 +31,16 @@ object NamedParticipantRepo {
     fun update(
         namedParticipantId: UUID,
         f: NamedParticipantRecord.() -> Unit
-    ): JIO<Boolean> = Jooq.query {
+    ): JIO<NamedParticipantRecord?> = Jooq.query {
         with(NAMED_PARTICIPANT) {
-            (selectFrom(this)
+            selectFrom(this)
                 .where(ID.eq(namedParticipantId))
-                .fetchOne() ?: return@query false)
-                .apply(f)
-                .update()
+                .fetchOne()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
-        true
     }
 
     fun delete(

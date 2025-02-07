@@ -4,7 +4,7 @@
   ],
   "templates": [
     {
-      "key": "VERIFY_REGISTRATION",
+      "key": "USER_REGISTRATION",
       "subject": "Ready2Race - Registrierung abschließen",
       "body": [
         "Hallo ##recipient##,",
@@ -17,6 +17,21 @@
         "##link##",
         "",
         "Bitte beachte dabei, dass ein Abschluss der Registrierung nur 24 Stunden lang möglich ist!"
+      ]
+    },
+    {
+      "key": "USER_INVITATION",
+      "subject": "Ready2Race - Einladung",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "du wurdest von ##sender## eingeladen, Ready2Race zu benutzen.",
+        "",
+        "Um deine Einladung zu akzeptieren, klicke bitte auf den folgenden Link oder kopiere ihn in die Adressleiste deines Web-Browsers.",
+        "",
+        "##link##",
+        "",
+        "Bitte beachte dabei, dass ein Akzeptieren der Einladung nur 7 Tage lang möglich ist!"
       ]
     }
   ]

@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.control.eventDto
-import de.lambda9.ready2race.backend.app.event.control.record
+import de.lambda9.ready2race.backend.app.event.control.toRecord
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
@@ -37,8 +37,10 @@ object EventService {
         request: EventRequest,
         userId: UUID
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
-        val id = !EventRepo.create(request.record(userId)).orDie()
-        KIO.ok(ApiResponse.Created(id))
+        val record = !request.toRecord(userId)
+        EventRepo.create(record).orDie().map {
+            ApiResponse.Created(it)
+        }
     }
 
     fun page(
@@ -77,7 +79,7 @@ object EventService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
-            .onFalseFail { EventError.EventNotFound }
+            .onNullFail { EventError.EventNotFound }
             .map { ApiResponse.NoData }
 
     fun deleteEvent(

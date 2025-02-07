@@ -53,7 +53,7 @@ fun Route.raceTemplate() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val raceTemplateId = !pathParam("raceTemplateId") { UUID.fromString(it) }
-                        RaceTemplateService.updateRaceTemplate(!payload, user.id!!, raceTemplateId)
+                        RaceTemplateService.updateRaceTemplate(raceTemplateId, !payload, user.id!!)
                     }
                 }
             }

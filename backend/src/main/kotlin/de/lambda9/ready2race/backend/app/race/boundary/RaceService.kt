@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.app.race.control.toDto
-import de.lambda9.ready2race.backend.app.race.control.record
+import de.lambda9.ready2race.backend.app.race.control.toRecord
 import de.lambda9.ready2race.backend.app.race.entity.AssignDaysToRaceRequest
 import de.lambda9.ready2race.backend.app.race.entity.RaceDto
 import de.lambda9.ready2race.backend.app.race.entity.RaceRequest
@@ -70,18 +70,19 @@ object RaceService {
         request: RaceRequest,
         userId: UUID,
         eventId: UUID,
-    ): App<RaceError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
-        EventService.checkEventExisting(eventId)
+        !EventService.checkEventExisting(eventId)
 
         if (request.template != null) {
             !RaceTemplateRepo.exists(request.template).orDie().onFalseFail { RaceError.RaceTemplateUnknown }
         }
 
-        RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
-        RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
+        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
+        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
 
-        val raceId = !RaceRepo.create(request.record(userId, eventId)).orDie()
+        val record = !request.toRecord(userId, eventId)
+        val raceId = !RaceRepo.create(record).orDie()
         val racePropertiesId = !RacePropertiesRepo.create(request.properties.record(raceId, null)).orDie()
         !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
             it.record(
@@ -96,9 +97,9 @@ object RaceService {
         eventId: UUID,
         params: PaginationParameters<RaceWithPropertiesSort>,
         eventDayId: UUID?
-    ): App<RaceError, ApiResponse.Page<RaceDto, RaceWithPropertiesSort>> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Page<RaceDto, RaceWithPropertiesSort>> = KIO.comprehension {
 
-        EventService.checkEventExisting(eventId)
+        !EventService.checkEventExisting(eventId)
 
         val total =
             if (eventDayId == null) !RaceRepo.countWithPropertiesByEvent(eventId, params.search).orDie()
@@ -140,7 +141,7 @@ object RaceService {
             template = request.template
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().onFalseFail { RaceError.RaceNotFound }
+        }.orDie().onNullFail { RaceError.RaceNotFound }
 
         // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
         !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toUpdateFunction())
@@ -192,6 +193,7 @@ object RaceService {
             EventDayHasRaceRecord(
                 eventDay = it,
                 race = raceId,
+                createdAt = LocalDateTime.now(),
                 createdBy = userId
             )
         }).orDie()
