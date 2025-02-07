@@ -20,14 +20,20 @@
       },
       "number": {
         "invalid": {
-          "pattern": "Bitte geben Sie eine gültige Zahl ein.",
+          "pattern": {
+            "integer": "Bitte geben Sie eine ganze Zahl ein.",
+            "number": "Bitte geben Sie eine gültige Zahl ein."
+          },
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
         }
       },
       "required": "Bitte füllen Sie dieses Feld aus."
     },
     "load": {
-      "error": "{{entity}} konnte nicht geladen werden"
+      "error": {
+        "multiple": "{{entity}} konnten nicht geladen werden",
+        "single": "{{entity}} konnte nicht geladen werden"
+      }
     },
     "ok": "Ok",
     "save": "Speichern",
@@ -68,7 +74,10 @@
     "location": "Ort",
     "name": "Name",
     "race": {
-      "category": "Kategorie",
+      "category": {
+        "category": "Kategorie",
+        "categories": "Kategorien"
+      },
       "count": {
         "males": "Anzahl Männer",
         "females": "Anzahl Frauen",
@@ -81,7 +90,7 @@
       "namedParticipant": {
         "description": "Beschreibung",
         "name": "Name",
-        "namedParticipant": "Spezifizierter Teilnehmer",
+        "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipants": "Spezifizierte Teilnehmer",
         "required": "Verpflichtend",
         "role": "Rolle"
@@ -89,8 +98,11 @@
       "participationFee": "Meldegebühr",
       "race": "Rennen",
       "rentalFee": "Leihgebühr",
-      "shortName": "Kürzel",
-      "template": "Vorlage"
+      "shortName": "Kurzname",
+      "template": {
+        "template": "Vorlage",
+        "templates": "Vorlagen"
+      }
     },
     "registrationAvailable": {
       "from": "Anmeldezeitraum von",

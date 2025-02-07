@@ -25,11 +25,13 @@ fun RaceTemplateToPropertiesWithNamedParticipantsRecord.toDto(): App<Nothing, Ra
                 countMixed = countMixed!!,
                 participationFee = participationFee!!,
                 rentalFee = rentalFee!!,
-                raceCategory = RaceCategoryDto(
-                    id = categoryId!!,
-                    name = categoryName!!,
-                    description = categoryDescription
-                ),
+                raceCategory = if (categoryId !== null) {
+                    RaceCategoryDto(
+                        id = categoryId!!,
+                        name = categoryName!!,
+                        description = categoryDescription
+                    )
+                } else null,
                 namedParticipants = it
             ),
         )

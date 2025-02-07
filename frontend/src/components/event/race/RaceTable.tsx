@@ -4,6 +4,7 @@ import {useTranslation} from "react-i18next";
 import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
 import EntityTable from "../../EntityTable.tsx";
 import {BaseEntityTableProps} from "../../../utils/types.ts";
+import {eventIndexRoute} from "../../../routes.tsx";
 
 
 const initialPagination: GridPaginationModel = {
@@ -14,19 +15,22 @@ const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'identifier', sort: 'asc'}]
 
 
-const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
-    return getRaces({
-        signal,
-        query: {...paginationParameters},
-    })
-}
-
-const deleteRequest = (dto: RaceDto) => {
-    return deleteRace({path: {eventId: dto.event, raceId: dto.id}})
-}
-
 const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
     const {t} = useTranslation()
+
+    const {eventId} = eventIndexRoute.useParams()
+
+    const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
+        return getRaces({
+            signal,
+            path: {eventId: eventId},
+            query: {...paginationParameters},
+        })
+    }
+
+    const deleteRequest = (dto: RaceDto) => {
+        return deleteRace({path: {eventId: dto.event, raceId: dto.id}})
+    }
 
     const columns: GridColDef<RaceDto>[] = [
         {
@@ -52,12 +56,13 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
         },
         {
             field: 'raceCategory',
-            headerName: t('event.race.category'),
+            headerName: t('event.race.category.category'),
             minWidth: 200,
             flex: 0,
             valueGetter: (_, row) => row.properties.raceCategory
         },
     ]
+
 
     return (
         <EntityTable

@@ -80,8 +80,8 @@ import type {
     AddRaceCategoryData,
     AddRaceCategoryError,
     AddRaceCategoryResponse,
-    GetRaceCategoryError,
-    GetRaceCategoryResponse,
+    GetRaceCategoriesError,
+    GetRaceCategoriesResponse,
     UpdateRaceCategoryData,
     UpdateRaceCategoryError,
     UpdateRaceCategoryResponse,
@@ -132,7 +132,7 @@ export const addEvent = <ThrowOnError extends boolean = false>(
 }
 
 export const getEvents = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetEventsData, ThrowOnError>,
+    options?: OptionsLegacyParser<GetEventsData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventsResponse, GetEventsError, ThrowOnError>({
         ...options,
@@ -177,7 +177,7 @@ export const addEventDay = <ThrowOnError extends boolean = false>(
 }
 
 export const getEventDays = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
+    options?: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventDaysResponse, GetEventDaysError, ThrowOnError>({
         ...options,
@@ -243,7 +243,7 @@ export const addRace = <ThrowOnError extends boolean = false>(
 }
 
 export const getRaces = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetRacesData, ThrowOnError>,
+    options?: OptionsLegacyParser<GetRacesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetRacesResponse, GetRacesError, ThrowOnError>({
         ...options,
@@ -305,7 +305,7 @@ export const addRaceTemplate = <ThrowOnError extends boolean = false>(
 }
 
 export const getRaceTemplates = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetRaceTemplatesData, ThrowOnError>,
+    options?: OptionsLegacyParser<GetRaceTemplatesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
         GetRaceTemplatesResponse,
@@ -421,12 +421,12 @@ export const addRaceCategory = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const getRaceCategory = <ThrowOnError extends boolean = false>(
+export const getRaceCategories = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetRaceCategoryResponse,
-        GetRaceCategoryError,
+        GetRaceCategoriesResponse,
+        GetRaceCategoriesError,
         ThrowOnError
     >({
         ...options,

@@ -1,5 +1,8 @@
 import {
     addRace,
+    getNamedParticipants,
+    getRaceCategories,
+    getRaceTemplates,
     RaceDto,
     RaceRequest,
     updateRace,
@@ -10,13 +13,15 @@ import {
     BaseEntityDialogProps,
 } from '../../../utils/types.ts'
 import EntityDialog from '../../EntityDialog.tsx'
-import {Box, Button, Grid2, Stack} from '@mui/material'
+import {Box, Button, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
 import {FormInputText} from '../../form/input/FormInputText.tsx'
 import {useTranslation} from 'react-i18next'
 import {eventIndexRoute} from '../../../routes.tsx'
 import {AutocompleteElement, SwitchElement, useFieldArray, useForm} from 'react-hook-form-mui'
 import FormInputNumber from '../../form/input/FormInputNumber.tsx'
 import {FormInputCurrency} from '../../form/input/FormInputCurrency.tsx'
+import {useFeedback, useFetch} from '../../../utils/hooks.ts'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 type RaceForm = {
     identifier?: string
@@ -43,6 +48,7 @@ type RaceForm = {
 
 const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const {eventId} = eventIndexRoute.useParams()
 
@@ -72,19 +78,71 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
         namedParticipants: [],
     }
 
-    //todo...
-    const templatesList: AutocompleteList = [
-        {id: 'testId', label: 'Test Template'},
-        {id: 'testId2', label: 'Test2 Template'},
-    ]
+    const {data: templatesData, pending: templatesPending} = useFetch(
+        signal => getRaceTemplates({signal}),
+        {
+            onResponse: result => {
+                if (result.error) {
+                    feedback.error(
+                        t('common.load.error.multiple', {
+                            entity: t('event.race.template.templates'),
+                        }),
+                    )
+                }
+            },
+        },
+        [], // todo: reload when opening the dialog
+    )
+    const templates: AutocompleteList =
+        templatesData?.data.map(dto => ({
+            id: dto.id,
+            label: dto.properties.name,
+        })) ?? []
 
-    const namedPsList: AutocompleteList = [
-        {id: 'e8413adc-72f9-4a05-a4ba-f12ada4c3639', label: 'Steuermann'},
-        {id: '3f15ca3d-641a-4d87-a12d-9f16d27edcb7', label: 'Steuerfrau'},
-        {id: '4b3d7747-e0f3-4803-bf18-d73807d48f8e', label: 'Mensch'},
-    ]
+    const {data: namedParticipantsData, pending: namedParticipantsPending} = useFetch(
+        signal => getNamedParticipants({signal}),
+        {
+            onResponse: result => {
+                if (result.error) {
+                    feedback.error(
+                        t('common.load.error.multiple', {
+                            entity: t('event.race.namedParticipant.namedParticipants'),
+                        }),
+                    )
+                }
+            },
+        },
+        [], // todo: reload when opening the dialog
+    )
 
-    const values = props.entity ? mapDtoToForm(props.entity, templatesList) : undefined
+    const namedParticipants: AutocompleteList =
+        namedParticipantsData?.map(dto => ({
+            id: dto.id,
+            label: dto.name,
+        })) ?? []
+
+    const {data: categoriesData, pending: categoriesPending} = useFetch(
+        signal => getRaceCategories({signal}),
+        {
+            onResponse: result => {
+                if (result.error) {
+                    feedback.error(
+                        t('common.load.error.multiple', {
+                            entity: t('event.race.category.categories'),
+                        }),
+                    )
+                }
+            },
+        },
+        [], // todo: reload when opening the dialog
+    )
+    const categories: AutocompleteList =
+        categoriesData?.map(dto => ({
+            id: dto.id,
+            label: dto.name,
+        })) ?? []
+
+    const values = props.entity ? mapDtoToForm(props.entity, templates) : undefined
 
     const formContext = useForm<RaceForm>({
         defaultValues: defaultValues,
@@ -94,7 +152,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const {
         fields: namedParticipantFields,
         append: appendNamedParticipant,
-        //remove: removeNamedParticipant
+        remove: removeNamedParticipant,
     } = useFieldArray({
         control: formContext.control,
         name: 'namedParticipants',
@@ -102,7 +160,6 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     })
 
     const entityNameKey = {entity: t('event.event')}
-
 
     return (
         <EntityDialog
@@ -116,116 +173,159 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
             addAction={addAction}
             editAction={editAction}
             onSuccess={() => {}}>
-            <Stack spacing={2} pt={2}>
-                <AutocompleteElement
-                    name="template"
-                    options={templatesList}
-                    label={t('event.race.template')}
-                />
+            <Stack spacing={2}>
+                <Box sx={{pb: 4}}>
+                    <AutocompleteElement
+                        name="template"
+                        options={templates}
+                        label={t('event.race.template.template')}
+                        loading={templatesPending}
+                    />
+                </Box>
                 <FormInputText name="identifier" label={t('event.race.identifier')} required />
                 <FormInputText name="name" label={t('event.race.name')} required />
                 <FormInputText name="shortName" label={t('event.race.shortName')} />
                 <FormInputText name="description" label={t('event.race.description')} />
-                <FormInputNumber
-                    name="countMales"
-                    label={t('event.race.count.males')}
-                    min={0}
-                    required
-                />
-                {
-                    // todo only ints
-                }
-                <FormInputNumber
-                    name="countFemales"
-                    label={t('event.race.count.females')}
-                    min={0}
-                    required
-                />
-                <FormInputNumber
-                    name="countNonBinary"
-                    label={t('event.race.count.nonBinary')}
-                    min={0}
-                    required
-                />
-                <FormInputNumber
-                    name="countMixed"
-                    label={t('event.race.count.mixed')}
-                    min={0}
-                    required
-                />
+                <Stack direction="row" spacing={2} sx={{mb: 4}}>
+                    <FormInputNumber
+                        name="countMales"
+                        label={t('event.race.count.males')}
+                        min={0}
+                        integer={true}
+                        required
+                        sx={{flex: 1}}
+                    />
+                    <FormInputNumber
+                        name="countFemales"
+                        label={t('event.race.count.females')}
+                        min={0}
+                        integer={true}
+                        required
+                        sx={{flex: 1}}
+                    />
+                </Stack>
+                <Stack direction="row" spacing={2} sx={{mb: 4}}>
+                    <FormInputNumber
+                        name="countNonBinary"
+                        label={t('event.race.count.nonBinary')}
+                        min={0}
+                        integer={true}
+                        required
+                        sx={{flex: 1}}
+                    />
+                    <FormInputNumber
+                        name="countMixed"
+                        label={t('event.race.count.mixed')}
+                        min={0}
+                        integer={true}
+                        required
+                        sx={{flex: 1}}
+                    />
+                </Stack>
                 <FormInputCurrency
                     name="participationFee"
                     label={t('event.race.participationFee')}
                     required
                 />
                 <FormInputCurrency name="rentalFee" label={t('event.race.rentalFee')} required />
-                <Box>
-                    {namedParticipantFields.map((field, index) => (
-                        <Box key={'remove' + field.fieldId} sx={{maxWidth: 550, m: 'auto'}}>
-                            <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
+                <AutocompleteElement
+                    name="raceCategory"
+                    options={categories}
+                    label={t('event.race.category.category')}
+                    loading={categoriesPending}
+                />
+                {namedParticipantFields.map((field, index) => (
+                    <Stack direction="row" spacing={2} alignItems={'center'}>
+                        <Box
+                            key={'remove' + field.fieldId}
+                            sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
+                            <Grid2 container flexDirection="row" spacing={2} sx={{mb: 2}}>
                                 <Grid2 size="grow" sx={{minWidth: 250}}>
                                     <AutocompleteElement
                                         name={'namedParticipants[' + index + '].namedParticipant'}
-                                        options={namedPsList}
+                                        options={namedParticipants}
                                         label={t('event.race.namedParticipant.role')}
                                         autocompleteProps={{
                                             noOptionsText: t('common.form.autocomplete.noOptions'),
                                         }}
+                                        loading={namedParticipantsPending}
                                     />
                                 </Grid2>
-                                <Box>
+                                <Box sx={{my: 'auto'}}>
                                     <SwitchElement
                                         name={'namedParticipants[' + index + '].required'}
                                         label={t('event.race.namedParticipant.required')}
                                     />
                                 </Box>
                             </Grid2>
-                            <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countMales'}
-                                    label={t('event.race.count.males')}
-                                    min={0}
-                                    max={5}
-                                    required
-                                />
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countFemales'}
-                                    label={t('event.race.count.females')}
-                                    min={0}
-                                    required
-                                />
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countNonBinary'}
-                                    label={t('event.race.count.nonBinary')}
-                                    min={0}
-                                    required
-                                />
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countMixed'}
-                                    label={t('event.race.count.mixed')}
-                                    min={0}
-                                    required
-                                />
-                            </Grid2>
+                            <Stack direction="column" spacing={2}>
+                                <Stack direction="row" spacing={2}>
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countMales'}
+                                        label={t('event.race.count.males')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countFemales'}
+                                        label={t('event.race.count.females')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                </Stack>
+                                <Stack direction="row" spacing={2}>
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countNonBinary'}
+                                        label={t('event.race.count.nonBinary')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countMixed'}
+                                        label={t('event.race.count.mixed')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                </Stack>
+                            </Stack>
                         </Box>
-                    ))}
-                    <Box sx={{minWidth: 200, margin: 'auto'}}>
-                        <Button
-                            onClick={() =>
-                                appendNamedParticipant({
-                                    required: false,
-                                    countMales: '0',
-                                    countFemales: '0',
-                                    countNonBinary: '0',
-                                    countMixed: '0',
-                                })
-                            }
-                            sx={{width: 1}}>
-                            {t('common.form.autocomplete.add', {
-                                entity: t('event.race.namedParticipant.namedParticipant'),
-                            })}
-                        </Button>
-                    </Box>
+                        <Tooltip
+                            title={t('common.delete')}
+                            disableInteractive
+                            slots={{
+                                transition: Zoom,
+                            }}>
+                            <IconButton
+                                onClick={() => {
+                                    removeNamedParticipant(index)
+                                }}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                ))}
+                <Box sx={{minWidth: 200, margin: 'auto'}}>
+                    <Button
+                        onClick={() =>
+                            appendNamedParticipant({
+                                required: false,
+                                countMales: '0',
+                                countFemales: '0',
+                                countNonBinary: '0',
+                                countMixed: '0',
+                            })
+                        }
+                        sx={{width: 1}}>
+                        {t('event.race.namedParticipant.add')}
+                    </Button>
                 </Box>
             </Stack>
         </EntityDialog>

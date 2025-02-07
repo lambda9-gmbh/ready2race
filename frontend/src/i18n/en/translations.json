@@ -15,19 +15,25 @@
       "currency": {
         "invalid": "Please select a valid amount."
       },
-      "dateTime":{
+      "dateTime": {
         "invalid": "Please select a valid date and time."
       },
       "number": {
         "invalid": {
-          "pattern": "Please enter a valid number.",
+          "pattern": {
+            "integer": "Please enter an integer number.",
+            "number": "Please enter a valid number."
+          },
           "range": "Please enter a number between {{min}} and {{max}}."
         }
       },
       "required": "Please fill in this field."
     },
     "load": {
-      "error": "{{entity}} could not be loaded"
+      "error": {
+        "multiple": "{{entity}} could not be loaded",
+        "single": "{{entity}} could not be loaded"
+      }
     },
     "ok": "Ok",
     "save": "Save",
@@ -68,7 +74,10 @@
     "location": "Location",
     "name": "Name",
     "race": {
-      "category": "Category",
+      "category": {
+        "category": "Category",
+        "categories": "Categories"
+      },
       "count": {
         "males": "Number of men",
         "females": "Number of women",
@@ -81,7 +90,7 @@
       "namedParticipant": {
         "description": "Description",
         "name": "Name",
-        "namedParticipant": "Named Participant",
+        "add": "Add Named Participant",
         "namedParticipants": "Named Participants",
         "required": "Required",
         "role": "Role"
@@ -90,7 +99,10 @@
       "race": "Race",
       "rentalFee": "Rental fee",
       "shortName": "Short name",
-      "template": "Template"
+      "template": {
+        "template": "Template",
+        "templates": "Templates"
+      }
     },
     "registrationAvailable": {
       "from": "Registration period start",

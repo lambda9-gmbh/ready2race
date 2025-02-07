@@ -40,6 +40,7 @@ const RootLayout = () => {
                         <Box
                             sx={{
                                 padding: 4,
+                                width: 1
                             }}>
                             <Outlet />
                         </Box>

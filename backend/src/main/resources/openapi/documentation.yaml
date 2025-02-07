@@ -490,7 +490,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NamedParticipantDto'
+              $ref: '#/components/schemas/NamedParticipantRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -527,7 +527,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NamedParticipantDto'
+              $ref: '#/components/schemas/NamedParticipantRequest'
       responses:
         204:
           description: NamedParticipant successfully updated
@@ -564,7 +564,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceCategoryDto'
+              $ref: '#/components/schemas/RaceCategoryRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -577,7 +577,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaceCategory
+      operationId: getRaceCategories
       responses:
         200:
           description: RaceCategory list successfully retrieved
@@ -601,7 +601,7 @@ paths:
         content:
           application/json:
             schema:
-              type: string
+              $ref: '#/components/schemas/RaceCategoryRequest'
       responses:
         204:
           description: RaceCategory successfully updated
@@ -643,7 +643,7 @@ components:
       name: limit
       in: query
       description: Page size for pagination
-      required: true
+      required: false
       schema:
         type: integer
 
@@ -651,7 +651,7 @@ components:
       name: offset
       in: query
       description: Result offset for pagination
-      required: true
+      required: false
       schema:
         type: integer
 
@@ -659,7 +659,7 @@ components:
       name: sort
       in: query
       description: "Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination"
-      required: true
+      required: false
       schema:
         type: string
 
@@ -1220,13 +1220,27 @@ components:
       type:
         object
       required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    NamedParticipantRequest:
+      type:
+        object
+      required:
         - name
       properties:
         name:
           type: string
         description:
           type: string
-
 
 
     # raceCategory
@@ -1241,6 +1255,17 @@ components:
         id:
           type: string
           format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    RaceCategoryRequest:
+      type:
+        object
+      required:
+        - name
+      properties:
         name:
           type: string
         description:

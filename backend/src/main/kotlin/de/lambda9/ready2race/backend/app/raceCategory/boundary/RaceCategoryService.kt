@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
 import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDtoList
 import de.lambda9.ready2race.backend.app.raceCategory.control.record
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
+import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryRequest
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -29,7 +30,7 @@ object RaceCategoryService {
     }
 
     fun addRaceCategory(
-        request: RaceCategoryDto
+        request: RaceCategoryRequest
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val raceCategoryId = !RaceCategoryRepo.create(request.record()).orDie()
         KIO.ok(ApiResponse.Created(raceCategoryId))
@@ -43,7 +44,7 @@ object RaceCategoryService {
 
 
     fun updateRaceCategory(
-        request: RaceCategoryDto,
+        request: RaceCategoryRequest,
         raceCategoryId: UUID
     ): App<RaceCategoryError, ApiResponse.NoData> = KIO.comprehension {
         !RaceCategoryRepo.update(raceCategoryId) {

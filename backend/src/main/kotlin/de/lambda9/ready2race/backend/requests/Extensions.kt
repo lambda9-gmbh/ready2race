@@ -87,9 +87,9 @@ fun ApplicationCall.queryParam(
 inline fun <reified S> ApplicationCall.pagination(): App<RequestError, PaginationParameters<S>>
     where S : Sortable, S : Enum<S> = KIO.comprehension {
 
-    val limit = !queryParam("limit") { it.toInt() }
-    val offset = !queryParam("offset") { it.toInt() }
-    val sort = !queryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
+    val limit = !optionalQueryParam("limit") { it.toInt() }
+    val offset = !optionalQueryParam("offset") { it.toInt() }
+    val sort = !optionalQueryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
     val search = !optionalQueryParam("search")
 
     ValidationResult.allOf(

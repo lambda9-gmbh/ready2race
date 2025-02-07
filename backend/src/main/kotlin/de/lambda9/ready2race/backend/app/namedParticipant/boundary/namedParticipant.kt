@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.namedParticipant.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pathParam
 import de.lambda9.ready2race.backend.requests.receiveV
@@ -14,7 +15,7 @@ import java.util.*
 fun Route.namedParticipant() {
     route("/namedParticipant") {
         post {
-            val payload = call.receiveV(NamedParticipantDto.example)
+            val payload = call.receiveV(NamedParticipantRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
@@ -34,7 +35,7 @@ fun Route.namedParticipant() {
 
         route("/{namedParticipantId}"){
             put{
-                val payload = call.receiveV(NamedParticipantDto.example)
+                val payload = call.receiveV(NamedParticipantRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)

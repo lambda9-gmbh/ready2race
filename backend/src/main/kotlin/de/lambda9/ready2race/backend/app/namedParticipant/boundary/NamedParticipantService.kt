@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipa
 import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
 import de.lambda9.ready2race.backend.app.namedParticipant.control.record
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
 import de.lambda9.ready2race.backend.count
@@ -56,7 +57,7 @@ object NamedParticipantService {
     }
 
     fun addNamedParticipant(
-        request: NamedParticipantDto
+        request: NamedParticipantRequest
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val namedParticipantId = !NamedParticipantRepo.create(request.record()).orDie()
         KIO.ok(ApiResponse.Created(namedParticipantId))
@@ -70,7 +71,7 @@ object NamedParticipantService {
     }
 
     fun updateNamedParticipant(
-        request: NamedParticipantDto,
+        request: NamedParticipantRequest,
         namedParticipantId: UUID
     ): App<NamedParticipantError, ApiResponse.NoData> =
         NamedParticipantRepo.update(namedParticipantId) {

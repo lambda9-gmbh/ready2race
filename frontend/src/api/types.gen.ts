@@ -85,6 +85,7 @@ export type LoginResponse = {
 }
 
 export type NamedParticipantDto = {
+    id: string
     name: string
     description?: string
 }
@@ -107,6 +108,11 @@ export type NamedParticipantForRaceRequestDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
+}
+
+export type NamedParticipantRequest = {
+    name: string
+    description?: string
 }
 
 export type Order = {
@@ -154,6 +160,11 @@ export type Privilege =
 
 export type RaceCategoryDto = {
     id: string
+    name: string
+    description?: string
+}
+
+export type RaceCategoryRequest = {
     name: string
     description?: string
 }
@@ -234,15 +245,15 @@ export type AddEventResponse = string
 export type AddEventError = string
 
 export type GetEventsData = {
-    query: {
+    query?: {
         /**
          * Page size for pagination
          */
-        limit: number
+        limit?: number
         /**
          * Result offset for pagination
          */
-        offset: number
+        offset?: number
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -250,7 +261,7 @@ export type GetEventsData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort?: string
     }
 }
 
@@ -283,15 +294,15 @@ export type AddEventDayResponse = string
 export type AddEventDayError = string
 
 export type GetEventDaysData = {
-    query: {
+    query?: {
         /**
          * Page size for pagination
          */
-        limit: number
+        limit?: number
         /**
          * Result offset for pagination
          */
-        offset: number
+        offset?: number
         /**
          * Optional parameter that filters by raceId
          */
@@ -303,7 +314,7 @@ export type GetEventDaysData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort?: string
     }
 }
 
@@ -344,7 +355,7 @@ export type AddRaceResponse = string
 export type AddRaceError = string
 
 export type GetRacesData = {
-    query: {
+    query?: {
         /**
          * Optional parameter that filters by eventDayId
          */
@@ -352,11 +363,11 @@ export type GetRacesData = {
         /**
          * Page size for pagination
          */
-        limit: number
+        limit?: number
         /**
          * Result offset for pagination
          */
-        offset: number
+        offset?: number
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -364,7 +375,7 @@ export type GetRacesData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort?: string
     }
 }
 
@@ -405,15 +416,15 @@ export type AddRaceTemplateResponse = string
 export type AddRaceTemplateError = string
 
 export type GetRaceTemplatesData = {
-    query: {
+    query?: {
         /**
          * Page size for pagination
          */
-        limit: number
+        limit?: number
         /**
          * Result offset for pagination
          */
-        offset: number
+        offset?: number
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -421,7 +432,7 @@ export type GetRaceTemplatesData = {
         /**
          * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
          */
-        sort: string
+        sort?: string
     }
 }
 
@@ -446,7 +457,7 @@ export type DeleteRaceTemplateResponse = void
 export type DeleteRaceTemplateError = string
 
 export type AddNamedParticipantData = {
-    body: NamedParticipantDto
+    body: NamedParticipantRequest
 }
 
 export type AddNamedParticipantResponse = string
@@ -458,7 +469,7 @@ export type GetNamedParticipantsResponse = Array<NamedParticipantDto>
 export type GetNamedParticipantsError = string
 
 export type UpdateNamedParticipantData = {
-    body: NamedParticipantDto
+    body: NamedParticipantRequest
 }
 
 export type UpdateNamedParticipantResponse = void
@@ -470,19 +481,19 @@ export type DeleteNamedParticipantResponse = void
 export type DeleteNamedParticipantError = string
 
 export type AddRaceCategoryData = {
-    body: RaceCategoryDto
+    body: RaceCategoryRequest
 }
 
 export type AddRaceCategoryResponse = string
 
 export type AddRaceCategoryError = string
 
-export type GetRaceCategoryResponse = Array<RaceCategoryDto>
+export type GetRaceCategoriesResponse = Array<RaceCategoryDto>
 
-export type GetRaceCategoryError = string
+export type GetRaceCategoriesError = string
 
 export type UpdateRaceCategoryData = {
-    body: string
+    body: RaceCategoryRequest
 }
 
 export type UpdateRaceCategoryResponse = void
