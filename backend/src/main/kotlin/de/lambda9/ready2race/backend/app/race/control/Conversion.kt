@@ -8,16 +8,25 @@ import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
 import de.lambda9.ready2race.backend.app.raceProperties.control.toDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceToPropertiesWithNamedParticipantsRecord
+import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
+import java.time.LocalDateTime
 import java.util.*
 
-fun RaceRequest.record(userId: UUID, eventId: UUID) = RaceRecord(
-    id = UUID.randomUUID(),
-    event = eventId,
-    template = template,
-    createdBy = userId,
-    updatedBy = userId,
-)
+fun RaceRequest.toRecord(userId: UUID, eventId: UUID): App<Nothing, RaceRecord> =
+    KIO.ok(
+        LocalDateTime.now().let { now ->
+            RaceRecord(
+                id = UUID.randomUUID(),
+                event = eventId,
+                template = template,
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+            )
+        }
+    )
 
 fun RaceToPropertiesWithNamedParticipantsRecord.toDto(): App<Nothing, RaceDto> =
     namedParticipants!!.toList().forEachM {

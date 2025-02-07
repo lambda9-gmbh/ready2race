@@ -4,15 +4,16 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
 import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDtoList
-import de.lambda9.ready2race.backend.app.raceCategory.control.record
+import de.lambda9.ready2race.backend.app.raceCategory.control.toRecord
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.ktor.http.*
+import java.time.LocalDateTime
 import java.util.UUID
 
 object RaceCategoryService {
@@ -29,9 +30,11 @@ object RaceCategoryService {
     }
 
     fun addRaceCategory(
-        request: RaceCategoryDto
+        request: RaceCategoryDto,
+        userId: UUID,
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
-        val raceCategoryId = !RaceCategoryRepo.create(request.record()).orDie()
+        val record = !request.toRecord(userId)
+        val raceCategoryId = !RaceCategoryRepo.create(record).orDie()
         KIO.ok(ApiResponse.Created(raceCategoryId))
     }
 
@@ -43,13 +46,16 @@ object RaceCategoryService {
 
 
     fun updateRaceCategory(
+        raceCategoryId: UUID,
         request: RaceCategoryDto,
-        raceCategoryId: UUID
+        userId: UUID,
     ): App<RaceCategoryError, ApiResponse.NoData> = KIO.comprehension {
         !RaceCategoryRepo.update(raceCategoryId) {
             name = request.name
             description = request.description
-        }.orDie().onFalseFail { RaceCategoryError.RaceCategoryNotFound }
+            updatedAt = LocalDateTime.now()
+            updatedBy = userId
+        }.orDie().onNullFail { RaceCategoryError.RaceCategoryNotFound }
 
         noData
     }

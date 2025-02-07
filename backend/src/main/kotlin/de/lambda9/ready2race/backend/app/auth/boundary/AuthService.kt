@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
+import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.control.AppUserSessionRepo
 import de.lambda9.ready2race.backend.app.auth.control.loginDto
@@ -7,13 +8,13 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.auth.control.newSessionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.recoverDefault
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
-import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.catchError
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import kotlin.time.Duration.Companion.minutes
@@ -33,9 +34,8 @@ object AuthService {
 
         if (credentialsOk) {
 
-            val token = RandomUtilities.alphanumerical()
-
-            !AppUserSessionRepo.create(user.id!!, token).orDie()
+            val record = !user.newSessionRecord(tokenLifetime)
+            val token = !AppUserSessionRepo.create(record).orDie()
             onSuccess(token)
 
             user.loginDto().map {
@@ -50,7 +50,7 @@ object AuthService {
         token: String?
     ): App<AuthError, ApiResponse> = KIO.comprehension {
 
-        val user = !getAppUserByToken(token).catchError { KIO.ok(null) }
+        val user = !useSessionToken(token).recoverDefault { null }
 
         user?.loginDto()?.map { ApiResponse.Dto(it) } ?: noData
     }
@@ -62,10 +62,11 @@ object AuthService {
 
         !AppUserSessionRepo.delete(token).orDie()
         onSuccess()
+
         noData
     }
 
-    fun getAppUserByToken(
+    fun useSessionToken(
         token: String?
     ): App<AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
 
@@ -73,11 +74,13 @@ object AuthService {
             return@comprehension KIO.fail(AuthError.TokenInvalid)
         }
 
-        val valid = !AppUserSessionRepo.useAndGet(token, tokenLifetime).orDie().onNullFail { AuthError.TokenInvalid }
+        val valid = !AppUserSessionRepo.update(token) {
+            expiresAt = tokenLifetime.afterNow()
+        }.orDie().onNullFail { AuthError.TokenInvalid }
 
-        AppUserRepo.getWithPrivileges(valid.appUser!!).orDie().onNullFail { AuthError.TokenInvalid }
+        AppUserRepo.getWithPrivileges(valid.appUser).orDie().onNullFail { AuthError.TokenInvalid }
     }
 
     fun deleteExpiredTokens(): App<Nothing, Int> =
-        AppUserSessionRepo.deleteExpired(tokenLifetime).orDie()
+        AppUserSessionRepo.deleteExpired().orDie()
 }

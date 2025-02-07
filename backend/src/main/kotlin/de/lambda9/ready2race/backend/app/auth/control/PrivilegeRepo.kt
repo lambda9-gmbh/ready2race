@@ -10,18 +10,9 @@ import java.util.*
 object PrivilegeRepo {
 
     fun create(
-        privileges: List<Privilege>
+        records: List<PrivilegeRecord>
     ): JIO<Int> = Jooq.query {
-        batchInsert(
-            privileges.map {
-                PrivilegeRecord(
-                    id = UUID.randomUUID(),
-                    action = it.action.name,
-                    resource = it.resource.name,
-                    scope = it.scope.name,
-                )
-            }
-        ).execute().sum()
+        batchInsert(records).execute().sum()
     }
 
     fun all(): JIO<List<PrivilegeRecord>> = Jooq.query {

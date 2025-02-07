@@ -5,8 +5,8 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.validatePrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.kio.toKio
 import de.lambda9.ready2race.backend.pagination.Order
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -37,19 +37,32 @@ suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V)
 fun ApplicationCall.authenticate(
     action: Privilege.Action,
     resource: Privilege.Resource,
-): App<AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>> = KIO.comprehension {
+    scope: Privilege.Scope,
+): App<AuthError, AppUserWithPrivilegesRecord> =
+    AuthService.useSessionToken(sessions.get<UserSession>()?.token).failIf(
+        condition = { user ->
+            user.privileges!!
+                .none { it!!.action == action.name && it.resource == resource.name && it.scope == scope.name }
+        },
+        then = { AuthError.PrivilegeMissing },
+    )
 
-    val userSession = sessions.get<UserSession>()
-    val user = !AuthService.getAppUserByToken(userSession?.token)
-    user.validatePrivilege(action, resource).map {
-        user to it
-    }
-}
+fun ApplicationCall.authenticate(
+    action: Privilege.Action,
+    resource: Privilege.Resource,
+): App<AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>> =
+    AuthService.useSessionToken(sessions.get<UserSession>()?.token).map { user ->
+        user.privileges!!
+            .filter { it!!.action == action.name && it.resource == resource.name }
+            .map { Privilege.Scope.valueOf(it!!.scope) }
+            .maxByOrNull { it.level }
+            ?.let { user to it }
+    }.onNullFail { AuthError.PrivilegeMissing }
 
 fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
 
     val userSession = sessions.get<UserSession>()
-    AuthService.getAppUserByToken(userSession?.token)
+    AuthService.useSessionToken(userSession?.token)
 }
 
 fun <T> ApplicationCall.pathParam(

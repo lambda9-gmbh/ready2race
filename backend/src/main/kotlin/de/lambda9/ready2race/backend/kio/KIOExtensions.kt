@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.Task
 import de.lambda9.tailwind.core.extensions.kio.andThen
+import de.lambda9.tailwind.core.extensions.kio.catchError
 
 fun <T> Result<T>.toKio(): Task<T> = fold(
     onSuccess = { KIO.ok(it) },
@@ -14,6 +15,9 @@ fun <T> Result<T>.toKio(): Task<T> = fold(
 fun accessConfig(): KIO<JEnv, Nothing, Config> = KIO.access { it.env.config }
 
 // todo: Use from library
+fun <R, E, A> KIO<R, E, A>.recoverDefault(default: () -> A) =
+    catchError { KIO.ok(default()) }
+
 fun <R, E : E1, E1, A> KIO<R, E, A>.failIf(condition: (A) -> Boolean, then: (A) -> E1): KIO<R, E1, A> =
     andThen {
         if (condition(it))

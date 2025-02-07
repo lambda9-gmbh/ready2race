@@ -379,6 +379,7 @@
                             <daos>false</daos>
                             <validationAnnotations>false</validationAnnotations>
                             <javaTimeTypes>true</javaTimeTypes>
+                            <kotlinNotNullRecordAttributes>true</kotlinNotNullRecordAttributes>
                         </generate>
                     </generator>
                 </configuration>

@@ -58,15 +58,16 @@ object EventRepo {
     fun update(
         id: UUID,
         f: EventRecord.() -> Unit
-    ): JIO<Boolean> = Jooq.query {
+    ): JIO<EventRecord?> = Jooq.query {
         with(EVENT) {
-            (selectFrom(this)
+            selectFrom(this)
                 .where(ID.eq(id))
-                .fetchOne() ?: return@query false)
-                .apply(f)
-                .update()
+                .fetchOne()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
-        true
     }
 
     fun delete(

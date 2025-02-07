@@ -17,6 +17,7 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.PrivilegeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.JobQueueState
@@ -36,6 +37,7 @@ import io.ktor.server.netty.*
 import kotlinx.coroutines.*
 import org.flywaydb.core.Flyway
 import java.time.LocalDateTime
+import java.util.*
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -80,12 +82,14 @@ private fun initializeApplication(env: JEnv) {
 
         // Add admin
 
-        val adminUserExisting = !AppUserRepo.exists(SYSTEM_USER).orDie()
-        val adminRoleExisting = !RoleRepo.exists(ADMIN_ROLE).orDie()
+        val adminUserExisting = !AppUserRepo.exists(SYSTEM_USER)
+        val adminRoleExisting = !RoleRepo.exists(ADMIN_ROLE)
 
         val admin = env.env.config.admin
 
         val hashedPw = !PasswordUtilities.hash(admin.password)
+
+        val now = LocalDateTime.now()
 
         if (!adminUserExisting) {
 
@@ -97,16 +101,19 @@ private fun initializeApplication(env: JEnv) {
                     lastname = "User",
                     password = hashedPw,
                     language = EmailLanguage.DE.name,
+                    createdAt = now,
                     createdBy = SYSTEM_USER,
+                    updatedAt = now,
                     updatedBy = SYSTEM_USER,
                 )
-            ).orDie()
+            )
         } else {
 
             !AppUserRepo.update(SYSTEM_USER) {
                 email = admin.email
                 password = hashedPw
-                updatedAt = LocalDateTime.now()
+                updatedAt = now
+                updatedBy = SYSTEM_USER
             }
         }
 
@@ -118,29 +125,37 @@ private fun initializeApplication(env: JEnv) {
                     description = "Global admin role",
                     static = true,
                     assignable = false,
+                    createdAt = now,
                     createdBy = SYSTEM_USER,
+                    updatedAt = now,
                     updatedBy = SYSTEM_USER,
                 )
-            ).orDie()
+            )
         }
 
         if (!adminUserExisting || !adminRoleExisting) {
-            !AppUserHasRoleRepo.create(SYSTEM_USER, listOf(ADMIN_ROLE)).orDie()
+            !AppUserHasRoleRepo.create(SYSTEM_USER, listOf(ADMIN_ROLE))
         }
 
         // Add missing privileges
 
         val privilegeRecords = !PrivilegeRepo.all()
-        !PrivilegeRepo.create(
-            Privilege.entries
-                .filter { p ->
-                    privilegeRecords.none {
-                        it.action == p.action.name
-                            && it.resource == p.resource.name
-                            && it.scope == p.scope.name
-                    }
+        val records = Privilege.entries
+            .filter { p ->
+                privilegeRecords.none {
+                    it.action == p.action.name
+                        && it.resource == p.resource.name
+                        && it.scope == p.scope.name
                 }
-        )
+            }.map {
+                PrivilegeRecord(
+                    id = UUID.randomUUID(),
+                    action = it.action.name,
+                    resource = it.resource.name,
+                    scope = it.scope.name,
+                )
+            }
+        !PrivilegeRepo.create(records)
 
         App.unit
     }

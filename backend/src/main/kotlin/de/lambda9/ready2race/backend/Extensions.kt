@@ -30,3 +30,6 @@ fun String.base64ToByteArray(): ByteArray =
 
 fun Duration.beforeNow(): LocalDateTime =
     LocalDateTime.now().minusSeconds(this.inWholeSeconds)
+
+fun Duration.afterNow(): LocalDateTime =
+    LocalDateTime.now().plusSeconds(this.inWholeSeconds)

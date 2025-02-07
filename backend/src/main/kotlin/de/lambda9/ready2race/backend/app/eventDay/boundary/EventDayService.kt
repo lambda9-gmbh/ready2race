@@ -5,14 +5,13 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
-import de.lambda9.ready2race.backend.app.eventDay.control.record
+import de.lambda9.ready2race.backend.app.eventDay.control.toRecord
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.entity.AssignRacesToDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -44,7 +43,8 @@ object EventDayService {
         userId: UUID,
         eventId: UUID
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
-        val id = !EventDayRepo.create(request.record(userId, eventId)).orDie()
+        val record = !request.toRecord(userId, eventId)
+        val id = !EventDayRepo.create(record).orDie()
         KIO.ok(ApiResponse.Created(id))
     }
 
@@ -88,7 +88,7 @@ object EventDayService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
-            .onFalseFail { EventDayError.EventDayNotFound }
+            .onNullFail { EventDayError.EventDayNotFound }
             .map { ApiResponse.NoData }
 
     fun deleteEvent(
@@ -120,6 +120,7 @@ object EventDayService {
             EventDayHasRaceRecord(
                 eventDay = eventDayId,
                 race = it,
+                createdAt = LocalDateTime.now(),
                 createdBy = userId
             )
         }).orDie()
