@@ -91,15 +91,14 @@ object AppUserService {
         val record = !invitation.toAppUser(request.password)
         val id = !AppUserRepo.create(record).orDie()
 
-        // todo: after merge add roles, uncomment this
-        /*!AppUserHasRoleRepo.create(
+        !AppUserHasRoleRepo.create(
             invitation.roles!!.map {
                 AppUserHasRoleRecord(
                     appUser = id,
                     role = it!!
                 )
             }
-        ).orDie()*/
+        ).orDie()
 
         KIO.ok(
             ApiResponse.Created(id)
