@@ -20,18 +20,20 @@ object RacePropertiesRepo {
         }
     }
 
+    // todo: use properties id instead
     fun updateByRaceOrTemplate(
         id: UUID,
         f: RacePropertiesRecord.() -> Unit
-    ): JIO<Boolean> = Jooq.query {
+    ): JIO<RacePropertiesRecord?> = Jooq.query {
         with(RACE_PROPERTIES) {
-            (selectFrom(this)
+            selectFrom(this)
                 .where(RACE.eq(id).or(RACE_TEMPLATE.eq(id)))
-                .fetchOne() ?: return@query false)
-                .apply(f)
-                .update()
+                .fetchOne()
+                ?.apply {
+                    f()
+                    update()
+                }
         }
-        true
     }
 
     fun getIdByRaceOrTemplateId(

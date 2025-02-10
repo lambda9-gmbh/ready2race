@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.control.eventDto
 import de.lambda9.ready2race.backend.app.event.control.toRecord
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.kio.onFalseFail
@@ -24,18 +25,9 @@ import java.util.*
 
 object EventService {
 
-
-    enum class EventError : ServiceError {
-        EventNotFound;
-
-        override fun respond(): ApiError = when (this) {
-            EventNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Event not found")
-        }
-    }
-
     fun addEvent(
         request: EventRequest,
-        userId: UUID
+        userId: UUID,
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val record = !request.toRecord(userId)
         EventRepo.create(record).orDie().map {
@@ -58,7 +50,7 @@ object EventService {
     }
 
     fun getEvent(
-        id: UUID
+        id: UUID,
     ): App<EventError, ApiResponse.Dto<EventDto>> = KIO.comprehension {
         val event = !EventRepo.getEvent(id).orDie().onNullFail { EventError.EventNotFound }
         event.eventDto().map { ApiResponse.Dto(it) }
@@ -83,7 +75,7 @@ object EventService {
             .map { ApiResponse.NoData }
 
     fun deleteEvent(
-        id: UUID
+        id: UUID,
     ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
         val deleted = !EventRepo.delete(id).orDie()
 
@@ -95,7 +87,7 @@ object EventService {
     }
 
     fun checkEventExisting(
-        eventId: UUID
+        eventId: UUID,
     ): App<EventError, Unit> = EventRepo.exists(eventId)
         .orDie()
         .failIf(condition = { !it }) {

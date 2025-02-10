@@ -5,13 +5,17 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.minLength
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 
 data class AcceptInvitationRequest(
     val token: String,
     val password: String,
 ): Validatable {
     override fun validate(): ValidationResult =
-        this::password validate minLength(DEFAULT_PASSWORD_MIN_LENGTH)
+        ValidationResult.allOf(
+            this::token validate notBlank,
+            this::password validate minLength(DEFAULT_PASSWORD_MIN_LENGTH),
+        )
 
     companion object {
         val example get() = AcceptInvitationRequest(

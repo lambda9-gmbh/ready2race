@@ -39,6 +39,9 @@
     "save": "Speichern",
     "search": "Suchen"
   },
+  "decimal": {
+    "point": ","
+  },
   "entity": {
     "add": {
       "action": "{{entity}} anlegen",

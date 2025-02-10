@@ -37,8 +37,14 @@ data class RacePropertiesRequestDto(
             this::countFemales validate IntValidators.notNegative,
             this::countNonBinary validate IntValidators.notNegative,
             this::countMixed validate IntValidators.notNegative,
-            this::participationFee validate BigDecimalValidators.notNegative,
-            this::rentalFee validate BigDecimalValidators.notNegative,
+            this::participationFee validate allOf(
+                BigDecimalValidators.notNegative,
+                BigDecimalValidators.currency,
+            ),
+            this::rentalFee validate allOf(
+                BigDecimalValidators.notNegative,
+                BigDecimalValidators.currency,
+            ),
             this::namedParticipants validate allOf(
                 collection,
                 noDuplicates(
@@ -66,8 +72,8 @@ data class RacePropertiesRequestDto(
                 countFemales = 0,
                 countNonBinary = 0,
                 countMixed = 1,
-                participationFee = BigDecimal(10),
-                rentalFee = BigDecimal(1),
+                participationFee = BigDecimal("10.50"),
+                rentalFee = BigDecimal("5.50"),
                 raceCategory = UUID.randomUUID(),
                 namedParticipants = listOf(NamedParticipantForRaceRequestDto.example)
             )

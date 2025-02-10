@@ -8,10 +8,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.app.race.control.toDto
 import de.lambda9.ready2race.backend.app.race.control.toRecord
-import de.lambda9.ready2race.backend.app.race.entity.AssignDaysToRaceRequest
-import de.lambda9.ready2race.backend.app.race.entity.RaceDto
-import de.lambda9.ready2race.backend.app.race.entity.RaceRequest
-import de.lambda9.ready2race.backend.app.race.entity.RaceWithPropertiesSort
+import de.lambda9.ready2race.backend.app.race.entity.*
 import de.lambda9.ready2race.backend.app.raceProperties.boundary.RacePropertiesService
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
@@ -34,37 +31,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 object RaceService {
-
-    sealed interface RaceError : ServiceError {
-        data object RaceNotFound : RaceError
-        data object RacePropertiesNotFound : RaceError
-        data object RaceTemplateUnknown : RaceError
-
-        data class ReferencedDaysUnknown(val days: List<UUID>) : RaceError
-
-        override fun respond(): ApiError = when (this) {
-            RaceNotFound -> ApiError(
-                status = HttpStatusCode.NotFound,
-                message = "Race not found"
-            )
-
-            RacePropertiesNotFound -> ApiError(
-                status = HttpStatusCode.NotFound,
-                message = "No associated raceProperties found for the race"
-            )
-
-            RaceTemplateUnknown -> ApiError(
-                status = HttpStatusCode.BadRequest,
-                message = "Referenced raceTemplate is unknown"
-            )
-
-            is ReferencedDaysUnknown -> ApiError(
-                status = HttpStatusCode.BadRequest,
-                message = "${"referenced race".count(days.size)} unknown",
-                details = mapOf("unknownIds" to days)
-            )
-        }
-    }
 
     fun addRace(
         request: RaceRequest,
@@ -130,6 +96,7 @@ object RaceService {
         raceId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
+        // todo: extract duplicated code to function
         if (request.template != null) {
             !RaceTemplateRepo.exists(request.template).orDie().onFalseFail { RaceError.RaceTemplateUnknown }
         }
@@ -146,7 +113,7 @@ object RaceService {
         // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
         !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toUpdateFunction())
             .orDie()
-            .onFalseFail { RaceError.RacePropertiesNotFound }
+            .onNullFail { RaceError.RacePropertiesNotFound }
 
         val racePropertiesId =
             !RacePropertiesRepo.getIdByRaceOrTemplateId(raceId).orDie().onNullFail { RaceError.RacePropertiesNotFound }

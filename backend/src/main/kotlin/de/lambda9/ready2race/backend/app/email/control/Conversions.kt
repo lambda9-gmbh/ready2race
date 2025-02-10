@@ -16,9 +16,9 @@ fun EmailContentTemplate.toDto(): App<Nothing, EmailTemplateDto> = KIO.ok(
 
         is EmailContentTemplate.Individual ->
             EmailTemplateDto(
-                subject = template.subject!!,
-                body = template.body!!,
-                bodyIsHtml = template.bodyIsHtml!!,
+                subject = template.subject,
+                body = template.body,
+                bodyIsHtml = template.bodyIsHtml,
             )
     }
 )

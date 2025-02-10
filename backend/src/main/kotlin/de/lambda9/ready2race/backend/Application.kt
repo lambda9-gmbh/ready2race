@@ -16,6 +16,7 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.PrivilegeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
@@ -134,7 +135,12 @@ private fun initializeApplication(env: JEnv) {
         }
 
         if (!adminUserExisting || !adminRoleExisting) {
-            !AppUserHasRoleRepo.create(SYSTEM_USER, listOf(ADMIN_ROLE))
+            !AppUserHasRoleRepo.create(
+                AppUserHasRoleRecord(
+                    appUser = SYSTEM_USER,
+                    role = ADMIN_ROLE,
+                )
+            )
         }
 
         // Add missing privileges

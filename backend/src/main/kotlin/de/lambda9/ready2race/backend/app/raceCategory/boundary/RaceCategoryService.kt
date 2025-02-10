@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
 import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDtoList
 import de.lambda9.ready2race.backend.app.raceCategory.control.toRecord
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
+import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryError
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryRequest
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.responses.ApiError
@@ -19,17 +20,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 object RaceCategoryService {
-
-    enum class RaceCategoryError : ServiceError {
-        RaceCategoryNotFound;
-
-        override fun respond(): ApiError = when (this) {
-            RaceCategoryNotFound -> ApiError(
-                status = HttpStatusCode.NotFound,
-                message = "RaceCategory not Found"
-            )
-        }
-    }
 
     fun addRaceCategory(
         request: RaceCategoryRequest,

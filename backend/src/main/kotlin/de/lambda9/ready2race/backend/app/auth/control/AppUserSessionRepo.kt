@@ -1,13 +1,10 @@
 package de.lambda9.ready2race.backend.app.auth.control
 
-import de.lambda9.ready2race.backend.beforeNow
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserSessionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_SESSION
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
-import java.util.*
-import kotlin.time.Duration
 
 object AppUserSessionRepo {
 
@@ -40,7 +37,7 @@ object AppUserSessionRepo {
     }
 
     fun delete(
-        token: String?
+        token: String?,
     ): JIO<Unit> = Jooq.query {
         with(APP_USER_SESSION) {
             deleteFrom(this)

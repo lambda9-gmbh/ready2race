@@ -35,7 +35,7 @@ fun AppUserWithPrivilegesRecord.loginDto(): App<Nothing, LoginDto> = KIO.compreh
     }
 }
 
-fun AppUserWithPrivilegesRecord.newSessionRecord(
+fun AppUserWithPrivilegesRecord.toSession(
     lifetime: Duration,
 ): App<Nothing, AppUserSessionRecord> =
     KIO.ok(

@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.validation.validate
 import java.util.*
 
 data class RaceRequest (
-    val properties: RacePropertiesRequestDto,
+    val properties: RacePropertiesRequestDto, // todo: nullable, validate "xor"
     val template: UUID?,
 ): Validatable {
     override fun validate(): ValidationResult =

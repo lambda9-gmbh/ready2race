@@ -3,14 +3,12 @@ package de.lambda9.ready2race.backend.app.eventDay.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.control.toRecord
-import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
-import de.lambda9.ready2race.backend.app.eventDay.entity.AssignRacesToDayRequest
-import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
-import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
+import de.lambda9.ready2race.backend.app.eventDay.entity.*
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -27,27 +25,11 @@ import java.util.*
 
 object EventDayService {
 
-
-    sealed interface EventDayError : ServiceError {
-        data object EventDayNotFound : EventDayError
-
-        data class RacesNotFound(val races: List<UUID>) : EventDayError
-
-        override fun respond(): ApiError = when (this) {
-            EventDayNotFound -> ApiError(HttpStatusCode.NotFound, message = "EventDay not found")
-            is RacesNotFound -> ApiError(
-                HttpStatusCode.BadRequest,
-                message = "Races not found",
-                details = mapOf("unknownIds" to races)
-            )
-        }
-    }
-
     fun addEventDay(
         request: EventDayRequest,
         userId: UUID,
         eventId: UUID
-    ): App<EventService.EventError, ApiResponse.Created> = KIO.comprehension {
+    ): App<EventError, ApiResponse.Created> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
 

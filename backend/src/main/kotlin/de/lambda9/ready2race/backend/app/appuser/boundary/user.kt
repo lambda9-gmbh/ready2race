@@ -15,7 +15,7 @@ fun Route.user() {
         get {
             call.respondKIO {
                 KIO.comprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.USER)
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.USER, Privilege.Scope.GLOBAL)
                     val params = !pagination<AppUserWithRolesSort>()
                     AppUserService.page(params)
                 }
@@ -26,6 +26,7 @@ fun Route.user() {
 
         }
 
+        // todo: evaluate rate limiting
         post("/register") {
             val payload = call.receiveV(RegisterRequest.example)
             call.respondKIO {

@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipa
 import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
 import de.lambda9.ready2race.backend.app.namedParticipant.control.toRecord
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantError
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
@@ -21,41 +22,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 object NamedParticipantService {
-
-    sealed interface NamedParticipantError : ServiceError {
-        data object NamedParticipantNotFound : NamedParticipantError
-
-        data class NamedParticipantIsInUse(val racesOrTemplates: RacesOrTemplatesContainingNamedParticipant) :
-            NamedParticipantError
-
-        override fun respond(): ApiError = when (this) {
-            NamedParticipantNotFound -> ApiError(
-                status = HttpStatusCode.NotFound,
-                message = "NamedParticipant not Found"
-            )
-
-            is NamedParticipantIsInUse -> ApiError(
-                status = HttpStatusCode.Conflict,
-                message = "NamedParticipant is contained in " +
-                    if (racesOrTemplates.races != null) {
-                        "race".count(racesOrTemplates.races.size) +
-                            if (racesOrTemplates.templates != null) {
-                                " and "
-                            } else {
-                                ""
-                            }
-                    } else {
-                        ""
-                    } +
-                    if (racesOrTemplates.templates != null) {
-                        "templates".count(racesOrTemplates.templates.size)
-                    } else {
-                        ""
-                    },
-                details = mapOf("entitiesContainingNamedParticipants" to racesOrTemplates)
-            )
-        }
-    }
 
     fun addNamedParticipant(
         request: NamedParticipantRequest,

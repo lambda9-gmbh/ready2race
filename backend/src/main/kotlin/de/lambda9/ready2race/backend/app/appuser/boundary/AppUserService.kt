@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
+import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
@@ -56,13 +57,14 @@ object AppUserService {
             template.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to request.firstname + " " + request.lastname,
                 EmailTemplatePlaceholder.SENDER to inviter.firstname + " " + inviter.lastname,
-                EmailTemplatePlaceholder.LINK to request.callbackUrl + token
+                EmailTemplatePlaceholder.LINK to request.callbackUrl + token,
             )
         }
 
         !EmailService.enqueue(
             recipient = request.email,
             content = content,
+            priority = EmailPriority.HIGH,
         )
 
         noData
@@ -70,7 +72,6 @@ object AppUserService {
 
     fun acceptInvitation(
         request: AcceptInvitationRequest,
-
     ): App<AppUserError, ApiResponse.Created> = KIO.comprehension {
 
         val invitation = !AppUserInvitationRepo.consume(request.token).orDie()
@@ -105,13 +106,14 @@ object AppUserService {
         !EmailService.enqueue(
             recipient = request.email,
             content = content,
+            priority = EmailPriority.HIGH,
         )
 
         noData
     }
 
     fun verifyRegistration(
-        request: VerifyRegistrationRequest
+        request: VerifyRegistrationRequest,
     ): App<AppUserError, ApiResponse.Created> = KIO.comprehension {
 
         val registration = !AppUserRegistrationRepo.consume(request.token).orDie()

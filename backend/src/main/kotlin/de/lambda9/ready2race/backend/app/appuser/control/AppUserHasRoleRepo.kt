@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithRolesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_HAS_ROLE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -10,17 +11,19 @@ import java.util.UUID
 object AppUserHasRoleRepo {
 
     fun create(
-        userId: UUID,
-        roleIds: List<UUID>,
+        record: AppUserHasRoleRecord,
+    ): JIO<Unit> = Jooq.query {
+        with(APP_USER_HAS_ROLE) {
+            insertInto(this)
+                .set(record)
+                .execute()
+        }
+    }
+
+    fun create(
+        records: List<AppUserHasRoleRecord>,
     ): JIO<Int> = Jooq.query {
-        batchInsert(
-            roleIds.map {
-                AppUserHasRoleRecord(
-                    appUser = userId,
-                    role = it
-                )
-            }
-        ).execute().size
+        batchInsert(records).execute().sum()
     }
 
     fun exists(

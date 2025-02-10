@@ -29,7 +29,7 @@ data class InviteRequest(
             firstname = "John",
             lastname = "Doe",
             language = EmailLanguage.EN,
-            callbackUrl = "https://example.com/acceptInvitation"
+            callbackUrl = "https://example.com/acceptInvitation",
         )
     }
 }

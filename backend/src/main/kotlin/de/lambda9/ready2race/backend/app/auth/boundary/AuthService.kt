@@ -8,7 +8,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
-import de.lambda9.ready2race.backend.app.auth.control.newSessionRecord
+import de.lambda9.ready2race.backend.app.auth.control.toSession
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.kio.recoverDefault
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -25,7 +25,7 @@ object AuthService {
 
     fun login(
         request: LoginRequest,
-        onSuccess: (String) -> Unit
+        onSuccess: (String) -> Unit,
     ): App<AuthError, ApiResponse.Dto<LoginDto>> = KIO.comprehension {
 
         val user = !AppUserRepo.getWithPrivilegesByEmail(request.email).orDie().onNullFail { AuthError.CredentialsIncorrect }
@@ -34,7 +34,7 @@ object AuthService {
 
         if (credentialsOk) {
 
-            val record = !user.newSessionRecord(tokenLifetime)
+            val record = !user.toSession(tokenLifetime)
             val token = !AppUserSessionRepo.create(record).orDie()
             onSuccess(token)
 
@@ -47,8 +47,8 @@ object AuthService {
     }
 
     fun checkLogin(
-        token: String?
-    ): App<AuthError, ApiResponse> = KIO.comprehension {
+        token: String?,
+    ): App<Nothing, ApiResponse> = KIO.comprehension {
 
         val user = !useSessionToken(token).recoverDefault { null }
 
@@ -57,7 +57,7 @@ object AuthService {
 
     fun logout(
         token: String?,
-        onSuccess: () -> Unit
+        onSuccess: () -> Unit,
     ): App<AuthError, ApiResponse.NoData> = KIO.comprehension {
 
         !AppUserSessionRepo.delete(token).orDie()
