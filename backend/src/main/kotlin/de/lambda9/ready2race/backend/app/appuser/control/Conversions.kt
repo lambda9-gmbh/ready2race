@@ -6,14 +6,10 @@ import de.lambda9.ready2race.backend.app.appuser.entity.AppUserDto
 import de.lambda9.ready2race.backend.app.appuser.entity.InviteRequest
 import de.lambda9.ready2race.backend.app.appuser.entity.RegisterRequest
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserInvitationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithRolesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration
@@ -75,16 +71,16 @@ fun AppUserRegistrationRecord.toAppUser(): App<Nothing, AppUserRecord> =
         }
     )
 
-fun AppUserInvitationRecord.toAppUser(password: String): App<Nothing, AppUserRecord> =
+fun AppUserInvitationWithRolesRecord.toAppUser(password: String): App<Nothing, AppUserRecord> =
     PasswordUtilities.hash(password).map { hashed ->
         LocalDateTime.now().let { now ->
             AppUserRecord(
                 id = UUID.randomUUID(),
-                email = email,
+                email = email!!,
                 password = hashed,
-                firstname = firstname,
-                lastname = lastname,
-                language = language,
+                firstname = firstname!!,
+                lastname = lastname!!,
+                language = language!!,
                 createdAt = now,
                 createdBy = createdBy,
                 updatedAt = now,

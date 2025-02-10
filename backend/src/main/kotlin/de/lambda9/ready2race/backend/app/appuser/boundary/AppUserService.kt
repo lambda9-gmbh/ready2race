@@ -7,6 +7,8 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserInvitationHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.kio.onTrueFail
@@ -50,6 +52,15 @@ object AppUserService {
         val record = !request.toRecord(inviter.id!!, invitationLifeTime)
         val token = !AppUserInvitationRepo.create(record).orDie()
 
+        !AppUserInvitationHasRoleRepo.create(
+            request.roles.map {
+                AppUserInvitationHasRoleRecord(
+                    appUserInvitation = token,
+                    role = it
+                )
+            }
+        ).orDie()
+
         val content = !EmailService.getTemplate(
             EmailTemplateKey.USER_INVITATION,
             request.language,
@@ -74,13 +85,25 @@ object AppUserService {
         request: AcceptInvitationRequest,
     ): App<AppUserError, ApiResponse.Created> = KIO.comprehension {
 
-        val invitation = !AppUserInvitationRepo.consume(request.token).orDie()
+        val invitation = !AppUserInvitationRepo.consumeWithRoles(request.token).orDie()
             .onNullFail { AppUserError.InvitationNotFound }
 
         val record = !invitation.toAppUser(request.password)
-        AppUserRepo.create(record).orDie().map {
-            ApiResponse.Created(it)
-        }
+        val id = !AppUserRepo.create(record).orDie()
+
+        // todo: after merge add roles, uncomment this
+        /*!AppUserHasRoleRepo.create(
+            invitation.roles!!.map {
+                AppUserHasRoleRecord(
+                    appUser = id,
+                    role = it!!
+                )
+            }
+        ).orDie()*/
+
+        KIO.ok(
+            ApiResponse.Created(id)
+        )
     }
 
     fun register(
@@ -124,6 +147,9 @@ object AppUserService {
             ApiResponse.Created(it)
         }
     }
+
+    fun deleteExpiredInvitations(): App<Nothing, Int> =
+        AppUserInvitationRepo.deleteExpired().orDie()
 
     fun deleteExpiredRegistrations(): App<Nothing, Int> =
         AppUserRegistrationRepo.deleteExpired().orDie()

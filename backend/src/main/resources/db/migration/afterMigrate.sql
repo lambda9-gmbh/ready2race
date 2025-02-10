@@ -1,6 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
-
+drop view if exists app_user_invitation_with_roles;
 drop view if exists race_template_to_properties_with_named_participants;
 drop view if exists race_to_properties_with_named_participants;
 drop view if exists named_participant_for_race_properties;
@@ -103,3 +103,10 @@ from race_template rt
          left join named_participant_for_race_properties npfrp on rp.id = npfrp.race_properties
          left join race_category rc on rp.race_category = rc.id
 group by rt.id, rp.id, rc.id;
+
+create view app_user_invitation_with_roles as
+select aui.*,
+       coalesce(array_agg(auihr.role) filter ( where auihr.role is not null ), '{}') as roles
+from app_user_invitation aui
+         left join app_user_invitation_has_role auihr on aui.token = auihr.app_user_invitation
+group by aui.token;

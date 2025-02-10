@@ -209,6 +209,12 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                 }
             }
 
+            scheduleFixed(1.hours) {
+                AppUserService.deleteExpiredInvitations().map {
+                    logger.info { "${"expired invitations".count(it)} deleted" }
+                }
+            }
+
             logger.info { "Scheduling done."}
         }
     }
