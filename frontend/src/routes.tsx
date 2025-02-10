@@ -10,23 +10,23 @@ import {User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import {Privilege} from './api'
-import EventsPage from "./pages/event/EventsPage.tsx";
-import EventPage from "./pages/event/EventPage.tsx";
+import EventsPage from './pages/event/EventsPage.tsx'
+import EventPage from './pages/event/EventPage.tsx'
+import {eventReadGlobal, userReadGlobal} from './authorization/privileges.ts'
+import UsersPage from './pages/UsersPage.tsx'
+import UserPage from './pages/UserPage.tsx'
 
 const checkAuth = (
     context: User,
     location: ParsedLocation,
     privilege?: Privilege,
-    globalOnly: boolean = false,
+    ownId?: string,
 ) => {
     if (!context.loggedIn) {
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
-    if (privilege) {
-        const privilegeScope = context.getPrivilegeScope(privilege)
-        if (!privilegeScope || (globalOnly && privilegeScope !== 'global')) {
-            throw redirect({to: '/dashboard'})
-        }
+    if (privilege && !context.checkPrivilege(privilege) && context.id !== ownId) {
+        throw redirect({to: '/dashboard'})
     }
 }
 
@@ -69,6 +69,34 @@ export const dashboardRoute = createRoute({
     },
 })
 
+export const usersRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'user',
+})
+
+export const usersIndexRoute = createRoute({
+    getParentRoute: () => usersRoute,
+    path: '/',
+    component: () => <UsersPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, userReadGlobal)
+    },
+})
+
+export const userRoute = createRoute({
+    getParentRoute: () => usersRoute,
+    path: '$userId',
+})
+
+export const userIndexRoute = createRoute({
+    getParentRoute: () => userRoute,
+    path: '/',
+    component: () => <UserPage />,
+    beforeLoad: ({context, location, params}) => {
+        checkAuth(context, location, userReadGlobal, params.userId)
+    },
+})
+
 export const eventsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'event',
@@ -77,10 +105,10 @@ export const eventsRoute = createRoute({
 export const eventsIndexRoute = createRoute({
     getParentRoute: () => eventsRoute,
     path: '/',
-    component: () => <EventsPage/>,
+    component: () => <EventsPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
-    }
+        checkAuth(context, location, eventReadGlobal)
+    },
 })
 
 export const eventRoute = createRoute({
@@ -91,22 +119,18 @@ export const eventRoute = createRoute({
 export const eventIndexRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: '/',
-    component: () => <EventPage/>,
+    component: () => <EventPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
-    }
+        checkAuth(context, location, eventReadGlobal)
+    },
 })
 
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
     dashboardRoute,
-    eventsRoute.addChildren([
-        eventsIndexRoute,
-        eventRoute.addChildren([
-            eventIndexRoute,
-        ])
-    ]),
+    usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
+    eventsRoute.addChildren([eventsIndexRoute, eventRoute.addChildren([eventIndexRoute])]),
 ])
 
 export const router = createRouter({

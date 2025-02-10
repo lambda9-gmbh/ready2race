@@ -1,7 +1,15 @@
+import {Scope} from '../api'
+
 export const getRootElement = () => document.getElementById('ready2race-root')!
+
+export const scopeLevel: Record<Scope, number> = {
+    GLOBAL: 3,
+    GROUP: 2,
+    OWN: 1,
+}
 
 export const formRegexNumber: RegExp = /^\d+([.,]\d+)?$/
 
 export const formRegexInteger: RegExp = /^\d+$/
 
-export const formRegexCurrency: RegExp =  /^(([1-9]\d*)|0)([.,]\d{2})?$/
+export const formRegexCurrency: RegExp = /^(([1-9]\d*)|0)([.,]\d{2})?$/

@@ -730,17 +730,29 @@ components:
 
     # enums
 
-    Privilege:
+    Action:
       type: string
       enum:
-        - USER_VIEW
-        - USER_EDIT
-        - ROLE_VIEW
-        - ROLE_EDIT
-        - EVENT_EDIT
-        - EVENT_VIEW
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
 
-    # authentication
+    Resource:
+      type: string
+      enum:
+        - USER
+        - EVENT
+
+    Scope:
+      type: string
+      enum:
+        - OWN
+        - GROUP
+        - GLOBAL
+
+
+    # authentication / authorization
 
     LoginRequest:
       type: object
@@ -753,20 +765,34 @@ components:
         password:
           type: string
 
+    Privilege:
+      type: object
+      required:
+        - resource
+        - action
+        - scope
+      properties:
+        resource:
+          $ref: '#/components/schemas/Resource'
+        action:
+          $ref: '#/components/schemas/Action'
+        scope:
+          $ref: '#/components/schemas/Scope'
+
     LoginResponse:
       type: object
       required:
-        - privilegesGlobal
-        - privilegesBound
+        - id
+        - privileges
       properties:
-        privilegesGlobal:
+        id:
+          type: string
+          format: uuid
+        privileges:
           type: array
           items:
             $ref: '#/components/schemas/Privilege'
-        privilegesBound:
-          type: array
-          items:
-            $ref: '#/components/schemas/Privilege'
+
 
     # user
 

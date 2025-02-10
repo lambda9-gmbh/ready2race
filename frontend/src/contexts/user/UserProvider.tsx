@@ -1,21 +1,25 @@
 import {PropsWithChildren, useEffect, useRef, useState} from 'react'
-import {User, UserContext} from './UserContext.ts'
-import {checkUserLogin, client, LoginResponse, Privilege, userLogout} from '../../api'
-import {PrivilegeScope} from '../../utils/types.ts'
+import {AnonymousUser, AuthenticatedUser, User, UserContext} from './UserContext.ts'
+import {
+    Action,
+    checkUserLogin,
+    client,
+    LoginResponse,
+    Privilege,
+    Resource,
+    Scope,
+    userLogout,
+} from '../../api'
 import {router} from '../../routes.tsx'
 import {useFetch} from '../../utils/hooks.ts'
+import {scopeLevel} from '../../utils/helpers.ts'
 
-type UserData = LoginResponse & {loggedIn: boolean}
-
-const defaultUserData: UserData = {
-    loggedIn: false,
-    privilegesGlobal: [],
-    privilegesBound: [],
-}
+type UserData = LoginResponse
 
 const UserProvider = ({children}: PropsWithChildren) => {
-    const [userData, setUserData] = useState(defaultUserData)
-    const prevLoggedIn = useRef(userData.loggedIn)
+    const [userData, setUserData] = useState<UserData>()
+    const prevLoggedIn = useRef(false)
+    const loggedIn = Boolean(userData)
 
     const navigate = router.navigate
 
@@ -32,10 +36,10 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }, [client])
 
     useEffect(() => {
-        if (prevLoggedIn.current !== userData.loggedIn) {
-            prevLoggedIn.current = userData.loggedIn
+        if (prevLoggedIn.current !== loggedIn) {
+            prevLoggedIn.current = loggedIn
             const redirect = router.state.resolvedLocation.search.redirect
-            navigate({to: userData.loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+            navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
         }
     }, [userData])
 
@@ -48,28 +52,42 @@ const UserProvider = ({children}: PropsWithChildren) => {
         },
     })
 
-    const login = (data: LoginResponse) => setUserData({...data, loggedIn: true})
+    const login = (data: LoginResponse) => setUserData({...data})
 
     const logout = async () => {
         const {error} = await userLogout()
         if (error === undefined) {
-            setUserData(defaultUserData)
+            setUserData(undefined)
         }
     }
 
-    const getAuthorization = (privilege: Privilege): PrivilegeScope | null =>
-        userData.privilegesGlobal.includes(privilege)
-            ? 'global'
-            : userData.privilegesBound.includes(privilege)
-              ? 'association-bound'
-              : null
+    let userValue: User
 
-    const userValue: User = {
-        loggedIn: userData.loggedIn,
-        login,
-        logout,
-        getPrivilegeScope: getAuthorization,
-        association: undefined,
+    if (!userData) {
+        userValue = {
+            loggedIn: false,
+            login,
+        } satisfies AnonymousUser
+    } else {
+        const checkPrivilege = (privilege: Privilege): boolean =>
+            userData.privileges.some(
+                p =>
+                    p.action === privilege.action &&
+                    p.resource === privilege.resource &&
+                    scopeLevel[p.scope] >= scopeLevel[privilege.scope],
+            )
+
+        const getPrivilegeScope = (resource: Resource, action: Action): Scope | undefined =>
+            userData.privileges.find(p => p.resource === resource && p.action === action)?.scope
+
+        userValue = {
+            loggedIn: true,
+            id: userData.id,
+            login,
+            logout,
+            checkPrivilege,
+            getPrivilegeScope,
+        } satisfies AuthenticatedUser
     }
 
     return <UserContext.Provider value={userValue}>{children}</UserContext.Provider>
