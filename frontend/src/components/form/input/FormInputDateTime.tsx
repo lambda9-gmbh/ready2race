@@ -18,7 +18,7 @@ const FormInputDateTime = (props: FormInputDateTimeProps) => {
         }
     }, [])
 
-    // todo? "overwriteErrorMessages" to translate "Date is invalid" if the Input is invalid
+    // todo? "overwriteErrorMessages" to translate the error msg: "Date is invalid" if the Input is invalid
     return (
         <DateTimePickerElement
             {...props}

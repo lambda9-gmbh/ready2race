@@ -4,16 +4,23 @@ import {
     getRaceCategories,
     getRaceTemplates,
     RaceDto,
+    RacePropertiesDto,
     RaceRequest,
     updateRace,
 } from '../../../api'
-import {
-    AutocompleteList,
-    AutocompleteListElement,
-    BaseEntityDialogProps,
-} from '../../../utils/types.ts'
+import {AutocompleteList, AutocompleteField, BaseEntityDialogProps} from '../../../utils/types.ts'
 import EntityDialog from '../../EntityDialog.tsx'
-import {Box, Button, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
+import {
+    Autocomplete,
+    Box,
+    Button,
+    Grid2,
+    IconButton,
+    Stack,
+    TextField,
+    Tooltip,
+    Zoom,
+} from '@mui/material'
 import {FormInputText} from '../../form/input/FormInputText.tsx'
 import {useTranslation} from 'react-i18next'
 import {eventIndexRoute} from '../../../routes.tsx'
@@ -22,6 +29,8 @@ import FormInputNumber from '../../form/input/FormInputNumber.tsx'
 import {FormInputCurrency} from '../../form/input/FormInputCurrency.tsx'
 import {useFeedback, useFetch} from '../../../utils/hooks.ts'
 import DeleteIcon from '@mui/icons-material/Delete'
+import {useEffect, useState} from 'react'
+import {takeIfNotEmpty} from '../../../utils/ApiUtils.ts'
 
 type RaceForm = {
     identifier?: string
@@ -34,16 +43,15 @@ type RaceForm = {
     countMixed?: string
     participationFee?: string
     rentalFee?: string
-    raceCategory?: AutocompleteListElement
+    raceCategory?: AutocompleteField
     namedParticipants: {
-        namedParticipant?: AutocompleteListElement
+        namedParticipant?: AutocompleteField
         required?: boolean
         countMales?: string
         countFemales?: string
         countNonBinary?: string
         countMixed?: string
     }[]
-    template?: AutocompleteListElement
 }
 
 const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
@@ -55,26 +63,29 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const addAction = (formData: RaceForm) => {
         return addRace({
             path: {eventId: eventId},
-            body: mapFormToRequest(formData),
+            body: mapFormToRequest(formData, template?.id),
         })
     }
 
     const editAction = (formData: RaceForm, entity: RaceDto) => {
         return updateRace({
             path: {eventId: entity.event, raceId: entity.id},
-            body: mapFormToRequest(formData),
+            body: mapFormToRequest(formData, template?.id),
         })
     }
 
     const defaultValues: RaceForm = {
         identifier: '',
         name: '',
+        shortName: '',
+        description: '',
         countMales: '0',
         countFemales: '0',
         countNonBinary: '0',
         countMixed: '0',
         participationFee: '',
         rentalFee: '',
+        raceCategory: {id: '', label: ''},
         namedParticipants: [],
     }
 
@@ -88,16 +99,24 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                             entity: t('event.race.template.templates'),
                         }),
                     )
+                } else if (result.data) {
+                    const t = result.data.data.find(dto => dto.id === props.entity?.template)
+                    setTemplate(t ? {id: t.id, label: t.properties.name} : null)
                 }
             },
         },
-        [], // todo: reload when opening the dialog
+        [], // todo: consider if the templates, raceCategories and namedParticipants are stale data and should be reloaded
     )
     const templates: AutocompleteList =
         templatesData?.data.map(dto => ({
             id: dto.id,
             label: dto.properties.name,
         })) ?? []
+
+    useEffect(() => {
+        const t = templates.find(t => t.id === props.entity?.template)
+        setTemplate(t ?? null)
+    }, [props.dialogIsOpen, templatesData])
 
     const {data: namedParticipantsData, pending: namedParticipantsPending} = useFetch(
         signal => getNamedParticipants({signal}),
@@ -112,7 +131,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                 }
             },
         },
-        [], // todo: reload when opening the dialog
+        [],
     )
 
     const namedParticipants: AutocompleteList =
@@ -134,7 +153,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                 }
             },
         },
-        [], // todo: reload when opening the dialog
+        [],
     )
     const categories: AutocompleteList =
         categoriesData?.map(dto => ({
@@ -142,10 +161,11 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
             label: dto.name,
         })) ?? []
 
-    const values = props.entity ? mapDtoToForm(props.entity, templates) : undefined
+    const values = props.entity
+        ? mapDtoToForm(props.entity.properties, t('decimal.point'))
+        : undefined
 
     const formContext = useForm<RaceForm>({
-        defaultValues: defaultValues,
         values: values,
     })
 
@@ -159,7 +179,36 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
         keyName: 'fieldId',
     })
 
-    const entityNameKey = {entity: t('event.event')}
+    const entityNameKey = {entity: t('event.race.race')}
+
+    const [template, setTemplate] = useState<AutocompleteField | null>(null)
+
+    useEffect(() => {
+        let templateLoaded = false
+        const subscription = formContext.watch((_, foo) => {
+            // Process to have the template removed when a field in the formContext is changed
+            // Needs to be this way because Lists (namedParticipants) trigger the watch an additional time
+            if (foo.name === undefined) {
+                // This is triggered when the form opens. This is the general watch triggered by the form
+                templateLoaded = true
+            } else if (templateLoaded) {
+                // This is triggered when the form opens. This is the watch triggered by the list (namedParticipants)
+                templateLoaded = false
+            } else {
+                // This will now only be triggered after the first two watch-triggers are done. This triggers when a value in the form is changed
+                setTemplate(null)
+            }
+        })
+        return () => subscription.unsubscribe()
+    }, [formContext.watch])
+
+    function fillFormWithTemplate(templateId: string) {
+        console.log('fill form function')
+        const template = templatesData?.data.find(dto => dto?.id === templateId)
+        if (template) {
+            formContext.reset(mapDtoToForm(template.properties, t('decimal.point')))
+        }
+    }
 
     return (
         <EntityDialog
@@ -169,16 +218,28 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                 action === 'add'
                     ? t('entity.add.action', entityNameKey)
                     : t('entity.edit.action', entityNameKey)
-            } // could be shortened but then the translation key can not be found by search
+            } // could be shortened but then the translation key can not be found by intellij-search
             addAction={addAction}
             editAction={editAction}
-            onSuccess={() => {}}>
+            onSuccess={() => {}}
+            closeAction={() => {
+                setTemplate(null)}
+            }
+            defaultValues={defaultValues}>
             <Stack spacing={2}>
                 <Box sx={{pb: 4}}>
-                    <AutocompleteElement
-                        name="template"
+                    <Autocomplete
                         options={templates}
-                        label={t('event.race.template.template')}
+                        renderInput={params => (
+                            <TextField {...params} label={t('event.race.template.template')} />
+                        )}
+                        value={template}
+                        onChange={(_e, newValue: AutocompleteField | null) => {
+                            setTemplate(newValue)
+                            if (newValue) {
+                                fillFormWithTemplate(newValue.id)
+                            }
+                        }}
                         loading={templatesPending}
                     />
                 </Box>
@@ -235,19 +296,14 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                     loading={categoriesPending}
                 />
                 {namedParticipantFields.map((field, index) => (
-                    <Stack direction="row" spacing={2} alignItems={'center'}>
-                        <Box
-                            key={'remove' + field.fieldId}
-                            sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
+                    <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
+                        <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
                             <Grid2 container flexDirection="row" spacing={2} sx={{mb: 2}}>
                                 <Grid2 size="grow" sx={{minWidth: 250}}>
                                     <AutocompleteElement
                                         name={'namedParticipants[' + index + '].namedParticipant'}
                                         options={namedParticipants}
                                         label={t('event.race.namedParticipant.role')}
-                                        autocompleteProps={{
-                                            noOptionsText: t('common.form.autocomplete.noOptions'),
-                                        }}
                                         loading={namedParticipantsPending}
                                     />
                                 </Grid2>
@@ -332,14 +388,13 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     )
 }
 
-function mapFormToRequest(formData: RaceForm): RaceRequest {
-    console.log(formData.namedParticipants[0])
+function mapFormToRequest(formData: RaceForm, templateId: string | undefined): RaceRequest {
     return {
         properties: {
             identifier: formData.identifier!!, // !! is safe because of FormValidation
             name: formData.name!!,
-            shortName: formData.shortName,
-            description: formData.description,
+            shortName: takeIfNotEmpty(formData.shortName),
+            description: takeIfNotEmpty(formData.description),
             countMales: Number(formData.countMales),
             countFemales: Number(formData.countFemales),
             countNonBinary: Number(formData.countNonBinary),
@@ -356,30 +411,29 @@ function mapFormToRequest(formData: RaceForm): RaceRequest {
                 countMixed: Number(value.countMixed),
             })),
         },
-        template: formData.template?.id,
+        template: templateId,
     }
 }
 
-function mapDtoToForm(dto: RaceDto, templates: AutocompleteList): RaceForm {
-    const template = templates.find(t => t.id === dto.template)
+function mapDtoToForm(dto: RacePropertiesDto, decimalPoint: string): RaceForm {
     return {
-        identifier: dto.properties.identifier,
-        name: dto.properties.name,
-        shortName: dto.properties.shortName,
-        description: dto.properties.description,
-        countMales: dto.properties.countMales.toString(),
-        countFemales: dto.properties.countFemales.toString(),
-        countNonBinary: dto.properties.countNonBinary.toString(),
-        countMixed: dto.properties.countMixed.toString(),
-        participationFee: dto.properties.participationFee,
-        rentalFee: dto.properties.rentalFee,
-        raceCategory: dto.properties.raceCategory
+        identifier: dto.identifier,
+        name: dto.name,
+        shortName: dto.shortName,
+        description: dto.description,
+        countMales: dto.countMales.toString(),
+        countFemales: dto.countFemales.toString(),
+        countNonBinary: dto.countNonBinary.toString(),
+        countMixed: dto.countMixed.toString(),
+        participationFee: dto.participationFee.replace('.', decimalPoint),
+        rentalFee: dto.rentalFee.replace('.', decimalPoint),
+        raceCategory: dto.raceCategory
             ? {
-                  id: dto.properties.raceCategory?.id,
-                  label: dto.properties.raceCategory.name,
+                  id: dto.raceCategory?.id,
+                  label: dto.raceCategory.name,
               }
             : undefined,
-        namedParticipants: dto.properties.namedParticipants.map(value => ({
+        namedParticipants: dto.namedParticipants.map(value => ({
             namedParticipant: {id: value.id, label: value.name},
             required: value.required,
             countMales: value.countMales.toString(),
@@ -387,7 +441,6 @@ function mapDtoToForm(dto: RaceDto, templates: AutocompleteList): RaceForm {
             countNonBinary: value.countNonBinary.toString(),
             countMixed: value.countMixed.toString(),
         })),
-        template: template ? {id: template.id, label: template.label} : undefined,
     }
 }
 

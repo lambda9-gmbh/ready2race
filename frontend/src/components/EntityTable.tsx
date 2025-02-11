@@ -178,7 +178,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
         {
             onResponse: _ => setTriggerReloadRows(!triggerReloadRows),
         },
-        [paginationModel, sortModel, debouncedSearchInput],
+        [paginationModel, sortModel, debouncedSearchInput, props.lastRequested],
     )
 
     return (

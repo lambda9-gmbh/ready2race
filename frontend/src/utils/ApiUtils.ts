@@ -39,3 +39,5 @@ export const paginationParameters = (
         search: searchString !== "" ? searchString : undefined
     }
 }
+
+export const takeIfNotEmpty = (str: string | undefined) => str ? str : undefined

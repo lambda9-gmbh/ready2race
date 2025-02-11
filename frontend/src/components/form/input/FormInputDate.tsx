@@ -17,7 +17,7 @@ const FormInputDate = (props: FormInputDateProps) => {
                     !props.rules?.required && {required: t('common.form.required')}),
             }}
             transform={{
-                output: value => dayjs(value).endOf('day').utcOffset(), // todo: prev: ".utc()" - does this work?
+                output: value => dayjs(value).endOf('day').utcOffset(),
             }}
         />
     )

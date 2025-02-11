@@ -22,7 +22,7 @@ client.setConfig({
 const language = document.getElementById('ready2race-root')!.dataset.lng ?? 'de'
 i18next.changeLanguage(language)
 
-const theme = muiTheme()
+const theme = muiTheme(language)
 
 const App = () => {
     const user = useUser()

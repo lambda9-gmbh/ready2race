@@ -30,6 +30,8 @@ type ExtendedEntityDialogProps<
     editAction: (formData: F, entity: E) => RequestResult<void, string, false> // todo: specific error type
     onSuccess: (res: R | void) => void
     entityName?: string
+    closeAction?: () => void
+    defaultValues?: F
 }
 
 const EntityDialog = <E extends object | undefined, F extends FieldValues = FieldValues, R = void>(
@@ -43,7 +45,8 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
     const formContext = props.formContext
 
     const handleClose = () => {
-        formContext.reset()
+        formContext.reset(props.defaultValues)
+        props.closeAction?.()
         props.closeDialog()
     }
 
@@ -80,7 +83,7 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
 
     return (
         <Dialog open={props.dialogIsOpen} fullWidth={true} maxWidth={'sm'}>
-            <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)}>
+            <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)} >
                 <DialogTitle>{props.title(props.entity ? 'edit' : 'add')}</DialogTitle>
                 <DialogCloseButton onClose={handleClose} />
                 <DialogContent>

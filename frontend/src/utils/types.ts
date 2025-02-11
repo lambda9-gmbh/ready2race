@@ -21,6 +21,6 @@ export type BaseEntityDialogProps<E> = {
 
 export type Param = keyof AllParams<typeof router.routeTree>
 
-export type AutocompleteListElement = {id: string, label: string}
+export type AutocompleteField = {id: string, label: string}
 
-export type AutocompleteList = AutocompleteListElement[]
+export type AutocompleteList = AutocompleteField[]

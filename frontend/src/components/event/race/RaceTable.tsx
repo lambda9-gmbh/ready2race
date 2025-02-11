@@ -59,7 +59,7 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
             headerName: t('event.race.category.category'),
             minWidth: 200,
             flex: 0,
-            valueGetter: (_, row) => row.properties.raceCategory
+            valueGetter: (_, row) => row.properties.raceCategory?.name ?? ""
         },
     ]
 
@@ -76,7 +76,7 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
                 to: '/event/$eventId',
                 params: {eventId: entity.id},
             })}
-            entityName={t('event.event')}
+            entityName={t('event.race.race')}
             deleteRequest={deleteRequest}
             onDelete={() => {}}
             changePermission={'EVENT_EDIT'}

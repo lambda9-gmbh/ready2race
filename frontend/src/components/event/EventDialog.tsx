@@ -6,6 +6,7 @@ import {Stack} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
 import {useForm} from "react-hook-form-mui";
+import dayjs from "dayjs";
 
 type EventForm = EventProperties
 
@@ -30,14 +31,12 @@ const editAction = (formData: EventForm, entity: EventDto) => {
 const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     const {t} = useTranslation()
 
-
-
-    const defaultValues: EventForm = {name: ''}
+    const dateNow = dayjs(Date.now()).toDate().toISOString()
+    const defaultValues: EventForm = {name: '', description: '', location: '', registrationAvailableFrom: dateNow, registrationAvailableTo: dateNow, invoicePrefix: ''}
 
     const values: EventForm | undefined = props.entity ? {...props.entity.properties} : undefined
 
     const formContext = useForm<EventForm>({
-        defaultValues: defaultValues,
         values: values
     })
 
@@ -54,7 +53,8 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
             } // could be shortened but then the translation key can not be found by search
             addAction={addAction}
             editAction={editAction}
-            onSuccess={() => {}}>
+            onSuccess={() => {}}
+            defaultValues={defaultValues}>
             <Stack spacing={2} pt={2}>
                 <FormInputText name={'name'} label={t('event.name')} required />
                 <FormInputText name={'description'} label={t('event.description')} />

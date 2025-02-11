@@ -8,33 +8,33 @@ type FormInputNumberProps = Omit<BaseFormInputProps, 'type'> & {
     integer?: boolean
 }
 
-const FormInputNumber = (props: FormInputNumberProps) => {
+const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) => {
     const {t} = useTranslation()
     return (
         <FormInputText
             {...props}
             rules={{
-                min: props.min
+                min: min
                     ? {
-                          value: props.min,
+                          value: min,
                           message: t('common.form.number.invalid.range', {
-                              min: props.min,
-                              max: props.max,
+                              min: min,
+                              max: max,
                           }),
                       }
                     : undefined,
-                max: props.max
+                max: max
                     ? {
-                          value: props.max,
+                          value: max,
                           message: t('common.form.number.invalid.range', {
-                              min: props.min,
-                              max: props.max,
+                              min: min,
+                              max: max,
                           }),
                       }
                     : undefined,
                 pattern: {
-                    value: props.integer ? formRegexInteger : formRegexNumber,
-                    message: props.integer
+                    value: integer ? formRegexInteger : formRegexNumber,
+                    message: integer
                         ? t('common.form.number.invalid.pattern.integer')
                         : t('common.form.number.invalid.pattern.number'),
                 },
