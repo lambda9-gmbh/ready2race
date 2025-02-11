@@ -1,43 +1,52 @@
-import {addEvent, EventDto, EventProperties, updateEvent} from '../../api'
+import {addEvent, EventDto, EventProperties, EventRequest, updateEvent} from '../../api'
 import {BaseEntityDialogProps} from '../../utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '../EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
-import {useForm} from "react-hook-form-mui";
-import dayjs from "dayjs";
+import {useForm} from 'react-hook-form-mui'
 
-type EventForm = EventProperties
-
+type EventForm = {
+    name: string
+    description: string
+    location: string
+    registrationAvailableFrom: string
+    registrationAvailableTo: string
+    invoicePrefix: string
+}
 
 const addAction = (formData: EventForm) => {
     return addEvent({
-        body: {
-            properties: formData,
-        },
+        body: mapFormToRequest(formData),
     })
 }
 
 const editAction = (formData: EventForm, entity: EventDto) => {
     return updateEvent({
         path: {eventId: entity.id},
-        body: {
-            properties: formData,
-        },
+        body: mapFormToRequest(formData),
     })
 }
 
 const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     const {t} = useTranslation()
 
-    const dateNow = dayjs(Date.now()).toDate().toISOString()
-    const defaultValues: EventForm = {name: '', description: '', location: '', registrationAvailableFrom: dateNow, registrationAvailableTo: dateNow, invoicePrefix: ''}
+    const defaultValues: EventForm = {
+        name: '',
+        description: '',
+        location: '',
+        registrationAvailableFrom: '',
+        registrationAvailableTo: '',
+        invoicePrefix: '',
+    }
 
-    const values: EventForm | undefined = props.entity ? {...props.entity.properties} : undefined
+    const values: EventForm | undefined = props.entity
+        ? mapDtoToForm(props.entity.properties)
+        : undefined
 
     const formContext = useForm<EventForm>({
-        values: values
+        values: values,
     })
 
     const entityNameKey = {entity: t('event.event')}
@@ -56,8 +65,8 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
             onSuccess={() => {}}
             defaultValues={defaultValues}>
             <Stack spacing={2} pt={2}>
-                <FormInputText name={'name'} label={t('event.name')} required />
-                <FormInputText name={'description'} label={t('event.description')} />
+                <FormInputText name={'name'} label={t('entity.name')} required />
+                <FormInputText name={'description'} label={t('entity.description')} />
                 <FormInputText name={'location'} label={t('event.location')} />
                 <FormInputDateTime
                     name={'registrationAvailableFrom'}
@@ -71,6 +80,25 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
             </Stack>
         </EntityDialog>
     )
+}
+
+function mapFormToRequest(formData: EventForm): EventRequest {
+    return {
+        properties: {
+            name: formData.name,
+        },
+    }
+}
+
+function mapDtoToForm(dto: EventProperties): EventForm {
+    return {
+        name: dto.name,
+        description: dto.description ?? '',
+        location: dto.location ?? '',
+        registrationAvailableFrom: dto.registrationAvailableFrom ?? '',
+        registrationAvailableTo: dto.registrationAvailableTo ?? '',
+        invoicePrefix: dto.invoicePrefix ?? '',
+    }
 }
 
 export default EventDialog

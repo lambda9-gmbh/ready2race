@@ -33,24 +33,24 @@ import {useEffect, useState} from 'react'
 import {takeIfNotEmpty} from '../../../utils/ApiUtils.ts'
 
 type RaceForm = {
-    identifier?: string
-    name?: string
-    shortName?: string
-    description?: string
-    countMales?: string
-    countFemales?: string
-    countNonBinary?: string
-    countMixed?: string
-    participationFee?: string
-    rentalFee?: string
-    raceCategory?: AutocompleteField
+    identifier: string
+    name: string
+    shortName: string
+    description: string
+    countMales: string
+    countFemales: string
+    countNonBinary: string
+    countMixed: string
+    participationFee: string
+    rentalFee: string
+    raceCategory: AutocompleteField
     namedParticipants: {
-        namedParticipant?: AutocompleteField
-        required?: boolean
-        countMales?: string
-        countFemales?: string
-        countNonBinary?: string
-        countMixed?: string
+        namedParticipant: AutocompleteField
+        required: boolean
+        countMales: string
+        countFemales: string
+        countNonBinary: string
+        countMixed: string
     }[]
 }
 
@@ -223,8 +223,8 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
             editAction={editAction}
             onSuccess={() => {}}
             closeAction={() => {
-                setTemplate(null)}
-            }
+                setTemplate(null)
+            }}
             defaultValues={defaultValues}>
             <Stack spacing={2}>
                 <Box sx={{pb: 4}}>
@@ -244,9 +244,9 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                     />
                 </Box>
                 <FormInputText name="identifier" label={t('event.race.identifier')} required />
-                <FormInputText name="name" label={t('event.race.name')} required />
+                <FormInputText name="name" label={t('entity.name')} required />
                 <FormInputText name="shortName" label={t('event.race.shortName')} />
-                <FormInputText name="description" label={t('event.race.description')} />
+                <FormInputText name="description" label={t('entity.description')} />
                 <Stack direction="row" spacing={2} sx={{mb: 4}}>
                     <FormInputNumber
                         name="countMales"
@@ -372,6 +372,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                     <Button
                         onClick={() =>
                             appendNamedParticipant({
+                                namedParticipant: {id: '', label: ''},
                                 required: false,
                                 countMales: '0',
                                 countFemales: '0',
@@ -419,8 +420,8 @@ function mapDtoToForm(dto: RacePropertiesDto, decimalPoint: string): RaceForm {
     return {
         identifier: dto.identifier,
         name: dto.name,
-        shortName: dto.shortName,
-        description: dto.description,
+        shortName: dto.shortName ?? '',
+        description: dto.description ?? '',
         countMales: dto.countMales.toString(),
         countFemales: dto.countFemales.toString(),
         countNonBinary: dto.countNonBinary.toString(),
@@ -432,7 +433,7 @@ function mapDtoToForm(dto: RacePropertiesDto, decimalPoint: string): RaceForm {
                   id: dto.raceCategory?.id,
                   label: dto.raceCategory.name,
               }
-            : undefined,
+            : {id: '', label: ''},
         namedParticipants: dto.namedParticipants.map(value => ({
             namedParticipant: {id: value.id, label: value.name},
             required: value.required,

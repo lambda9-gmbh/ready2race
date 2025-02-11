@@ -52,12 +52,14 @@
       "success": "{{entity}} deleted",
       "error": "An error occurred when deleting the {{entity}}"
     },
+    "description": "Description",
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
       "error": "An error occurred when updating the {{entity}}"
     },
-    "entity": "Object"
+    "entity": "Object",
+    "name": "Name"
   },
   "navigation": {
     "titles": {
@@ -69,13 +71,15 @@
     "password": "Password"
   },
   "event": {
-    "description": "Description",
     "event": "Event",
+    "eventDay": {
+      "eventDay": "Day",
+      "date": "Date"
+    },
     "invoice": {
       "prefix": "Invoice prefix"
     },
     "location": "Location",
-    "name": "Name",
     "race": {
       "category": {
         "category": "Category",
@@ -87,12 +91,8 @@
         "nonBinary": "Number of non-binary",
         "mixed": "Number of any"
       },
-      "description": "Description",
       "identifier": "Identifier",
-      "name": "Name",
       "namedParticipant": {
-        "description": "Description",
-        "name": "Name",
         "add": "Add Named Participant",
         "namedParticipants": "Named Participants",
         "required": "Required",

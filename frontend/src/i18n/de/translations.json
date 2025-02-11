@@ -52,12 +52,14 @@
       "success": "{{entity}} gelöscht",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
     },
+    "description": "Description",
     "edit": {
       "action": "{{entity}} bearbeiten",
       "success": "{{entity}} aktualisiert",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
     },
-    "entity": "Objekt"
+    "entity": "Objekt",
+    "name": "Name"
   },
   "navigation": {
     "titles": {
@@ -69,13 +71,15 @@
     "password": "Passwort"
   },
   "event": {
-    "description": "Beschreibung",
     "event": "Veranstaltung",
+    "eventDay": {
+      "eventDay": "Tag",
+      "date": "Datum"
+    },
     "invoice": {
       "prefix": "Rechnungspräfix"
     },
     "location": "Ort",
-    "name": "Name",
     "race": {
       "category": {
         "category": "Kategorie",
@@ -87,12 +91,8 @@
         "nonBinary": "Anzahl nichtbinäre Personen",
         "mixed": "Anzahl Beliebige"
       },
-      "description": "Beschreibung",
       "identifier": "Kennung",
-      "name": "Name",
       "namedParticipant": {
-        "description": "Beschreibung",
-        "name": "Name",
         "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipants": "Spezifizierte Teilnehmer",
         "required": "Verpflichtend",

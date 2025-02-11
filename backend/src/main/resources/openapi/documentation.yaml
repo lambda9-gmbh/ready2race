@@ -924,7 +924,7 @@ components:
         id:
           type: string
           format: uuid
-        eventId:
+        event:
           type: string
           format: uuid
         properties:

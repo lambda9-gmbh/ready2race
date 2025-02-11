@@ -49,7 +49,7 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
         },
         {
             field: 'name',
-            headerName: t('event.race.name'),
+            headerName: t('entity.name'),
             minWidth: 200,
             flex: 1,
             valueGetter: (_, e) => e.properties.name
@@ -73,8 +73,8 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
             columns={columns}
             dataRequest={dataRequest}
             jumpToColumn={entity => ({
-                to: '/event/$eventId',
-                params: {eventId: entity.id},
+                to: '/event/$eventId/race/$raceId',
+                params: {eventId: entity.event, raceId: entity.id},
             })}
             entityName={t('event.race.race')}
             deleteRequest={deleteRequest}

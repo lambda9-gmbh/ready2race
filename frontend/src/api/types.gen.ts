@@ -22,7 +22,7 @@ export type AssignRacesToDayRequest = {
 
 export type EventDayDto = {
     id: string
-    eventId?: string
+    event: string
     properties: EventDayProperties
 }
 

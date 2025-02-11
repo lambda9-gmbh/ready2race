@@ -32,14 +32,14 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     const columns: GridColDef<EventDto>[] = [
         {
             field: 'name',
-            headerName: t('event.name'),
+            headerName: t('entity.name'),
             minWidth: 200,
             flex: 1,
             valueGetter: (_, e) => e.properties.name
         },
         {
             field: 'description',
-            headerName: t('event.description'),
+            headerName: t('entity.description'),
             minWidth: 200,
             flex: 2,
             sortable: false,

@@ -13,6 +13,8 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {enUS as enDatePicker} from '@mui/x-date-pickers/locales/enUS'
 import {deDE as deDatePicker} from '@mui/x-date-pickers/locales/deDE'
 import i18next from "i18next";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc"
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
@@ -21,6 +23,8 @@ client.setConfig({
 
 const language = document.getElementById('ready2race-root')!.dataset.lng ?? 'de'
 i18next.changeLanguage(language)
+
+dayjs.extend(utc);
 
 const theme = muiTheme(language)
 
