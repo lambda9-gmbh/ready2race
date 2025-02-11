@@ -7,6 +7,7 @@ import io.ktor.http.*
 enum class AppUserError : ServiceError {
 
     EmailAlreadyInUse,
+    NotFound,
     RegistrationNotFound,
     InvitationNotFound;
 
@@ -15,6 +16,12 @@ enum class AppUserError : ServiceError {
             ApiError(
                 status = HttpStatusCode.Conflict,
                 message = "Email already in use",
+            )
+
+        NotFound ->
+            ApiError(
+                status = HttpStatusCode.NotFound,
+                message = "User not found",
             )
 
         RegistrationNotFound ->

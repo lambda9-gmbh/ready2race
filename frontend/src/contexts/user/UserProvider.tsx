@@ -77,8 +77,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
                     scopeLevel[p.scope] >= scopeLevel[privilege.scope],
             )
 
-        const getPrivilegeScope = (resource: Resource, action: Action): Scope | undefined =>
-            userData.privileges.find(p => p.resource === resource && p.action === action)?.scope
+        const getPrivilegeScope = (action: Action, resource: Resource): Scope | undefined =>
+            userData.privileges.find(p => p.action === action && p.resource === resource)?.scope
 
         userValue = {
             loggedIn: true,
@@ -89,6 +89,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
             getPrivilegeScope,
         } satisfies AuthenticatedUser
     }
+
+    console.log(userData)
 
     return <UserContext.Provider value={userValue}>{children}</UserContext.Provider>
 }

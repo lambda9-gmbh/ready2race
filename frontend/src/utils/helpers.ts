@@ -3,8 +3,7 @@ import {Scope} from '../api'
 export const getRootElement = () => document.getElementById('ready2race-root')!
 
 export const scopeLevel: Record<Scope, number> = {
-    GLOBAL: 3,
-    GROUP: 2,
+    GLOBAL: 2,
     OWN: 1,
 }
 

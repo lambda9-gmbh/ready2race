@@ -1,9 +1,12 @@
 import {Privilege} from '../api'
 
-export const userCreateGlobal: Privilege = {resource: 'USER', action: 'CREATE', scope: 'GLOBAL'}
-export const userReadGlobal: Privilege = {resource: 'USER', action: 'READ', scope: 'GLOBAL'}
+export const createUserGlobal: Privilege = {action: 'CREATE', resource: 'USER', scope: 'GLOBAL'}
+export const readUserGlobal: Privilege = {action: 'READ', resource: 'USER', scope: 'GLOBAL'}
+export const readUserOwn: Privilege = {action: 'READ', resource: 'USER', scope: 'OWN'}
 
-export const eventCreateGlobal: Privilege = {resource: 'EVENT', action: 'CREATE', scope: 'GLOBAL'}
-export const eventReadGlobal: Privilege = {resource: 'EVENT', action: 'READ', scope: 'GLOBAL'}
-export const eventUpdateGlobal: Privilege = {resource: 'EVENT', action: 'UPDATE', scope: 'GLOBAL'}
-export const eventDeleteGlobal: Privilege = {resource: 'EVENT', action: 'DELETE', scope: 'GLOBAL'}
+export const readRoleGlobal: Privilege = {action: 'READ', resource: 'ROLE', scope: 'GLOBAL'}
+
+export const createEventGlobal: Privilege = {action: 'CREATE', resource: 'EVENT', scope: 'GLOBAL'}
+export const readEventGlobal: Privilege = {action: 'READ', resource: 'EVENT', scope: 'GLOBAL'}
+export const updateEventGlobal: Privilege = {action: 'UPDATE', resource: 'EVENT', scope: 'GLOBAL'}
+export const deleteEventGlobal: Privilege = {action: 'DELETE', resource: 'EVENT', scope: 'GLOBAL'}

@@ -16,6 +16,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -26,6 +27,15 @@ object AppUserService {
 
     private val registrationLifeTime = 1.days
     private val invitationLifeTime = 7.days
+
+    fun get(
+        id: UUID,
+    ): App<AppUserError, ApiResponse.Dto<AppUserDto>> =
+        AppUserRepo.getWithRoles(id).orDie().onNullFail { AppUserError.NotFound }.andThen {
+            it.appUserDto()
+        }.map {
+            ApiResponse.Dto(it)
+        }
 
     fun page(
         params: PaginationParameters<AppUserWithRolesSort>,

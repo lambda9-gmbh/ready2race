@@ -6,7 +6,7 @@ export type AuthenticatedUser = {
     id: string
     login: (data: LoginResponse) => void
     logout: () => void
-    getPrivilegeScope: (resource: Resource, action: Action) => Scope | undefined
+    getPrivilegeScope: (action: Action, resource: Resource) => Scope | undefined
     checkPrivilege: (privilege: Privilege) => boolean
 }
 

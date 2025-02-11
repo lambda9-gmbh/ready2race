@@ -9,6 +9,23 @@ import type {
     CheckUserLoginResponse,
     UserLogoutError,
     UserLogoutResponse,
+    GetUsersData,
+    GetUsersError,
+    GetUsersResponse,
+    GetUserError,
+    GetUserResponse,
+    RegisterUserData,
+    RegisterUserError,
+    RegisterUserResponse,
+    VerifyUserRegistrationData,
+    VerifyUserRegistrationError,
+    VerifyUserRegistrationResponse,
+    InviteUserData,
+    InviteUserError,
+    InviteUserResponse,
+    AcceptUserInvitationData,
+    AcceptUserInvitationError,
+    AcceptUserInvitationResponse,
     AddEventData,
     AddEventError,
     AddEventResponse,
@@ -119,6 +136,68 @@ export const userLogout = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<UserLogoutResponse, UserLogoutError, ThrowOnError>({
         ...options,
         url: '/login',
+    })
+}
+
+export const getUsers = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetUsersData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetUsersResponse, GetUsersError, ThrowOnError>({
+        ...options,
+        url: '/user',
+    })
+}
+
+export const getUser = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
+        ...options,
+        url: '/user/{userId}',
+    })
+}
+
+export const registerUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RegisterUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<RegisterUserResponse, RegisterUserError, ThrowOnError>({
+        ...options,
+        url: '/register',
+    })
+}
+
+export const verifyUserRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<VerifyUserRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        VerifyUserRegistrationResponse,
+        VerifyUserRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/verifyRegistration',
+    })
+}
+
+export const inviteUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<InviteUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<InviteUserResponse, InviteUserError, ThrowOnError>({
+        ...options,
+        url: '/invite',
+    })
+}
+
+export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AcceptUserInvitationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AcceptUserInvitationResponse,
+        AcceptUserInvitationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/acceptInvitation',
     })
 }
 

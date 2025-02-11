@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticip
 import de.lambda9.ready2race.backend.app.raceCategory.boundary.raceCategory
 import de.lambda9.ready2race.backend.app.raceTemplate.boundary.raceTemplate
 import de.lambda9.ready2race.backend.app.appuser.boundary.user
+import de.lambda9.ready2race.backend.app.role.boundary.role
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
@@ -14,6 +15,7 @@ fun Application.configureRouting() {
         route("/api") {
             auth()
             user()
+            role()
             event()
             namedParticipant()
             raceCategory()

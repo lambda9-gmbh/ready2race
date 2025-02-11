@@ -6,26 +6,38 @@ import {
     redirect,
     SearchSchemaInput,
 } from '@tanstack/react-router'
-import {User} from './contexts/user/UserContext.ts'
+import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
-import {Privilege} from './api'
+import {Action, Privilege, Resource, Scope} from './api'
 import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage from './pages/event/EventPage.tsx'
-import {eventReadGlobal, userReadGlobal} from './authorization/privileges.ts'
+import {readEventGlobal, readRoleGlobal, readUserGlobal} from './authorization/privileges.ts'
 import UsersPage from './pages/UsersPage.tsx'
 import UserPage from './pages/UserPage.tsx'
+import RolesPage from './pages/RolesPage.tsx'
 
-const checkAuth = (
+const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
+    if (!context.loggedIn) {
+        throw redirect({to: '/login', search: {redirect: location.href}})
+    }
+    if (privilege && !context.checkPrivilege(privilege)) {
+        throw redirect({to: '/dashboard'})
+    }
+}
+
+const checkAuthWith = (
     context: User,
     location: ParsedLocation,
-    privilege?: Privilege,
-    ownId?: string,
+    action: Action,
+    resource: Resource,
+    f: (authenticated: AuthenticatedUser, scope: Scope) => boolean,
 ) => {
     if (!context.loggedIn) {
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
-    if (privilege && !context.checkPrivilege(privilege) && context.id !== ownId) {
+    const scope = context.getPrivilegeScope(action, resource)
+    if (!scope || !f(context, scope)) {
         throw redirect({to: '/dashboard'})
     }
 }
@@ -79,7 +91,7 @@ export const usersIndexRoute = createRoute({
     path: '/',
     component: () => <UsersPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, userReadGlobal)
+        checkAuth(context, location, readUserGlobal)
     },
 })
 
@@ -93,7 +105,27 @@ export const userIndexRoute = createRoute({
     path: '/',
     component: () => <UserPage />,
     beforeLoad: ({context, location, params}) => {
-        checkAuth(context, location, userReadGlobal, params.userId)
+        checkAuthWith(
+            context,
+            location,
+            'READ',
+            'USER',
+            (user, scope) => scope === 'GLOBAL' || params.userId === user.id,
+        )
+    },
+})
+
+export const rolesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'role',
+})
+
+export const rolesIndexRoute = createRoute({
+    getParentRoute: () => rolesRoute,
+    path: '/',
+    component: () => <RolesPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readRoleGlobal)
     },
 })
 
@@ -107,7 +139,7 @@ export const eventsIndexRoute = createRoute({
     path: '/',
     component: () => <EventsPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, eventReadGlobal)
+        checkAuth(context, location, readEventGlobal)
     },
 })
 
@@ -121,7 +153,7 @@ export const eventIndexRoute = createRoute({
     path: '/',
     component: () => <EventPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, eventReadGlobal)
+        checkAuth(context, location, readEventGlobal)
     },
 })
 
@@ -130,6 +162,7 @@ const routeTree = rootRoute.addChildren([
     loginRoute,
     dashboardRoute,
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
+    rolesRoute.addChildren([rolesIndexRoute]),
     eventsRoute.addChildren([eventsIndexRoute, eventRoute.addChildren([eventIndexRoute])]),
 ])
 
