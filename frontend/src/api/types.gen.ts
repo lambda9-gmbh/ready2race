@@ -53,26 +53,6 @@ export type EventRequest = {
     invoicePrefix?: string
 }
 
-export type GetEventDayPageResponse = {
-    data: Array<EventDayDto>
-    pagination: Pagination
-}
-
-export type GetEventPageResponse = {
-    data: Array<EventDto>
-    pagination: Pagination
-}
-
-export type GetRacePageResponse = {
-    data: Array<RaceDto>
-    pagination: Pagination
-}
-
-export type GetRaceTemplatePageResponse = {
-    data: Array<RaceTemplateDto>
-    pagination: Pagination
-}
-
 export type LoginRequest = {
     email: string
     password: string
@@ -264,7 +244,10 @@ export type GetEventsData = {
     }
 }
 
-export type GetEventsResponse = GetEventPageResponse
+export type GetEventsResponse = {
+    data: Array<EventDto>
+    pagination: Pagination
+}
 
 export type GetEventsError = string
 
@@ -317,7 +300,10 @@ export type GetEventDaysData = {
     }
 }
 
-export type GetEventDaysResponse = GetEventDayPageResponse
+export type GetEventDaysResponse = {
+    data: Array<EventDayDto>
+    pagination: Pagination
+}
 
 export type GetEventDaysError = string
 
@@ -378,7 +364,10 @@ export type GetRacesData = {
     }
 }
 
-export type GetRacesResponse = GetRacePageResponse
+export type GetRacesResponse = {
+    data: Array<RaceDto>
+    pagination: Pagination
+}
 
 export type GetRacesError = string
 
@@ -435,7 +424,10 @@ export type GetRaceTemplatesData = {
     }
 }
 
-export type GetRaceTemplatesResponse = GetRaceTemplatePageResponse
+export type GetRaceTemplatesResponse = {
+    data: Array<RaceTemplateDto>
+    pagination: Pagination
+}
 
 export type GetRaceTemplatesError = string
 
@@ -463,7 +455,10 @@ export type AddNamedParticipantResponse = string
 
 export type AddNamedParticipantError = string
 
-export type GetNamedParticipantsResponse = Array<NamedParticipantDto>
+export type GetNamedParticipantsResponse = {
+    data: Array<NamedParticipantDto>
+    pagination: Pagination
+}
 
 export type GetNamedParticipantsError = string
 
@@ -487,7 +482,10 @@ export type AddRaceCategoryResponse = string
 
 export type AddRaceCategoryError = string
 
-export type GetRaceCategoriesResponse = Array<RaceCategoryDto>
+export type GetRaceCategoriesResponse = {
+    data: Array<RaceCategoryDto>
+    pagination: Pagination
+}
 
 export type GetRaceCategoriesError = string
 

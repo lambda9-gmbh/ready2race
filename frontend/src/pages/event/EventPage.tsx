@@ -34,17 +34,19 @@ const EventPage = () => {
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(data && (
-                <Box>
-                    <Typography variant="h4">{data.name}</Typography>
-                    <Box>
+                <>
+                    <Typography variant="h3">{data.name}</Typography>
+                    <Box sx={{mt: 4}}>
+                        <Typography variant="h4">{t('event.race.races')}</Typography>
                         <RaceTable {...raceAdministrationProps} />
                         <RaceDialog {...raceAdministrationProps} />
                     </Box>
-                    <Box>
+                    <Box sx={{mt: 4}}>
+                        <Typography variant="h4">{t('event.eventDay.eventDays')}</Typography>
                         <EventDayTable {...eventDayAdministrationProps} />
                         <EventDayDialog {...eventDayAdministrationProps} />
                     </Box>
-                </Box>
+                </>
             )) || <Throbber />}
         </Box>
     )

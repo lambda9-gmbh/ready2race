@@ -81,7 +81,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetEventPageResponse'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -182,7 +193,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetEventDayPageResponse'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDayDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -307,7 +329,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetRacePageResponse'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RaceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -423,7 +456,18 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetRaceTemplatePageResponse'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RaceTemplateDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -510,9 +554,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/NamedParticipantDto'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NamedParticipantDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -557,7 +610,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /raceCategory:
-    put:
+    post:
       operationId: addRaceCategory
       requestBody:
         required: true
@@ -584,9 +637,18 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RaceCategoryDto'
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RaceCategoryDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -887,19 +949,6 @@ components:
         invoicePrefix:
           type: string
 
-    GetEventPageResponse:
-      type:
-        object
-      required:
-        - data
-        - pagination
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventDto'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
 
 
     # eventDay
@@ -937,20 +986,6 @@ components:
           type: string
         description:
           type: string
-
-    GetEventDayPageResponse:
-      type:
-        object
-      required:
-        - data
-        - pagination
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/EventDayDto'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
 
 
     AssignRacesToDayRequest:
@@ -1146,21 +1181,6 @@ components:
           format: uuid
 
 
-    GetRacePageResponse:
-      type:
-        object
-      required:
-        - data
-        - pagination
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/RaceDto'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
-
-
     AssignDaysToRaceRequest:
       type:
         object
@@ -1198,20 +1218,6 @@ components:
         properties:
           $ref: '#/components/schemas/RacePropertiesRequestDto'
 
-
-    GetRaceTemplatePageResponse:
-      type:
-        object
-      required:
-        - data
-        - pagination
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/RaceTemplateDto'
-        pagination:
-          $ref: '#/components/schemas/Pagination'
 
 
     # namedParticipant

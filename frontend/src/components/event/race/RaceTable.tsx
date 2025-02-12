@@ -36,14 +36,14 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
         {
             field: 'identifier',
             headerName: t('event.race.identifier'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 0,
             valueGetter: (_, e) => e.properties.identifier
         },
         {
             field: 'shortName',
             headerName: t('event.race.shortName'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 0,
             valueGetter: (_, e) => e.properties.shortName
         },
@@ -78,7 +78,6 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
             })}
             entityName={t('event.race.race')}
             deleteRequest={deleteRequest}
-            onDelete={() => {}}
             changePermission={'EVENT_EDIT'}
             readPermission={'EVENT_VIEW'}
         />

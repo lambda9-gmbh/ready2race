@@ -1,13 +1,20 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.control
 
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
+import de.lambda9.ready2race.backend.database.generated.tables.NamedParticipant
 import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.NAMED_PARTICIPANT
+import de.lambda9.ready2race.backend.database.metaSearch
+import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import java.util.*
 
 object NamedParticipantRepo {
+
+    private fun NamedParticipant.searchFields() = listOf(NAME)
 
     fun create(
         record: NamedParticipantRecord
@@ -21,9 +28,20 @@ object NamedParticipantRepo {
         }
     }
 
-    fun getMany(): JIO<List<NamedParticipantRecord>> = Jooq.query {
+    fun count(
+        search: String?
+    ): JIO<Int> = Jooq.query {
+        with(NAMED_PARTICIPANT) {
+            fetchCount(this, search.metaSearch(searchFields()))
+        }
+    }
+
+    fun page(
+        params: PaginationParameters<NamedParticipantSort>
+    ): JIO<List<NamedParticipantRecord>> = Jooq.query {
         with(NAMED_PARTICIPANT) {
             selectFrom(this)
+                .page(params, searchFields())
                 .fetch()
         }
     }

@@ -7,6 +7,7 @@ import {FormInputText} from '../form/input/FormInputText.tsx'
 import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
 import {takeIfNotEmpty} from "../../utils/ApiUtils.ts";
+import {useCallback} from "react";
 
 type EventForm = {
     name: string
@@ -42,13 +43,12 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         invoicePrefix: '',
     }
 
-    const values: EventForm | undefined = props.entity
-        ? mapDtoToForm(props.entity)
-        : undefined
+    const formContext = useForm<EventForm>()
 
-    const formContext = useForm<EventForm>({
-        values: values,
-    })
+    const onOpen = useCallback(() => {
+        formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
+    }, [props.entity])
+
 
     const entityNameKey = {entity: t('event.event')}
 
@@ -56,6 +56,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         <EntityDialog
             {...props}
             formContext={formContext}
+            onOpen={onOpen}
             title={action =>
                 action === 'add'
                     ? t('entity.add.action', entityNameKey)
@@ -63,9 +64,8 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
             } // could be shortened but then the translation key can not be found by search
             addAction={addAction}
             editAction={editAction}
-            onSuccess={() => {}}
-            defaultValues={defaultValues}>
-            <Stack spacing={2} pt={2}>
+            onSuccess={() => {}}>
+            <Stack spacing={2}>
                 <FormInputText name={'name'} label={t('entity.name')} required />
                 <FormInputText name={'description'} label={t('entity.description')} />
                 <FormInputText name={'location'} label={t('event.location')} />

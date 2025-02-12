@@ -74,6 +74,7 @@
     "event": "Veranstaltung",
     "eventDay": {
       "eventDay": "Tag",
+      "eventDays": "Tage",
       "date": "Datum"
     },
     "invoice": {
@@ -94,12 +95,14 @@
       "identifier": "Kennung",
       "namedParticipant": {
         "add": "Spezifischen Teilnehmer hinzufügen",
+        "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
         "required": "Verpflichtend",
         "role": "Rolle"
       },
       "participationFee": "Meldegebühr",
       "race": "Rennen",
+      "races": "Rennen",
       "rentalFee": "Leihgebühr",
       "shortName": "Kurzname",
       "template": {

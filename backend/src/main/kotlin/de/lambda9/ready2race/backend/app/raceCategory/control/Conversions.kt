@@ -23,12 +23,10 @@ fun RaceCategoryRequest.toRecord(userId: UUID): App<Nothing, RaceCategoryRecord>
         }
     )
 
-fun List<RaceCategoryRecord>.raceCategoryDtoList(): App<Nothing, List<RaceCategoryDto>> = KIO.ok(
-    this.map{
-        RaceCategoryDto(
-            id = it.id,
-            name = it.name,
-            description = it.description
-        )
-    }
+fun RaceCategoryRecord.raceCategoryDto(): App<Nothing, RaceCategoryDto> = KIO.ok(
+    RaceCategoryDto(
+        id = id,
+        name = name,
+        description = description
+    )
 )

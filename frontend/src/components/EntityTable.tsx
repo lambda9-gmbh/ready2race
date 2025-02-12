@@ -27,7 +27,7 @@ type EntityTableProps<Entity extends GridValidRowModel, Error> = BaseEntityTable
     (
         | {
               deleteRequest: (entity: Entity) => RequestResult<void, string, false> // todo: specific error type
-              onDelete: () => void
+              onDelete?: () => void
               deletableWhen?: (entity: Entity) => boolean
           }
         | {}
@@ -119,7 +119,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                           <GridActionsCellItem
                               icon={<Edit />}
                               label={t('common.edit')}
-                              onClick={() => props.openDialog(params.row)}
+                              onClick={() => props.openDialog({...params.row})}
                               showInMenu={true}
                           />,
                       ]
@@ -144,7 +144,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                                           )
                                       } else {
                                           props.reloadData()
-                                          props.onDelete()
+                                          props.onDelete?.()
                                           feedback.success(
                                               t('entity.delete.success', {entity: entityTitle}),
                                           )

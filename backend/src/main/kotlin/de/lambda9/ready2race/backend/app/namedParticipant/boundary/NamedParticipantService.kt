@@ -1,23 +1,22 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
-import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
+import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDto
 import de.lambda9.ready2race.backend.app.namedParticipant.control.toRecord
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantError
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
-import de.lambda9.ready2race.backend.count
-import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -33,10 +32,18 @@ object NamedParticipantService {
         }
     }
 
-    fun getNamedParticipantList(): App<Nothing, ApiResponse.Dto<List<NamedParticipantDto>>> = KIO.comprehension {
-        val namedParticipantList = !NamedParticipantRepo.getMany().orDie()
+    fun page(
+        params: PaginationParameters<NamedParticipantSort>
+    ): App<Nothing, ApiResponse.Page<NamedParticipantDto, NamedParticipantSort>> = KIO.comprehension {
+        val total = !NamedParticipantRepo.count(params.search).orDie()
+        val page = !NamedParticipantRepo.page(params).orDie()
 
-        namedParticipantList.namedParticipantDtoList().map { ApiResponse.Dto(it) }
+        page.forEachM { it.namedParticipantDto() }.map{
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
     }
 
     fun updateNamedParticipant(

@@ -1,9 +1,10 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
 import de.lambda9.ready2race.backend.requests.authenticate
+import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
 import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
@@ -28,7 +29,8 @@ fun Route.namedParticipant() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    NamedParticipantService.getNamedParticipantList()
+                    val params = !pagination<NamedParticipantSort>()
+                    NamedParticipantService.page(params)
                 }
             }
         }

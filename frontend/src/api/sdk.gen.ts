@@ -411,7 +411,7 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
 export const addRaceCategory = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddRaceCategoryData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).put<
+    return (options?.client ?? client).post<
         AddRaceCategoryResponse,
         AddRaceCategoryError,
         ThrowOnError

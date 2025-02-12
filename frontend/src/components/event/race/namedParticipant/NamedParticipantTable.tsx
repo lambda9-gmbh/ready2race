@@ -1,10 +1,13 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {deleteEvent, EventDto, getEvents} from '../../api'
-import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
-
+import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
+import {PaginationParameters} from "../../../../utils/ApiUtils.ts";
+import {
+    deleteNamedParticipant,
+    getNamedParticipants,
+    NamedParticipantDto,
+} from "../../../../api";
+import {BaseEntityTableProps} from "../../../../utils/types.ts";
+import {useTranslation} from "react-i18next";
+import EntityTable from "../../../EntityTable.tsx";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -15,21 +18,21 @@ const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
-    return getEvents({
+    return getNamedParticipants({
         signal,
         query: {...paginationParameters},
     })
 }
 
-const deleteRequest = (dto: EventDto) => {
-    return deleteEvent({path: {eventId: dto.id}})
+const deleteRequest = (dto: NamedParticipantDto) => {
+    return deleteNamedParticipant({path: {namedParticipantId: dto.id}})
 }
 
 
-const EventTable = (props: BaseEntityTableProps<EventDto>) => {
+const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>) => {
     const {t} = useTranslation()
 
-    const columns: GridColDef<EventDto>[] = [
+    const columns: GridColDef<NamedParticipantDto>[] = [
         {
             field: 'name',
             headerName: t('entity.name'),
@@ -54,11 +57,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            jumpToColumn={entity => ({
-                to: '/event/$eventId',
-                params: {eventId: entity.id},
-            })}
-            entityName={t('event.event')}
+            entityName={t('event.race.template.template')}
             deleteRequest={deleteRequest}
             changePermission={'EVENT_EDIT'}
             readPermission={'EVENT_VIEW'}
@@ -66,4 +65,4 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     )
 }
 
-export default EventTable
+export default NamedParticipantTable

@@ -1,10 +1,13 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {deleteEvent, EventDto, getEvents} from '../../api'
-import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
-
+import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
+import {BaseEntityTableProps} from "../../../../utils/types.ts";
+import {
+    deleteRaceCategory,
+    getRaceCategories,
+    RaceCategoryDto
+} from "../../../../api";
+import {useTranslation} from "react-i18next";
+import {PaginationParameters} from "../../../../utils/ApiUtils.ts";
+import EntityTable from "../../../EntityTable.tsx";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -13,23 +16,21 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 
-
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
-    return getEvents({
+    return getRaceCategories({
         signal,
         query: {...paginationParameters},
     })
 }
 
-const deleteRequest = (dto: EventDto) => {
-    return deleteEvent({path: {eventId: dto.id}})
+const deleteRequest = (dto: RaceCategoryDto) => {
+    return deleteRaceCategory({path: {raceCategoryId: dto.id}})
 }
 
-
-const EventTable = (props: BaseEntityTableProps<EventDto>) => {
+const RaceCategoryTable = (props: BaseEntityTableProps<RaceCategoryDto>) => {
     const {t} = useTranslation()
 
-    const columns: GridColDef<EventDto>[] = [
+    const columns: GridColDef<RaceCategoryDto>[] = [
         {
             field: 'name',
             headerName: t('entity.name'),
@@ -42,9 +43,8 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             minWidth: 200,
             flex: 2,
             sortable: false,
-        },
+        }
     ]
-
 
     return (
         <EntityTable
@@ -54,11 +54,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            jumpToColumn={entity => ({
-                to: '/event/$eventId',
-                params: {eventId: entity.id},
-            })}
-            entityName={t('event.event')}
+            entityName={t('event.race.category.category')}
             deleteRequest={deleteRequest}
             changePermission={'EVENT_EDIT'}
             readPermission={'EVENT_VIEW'}
@@ -66,4 +62,4 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     )
 }
 
-export default EventTable
+export default RaceCategoryTable

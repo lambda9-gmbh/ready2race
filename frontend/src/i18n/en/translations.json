@@ -74,6 +74,7 @@
     "event": "Event",
     "eventDay": {
       "eventDay": "Day",
+      "eventDays": "Days",
       "date": "Date"
     },
     "invoice": {
@@ -94,12 +95,14 @@
       "identifier": "Identifier",
       "namedParticipant": {
         "add": "Add Named Participant",
+        "namedParticipant": "Named Participant",
         "namedParticipants": "Named Participants",
         "required": "Required",
         "role": "Role"
       },
       "participationFee": "Registration fee",
       "race": "Race",
+      "races": "Races",
       "rentalFee": "Rental fee",
       "shortName": "Short name",
       "template": {

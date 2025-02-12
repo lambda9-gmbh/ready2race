@@ -1,4 +1,4 @@
-import {PropsWithChildren, useState} from 'react'
+import {PropsWithChildren, useEffect, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
@@ -25,13 +25,12 @@ type ExtendedEntityDialogProps<
     R = void,
 > = {
     formContext: UseFormReturn<F>
+    onOpen: () => void
     title: (action: 'add' | 'edit') => string
     addAction?: (formData: F) => RequestResult<R, string, false> // todo: specific error type
     editAction: (formData: F, entity: E) => RequestResult<void, string, false> // todo: specific error type
-    onSuccess: (res: R | void) => void
+    onSuccess?: (res: R | void) => void
     entityName?: string
-    closeAction?: () => void
-    defaultValues?: F
 }
 
 const EntityDialog = <E extends object | undefined, F extends FieldValues = FieldValues, R = void>(
@@ -42,11 +41,7 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
 
     const [submitting, setSubmitting] = useState(false)
 
-    const formContext = props.formContext
-
     const handleClose = () => {
-        formContext.reset(props.defaultValues)
-        props.closeAction?.()
         props.closeDialog()
     }
 
@@ -70,7 +65,7 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
                 }
             } else {
                 handleClose()
-                props.onSuccess(requestResult.data)
+                props.onSuccess?.(requestResult.data)
                 props.reloadData()
                 if (props.entity) {
                     feedback.success(t('entity.edit.success', {entity: entityTitle}))
@@ -81,9 +76,15 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
         }
     }
 
+    useEffect(() => {
+        if (props.dialogIsOpen) {
+            props.onOpen()
+        }
+    }, [props.dialogIsOpen, props.onOpen]);
+
     return (
         <Dialog open={props.dialogIsOpen} fullWidth={true} maxWidth={'sm'}>
-            <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)} >
+            <FormContainer formContext={props.formContext} onSuccess={data => onSubmit(data)} >
                 <DialogTitle>{props.title(props.entity ? 'edit' : 'add')}</DialogTitle>
                 <DialogCloseButton onClose={handleClose} />
                 <DialogContent>

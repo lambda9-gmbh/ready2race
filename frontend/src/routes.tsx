@@ -10,10 +10,11 @@ import {User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import {Privilege} from './api'
-import EventsPage from "./pages/event/EventsPage.tsx";
-import EventPage from "./pages/event/EventPage.tsx";
-import RacePage from "./pages/event/RacePage.tsx";
-import EventDayPage from "./pages/event/EventDayPage.tsx";
+import EventsPage from './pages/event/EventsPage.tsx'
+import EventPage from './pages/event/EventPage.tsx'
+import RacePage from './pages/event/RacePage.tsx'
+import EventDayPage from './pages/event/EventDayPage.tsx'
+import RaceConfigPage from './pages/event/RaceConfigPage.tsx'
 
 const checkAuth = (
     context: User,
@@ -79,10 +80,10 @@ export const eventsRoute = createRoute({
 export const eventsIndexRoute = createRoute({
     getParentRoute: () => eventsRoute,
     path: '/',
-    component: () => <EventsPage/>,
+    component: () => <EventsPage />,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
-    }
+    },
 })
 
 export const eventRoute = createRoute({
@@ -93,10 +94,10 @@ export const eventRoute = createRoute({
 export const eventIndexRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: '/',
-    component: () => <EventPage/>,
+    component: () => <EventPage />,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
-    }
+    },
 })
 
 export const eventDayRoute = createRoute({
@@ -107,10 +108,10 @@ export const eventDayRoute = createRoute({
 export const eventDayIndexRoute = createRoute({
     getParentRoute: () => eventDayRoute,
     path: '/',
-    component: () => <EventDayPage/>,
+    component: () => <EventDayPage />,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
-    }
+    },
 })
 
 export const raceRoute = createRoute({
@@ -121,10 +122,24 @@ export const raceRoute = createRoute({
 export const raceIndexRoute = createRoute({
     getParentRoute: () => raceRoute,
     path: '/',
-    component: () => <RacePage/>,
+    component: () => <RacePage />,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
-    }
+    },
+})
+
+export const raceConfigRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'raceConfig',
+})
+
+export const raceConfigIndexRoute = createRoute({
+    getParentRoute: () => raceConfigRoute,
+    path: '/',
+    component: () => <RaceConfigPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
 })
 
 const routeTree = rootRoute.addChildren([
@@ -135,14 +150,11 @@ const routeTree = rootRoute.addChildren([
         eventsIndexRoute,
         eventRoute.addChildren([
             eventIndexRoute,
-            eventDayRoute.addChildren([
-                eventDayIndexRoute,
-            ]),
-            raceRoute.addChildren([
-                raceIndexRoute,
-            ])
-        ])
+            eventDayRoute.addChildren([eventDayIndexRoute]),
+            raceRoute.addChildren([raceIndexRoute]),
+        ]),
     ]),
+    raceConfigRoute.addChildren([raceConfigIndexRoute]),
 ])
 
 export const router = createRouter({

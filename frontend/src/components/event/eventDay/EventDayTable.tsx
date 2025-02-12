@@ -34,7 +34,7 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
         {
             field: 'date',
             headerName: t('event.eventDay.date'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 0,
         },
         {
@@ -66,7 +66,6 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
             })}
             entityName={t('event.eventDay.eventDay')}
             deleteRequest={deleteRequest}
-            onDelete={() => {}}
             changePermission={'EVENT_EDIT'}
             readPermission={'EVENT_VIEW'}
         />

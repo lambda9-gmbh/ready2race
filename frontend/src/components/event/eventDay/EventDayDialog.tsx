@@ -8,6 +8,7 @@ import {Stack} from '@mui/material'
 import {FormInputText} from '../../form/input/FormInputText.tsx'
 import FormInputDate from '../../form/input/FormInputDate.tsx'
 import {takeIfNotEmpty} from '../../../utils/ApiUtils.ts'
+import {useCallback} from "react";
 
 type EventDayForm = {
     date: string
@@ -40,11 +41,12 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
         description: '',
     }
 
-    const values: EventDayForm | undefined = props.entity ? mapDtoToForm(props.entity) : undefined
+    const formContext = useForm<EventDayForm>()
 
-    const formContext = useForm<EventDayForm>({
-        values: values,
-    })
+    const onOpen = useCallback(() => {
+        formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
+    }, [props.entity])
+
 
     const entityKeyName = {entity: t('event.eventDay.eventDay')}
 
@@ -52,14 +54,14 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
         <EntityDialog
             {...props}
             formContext={formContext}
+            onOpen={onOpen}
             title={action =>
                 action === 'add' ? t('entity.add.action', entityKeyName) : t('entity.edit.action')
             }
             addAction={addAction}
             editAction={editAction}
-            onSuccess={() => {}}
-            defaultValues={defaultValues}>
-            <Stack spacing={2} pt={2}>
+            onSuccess={() => {}}>
+            <Stack spacing={2}>
                 <FormInputDate name="date" label={t('event.eventDay.date')} required />
                 <FormInputText name="name" label={t('entity.name')} />
                 <FormInputText name="description" label={t('entity.description')} />

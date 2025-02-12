@@ -23,12 +23,10 @@ fun NamedParticipantRequest.toRecord(userId: UUID): App<Nothing, NamedParticipan
         }
     )
 
-fun List<NamedParticipantRecord>.namedParticipantDtoList(): App<Nothing, List<NamedParticipantDto>> = KIO.ok(
-    this.map {
-        NamedParticipantDto(
-            id = it.id!!,
-            name = it.name,
-            description = it.description,
-        )
-    }
+fun NamedParticipantRecord.namedParticipantDto(): App<Nothing, NamedParticipantDto> = KIO.ok(
+    NamedParticipantDto(
+        id = id,
+        name = name,
+        description = description,
+    )
 )

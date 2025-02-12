@@ -1,9 +1,10 @@
 package de.lambda9.ready2race.backend.app.raceCategory.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryRequest
+import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategorySort
 import de.lambda9.ready2race.backend.requests.authenticate
+import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
 import de.lambda9.ready2race.backend.requests.receiveV
 import de.lambda9.ready2race.backend.responses.respondKIO
@@ -28,7 +29,8 @@ fun Route.raceCategory() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    RaceCategoryService.getRaceCategoryList()
+                    val params = !pagination<RaceCategorySort>()
+                    RaceCategoryService.page(params)
                 }
             }
         }

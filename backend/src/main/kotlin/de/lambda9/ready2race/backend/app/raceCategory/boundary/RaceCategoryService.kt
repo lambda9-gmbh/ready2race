@@ -1,21 +1,20 @@
 package de.lambda9.ready2race.backend.app.raceCategory.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
-import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDtoList
+import de.lambda9.ready2race.backend.app.raceCategory.control.raceCategoryDto
 import de.lambda9.ready2race.backend.app.raceCategory.control.toRecord
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryDto
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryError
 import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategoryRequest
-import de.lambda9.ready2race.backend.kio.onFalseFail
-import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.app.raceCategory.entity.RaceCategorySort
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -30,10 +29,18 @@ object RaceCategoryService {
         KIO.ok(ApiResponse.Created(raceCategoryId))
     }
 
-    fun getRaceCategoryList(): App<Nothing, ApiResponse.Dto<List<RaceCategoryDto>>> = KIO.comprehension {
-        val raceCategoryList = !RaceCategoryRepo.getMany().orDie()
+    fun page(
+        params: PaginationParameters<RaceCategorySort>
+    ): App<Nothing, ApiResponse.Page<RaceCategoryDto, RaceCategorySort>> = KIO.comprehension {
+        val total = !RaceCategoryRepo.count(params.search).orDie()
+        val page = !RaceCategoryRepo.page(params).orDie()
 
-        raceCategoryList.raceCategoryDtoList().map{ ApiResponse.Dto(it) }
+        page.forEachM { it.raceCategoryDto() }.map{
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
     }
 
 
