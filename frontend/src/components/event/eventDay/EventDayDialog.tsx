@@ -1,12 +1,6 @@
 import {useTranslation} from 'react-i18next'
 import {eventIndexRoute} from '../../../routes.tsx'
-import {
-    addEventDay,
-    EventDayDto,
-    EventDayProperties,
-    EventDayRequest,
-    updateEventDay,
-} from '../../../api'
+import {addEventDay, EventDayDto, EventDayRequest, updateEventDay} from '../../../api'
 import {BaseEntityDialogProps} from '../../../utils/types.ts'
 import {useForm} from 'react-hook-form-mui'
 import EntityDialog from '../../EntityDialog.tsx'
@@ -35,7 +29,7 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
 
     const editAction = (formData: EventDayForm, entity: EventDayDto) => {
         return updateEventDay({
-            path: {eventId: entity.event, raceId: entity.id},
+            path: {eventId: entity.event, eventDayId: entity.id},
             body: mapFormToRequest(formData),
         })
     }
@@ -46,9 +40,7 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
         description: '',
     }
 
-    const values: EventDayForm | undefined = props.entity
-        ? mapDtoToForm(props.entity.properties)
-        : undefined
+    const values: EventDayForm | undefined = props.entity ? mapDtoToForm(props.entity) : undefined
 
     const formContext = useForm<EventDayForm>({
         values: values,
@@ -70,7 +62,7 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
             <Stack spacing={2} pt={2}>
                 <FormInputDate name="date" label={t('event.eventDay.date')} required />
                 <FormInputText name="name" label={t('entity.name')} />
-                <FormInputText name='description' label={t('entity.description')} />
+                <FormInputText name="description" label={t('entity.description')} />
             </Stack>
         </EntityDialog>
     )
@@ -78,15 +70,13 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
 
 function mapFormToRequest(formData: EventDayForm): EventDayRequest {
     return {
-        properties: {
-            date: formData.date,
-            name: takeIfNotEmpty(formData.name),
-            description: takeIfNotEmpty(formData.description),
-        },
+        date: formData.date,
+        name: takeIfNotEmpty(formData.name),
+        description: takeIfNotEmpty(formData.description),
     }
 }
 
-function mapDtoToForm(dto: EventDayProperties): EventDayForm {
+function mapDtoToForm(dto: EventDayDto): EventDayForm {
     return {
         date: dto.date,
         name: dto.name ?? '',

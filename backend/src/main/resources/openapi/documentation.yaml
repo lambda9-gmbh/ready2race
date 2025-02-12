@@ -843,7 +843,31 @@ components:
 
     # event
 
-    EventProperties:
+    EventDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        registrationAvailableFrom:
+          type: string
+          format: date-time
+        registrationAvailableTo:
+          type: string
+          format: date-time
+        invoicePrefix:
+          type: string
+
+    EventRequest:
       type: object
       required:
         - name
@@ -863,26 +887,6 @@ components:
         invoicePrefix:
           type: string
 
-    EventDto:
-      type: object
-      required:
-        - id
-        - properties
-      properties:
-        id:
-          type: string
-          format: uuid
-        properties:
-          $ref: '#/components/schemas/EventProperties'
-
-    EventRequest:
-      type: object
-      required:
-        - properties
-      properties:
-        properties:
-          $ref: '#/components/schemas/EventProperties'
-
     GetEventPageResponse:
       type:
         object
@@ -900,7 +904,28 @@ components:
 
     # eventDay
 
-    EventDayProperties:
+    EventDayDto:
+      type: object
+      required:
+        - id
+        - event
+        - date
+      properties:
+        id:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        name:
+          type: string
+        description:
+          type: string
+
+    EventDayRequest:
       type: object
       required:
         - date
@@ -912,31 +937,6 @@ components:
           type: string
         description:
           type: string
-
-
-    EventDayDto:
-      type: object
-      required:
-        - id
-        - event
-        - properties
-      properties:
-        id:
-          type: string
-          format: uuid
-        event:
-          type: string
-          format: uuid
-        properties:
-          $ref: '#/components/schemas/EventDayProperties'
-
-    EventDayRequest:
-      type: object
-      required:
-        - properties
-      properties:
-        properties:
-          $ref: '#/components/schemas/EventDayProperties'
 
     GetEventDayPageResponse:
       type:

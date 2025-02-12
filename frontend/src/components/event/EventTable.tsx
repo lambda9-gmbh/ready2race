@@ -35,7 +35,6 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             headerName: t('entity.name'),
             minWidth: 200,
             flex: 1,
-            valueGetter: (_, e) => e.properties.name
         },
         {
             field: 'description',
@@ -43,7 +42,6 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             minWidth: 200,
             flex: 2,
             sortable: false,
-            valueGetter: (_, row) => row.properties.description
         },
     ]
 

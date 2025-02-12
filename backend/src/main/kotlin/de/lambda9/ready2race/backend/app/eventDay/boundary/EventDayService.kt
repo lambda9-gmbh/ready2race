@@ -12,14 +12,12 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.*
 import de.lambda9.ready2race.backend.app.race.control.RaceRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -75,9 +73,9 @@ object EventDayService {
         eventDayId: UUID,
     ): App<EventDayError, ApiResponse.NoData> =
         EventDayRepo.update(eventDayId) {
-            date = request.properties.date
-            name = request.properties.name
-            description = request.properties.description
+            date = request.date
+            name = request.name
+            description = request.description
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

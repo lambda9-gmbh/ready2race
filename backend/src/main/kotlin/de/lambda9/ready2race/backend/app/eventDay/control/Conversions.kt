@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.eventDay.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayDto
-import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayProperties
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 import de.lambda9.tailwind.core.KIO
@@ -15,9 +14,9 @@ fun EventDayRequest.toRecord(userId: UUID, eventId: UUID): App<Nothing, EventDay
             EventDayRecord(
                 id = UUID.randomUUID(),
                 event = eventId,
-                date = properties.date,
-                name = properties.name,
-                description = properties.description,
+                date = date,
+                name = name,
+                description = description,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -30,10 +29,8 @@ fun EventDayRecord.eventDayDto(): App<Nothing, EventDayDto> = KIO.ok(
     EventDayDto(
         id = id,
         event = event,
-        properties = EventDayProperties(
-            date = date,
-            name = name,
-            description = description,
-        )
+        date = date,
+        name = name,
+        description = description,
     )
 )

@@ -1,4 +1,4 @@
-import {addEvent, EventDto, EventProperties, EventRequest, updateEvent} from '../../api'
+import {addEvent, EventDto, EventRequest, updateEvent} from '../../api'
 import {BaseEntityDialogProps} from '../../utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '../EntityDialog.tsx'
@@ -6,6 +6,7 @@ import {Stack} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
+import {takeIfNotEmpty} from "../../utils/ApiUtils.ts";
 
 type EventForm = {
     name: string
@@ -42,7 +43,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     }
 
     const values: EventForm | undefined = props.entity
-        ? mapDtoToForm(props.entity.properties)
+        ? mapDtoToForm(props.entity)
         : undefined
 
     const formContext = useForm<EventForm>({
@@ -84,13 +85,16 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
 
 function mapFormToRequest(formData: EventForm): EventRequest {
     return {
-        properties: {
-            name: formData.name,
-        },
+        name: formData.name,
+        description: takeIfNotEmpty(formData.description),
+        location: takeIfNotEmpty(formData.location),
+        registrationAvailableFrom: takeIfNotEmpty(formData.registrationAvailableFrom),
+        registrationAvailableTo: takeIfNotEmpty(formData.registrationAvailableTo),
+        invoicePrefix: takeIfNotEmpty(formData.invoicePrefix)
     }
 }
 
-function mapDtoToForm(dto: EventProperties): EventForm {
+function mapDtoToForm(dto: EventDto): EventForm {
     return {
         name: dto.name,
         description: dto.description ?? '',

@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.control.eventDto
 import de.lambda9.ready2race.backend.app.event.control.toRecord
@@ -9,17 +8,14 @@ import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -62,12 +58,12 @@ object EventService {
         eventId: UUID,
     ): App<EventError, ApiResponse.NoData> =
         EventRepo.update(eventId) {
-            name = request.properties.name
-            description = request.properties.description
-            location = request.properties.location
-            registrationAvailableFrom = request.properties.registrationAvailableFrom
-            registrationAvailableTo = request.properties.registrationAvailableTo
-            invoicePrefix = request.properties.invoicePrefix
+            name = request.name
+            description = request.description
+            location = request.location
+            registrationAvailableFrom = request.registrationAvailableFrom
+            registrationAvailableTo = request.registrationAvailableTo
+            invoicePrefix = request.invoicePrefix
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

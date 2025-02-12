@@ -23,25 +23,19 @@ export type AssignRacesToDayRequest = {
 export type EventDayDto = {
     id: string
     event: string
-    properties: EventDayProperties
-}
-
-export type EventDayProperties = {
     date: string
     name?: string
     description?: string
 }
 
 export type EventDayRequest = {
-    properties: EventDayProperties
+    date: string
+    name?: string
+    description?: string
 }
 
 export type EventDto = {
     id: string
-    properties: EventProperties
-}
-
-export type EventProperties = {
     name: string
     description?: string
     location?: string
@@ -51,7 +45,12 @@ export type EventProperties = {
 }
 
 export type EventRequest = {
-    properties: EventProperties
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    invoicePrefix?: string
 }
 
 export type GetEventDayPageResponse = {
