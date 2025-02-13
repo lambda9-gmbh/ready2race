@@ -217,7 +217,6 @@ const routeTree = rootRoute.addChildren([
     raceConfigRoute.addChildren([raceConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
-    eventsRoute.addChildren([eventsIndexRoute, eventRoute.addChildren([eventIndexRoute])]),
 ])
 
 export const router = createRouter({

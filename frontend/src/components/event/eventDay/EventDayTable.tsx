@@ -66,8 +66,6 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
             })}
             entityName={t('event.eventDay.eventDay')}
             deleteRequest={deleteRequest}
-            changePermission={'EVENT_EDIT'}
-            readPermission={'EVENT_VIEW'}
         />
     )
 }

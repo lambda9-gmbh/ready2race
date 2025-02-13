@@ -73,11 +73,19 @@
     "password": "Password"
   },
   "event": {
+    "assign": {
+      "save": {
+        "error": "An error occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
+        "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
+      },
+      "title": "{{toBeAssigned}} for the {{assignedTo}}"
+    },
     "event": "Event",
     "eventDay": {
+      "assignedRaces": "Races for the day",
+      "date": "Date",
       "eventDay": "Day",
-      "eventDays": "Days",
-      "date": "Date"
+      "eventDays": "Days"
     },
     "invoice": {
       "prefix": "Invoice prefix"

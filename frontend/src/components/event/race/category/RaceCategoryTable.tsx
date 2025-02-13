@@ -56,8 +56,6 @@ const RaceCategoryTable = (props: BaseEntityTableProps<RaceCategoryDto>) => {
             dataRequest={dataRequest}
             entityName={t('event.race.category.category')}
             deleteRequest={deleteRequest}
-            changePermission={'EVENT_EDIT'}
-            readPermission={'EVENT_VIEW'}
         />
     )
 }

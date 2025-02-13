@@ -15,7 +15,7 @@
       "currency": {
         "invalid": "Bitte geben Sie einen gültigen Betrag ein."
       },
-      "dateTime":{
+      "dateTime": {
         "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
       },
       "number": {
@@ -73,11 +73,19 @@
     "password": "Passwort"
   },
   "event": {
+    "assign": {
+      "save": {
+        "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
+        "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
+      },
+      "title": "{{toBeAssigned}} für den {{assignedTo}}"
+    },
     "event": "Veranstaltung",
     "eventDay": {
+      "assignedRaces": "Rennen für den Tag",
+      "date": "Datum",
       "eventDay": "Tag",
-      "eventDays": "Tage",
-      "date": "Datum"
+      "eventDays": "Tage"
     },
     "invoice": {
       "prefix": "Rechnungspräfix"

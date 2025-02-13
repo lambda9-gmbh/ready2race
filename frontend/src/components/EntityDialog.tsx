@@ -83,7 +83,7 @@ const EntityDialog = <E extends object | undefined, F extends FieldValues = Fiel
     }, [props.dialogIsOpen, props.onOpen]);
 
     return (
-        <Dialog open={props.dialogIsOpen} fullWidth={true} maxWidth={'sm'}>
+        <Dialog open={props.dialogIsOpen} fullWidth={true} maxWidth={'sm'} className='ready2race'>
             <FormContainer formContext={props.formContext} onSuccess={data => onSubmit(data)} >
                 <DialogTitle>{props.title(props.entity ? 'edit' : 'add')}</DialogTitle>
                 <DialogCloseButton onClose={handleClose} />

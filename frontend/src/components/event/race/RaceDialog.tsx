@@ -11,7 +11,7 @@ import {
     mapRaceFormToRacePropertiesRequest,
     mapRacePropertiesToRaceForm,
     RaceForm,
-    raceFormDefaultValues,
+    raceFormDefaultValues, raceLabelName,
 } from './common.ts'
 import {RacePropertiesFormInputs} from './RacePropertiesFormInputs.tsx'
 
@@ -53,7 +53,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const templates: AutocompleteOption[] =
         templatesData?.data.map(dto => ({
             id: dto.id,
-            label: templateLabelName(dto.properties.identifier, dto.properties.name),
+            label: raceLabelName(dto.properties.identifier, dto.properties.name),
         })) ?? []
 
     const formContext = useForm<RaceForm>()
@@ -140,8 +140,5 @@ function mapFormToRequest(formData: RaceForm, templateId: string | undefined): R
     }
 }
 
-function templateLabelName(identifier: string, name: string) {
-    return `${identifier} | ${name}`
-}
 
 export default RaceDialog

@@ -59,8 +59,6 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
             dataRequest={dataRequest}
             entityName={t('event.race.template.template')}
             deleteRequest={deleteRequest}
-            changePermission={'EVENT_EDIT'}
-            readPermission={'EVENT_VIEW'}
         />
     )
 }

@@ -78,8 +78,6 @@ const RaceTable = (props: BaseEntityTableProps<RaceDto>) => {
             })}
             entityName={t('event.race.race')}
             deleteRequest={deleteRequest}
-            changePermission={'EVENT_EDIT'}
-            readPermission={'EVENT_VIEW'}
         />
     )
 }

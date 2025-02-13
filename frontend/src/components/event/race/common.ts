@@ -94,3 +94,8 @@ export function mapRacePropertiesToRaceForm(
         })),
     }
 }
+
+
+export function raceLabelName(identifier: string, name: string) {
+    return `${identifier} | ${name}`
+}
