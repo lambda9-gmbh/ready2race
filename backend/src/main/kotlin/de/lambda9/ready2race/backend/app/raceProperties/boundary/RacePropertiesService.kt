@@ -17,17 +17,19 @@ object RacePropertiesService {
 
     fun checkNamedParticipantsExisting(
         namedParticipants: List<UUID>
-    ): App<RacePropertiesError, Unit> =
+    ): App<RacePropertiesError, Unit> = KIO.comprehension {
         if (namedParticipants.isEmpty()) {
             KIO.unit
         } else {
-            NamedParticipantRepo
-                .findUnknown(namedParticipants)
-                .orDie()
-                .failIf(condition = { it.isNotEmpty() }) {
-                    RacePropertiesError.NamedParticipantsUnknown(it)
-                }.map {}
+            val found = !NamedParticipantRepo.getIfExist(namedParticipants).orDie()
+            val notFound = namedParticipants.filter { id -> found.none { it.id == id } }
+            if (notFound.isNotEmpty()) {
+                KIO.fail(RacePropertiesError.NamedParticipantsUnknown(notFound))
+            } else {
+                KIO.unit
+            }
         }
+    }
 
     fun checkRaceCategoryExisting(
         raceCategory: UUID?

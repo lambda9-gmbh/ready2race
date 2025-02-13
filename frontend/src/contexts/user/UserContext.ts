@@ -1,14 +1,21 @@
 import {createContext, useContext} from 'react'
-import {LoginResponse, Privilege} from '../../api'
-import {PrivilegeScope} from '../../utils/types.ts'
+import {Action, LoginResponse, Privilege, Resource, Scope} from '../../api'
 
-export type User = {
-    loggedIn: boolean
+export type AuthenticatedUser = {
+    loggedIn: true
+    id: string
     login: (data: LoginResponse) => void
     logout: () => void
-    getPrivilegeScope: (privilege: Privilege) => PrivilegeScope | null
-    association: string | undefined
+    getPrivilegeScope: (action: Action, resource: Resource) => Scope | undefined
+    checkPrivilege: (privilege: Privilege) => boolean
 }
+
+export type AnonymousUser = {
+    loggedIn: false
+    login: (data: LoginResponse) => void
+}
+
+export type User = AuthenticatedUser | AnonymousUser
 
 export const UserContext = createContext<User | null>(null)
 

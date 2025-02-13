@@ -9,6 +9,35 @@ import type {
     CheckUserLoginResponse,
     UserLogoutError,
     UserLogoutResponse,
+    GetUsersData,
+    GetUsersError,
+    GetUsersResponse,
+    GetUserError,
+    GetUserResponse,
+    RegisterUserData,
+    RegisterUserError,
+    RegisterUserResponse,
+    VerifyUserRegistrationData,
+    VerifyUserRegistrationError,
+    VerifyUserRegistrationResponse,
+    InviteUserData,
+    InviteUserError,
+    InviteUserResponse,
+    AcceptUserInvitationData,
+    AcceptUserInvitationError,
+    AcceptUserInvitationResponse,
+    AddRoleData,
+    AddRoleError,
+    AddRoleResponse,
+    GetRolesData,
+    GetRolesError,
+    GetRolesResponse,
+    UpdateRoleData,
+    UpdateRoleError,
+    UpdateRoleResponse,
+    DeleteRoleData,
+    DeleteRoleError,
+    DeleteRoleResponse,
     AddEventData,
     AddEventError,
     AddEventResponse,
@@ -119,6 +148,104 @@ export const userLogout = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<UserLogoutResponse, UserLogoutError, ThrowOnError>({
         ...options,
         url: '/login',
+    })
+}
+
+export const getUsers = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetUsersData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetUsersResponse, GetUsersError, ThrowOnError>({
+        ...options,
+        url: '/user',
+    })
+}
+
+export const getUser = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
+        ...options,
+        url: '/user/{userId}',
+    })
+}
+
+export const registerUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RegisterUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<RegisterUserResponse, RegisterUserError, ThrowOnError>({
+        ...options,
+        url: '/register',
+    })
+}
+
+export const verifyUserRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<VerifyUserRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        VerifyUserRegistrationResponse,
+        VerifyUserRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/verifyRegistration',
+    })
+}
+
+export const inviteUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<InviteUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<InviteUserResponse, InviteUserError, ThrowOnError>({
+        ...options,
+        url: '/invite',
+    })
+}
+
+export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AcceptUserInvitationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AcceptUserInvitationResponse,
+        AcceptUserInvitationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/acceptInvitation',
+    })
+}
+
+export const addRole = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRoleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddRoleResponse, AddRoleError, ThrowOnError>({
+        ...options,
+        url: '/role',
+    })
+}
+
+export const getRoles = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRolesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetRolesResponse, GetRolesError, ThrowOnError>({
+        ...options,
+        url: '/role',
+    })
+}
+
+export const updateRole = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRoleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateRoleResponse, UpdateRoleError, ThrowOnError>({
+        ...options,
+        url: '/role/{roleId}',
+    })
+}
+
+export const deleteRole = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteRoleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteRoleResponse, DeleteRoleError, ThrowOnError>({
+        ...options,
+        url: '/role/{roleId}',
     })
 }
 

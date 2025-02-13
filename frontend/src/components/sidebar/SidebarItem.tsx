@@ -3,15 +3,36 @@ import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {Privilege} from '../../api'
 import {ListItem, ListItemButton, ListItemIcon, ListItemText} from '@mui/material'
 import {useSidebar} from './SidebarContext.ts'
+import {useUser} from '../../contexts/user/UserContext.ts'
 
 type Props = {
     text: string
     icon: ReactElement
-    privilege?: Privilege
-} & LinkComponentProps<'a'>
+} & (
+    | {
+          authenticatedOnly: true
+          privilege?: Privilege
+      }
+    | {
+          authenticatedOnly?: false
+          privilege?: never
+      }
+) &
+    LinkComponentProps<'a'>
 
-const SidebarItem = ({text, icon, privilege, ...linkProps}: Props) => {
+const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: Props) => {
     const {open} = useSidebar()
+    const user = useUser()
+
+    if (!user.loggedIn) {
+        if (authenticatedOnly) {
+            return <></>
+        }
+    } else {
+        if (privilege && !user.checkPrivilege(privilege)) {
+            return <></>
+        }
+    }
 
     return (
         <Link {...linkProps}>

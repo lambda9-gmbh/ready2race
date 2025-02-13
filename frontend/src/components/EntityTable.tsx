@@ -1,4 +1,4 @@
-import {Pagination, Privilege} from '../api'
+import {Pagination, Privilege, Scope} from '../api'
 import {
     DataGrid,
     DataGridProps,
@@ -13,7 +13,7 @@ import {
 } from '@mui/x-data-grid'
 import {ReactElement, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '../utils/ApiUtils.ts'
-import {BaseEntityTableProps, PartialRequired, PrivilegeScope} from '../utils/types.ts'
+import {BaseEntityTableProps, PartialRequired} from '../utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
@@ -39,21 +39,22 @@ type ExtendedEntityTableProps<Entity extends GridValidRowModel, Error> = {
     initialSort: GridSortModel
     columns:
         | GridColDef<Entity>[]
-        | ((readScope: PrivilegeScope, changeScope: PrivilegeScope | null) => GridColDef<Entity>[])
+        | ((readScope: Scope, changeScope: Scope | null) => GridColDef<Entity>[])
     dataRequest: (
         signal: AbortSignal,
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, Error, false>
     omitEditAction?: boolean
+    omitAddAction?: boolean
     customActions?: (
         entity: Entity,
-        changeScope: PrivilegeScope | null,
+        changeScope: Scope | null,
     ) => ReactElement<GridActionsCellItemProps>[]
     jumpToColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     entityName?: string
     gridProps?: Partial<DataGridProps>
-    readPermission: Privilege
-    changePermission: Privilege
+    readPermission?: Privilege
+    changePermission?: Privilege
     hideSearch?: boolean
 }
 
@@ -68,8 +69,8 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
     ...props
 }: EntityTableProps<Entity, Error>) => {
     //todo: Change PrivilegeScope
-    const readPermitted: PrivilegeScope = 'global'
-    const changePermitted: PrivilegeScope = 'global'
+    const readPermitted: Scope = 'GLOBAL'
+    const changePermitted: Scope = 'GLOBAL'
 
     const {t} = useTranslation()
     const feedback = useFeedback()
@@ -196,7 +197,7 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                         }}
                     />
                 )}
-                {changePermitted && (
+                {changePermitted && !props.omitAddAction && (
                     <Button
                         variant={'outlined'}
                         startIcon={<Add />}

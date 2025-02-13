@@ -27,6 +27,16 @@ object AppUserRepo {
         }
     }
 
+    fun getWithRoles(
+        id: UUID,
+    ): JIO<AppUserWithRolesRecord?> = Jooq.query {
+        with(APP_USER_WITH_ROLES) {
+            selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
     fun countWithRoles(
         search: String?
     ): JIO<Int> = Jooq.query {

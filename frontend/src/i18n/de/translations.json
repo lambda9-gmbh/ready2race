@@ -63,7 +63,9 @@
   },
   "navigation": {
     "titles": {
-      "login": "Login"
+      "dashboard": "Dashboard",
+      "users": "Benutzer",
+      "roles": "Rollen"
     }
   },
   "login": {
@@ -114,5 +116,15 @@
       "from": "Anmeldezeitraum von",
       "to": "Anmeldezeitraum bis"
     }
+  },
+  "user": {
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "email": "E-Mail"
+  },
+  "role": {
+    "role": "Rolle",
+    "name": "Name",
+    "description": "Beschreibung"
   }
 }

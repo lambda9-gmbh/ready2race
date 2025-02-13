@@ -25,7 +25,7 @@ import io.ktor.server.plugins.*
 import io.ktor.server.request.*
 import io.ktor.server.sessions.*
 
-suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V): IO<RequestError, V> =
+suspend inline fun <reified V : Validatable> ApplicationCall.receiveV(example: V): IO<RequestError, V> =
     runCatching { receive<V>() }.toKio().mapError {
         when (it) {
             is BadRequestException -> RequestError.BodyUnparsable(example)
@@ -35,14 +35,16 @@ suspend inline fun <reified V: Validatable> ApplicationCall.receiveV(example: V)
     }
 
 fun ApplicationCall.authenticate(
-    action: Privilege.Action,
-    resource: Privilege.Resource,
-    scope: Privilege.Scope,
+    privilege: Privilege,
 ): App<AuthError, AppUserWithPrivilegesRecord> =
     AuthService.useSessionToken(sessions.get<UserSession>()?.token).failIf(
         condition = { user ->
             user.privileges!!
-                .none { it!!.action == action.name && it.resource == resource.name && it.scope == scope.name }
+                .none {
+                    it!!.action == privilege.action.name
+                        && it.resource == privilege.resource.name
+                        && Privilege.Scope.valueOf(it.scope).level >= privilege.scope.level
+                }
         },
         then = { AuthError.PrivilegeMissing },
     )

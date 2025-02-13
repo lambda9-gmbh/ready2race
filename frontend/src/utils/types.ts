@@ -1,8 +1,3 @@
-import {AllParams} from "@tanstack/react-router";
-import {router} from "../routes.tsx";
-
-export type PrivilegeScope = 'global' | 'association-bound'
-
 export type PartialRequired<T, K extends keyof T = keyof T> = Omit<T, K> & Required<Pick<T, K>>
 
 export type BaseEntityTableProps<E> = {
@@ -19,8 +14,6 @@ export type BaseEntityDialogProps<E> = {
     entity?: E
 }
 
-export type Param = keyof AllParams<typeof router.routeTree>
+export type Language = 'de' | 'en'
 
-export type AutocompleteField = {id: string, label: string}
-
-export type AutocompleteList = AutocompleteField[]
+export type AutocompleteOption = {id: string; label: string}

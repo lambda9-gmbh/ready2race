@@ -48,6 +48,233 @@ paths:
           $ref: '#/components/responses/204'
         500:
           $ref: '#/components/responses/500'
+
+  /user:
+    get:
+      operationId: getUsers
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: User page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppUserDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /user/{userId}:
+    get:
+      operationId: getUser
+      responses:
+        200:
+          description: User successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUserDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /register:
+    post:
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        204:
+          description: Registration initiated
+        400:
+          $ref: '#/components/responses/400'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /verifyRegistration:
+    post:
+      operationId: verifyUserRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyRegistrationRequest'
+      responses:
+        201:
+          description: Registration completed, user added
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /invite:
+    post:
+      operationId: inviteUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteRequest'
+      responses:
+        204:
+          description: Invitation initiated
+        400:
+          $ref: '#/components/responses/400'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /acceptInvitation:
+    post:
+      operationId: acceptUserInvitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInvitationRequest'
+      responses:
+        201:
+          description: Invitation accepted, user added
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /role:
+    post:
+      operationId: addRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getRoles
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Role page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RoleDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /role/{roleId}:
+    parameters:
+      - in: path
+        name: roleId
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: updateRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleRequest'
+      responses:
+        204:
+          description: Event successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteRole
+      responses:
+        204:
+          description: Role successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event:
     post:
       operationId: addEvent
@@ -66,6 +293,8 @@ paths:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -781,6 +1010,13 @@ components:
           schema:
             type: string
 
+    422:
+      description: Unprocessable
+      content:
+        text/plain:
+          schema:
+            type: string
+
     500:
       description: Server Error
       content:
@@ -792,17 +1028,34 @@ components:
 
     # enums
 
-    Privilege:
+    Action:
       type: string
       enum:
-        - USER_VIEW
-        - USER_EDIT
-        - ROLE_VIEW
-        - ROLE_EDIT
-        - EVENT_EDIT
-        - EVENT_VIEW
+        - CREATE
+        - READ
+        - UPDATE
+        - DELETE
 
-    # authentication
+    Resource:
+      type: string
+      enum:
+        - USER
+        - ROLE
+        - EVENT
+
+    Scope:
+      type: string
+      enum:
+        - OWN
+        - GLOBAL
+
+    EmailLanguage:
+      type: string
+      enum:
+        - de
+        - en
+
+    # authentication / authorization
 
     LoginRequest:
       type: object
@@ -815,54 +1068,34 @@ components:
         password:
           type: string
 
+    Privilege:
+      type: object
+      required:
+        - action
+        - resource
+        - scope
+      properties:
+        action:
+          $ref: '#/components/schemas/Action'
+        resource:
+          $ref: '#/components/schemas/Resource'
+        scope:
+          $ref: '#/components/schemas/Scope'
+
     LoginResponse:
       type: object
       required:
-        - privilegesGlobal
-        - privilegesBound
-      properties:
-        privilegesGlobal:
-          type: array
-          items:
-            $ref: '#/components/schemas/Privilege'
-        privilegesBound:
-          type: array
-          items:
-            $ref: '#/components/schemas/Privilege'
-
-    # user
-
-    AppUserProperties:
-      type: object
-      required:
-        - email
-        - firstname
-        - lastname
-        - roles
-      properties:
-        email:
-          type: string
-        firstname:
-          type: string
-        lastname:
-          type: string
-        roles:
-          type: array
-          items:
-            type: string
-            format: uuid
-
-    AppUserResponse:
-      type: object
-      required:
         - id
-        - properties
+        - privileges
       properties:
         id:
           type: string
           format: uuid
-        properties:
-          $ref: '#/components/schemas/AppUserProperties'
+        privileges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Privilege'
+
 
     # pagination
 
@@ -902,6 +1135,138 @@ components:
             - ASC
             - DESC
 
+
+    # user
+
+    AppUserDto:
+      type: object
+      required:
+        - id
+        - email
+        - firstname
+        - lastname
+        - roles
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleDto'
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - firstname
+        - lastname
+        - language
+        - callbackUrl
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        callbackUrl:
+          type: string
+          format: url
+
+    VerifyRegistrationRequest:
+      type: object
+      required:
+        - token
+      properties:
+        token:
+          type: string
+
+    InviteRequest:
+      type: object
+      required:
+        - email
+        - firstname
+        - lastname
+        - language
+        - roles
+        - callbackUrl
+      properties:
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        roles:
+          type: array
+          items:
+            type: string
+            format: uuid
+        callbackUrl:
+          type: string
+          format: url
+
+    AcceptInvitationRequest:
+      type: object
+      required:
+        - token
+        - password
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+
+    # role
+
+    RoleDto:
+      type: object
+      required:
+        - id
+        - name
+        - privileges
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        privileges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Privilege'
+
+    RoleRequest:
+      type: object
+      required:
+        - name
+        - privileges
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        privileges:
+          type: array
+          items:
+            type: string
+            format: uuid
 
     # event
 

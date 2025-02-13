@@ -1,4 +1,4 @@
-import {AutocompleteList} from '../../../utils/types.ts'
+import {AutocompleteOption} from '../../../utils/types.ts'
 import {getNamedParticipants, getRaceCategories} from '../../../api'
 import {AutocompleteElement, SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
@@ -34,7 +34,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
         [],
     )
 
-    const namedParticipants: AutocompleteList =
+    const namedParticipants: AutocompleteOption[] =
         namedParticipantsData?.data.map(dto => ({
             id: dto.id,
             label: dto.name,
@@ -55,7 +55,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
         },
         [],
     )
-    const categories: AutocompleteList =
+    const categories: AutocompleteOption[] =
         categoriesData?.data.map(dto => ({
             id: dto.id,
             label: dto.name,

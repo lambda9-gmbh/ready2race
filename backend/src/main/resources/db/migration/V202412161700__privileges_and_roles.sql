@@ -6,7 +6,6 @@ create table role
     name        text      not null,
     description text,
     static      boolean   not null,
-    assignable  boolean   not null,
     created_at  timestamp not null,
     created_by  uuid      references app_user on delete set null,
     updated_at  timestamp not null,

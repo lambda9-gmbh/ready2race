@@ -1,5 +1,5 @@
 import {addRace, getRaceTemplates, RaceDto, RaceRequest, updateRace} from '../../../api'
-import {AutocompleteList, AutocompleteField, BaseEntityDialogProps} from '../../../utils/types.ts'
+import {AutocompleteOption, BaseEntityDialogProps} from '../../../utils/types.ts'
 import EntityDialog from '../../EntityDialog.tsx'
 import {Autocomplete, Box, Stack, TextField} from '@mui/material'
 import {useTranslation} from 'react-i18next'
@@ -50,17 +50,15 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
         },
         [], // todo: consider if the templates, raceCategories and namedParticipants are stale data and should be reloaded
     )
-    const templates: AutocompleteList =
+    const templates: AutocompleteOption[] =
         templatesData?.data.map(dto => ({
             id: dto.id,
             label: templateLabelName(dto.properties.identifier, dto.properties.name),
         })) ?? []
 
-
     const formContext = useForm<RaceForm>()
 
-
-    const [template, setTemplate] = useState<AutocompleteField | null>(null)
+    const [template, setTemplate] = useState<AutocompleteOption | null>(null)
     const resetTemplate = () => {
         setTemplate(null)
     }
@@ -91,7 +89,6 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
         setTemplate(templates.find(t => t.id === props.entity?.template) ?? null)
     }, [props.entity, templatesData])
 
-
     const entityNameKey = {entity: t('event.race.race')}
 
     return (
@@ -118,7 +115,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                             <TextField {...params} label={t('event.race.template.template')} />
                         )}
                         value={template}
-                        onChange={(_e, newValue: AutocompleteField | null) => {
+                        onChange={(_e, newValue: AutocompleteOption | null) => {
                             setTemplate(newValue)
                             if (newValue) {
                                 fillFormWithTemplate(newValue.id)

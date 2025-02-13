@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.app.auth.entity
 
 sealed class Privilege(
-    val resource: Resource,
     val action: Action,
+    val resource: Resource,
     val scope: Scope
 ) {
 
@@ -13,25 +13,29 @@ sealed class Privilege(
         DELETE
     }
 
-    enum class Scope(val level: Int) {
-        OWN(1),
-        GROUP(2),
-        GLOBAL(3);
-    }
-
     enum class Resource {
         USER,
         ROLE,
         EVENT,
     }
 
-    data object UserCreateGlobal: Privilege(Resource.USER, Action.CREATE, Scope.GLOBAL)
-    data object UserReadGlobal: Privilege(Resource.USER, Action.READ, Scope.GLOBAL)
+    enum class Scope(val level: Int) {
+        OWN(1),
+        GLOBAL(2);
+    }
 
-    data object EventCreateGlobal: Privilege(Resource.EVENT, Action.CREATE, Scope.GLOBAL)
-    data object EventReadGlobal: Privilege(Resource.EVENT, Action.READ, Scope.GLOBAL)
-    data object EventUpdateGlobal: Privilege(Resource.EVENT, Action.UPDATE, Scope.GLOBAL)
-    data object EventDeleteGlobal: Privilege(Resource.EVENT, Action.DELETE, Scope.GLOBAL)
+    data object CreateUserGlobal: Privilege(Action.CREATE, Resource.USER, Scope.GLOBAL)
+    data object ReadUserGlobal: Privilege(Action.READ, Resource.USER, Scope.GLOBAL)
+    data object ReadUserOwn: Privilege(Action.READ, Resource.USER, Scope.OWN)
+
+    data object CreateRoleGlobal: Privilege(Action.CREATE, Resource.ROLE, Scope.GLOBAL)
+    data object ReadRoleGlobal: Privilege(Action.READ, Resource.ROLE, Scope.GLOBAL)
+    data object UpdateRoleGlobal: Privilege(Action.UPDATE, Resource.ROLE, Scope.GLOBAL)
+
+    data object CreateEventGlobal: Privilege(Action.CREATE, Resource.EVENT, Scope.GLOBAL)
+    data object ReadEventGlobal: Privilege(Action.READ, Resource.EVENT, Scope.GLOBAL)
+    data object UpdateEventGlobal: Privilege(Action.UPDATE, Resource.EVENT, Scope.GLOBAL)
+    data object DeleteEventGlobal: Privilege(Action.DELETE, Resource.EVENT, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

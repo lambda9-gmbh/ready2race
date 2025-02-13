@@ -63,7 +63,9 @@
   },
   "navigation": {
     "titles": {
-      "login": "Login"
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "roles": "Roles"
     }
   },
   "login": {
@@ -114,5 +116,15 @@
       "from": "Registration period start",
       "to": "Registration period end"
     }
+  },
+  "user": {
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "email": "Email"
+  },
+  "role": {
+    "role": "Role",
+    "name": "Name",
+    "description": "Description"
   }
 }

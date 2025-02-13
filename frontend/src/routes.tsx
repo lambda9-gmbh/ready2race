@@ -6,30 +6,42 @@ import {
     redirect,
     SearchSchemaInput,
 } from '@tanstack/react-router'
-import {User} from './contexts/user/UserContext.ts'
+import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
-import {Privilege} from './api'
+import {Action, Privilege, Resource, Scope} from './api'
+import {readEventGlobal, readRoleGlobal, readUserGlobal} from './authorization/privileges.ts'
+import UsersPage from './pages/UsersPage.tsx'
+import UserPage from './pages/UserPage.tsx'
+import RolesPage from './pages/RolesPage.tsx'
 import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage from './pages/event/EventPage.tsx'
 import RacePage from './pages/event/RacePage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import RaceConfigPage from './pages/event/RaceConfigPage.tsx'
 
-const checkAuth = (
+const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
+    if (!context.loggedIn) {
+        throw redirect({to: '/login', search: {redirect: location.href}})
+    }
+    if (privilege && !context.checkPrivilege(privilege)) {
+        throw redirect({to: '/dashboard'})
+    }
+}
+
+const checkAuthWith = (
     context: User,
     location: ParsedLocation,
-    privilege?: Privilege,
-    globalOnly: boolean = false,
+    action: Action,
+    resource: Resource,
+    f: (authenticated: AuthenticatedUser, scope: Scope) => boolean,
 ) => {
     if (!context.loggedIn) {
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
-    if (privilege) {
-        const privilegeScope = context.getPrivilegeScope(privilege)
-        if (!privilegeScope || (globalOnly && privilegeScope !== 'global')) {
-            throw redirect({to: '/dashboard'})
-        }
+    const scope = context.getPrivilegeScope(action, resource)
+    if (!scope || !f(context, scope)) {
+        throw redirect({to: '/dashboard'})
     }
 }
 
@@ -72,6 +84,54 @@ export const dashboardRoute = createRoute({
     },
 })
 
+export const usersRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'user',
+})
+
+export const usersIndexRoute = createRoute({
+    getParentRoute: () => usersRoute,
+    path: '/',
+    component: () => <UsersPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readUserGlobal)
+    },
+})
+
+export const userRoute = createRoute({
+    getParentRoute: () => usersRoute,
+    path: '$userId',
+})
+
+export const userIndexRoute = createRoute({
+    getParentRoute: () => userRoute,
+    path: '/',
+    component: () => <UserPage />,
+    beforeLoad: ({context, location, params}) => {
+        checkAuthWith(
+            context,
+            location,
+            'READ',
+            'USER',
+            (user, scope) => scope === 'GLOBAL' || params.userId === user.id,
+        )
+    },
+})
+
+export const rolesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'role',
+})
+
+export const rolesIndexRoute = createRoute({
+    getParentRoute: () => rolesRoute,
+    path: '/',
+    component: () => <RolesPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readRoleGlobal)
+    },
+})
+
 export const eventsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'event',
@@ -82,7 +142,7 @@ export const eventsIndexRoute = createRoute({
     path: '/',
     component: () => <EventsPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
+        checkAuth(context, location, readEventGlobal)
     },
 })
 
@@ -96,7 +156,7 @@ export const eventIndexRoute = createRoute({
     path: '/',
     component: () => <EventPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
+        checkAuth(context, location, readEventGlobal)
     },
 })
 
@@ -155,6 +215,9 @@ const routeTree = rootRoute.addChildren([
         ]),
     ]),
     raceConfigRoute.addChildren([raceConfigIndexRoute]),
+    usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
+    rolesRoute.addChildren([rolesIndexRoute]),
+    eventsRoute.addChildren([eventsIndexRoute, eventRoute.addChildren([eventIndexRoute])]),
 ])
 
 export const router = createRouter({

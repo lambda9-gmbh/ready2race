@@ -1,7 +1,6 @@
-import {RacePropertiesDto, RacePropertiesRequestDto} from "../../../api";
-import {takeIfNotEmpty} from "../../../utils/ApiUtils.ts";
-import {AutocompleteField} from "../../../utils/types.ts";
-
+import {RacePropertiesDto, RacePropertiesRequestDto} from '../../../api'
+import {takeIfNotEmpty} from '../../../utils/ApiUtils.ts'
+import {AutocompleteOption} from '../../../utils/types.ts'
 
 export type RaceForm = {
     identifier: string
@@ -14,9 +13,9 @@ export type RaceForm = {
     countMixed: string
     participationFee: string
     rentalFee: string
-    raceCategory: AutocompleteField
+    raceCategory: AutocompleteOption
     namedParticipants: {
-        namedParticipant: AutocompleteField
+        namedParticipant: AutocompleteOption
         required: boolean
         countMales: string
         countFemales: string
@@ -39,7 +38,6 @@ export const raceFormDefaultValues: RaceForm = {
     raceCategory: {id: '', label: ''},
     namedParticipants: [],
 }
-
 
 export function mapRaceFormToRacePropertiesRequest(formData: RaceForm): RacePropertiesRequestDto {
     return {
@@ -82,9 +80,9 @@ export function mapRacePropertiesToRaceForm(
         rentalFee: dto.rentalFee.replace('.', decimalPoint),
         raceCategory: dto.raceCategory
             ? {
-                id: dto.raceCategory?.id,
-                label: dto.raceCategory.name,
-            }
+                  id: dto.raceCategory?.id,
+                  label: dto.raceCategory.name,
+              }
             : {id: '', label: ''},
         namedParticipants: dto.namedParticipants.map(value => ({
             namedParticipant: {id: value.id, label: value.name},

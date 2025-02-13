@@ -5,25 +5,27 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserDto
 import de.lambda9.ready2race.backend.app.appuser.entity.InviteRequest
 import de.lambda9.ready2race.backend.app.appuser.entity.RegisterRequest
+import de.lambda9.ready2race.backend.app.role.control.toDto
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.forEachM
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration
 
 fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
-    KIO.ok(
+    roles!!.toList().forEachM { it!!.toDto() }.map {
         AppUserDto(
             id = id!!,
             firstname = firstname!!,
             lastname = lastname!!,
             email = email!!,
-            roles = roles!!.map { it!! }
+            roles = it
         )
-    )
+    }
 
 fun InviteRequest.toRecord(inviterId: UUID, lifeTime: Duration): App<Nothing, AppUserInvitationRecord> =
     KIO.ok(

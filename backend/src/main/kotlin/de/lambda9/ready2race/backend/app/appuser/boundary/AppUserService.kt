@@ -1,12 +1,14 @@
 package de.lambda9.ready2race.backend.app.appuser.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserInvitationHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
@@ -16,6 +18,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -26,6 +29,15 @@ object AppUserService {
 
     private val registrationLifeTime = 1.days
     private val invitationLifeTime = 7.days
+
+    fun get(
+        id: UUID,
+    ): App<AppUserError, ApiResponse.Dto<AppUserDto>> =
+        AppUserRepo.getWithRoles(id).orDie().onNullFail { AppUserError.NotFound }.andThen {
+            it.appUserDto()
+        }.map {
+            ApiResponse.Dto(it)
+        }
 
     fun page(
         params: PaginationParameters<AppUserWithRolesSort>,
@@ -44,7 +56,7 @@ object AppUserService {
     fun invite(
         request: InviteRequest,
         inviter: AppUserWithPrivilegesRecord,
-    ): App<AppUserError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !EmailAddressRepo.exists(request.email).orDie()
             .onTrueFail { AppUserError.EmailAlreadyInUse }
@@ -52,6 +64,7 @@ object AppUserService {
         val record = !request.toRecord(inviter.id!!, invitationLifeTime)
         val token = !AppUserInvitationRepo.create(record).orDie()
 
+        !RoleService.checkAssignable(request.roles)
         !AppUserInvitationHasRoleRepo.create(
             request.roles.map {
                 AppUserInvitationHasRoleRecord(
@@ -83,7 +96,7 @@ object AppUserService {
 
     fun acceptInvitation(
         request: AcceptInvitationRequest,
-    ): App<AppUserError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
         val invitation = !AppUserInvitationRepo.consumeWithRoles(request.token).orDie()
             .onNullFail { AppUserError.InvitationNotFound }
@@ -91,11 +104,14 @@ object AppUserService {
         val record = !invitation.toAppUser(request.password)
         val id = !AppUserRepo.create(record).orDie()
 
+        val roles = invitation.roles!!.map { it!! }
+
+        !RoleService.checkAssignable(roles)
         !AppUserHasRoleRepo.create(
-            invitation.roles!!.map {
+            roles.map {
                 AppUserHasRoleRecord(
                     appUser = id,
-                    role = it!!
+                    role = it
                 )
             }
         ).orDie()
