@@ -1,10 +1,10 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
-import {BaseEntityTableProps} from "../../../utils/types.ts";
-import {deleteEventDay, EventDayDto, getEventDays} from "../../../api";
-import {useTranslation} from "react-i18next";
-import {eventIndexRoute} from "../../../routes.tsx";
-import {PaginationParameters} from "../../../utils/ApiUtils.ts";
-import EntityTable from "../../EntityTable.tsx";
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {BaseEntityTableProps} from '../../../utils/types.ts'
+import {deleteEventDay, EventDayDto, getEventDays} from '../../../api'
+import {useTranslation} from 'react-i18next'
+import {eventIndexRoute} from '../../../routes.tsx'
+import {PaginationParameters} from '../../../utils/ApiUtils.ts'
+import EntityTable from '../../EntityTable.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -49,20 +49,21 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
             minWidth: 200,
             flex: 2,
             sortable: false,
-        }
+        },
     ]
 
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            jumpToColumn={entity => ({
+            linkColumn={entity => ({
                 to: '/event/$eventId/eventDay/$eventDayId',
-                params: {eventId: entity.event, eventDayId: entity.id}
+                params: {eventId: entity.event, eventDayId: entity.id},
             })}
             entityName={t('event.eventDay.eventDay')}
             deleteRequest={deleteRequest}

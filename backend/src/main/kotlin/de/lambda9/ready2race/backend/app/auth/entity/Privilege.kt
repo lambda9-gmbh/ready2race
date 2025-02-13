@@ -15,7 +15,6 @@ sealed class Privilege(
 
     enum class Resource {
         USER,
-        ROLE,
         EVENT,
     }
 
@@ -27,10 +26,8 @@ sealed class Privilege(
     data object CreateUserGlobal: Privilege(Action.CREATE, Resource.USER, Scope.GLOBAL)
     data object ReadUserGlobal: Privilege(Action.READ, Resource.USER, Scope.GLOBAL)
     data object ReadUserOwn: Privilege(Action.READ, Resource.USER, Scope.OWN)
-
-    data object CreateRoleGlobal: Privilege(Action.CREATE, Resource.ROLE, Scope.GLOBAL)
-    data object ReadRoleGlobal: Privilege(Action.READ, Resource.ROLE, Scope.GLOBAL)
-    data object UpdateRoleGlobal: Privilege(Action.UPDATE, Resource.ROLE, Scope.GLOBAL)
+    data object UpdateUserGlobal: Privilege(Action.UPDATE, Resource.USER, Scope.GLOBAL)
+    data object UpdateUserOwn: Privilege(Action.UPDATE, Resource.USER, Scope.OWN)
 
     data object CreateEventGlobal: Privilege(Action.CREATE, Resource.EVENT, Scope.GLOBAL)
     data object ReadEventGlobal: Privilege(Action.READ, Resource.EVENT, Scope.GLOBAL)

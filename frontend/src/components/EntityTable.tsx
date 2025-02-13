@@ -1,4 +1,4 @@
-import {Pagination, Privilege, Scope} from '../api'
+import {Pagination, Resource} from '../api'
 import {
     DataGrid,
     DataGridProps,
@@ -13,7 +13,7 @@ import {
 } from '@mui/x-data-grid'
 import {ReactElement, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '../utils/ApiUtils.ts'
-import {BaseEntityTableProps, PartialRequired} from '../utils/types.ts'
+import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '../utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
@@ -21,113 +21,185 @@ import {useDebounce, useFeedback, useFetch} from '../utils/hooks.ts'
 import {useConfirmation} from '../contexts/confirmation/ConfirmationContext.ts'
 import {Box, Button, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
+import {useUser} from '../contexts/user/UserContext.ts'
 
-type EntityTableProps<Entity extends GridValidRowModel, Error> = BaseEntityTableProps<Entity> &
-    ExtendedEntityTableProps<Entity, Error> &
-    (
-        | {
-              deleteRequest: (entity: Entity) => RequestResult<void, string, false> // todo: specific error type
-              onDelete?: () => void
-              deletableWhen?: (entity: Entity) => boolean
-          }
-        | {}
-    )
+type EntityTableProps<
+    Entity extends GridValidRowModel,
+    GetError,
+    DeleteError,
+> = BaseEntityTableProps<Entity> & ExtendedEntityTableProps<Entity, GetError, DeleteError>
 
-type ExtendedEntityTableProps<Entity extends GridValidRowModel, Error> = {
+type ExtendedEntityTableProps<Entity extends GridValidRowModel, GetError, DeleteError> = {
+    title?: string
     initialPagination: GridPaginationModel
     pageSizeOptions: (number | {value: number; label: string})[]
     initialSort: GridSortModel
-    columns:
-        | GridColDef<Entity>[]
-        | ((readScope: Scope, changeScope: Scope | null) => GridColDef<Entity>[])
+    columns: GridColDef<Entity>[]
     dataRequest: (
         signal: AbortSignal,
         paginationParameters: PaginationParameters,
-    ) => RequestResult<PageResponse<Entity>, Error, false>
-    omitEditAction?: boolean
-    omitAddAction?: boolean
-    customActions?: (
-        entity: Entity,
-        changeScope: Scope | null,
-    ) => ReactElement<GridActionsCellItemProps>[]
-    jumpToColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
-    entityName?: string
+    ) => RequestResult<PageResponse<Entity>, GetError, false>
+    customActions?: (entity: Entity) => EntityTableAction[]
+    linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
-    readPermission?: Privilege
-    changePermission?: Privilege
-    hideSearch?: boolean
-}
+    withSearch?: boolean
+} & (
+    | {
+          deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false> // todo: specific error type
+          onDelete?: () => void
+          deletableIf?: (entity: Entity) => boolean
+      }
+    | {
+          deleteRequest?: never
+          onDelete?: never
+          deletableIf?: never
+      }
+) &
+    (
+        | {
+              resource: Resource
+              parentResource?: never
+          }
+        | {
+              resource?: never
+              parentResource: Resource
+          }
+    )
 
 type PageResponse<E> = {
     data: E[]
     pagination: Pagination
 }
 
-const EntityTable = <Entity extends GridValidRowModel, Error>({
-    jumpToColumn,
-    entityName,
-    ...props
-}: EntityTableProps<Entity, Error>) => {
-    //todo: Change PrivilegeScope
-    const readPermitted: Scope = 'GLOBAL'
-    const changePermitted: Scope = 'GLOBAL'
+type Crud = {
+    create: boolean
+    read: boolean
+    update: boolean
+    delete: boolean
+}
 
+const EntityTable = <Entity extends GridValidRowModel, GetError, DeleteError>({
+    resource,
+    parentResource,
+    ...props
+}: EntityTableProps<Entity, GetError, DeleteError>) => {
+    const user = useUser()
+
+    let crud: Crud | undefined
+
+    if (user.loggedIn) {
+        if (resource) {
+            crud = {
+                create: user.checkPrivilege({action: 'CREATE', resource, scope: 'GLOBAL'}),
+                read: user.checkPrivilege({action: 'READ', resource, scope: 'GLOBAL'}),
+                update: user.checkPrivilege({action: 'UPDATE', resource, scope: 'GLOBAL'}),
+                delete: user.checkPrivilege({action: 'DELETE', resource, scope: 'GLOBAL'}),
+            }
+        } else {
+            const rest = user.checkPrivilege({
+                action: 'UPDATE',
+                resource: parentResource,
+                scope: 'GLOBAL',
+            })
+            crud = {
+                create: rest,
+                read: user.checkPrivilege({
+                    action: 'READ',
+                    resource: parentResource,
+                    scope: 'GLOBAL',
+                }),
+                update: rest,
+                delete: rest,
+            }
+        }
+    }
+
+    return crud?.read && <EntityTableInternal {...props} crud={crud} />
+}
+
+type EntityTableInternalProps<Entity extends GridValidRowModel, GetError, DeleteError> = Omit<
+    EntityTableProps<Entity, GetError, DeleteError>,
+    'resource' | 'privilege'
+> & {crud: Crud}
+
+const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteError>({
+    entityName,
+    title,
+    lastRequested,
+    reloadData,
+    openDialog,
+    options,
+    initialPagination,
+    pageSizeOptions,
+    initialSort,
+    columns,
+    dataRequest,
+    customActions = () => [],
+    linkColumn,
+    gridProps,
+    withSearch = true,
+    crud,
+    deleteRequest,
+    onDelete,
+    deletableIf,
+}: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
+    const user = useUser()
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
 
-    const entityTitle = entityName ?? t('entity.entity')
-
-    const columns: GridColDef<Entity>[] = [
-        ...(jumpToColumn
+    const cols: GridColDef<Entity>[] = [
+        ...(linkColumn
             ? [
                   {
                       field: 'jumpTo',
                       headerName: '',
                       sortable: false,
                       width: 80,
-                      renderCell: (params: GridRenderCellParams<Entity>) => {
-                          const {...rest} = jumpToColumn(params.row)
-                          return (
-                              <Box display={'flex'} justifyContent={'center'} width={1}>
-                                  <Link
-                                      {...rest}
-                                      onClick={e => {
-                                          rest.onClick?.(e)
-                                      }}>
-                                      <Box display={'flex'} alignItems={'center'}>
-                                          <Input />
-                                      </Box>
-                                  </Link>
-                              </Box>
-                          )
-                      },
+                      renderCell: (params: GridRenderCellParams<Entity>) => (
+                          <Box display={'flex'} justifyContent={'center'} width={1}>
+                              <Link {...linkColumn(params.row)}>
+                                  <Box display={'flex'} alignItems={'center'}>
+                                      <Input />
+                                  </Box>
+                              </Link>
+                          </Box>
+                      ),
                   },
               ]
             : []),
-        ...(typeof props.columns === 'function'
-            ? props.columns(readPermitted, changePermitted)
-            : props.columns),
+        ...columns,
         {
             field: 'actions',
             type: 'actions' as 'actions',
             getActions: (params: GridRowParams<Entity>) => [
-                ...(props.customActions?.(params.row, changePermitted) ?? []),
-                ...(!props.omitEditAction && changePermitted
+                ...customActions(params.row)
+                    .map(action => {
+                        const {privilege, ...rest} = action.props
+                        const gridAction: ReactElement<GridActionsCellItemProps> = {
+                            type: action.type,
+                            props: rest,
+                            key: action.key,
+                        }
+                        action.props = rest
+                        return !privilege || (user.loggedIn && user.checkPrivilege(privilege))
+                            ? gridAction
+                            : null
+                    })
+                    .filter(action => action !== null),
+                ...(crud.update && options.entityUpdate
                     ? [
                           <GridActionsCellItem
                               icon={<Edit />}
                               label={t('common.edit')}
-                              onClick={() => props.openDialog({...params.row})}
+                              onClick={() => openDialog({...params.row})}
                               showInMenu={true}
                           />,
                       ]
                     : []),
-                ...('deleteRequest' in props &&
-                (props.deletableWhen?.(params.row) ?? true) &&
-                changePermitted
+                ...(deleteRequest && crud.delete && (deletableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
                               icon={<Delete />}
@@ -135,19 +207,19 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                               onClick={() => {
                                   confirmAction(async () => {
                                       setIsDeletingRow(true)
-                                      const {error} = await props.deleteRequest(params.row)
+                                      const {error} = await deleteRequest(params.row)
                                       setIsDeletingRow(false)
                                       if (error) {
                                           // todo better error display with specific error types
                                           console.log(error)
                                           feedback.error(
-                                              t('entity.delete.error', {entity: entityTitle}),
+                                              t('entity.delete.error', {entity: entityName}),
                                           )
                                       } else {
-                                          props.reloadData()
-                                          props.onDelete?.()
+                                          reloadData()
+                                          onDelete?.()
                                           feedback.success(
-                                              t('entity.delete.success', {entity: entityTitle}),
+                                              t('entity.delete.success', {entity: entityName}),
                                           )
                                       }
                                   })
@@ -160,33 +232,28 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
         },
     ]
 
-    const [paginationModel, setPaginationModel] = useState<GridPaginationModel>(
-        props.initialPagination,
-    )
-    const [sortModel, setSortModel] = useState<GridSortModel>(props.initialSort)
+    const [paginationModel, setPaginationModel] = useState<GridPaginationModel>(initialPagination)
+    const [sortModel, setSortModel] = useState<GridSortModel>(initialSort)
 
     const [searchInput, setSearchInput] = useState<string>('')
     const debouncedSearchInput = useDebounce(searchInput, 700)
 
-    const [triggerReloadRows, setTriggerReloadRows] = useState(false)
-
     const {data, pending} = useFetch(
         signal =>
-            props.dataRequest(
+            dataRequest(
                 signal,
                 paginationParameters(paginationModel, sortModel, debouncedSearchInput),
             ),
         {
-            onResponse: _ => setTriggerReloadRows(!triggerReloadRows),
+            deps: [paginationModel, sortModel, debouncedSearchInput, lastRequested],
         },
-        [paginationModel, sortModel, debouncedSearchInput, props.lastRequested],
     )
 
     return (
         <>
-            {props.title && <Typography variant={'h6'}>{props.title}</Typography>}
+            {title && <Typography variant={'h6'}>{title}</Typography>}
             <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
-                {!props.hideSearch && (
+                {withSearch && (
                     <TextField
                         size={'small'}
                         variant={'outlined'}
@@ -197,49 +264,44 @@ const EntityTable = <Entity extends GridValidRowModel, Error>({
                         }}
                     />
                 )}
-                {changePermitted && !props.omitAddAction && (
-                    <Button
-                        variant={'outlined'}
-                        startIcon={<Add />}
-                        onClick={() => props.openDialog()}>
-                        {t('entity.add.action', {entity: entityTitle ?? t('entity.entity')})}
+                {crud.create && options.entityCreate && (
+                    <Button variant={'outlined'} startIcon={<Add />} onClick={() => openDialog()}>
+                        {t('entity.add.action', {entity: entityName})}
                     </Button>
                 )}
             </Box>
-            {triggerReloadRows !== undefined && ( // todo: better solution? This fixes a bug where sometimes after deleting a search entry the rows would not be displayed
-                <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                    <DataGrid
-                        isRowSelectable={() => false}
-                        paginationMode="server"
-                        pageSizeOptions={[
-                            ...props.pageSizeOptions,
-                            ...(props.pageSizeOptions.includes(props.initialPagination.pageSize)
-                                ? []
-                                : [props.initialPagination.pageSize]),
-                        ]}
-                        disableColumnFilter={true}
-                        paginationModel={paginationModel}
-                        onPaginationModelChange={setPaginationModel}
-                        sortingMode="server"
-                        sortModel={sortModel}
-                        onSortModelChange={setSortModel}
-                        columns={columns}
-                        rows={data?.data ?? []}
-                        rowCount={data?.pagination?.total ?? 0}
-                        loading={pending || isDeletingRow}
-                        density={'compact'}
-                        getRowHeight={() => 'auto'}
-                        sx={{
-                            '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
-                            '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
-                            '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
-                                py: '22px',
-                            },
-                        }}
-                        {...props.gridProps}
-                    />
-                </Box>
-            )}
+            <Box sx={{display: 'flex', flexDirection: 'column'}}>
+                <DataGrid
+                    isRowSelectable={() => false}
+                    paginationMode="server"
+                    pageSizeOptions={[
+                        ...pageSizeOptions,
+                        ...(pageSizeOptions.includes(initialPagination.pageSize)
+                            ? []
+                            : [initialPagination.pageSize]),
+                    ]}
+                    disableColumnFilter={true}
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
+                    sortingMode="server"
+                    sortModel={sortModel}
+                    onSortModelChange={setSortModel}
+                    columns={cols}
+                    rows={data?.data ?? []}
+                    rowCount={data?.pagination?.total ?? 0}
+                    loading={pending || isDeletingRow}
+                    density={'compact'}
+                    getRowHeight={() => 'auto'}
+                    sx={{
+                        '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
+                        '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
+                        '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
+                            py: '22px',
+                        },
+                    }}
+                    {...gridProps}
+                />
+            </Box>
         </>
     )
 }

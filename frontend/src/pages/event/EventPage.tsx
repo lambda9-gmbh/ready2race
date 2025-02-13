@@ -24,12 +24,13 @@ const EventPage = () => {
                     console.log(result.error)
                 }
             },
+            deps:
+                [eventId],
         },
-        [eventId],
     )
 
-    const raceAdministrationProps = useEntityAdministration<RaceDto>()
-    const eventDayAdministrationProps = useEntityAdministration<EventDayDto>()
+    const raceAdministrationProps = useEntityAdministration<RaceDto>(t('event.race.race'))
+    const eventDayAdministrationProps = useEntityAdministration<EventDayDto>(t('event.eventDay.eventDay'))
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -38,13 +39,13 @@ const EventPage = () => {
                     <Typography variant="h3">{data.name}</Typography>
                     <Box sx={{mt: 4}}>
                         <Typography variant="h4">{t('event.race.races')}</Typography>
-                        <RaceTable {...raceAdministrationProps} />
-                        <RaceDialog {...raceAdministrationProps} />
+                        <RaceTable {...raceAdministrationProps.table} />
+                        <RaceDialog {...raceAdministrationProps.dialog} />
                     </Box>
                     <Box sx={{mt: 4}}>
                         <Typography variant="h4">{t('event.eventDay.eventDays')}</Typography>
-                        <EventDayTable {...eventDayAdministrationProps} />
-                        <EventDayDialog {...eventDayAdministrationProps} />
+                        <EventDayTable {...eventDayAdministrationProps.table} />
+                        <EventDayDialog {...eventDayAdministrationProps.dialog} />
                     </Box>
                 </>
             )) || <Throbber />}

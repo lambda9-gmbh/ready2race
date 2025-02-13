@@ -47,19 +47,13 @@ const RaceCategoryDialog = (props: BaseEntityDialogProps<RaceCategoryDto>) => {
     }, [props.entity])
 
 
-    const entityKeyName = {entity: t('event.race.category.category')}
-
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
             onOpen={onOpen}
-            title={action =>
-                action === 'add' ? t('entity.add.action', entityKeyName) : t('entity.edit.action')
-            }
             addAction={addAction}
-            editAction={editAction}
-            onSuccess={() => {}}>
+            editAction={editAction}>
             <Stack spacing={2}>
                 <FormInputText name="name" label={t('entity.name')} required/>
                 <FormInputText name="description" label={t('entity.description')} />

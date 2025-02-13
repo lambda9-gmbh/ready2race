@@ -31,7 +31,6 @@ export const RacePropertiesFormInputs = (props: Props) => {
                 }
             },
         },
-        [],
     )
 
     const namedParticipants: AutocompleteOption[] =
@@ -53,7 +52,6 @@ export const RacePropertiesFormInputs = (props: Props) => {
                 }
             },
         },
-        [],
     )
     const categories: AutocompleteOption[] =
         categoriesData?.data.map(dto => ({

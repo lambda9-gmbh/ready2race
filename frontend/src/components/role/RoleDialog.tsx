@@ -2,13 +2,25 @@ import EntityDialog from '../EntityDialog.tsx'
 import {BaseEntityDialogProps} from '../../utils/types.ts'
 import {addRole, RoleDto, RoleRequest, updateRole} from '../../api'
 import {useForm} from 'react-hook-form-mui'
-import {useTranslation} from 'react-i18next'
+import {useCallback} from 'react'
 
 type RoleForm = {
     name: string
     description: string
     privileges: string[]
 }
+
+const defaultValues: RoleForm = {
+    name: '',
+    description: '',
+    privileges: [],
+}
+
+const mapDtoToForm = (dto: RoleDto): RoleForm => ({
+    name: dto.name,
+    description: dto.description ?? '',
+    privileges: dto.privileges.map(p => p.id),
+})
 
 const mapFormToRequest = (formData: RoleForm): RoleRequest => ({
     name: formData.name,
@@ -28,17 +40,19 @@ const editAction = (formData: RoleForm, entity: RoleDto) =>
     })
 
 const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
-    const {t} = useTranslation()
     const formContext = useForm<RoleForm>()
+
+    const onOpen = useCallback(() => {
+        formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
+    }, [props.entity])
 
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
-            title={action => t(`entity.${action}.action`, {entity: t('role.role')})}
+            onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}
-            onSuccess={() => null}
         />
     )
 }

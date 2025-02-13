@@ -45,7 +45,7 @@ const RoleTable = (props: BaseEntityTableProps<RoleDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            entityName={t('role.role')}
+            parentResource={'USER'}
         />
     )
 }

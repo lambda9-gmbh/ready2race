@@ -50,8 +50,8 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            omitEditAction
-            omitAddAction
+            resource={'USER'}
+            readOnly
         />
     )
 }

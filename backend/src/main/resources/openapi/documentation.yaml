@@ -21,7 +21,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: '#/components/schemas/LoginDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -36,7 +36,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/LoginResponse'
+                $ref: '#/components/schemas/LoginDto'
         204:
           $ref: '#/components/responses/204'
         500:
@@ -1040,7 +1040,6 @@ components:
       type: string
       enum:
         - USER
-        - ROLE
         - EVENT
 
     Scope:
@@ -1082,7 +1081,25 @@ components:
         scope:
           $ref: '#/components/schemas/Scope'
 
-    LoginResponse:
+    PrivilegeDto:
+      type: object
+      required:
+        - id
+        - action
+        - resource
+        - scope
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          $ref: '#/components/schemas/Action'
+        resource:
+          $ref: '#/components/schemas/Resource'
+        scope:
+          $ref: '#/components/schemas/Scope'
+
+    LoginDto:
       type: object
       required:
         - id
@@ -1094,7 +1111,7 @@ components:
         privileges:
           type: array
           items:
-            $ref: '#/components/schemas/Privilege'
+            $ref: '#/components/schemas/PrivilegeDto'
 
 
     # pagination
@@ -1250,7 +1267,7 @@ components:
         privileges:
           type: array
           items:
-            $ref: '#/components/schemas/Privilege'
+            $ref: '#/components/schemas/PrivilegeDto'
 
     RoleRequest:
       type: object

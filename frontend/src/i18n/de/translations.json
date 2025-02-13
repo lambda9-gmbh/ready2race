@@ -126,6 +126,7 @@
     }
   },
   "user": {
+    "user": "Benutzer",
     "firstname": "Vorname",
     "lastname": "Nachname",
     "email": "E-Mail"

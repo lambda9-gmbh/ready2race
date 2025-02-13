@@ -52,6 +52,7 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

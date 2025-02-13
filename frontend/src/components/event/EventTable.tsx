@@ -45,12 +45,13 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            jumpToColumn={entity => ({
+            linkColumn={entity => ({
                 to: '/event/$eventId',
                 params: {eventId: entity.id},
             })}

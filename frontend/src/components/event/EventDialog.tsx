@@ -50,21 +50,13 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     }, [props.entity])
 
 
-    const entityNameKey = {entity: t('event.event')}
-
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
             onOpen={onOpen}
-            title={action =>
-                action === 'add'
-                    ? t('entity.add.action', entityNameKey)
-                    : t('entity.edit.action', entityNameKey)
-            } // could be shortened but then the translation key can not be found by search
             addAction={addAction}
-            editAction={editAction}
-            onSuccess={() => {}}>
+            editAction={editAction}>
             <Stack spacing={2}>
                 <FormInputText name={'name'} label={t('entity.name')} required />
                 <FormInputText name={'description'} label={t('entity.description')} />

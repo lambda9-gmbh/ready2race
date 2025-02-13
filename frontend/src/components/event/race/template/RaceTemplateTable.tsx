@@ -50,12 +50,12 @@ const RaceTemplateTable = (props: BaseEntityTableProps<RaceTemplateDto>) => {
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            entityName={t('event.race.template.template')}
             deleteRequest={deleteRequest}
         />
     )

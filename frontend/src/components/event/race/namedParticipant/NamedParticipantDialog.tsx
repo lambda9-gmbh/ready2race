@@ -45,18 +45,12 @@ const NamedParticipantDialog = (props: BaseEntityDialogProps<NamedParticipantDto
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
 
-    const entityNameKey = {entity: t('event.race.namedParticipant.namedParticipant')}
 
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
             onOpen={onOpen}
-            title={action =>
-                action === 'add'
-                    ? t('entity.add.action', entityNameKey)
-                    : t('entity.edit.action', entityNameKey)
-            }
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={2}>

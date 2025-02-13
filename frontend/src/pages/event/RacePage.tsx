@@ -26,8 +26,8 @@ const RacePage = () => {
                     console.log(result.error)
                 }
             },
+            deps: [eventId, raceId],
         },
-        [eventId, raceId],
     )
 
     const {data: assignedEventDaysData} = useFetch(
@@ -39,8 +39,8 @@ const RacePage = () => {
                     console.log(result.error)
                 }
             },
+            deps: [eventId, raceId],
         },
-        [eventId, raceId],
     )
     const assignedEventDays =
         assignedEventDaysData?.data.map(value => ({
@@ -57,8 +57,8 @@ const RacePage = () => {
                     console.log(result.error)
                 }
             },
+            deps: [eventId],
         },
-        [eventId],
     )
 
     const selection: AutocompleteOption[] =

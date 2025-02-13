@@ -26,8 +26,8 @@ const EventDayPage = () => {
                     console.log(result.error)
                 }
             },
+            deps: [eventId, eventDayId],
         },
-        [eventId, eventDayId],
     )
 
     const {data: assignedRacesData} = useFetch(
@@ -39,8 +39,8 @@ const EventDayPage = () => {
                     console.log(result.error)
                 }
             },
+            deps: [eventId, eventDayId],
         },
-        [eventId, eventDayId],
     )
     const assignedRaces =
         assignedRacesData?.data.map(value => ({
@@ -48,18 +48,15 @@ const EventDayPage = () => {
             label: raceLabelName(value.properties.identifier, value.properties.name),
         })) ?? []
 
-    const {data: racesData} = useFetch(
-        signal => getRaces({signal, path: {eventId: eventId}}),
-        {
-            onResponse: result => {
-                if (result.error) {
-                    feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
-                    console.log(result.error)
-                }
-            },
+    const {data: racesData} = useFetch(signal => getRaces({signal, path: {eventId: eventId}}), {
+        onResponse: result => {
+            if (result.error) {
+                feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
+                console.log(result.error)
+            }
         },
-        [eventId],
-    )
+        deps: [eventId],
+    })
 
     const selection: AutocompleteOption[] =
         racesData?.data.map(value => ({

@@ -49,6 +49,7 @@ const RaceCategoryTable = (props: BaseEntityTableProps<RaceCategoryDto>) => {
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

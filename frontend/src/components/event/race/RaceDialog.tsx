@@ -48,7 +48,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                 }
             },
         },
-        [], // todo: consider if the templates, raceCategories and namedParticipants are stale data and should be reloaded
+         // todo: consider if the templates, raceCategories and namedParticipants are stale data and should be reloaded
     )
     const templates: AutocompleteOption[] =
         templatesData?.data.map(dto => ({
@@ -89,18 +89,11 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
         setTemplate(templates.find(t => t.id === props.entity?.template) ?? null)
     }, [props.entity, templatesData])
 
-    const entityNameKey = {entity: t('event.race.race')}
-
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
             onOpen={onOpen}
-            title={action =>
-                action === 'add'
-                    ? t('entity.add.action', entityNameKey)
-                    : t('entity.edit.action', entityNameKey)
-            } // could be shortened but then the translation key can not be found by intellij-search
             addAction={addAction}
             editAction={editAction}>
             {

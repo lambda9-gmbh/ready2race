@@ -10,7 +10,7 @@ import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
-import {readEventGlobal, readRoleGlobal, readUserGlobal} from './authorization/privileges.ts'
+import {readEventGlobal, readUserGlobal, updateUserGlobal} from './authorization/privileges.ts'
 import UsersPage from './pages/UsersPage.tsx'
 import UserPage from './pages/UserPage.tsx'
 import RolesPage from './pages/RolesPage.tsx'
@@ -128,7 +128,7 @@ export const rolesIndexRoute = createRoute({
     path: '/',
     component: () => <RolesPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readRoleGlobal)
+        checkAuth(context, location, updateUserGlobal)
     },
 })
 
