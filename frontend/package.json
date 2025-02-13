@@ -20,7 +20,7 @@
     "@mui/x-data-grid": "^7.25.0",
     "@mui/x-date-pickers": "^7.25.0",
     "@tanstack/react-router": "^1.91.2",
-    "dayjs": "^1.11.13",
+    "date-fns": "^4.1.0",
     "i18next": "^24.2.1",
     "i18next-browser-languagedetector": "^8.0.2",
     "notistack": "^3.0.2",

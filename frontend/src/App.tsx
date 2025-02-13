@@ -8,15 +8,10 @@ import {ThemeProvider} from '@mui/material'
 import {SnackbarProvider} from 'notistack'
 import {ConfirmationProvider} from './contexts/confirmation/ConfirmationProvider.tsx'
 import {LocalizationProvider} from '@mui/x-date-pickers'
-import {AdapterDayjs} from '@mui/x-date-pickers/AdapterDayjs'
-import {enUS as enDatePicker} from '@mui/x-date-pickers/locales/enUS'
-import {deDE as deDatePicker} from '@mui/x-date-pickers/locales/deDE'
-import {Language} from './utils/types.ts'
+import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFnsV3'
 import i18next from 'i18next'
 import './i18n/config'
-import 'dayjs/locale/de'
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc"
+import {Language, locales} from './i18n/config.ts'
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
@@ -27,23 +22,17 @@ const language: Language = (document.getElementById('ready2race-root')!.dataset.
     'de') as Language
 i18next.changeLanguage(language).then()
 
-dayjs.extend(utc);
-
-const theme = muiTheme(language)
+const locale = locales[language]
+const theme = muiTheme(locale)
 
 const App = () => {
     const user = useUser()
 
-    const localeText =
-        language === 'en'
-            ? enDatePicker.components.MuiLocalizationProvider.defaultProps.localeText
-            : deDatePicker.components.MuiLocalizationProvider.defaultProps.localeText
-
     return (
         <LocalizationProvider
-            dateAdapter={AdapterDayjs}
-            adapterLocale={language}
-            localeText={localeText}>
+            dateAdapter={AdapterDateFns}
+            adapterLocale={locale.date}
+            localeText={locale.datePicker}>
             <ThemeProvider theme={theme}>
                 <SnackbarProvider
                     maxSnack={3}

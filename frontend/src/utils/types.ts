@@ -14,6 +14,4 @@ export type BaseEntityDialogProps<E> = {
     entity?: E
 }
 
-export type Language = 'de' | 'en'
-
 export type AutocompleteOption = {id: string; label: string}
