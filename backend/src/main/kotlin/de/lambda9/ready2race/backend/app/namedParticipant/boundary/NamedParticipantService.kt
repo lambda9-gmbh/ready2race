@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.app.namedParticipant.control.namedParticipantDtoList
 import de.lambda9.ready2race.backend.app.namedParticipant.control.toRecord
@@ -10,14 +9,11 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipan
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
-import de.lambda9.ready2race.backend.count
-import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -34,7 +30,7 @@ object NamedParticipantService {
     }
 
     fun getNamedParticipantList(): App<Nothing, ApiResponse.Dto<List<NamedParticipantDto>>> = KIO.comprehension {
-        val namedParticipantList = !NamedParticipantRepo.getMany().orDie()
+        val namedParticipantList = !NamedParticipantRepo.all().orDie()
 
         namedParticipantList.namedParticipantDtoList().map { ApiResponse.Dto(it) }
     }

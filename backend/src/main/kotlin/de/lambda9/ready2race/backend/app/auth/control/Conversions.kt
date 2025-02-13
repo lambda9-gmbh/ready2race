@@ -16,24 +16,13 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
 import kotlin.time.Duration
 
-fun AppUserWithPrivilegesRecord.loginDto(): App<Nothing, LoginDto> = KIO.comprehension {
-
-    val admin = !AppUserHasRoleRepo.exists(id!!, ADMIN_ROLE).orDie()
-
-    if (admin) {
-        PrivilegeRepo.all().orDie().map { privilegeRecords ->
-            LoginDto(
-                privileges = !privilegeRecords.forEachM { it.toPrivilegeDto() }
-            )
-        }
-    } else {
-        privileges!!.toList().forEachM { it!!.toPrivilegeDto()}.map {
-            LoginDto(
-                privileges = it
-            )
-        }
+fun AppUserWithPrivilegesRecord.loginDto(): App<Nothing, LoginDto> =
+    privileges!!.toList().forEachM { it!!.toPrivilegeDto() }.map {
+        LoginDto(
+            id = id!!,
+            privileges = it
+        )
     }
-}
 
 fun AppUserWithPrivilegesRecord.toSession(
     lifetime: Duration,

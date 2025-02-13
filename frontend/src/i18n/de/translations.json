@@ -118,5 +118,10 @@
     "firstname": "Vorname",
     "lastname": "Nachname",
     "email": "E-Mail"
+  },
+  "role": {
+    "role": "Rolle",
+    "name": "Name",
+    "description": "Beschreibung"
   }
 }

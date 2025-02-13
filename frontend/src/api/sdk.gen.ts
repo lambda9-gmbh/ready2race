@@ -26,6 +26,18 @@ import type {
     AcceptUserInvitationData,
     AcceptUserInvitationError,
     AcceptUserInvitationResponse,
+    AddRoleData,
+    AddRoleError,
+    AddRoleResponse,
+    GetRolesData,
+    GetRolesError,
+    GetRolesResponse,
+    UpdateRoleData,
+    UpdateRoleError,
+    UpdateRoleResponse,
+    DeleteRoleData,
+    DeleteRoleError,
+    DeleteRoleResponse,
     AddEventData,
     AddEventError,
     AddEventResponse,
@@ -198,6 +210,42 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/acceptInvitation',
+    })
+}
+
+export const addRole = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRoleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddRoleResponse, AddRoleError, ThrowOnError>({
+        ...options,
+        url: '/role',
+    })
+}
+
+export const getRoles = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRolesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetRolesResponse, GetRolesError, ThrowOnError>({
+        ...options,
+        url: '/role',
+    })
+}
+
+export const updateRole = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRoleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateRoleResponse, UpdateRoleError, ThrowOnError>({
+        ...options,
+        url: '/role/{roleId}',
+    })
+}
+
+export const deleteRole = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteRoleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteRoleResponse, DeleteRoleError, ThrowOnError>({
+        ...options,
+        url: '/role/{roleId}',
     })
 }
 

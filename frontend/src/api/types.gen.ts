@@ -12,7 +12,7 @@ export type AppUserDto = {
     email: string
     firstname: string
     lastname: string
-    roles: Array<string>
+    roles: Array<RoleDto>
 }
 
 export type AssignDaysToRaceRequest = {
@@ -243,6 +243,19 @@ export type RegisterRequest = {
 
 export type Resource = 'USER' | 'ROLE' | 'EVENT'
 
+export type RoleDto = {
+    id: string
+    name: string
+    description?: string
+    privileges: Array<Privilege>
+}
+
+export type RoleRequest = {
+    name: string
+    description?: string
+    privileges: Array<string>
+}
+
 export type Scope = 'OWN' | 'GLOBAL'
 
 export type VerifyRegistrationRequest = {
@@ -328,6 +341,63 @@ export type AcceptUserInvitationData = {
 export type AcceptUserInvitationResponse = unknown
 
 export type AcceptUserInvitationError = string
+
+export type AddRoleData = {
+    body: RoleRequest
+}
+
+export type AddRoleResponse = string
+
+export type AddRoleError = string
+
+export type GetRolesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRolesResponse = {
+    data: Array<RoleDto>
+    pagination: Pagination
+}
+
+export type GetRolesError = string
+
+export type UpdateRoleData = {
+    body: RoleRequest
+    path: {
+        roleId: string
+    }
+}
+
+export type UpdateRoleResponse = void
+
+export type UpdateRoleError = string
+
+export type DeleteRoleData = {
+    path: {
+        roleId: string
+    }
+}
+
+export type DeleteRoleResponse = void
+
+export type DeleteRoleError = string
 
 export type AddEventData = {
     body: EventRequest

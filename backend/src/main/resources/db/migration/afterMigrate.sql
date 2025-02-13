@@ -12,12 +12,11 @@ create view role_with_privileges as
 select r.id,
        r.name,
        r.description,
-       r.static,
        coalesce(array_agg(p) filter ( where p.id is not null ), '{}') as privileges
 from role r
          left join role_has_privilege rhp on r.id = rhp.role
          left join privilege p on rhp.privilege = p.id
-where r.assignable is true
+where r.static is false
 group by r.id;
 
 create view app_user_with_roles as
@@ -25,9 +24,10 @@ select au.id,
        au.firstname,
        au.lastname,
        au.email,
-       coalesce(array_agg(auhr.role) filter ( where auhr.role is not null ), '{}') as roles
+       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
+         left join role_with_privileges rwp on auhr.role = rwp.id
 where not exists(select *
                  from app_user_has_role auhr2
                  where auhr2.role = '00000000-0000-0000-0000-000000000000'

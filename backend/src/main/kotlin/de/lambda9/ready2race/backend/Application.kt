@@ -80,6 +80,27 @@ private fun initializeApplication(env: JEnv) {
 
     KIO.comprehension {
 
+        // Add missing privileges
+
+        val privilegeRecords = !PrivilegeRepo.all()
+        val records = Privilege.entries
+            .filter { p ->
+                privilegeRecords.none {
+                    it.action == p.action.name
+                        && it.resource == p.resource.name
+                        && it.scope == p.scope.name
+                }
+            }.map {
+                PrivilegeRecord(
+                    id = UUID.randomUUID(),
+                    action = it.action.name,
+                    resource = it.resource.name,
+                    scope = it.scope.name,
+                )
+            }
+        !PrivilegeRepo.create(records)
+        val allPrivileges = !PrivilegeRepo.all()
+
         // Add admin
 
         val adminUserExisting = !AppUserRepo.exists(SYSTEM_USER)
@@ -124,7 +145,6 @@ private fun initializeApplication(env: JEnv) {
                     name = "Admin",
                     description = "Global admin role",
                     static = true,
-                    assignable = false,
                     createdAt = now,
                     createdBy = SYSTEM_USER,
                     updatedAt = now,
@@ -142,25 +162,17 @@ private fun initializeApplication(env: JEnv) {
             )
         }
 
-        // Add missing privileges
-
-        val privilegeRecords = !PrivilegeRepo.all()
-        val records = Privilege.entries
-            .filter { p ->
-                privilegeRecords.none {
-                    it.action == p.action.name
-                        && it.resource == p.resource.name
-                        && it.scope == p.scope.name
-                }
+        val currentAdminPrivileges = !RoleHasPrivilegeRepo.getPrivilegesByRole(ADMIN_ROLE)
+        !RoleHasPrivilegeRepo.create(
+            allPrivileges.filter {
+                currentAdminPrivileges.none { id -> id == it.id }
             }.map {
-                PrivilegeRecord(
-                    id = UUID.randomUUID(),
-                    action = it.action.name,
-                    resource = it.resource.name,
-                    scope = it.scope.name,
+                RoleHasPrivilegeRecord(
+                    role = ADMIN_ROLE,
+                    privilege = it.id,
                 )
             }
-        !PrivilegeRepo.create(records)
+        )
 
         // Add default user role & privileges
 
@@ -177,7 +189,6 @@ private fun initializeApplication(env: JEnv) {
                     name = "User",
                     description = "Global user role",
                     static = true,
-                    assignable = false,
                     createdAt = now,
                     createdBy = SYSTEM_USER,
                     updatedAt = now,
@@ -186,7 +197,6 @@ private fun initializeApplication(env: JEnv) {
             )
         }
 
-        val allPrivileges = !PrivilegeRepo.all()
         val currentUserPrivileges = !RoleHasPrivilegeRepo.getPrivilegesByRole(USER_ROLE)
 
         !RoleHasPrivilegeRepo.create(

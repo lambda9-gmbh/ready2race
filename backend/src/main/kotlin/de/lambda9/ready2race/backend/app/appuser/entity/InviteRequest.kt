@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.emailPattern
 import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.pattern
 import java.util.UUID
@@ -23,6 +24,7 @@ data class InviteRequest(
             this::firstname validate notBlank,
             this::lastname validate notBlank,
             this::callbackUrl validate notBlank,
+            this::roles validate noDuplicates
         )
 
     companion object {

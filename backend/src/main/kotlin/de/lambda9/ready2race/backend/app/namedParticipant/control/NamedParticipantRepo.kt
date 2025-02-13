@@ -21,9 +21,19 @@ object NamedParticipantRepo {
         }
     }
 
-    fun getMany(): JIO<List<NamedParticipantRecord>> = Jooq.query {
+    fun all(): JIO<List<NamedParticipantRecord>> = Jooq.query {
         with(NAMED_PARTICIPANT) {
             selectFrom(this)
+                .fetch()
+        }
+    }
+
+    fun getIfExist(
+        ids: List<UUID>,
+    ): JIO<List<NamedParticipantRecord>> = Jooq.query {
+        with(NAMED_PARTICIPANT) {
+            selectFrom(this)
+                .where(DSL.or(ids.map { ID.eq(it) }))
                 .fetch()
         }
     }

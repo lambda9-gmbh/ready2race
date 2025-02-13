@@ -4,23 +4,27 @@ import {Login, Logout} from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'
 
 const UserWidget = () => {
-    const {loggedIn, logout} = useUser()
+    const user = useUser()
 
-    const handleLogout = () => {
-        logout()
-    }
+    if (user.loggedIn) {
+        const handleLogout = () => {
+            user.logout()
+        }
 
-    return loggedIn ? (
-        <IconButton onClick={handleLogout}>
-            <Logout />
-        </IconButton>
-    ) : (
-        <Link to={'/login'}>
-            <IconButton>
-                <Login />
+        return (
+            <IconButton onClick={handleLogout}>
+                <Logout />
             </IconButton>
-        </Link>
-    )
+        )
+    } else {
+        return (
+            <Link to={'/login'}>
+                <IconButton>
+                    <Login />
+                </IconButton>
+            </Link>
+        )
+    }
 }
 
 export default UserWidget
