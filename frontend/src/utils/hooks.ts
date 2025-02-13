@@ -1,11 +1,12 @@
 import {RequestResult} from '@hey-api/client-fetch'
 import {DependencyList, useEffect, useState} from 'react'
 import {useSnackbar} from 'notistack'
-import {GridValidRowModel} from "@mui/x-data-grid";
+import {GridValidRowModel} from '@mui/x-data-grid'
 
 type UseFetchOptions<T, E> = {
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
     preCondition?: () => boolean
+    deps?: DependencyList
 }
 
 export type FetchError<E> = {
@@ -39,7 +40,6 @@ const fetchPending: UseFetchReturn<unknown, unknown> = {
 export const useFetch = <T, E>(
     req: (abortSignal: AbortSignal) => RequestResult<T, E, false>,
     options?: UseFetchOptions<T, E>,
-    deps?: DependencyList,
 ): UseFetchReturn<T, E> => {
     const [result, setResult] = useState<UseFetchReturn<T, E>>(fetchPending)
 
@@ -80,14 +80,19 @@ export const useFetch = <T, E>(
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [...(deps ?? [])])
+    }, [...(options?.deps ?? [])])
 
     return result
 }
 
-export type ParamDialogState<T> = [boolean, (params?: T) => void, () => void, props: T | undefined]
+export type UseParamDialogStateReturn<T> = [
+    boolean,
+    (params?: T) => void,
+    () => void,
+    props: T | undefined,
+]
 
-export const useParamDialogState = <T>(defaultOpen: boolean): ParamDialogState<T> => {
+export const useParamDialogState = <T>(defaultOpen: boolean): UseParamDialogStateReturn<T> => {
     const [dialogOpen, setDialogOpen] = useState(defaultOpen)
     const [props, setProps] = useState<T>()
 
@@ -102,30 +107,57 @@ export const useParamDialogState = <T>(defaultOpen: boolean): ParamDialogState<T
     ]
 }
 
-export type EntityAdministration<T> = {
-    dialogIsOpen: boolean
-    openDialog: (entity?: T) => void
-    closeDialog: () => void
-    entity?: T
-    lastRequested: number
-    reloadData: () => void
+export type UseEntityAdministrationOptions = {
+    entityCreate?: boolean
+    entityUpdate?: boolean
 }
 
-export const useEntityAdministration = <
-    T extends GridValidRowModel | undefined = undefined,
->(): EntityAdministration<T> => {
+export type UseEntityAdministrationReturn<T> = {
+    table: {
+        entityName: string
+        lastRequested: number
+        reloadData: () => void
+        openDialog: (entity?: T) => void
+        options: UseEntityAdministrationOptions
+    }
+    dialog: {
+        entityName: string
+        dialogIsOpen: boolean
+        closeDialog: () => void
+        reloadData: () => void
+        entity?: T
+    }
+}
+
+export const useEntityAdministration = <T extends GridValidRowModel | undefined = undefined>(
+    entityName: string,
+    {entityCreate = true, entityUpdate = true}: UseEntityAdministrationOptions = {},
+): UseEntityAdministrationReturn<T> => {
     const [dialogIsOpen, openDialog, closeDialog, entity] = useParamDialogState<T>(false)
 
     const [lastRequested, setLastRequested] = useState(Date.now())
 
+    const reloadData = () => setLastRequested(Date.now())
+
+    const options: UseEntityAdministrationOptions = {
+        entityCreate,
+        entityUpdate,
+    }
+
     return {
-        dialogIsOpen,
-        openDialog,
-        closeDialog,
-        entity,
-        lastRequested,
-        reloadData: () => {
-            setLastRequested(Date.now())
+        table: {
+            entityName,
+            lastRequested,
+            reloadData,
+            openDialog,
+            options,
+        },
+        dialog: {
+            entityName,
+            dialogIsOpen,
+            closeDialog,
+            reloadData,
+            entity,
         },
     }
 }

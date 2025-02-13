@@ -39,6 +39,7 @@ fun AppUserWithPrivilegesRecord.toSession(
 fun PrivilegeRecord.toPrivilegeDto(): App<Nothing, PrivilegeDto> =
     KIO.ok(
         PrivilegeDto(
+            id = id,
             action = action,
             resource = resource,
             scope = scope

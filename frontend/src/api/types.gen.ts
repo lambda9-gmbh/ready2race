@@ -67,14 +67,14 @@ export type InviteRequest = {
     callbackUrl: string
 }
 
+export type LoginDto = {
+    id: string
+    privileges: Array<PrivilegeDto>
+}
+
 export type LoginRequest = {
     email: string
     password: string
-}
-
-export type LoginResponse = {
-    id: string
-    privileges: Array<Privilege>
 }
 
 export type NamedParticipantDto = {
@@ -144,6 +144,13 @@ export type Parametersearch = string
 export type Parametersort = string
 
 export type Privilege = {
+    action: Action
+    resource: Resource
+    scope: Scope
+}
+
+export type PrivilegeDto = {
+    id: string
     action: Action
     resource: Resource
     scope: Scope
@@ -220,13 +227,13 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'ROLE' | 'EVENT'
+export type Resource = 'USER' | 'EVENT'
 
 export type RoleDto = {
     id: string
     name: string
     description?: string
-    privileges: Array<Privilege>
+    privileges: Array<PrivilegeDto>
 }
 
 export type RoleRequest = {
@@ -245,11 +252,11 @@ export type UserLoginData = {
     body: LoginRequest
 }
 
-export type UserLoginResponse = LoginResponse
+export type UserLoginResponse = LoginDto
 
 export type UserLoginError = string
 
-export type CheckUserLoginResponse = LoginResponse | void
+export type CheckUserLoginResponse = LoginDto | void
 
 export type CheckUserLoginError = string
 

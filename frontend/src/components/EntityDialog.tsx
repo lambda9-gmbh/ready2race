@@ -3,93 +3,87 @@ import {useTranslation} from 'react-i18next'
 import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
 import {RequestResult} from '@hey-api/client-fetch'
-import {BaseEntityDialogProps, PartialRequired} from '../utils/types.ts'
+import {BaseEntityDialogProps} from '../utils/types.ts'
 import {useFeedback} from '../utils/hooks.ts'
 import {SubmitButton} from './form/SubmitButton.tsx'
 import DialogCloseButton from './DialogCloseButton.tsx'
+import {GridValidRowModel} from '@mui/x-data-grid'
 
 type EntityDialogProps<
-    E extends object | undefined,
-    F extends FieldValues = FieldValues,
-    R = void,
-> = E extends object
-    ?
-          | (BaseEntityDialogProps<E> & ExtendedEntityDialogProps<E, F, R>)
-          | (PartialRequired<BaseEntityDialogProps<E>, 'entity'> &
-                Omit<ExtendedEntityDialogProps<E, F, R>, 'addAction'>)
-    : BaseEntityDialogProps<E> & Omit<ExtendedEntityDialogProps<E, F, R>, 'editAction'>
+    Entity extends GridValidRowModel,
+    Form extends FieldValues,
+> = BaseEntityDialogProps<Entity> & ExtendedEntityDialogProps<Entity, Form>
 
-type ExtendedEntityDialogProps<
-    E extends object | undefined,
-    F extends FieldValues = FieldValues,
-    R = void,
-> = {
-    formContext: UseFormReturn<F>
+type ExtendedEntityDialogProps<Entity extends GridValidRowModel, Form extends FieldValues> = {
+    formContext: UseFormReturn<Form>
     onOpen: () => void
-    title: (action: 'add' | 'edit') => string
-    addAction?: (formData: F) => RequestResult<R, string, false> // todo: specific error type
-    editAction: (formData: F, entity: E) => RequestResult<void, string, false> // todo: specific error type
-    onSuccess?: (res: R | void) => void
-    entityName?: string
+    addAction?: (formData: Form) => RequestResult<any, string, false> // todo: specific error type
+    editAction?: (formData: Form, entity: Entity) => RequestResult<void, string, false> // todo: specific error type
 }
 
-const EntityDialog = <E extends object | undefined, F extends FieldValues = FieldValues, R = void>(
-    props: PropsWithChildren<EntityDialogProps<E, F, R>>,
-) => {
+const EntityDialog = <Entity extends GridValidRowModel, Form extends FieldValues>({
+    entityName,
+    dialogIsOpen,
+    closeDialog,
+    reloadData,
+    entity,
+    formContext,
+    onOpen,
+    addAction,
+    editAction,
+    children,
+}: PropsWithChildren<EntityDialogProps<Entity, Form>>) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
     const [submitting, setSubmitting] = useState(false)
 
     const handleClose = () => {
-        props.closeDialog()
+        closeDialog()
     }
 
-    const entityTitle = props.entityName ?? t('entity.entity')
-
-    const onSubmit = async (formData: F) => {
+    const onSubmit = async (formData: Form) => {
         setSubmitting(true)
-        let requestResult = props.entity
-            ? await props.editAction(formData, props.entity)
-            : props.addAction && (await props.addAction(formData))
+        let requestResult = entity
+            ? await editAction?.(formData, entity)
+            : await addAction?.(formData)
         setSubmitting(false)
 
         if (requestResult) {
             if (requestResult.error) {
                 // todo better error display with specific error types
                 console.log(requestResult.error)
-                if (props.entity) {
-                    feedback.error(t('entity.edit.error', {entity: entityTitle}))
+                if (entity) {
+                    feedback.error(t('entity.edit.error', {entity: entityName}))
                 } else {
-                    feedback.error(t('entity.add.error', {entity: entityTitle}))
+                    feedback.error(t('entity.add.error', {entity: entityName}))
                 }
             } else {
                 handleClose()
-                props.onSuccess?.(requestResult.data)
-                props.reloadData()
-                if (props.entity) {
-                    feedback.success(t('entity.edit.success', {entity: entityTitle}))
+                reloadData()
+                if (entity) {
+                    feedback.success(t('entity.edit.success', {entity: entityName}))
                 } else {
-                    feedback.success(t('entity.add.success', {entity: entityTitle}))
+                    feedback.success(t('entity.add.success', {entity: entityName}))
                 }
             }
         }
     }
 
     useEffect(() => {
-        if (props.dialogIsOpen) {
-            props.onOpen()
+        if (dialogIsOpen) {
+            onOpen()
         }
-    }, [props.dialogIsOpen, props.onOpen]);
+    }, [dialogIsOpen, onOpen])
 
     return (
-        <Dialog open={props.dialogIsOpen} fullWidth={true} maxWidth={'sm'}>
-            <FormContainer formContext={props.formContext} onSuccess={data => onSubmit(data)} >
-                <DialogTitle>{props.title(props.entity ? 'edit' : 'add')}</DialogTitle>
+        <Dialog open={dialogIsOpen} fullWidth={true} maxWidth={'sm'}>
+            <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)}>
+                <DialogTitle>
+                    {t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
+                </DialogTitle>
                 <DialogCloseButton onClose={handleClose} />
-                <DialogContent>
-                    {props.children}
-                </DialogContent>
+                <DialogContent>{children}</DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose} disabled={submitting}>
                         {t('common.cancel')}

@@ -50,7 +50,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            jumpToColumn={entity => ({
+            linkColumn={entity => ({
                 to: '/event/$eventId',
                 params: {eventId: entity.id},
             })}

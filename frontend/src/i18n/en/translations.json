@@ -118,6 +118,7 @@
     }
   },
   "user": {
+    "user": "User",
     "firstname": "Firstname",
     "lastname": "Lastname",
     "email": "Email"

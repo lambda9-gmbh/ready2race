@@ -4,7 +4,7 @@ import {
     Action,
     checkUserLogin,
     client,
-    LoginResponse,
+    LoginDto,
     Privilege,
     Resource,
     Scope,
@@ -14,7 +14,7 @@ import {router} from '../../routes.tsx'
 import {useFetch} from '../../utils/hooks.ts'
 import {scopeLevel} from '../../utils/helpers.ts'
 
-type UserData = LoginResponse
+type UserData = LoginDto
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [userData, setUserData] = useState<UserData>()
@@ -52,7 +52,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         },
     })
 
-    const login = (data: LoginResponse) => setUserData({...data})
+    const login = (data: LoginDto) => setUserData({...data})
 
     const logout = async () => {
         const {error} = await userLogout()
@@ -89,8 +89,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
             getPrivilegeScope,
         } satisfies AuthenticatedUser
     }
-
-    console.log(userData)
 
     return <UserContext.Provider value={userValue}>{children}</UserContext.Provider>
 }

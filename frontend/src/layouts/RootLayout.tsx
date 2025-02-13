@@ -6,7 +6,7 @@ import Sidebar from '../components/sidebar/Sidebar.tsx'
 import SidebarItem from '../components/sidebar/SidebarItem.tsx'
 import UserWidget from '../components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
-import {readRoleGlobal, readUserGlobal} from '../authorization/privileges.ts'
+import {readUserGlobal} from '../authorization/privileges.ts'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -51,7 +51,7 @@ const RootLayout = () => {
                                 text={t('navigation.titles.roles')}
                                 icon={<Work />}
                                 authenticatedOnly
-                                privilege={readRoleGlobal}
+                                privilege={readUserGlobal}
                                 to={'/role'}
                             />
                         </Sidebar>
