@@ -121,6 +121,7 @@ object AppUserService {
         )
     }
 
+    // Should another "Conflict" Error-Code (other than "Email already in use") be created, the Error Display in the Frontend-Application needs to be updated
     fun register(
         request: RegisterRequest,
     ): App<AppUserError, ApiResponse.NoData> = KIO.comprehension {

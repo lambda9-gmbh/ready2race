@@ -46,17 +46,17 @@
     "add": {
       "action": "Add {{entity}}",
       "success": "{{entity}} added",
-      "error": "An error occurred when adding the {{entity}}"
+      "error": "An error has occurred when adding the {{entity}}"
     },
     "delete": {
       "success": "{{entity}} deleted",
-      "error": "An error occurred when deleting the {{entity}}"
+      "error": "An error has occurred when deleting the {{entity}}"
     },
     "description": "Description",
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
-      "error": "An error occurred when updating the {{entity}}"
+      "error": "An error has occurred when updating the {{entity}}"
     },
     "entity": "Object",
     "name": "Name"
@@ -64,8 +64,10 @@
   "navigation": {
     "titles": {
       "dashboard": "Dashboard",
-      "users": "Users",
-      "roles": "Roles"
+      "events": "Events",
+      "raceConfig": "Race Settings",
+      "roles": "Roles",
+      "users": "Users"
     }
   },
   "login": {
@@ -75,7 +77,7 @@
   "event": {
     "assign": {
       "save": {
-        "error": "An error occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
+        "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
         "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
       },
       "title": "{{toBeAssigned}} for the {{assignedTo}}"
@@ -107,7 +109,10 @@
         "add": "Add Named Participant",
         "namedParticipant": "Named Participant",
         "namedParticipants": "Named Participants",
-        "required": "Required",
+        "required": {
+          "notRequired": "Not required",
+          "required": "Required"
+        },
         "role": "Role"
       },
       "participationFee": "Registration fee",
@@ -126,10 +131,27 @@
     }
   },
   "user": {
-    "user": "User",
+    "email": "Email",
     "firstname": "Firstname",
     "lastname": "Lastname",
-    "email": "Email"
+    "password": "Password",
+    "registration": {
+      "email": {
+        "inUse": {
+          "statement": "The email address you entered is already in use.",
+          "callToAction": "Please use a different email address or log in with the existing one."
+        }
+      },
+      "error": "An error has occurred during registration",
+      "password": {
+        "confirm": "Confirm password",
+        "notMatching": "The two passwords you entered do not match. Please ensure that they are identical.",
+        "tooShort": "Please enter a password with at least {{min}} characters"
+      },
+      "register": "Register",
+      "registration": "Registration"
+    },
+    "user": "User"
   },
   "role": {
     "role": "Role",

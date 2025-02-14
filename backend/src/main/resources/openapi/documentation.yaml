@@ -98,7 +98,7 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /register:
+  /user/registration:
     post:
       operationId: registerUser
       requestBody:
@@ -118,7 +118,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /verifyRegistration:
+  /user/registration/verify:
     post:
       operationId: verifyUserRegistration
       requestBody:
@@ -138,7 +138,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /invite:
+  /user/invitation:
     post:
       operationId: inviteUser
       requestBody:
@@ -158,7 +158,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /acceptInvitation:
+  /user/invitation/accept:
     post:
       operationId: acceptUserInvitation
       requestBody:
@@ -978,51 +978,51 @@ components:
     400:
       description: Bad Request
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
     401:
       description: Unauthorized
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
     403:
       description: Forbidden
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
     404:
       description: Not Found
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
     409:
       description: Conflict
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
     422:
       description: Unprocessable
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
     500:
       description: Server Error
       content:
-        text/plain:
+        application/json:
           schema:
-            type: string
+            $ref: '#/components/schemas/ApiError'
 
   schemas:
 
@@ -1053,6 +1053,31 @@ components:
       enum:
         - de
         - en
+
+
+
+    # error
+
+    ApiError:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: object
+          required:
+            - value
+            - description
+          properties:
+            value:
+              type: number
+            description:
+              type: string
+        message:
+          type: string
+        details: {}
+
 
     # authentication / authorization
 

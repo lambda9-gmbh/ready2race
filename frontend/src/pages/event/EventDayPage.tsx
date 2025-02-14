@@ -1,4 +1,4 @@
-import {Box, Divider, Grid2, Stack, Typography} from '@mui/material'
+import {Box, Divider, Grid2, Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '../../utils/hooks.ts'
 import {eventDayRoute, eventRoute} from '../../routes.tsx'
@@ -7,6 +7,8 @@ import Throbber from '../../components/Throbber.tsx'
 import RaceAndDayAssignment from '../../components/event/raceAndDayAssignment/RaceAndDayAssignment.tsx'
 import {AutocompleteOption} from '../../utils/types.ts'
 import {raceLabelName} from '../../components/event/race/common.ts'
+import {useState} from "react";
+import EntityDetailsEntry from "../../components/EntityDetailsEntry.tsx";
 
 const EventDayPage = () => {
     const {t} = useTranslation()
@@ -14,6 +16,8 @@ const EventDayPage = () => {
 
     const {eventId} = eventRoute.useParams()
     const {eventDayId} = eventDayRoute.useParams()
+
+    const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
 
     const {data: eventDayData} = useFetch(
         signal => getEventDay({signal, path: {eventId: eventId, eventDayId: eventDayId}}),
@@ -39,7 +43,7 @@ const EventDayPage = () => {
                     console.log(result.error)
                 }
             },
-            deps: [eventId, eventDayId],
+            deps: [eventId, eventDayId, reloadDataTrigger],
         },
     )
     const assignedRaces =
@@ -55,7 +59,7 @@ const EventDayPage = () => {
                 console.log(result.error)
             }
         },
-        deps: [eventId],
+        deps: [eventId, reloadDataTrigger],
     })
 
     const selection: AutocompleteOption[] =
@@ -68,12 +72,9 @@ const EventDayPage = () => {
         <Grid2 container justifyContent="space-between" direction="row" spacing={2}>
             <Box sx={{flex: 1, maxWidth: 400}}>
                 {(eventDayData && (
-                    <Stack spacing={1}>
-                        <Typography variant="h4">{eventDayData.date}</Typography>
-                        <Divider orientation="horizontal" />
-                        <Typography variant="h5">{eventDayData.name}</Typography>
-                        <Divider orientation="horizontal" />
-                        <Typography variant="body1">{eventDayData.description}</Typography>
+                    <Stack spacing={2}>
+                        <EntityDetailsEntry content={eventDayData.date + ( eventDayData.name ? " | " + eventDayData.name : "")} variant="h4"/>
+                        <EntityDetailsEntry content={eventDayData.description}/>
                     </Stack>
                 )) || <Throbber />}
             </Box>
@@ -86,6 +87,7 @@ const EventDayPage = () => {
                         assignedEntities={assignedRaces}
                         assignEntityLabel={t('event.race.race')}
                         racesToDay={true}
+                        onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
                     />
                 )) || <Throbber />}
             </Box>

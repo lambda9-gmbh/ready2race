@@ -1,8 +1,8 @@
-import {useUser} from '../contexts/user/UserContext.ts'
+import {useUser} from '../../contexts/user/UserContext.ts'
 import {useState} from 'react'
-import {LoginRequest, userLogin} from '../api'
+import {LoginRequest, userLogin} from '../../api'
 import {useTranslation} from 'react-i18next'
-import {useFeedback} from '../utils/hooks.ts'
+import {useFeedback} from '../../utils/hooks.ts'
 
 const LoginPage = () => {
     const {login} = useUser()

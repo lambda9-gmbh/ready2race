@@ -174,7 +174,7 @@ export const registerUser = <ThrowOnError extends boolean = false>(
 ) => {
     return (options?.client ?? client).post<RegisterUserResponse, RegisterUserError, ThrowOnError>({
         ...options,
-        url: '/register',
+        url: '/user/registration',
     })
 }
 
@@ -187,7 +187,7 @@ export const verifyUserRegistration = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/verifyRegistration',
+        url: '/user/registration/verify',
     })
 }
 
@@ -196,7 +196,7 @@ export const inviteUser = <ThrowOnError extends boolean = false>(
 ) => {
     return (options?.client ?? client).post<InviteUserResponse, InviteUserError, ThrowOnError>({
         ...options,
-        url: '/invite',
+        url: '/user/invitation',
     })
 }
 
@@ -209,7 +209,7 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/acceptInvitation',
+        url: '/user/invitation/accept',
     })
 }
 

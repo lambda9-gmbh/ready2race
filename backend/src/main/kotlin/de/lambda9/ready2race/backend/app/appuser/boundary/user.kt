@@ -46,7 +46,7 @@ fun Route.user() {
         }
 
         // todo: evaluate rate limiting
-        post("/register") {
+        post("/registration") {
             val payload = call.receiveV(RegisterRequest.example)
             call.respondKIO {
                 payload.andThen {
@@ -64,7 +64,7 @@ fun Route.user() {
             }
         }
 
-        post("/invite") {
+        post("/invitation") {
             val payload = call.receiveV(InviteRequest.example)
             call.respondKIO {
                 KIO.comprehension {

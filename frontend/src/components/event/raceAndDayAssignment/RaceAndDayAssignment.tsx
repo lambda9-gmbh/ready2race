@@ -30,6 +30,7 @@ type Props = {
     assignedEntities: AutocompleteOption[]
     assignEntityLabel: string
     racesToDay: boolean
+    onSuccess: () => void
 }
 const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
     const {t} = useTranslation()
@@ -95,6 +96,7 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
             } else {
                 closeDialog()
                 // todo reloadData()
+                props.onSuccess()
                 feedback.success(t('event.assign.save.success', entityNames))
             }
         }
@@ -104,7 +106,7 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
         value => !entityFields.some(ar => ar.entry.id === value.id),
     )
 
-    const [fooState, setFooState] = useState({id: '', label: ''})
+    const [autocompleteContent, setAutocompleteContent] = useState({id: '', label: ''})
 
     return (
         <Box sx={{flex: 1, maxWidth: 400, border: 1, borderRadius: 4, p: 4}}>
@@ -124,12 +126,12 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
                 className="ready2race">
                 <Box sx={{ mx: 4, my: 2}}>
                     <Autocomplete
-                        value={fooState}
+                        value={autocompleteContent}
                         options={filteredOptions}
                         onChange={(_e, newValue) => {
                             if (newValue) {
                                 appendEntity({entry: newValue})
-                                setFooState({id: '', label: ''})
+                                setAutocompleteContent({id: '', label: ''})
                             }
                         }}
                         renderInput={params => (

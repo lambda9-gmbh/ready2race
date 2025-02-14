@@ -141,7 +141,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
                             <Box sx={{my: 'auto'}}>
                                 <SwitchElement
                                     name={'namedParticipants[' + index + '].required'}
-                                    label={t('event.race.namedParticipant.required')}
+                                    label={t('event.race.namedParticipant.required.required')}
                                 />
                             </Box>
                         </Grid2>

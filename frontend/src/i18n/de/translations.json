@@ -64,8 +64,10 @@
   "navigation": {
     "titles": {
       "dashboard": "Dashboard",
-      "users": "Benutzer",
-      "roles": "Rollen"
+      "events": "Veranstaltungen",
+      "raceConfig": "Rennen Einstellungen",
+      "roles": "Rollen",
+      "users": "Benutzer"
     }
   },
   "login": {
@@ -107,7 +109,10 @@
         "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
-        "required": "Verpflichtend",
+        "required": {
+          "notRequired": "Nicht verpflichtend",
+          "required": "Verpflichtend"
+        },
         "role": "Rolle"
       },
       "participationFee": "Meldegebühr",
@@ -126,10 +131,27 @@
     }
   },
   "user": {
-    "user": "Benutzer",
+    "email": "E-Mail",
     "firstname": "Vorname",
     "lastname": "Nachname",
-    "email": "E-Mail"
+    "password": "Passwort",
+    "registration": {
+      "email": {
+        "inUse": {
+          "statement": "Die eingegebene E-Mail Adresse ist bereits in Verwendung.",
+          "callToAction": "Bitte verwenden Sie eine andere E-Mail Adresse oder melden Sie sich mit der bestehenden an."
+        }
+      },
+      "error": "Bei der Registrierung ist ein Fehler aufgetreten",
+      "password": {
+        "confirm": "Passwort bestätigen",
+        "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
+        "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
+      },
+      "register": "Registrieren",
+      "registration": "Registrierung"
+    },
+    "user": "Benutzer"
   },
   "role": {
     "role": "Rolle",
