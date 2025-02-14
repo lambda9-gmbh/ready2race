@@ -12,7 +12,7 @@ type InvitationForm = {
     email: string
     firstname: string
     lastname: string
-    roles: string[]
+    roles: string[] // todo: implement me
 }
 
 const defaultValues: InvitationForm = {
@@ -37,8 +37,6 @@ const addAction = (formData: InvitationForm) =>
     })
 
 const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>) => {
-    const {t} = useTranslation()
-
     const formContext = useForm<InvitationForm>()
 
     const onOpen = useCallback(() => {

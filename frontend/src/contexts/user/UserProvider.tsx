@@ -94,3 +94,5 @@ const UserProvider = ({children}: PropsWithChildren) => {
 }
 
 export default UserProvider
+
+//todo: add "ready" (with Loading animation?) or better solution?

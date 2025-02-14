@@ -15,21 +15,20 @@ const EventPage = () => {
 
     const {eventId} = eventRoute.useParams()
 
-    const {data} = useFetch(
-        signal => getEvent({signal, path: {eventId: eventId}}),
-        {
-            onResponse: result => {
-                if (result.error) {
-                    feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                    console.log(result.error)
-                }
-            },
+    const {data} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
+        onResponse: result => {
+            if (result.error) {
+                feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+                console.log(result.error)
+            }
         },
-        [eventId],
-    )
+        deps: [eventId],
+    })
 
-    const raceAdministrationProps = useEntityAdministration<RaceDto>()
-    const eventDayAdministrationProps = useEntityAdministration<EventDayDto>()
+    const raceAdministrationProps = useEntityAdministration<RaceDto>(t('event.race.race'))
+    const eventDayAdministrationProps = useEntityAdministration<EventDayDto>(
+        t('event.eventDay.eventDay'),
+    )
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -37,14 +36,18 @@ const EventPage = () => {
                 <>
                     <Typography variant="h3">{data.name}</Typography>
                     <Box sx={{mt: 4}}>
-                        <Typography variant="h4">{t('event.race.races')}</Typography>
-                        <RaceTable {...raceAdministrationProps} />
-                        <RaceDialog {...raceAdministrationProps} />
+                        <RaceTable
+                            {...raceAdministrationProps.table}
+                            title={t('event.race.races')}
+                        />
+                        <RaceDialog {...raceAdministrationProps.dialog} />
                     </Box>
                     <Box sx={{mt: 4}}>
-                        <Typography variant="h4">{t('event.eventDay.eventDays')}</Typography>
-                        <EventDayTable {...eventDayAdministrationProps} />
-                        <EventDayDialog {...eventDayAdministrationProps} />
+                        <EventDayTable
+                            {...eventDayAdministrationProps.table}
+                            title={t('event.eventDay.eventDays')}
+                        />
+                        <EventDayDialog {...eventDayAdministrationProps.dialog} />
                     </Box>
                 </>
             )) || <Throbber />}

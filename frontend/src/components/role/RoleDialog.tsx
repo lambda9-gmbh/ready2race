@@ -10,7 +10,7 @@ import {takeIfNotEmpty} from '../../utils/ApiUtils.ts'
 type RoleForm = {
     name: string
     description: string
-    privileges: string[]
+    privileges: string[] // todo: implement me
 }
 
 const defaultValues: RoleForm = {

@@ -12,7 +12,8 @@ export const FormInputText = (props: BaseFormInputProps) => {
             type={'text'}
             rules={{
                 ...props.rules,
-                ...(props.required && !props.rules?.required && {required: t('common.form.required')}),
+                ...(props.required &&
+                    !props.rules?.required && {required: t('common.form.required')}),
             }}
         />
     )

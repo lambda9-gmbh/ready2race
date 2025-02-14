@@ -48,19 +48,13 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
     }, [props.entity])
 
 
-    const entityKeyName = {entity: t('event.eventDay.eventDay')}
-
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
             onOpen={onOpen}
-            title={action =>
-                action === 'add' ? t('entity.add.action', entityKeyName) : t('entity.edit.action')
-            }
             addAction={addAction}
-            editAction={editAction}
-            onSuccess={() => {}}>
+            editAction={editAction}>
             <Stack spacing={2}>
                 <FormInputDate name="date" label={t('event.eventDay.date')} required />
                 <FormInputText name="name" label={t('entity.name')} />

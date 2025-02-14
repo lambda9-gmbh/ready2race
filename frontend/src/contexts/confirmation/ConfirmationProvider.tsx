@@ -1,19 +1,19 @@
-import {useTranslation} from "react-i18next";
-import {PropsWithChildren, useState} from "react";
+import {useTranslation} from 'react-i18next'
+import {PropsWithChildren, useState} from 'react'
 import {Confirmation, ConfirmationContext, ConfirmationOptions} from './ConfirmationContext'
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from "@mui/material";
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
 
 type ConfirmationState =
     | {
-    open: false
-    action: null
-    options?: ConfirmationOptions
-}
+          open: false
+          action: null
+          options?: ConfirmationOptions
+      }
     | {
-    open: true
-    action: () => void
-    options?: ConfirmationOptions
-}
+          open: true
+          action: () => void
+          options?: ConfirmationOptions
+      }
 
 const closedConfirmation = (options?: ConfirmationOptions): ConfirmationState => ({
     open: false,
@@ -51,7 +51,11 @@ export const ConfirmationProvider = (props: PropsWithChildren<{}>) => {
     return (
         <ConfirmationContext.Provider value={confirmationValue}>
             {props.children}
-            <Dialog open={confirmation.open} maxWidth={'sm'} fullWidth={true}>
+            <Dialog
+                className={'ready2race'}
+                open={confirmation.open}
+                maxWidth={'sm'}
+                fullWidth={true}>
                 <DialogTitle>
                     {confirmation.options?.title ?? t('common.confirmation.title')}
                 </DialogTitle>

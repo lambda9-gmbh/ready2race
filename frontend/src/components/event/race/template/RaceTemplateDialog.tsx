@@ -40,18 +40,11 @@ const RaceTemplateDialog = (props: BaseEntityDialogProps<RaceTemplateDto>) => {
         )
     }, [props.entity])
 
-    const entityNameKey = {entity: t('event.race.template.template')}
-
     return (
         <EntityDialog
             {...props}
             formContext={formContext}
             onOpen={onOpen}
-            title={action =>
-                action === 'add'
-                    ? t('entity.add.action', entityNameKey)
-                    : t('entity.edit.action', entityNameKey)
-            } // could be shortened but then the translation key can not be found by intellij-search
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={2}>

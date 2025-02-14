@@ -52,6 +52,7 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}
@@ -59,8 +60,6 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
             dataRequest={dataRequest}
             entityName={t('event.race.template.template')}
             deleteRequest={deleteRequest}
-            changePermission={'EVENT_EDIT'}
-            readPermission={'EVENT_VIEW'}
         />
     )
 }

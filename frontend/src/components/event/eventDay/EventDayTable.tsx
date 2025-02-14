@@ -55,6 +55,7 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}
@@ -66,8 +67,6 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
             })}
             entityName={t('event.eventDay.eventDay')}
             deleteRequest={deleteRequest}
-            changePermission={'EVENT_EDIT'}
-            readPermission={'EVENT_VIEW'}
         />
     )
 }

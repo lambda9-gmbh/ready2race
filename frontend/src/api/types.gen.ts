@@ -7,6 +7,15 @@ export type AcceptInvitationRequest = {
 
 export type Action = 'CREATE' | 'READ' | 'UPDATE' | 'DELETE'
 
+export type ApiError = {
+    status: {
+        value: number
+        description: string
+    }
+    message: string
+    details?: unknown
+}
+
 export type AppUserDto = {
     id: string
     email: string
@@ -290,15 +299,15 @@ export type UserLoginData = {
 
 export type UserLoginResponse = LoginDto
 
-export type UserLoginError = string
+export type UserLoginError = ApiError
 
 export type CheckUserLoginResponse = LoginDto | void
 
-export type CheckUserLoginError = string
+export type CheckUserLoginError = ApiError
 
 export type UserLogoutResponse = void
 
-export type UserLogoutError = string
+export type UserLogoutError = ApiError
 
 export type GetUsersData = {
     query?: {
@@ -326,11 +335,11 @@ export type GetUsersResponse = {
     pagination: Pagination
 }
 
-export type GetUsersError = string
+export type GetUsersError = ApiError
 
 export type GetUserResponse = AppUserDto
 
-export type GetUserError = string
+export type GetUserError = ApiError
 
 export type GetRegistrationsData = {
     query?: {
@@ -358,7 +367,7 @@ export type GetRegistrationsResponse = {
     pagination: Pagination
 }
 
-export type GetRegistrationsError = string
+export type GetRegistrationsError = ApiError
 
 export type RegisterUserData = {
     body: RegisterRequest
@@ -366,7 +375,7 @@ export type RegisterUserData = {
 
 export type RegisterUserResponse = void
 
-export type RegisterUserError = string
+export type RegisterUserError = ApiError
 
 export type VerifyUserRegistrationData = {
     body: VerifyRegistrationRequest
@@ -374,7 +383,7 @@ export type VerifyUserRegistrationData = {
 
 export type VerifyUserRegistrationResponse = unknown
 
-export type VerifyUserRegistrationError = string
+export type VerifyUserRegistrationError = ApiError
 
 export type GetInvitationsData = {
     query?: {
@@ -402,7 +411,7 @@ export type GetInvitationsResponse = {
     pagination: Pagination
 }
 
-export type GetInvitationsError = string
+export type GetInvitationsError = ApiError
 
 export type InviteUserData = {
     body: InviteRequest
@@ -410,7 +419,7 @@ export type InviteUserData = {
 
 export type InviteUserResponse = void
 
-export type InviteUserError = string
+export type InviteUserError = ApiError
 
 export type AcceptUserInvitationData = {
     body: AcceptInvitationRequest
@@ -418,7 +427,7 @@ export type AcceptUserInvitationData = {
 
 export type AcceptUserInvitationResponse = unknown
 
-export type AcceptUserInvitationError = string
+export type AcceptUserInvitationError = ApiError
 
 export type AddRoleData = {
     body: RoleRequest
@@ -426,7 +435,7 @@ export type AddRoleData = {
 
 export type AddRoleResponse = string
 
-export type AddRoleError = string
+export type AddRoleError = ApiError
 
 export type GetRolesData = {
     query?: {
@@ -454,7 +463,7 @@ export type GetRolesResponse = {
     pagination: Pagination
 }
 
-export type GetRolesError = string
+export type GetRolesError = ApiError
 
 export type UpdateRoleData = {
     body: RoleRequest
@@ -465,7 +474,7 @@ export type UpdateRoleData = {
 
 export type UpdateRoleResponse = void
 
-export type UpdateRoleError = string
+export type UpdateRoleError = ApiError
 
 export type DeleteRoleData = {
     path: {
@@ -475,7 +484,7 @@ export type DeleteRoleData = {
 
 export type DeleteRoleResponse = void
 
-export type DeleteRoleError = string
+export type DeleteRoleError = ApiError
 
 export type AddEventData = {
     body: EventRequest
@@ -483,7 +492,7 @@ export type AddEventData = {
 
 export type AddEventResponse = string
 
-export type AddEventError = string
+export type AddEventError = ApiError
 
 export type GetEventsData = {
     query?: {
@@ -511,11 +520,11 @@ export type GetEventsResponse = {
     pagination: Pagination
 }
 
-export type GetEventsError = string
+export type GetEventsError = ApiError
 
 export type GetEventResponse = EventDto
 
-export type GetEventError = string
+export type GetEventError = ApiError
 
 export type UpdateEventData = {
     body: EventRequest
@@ -523,11 +532,11 @@ export type UpdateEventData = {
 
 export type UpdateEventResponse = void
 
-export type UpdateEventError = string
+export type UpdateEventError = ApiError
 
 export type DeleteEventResponse = void
 
-export type DeleteEventError = string
+export type DeleteEventError = ApiError
 
 export type AddEventDayData = {
     body: EventDayRequest
@@ -535,7 +544,7 @@ export type AddEventDayData = {
 
 export type AddEventDayResponse = string
 
-export type AddEventDayError = string
+export type AddEventDayError = ApiError
 
 export type GetEventDaysData = {
     query?: {
@@ -567,11 +576,11 @@ export type GetEventDaysResponse = {
     pagination: Pagination
 }
 
-export type GetEventDaysError = string
+export type GetEventDaysError = ApiError
 
 export type GetEventDayResponse = EventDayDto
 
-export type GetEventDayError = string
+export type GetEventDayError = ApiError
 
 export type UpdateEventDayData = {
     body: EventDayRequest
@@ -579,11 +588,11 @@ export type UpdateEventDayData = {
 
 export type UpdateEventDayResponse = void
 
-export type UpdateEventDayError = string
+export type UpdateEventDayError = ApiError
 
 export type DeleteEventDayResponse = void
 
-export type DeleteEventDayError = string
+export type DeleteEventDayError = ApiError
 
 export type AssignRacesToEventDayData = {
     body: AssignRacesToDayRequest
@@ -591,7 +600,7 @@ export type AssignRacesToEventDayData = {
 
 export type AssignRacesToEventDayResponse = void
 
-export type AssignRacesToEventDayError = string
+export type AssignRacesToEventDayError = ApiError
 
 export type AddRaceData = {
     body: RaceRequest
@@ -599,7 +608,7 @@ export type AddRaceData = {
 
 export type AddRaceResponse = string
 
-export type AddRaceError = string
+export type AddRaceError = ApiError
 
 export type GetRacesData = {
     query?: {
@@ -631,11 +640,11 @@ export type GetRacesResponse = {
     pagination: Pagination
 }
 
-export type GetRacesError = string
+export type GetRacesError = ApiError
 
 export type GetRaceResponse = RaceDto
 
-export type GetRaceError = string
+export type GetRaceError = ApiError
 
 export type UpdateRaceData = {
     body: RaceRequest
@@ -643,11 +652,11 @@ export type UpdateRaceData = {
 
 export type UpdateRaceResponse = void
 
-export type UpdateRaceError = string
+export type UpdateRaceError = ApiError
 
 export type DeleteRaceResponse = void
 
-export type DeleteRaceError = string
+export type DeleteRaceError = ApiError
 
 export type AssignDaysToRaceData = {
     body: AssignDaysToRaceRequest
@@ -655,7 +664,7 @@ export type AssignDaysToRaceData = {
 
 export type AssignDaysToRaceResponse = void
 
-export type AssignDaysToRaceError = string
+export type AssignDaysToRaceError = ApiError
 
 export type AddRaceTemplateData = {
     body: RaceTemplateRequest
@@ -663,7 +672,7 @@ export type AddRaceTemplateData = {
 
 export type AddRaceTemplateResponse = string
 
-export type AddRaceTemplateError = string
+export type AddRaceTemplateError = ApiError
 
 export type GetRaceTemplatesData = {
     query?: {
@@ -691,11 +700,11 @@ export type GetRaceTemplatesResponse = {
     pagination: Pagination
 }
 
-export type GetRaceTemplatesError = string
+export type GetRaceTemplatesError = ApiError
 
 export type GetRaceTemplateResponse = RaceTemplateDto
 
-export type GetRaceTemplateError = string
+export type GetRaceTemplateError = ApiError
 
 export type UpdateRaceTemplateData = {
     body: RaceTemplateRequest
@@ -703,11 +712,11 @@ export type UpdateRaceTemplateData = {
 
 export type UpdateRaceTemplateResponse = void
 
-export type UpdateRaceTemplateError = string
+export type UpdateRaceTemplateError = ApiError
 
 export type DeleteRaceTemplateResponse = void
 
-export type DeleteRaceTemplateError = string
+export type DeleteRaceTemplateError = ApiError
 
 export type AddNamedParticipantData = {
     body: NamedParticipantRequest
@@ -715,14 +724,14 @@ export type AddNamedParticipantData = {
 
 export type AddNamedParticipantResponse = string
 
-export type AddNamedParticipantError = string
+export type AddNamedParticipantError = ApiError
 
 export type GetNamedParticipantsResponse = {
     data: Array<NamedParticipantDto>
     pagination: Pagination
 }
 
-export type GetNamedParticipantsError = string
+export type GetNamedParticipantsError = ApiError
 
 export type UpdateNamedParticipantData = {
     body: NamedParticipantRequest
@@ -730,11 +739,11 @@ export type UpdateNamedParticipantData = {
 
 export type UpdateNamedParticipantResponse = void
 
-export type UpdateNamedParticipantError = string
+export type UpdateNamedParticipantError = ApiError
 
 export type DeleteNamedParticipantResponse = void
 
-export type DeleteNamedParticipantError = string
+export type DeleteNamedParticipantError = ApiError
 
 export type AddRaceCategoryData = {
     body: RaceCategoryRequest
@@ -742,14 +751,14 @@ export type AddRaceCategoryData = {
 
 export type AddRaceCategoryResponse = string
 
-export type AddRaceCategoryError = string
+export type AddRaceCategoryError = ApiError
 
 export type GetRaceCategoriesResponse = {
     data: Array<RaceCategoryDto>
     pagination: Pagination
 }
 
-export type GetRaceCategoriesError = string
+export type GetRaceCategoriesError = ApiError
 
 export type UpdateRaceCategoryData = {
     body: RaceCategoryRequest
@@ -757,8 +766,8 @@ export type UpdateRaceCategoryData = {
 
 export type UpdateRaceCategoryResponse = void
 
-export type UpdateRaceCategoryError = string
+export type UpdateRaceCategoryError = ApiError
 
 export type DeleteRaceCategoryResponse = void
 
-export type DeleteRaceCategoryError = string
+export type DeleteRaceCategoryError = ApiError

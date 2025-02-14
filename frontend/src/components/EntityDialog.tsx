@@ -12,16 +12,28 @@ import {GridValidRowModel} from '@mui/x-data-grid'
 type EntityDialogProps<
     Entity extends GridValidRowModel,
     Form extends FieldValues,
-> = BaseEntityDialogProps<Entity> & ExtendedEntityDialogProps<Entity, Form>
+    AddError,
+    UpdateError,
+> = BaseEntityDialogProps<Entity> & ExtendedEntityDialogProps<Entity, Form, AddError, UpdateError>
 
-type ExtendedEntityDialogProps<Entity extends GridValidRowModel, Form extends FieldValues> = {
+type ExtendedEntityDialogProps<
+    Entity extends GridValidRowModel,
+    Form extends FieldValues,
+    AddError,
+    UpdateError,
+> = {
     formContext: UseFormReturn<Form>
     onOpen: () => void
-    addAction?: (formData: Form) => RequestResult<any, string, false> // todo: specific error type
-    editAction?: (formData: Form, entity: Entity) => RequestResult<void, string, false> // todo: specific error type
+    addAction?: (formData: Form) => RequestResult<any, AddError, false>
+    editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
 }
 
-const EntityDialog = <Entity extends GridValidRowModel, Form extends FieldValues>({
+const EntityDialog = <
+    Entity extends GridValidRowModel,
+    Form extends FieldValues,
+    AddError,
+    UpdateError,
+>({
     entityName,
     dialogIsOpen,
     closeDialog,
@@ -32,7 +44,7 @@ const EntityDialog = <Entity extends GridValidRowModel, Form extends FieldValues
     addAction,
     editAction,
     children,
-}: PropsWithChildren<EntityDialogProps<Entity, Form>>) => {
+}: PropsWithChildren<EntityDialogProps<Entity, Form, AddError, UpdateError>>) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
@@ -77,7 +89,7 @@ const EntityDialog = <Entity extends GridValidRowModel, Form extends FieldValues
     }, [dialogIsOpen, onOpen])
 
     return (
-        <Dialog open={dialogIsOpen} fullWidth={true} maxWidth={'sm'}>
+        <Dialog open={dialogIsOpen} fullWidth={true} maxWidth={'sm'} className="ready2race">
             <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)}>
                 <DialogTitle>
                     {t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}

@@ -45,6 +45,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     return (
         <EntityTable
             {...props}
+            parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

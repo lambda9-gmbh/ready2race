@@ -8,17 +8,18 @@ import {
 } from '@tanstack/react-router'
 import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
-import LoginPage from './pages/LoginPage.tsx'
+import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
 import {readEventGlobal, readUserGlobal, updateUserGlobal} from './authorization/privileges.ts'
-import UsersPage from './pages/UsersPage.tsx'
-import UserPage from './pages/UserPage.tsx'
-import RolesPage from './pages/RolesPage.tsx'
+import UsersPage from './pages/user/UsersPage.tsx'
+import UserPage from './pages/user/UserPage.tsx'
+import RolesPage from './pages/user/RolesPage.tsx'
 import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage from './pages/event/EventPage.tsx'
 import RacePage from './pages/event/RacePage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import RaceConfigPage from './pages/event/RaceConfigPage.tsx'
+import RegistrationPage from './pages/user/RegistrationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -73,6 +74,17 @@ export const loginRoute = createRoute({
     validateSearch: ({redirect}: {redirect?: string} & SearchSchemaInput): LoginSearch => ({
         redirect,
     }),
+})
+
+export const registrationRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'registration',
+    component: () => <RegistrationPage />,
+    beforeLoad: ({context}) => {
+        if (context.loggedIn) {
+            throw redirect({to: '/dashboard'})
+        }
+    },
 })
 
 export const dashboardRoute = createRoute({
@@ -205,6 +217,7 @@ export const raceConfigIndexRoute = createRoute({
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
+    registrationRoute,
     dashboardRoute,
     eventsRoute.addChildren([
         eventsIndexRoute,

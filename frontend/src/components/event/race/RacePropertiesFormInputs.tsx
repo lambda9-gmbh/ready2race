@@ -31,7 +31,6 @@ export const RacePropertiesFormInputs = (props: Props) => {
                 }
             },
         },
-        [],
     )
 
     const namedParticipants: AutocompleteOption[] =
@@ -53,7 +52,6 @@ export const RacePropertiesFormInputs = (props: Props) => {
                 }
             },
         },
-        [],
     )
     const categories: AutocompleteOption[] =
         categoriesData?.data.map(dto => ({
@@ -143,7 +141,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
                             <Box sx={{my: 'auto'}}>
                                 <SwitchElement
                                     name={'namedParticipants[' + index + '].required'}
-                                    label={t('event.race.namedParticipant.required')}
+                                    label={t('event.race.namedParticipant.required.required')}
                                 />
                             </Box>
                         </Grid2>

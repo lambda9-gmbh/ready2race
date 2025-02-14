@@ -4,6 +4,7 @@ type Props = ButtonProps & {
     label: string
     pending: boolean
 }
+//todo: KERN: progress not for really short timespan?
 const LoadingButton = ({label, pending, ...rest}: Props) => {
     return (
         <Button {...rest} disabled={pending || rest.disabled} sx={{display: 'flex'}}>

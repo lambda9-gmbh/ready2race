@@ -1,10 +1,10 @@
 import {createContext, useContext} from 'react'
-import {Action, LoginResponse, Privilege, Resource, Scope} from '../../api'
+import {Action, LoginDto, Privilege, Resource, Scope} from '../../api'
 
 export type AuthenticatedUser = {
     loggedIn: true
     id: string
-    login: (data: LoginResponse) => void
+    login: (data: LoginDto) => void
     logout: () => void
     getPrivilegeScope: (action: Action, resource: Resource) => Scope | undefined
     checkPrivilege: (privilege: Privilege) => boolean
@@ -12,7 +12,7 @@ export type AuthenticatedUser = {
 
 export type AnonymousUser = {
     loggedIn: false
-    login: (data: LoginResponse) => void
+    login: (data: LoginDto) => void
 }
 
 export type User = AuthenticatedUser | AnonymousUser

@@ -15,7 +15,7 @@
       "currency": {
         "invalid": "Bitte geben Sie einen gültigen Betrag ein."
       },
-      "dateTime":{
+      "dateTime": {
         "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
       },
       "number": {
@@ -64,8 +64,10 @@
   "navigation": {
     "titles": {
       "dashboard": "Dashboard",
-      "users": "Benutzer",
-      "roles": "Rollen"
+      "events": "Veranstaltungen",
+      "raceConfig": "Rennen Einstellungen",
+      "roles": "Rollen",
+      "users": "Benutzer"
     }
   },
   "login": {
@@ -73,11 +75,19 @@
     "password": "Passwort"
   },
   "event": {
+    "assign": {
+      "save": {
+        "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
+        "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
+      },
+      "title": "{{toBeAssigned}} für den {{assignedTo}}"
+    },
     "event": "Veranstaltung",
     "eventDay": {
+      "assignedRaces": "Rennen für den Tag",
+      "date": "Datum",
       "eventDay": "Tag",
-      "eventDays": "Tage",
-      "date": "Datum"
+      "eventDays": "Tage"
     },
     "invoice": {
       "prefix": "Rechnungspräfix"
@@ -99,7 +109,10 @@
         "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
-        "required": "Verpflichtend",
+        "required": {
+          "notRequired": "Nicht verpflichtend",
+          "required": "Verpflichtend"
+        },
         "role": "Rolle"
       },
       "participationFee": "Meldegebühr",
@@ -124,6 +137,23 @@
       "invitation": "Einladung"
     },
     "lastname": "Nachname",
+    "password": "Passwort",
+    "registration": {
+      "email": {
+        "inUse": {
+          "statement": "Die eingegebene E-Mail Adresse ist bereits in Verwendung.",
+          "callToAction": "Bitte verwenden Sie eine andere E-Mail Adresse oder melden Sie sich mit der bestehenden an."
+        }
+      },
+      "error": "Bei der Registrierung ist ein Fehler aufgetreten",
+      "password": {
+        "confirm": "Passwort bestätigen",
+        "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
+        "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
+      },
+      "register": "Registrieren",
+      "registration": "Registrierung"
+    },
     "user": "Benutzer"
   },
   "role": {
