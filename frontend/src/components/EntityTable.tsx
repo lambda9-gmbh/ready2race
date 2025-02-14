@@ -30,7 +30,6 @@ type EntityTableProps<
 > = BaseEntityTableProps<Entity> & ExtendedEntityTableProps<Entity, GetError, DeleteError>
 
 type ExtendedEntityTableProps<Entity extends GridValidRowModel, GetError, DeleteError> = {
-    title?: string
     initialPagination: GridPaginationModel
     pageSizeOptions: (number | {value: number; label: string})[]
     initialSort: GridSortModel
@@ -250,7 +249,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     )
 
     return (
-        <>
+        <Box>
             {title && <Typography variant={'h6'}>{title}</Typography>}
             <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
                 {withSearch && (
@@ -302,7 +301,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
                     {...gridProps}
                 />
             </Box>
-        </>
+        </Box>
     )
 }
 

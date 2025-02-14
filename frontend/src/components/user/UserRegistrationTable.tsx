@@ -1,9 +1,9 @@
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {AppUserDto, getUsers} from '../../api'
-import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '../../utils/ApiUtils.ts'
+import {AppUserRegistrationDto, getRegistrations} from '../../api'
+import {BaseEntityTableProps} from '../../utils/types.ts'
+import {useTranslation} from 'react-i18next'
+import EntityTable from '../EntityTable.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -13,15 +13,15 @@ const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'lastname', sort: 'asc'}]
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) =>
-    getUsers({
+    getRegistrations({
         signal,
         query: paginationParameters,
     })
 
-const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
+const UserRegistrationTable = (props: BaseEntityTableProps<AppUserRegistrationDto>) => {
     const {t} = useTranslation()
 
-    const columns: GridColDef<AppUserDto>[] = [
+    const columns: GridColDef<AppUserRegistrationDto>[] = [
         {
             field: 'firstname',
             headerName: t('user.firstname'),
@@ -55,4 +55,4 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
     )
 }
 
-export default UserTable
+export default UserRegistrationTable

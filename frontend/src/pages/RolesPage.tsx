@@ -11,8 +11,8 @@ const RolesPage = () => {
 
     return (
         <Box>
-            <RoleTable {...administrationProps} />
-            <RoleDialog {...administrationProps} />
+            <RoleTable {...administrationProps.table} />
+            <RoleDialog {...administrationProps.dialog} />
         </Box>
     )
 }

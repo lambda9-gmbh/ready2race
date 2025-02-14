@@ -84,3 +84,21 @@ create rule delete_email_app_user_invitation as on delete
     delete
     from email_address
     where email = old.email;
+
+create table app_user_invitation_to_email
+(
+    app_user_invitation uuid references app_user_invitation on delete cascade,
+    email uuid references email on delete set null
+);
+
+create unique index on app_user_invitation_to_email (app_user_invitation);
+create index on app_user_invitation_to_email (email);
+
+create table app_user_registration_to_email
+(
+    app_user_registration uuid references app_user_registration on delete cascade,
+    email uuid references email on delete set null
+);
+
+create unique index on app_user_registration_to_email (app_user_registration);
+create index on app_user_registration_to_email (email);

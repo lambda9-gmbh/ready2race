@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.appuser.control
 import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.entity.*
+import de.lambda9.ready2race.backend.app.email.control.toAssignedDto
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.role.control.toDto
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
@@ -102,8 +103,12 @@ fun CreatedByRecord?.toDto(): App<Nothing, CreatedByDto?> =
         }
     )
 
-fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto> =
-    createdBy.toDto().map {
+fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto> = KIO.comprehension {
+    val createdByDto = !createdBy.toDto()
+    val assignedEmailDto = !emailEntity.toAssignedDto()
+    val roleDtos = !roles!!.toList().forEachM { it!!.toDto() }
+
+    KIO.ok(
         AppUserInvitationDto(
             id = id!!,
             email = email!!,
@@ -112,19 +117,23 @@ fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto>
             language = EmailLanguage.valueOf(language!!),
             expiresAt = expiresAt!!,
             createdAt = createdAt!!,
-            createdBy = it
-        )
-    }
-
-fun AppUserRegistrationRecord.toDto(): App<Nothing, AppUserRegistrationDto> =
-    KIO.ok(
-        AppUserRegistrationDto(
-            id = id,
-            email = email,
-            firstname = firstname,
-            lastname = lastname,
-            language = EmailLanguage.valueOf(language),
-            expiresAt = expiresAt,
-            createdAt = createdAt
+            assignedEmail = assignedEmailDto,
+            roles = roleDtos,
+            createdBy = createdByDto,
         )
     )
+}
+
+fun AppUserRegistrationViewRecord.toDto(): App<Nothing, AppUserRegistrationDto> =
+    emailEntity.toAssignedDto().map {
+        AppUserRegistrationDto(
+            id = id!!,
+            email = email!!,
+            firstname = firstname!!,
+            lastname = lastname!!,
+            language = EmailLanguage.valueOf(language!!),
+            expiresAt = expiresAt!!,
+            createdAt = createdAt!!,
+            assignedEmail = it
+        )
+    }

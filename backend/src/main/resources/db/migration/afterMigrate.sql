@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists app_user_registration_view;
 drop view if exists app_user_invitation_with_roles;
 drop view if exists race_template_to_properties_with_named_participants;
 drop view if exists race_to_properties_with_named_participants;
@@ -120,10 +121,26 @@ select aui.id,
        aui.language,
        aui.expires_at,
        aui.created_at,
-       coalesce(array_agg(auihr.role) filter ( where auihr.role is not null ), '{}') as roles,
+       e                                                                             as email_entity,
+       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles,
        cb                                                                            as created_by
 from app_user_invitation aui
+         left join app_user_invitation_to_email auite on aui.id = auite.app_user_invitation
+         left join email e on auite.email = e.id
          left join app_user_invitation_has_role auihr on aui.id = auihr.app_user_invitation
+         left join role_with_privileges rwp on auihr.role = rwp.id
          left join created_by cb on aui.created_by = cb.id
-group by aui.id, cb;
+group by aui.id, e, cb;
 
+create view app_user_registration_view as
+select aur.id,
+       aur.email,
+       aur.firstname,
+       aur.lastname,
+       aur.language,
+       aur.expires_at,
+       aur.created_at,
+       e as email_entity
+from app_user_registration aur
+         left join app_user_registration_to_email aurte on aur.id = aurte.app_user_registration
+         left join email e on aurte.email = e.id;

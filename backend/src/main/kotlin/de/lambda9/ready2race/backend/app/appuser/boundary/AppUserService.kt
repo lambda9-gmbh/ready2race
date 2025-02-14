@@ -132,7 +132,7 @@ object AppUserService {
         val record = !invitation.toAppUser(request.password)
         val id = !AppUserRepo.create(record).orDie()
 
-        val roles = invitation.roles!!.map { it!! }
+        val roles = invitation.roles!!.map { it!!.id!! }
 
         !RoleService.checkAssignable(roles)
         !AppUserHasRoleRepo.create(

@@ -118,10 +118,13 @@
     }
   },
   "user": {
-    "user": "User",
+    "email": "Email",
     "firstname": "Firstname",
+    "invitation": {
+      "invitation": "Invitation"
+    },
     "lastname": "Lastname",
-    "email": "Email"
+    "user": "User"
   },
   "role": {
     "role": "Role",

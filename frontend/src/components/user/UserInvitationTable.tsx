@@ -1,8 +1,8 @@
 import {BaseEntityTableProps} from '../../utils/types.ts'
-import {AppUserDto, getUsers} from '../../api'
+import {AppUserInvitationDto, getInvitations} from '../../api'
 import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import EntityTable from '../EntityTable.tsx'
 import {PaginationParameters} from '../../utils/ApiUtils.ts'
 
 const initialPagination: GridPaginationModel = {
@@ -13,15 +13,15 @@ const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'lastname', sort: 'asc'}]
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) =>
-    getUsers({
+    getInvitations({
         signal,
         query: paginationParameters,
     })
 
-const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
+const UserInvitationTable = (props: BaseEntityTableProps<AppUserInvitationDto>) => {
     const {t} = useTranslation()
 
-    const columns: GridColDef<AppUserDto>[] = [
+    const columns: GridColDef<AppUserInvitationDto>[] = [
         {
             field: 'firstname',
             headerName: t('user.firstname'),
@@ -55,4 +55,4 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
     )
 }
 
-export default UserTable
+export default UserInvitationTable

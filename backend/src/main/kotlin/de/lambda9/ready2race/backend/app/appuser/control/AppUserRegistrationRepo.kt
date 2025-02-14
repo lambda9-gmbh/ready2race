@@ -1,9 +1,11 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserRegistrationSort
-import de.lambda9.ready2race.backend.database.generated.tables.AppUserRegistration
+import de.lambda9.ready2race.backend.database.generated.tables.AppUserRegistrationView
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_REGISTRATION
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_REGISTRATION_VIEW
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -13,7 +15,7 @@ import java.time.LocalDateTime
 
 object AppUserRegistrationRepo {
 
-    private fun AppUserRegistration.searchFields() = listOf(EMAIL, FIRSTNAME, LASTNAME)
+    private fun AppUserRegistrationView.searchFields() = listOf(EMAIL, FIRSTNAME, LASTNAME)
 
     fun create(
         record: AppUserRegistrationRecord,
@@ -30,15 +32,15 @@ object AppUserRegistrationRepo {
     fun count(
         search: String?,
     ): JIO<Int> = Jooq.query {
-        with(APP_USER_REGISTRATION) {
+        with(APP_USER_REGISTRATION_VIEW) {
             fetchCount(this, search.metaSearch(searchFields()))
         }
     }
 
     fun page(
         params: PaginationParameters<AppUserRegistrationSort>,
-    ): JIO<List<AppUserRegistrationRecord>> = Jooq.query {
-        with(APP_USER_REGISTRATION) {
+    ): JIO<List<AppUserRegistrationViewRecord>> = Jooq.query {
+        with(APP_USER_REGISTRATION_VIEW) {
             selectFrom(this)
                 .page(params, searchFields())
                 .fetch()

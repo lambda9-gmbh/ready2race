@@ -3,6 +3,9 @@ import {BaseEntityDialogProps} from '../../utils/types.ts'
 import {addRole, RoleDto, RoleRequest, updateRole} from '../../api'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
+import {Stack} from '@mui/material'
+import {FormInputText} from '../form/input/FormInputText.tsx'
+import {takeIfNotEmpty} from '../../utils/ApiUtils.ts'
 
 type RoleForm = {
     name: string
@@ -24,7 +27,7 @@ const mapDtoToForm = (dto: RoleDto): RoleForm => ({
 
 const mapFormToRequest = (formData: RoleForm): RoleRequest => ({
     name: formData.name,
-    description: formData.description, // todo: after merger use function takeIfNotEmpty
+    description: takeIfNotEmpty(formData.description),
     privileges: formData.privileges,
 })
 
@@ -52,8 +55,12 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             formContext={formContext}
             onOpen={onOpen}
             addAction={addAction}
-            editAction={editAction}
-        />
+            editAction={editAction}>
+            <Stack spacing={2}>
+                <FormInputText name={'name'} label={'[todo] Bezeichnung'} required />
+                <FormInputText name={'description'} label={'[todo] Beschreibung'} />
+            </Stack>
+        </EntityDialog>
     )
 }
 

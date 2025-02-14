@@ -1,6 +1,6 @@
 import EntityTable from '../EntityTable.tsx'
 import {BaseEntityTableProps} from '../../utils/types.ts'
-import {getRoles, RoleDto} from '../../api'
+import {deleteRole, getRoles, RoleDto} from '../../api'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '../../utils/ApiUtils.ts'
 import {useTranslation} from 'react-i18next'
@@ -17,6 +17,8 @@ const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParame
         signal,
         query: paginationParameters,
     })
+
+const deleteRequest = (entity: RoleDto) => deleteRole({path: {roleId: entity.id}})
 
 const RoleTable = (props: BaseEntityTableProps<RoleDto>) => {
     const {t} = useTranslation()
@@ -45,6 +47,7 @@ const RoleTable = (props: BaseEntityTableProps<RoleDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
+            deleteRequest={deleteRequest}
             parentResource={'USER'}
         />
     )

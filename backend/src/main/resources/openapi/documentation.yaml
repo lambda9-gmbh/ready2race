@@ -74,10 +74,14 @@ paths:
                       $ref: '#/components/schemas/AppUserDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /user/{userId}:
@@ -98,7 +102,41 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /register:
+  /user/registration:
+    get:
+      operationId: getRegistrations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Registration page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppUserRegistrationDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
     post:
       operationId: registerUser
       requestBody:
@@ -118,7 +156,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /verifyRegistration:
+  /user/registration/verify:
     post:
       operationId: verifyUserRegistration
       requestBody:
@@ -138,7 +176,41 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /invite:
+  /user/invitation:
+    get:
+      operationId: getInvitations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Invitation page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppUserInvitationDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
     post:
       operationId: inviteUser
       requestBody:
@@ -158,7 +230,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-  /acceptInvitation:
+  /user/invitation/accept:
     post:
       operationId: acceptUserInvitation
       requestBody:
@@ -1152,8 +1224,37 @@ components:
             - ASC
             - DESC
 
+    # email
+
+    AssignedEmailDto:
+      type: object
+      required:
+        - recipient
+      properties:
+        recipient:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+        lastErrorAt:
+          type: string
+          format: date-time
+        lastError:
+          type: string
+
 
     # user
+
+    CreatedByDto:
+      type: object
+      required:
+        - firstname
+        - lastname
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
 
     AppUserDto:
       type: object
@@ -1177,6 +1278,37 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleDto'
+
+    AppUserRegistrationDto:
+      type: object
+      required:
+        - id
+        - email
+        - firstname
+        - lastname
+        - language
+        - expiresAt
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        assignedEmail:
+          $ref: '#/components/schemas/AssignedEmailDto'
 
     RegisterRequest:
       type: object
@@ -1209,6 +1341,44 @@ components:
       properties:
         token:
           type: string
+
+    AppUserInvitationDto:
+      type: object
+      required:
+        - id
+        - email
+        - firstname
+        - lastname
+        - language
+        - expiresAt
+        - createdAt
+        - roles
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        assignedEmail:
+          $ref: '#/components/schemas/AssignedEmailDto'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleDto'
+        createdBy:
+          $ref: '#/components/schemas/CreatedByDto'
 
     InviteRequest:
       type: object

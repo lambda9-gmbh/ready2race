@@ -15,12 +15,48 @@ export type AppUserDto = {
     roles: Array<RoleDto>
 }
 
+export type AppUserInvitationDto = {
+    id: string
+    email: string
+    firstname: string
+    lastname: string
+    language: EmailLanguage
+    expiresAt: string
+    createdAt: string
+    assignedEmail?: AssignedEmailDto
+    roles: Array<RoleDto>
+    createdBy?: CreatedByDto
+}
+
+export type AppUserRegistrationDto = {
+    id: string
+    email: string
+    firstname: string
+    lastname: string
+    language: EmailLanguage
+    expiresAt: string
+    createdAt: string
+    assignedEmail?: AssignedEmailDto
+}
+
 export type AssignDaysToRaceRequest = {
     days: Array<string>
 }
 
+export type AssignedEmailDto = {
+    recipient: string
+    sentAt?: string
+    lastErrorAt?: string
+    lastError?: string
+}
+
 export type AssignRacesToDayRequest = {
     races: Array<string>
+}
+
+export type CreatedByDto = {
+    firstname: string
+    lastname: string
 }
 
 export type EmailLanguage = 'de' | 'en'
@@ -296,6 +332,34 @@ export type GetUserResponse = AppUserDto
 
 export type GetUserError = string
 
+export type GetRegistrationsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRegistrationsResponse = {
+    data: Array<AppUserRegistrationDto>
+    pagination: Pagination
+}
+
+export type GetRegistrationsError = string
+
 export type RegisterUserData = {
     body: RegisterRequest
 }
@@ -311,6 +375,34 @@ export type VerifyUserRegistrationData = {
 export type VerifyUserRegistrationResponse = unknown
 
 export type VerifyUserRegistrationError = string
+
+export type GetInvitationsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetInvitationsResponse = {
+    data: Array<AppUserInvitationDto>
+    pagination: Pagination
+}
+
+export type GetInvitationsError = string
 
 export type InviteUserData = {
     body: InviteRequest

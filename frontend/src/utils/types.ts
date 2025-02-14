@@ -11,6 +11,7 @@ export type BaseEntityTableProps<E> = {
     reloadData: () => void
     openDialog: (entity?: E) => void
     options: UseEntityAdministrationOptions
+    title?: string
 }
 
 export type EntityTableAction = ReactElement<

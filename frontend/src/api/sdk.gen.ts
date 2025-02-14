@@ -14,12 +14,18 @@ import type {
     GetUsersResponse,
     GetUserError,
     GetUserResponse,
+    GetRegistrationsData,
+    GetRegistrationsError,
+    GetRegistrationsResponse,
     RegisterUserData,
     RegisterUserError,
     RegisterUserResponse,
     VerifyUserRegistrationData,
     VerifyUserRegistrationError,
     VerifyUserRegistrationResponse,
+    GetInvitationsData,
+    GetInvitationsError,
+    GetInvitationsResponse,
     InviteUserData,
     InviteUserError,
     InviteUserResponse,
@@ -169,12 +175,25 @@ export const getUser = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getRegistrations = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationsResponse,
+        GetRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/registration',
+    })
+}
+
 export const registerUser = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<RegisterUserData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).post<RegisterUserResponse, RegisterUserError, ThrowOnError>({
         ...options,
-        url: '/register',
+        url: '/user/registration',
     })
 }
 
@@ -187,7 +206,20 @@ export const verifyUserRegistration = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/verifyRegistration',
+        url: '/user/registration/verify',
+    })
+}
+
+export const getInvitations = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetInvitationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetInvitationsResponse,
+        GetInvitationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/invitation',
     })
 }
 
@@ -196,7 +228,7 @@ export const inviteUser = <ThrowOnError extends boolean = false>(
 ) => {
     return (options?.client ?? client).post<InviteUserResponse, InviteUserError, ThrowOnError>({
         ...options,
-        url: '/invite',
+        url: '/user/invitation',
     })
 }
 
@@ -209,7 +241,7 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/acceptInvitation',
+        url: '/user/invitation/accept',
     })
 }
 
