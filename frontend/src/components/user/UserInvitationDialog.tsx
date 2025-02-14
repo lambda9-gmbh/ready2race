@@ -1,7 +1,6 @@
 import {BaseEntityDialogProps} from '../../utils/types.ts'
 import {AppUserInvitationDto, EmailLanguage, InviteRequest, inviteUser} from '../../api'
 import i18next from 'i18next'
-import {useTranslation} from 'react-i18next'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
 import EntityDialog from '../EntityDialog.tsx'

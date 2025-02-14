@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
+import java.util.*
 
 object AppUserRegistrationRepo {
 
@@ -19,11 +20,11 @@ object AppUserRegistrationRepo {
 
     fun create(
         record: AppUserRegistrationRecord,
-    ): JIO<String> = Jooq.query {
+    ): JIO<UUID> = Jooq.query {
         with(APP_USER_REGISTRATION) {
             insertInto(this)
                 .set(record)
-                .returningResult(TOKEN)
+                .returningResult(ID)
                 .fetchOne()!!
                 .value1()!!
         }

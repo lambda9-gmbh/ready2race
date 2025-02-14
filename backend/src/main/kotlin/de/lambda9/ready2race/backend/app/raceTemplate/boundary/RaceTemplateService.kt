@@ -13,18 +13,14 @@ import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateDto
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateError
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateRequest
 import de.lambda9.ready2race.backend.app.raceTemplate.entity.RaceTemplateWithPropertiesSort
-import de.lambda9.ready2race.backend.count
 import de.lambda9.ready2race.backend.database.generated.tables.records.RaceTemplateRecord
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiError
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import io.ktor.http.*
 import java.time.LocalDateTime
 import java.util.*
 
