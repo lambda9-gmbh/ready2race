@@ -45,40 +45,64 @@ fun Route.user() {
             }
         }
 
-        // todo: evaluate rate limiting
-        post("/register") {
-            val payload = call.receiveV(RegisterRequest.example)
-            call.respondKIO {
-                payload.andThen {
-                    AppUserService.register(it)
+        route("/registration") {
+            // todo: evaluate rate limiting
+            post {
+                val payload = call.receiveV(RegisterRequest.example)
+                call.respondKIO {
+                    payload.andThen {
+                        AppUserService.register(it)
+                    }
+                }
+            }
+
+            get {
+                call.respondKIO {
+                    KIO.comprehension {
+                        !authenticate(Privilege.ReadUserGlobal)
+                        val params = !pagination<AppUserRegistrationSort>()
+                        AppUserService.pageRegistrations(params)
+                    }
+                }
+            }
+
+            post("/verify") {
+                val payload = call.receiveV(VerifyRegistrationRequest.example)
+                call.respondKIO {
+                    payload.andThen {
+                        AppUserService.verifyRegistration(it)
+                    }
                 }
             }
         }
 
-        post("/verifyRegistration") {
-            val payload = call.receiveV(VerifyRegistrationRequest.example)
-            call.respondKIO {
-                payload.andThen {
-                    AppUserService.verifyRegistration(it)
+        route("invitation") {
+            post {
+                val payload = call.receiveV(InviteRequest.example)
+                call.respondKIO {
+                    KIO.comprehension {
+                        val user = !authenticate(Privilege.CreateUserGlobal)
+                        AppUserService.invite(!payload, user)
+                    }
                 }
             }
-        }
 
-        post("/invite") {
-            val payload = call.receiveV(InviteRequest.example)
-            call.respondKIO {
-                KIO.comprehension {
-                    val user = !authenticate(Privilege.CreateUserGlobal)
-                    AppUserService.invite(!payload, user)
+            get {
+                call.respondKIO {
+                    KIO.comprehension {
+                        !authenticate(Privilege.ReadUserGlobal)
+                        val params = !pagination<AppUserInvitationWithRolesSort>()
+                        AppUserService.pageInvitations(params)
+                    }
                 }
             }
-        }
 
-        post("/acceptInvitation") {
-            val payload = call.receiveV(AcceptInvitationRequest.example)
-            call.respondKIO {
-                payload.andThen {
-                    AppUserService.acceptInvitation(it)
+            post("/accept") {
+                val payload = call.receiveV(AcceptInvitationRequest.example)
+                call.respondKIO {
+                    payload.andThen {
+                        AppUserService.acceptInvitation(it)
+                    }
                 }
             }
         }

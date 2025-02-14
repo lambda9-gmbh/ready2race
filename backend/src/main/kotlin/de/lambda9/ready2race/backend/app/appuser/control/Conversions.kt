@@ -2,9 +2,8 @@ package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.appuser.entity.AppUserDto
-import de.lambda9.ready2race.backend.app.appuser.entity.InviteRequest
-import de.lambda9.ready2race.backend.app.appuser.entity.RegisterRequest
+import de.lambda9.ready2race.backend.app.appuser.entity.*
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.role.control.toDto
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
@@ -30,6 +29,7 @@ fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
 fun InviteRequest.toRecord(inviterId: UUID, lifeTime: Duration): App<Nothing, AppUserInvitationRecord> =
     KIO.ok(
         AppUserInvitationRecord(
+            id = UUID.randomUUID(),
             token = RandomUtilities.token(),
             email = email,
             firstname = firstname,
@@ -44,6 +44,7 @@ fun InviteRequest.toRecord(inviterId: UUID, lifeTime: Duration): App<Nothing, Ap
 fun RegisterRequest.toRecord(lifeTime: Duration): App<Nothing, AppUserRegistrationRecord> =
     PasswordUtilities.hash(password).map {
         AppUserRegistrationRecord(
+            id = UUID.randomUUID(),
             token = RandomUtilities.token(),
             email = email,
             password = it,
@@ -84,9 +85,46 @@ fun AppUserInvitationWithRolesRecord.toAppUser(password: String): App<Nothing, A
                 lastname = lastname!!,
                 language = language!!,
                 createdAt = now,
-                createdBy = createdBy,
+                createdBy = createdBy?.id,
                 updatedAt = now,
-                updatedBy = createdBy
+                updatedBy = createdBy?.id
             )
         }
     }
+
+fun CreatedByRecord?.toDto(): App<Nothing, CreatedByDto?> =
+    KIO.ok(
+        this?.let {
+            CreatedByDto(
+                firstname = it.firstname!!,
+                lastname = it.lastname!!
+            )
+        }
+    )
+
+fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto> =
+    createdBy.toDto().map {
+        AppUserInvitationDto(
+            id = id!!,
+            email = email!!,
+            firstname = firstname!!,
+            lastname = lastname!!,
+            language = EmailLanguage.valueOf(language!!),
+            expiresAt = expiresAt!!,
+            createdAt = createdAt!!,
+            createdBy = it
+        )
+    }
+
+fun AppUserRegistrationRecord.toDto(): App<Nothing, AppUserRegistrationDto> =
+    KIO.ok(
+        AppUserRegistrationDto(
+            id = id,
+            email = email,
+            firstname = firstname,
+            lastname = lastname,
+            language = EmailLanguage.valueOf(language),
+            expiresAt = expiresAt,
+            createdAt = createdAt
+        )
+    )

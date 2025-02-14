@@ -7,6 +7,13 @@ drop view if exists named_participant_for_race_properties;
 drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
+drop view if exists created_by;
+
+create view created_by as
+select au.id,
+       au.firstname,
+       au.lastname
+from app_user au;
 
 create view role_with_privileges as
 select r.id,
@@ -105,8 +112,18 @@ from race_template rt
 group by rt.id, rp.id, rc.id;
 
 create view app_user_invitation_with_roles as
-select aui.*,
-       coalesce(array_agg(auihr.role) filter ( where auihr.role is not null ), '{}') as roles
+select aui.id,
+       aui.token,
+       aui.email,
+       aui.firstname,
+       aui.lastname,
+       aui.language,
+       aui.expires_at,
+       aui.created_at,
+       coalesce(array_agg(auihr.role) filter ( where auihr.role is not null ), '{}') as roles,
+       cb                                                                            as created_by
 from app_user_invitation aui
-         left join app_user_invitation_has_role auihr on aui.token = auihr.app_user_invitation
-group by aui.token;
+         left join app_user_invitation_has_role auihr on aui.id = auihr.app_user_invitation
+         left join created_by cb on aui.created_by = cb.id
+group by aui.id, cb;
+

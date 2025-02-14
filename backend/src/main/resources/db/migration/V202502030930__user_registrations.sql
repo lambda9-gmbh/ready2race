@@ -2,7 +2,8 @@ set search_path to ready2race, pg_catalog, public;
 
 create table app_user_registration
 (
-    token      char(30) primary key,
+    id         uuid primary key,
+    token      char(30)  not null,
     email      text      not null,
     password   text      not null,
     firstname  text      not null,
@@ -16,7 +17,8 @@ create unique index on app_user_registration (email);
 
 create table app_user_invitation
 (
-    token      char(30) primary key,
+    id         uuid primary key,
+    token      char(30)  not null,
     email      text      not null,
     firstname  text      not null,
     lastname   text      not null,
@@ -26,11 +28,12 @@ create table app_user_invitation
     created_by uuid      references app_user on delete set null
 );
 
+create unique index on app_user_invitation (token);
 create unique index on app_user_invitation (email);
 
 create table app_user_invitation_has_role
 (
-    app_user_invitation char(30) references app_user_invitation on delete cascade,
+    app_user_invitation uuid references app_user_invitation on delete cascade,
     role                uuid references role on delete cascade,
     primary key (app_user_invitation, role)
 );

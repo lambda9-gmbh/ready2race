@@ -38,7 +38,7 @@ object AppUserRepo {
     }
 
     fun countWithRoles(
-        search: String?
+        search: String?,
     ): JIO<Int> = Jooq.query {
         with(APP_USER_WITH_ROLES) {
             fetchCount(this, search.metaSearch(searchFields()))

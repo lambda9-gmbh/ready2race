@@ -53,6 +53,34 @@ object AppUserService {
         }
     }
 
+    fun pageInvitations(
+        params: PaginationParameters<AppUserInvitationWithRolesSort>,
+    ): App<Nothing, ApiResponse.Page<AppUserInvitationDto, AppUserInvitationWithRolesSort>> = KIO.comprehension {
+        val total = !AppUserInvitationRepo.countWithRoles(params.search).orDie()
+        val page = !AppUserInvitationRepo.pageWithRoles(params).orDie()
+
+        page.forEachM { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
+    fun pageRegistrations(
+        params: PaginationParameters<AppUserRegistrationSort>,
+    ): App<Nothing, ApiResponse.Page<AppUserRegistrationDto, AppUserRegistrationSort>> = KIO.comprehension {
+        val total = !AppUserRegistrationRepo.count(params.search).orDie()
+        val page = !AppUserRegistrationRepo.page(params).orDie()
+
+        page.forEachM { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
     fun invite(
         request: InviteRequest,
         inviter: AppUserWithPrivilegesRecord,
@@ -62,13 +90,13 @@ object AppUserService {
             .onTrueFail { AppUserError.EmailAlreadyInUse }
 
         val record = !request.toRecord(inviter.id!!, invitationLifeTime)
-        val token = !AppUserInvitationRepo.create(record).orDie()
+        val id = !AppUserInvitationRepo.create(record).orDie()
 
         !RoleService.checkAssignable(request.roles)
         !AppUserInvitationHasRoleRepo.create(
             request.roles.map {
                 AppUserInvitationHasRoleRecord(
-                    appUserInvitation = token,
+                    appUserInvitation = id,
                     role = it
                 )
             }
@@ -81,7 +109,7 @@ object AppUserService {
             template.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to request.firstname + " " + request.lastname,
                 EmailTemplatePlaceholder.SENDER to inviter.firstname + " " + inviter.lastname,
-                EmailTemplatePlaceholder.LINK to request.callbackUrl + token,
+                EmailTemplatePlaceholder.LINK to request.callbackUrl + record.token,
             )
         }
 
