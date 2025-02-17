@@ -34,7 +34,7 @@ const EventPage = () => {
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(data && (
                 <>
-                    <Typography variant="h3">{data.name}</Typography>
+                    <Typography variant="h1">{data.name}</Typography>
                     <Box sx={{mt: 4}}>
                         <RaceTable
                             {...raceAdministrationProps.table}

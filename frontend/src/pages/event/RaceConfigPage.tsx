@@ -31,15 +31,15 @@ const RaceConfigPage = () => {
                 />
                 <RaceTemplateDialog {...raceTemplateAdministrationProps.dialog} />
             </Box>
-            <Stack spacing={4} direction="row" sx={{mt: 4}}>
-                <Box>
+            <Stack spacing={10} direction="row" justifyContent='space-between' sx={{mt: 4}}>
+                <Box sx={{flex: 1}}>
                     <RaceCategoryTable
                         {...raceCategoryAdministrationProps.table}
                         title={t('event.race.category.categories')}
                     />
                     <RaceCategoryDialog {...raceCategoryAdministrationProps.dialog} />
                 </Box>
-                <Box>
+                <Box sx={{flex: 1}}>
                     <NamedParticipantTable
                         {...namedParticipantAdministrationProps.table}
                         title={t('event.race.namedParticipant.namedParticipants')}

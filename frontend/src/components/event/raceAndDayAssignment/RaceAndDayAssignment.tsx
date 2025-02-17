@@ -109,8 +109,8 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
     const [autocompleteContent, setAutocompleteContent] = useState({id: '', label: ''})
 
     return (
-        <Box sx={{flex: 1, maxWidth: 400, border: 1, borderRadius: 4, p: 4}}>
-            <Typography variant="h4">{t('event.assign.title', entityNames)}</Typography>
+        <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
+            <Typography variant="h2">{racesToDay ? t('event.eventDay.assignedRaces') : t('event.race.assignedDays')}</Typography>
             <Button onClick={openDialog} variant="outlined" sx={{mt: 1, mb: 2}}>
                 {t('common.edit')}
             </Button>
@@ -145,7 +145,6 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
                             racesToDay={racesToDay}
                             removeElement={removeEntity}
                         />
-
                         <Box sx={{mt: 2}}>
                             <DialogActions>
                                 <Button onClick={closeDialog} disabled={submitting}>

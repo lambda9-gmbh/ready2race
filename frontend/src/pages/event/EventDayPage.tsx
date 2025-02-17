@@ -70,10 +70,10 @@ const EventDayPage = () => {
 
     return (
         <Grid2 container justifyContent="space-between" direction="row" spacing={2}>
-            <Box sx={{flex: 1, maxWidth: 400}}>
+            <Box sx={{flex: 1, maxWidth: 600}}>
                 {(eventDayData && (
                     <Stack spacing={2}>
-                        <EntityDetailsEntry content={eventDayData.date + ( eventDayData.name ? " | " + eventDayData.name : "")} variant="h4"/>
+                        <EntityDetailsEntry content={eventDayData.date + ( eventDayData.name ? " | " + eventDayData.name : "")} variant="h1"/>
                         <EntityDetailsEntry content={eventDayData.description}/>
                     </Stack>
                 )) || <Throbber />}

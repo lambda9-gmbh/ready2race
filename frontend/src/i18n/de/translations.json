@@ -79,8 +79,7 @@
       "save": {
         "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
         "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
-      },
-      "title": "{{toBeAssigned}} für den {{assignedTo}}"
+      }
     },
     "event": "Veranstaltung",
     "eventDay": {
@@ -94,6 +93,7 @@
     },
     "location": "Ort",
     "race": {
+      "assignedDays": "Tage des Rennens",
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien"
@@ -140,6 +140,10 @@
     "password": "Passwort",
     "registration": {
       "email": {
+        "emailSent": {
+          "header": "Bestätigen Sie Ihre E-Mail-Adresse",
+          "message": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.\nKlicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+        },
         "inUse": {
           "statement": "Die eingegebene E-Mail Adresse ist bereits in Verwendung.",
           "callToAction": "Bitte verwenden Sie eine andere E-Mail Adresse oder melden Sie sich mit der bestehenden an."
@@ -148,6 +152,7 @@
       "error": "Bei der Registrierung ist ein Fehler aufgetreten",
       "password": {
         "confirm": "Passwort bestätigen",
+        "minLength": "{{min}} oder mehr Zeichen",
         "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
         "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
       },

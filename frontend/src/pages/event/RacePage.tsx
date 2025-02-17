@@ -75,10 +75,10 @@ const RacePage = () => {
 
     return (
         <Grid2 container justifyContent="space-between" direction="row" spacing={2}>
-            <Box sx={{flex: 1, maxWidth: 400}}>
+            <Box sx={{flex: 1, maxWidth: 600}}>
                 {(raceData && (
                     <Stack spacing={2}>
-                        <EntityDetailsEntry content={raceData.properties.identifier + " | " + raceData.properties.name} variant="h4"/>
+                        <EntityDetailsEntry content={raceData.properties.identifier + " | " + raceData.properties.name} variant="h1"/>
                         <EntityDetailsEntry content={raceData.properties.shortName}/>
                         <EntityDetailsEntry content={raceData.properties.description}/>
                         {raceData.properties.raceCategory && (
@@ -102,7 +102,7 @@ const RacePage = () => {
                             <>
                                 <Divider orientation="horizontal" key={`divider${index}`}/>
                                 <Box key={`box${index}`}>
-                                    <Typography variant="h5">{np.name}</Typography>
+                                    <Typography variant="subtitle1">{np.name}</Typography>
                                     <Typography>{np.description}</Typography>
                                     <Typography>
                                         {np.required

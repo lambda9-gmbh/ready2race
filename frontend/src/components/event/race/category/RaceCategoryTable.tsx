@@ -34,13 +34,12 @@ const RaceCategoryTable = (props: BaseEntityTableProps<RaceCategoryDto>) => {
         {
             field: 'name',
             headerName: t('entity.name'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
             headerName: t('entity.description'),
-            minWidth: 200,
             flex: 2,
             sortable: false,
         }

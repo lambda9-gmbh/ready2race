@@ -34,19 +34,18 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
         {
             field: 'date',
             headerName: t('event.eventDay.date'),
-            minWidth: 150,
+            minWidth: 120,
             flex: 0,
         },
         {
             field: 'name',
             headerName: t('entity.name'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
             headerName: t('entity.description'),
-            minWidth: 200,
             flex: 2,
             sortable: false,
         },

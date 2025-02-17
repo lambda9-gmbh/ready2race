@@ -79,8 +79,7 @@
       "save": {
         "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
         "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
-      },
-      "title": "{{toBeAssigned}} for the {{assignedTo}}"
+      }
     },
     "event": "Event",
     "eventDay": {
@@ -94,6 +93,7 @@
     },
     "location": "Location",
     "race": {
+      "assignedDays": "Days of the race",
       "category": {
         "category": "Category",
         "categories": "Categories"
@@ -140,6 +140,10 @@
     "password": "Password",
     "registration": {
       "email": {
+        "emailSent": {
+          "header": "Please verify your email",
+          "message": "We've sent you an email to verify your email adress and activate your account.\nClick on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+        },
         "inUse": {
           "statement": "The email address you entered is already in use.",
           "callToAction": "Please use a different email address or log in with the existing one."
@@ -148,6 +152,7 @@
       "error": "An error has occurred during registration",
       "password": {
         "confirm": "Confirm password",
+        "minLength": "{{min}} or more characters",
         "notMatching": "The two passwords you entered do not match. Please ensure that they are identical.",
         "tooShort": "Please enter a password with at least {{min}} characters"
       },

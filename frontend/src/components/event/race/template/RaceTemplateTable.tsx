@@ -32,14 +32,13 @@ const RaceTemplateTable = (props: BaseEntityTableProps<RaceTemplateDto>) => {
         {
             field: 'name',
             headerName: t('entity.name'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 1,
             valueGetter: (_, e) => e.properties.name
         },
         {
             field: 'description',
             headerName: t('entity.description'),
-            minWidth: 200,
             flex: 2,
             sortable: false,
             valueGetter: (_, e) => e.properties.description

@@ -250,7 +250,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
 
     return (
         <Box>
-            {title && <Typography variant={'h6'}>{title}</Typography>}
+            {title && <Typography variant={'h2'}>{title}</Typography>}
             <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
                 {withSearch && (
                     <TextField
