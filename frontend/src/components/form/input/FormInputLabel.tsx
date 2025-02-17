@@ -13,8 +13,8 @@ const FormInputLabel = (props: Props) => {
             {!props.required && (
                 <Typography
                     className={'input-label-optional-text'}
-                    variant="body2"
-                    alignSelf="center">{` (${props.optional})`}</Typography>
+                    alignSelf="center"
+                >{` - ${props.optional}`}</Typography>
             )}
         </Stack>
     )

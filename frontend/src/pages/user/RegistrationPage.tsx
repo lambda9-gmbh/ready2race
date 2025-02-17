@@ -1,4 +1,4 @@
-import {Box, Button, Card, Stack, Typography} from '@mui/material'
+import {Box, Divider, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {FormContainer, PasswordElement, useForm} from 'react-hook-form-mui'
 import {registerUser} from '../../api'
@@ -8,6 +8,8 @@ import {FormInputText} from '../../components/form/input/FormInputText.tsx'
 import {SubmitButton} from '../../components/form/SubmitButton.tsx'
 import {EmailOutlined} from '@mui/icons-material'
 import FormInputPassword from '../../components/form/input/FormInputPassword.tsx'
+import SimpleFormLayout from '../../components/SimpleFormLayout.tsx'
+import {Link} from '@tanstack/react-router'
 
 type Form = {
     email: string
@@ -62,120 +64,114 @@ const RegistrationPage = () => {
     }
 
     return (
-        <Box sx={{display: 'flex'}}>
-            {/*to SimpleFormLayout*/}
-            <Card
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignSelf: 'center',
-                    margin: 'auto',
-                    maxWidth: 600,
-                    padding: 4,
-                }}>
-                {(!mailSent && (
-                    <>
-                        <Box sx={{mb: 4}}>
-                            <Typography variant="h1">
-                                {t('user.registration.registration')}
-                            </Typography>
-                        </Box>
-                        <FormContainer formContext={formContext} onSuccess={handleSubmit}>
-                            <Stack spacing={4}>
-                                <FormInputText name={'email'} label={t('user.email')} required />
-                                <Stack direction="row" spacing={2}>
-                                    <FormInputPassword
-                                        name={'password'}
-                                        label={t('user.password')}
-                                        required
-                                        helperText={t('user.registration.password.minLength', {
-                                            min: minPasswordLength,
-                                        })}
-                                        rules={{
-                                            minLength: {
-                                                value: minPasswordLength,
-                                                message: t('user.registration.password.tooShort', {
-                                                    min: minPasswordLength,
-                                                }),
-                                            },
-                                            validate: (val, vals) => {
-                                                if (val !== vals['confirmPassword']) {
-                                                    formContext.setError('confirmPassword', {
-                                                        type: 'validate',
-                                                        message: t(
-                                                            'user.registration.password.notMatching',
-                                                        ),
-                                                    })
-                                                    return t(
+        <SimpleFormLayout maxWidth={500}>
+            {(!mailSent && (
+                <>
+                    <Box sx={{mb:4}} >
+                        <Typography variant="h1">{t('user.registration.register')}</Typography>
+                    </Box>
+                    <FormContainer formContext={formContext} onSuccess={handleSubmit}>
+                        <Stack spacing={4}>
+                            <FormInputText name={'email'} label={t('user.email')} required />
+                            <Stack direction="row" spacing={2}>
+                                <FormInputPassword
+                                    name={'password'}
+                                    label={t('user.password')}
+                                    required
+                                    helperText={t('user.registration.password.minLength', {
+                                        min: minPasswordLength,
+                                    })}
+                                    rules={{
+                                        minLength: {
+                                            value: minPasswordLength,
+                                            message: t('user.registration.password.tooShort', {
+                                                min: minPasswordLength,
+                                            }),
+                                        },
+                                        validate: (val, vals) => {
+                                            if (val !== vals['confirmPassword']) {
+                                                formContext.setError('confirmPassword', {
+                                                    type: 'validate',
+                                                    message: t(
                                                         'user.registration.password.notMatching',
-                                                    )
-                                                } else {
-                                                    formContext.clearErrors('confirmPassword')
-                                                }
-                                            },
-                                        }}
-                                    />
-                                    <PasswordElement
-                                        name="confirmPassword"
-                                        label={t('user.registration.password.confirm')}
-                                        required
-                                        type="password"
-                                        rules={{
-                                            required: t('common.form.required'),
-                                            validate: (val, vals) => {
-                                                if (val !== vals['password']) {
-                                                    formContext.setError('password', {
-                                                        type: 'validate',
-                                                        message: t(
-                                                            'user.registration.password.notMatching',
-                                                        ),
-                                                    })
-                                                    return t(
+                                                    ),
+                                                })
+                                                return t('user.registration.password.notMatching')
+                                            } else {
+                                                formContext.clearErrors('confirmPassword')
+                                            }
+                                        },
+                                    }}
+                                    sx={{flex: 1}}
+                                />
+                                <PasswordElement
+                                    name="confirmPassword"
+                                    label={t('user.registration.password.confirm')}
+                                    required
+                                    type="password"
+                                    rules={{
+                                        required: t('common.form.required'),
+                                        validate: (val, vals) => {
+                                            if (val !== vals['password']) {
+                                                formContext.setError('password', {
+                                                    type: 'validate',
+                                                    message: t(
                                                         'user.registration.password.notMatching',
-                                                    )
-                                                } else {
-                                                    formContext.clearErrors('password')
-                                                }
-                                            },
-                                        }}
-                                        sx={{maxWidth: 250}}
-                                    />
-                                </Stack>
-                                <Stack spacing={2} direction="row">
-                                    <FormInputText
-                                        name={'firstname'}
-                                        label={t('user.firstname')}
-                                        required
-                                    />
-                                    <FormInputText
-                                        name={'lastname'}
-                                        label={t('user.lastname')}
-                                        required
-                                    />
-                                </Stack>
-                                <SubmitButton
-                                    label={t('user.registration.register')}
-                                    submitting={submitting}
+                                                    ),
+                                                })
+                                                return t('user.registration.password.notMatching')
+                                            } else {
+                                                formContext.clearErrors('password')
+                                            }
+                                        },
+                                    }}
+                                    sx={{flex: 1}}
                                 />
                             </Stack>
-                        </FormContainer>
-                        <Button onClick={() => setMailSent(true)}>Delete this later</Button>
-                    </>
-                )) || (
-                    <>
-                        <Box sx={{display: 'flex'}}>
-                            <EmailOutlined sx={{height: 100, width: 100, margin: 'auto'}} />
-                        </Box>
-                        <Typography textAlign="center" variant="h2">
-                            {t('user.registration.email.emailSent.header')}
+                            <Stack spacing={2} direction="row">
+                                <FormInputText
+                                    name={'firstname'}
+                                    label={t('user.firstname')}
+                                    required
+                                    sx={{flex: 1}}
+                                />
+                                <FormInputText
+                                    name={'lastname'}
+                                    label={t('user.lastname')}
+                                    required
+                                    sx={{flex: 1}}
+                                />
+                            </Stack>
+                            <SubmitButton
+                                label={t('user.registration.register')}
+                                submitting={submitting}
+                            />
+                            <Divider />
+                        </Stack>
+                    </FormContainer>
+                    <Stack direction="row" spacing="5px" justifyContent="center" sx={{mt: 4}}>
+                        <Typography variant="body1" sx={{fontWeight: 'light'}}>
+                            {t('user.registration.login.message')}
                         </Typography>
-                        <Typography variant="body1">
-                            {t('user.registration.email.emailSent.message')}
-                        </Typography>
-                    </>
-                )}
-            </Card>
-        </Box>
+                        <Link to="/login">
+                            <Typography>{t('user.registration.login.link')}</Typography>
+                        </Link>
+                    </Stack>
+                </>
+            )) || (
+                <>
+                    <Box sx={{display: 'flex'}}>
+                        <EmailOutlined sx={{height: 100, width: 100, margin: 'auto'}} />
+                    </Box>
+                    <Typography textAlign="center" variant="h2">
+                        {t('user.registration.email.emailSent.header')}
+                    </Typography>
+                    <Typography variant="body1">
+                        {t('user.registration.email.emailSent.message')}
+                    </Typography>
+                </>
+            )}
+        </SimpleFormLayout>
     )
 }
 

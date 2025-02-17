@@ -1,7 +1,11 @@
 import {Box, Card} from '@mui/material'
 import {PropsWithChildren} from 'react'
 
-const SimpleFormLayout = ({children}: PropsWithChildren) => {
+type Props = PropsWithChildren & {
+    maxWidth: number
+}
+
+const SimpleFormLayout = ({children, maxWidth}: Props) => {
     return (
         <Box sx={{display: 'flex'}}>
             <Card
@@ -10,8 +14,9 @@ const SimpleFormLayout = ({children}: PropsWithChildren) => {
                     flexDirection: 'column',
                     alignSelf: 'center',
                     margin: 'auto',
-                    maxWidth: 600,
+                    maxWidth: maxWidth,
                     padding: 4,
+                    flex:1
                 }}>
                 {children}
             </Card>

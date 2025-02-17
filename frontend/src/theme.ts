@@ -23,7 +23,7 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
         },
         body1:{
             fontSize: '1rem',
-        }
+        },
     },
     components: {
         MuiButton: {
@@ -37,23 +37,23 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
             styleOverrides: {
                 root: {
                     "& label span": {
-                        backgroundColor: "#229944",
                         display: "none" // Removes the "Required" Asterisk to follow KERN-Recommendations (Optional Fields are marked with "(optional)")
                     },
-                    "&.Mui-focused": {
-                        backgroundColor: "#229944"
-
-                    }
                 },
             }
         },MuiFormLabel: {
             styleOverrides: {
                 root: {
-                    "&.Mui-focused": {
+                    ".input-label-optional-text":{
+                        fontSize: '0.8rem',
+                        color: 'grey',
+                    },
+                    "&.MuiInputLabel-shrink": {
                         ".input-label-optional-text":{
-                            fontSize: _theme.typography.body1.fontSize // When a Form-Field is focused the "optional"-text fontSize of the input label is set to the same size of the rest of the label (body1)
+                            fontSize: _theme.typography.body1.fontSize, // When a Form-Field is focused the "optional"-text fontSize of the input label is set to the same size of the rest of the label (body1)
+                            color: 'inherit'
                         },
-                    }
+                    },
                 },
             }
         },

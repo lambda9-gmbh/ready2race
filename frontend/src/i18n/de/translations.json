@@ -30,7 +30,7 @@
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
         }
       },
-      "optional": "optional",
+      "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus."
     },
     "load": {
@@ -73,13 +73,6 @@
       "roles": "Rollen",
       "users": "Benutzer"
     }
-  },
-  "login": {
-    "login": "Anmelden",
-    "email": "E-Mail",
-    "password": "Passwort",
-    "submit": "Anmelden",
-    "error": "Logindaten inkorrekt"
   },
   "event": {
     "assign": {
@@ -145,7 +138,20 @@
     },
     "lastname": "Nachname",
     "password": "Passwort",
+    "login": {
+      "login": "Anmelden",
+      "email": "E-Mail",
+      "password": "Passwort",
+      "forgotPassword": "Passwort vergessen?",
+      "signUp": {
+        "link": "Hier registrieren",
+        "message": "Sie haben noch keinen Account?"
+      },
+      "submit": "Anmelden",
+      "error": "Logindaten inkorrekt"
+    },
     "registration": {
+      "register": "Registrieren",
       "email": {
         "emailSent": {
           "header": "Bestätigen Sie Ihre E-Mail-Adresse",
@@ -163,8 +169,10 @@
         "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
         "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
       },
-      "register": "Registrieren",
-      "registration": "Registrierung"
+      "login": {
+        "link": "Hier anmelden",
+        "message": "Sie besitzen bereits einen Account?"
+      }
     },
     "user": "Benutzer"
   },

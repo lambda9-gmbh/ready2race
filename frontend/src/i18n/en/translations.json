@@ -30,7 +30,7 @@
           "range": "Please enter a number between {{min}} and {{max}}."
         }
       },
-      "optional": "optional",
+      "optional": "Optional",
       "required": "Please fill in this field."
     },
     "load": {
@@ -73,13 +73,6 @@
       "roles": "Roles",
       "users": "Users"
     }
-  },
-  "login": {
-    "login": "Login",
-    "email": "Email",
-    "password": "Password",
-    "submit": "Login",
-    "error": "Incorrect credentials"
   },
   "event": {
     "assign": {
@@ -145,7 +138,20 @@
     },
     "lastname": "Lastname",
     "password": "Password",
+    "login": {
+      "login": "Login",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "signUp": {
+        "link": "Register here",
+        "message": "Don't have an account?"
+      },
+      "submit": "Login",
+      "error": "Incorrect credentials"
+    },
     "registration": {
+      "register": "Register",
       "email": {
         "emailSent": {
           "header": "Please verify your email",
@@ -163,8 +169,10 @@
         "notMatching": "The two passwords you entered do not match. Please ensure that they are identical.",
         "tooShort": "Please enter a password with at least {{min}} characters"
       },
-      "register": "Register",
-      "registration": "Registration"
+      "login": {
+        "link": "Login here",
+        "message": "Already have an account?"
+      }
     },
     "user": "User"
   },
