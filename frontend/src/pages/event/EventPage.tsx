@@ -16,10 +16,10 @@ const EventPage = () => {
     const {eventId} = eventRoute.useParams()
 
     const {data} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
-        onResponse: result => {
-            if (result.error) {
+        onResponse: ({error}) => {
+            if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                console.log(result.error)
+                console.log(error)
             }
         },
         deps: [eventId],

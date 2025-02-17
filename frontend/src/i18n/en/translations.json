@@ -7,6 +7,9 @@
     },
     "delete": "Delete",
     "edit": "Edit",
+    "error": {
+      "unexpected": "An unexpected error has occured. Please try again later."
+    },
     "form": {
       "autocomplete": {
         "noOptions": "No options",
@@ -27,6 +30,7 @@
           "range": "Please enter a number between {{min}} and {{max}}."
         }
       },
+      "optional": "optional",
       "required": "Please fill in this field."
     },
     "load": {
@@ -71,8 +75,11 @@
     }
   },
   "login": {
+    "login": "Login",
     "email": "Email",
-    "password": "Password"
+    "password": "Password",
+    "submit": "Login",
+    "error": "Incorrect credentials"
   },
   "event": {
     "assign": {

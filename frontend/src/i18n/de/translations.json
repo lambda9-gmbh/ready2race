@@ -7,6 +7,9 @@
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "error": {
+      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+    },
     "form": {
       "autocomplete": {
         "noOptions": "Keine Auswahl",
@@ -27,6 +30,7 @@
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
         }
       },
+      "optional": "optional",
       "required": "Bitte füllen Sie dieses Feld aus."
     },
     "load": {
@@ -71,8 +75,11 @@
     }
   },
   "login": {
+    "login": "Anmelden",
     "email": "E-Mail",
-    "password": "Passwort"
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "error": "Logindaten inkorrekt"
   },
   "event": {
     "assign": {

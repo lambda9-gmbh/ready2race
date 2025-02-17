@@ -1,25 +1,20 @@
+import {PasswordElement, PasswordElementProps} from 'react-hook-form-mui'
 import {RefAttributes} from 'react'
 import {useTranslation} from 'react-i18next'
-import {DatePickerElement, DatePickerElementProps} from 'react-hook-form-mui/date-pickers'
-import {formatISO} from 'date-fns'
 import FormInputLabel from "./FormInputLabel.tsx";
 
-type FormInputDateProps = DatePickerElementProps & RefAttributes<HTMLDivElement>
+type FormInputPasswordProps = Omit<PasswordElementProps & RefAttributes<HTMLDivElement>, 'type'>
 
-const FormInputDate = (props: FormInputDateProps) => {
+const FormInputPassword = (props: FormInputPasswordProps) => {
     const {t} = useTranslation()
 
     return (
-        <DatePickerElement
+        <PasswordElement
             {...props}
             rules={{
                 ...props.rules,
                 ...(props.required &&
                     !props.rules?.required && {required: t('common.form.required')}),
-            }}
-            transform={{
-                output: value =>
-                    value === null ? undefined : formatISO(value, {representation: 'date'}),
             }}
             label={
                 <FormInputLabel
@@ -31,4 +26,5 @@ const FormInputDate = (props: FormInputDateProps) => {
         />
     )
 }
-export default FormInputDate
+
+export default FormInputPassword

@@ -1,12 +1,13 @@
 import {Box, Button, Card, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {FormContainer, TextFieldElement, useForm} from 'react-hook-form-mui'
+import {FormContainer, PasswordElement, useForm} from 'react-hook-form-mui'
 import {registerUser} from '../../api'
 import {useState} from 'react'
 import {useFeedback} from '../../utils/hooks.ts'
 import {FormInputText} from '../../components/form/input/FormInputText.tsx'
 import {SubmitButton} from '../../components/form/SubmitButton.tsx'
 import {EmailOutlined} from '@mui/icons-material'
+import FormInputPassword from '../../components/form/input/FormInputPassword.tsx'
 
 type Form = {
     email: string
@@ -30,7 +31,7 @@ const RegistrationPage = () => {
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
-        const result = await registerUser({
+        const {error} = await registerUser({
             body: {
                 email: formData.email,
                 password: formData.password,
@@ -41,30 +42,28 @@ const RegistrationPage = () => {
             },
         })
         setSubmitting(false)
-
-        if (result) {
-            if (result.error) {
-                if (result.error.status.value === 409) {
-                    formContext.setError('email', {
-                        type: 'validate',
-                        message:
-                            t('user.registration.email.inUse.statement') +
-                            ' ' +
-                            t('user.registration.email.inUse.callToAction'),
-                    })
-                    feedback.error(t('user.registration.email.inUse.statement'))
-                } else {
-                    feedback.error(t('user.registration.error'))
-                }
-                console.log(result.error)
+        if (error) {
+            if (error.status.value === 409) {
+                formContext.setError('email', {
+                    type: 'validate',
+                    message:
+                        t('user.registration.email.inUse.statement') +
+                        ' ' +
+                        t('user.registration.email.inUse.callToAction'),
+                })
+                feedback.error(t('user.registration.email.inUse.statement'))
             } else {
-                setMailSent(true)
+                feedback.error(t('user.registration.error'))
             }
+            console.log(error)
+        } else {
+            setMailSent(true)
         }
     }
 
     return (
         <Box sx={{display: 'flex'}}>
+            {/*to SimpleFormLayout*/}
             <Card
                 sx={{
                     display: 'flex',
@@ -85,16 +84,14 @@ const RegistrationPage = () => {
                             <Stack spacing={4}>
                                 <FormInputText name={'email'} label={t('user.email')} required />
                                 <Stack direction="row" spacing={2}>
-                                    <TextFieldElement
+                                    <FormInputPassword
                                         name={'password'}
                                         label={t('user.password')}
                                         required
-                                        type="password"
                                         helperText={t('user.registration.password.minLength', {
                                             min: minPasswordLength,
                                         })}
                                         rules={{
-                                            required: t('common.form.required'),
                                             minLength: {
                                                 value: minPasswordLength,
                                                 message: t('user.registration.password.tooShort', {
@@ -118,7 +115,7 @@ const RegistrationPage = () => {
                                             },
                                         }}
                                     />
-                                    <TextFieldElement
+                                    <PasswordElement
                                         name="confirmPassword"
                                         label={t('user.registration.password.confirm')}
                                         required
@@ -169,8 +166,12 @@ const RegistrationPage = () => {
                         <Box sx={{display: 'flex'}}>
                             <EmailOutlined sx={{height: 100, width: 100, margin: 'auto'}} />
                         </Box>
-                        <Typography textAlign='center' variant='h2'>{t('user.registration.email.emailSent.header')}</Typography>
-                        <Typography variant='body1'>{t('user.registration.email.emailSent.message')}</Typography>
+                        <Typography textAlign="center" variant="h2">
+                            {t('user.registration.email.emailSent.header')}
+                        </Typography>
+                        <Typography variant="body1">
+                            {t('user.registration.email.emailSent.message')}
+                        </Typography>
                     </>
                 )}
             </Card>

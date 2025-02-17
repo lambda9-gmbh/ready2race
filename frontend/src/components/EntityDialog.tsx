@@ -56,7 +56,7 @@ const EntityDialog = <
 
     const onSubmit = async (formData: Form) => {
         setSubmitting(true)
-        let requestResult = entity
+        let requestResult = entity // todo: to const?
             ? await editAction?.(formData, entity)
             : await addAction?.(formData)
         setSubmitting(false)

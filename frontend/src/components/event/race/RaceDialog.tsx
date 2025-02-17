@@ -38,8 +38,8 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const {data: templatesData, pending: templatesPending} = useFetch(
         signal => getRaceTemplates({signal}),
         {
-            onResponse: result => {
-                if (result.error) {
+            onResponse: ({error}) => {
+                if (error) {
                     feedback.error(
                         t('common.load.error.multiple', {
                             entity: t('event.race.template.templates'),

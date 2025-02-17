@@ -22,10 +22,10 @@ const RacePage = () => {
     const {data: raceData} = useFetch(
         signal => getRace({signal, path: {eventId: eventId, raceId: raceId}}),
         {
-            onResponse: result => {
-                if (result.error) {
+            onResponse: ({error}) => {
+                if (error) {
                     feedback.error(t('common.load.error.single', {entity: t('event.race.race')}))
-                    console.log(result.error)
+                    console.log(error)
                 }
             },
             deps: [eventId, raceId],
@@ -35,12 +35,12 @@ const RacePage = () => {
     const {data: assignedEventDaysData} = useFetch(
         signal => getEventDays({signal, path: {eventId: eventId}, query: {raceId: raceId}}),
         {
-            onResponse: result => {
-                if (result.error) {
+            onResponse: ({error}) => {
+                if (error) {
                     feedback.error(
                         t('common.load.error.multiple', {entity: t('event.eventDay.eventDays')}),
                     )
-                    console.log(result.error)
+                    console.log(error)
                 }
             },
             deps: [eventId, raceId, reloadDataTrigger],
@@ -55,12 +55,12 @@ const RacePage = () => {
     const {data: eventDaysData} = useFetch(
         signal => getEventDays({signal, path: {eventId: eventId}}),
         {
-            onResponse: result => {
-                if (result.error) {
+            onResponse: ({error}) => {
+                if (error) {
                     feedback.error(
                         t('common.load.error.multiple', {entity: t('event.eventDay.eventDays')}),
                     )
-                    console.log(result.error)
+                    console.log(error)
                 }
             },
             deps: [eventId, reloadDataTrigger],

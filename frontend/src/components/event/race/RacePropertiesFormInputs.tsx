@@ -21,8 +21,8 @@ export const RacePropertiesFormInputs = (props: Props) => {
     const {data: namedParticipantsData, pending: namedParticipantsPending} = useFetch(
         signal => getNamedParticipants({signal}),
         {
-            onResponse: result => {
-                if (result.error) {
+            onResponse: ({error}) => {
+                if (error) {
                     feedback.error(
                         t('common.load.error.multiple', {
                             entity: t('event.race.namedParticipant.namedParticipants'),
@@ -42,8 +42,8 @@ export const RacePropertiesFormInputs = (props: Props) => {
     const {data: categoriesData, pending: categoriesPending} = useFetch(
         signal => getRaceCategories({signal}),
         {
-            onResponse: result => {
-                if (result.error) {
+            onResponse: ({error}) => {
+                if (error) {
                     feedback.error(
                         t('common.load.error.multiple', {
                             entity: t('event.race.category.categories'),

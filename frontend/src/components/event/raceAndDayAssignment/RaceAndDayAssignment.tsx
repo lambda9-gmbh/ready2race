@@ -73,7 +73,7 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
 
     const onSubmit = async (formData: AssignmentForm) => {
         setSubmitting(true)
-        const result = racesToDay
+        const {error} = racesToDay
             ? await assignRacesToEventDay({
                   path: {eventId: eventId, eventDayId: props.entityPathId},
                   body: {
@@ -88,17 +88,15 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
               })
         setSubmitting(false)
 
-        if (result) {
-            if (result.error) {
-                // todo better error display with specific error types
-                console.log(result.error)
-                feedback.error(t('event.assign.save.error', entityNames))
-            } else {
-                closeDialog()
-                // todo reloadData()
-                props.onSuccess()
-                feedback.success(t('event.assign.save.success', entityNames))
-            }
+        if (error) {
+            // todo better error display with specific error types
+            console.log(error)
+            feedback.error(t('event.assign.save.error', entityNames))
+        } else {
+            closeDialog()
+            // todo reloadData()
+            props.onSuccess()
+            feedback.success(t('event.assign.save.success', entityNames))
         }
     }
 
@@ -110,7 +108,9 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
 
     return (
         <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
-            <Typography variant="h2">{racesToDay ? t('event.eventDay.assignedRaces') : t('event.race.assignedDays')}</Typography>
+            <Typography variant="h2">
+                {racesToDay ? t('event.eventDay.assignedRaces') : t('event.race.assignedDays')}
+            </Typography>
             <Button onClick={openDialog} variant="outlined" sx={{mt: 1, mb: 2}}>
                 {t('common.edit')}
             </Button>
@@ -124,7 +124,7 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
                 fullWidth={true}
                 maxWidth={'xs'}
                 className="ready2race">
-                <Box sx={{ mx: 4, my: 2}}>
+                <Box sx={{mx: 4, my: 2}}>
                     <Autocomplete
                         value={autocompleteContent}
                         options={filteredOptions}
