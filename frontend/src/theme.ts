@@ -4,6 +4,27 @@ import {Locale} from './i18n/config.ts'
 const baseThemeOptions: ThemeOptions = {}
 
 const componentOverrides = (_theme: Theme): ThemeOptions => ({
+    palette: {
+        mode: 'light',
+        success: {
+            main: '#cbe694',
+        },
+        warning: {
+            main: '#f5d9b0',
+        },
+        error: {
+            main: '#da4d4d',
+        },
+        info: {
+            main: '#6fb0d4',
+        },
+        background: {
+            paper: '#fafafa',
+        },
+        common:{
+            black: '#1d1d1d'
+        }
+    },
     typography: {
         h1: {
             fontSize: '3rem',

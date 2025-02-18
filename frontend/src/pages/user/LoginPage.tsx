@@ -43,7 +43,7 @@ const LoginPage = () => {
     return (
         <SimpleFormLayout maxWidth={400}>
             <Box sx={{mb: 4}}>
-                <Typography variant="h1">{t('user.login.login')}</Typography>
+                <Typography variant="h1" textAlign='center'>{t('user.login.login')}</Typography>
             </Box>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                 <Stack spacing={4}>

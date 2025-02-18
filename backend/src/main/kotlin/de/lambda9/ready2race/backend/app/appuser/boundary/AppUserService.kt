@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.appuser.boundary
 
+import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.control.*
@@ -8,15 +9,15 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserInvitationHasRoleRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.security.PasswordUtilities
+import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.forEachM
@@ -29,6 +30,7 @@ object AppUserService {
 
     private val registrationLifeTime = 1.days
     private val invitationLifeTime = 7.days
+    private val passwordResetLifeTime = 1.days
 
     fun get(
         id: UUID,
@@ -192,9 +194,68 @@ object AppUserService {
         }
     }
 
+
+    fun initPasswordReset(
+        request: PasswordResetInitRequest,
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        val appUser = !AppUserRepo.getByEmail(request.email).orDie()
+
+        if (appUser != null) {
+            !AppUserPasswordResetRepo.delete(appUser.id).orDie()
+
+            val token = !AppUserPasswordResetRepo.create(
+                AppUserPasswordResetRecord(
+                    token = RandomUtilities.token(),
+                    appUser = appUser.id,
+                    expiresAt = passwordResetLifeTime.afterNow(),
+                )
+            ).orDie()
+
+            val content = !EmailService.getTemplate(
+                EmailTemplateKey.USER_RESET_PASSWORD,
+                request.language,
+            ).map { template ->
+                template.toContent(
+                    EmailTemplatePlaceholder.RECIPIENT to appUser.firstname + " " + appUser.lastname,
+                    EmailTemplatePlaceholder.LINK to request.callbackUrl + token
+                )
+            }
+
+            !EmailService.enqueue(
+                recipient = request.email,
+                content = content,
+                // todo: Email Priority = high?
+            )
+        }
+        noData
+    }
+
+    fun resetPassword(
+        token: String,
+        request: PasswordResetRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val passwordReset =
+            !AppUserPasswordResetRepo.consume(token).orDie().onNullFail { AppUserError.PasswordResetNotFound }
+
+        val newPassword = !PasswordUtilities.hash(request.password)
+        val updated = !AppUserRepo.update(passwordReset.appUser) { password = newPassword }.orDie()
+
+        if (updated == null) {
+            KIO.fail(AppUserError.NotFound) // Todo: Can this case be possible? Do we want to give this info to the user?
+        } else {
+            noData
+        }
+    }
+
+
+
     fun deleteExpiredInvitations(): App<Nothing, Int> =
         AppUserInvitationRepo.deleteExpired().orDie()
 
     fun deleteExpiredRegistrations(): App<Nothing, Int> =
         AppUserRegistrationRepo.deleteExpired().orDie()
+
+    fun deleteExpiredPasswordResets(): App<Nothing, Int> =
+        AppUserPasswordResetRepo.deleteExpired().orDie()
 }

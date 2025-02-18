@@ -27,6 +27,16 @@ object AppUserRepo {
         }
     }
 
+    fun getByEmail(
+        email: String,
+    ): JIO<AppUserRecord?> = Jooq.query {
+        with(APP_USER) {
+            selectFrom(this)
+                .where(EMAIL.eq(email))
+                .fetchOne()
+        }
+    }
+
     fun getWithRoles(
         id: UUID,
     ): JIO<AppUserWithRolesRecord?> = Jooq.query {

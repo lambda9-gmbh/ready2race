@@ -155,11 +155,18 @@
       "email": {
         "emailSent": {
           "header": "Please verify your email",
-          "message": "We've sent you an email to verify your email adress and activate your account.\nClick on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+          "message": {
+            "part1": "We've sent you an email to verify your email adress and activate your account.",
+            "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+          }
         },
         "inUse": {
           "statement": "The email address you entered is already in use.",
           "callToAction": "Please use a different email address or log in with the existing one."
+        },
+        "verified": {
+          "header": "Email verified",
+          "message": "Your email adress has been successfully verified. Your account is now activated."
         }
       },
       "error": "An error has occurred during registration",

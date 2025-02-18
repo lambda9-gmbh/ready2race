@@ -266,6 +266,12 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                 }
             }
 
+            scheduleFixed(1.hours) {
+                AppUserService.deleteExpiredPasswordResets().map {
+                    logger.info { "${"expired password resets".count(it)} deleted" }
+                }
+            }
+
             logger.info { "Scheduling done."}
         }
     }

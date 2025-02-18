@@ -33,6 +33,22 @@
         "",
         "Please note that accepting the invitation is only possible for 7 days!"
       ]
+    },
+    {
+      "key": "USER_RESET_PASSWORD",
+      "subject": "Ready2Race - Reset Password",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "We received a request to reset your password.",
+        "If you did not initiate this yourself, please ignore this email! Your password will not be changed.",
+        "",
+        "To reset your password, please click on the following link or copy it into the address bar of your web browser.",
+        "",
+        "##link##",
+        "",
+        "Please not that resetting the password is only possible within 24 hours!"
+      ]
     }
   ]
 }

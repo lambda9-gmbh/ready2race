@@ -33,6 +33,22 @@
         "",
         "Bitte beachte dabei, dass ein Akzeptieren der Einladung nur 7 Tage lang möglich ist!"
       ]
+    },
+    {
+      "key": "USER_RESET_PASSWORD",
+      "subject": "Ready2Race - Passwort zurücksetzen",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "Wir haben eine Anfrage erhalten, dein Passwort zurückzusetzen.",
+        "Solltest du dies nicht selbst veranlasst haben, ignoriere diese E-Mail bitte! Dein Passwort wird nicht zurückgesetzt.",
+        "",
+        "Um dein Passwort zurückzusetzen, klicke bitte auf den folgenden Link oder kopiere ihn in die Adressleiste deines Web-Browsers.",
+        "",
+        "##link##",
+        "",
+        "Bitte beachte dabei, dass ein Zurücksetzen des Passworts nur 24 Stunden lang möglich ist!"
+      ]
     }
   ]
 }

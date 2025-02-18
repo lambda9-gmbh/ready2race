@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
+import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetRequest
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
@@ -102,6 +104,29 @@ fun Route.user() {
                 call.respondKIO {
                     payload.andThen {
                         AppUserService.acceptInvitation(it)
+                    }
+                }
+            }
+        }
+        route("/resetPassword"){
+            post{
+                val payload = call.receiveV(PasswordResetInitRequest.example)
+                call.respondKIO {
+                    payload.andThen {
+                        // todo: captcha
+                        AppUserService.initPasswordReset(it)
+                    }
+                }
+            }
+
+            route("/{passwordResetToken}"){
+                put{
+                    val payload = call.receiveV(PasswordResetRequest.example)
+                    call.respondKIO {
+                        KIO.comprehension {
+                            val token = !pathParam("passwordResetToken")
+                            AppUserService.resetPassword(token, !payload)
+                        }
                     }
                 }
             }

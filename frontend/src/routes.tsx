@@ -22,6 +22,7 @@ import RaceConfigPage from './pages/event/RaceConfigPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from "./pages/user/resetPassword/InitResetPasswordPage.tsx";
+import VerifyRegistrationPage from "./pages/user/VerifyRegistrationPage.tsx";
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -81,6 +82,11 @@ export const loginRoute = createRoute({
 export const registrationRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'registration',
+})
+
+export const registrationIndexRoute = createRoute({
+    getParentRoute: () => registrationRoute,
+    path: '/',
     component: () => <RegistrationPage />,
     beforeLoad: ({context}) => {
         if (context.loggedIn) {
@@ -89,25 +95,31 @@ export const registrationRoute = createRoute({
     },
 })
 
-export const passwordResetRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: 'passwordReset',
+export const registrationTokenRoute = createRoute({
+    getParentRoute: () => registrationRoute,
+    path: '$registrationToken',
+    component: () => <VerifyRegistrationPage />,
+    beforeLoad: ({context}) => {
+        if (context.loggedIn) {
+            throw redirect({to: '/dashboard'})
+        }
+    },
 })
 
-export const passwordResetIndexRoute = createRoute({
-    getParentRoute: () => passwordResetRoute,
+export const resetPasswordRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'resetPassword',
+})
+
+export const resetPasswordIndexRoute = createRoute({
+    getParentRoute: () => resetPasswordRoute,
     path: '/',
     component: () => <InitResetPasswordPage />,
 })
 
-export const passwordResetTokenRoute = createRoute({
-    getParentRoute: () => passwordResetRoute,
-    path: '$passwordResetToken',
-})
-
-export const passwordResetTokenIndexRoute = createRoute({
-    getParentRoute: () => passwordResetTokenRoute,
-    path: '/',
+export const resetPasswordTokenRoute = createRoute({
+    getParentRoute: () => resetPasswordRoute,
+    path: 'passwordResetToken',
     component: () => <ResetPasswordPage />,
 })
 
@@ -241,7 +253,6 @@ export const raceConfigIndexRoute = createRoute({
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
-    registrationRoute,
     dashboardRoute,
     eventsRoute.addChildren([
         eventsIndexRoute,
@@ -254,11 +265,13 @@ const routeTree = rootRoute.addChildren([
     raceConfigRoute.addChildren([raceConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
-    passwordResetRoute.addChildren([
-        passwordResetIndexRoute,
-        passwordResetTokenRoute.addChildren([
-            passwordResetTokenIndexRoute,
-        ]),
+    registrationRoute.addChildren([
+        registrationIndexRoute,
+        registrationTokenRoute
+    ]),
+    resetPasswordRoute.addChildren([
+        resetPasswordIndexRoute,
+        resetPasswordTokenRoute,
     ]),
 ])
 

@@ -9,7 +9,8 @@ enum class AppUserError : ServiceError {
     EmailAlreadyInUse,
     NotFound,
     RegistrationNotFound,
-    InvitationNotFound;
+    InvitationNotFound,
+    PasswordResetNotFound;
 
     override fun respond(): ApiError = when (this) {
         EmailAlreadyInUse ->
@@ -34,6 +35,12 @@ enum class AppUserError : ServiceError {
             ApiError(
                 status = HttpStatusCode.NotFound,
                 message = "Invitation not found",
+            )
+
+        PasswordResetNotFound ->
+            ApiError(
+                status = HttpStatusCode.NotFound,
+                message = "Reset password request not found",
             )
     }
 }

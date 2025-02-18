@@ -40,7 +40,7 @@ const RegistrationPage = () => {
                 firstname: formData.firstname,
                 lastname: formData.lastname,
                 language: 'de', // todo, read from i18n
-                callbackUrl: location.origin + location.pathname,
+                callbackUrl: location.origin + location.pathname + '/',
             },
         })
         setSubmitting(false)
@@ -67,8 +67,8 @@ const RegistrationPage = () => {
         <SimpleFormLayout maxWidth={500}>
             {(!mailSent && (
                 <>
-                    <Box sx={{mb:4}} >
-                        <Typography variant="h1">{t('user.registration.register')}</Typography>
+                    <Box sx={{mb: 4}}>
+                        <Typography variant="h1" textAlign='center'>{t('user.registration.register')}</Typography>
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
@@ -159,17 +159,21 @@ const RegistrationPage = () => {
                     </Stack>
                 </>
             )) || (
-                <>
+                <Stack spacing={2}>
                     <Box sx={{display: 'flex'}}>
                         <EmailOutlined sx={{height: 100, width: 100, margin: 'auto'}} />
                     </Box>
-                    <Typography textAlign="center" variant="h2">
+                    <Typography variant="h2" textAlign="center">
                         {t('user.registration.email.emailSent.header')}
                     </Typography>
-                    <Typography variant="body1">
-                        {t('user.registration.email.emailSent.message')}
+                    <Divider />
+                    <Typography textAlign="center">
+                        {t('user.registration.email.emailSent.message.part1')}
                     </Typography>
-                </>
+                    <Typography textAlign="center">
+                        {t('user.registration.email.emailSent.message.part2')}
+                    </Typography>
+                </Stack>
             )}
         </SimpleFormLayout>
     )

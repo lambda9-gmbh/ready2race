@@ -25,3 +25,12 @@ create table app_user_session
 );
 
 create index on app_user_session (app_user);
+
+create table app_user_password_reset
+(
+    token      char(30) primary key,
+    app_user   uuid      not null references app_user on delete cascade,
+    expires_at timestamp not null
+);
+
+create index on app_user_password_reset (app_user);
