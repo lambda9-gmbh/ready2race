@@ -34,3 +34,4 @@ create table app_user_password_reset
 );
 
 create index on app_user_password_reset (app_user);
+create index on app_user_password_reset (expires_at);

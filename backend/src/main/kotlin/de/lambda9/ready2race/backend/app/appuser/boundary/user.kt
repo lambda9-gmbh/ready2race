@@ -5,10 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetRequest
-import de.lambda9.ready2race.backend.requests.authenticate
-import de.lambda9.ready2race.backend.requests.pagination
-import de.lambda9.ready2race.backend.requests.pathParam
-import de.lambda9.ready2race.backend.requests.receiveV
+import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.andThen
@@ -112,9 +109,10 @@ fun Route.user() {
             post{
                 val payload = call.receiveV(PasswordResetInitRequest.example)
                 call.respondKIO {
-                    payload.andThen {
-                        // todo: captcha
-                        AppUserService.initPasswordReset(it)
+                    KIO.comprehension {
+                        val captchaId = !queryParam("challenge") { UUID.fromString(it) }
+                        val captchaInput = !queryParam("input") { it.toInt() }
+                        AppUserService.initPasswordReset(!payload)
                     }
                 }
             }
