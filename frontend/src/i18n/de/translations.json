@@ -56,7 +56,7 @@
       "success": "{{entity}} gelöscht",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
     },
-    "description": "Description",
+    "description": "Beschreibung",
     "edit": {
       "action": "{{entity}} bearbeiten",
       "success": "{{entity}} aktualisiert",
@@ -141,7 +141,6 @@
     "password": "Passwort",
     "login": {
       "login": "Anmelden",
-      "email": "E-Mail",
       "password": "Passwort",
       "forgotPassword": "Passwort vergessen?",
       "signUp": {
@@ -149,7 +148,10 @@
         "message": "Sie haben noch kein Konto?"
       },
       "submit": "Anmelden",
-      "error": "Logindaten inkorrekt"
+      "error": {
+        "credentials": "Logindaten inkorrekt",
+        "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
+      }
     },
     "registration": {
       "register": "Registrieren",
@@ -162,12 +164,12 @@
           }
         },
         "inUse": {
-          "statement": "Die eingegebene E-Mail Adresse ist bereits in Verwendung.",
-          "callToAction": "Bitte verwenden Sie eine andere E-Mail Adresse oder melden Sie sich mit der bestehenden an."
+          "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
+          "callToAction": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
         },
         "verified": {
           "header": "E-Mail bestätigt",
-          "message": "Ihre E-Mail Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
+          "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
         }
       },
       "error": "Bei der Registrierung ist ein Fehler aufgetreten",
@@ -183,14 +185,34 @@
       }
     },
     "resetPassword": {
+      "resetPassword": "Passwort zurücksetzen",
+      "forgotPassword": "Passwort vergessen?",
       "init": {
-        "submit": "Link zum Zurücksetzen des Passworts anfordern"
+        "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
+        "submit": "Passwort zurücksetzen"
+      },
+      "emailSent": {
+        "header": "Prüfen Sie Ihr Postfach",
+        "message": {
+          "part1": "Wir haben Ihnen eine E-Mail mit weiteren Anweisungen zum Zurücksetzen Ihres Passworts geschickt.",
+          "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+        }
+      },
+      "newPassword": "Neues Passwort",
+      "success": {
+        "header": "Passwort geändert!",
+        "message": "Ihr Passwort wurde erfolgreich geändert."
+      },
+      "error": {
+        "header": "Ein Fehler ist aufgetreten",
+        "message": {
+          "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
+          "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
+        }
       }
     }
   },
   "role": {
-    "role": "Rolle",
-    "name": "Name",
-    "description": "Beschreibung"
+    "role": "Rolle"
   }
 }

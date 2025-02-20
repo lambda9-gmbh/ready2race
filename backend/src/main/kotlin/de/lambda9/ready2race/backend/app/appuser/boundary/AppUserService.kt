@@ -241,13 +241,12 @@ object AppUserService {
         val newPassword = !PasswordUtilities.hash(request.password)
         val updated = !AppUserRepo.update(passwordReset.appUser) { password = newPassword }.orDie()
 
-        if (updated == null) {
+        /*if (updated == null) {
             KIO.fail(AppUserError.NotFound) // Todo: Can this case be possible? Do we want to give this info to the user?
-        } else {
-            noData
-        }
+        } else {*/
+        noData
+        //}
     }
-
 
 
     fun deleteExpiredInvitations(): App<Nothing, Int> =

@@ -33,10 +33,13 @@ const LoginPage = () => {
         if (data !== undefined) {
             login(data)
         } else if (error) {
-            if (error.status.value === 500) {
+            console.log(error)
+            if (error.status.value === 429) {
+                feedback.error(t('user.login.error.tooManyRequests'))
+            } else if (error.status.value === 500) {
                 feedback.error(t('common.error.unexpected'))
             } else {
-                feedback.error(t('user.login.error'))
+                feedback.error(t('user.login.error.credentials'))
             }
         }
     }
@@ -48,7 +51,7 @@ const LoginPage = () => {
             </Box>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                 <Stack spacing={4}>
-                    <FormInputText name="email" label={t('user.login.email')} required />
+                    <FormInputText name="email" label={t('user.email')} required />
                     <Box sx={{display: 'flex', flexDirection: 'column'}}>
                         <FormInputPassword name="password" label={t('user.login.password')} required />
                         <Box sx={{display: 'flex', justifyContent: 'end', mt: 2}}>

@@ -119,7 +119,7 @@ export const resetPasswordIndexRoute = createRoute({
 
 export const resetPasswordTokenRoute = createRoute({
     getParentRoute: () => resetPasswordRoute,
-    path: 'passwordResetToken',
+    path: '$passwordResetToken',
     component: () => <ResetPasswordPage />,
 })
 

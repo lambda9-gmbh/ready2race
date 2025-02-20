@@ -1,33 +1,30 @@
 import {Box, Divider, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {FormContainer, PasswordElement, useForm} from 'react-hook-form-mui'
+import {FormContainer, useForm} from 'react-hook-form-mui'
 import {registerUser} from 'api/sdk.gen.ts'
 import {useState} from 'react'
 import {useFeedback} from '@utils/hooks.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import {EmailOutlined} from '@mui/icons-material'
-import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
+import ConfirmationMailSent from "@components/user/ConfirmationMailSent.tsx";
+import {NewPassword, PasswortFormPart} from "@components/form/NewPassword.tsx";
 
 type Form = {
     email: string
-    password: string
-    confirmPassword: string
     firstname: string
     lastname: string
-}
+} & PasswortFormPart
 
 const RegistrationPage = () => {
-    const minPasswordLength = 10
 
     const {t} = useTranslation()
     const feedback = useFeedback()
 
     const [submitting, setSubmitting] = useState(false)
 
-    const [mailSent, setMailSent] = useState(false)
+    const [requested, setRequested] = useState(false)
 
     const formContext = useForm<Form>()
 
@@ -58,14 +55,13 @@ const RegistrationPage = () => {
                 feedback.error(t('user.registration.error'))
             }
             console.log(error)
-        } else {
-            setMailSent(true)
         }
+        setRequested(true)
     }
 
     return (
         <SimpleFormLayout maxWidth={500}>
-            {(!mailSent && (
+            {(!requested && (
                 <>
                     <Box sx={{mb: 4}}>
                         <Typography variant="h1" textAlign='center'>{t('user.registration.register')}</Typography>
@@ -73,61 +69,7 @@ const RegistrationPage = () => {
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
                             <FormInputText name={'email'} label={t('user.email')} required />
-                            <Stack direction="row" spacing={2}>
-                                <FormInputPassword
-                                    name={'password'}
-                                    label={t('user.password')}
-                                    required
-                                    helperText={t('user.registration.password.minLength', {
-                                        min: minPasswordLength,
-                                    })}
-                                    rules={{
-                                        minLength: {
-                                            value: minPasswordLength,
-                                            message: t('user.registration.password.tooShort', {
-                                                min: minPasswordLength,
-                                            }),
-                                        },
-                                        validate: (val, vals) => {
-                                            if (val !== vals['confirmPassword']) {
-                                                formContext.setError('confirmPassword', {
-                                                    type: 'validate',
-                                                    message: t(
-                                                        'user.registration.password.notMatching',
-                                                    ),
-                                                })
-                                                return t('user.registration.password.notMatching')
-                                            } else {
-                                                formContext.clearErrors('confirmPassword')
-                                            }
-                                        },
-                                    }}
-                                    sx={{flex: 1}}
-                                />
-                                <PasswordElement
-                                    name="confirmPassword"
-                                    label={t('user.registration.password.confirm')}
-                                    required
-                                    type="password"
-                                    rules={{
-                                        required: t('common.form.required'),
-                                        validate: (val, vals) => {
-                                            if (val !== vals['password']) {
-                                                formContext.setError('password', {
-                                                    type: 'validate',
-                                                    message: t(
-                                                        'user.registration.password.notMatching',
-                                                    ),
-                                                })
-                                                return t('user.registration.password.notMatching')
-                                            } else {
-                                                formContext.clearErrors('password')
-                                            }
-                                        },
-                                    }}
-                                    sx={{flex: 1}}
-                                />
-                            </Stack>
+                            <NewPassword formContext={formContext} horizontal/>
                             <Stack spacing={2} direction="row">
                                 <FormInputText
                                     name={'firstname'}
@@ -159,21 +101,14 @@ const RegistrationPage = () => {
                     </Stack>
                 </>
             )) || (
-                <Stack spacing={2}>
-                    <Box sx={{display: 'flex'}}>
-                        <EmailOutlined sx={{height: 100, width: 100, margin: 'auto'}} />
-                    </Box>
-                    <Typography variant="h2" textAlign="center">
-                        {t('user.registration.email.emailSent.header')}
-                    </Typography>
-                    <Divider />
+                <ConfirmationMailSent header={t('user.registration.email.emailSent.header')}>
                     <Typography textAlign="center">
                         {t('user.registration.email.emailSent.message.part1')}
                     </Typography>
                     <Typography textAlign="center">
                         {t('user.registration.email.emailSent.message.part2')}
                     </Typography>
-                </Stack>
+                </ConfirmationMailSent>
             )}
         </SimpleFormLayout>
     )

@@ -8,7 +8,7 @@
     "delete": "Delete",
     "edit": "Edit",
     "error": {
-      "unexpected": "An unexpected error has occured. Please try again later."
+      "unexpected": "An unexpected error has occurred. Please try again later."
     },
     "form": {
       "autocomplete": {
@@ -141,7 +141,6 @@
     "password": "Password",
     "login": {
       "login": "Login",
-      "email": "Email",
       "password": "Password",
       "forgotPassword": "Forgot password?",
       "signUp": {
@@ -149,7 +148,10 @@
         "message": "Don't have an account?"
       },
       "submit": "Login",
-      "error": "Incorrect credentials"
+      "error": {
+        "credentials": "Incorrect credentials",
+        "tooManyRequests": "Too many login requests. Try again later."
+      }
     },
     "registration": {
       "register": "Register",
@@ -183,14 +185,34 @@
       }
     },
     "resetPassword": {
+      "resetPassword": "Reset password",
+      "forgotPassword": "Forgot your password?",
       "init": {
-        "submit": "Request password reset link"
+        "instruction": "Enter your email adress and we'll send you a link to reset your password.",
+        "submit": "Reset password"
+      },
+      "emailSent": {
+        "header": "Check your email",
+        "message": {
+          "part1": "We've sent you an email with further instructions to reset your password.",
+          "part2": "If you don't see it, you may need to check your spam folder."
+        }
+      },
+      "newPassword": "New Passwort",
+      "success": {
+        "header": "Password changed!",
+        "message": "Your password has been successfully changed."
+      },
+      "error": {
+        "header": "An error has occurred",
+        "message": {
+          "part1": "An error has occurred when resetting your password.",
+          "part2": "Make sure that you are using the correct and complete link from the email. Only the last link sent is valid. The link is valid for 24 hours."
+        }
       }
     }
   },
   "role": {
-    "role": "Role",
-    "name": "Name",
-    "description": "Description"
+    "role": "Role"
   }
 }
