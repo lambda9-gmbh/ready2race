@@ -1,13 +1,14 @@
-import {addEvent, EventDto, EventRequest, updateEvent} from '../../api'
-import {BaseEntityDialogProps} from '../../utils/types.ts'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
-import EntityDialog from '../EntityDialog.tsx'
+import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
-import {FormInputText} from '../form/input/FormInputText.tsx'
-import FormInputDateTime from '../form/input/FormInputDateTime.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
-import {takeIfNotEmpty} from "../../utils/ApiUtils.ts";
+import {takeIfNotEmpty} from "@utils/ApiUtils.ts";
 import {useCallback} from "react";
+import {EventDto, EventRequest} from "@api/types.gen.ts";
+import {addEvent, updateEvent} from "@api/sdk.gen.ts";
 
 type EventForm = {
     name: string

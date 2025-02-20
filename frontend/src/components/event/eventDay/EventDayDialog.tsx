@@ -1,14 +1,15 @@
 import {useTranslation} from 'react-i18next'
-import {eventIndexRoute} from '../../../routes.tsx'
-import {addEventDay, EventDayDto, EventDayRequest, updateEventDay} from '../../../api'
-import {BaseEntityDialogProps} from '../../../utils/types.ts'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useForm} from 'react-hook-form-mui'
-import EntityDialog from '../../EntityDialog.tsx'
 import {Stack} from '@mui/material'
-import {FormInputText} from '../../form/input/FormInputText.tsx'
-import FormInputDate from '../../form/input/FormInputDate.tsx'
-import {takeIfNotEmpty} from '../../../utils/ApiUtils.ts'
-import {useCallback} from "react";
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {useCallback} from 'react'
+import EntityDialog from '@components/EntityDialog.tsx'
+import FormInputDate from '@components/form/input/FormInputDate.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {eventIndexRoute} from '@routes'
+import {addEventDay, updateEventDay} from '@api/sdk.gen.ts'
+import {EventDayDto, EventDayRequest} from '@api/types.gen.ts'
 
 type EventDayForm = {
     date: string
@@ -46,7 +47,6 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
-
 
     return (
         <EntityDialog

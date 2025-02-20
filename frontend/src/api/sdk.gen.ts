@@ -32,6 +32,12 @@ import type {
     AcceptUserInvitationData,
     AcceptUserInvitationError,
     AcceptUserInvitationResponse,
+    InitPasswordResetData,
+    InitPasswordResetError,
+    InitPasswordResetResponse,
+    ResetPasswordData,
+    ResetPasswordError,
+    ResetPasswordResponse,
     AddRoleData,
     AddRoleError,
     AddRoleResponse,
@@ -243,6 +249,30 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
         ...options,
         url: '/user/invitation/accept',
     })
+}
+
+export const initPasswordReset = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<InitPasswordResetData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        InitPasswordResetResponse,
+        InitPasswordResetError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/resetPassword',
+    })
+}
+
+export const resetPassword = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResetPasswordData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<ResetPasswordResponse, ResetPasswordError, ThrowOnError>(
+        {
+            ...options,
+            url: '/user/resetPassword/{passwordResetToken}',
+        },
+    )
 }
 
 export const addRole = <ThrowOnError extends boolean = false>(

@@ -8,14 +8,14 @@ import {
     Typography,
 } from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {useFeedback} from '../../../utils/hooks.ts'
+import {useFeedback} from '@utils/hooks.ts'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
-import {AutocompleteOption} from '../../../utils/types.ts'
-import {eventRoute} from '../../../routes.tsx'
+import {AutocompleteOption} from '@utils/types.ts'
+import {eventRoute} from '@routes'
 import {useState} from 'react'
 import RaceAndDayAssignmentList from './RaceAndDayAssignmentList.tsx'
-import {SubmitButton} from '../../form/SubmitButton.tsx'
-import {assignDaysToRace, assignRacesToEventDay} from '../../../api'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {assignDaysToRace, assignRacesToEventDay} from "@api/sdk.gen.ts";
 
 type AssignmentEntry = {
     entry: AutocompleteOption

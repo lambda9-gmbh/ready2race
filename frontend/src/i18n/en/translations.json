@@ -131,6 +131,7 @@
     }
   },
   "user": {
+    "user": "User",
     "email": "Email",
     "firstname": "Firstname",
     "invitation": {
@@ -181,7 +182,11 @@
         "message": "Already have an account?"
       }
     },
-    "user": "User"
+    "resetPassword": {
+      "init": {
+        "submit": "Request password reset link"
+      }
+    }
   },
   "role": {
     "role": "Role",

@@ -1,5 +1,5 @@
 import {createContext, useContext} from 'react'
-import {Action, LoginDto, Privilege, Resource, Scope} from '../../api'
+import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
 
 export type AuthenticatedUser = {
     loggedIn: true

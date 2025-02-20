@@ -1,4 +1,4 @@
-import {useUser} from '../../contexts/user/UserContext.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
 import {IconButton} from '@mui/material'
 import {Login, Logout} from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'

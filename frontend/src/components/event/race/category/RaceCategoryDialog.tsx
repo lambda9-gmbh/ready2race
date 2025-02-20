@@ -1,17 +1,13 @@
-import {BaseEntityDialogProps} from '../../../../utils/types.ts'
-import {
-    addRaceCategory,
-    RaceCategoryDto,
-    RaceCategoryRequest,
-    updateRaceCategory,
-} from '../../../../api'
+import {BaseEntityDialogProps} from '@utils/types.ts'
+import {RaceCategoryDto, RaceCategoryRequest} from '@api/types.gen.ts'
+import {addRaceCategory, updateRaceCategory} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
-import {takeIfNotEmpty} from '../../../../utils/ApiUtils.ts'
-import {useForm} from "react-hook-form-mui";
-import {useCallback} from "react";
-import EntityDialog from "../../../EntityDialog.tsx";
-import {Stack} from "@mui/material";
-import {FormInputText} from "../../../form/input/FormInputText.tsx";
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {useForm} from 'react-hook-form-mui'
+import {useCallback} from 'react'
+import EntityDialog from '@components/EntityDialog.tsx'
+import {Stack} from '@mui/material'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
 
 type RaceCategoryForm = {
     name: string
@@ -34,7 +30,6 @@ const RaceCategoryDialog = (props: BaseEntityDialogProps<RaceCategoryDto>) => {
         })
     }
 
-
     const defaultValues: RaceCategoryForm = {
         name: '',
         description: '',
@@ -46,7 +41,6 @@ const RaceCategoryDialog = (props: BaseEntityDialogProps<RaceCategoryDto>) => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
 
-
     return (
         <EntityDialog
             {...props}
@@ -55,7 +49,7 @@ const RaceCategoryDialog = (props: BaseEntityDialogProps<RaceCategoryDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={2}>
-                <FormInputText name="name" label={t('entity.name')} required/>
+                <FormInputText name="name" label={t('entity.name')} required />
                 <FormInputText name="description" label={t('entity.description')} />
             </Stack>
         </EntityDialog>

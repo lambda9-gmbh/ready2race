@@ -1,17 +1,13 @@
-import {BaseEntityDialogProps} from '../../../../utils/types.ts'
-import {
-    addNamedParticipant,
-    NamedParticipantDto,
-    NamedParticipantRequest,
-    updateNamedParticipant,
-} from '../../../../api'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import {useForm} from 'react-hook-form-mui'
-import EntityDialog from '../../../EntityDialog.tsx'
+import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {useCallback} from 'react'
-import {takeIfNotEmpty} from '../../../../utils/ApiUtils.ts'
-import {FormInputText} from '../../../form/input/FormInputText.tsx'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {addNamedParticipant, updateNamedParticipant} from '@api/sdk.gen'
+import {NamedParticipantDto, NamedParticipantRequest} from "@api/types.gen.ts";
 
 type NamedParticipantForm = {
     name: string

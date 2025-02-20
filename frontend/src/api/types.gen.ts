@@ -188,6 +188,16 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
+export type PasswordResetInitRequest = {
+    email: string
+    language: EmailLanguage
+    callbackUrl: string
+}
+
+export type PasswordResetRequest = {
+    password: string
+}
+
 export type Privilege = {
     action: Action
     resource: Resource
@@ -428,6 +438,25 @@ export type AcceptUserInvitationData = {
 export type AcceptUserInvitationResponse = unknown
 
 export type AcceptUserInvitationError = ApiError
+
+export type InitPasswordResetData = {
+    body: PasswordResetInitRequest
+}
+
+export type InitPasswordResetResponse = void
+
+export type InitPasswordResetError = ApiError
+
+export type ResetPasswordData = {
+    body: PasswordResetRequest
+    path: {
+        passwordResetToken: string
+    }
+}
+
+export type ResetPasswordResponse = void
+
+export type ResetPasswordError = ApiError
 
 export type AddRoleData = {
     body: RoleRequest

@@ -1,12 +1,12 @@
-import {BaseEntityDialogProps} from '../../utils/types.ts'
-import {AppUserInvitationDto, EmailLanguage, InviteRequest, inviteUser} from '../../api'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import i18next from 'i18next'
-import {useTranslation} from 'react-i18next'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
-import EntityDialog from '../EntityDialog.tsx'
+import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
-import {FormInputText} from '../form/input/FormInputText.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {AppUserInvitationDto, EmailLanguage, InviteRequest} from "@api/types.gen.ts";
+import {inviteUser} from "@api/sdk.gen.ts";
 
 type InvitationForm = {
     email: string

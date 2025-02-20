@@ -1,4 +1,3 @@
-import {Pagination, Resource} from '../api'
 import {
     DataGrid,
     DataGridProps,
@@ -12,16 +11,17 @@ import {
     GridValidRowModel,
 } from '@mui/x-data-grid'
 import {ReactElement, useState} from 'react'
-import {paginationParameters, PaginationParameters} from '../utils/ApiUtils.ts'
-import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '../utils/types.ts'
+import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
+import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
-import {useDebounce, useFeedback, useFetch} from '../utils/hooks.ts'
-import {useConfirmation} from '../contexts/confirmation/ConfirmationContext.ts'
+import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Box, Button, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
-import {useUser} from '../contexts/user/UserContext.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {Pagination, Resource} from "@api/types.gen.ts";
 
 type EntityTableProps<
     Entity extends GridValidRowModel,

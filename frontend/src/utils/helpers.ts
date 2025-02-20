@@ -1,4 +1,4 @@
-import {Scope} from '../api'
+import {Scope} from '@api/types.gen.ts'
 
 export const getRootElement = () => document.getElementById('ready2race-root')!
 

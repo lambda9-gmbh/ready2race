@@ -1,11 +1,10 @@
-import {addRace, getRaceTemplates, RaceDto, RaceRequest, updateRace} from '../../../api'
-import {AutocompleteOption, BaseEntityDialogProps} from '../../../utils/types.ts'
-import EntityDialog from '../../EntityDialog.tsx'
+import {AutocompleteOption, BaseEntityDialogProps} from '@utils/types.ts'
+import EntityDialog from '@components/EntityDialog.tsx'
 import {Autocomplete, Box, Stack, TextField} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {eventIndexRoute} from '../../../routes.tsx'
+import {eventIndexRoute} from '@routes'
 import {useForm} from 'react-hook-form-mui'
-import {useFeedback, useFetch} from '../../../utils/hooks.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useCallback, useEffect, useState} from 'react'
 import {
     mapRaceFormToRacePropertiesRequest,
@@ -14,6 +13,8 @@ import {
     raceFormDefaultValues, raceLabelName,
 } from './common.ts'
 import {RacePropertiesFormInputs} from './RacePropertiesFormInputs.tsx'
+import {RaceDto, RaceRequest} from "@api/types.gen.ts";
+import {addRace, getRaceTemplates, updateRace} from "@api/sdk.gen.ts";
 
 const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const {t} = useTranslation()

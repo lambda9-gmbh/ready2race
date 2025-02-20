@@ -1,14 +1,14 @@
 import {Box, Divider, Grid2, Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {useFeedback, useFetch} from '../../utils/hooks.ts'
-import {eventDayRoute, eventRoute} from '../../routes.tsx'
-import {getEventDay, getRaces} from '../../api'
-import Throbber from '../../components/Throbber.tsx'
-import RaceAndDayAssignment from '../../components/event/raceAndDayAssignment/RaceAndDayAssignment.tsx'
-import {AutocompleteOption} from '../../utils/types.ts'
-import {raceLabelName} from '../../components/event/race/common.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {eventDayRoute, eventRoute} from '@routes'
+import Throbber from '@components/Throbber.tsx'
+import RaceAndDayAssignment from '@components/event/raceAndDayAssignment/RaceAndDayAssignment.tsx'
+import {AutocompleteOption} from '@utils/types.ts'
+import {raceLabelName} from '@components/event/race/common.ts'
 import {useState} from "react";
-import EntityDetailsEntry from "../../components/EntityDetailsEntry.tsx";
+import EntityDetailsEntry from "@components/EntityDetailsEntry.tsx";
+import {getEventDay, getRaces} from "@api/sdk.gen.ts";
 
 const EventDayPage = () => {
     const {t} = useTranslation()

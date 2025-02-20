@@ -2,11 +2,11 @@ import {Outlet} from '@tanstack/react-router'
 import {AppBar, Box, Container, IconButton, Paper, Toolbar} from '@mui/material'
 import {useState} from 'react'
 import {Dashboard, EditCalendar, Event, Menu, MenuOpen, People, Work} from '@mui/icons-material'
-import Sidebar from '../components/sidebar/Sidebar.tsx'
-import SidebarItem from '../components/sidebar/SidebarItem.tsx'
-import UserWidget from '../components/appbar/UserWidget.tsx'
+import Sidebar from '@components/sidebar/Sidebar.tsx'
+import SidebarItem from '@components/sidebar/SidebarItem.tsx'
+import UserWidget from '@components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
-import {readUserGlobal, updateEventGlobal} from '../authorization/privileges.ts'
+import {readUserGlobal, updateEventGlobal} from '@authorization/privileges.ts'
 
 const RootLayout = () => {
     const {t} = useTranslation()

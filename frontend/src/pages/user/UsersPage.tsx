@@ -1,11 +1,11 @@
-import {useEntityAdministration} from '../../utils/hooks.ts'
-import {AppUserDto, AppUserInvitationDto, AppUserRegistrationDto} from '../../api'
+import {useEntityAdministration} from '@utils/hooks.ts'
+import {AppUserDto, AppUserInvitationDto, AppUserRegistrationDto} from '@api/types.gen.ts'
 import {Stack} from '@mui/material'
-import UserTable from '../../components/user/UserTable.tsx'
+import UserTable from '@components/user/UserTable.tsx'
 import {useTranslation} from 'react-i18next'
-import UserInvitationTable from '../../components/user/UserInvitationTable.tsx'
-import UserRegistrationTable from '../../components/user/UserRegistrationTable.tsx'
-import UserInvitationDialog from '../../components/user/UserInvitationDialog.tsx'
+import UserInvitationTable from '@components/user/UserInvitationTable.tsx'
+import UserRegistrationTable from '@components/user/UserRegistrationTable.tsx'
+import UserInvitationDialog from '@components/user/UserInvitationDialog.tsx'
 
 const UsersPage = () => {
     const {t} = useTranslation()

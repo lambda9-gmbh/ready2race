@@ -1,14 +1,14 @@
-import {AutocompleteOption} from '../../../utils/types.ts'
-import {getNamedParticipants, getRaceCategories} from '../../../api'
+import {AutocompleteOption} from '@utils/types.ts'
 import {AutocompleteElement, SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
-import {useFeedback, useFetch} from '../../../utils/hooks.ts'
-import {FormInputText} from '../../form/input/FormInputText.tsx'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {Box, Button, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
-import FormInputNumber from '../../form/input/FormInputNumber.tsx'
-import {FormInputCurrency} from '../../form/input/FormInputCurrency.tsx'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {RaceForm} from './common.ts'
+import {FormInputText} from "@components/form/input/FormInputText.tsx";
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
+import {getNamedParticipants, getRaceCategories} from "@api/sdk.gen.ts";
 
 type Props = {
     formContext: UseFormReturn<RaceForm>

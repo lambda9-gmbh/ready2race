@@ -1,6 +1,6 @@
 import {useUser} from './contexts/user/UserContext'
 import {RouterProvider} from '@tanstack/react-router'
-import {router} from './routes'
+import {router} from '@routes'
 import {client} from './api'
 import Config from './Config'
 import {muiTheme} from './theme'

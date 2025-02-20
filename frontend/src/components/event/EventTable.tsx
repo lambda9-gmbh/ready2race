@@ -1,9 +1,10 @@
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {deleteEvent, EventDto, getEvents} from '../../api'
+import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
+import EntityTable from '@components/EntityTable.tsx'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {deleteEvent, getEvents} from "@api/sdk.gen.ts";
+import {EventDto} from "@api/types.gen.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,

@@ -1,6 +1,6 @@
-import {RacePropertiesDto, RacePropertiesRequestDto} from '../../../api'
-import {takeIfNotEmpty} from '../../../utils/ApiUtils.ts'
-import {AutocompleteOption} from '../../../utils/types.ts'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {AutocompleteOption} from '@utils/types.ts'
+import {RacePropertiesDto, RacePropertiesRequestDto} from "@api/types.gen.ts";
 
 export type RaceForm = {
     identifier: string

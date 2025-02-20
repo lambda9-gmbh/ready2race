@@ -1,13 +1,13 @@
 import {Box, Stack} from '@mui/material'
-import {useEntityAdministration} from '../../utils/hooks.ts'
-import {NamedParticipantDto, RaceCategoryDto, RaceTemplateDto} from '../../api'
-import RaceTemplateTable from '../../components/event/race/template/RaceTemplateTable.tsx'
-import RaceTemplateDialog from '../../components/event/race/template/RaceTemplateDialog.tsx'
+import {useEntityAdministration} from '@utils/hooks.ts'
+import RaceTemplateTable from '@components/event/race/template/RaceTemplateTable.tsx'
+import RaceTemplateDialog from '@components/event/race/template/RaceTemplateDialog.tsx'
 import {useTranslation} from 'react-i18next'
-import RaceCategoryTable from '../../components/event/race/category/RaceCategoryTable.tsx'
-import RaceCategoryDialog from '../../components/event/race/category/RaceCategoryDialog.tsx'
-import NamedParticipantTable from '../../components/event/race/namedParticipant/NamedParticipantTable.tsx'
-import NamedParticipantDialog from '../../components/event/race/namedParticipant/NamedParticipantDialog.tsx'
+import RaceCategoryTable from '@components/event/race/category/RaceCategoryTable.tsx'
+import RaceCategoryDialog from '@components/event/race/category/RaceCategoryDialog.tsx'
+import NamedParticipantTable from '@components/event/race/namedParticipant/NamedParticipantTable.tsx'
+import NamedParticipantDialog from '@components/event/race/namedParticipant/NamedParticipantDialog.tsx'
+import {NamedParticipantDto, RaceCategoryDto, RaceTemplateDto} from "@api/types.gen.ts";
 
 const RaceConfigPage = () => {
     const {t} = useTranslation()

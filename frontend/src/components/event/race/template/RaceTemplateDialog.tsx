@@ -1,9 +1,8 @@
-import {BaseEntityDialogProps} from '../../../../utils/types.ts'
-import {addRaceTemplate, RaceTemplateDto, updateRaceTemplate} from '../../../../api'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import {RacePropertiesFormInputs} from '../RacePropertiesFormInputs.tsx'
 import {useForm} from 'react-hook-form-mui'
-import EntityDialog from '../../../EntityDialog.tsx'
+import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {
     mapRaceFormToRacePropertiesRequest,
@@ -12,6 +11,8 @@ import {
     raceFormDefaultValues,
 } from '../common.ts'
 import {useCallback} from 'react'
+import {addRaceTemplate, updateRaceTemplate} from "@api/sdk.gen.ts";
+import {RaceTemplateDto} from "@api/types.gen.ts";
 
 const RaceTemplateDialog = (props: BaseEntityDialogProps<RaceTemplateDto>) => {
     const {t} = useTranslation()

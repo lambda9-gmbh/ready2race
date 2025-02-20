@@ -1,5 +1,5 @@
 import {BaseFormInputProps, FormInputText} from './FormInputText.tsx'
-import {formRegexInteger, formRegexNumber} from '../../../utils/helpers.ts'
+import {formRegexInteger, formRegexNumber} from '@utils/helpers.ts'
 import {useTranslation} from 'react-i18next'
 
 type FormInputNumberProps = Omit<BaseFormInputProps, 'type'> & {

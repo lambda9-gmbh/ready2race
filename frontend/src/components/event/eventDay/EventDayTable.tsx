@@ -1,10 +1,11 @@
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {BaseEntityTableProps} from '../../../utils/types.ts'
-import {deleteEventDay, EventDayDto, getEventDays} from '../../../api'
+import {BaseEntityTableProps} from '@utils/types.ts'
+import {deleteEventDay, getEventDays} from '@api/sdk.gen.ts'
+import {EventDayDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
-import {eventIndexRoute} from '../../../routes.tsx'
-import {PaginationParameters} from '../../../utils/ApiUtils.ts'
-import EntityTable from '../../EntityTable.tsx'
+import {eventIndexRoute} from '@routes'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import EntityTable from '@components/EntityTable.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,

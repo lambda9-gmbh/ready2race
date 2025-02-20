@@ -1,7 +1,7 @@
 import {Box, Divider, IconButton, Stack, Tooltip, Typography, Zoom} from '@mui/material'
 import {Link} from '@tanstack/react-router'
-import {eventRoute} from '../../../routes.tsx'
-import {AutocompleteOption} from '../../../utils/types.ts'
+import {eventRoute} from '@routes'
+import {AutocompleteOption} from '@utils/types.ts'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {useTranslation} from 'react-i18next'
 

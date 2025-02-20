@@ -1,9 +1,10 @@
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {AppUserDto, getUsers} from '../../api'
+import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
+import EntityTable from '@components/EntityTable.tsx'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {getUsers} from "@api/sdk.gen.ts";
+import {AppUserDto} from "@api/types.gen.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
