@@ -26,6 +26,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        429:
+          $ref: '#/components/responses/429'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -250,6 +252,43 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /user/resetPassword:
+    post:
+      operationId: initPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetInitRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        500:
+          $ref: '#/components/responses/500'
+  /user/resetPassword/{passwordResetToken}:
+    parameters:
+      - in: path
+        name: passwordResetToken
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 
   /role:
     post:
@@ -1089,6 +1128,13 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
 
+    429:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
     500:
       description: Server Error
       content:
@@ -1148,7 +1194,7 @@ components:
               type: string
         message:
           type: string
-        details: {}
+        details: { }
 
 
     # authentication / authorization
@@ -1442,6 +1488,31 @@ components:
           type: string
         password:
           type: string
+
+
+    PasswordResetInitRequest:
+      type: object
+      required:
+        - email
+        - language
+        - callbackUrl
+      properties:
+        email:
+          type: string
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        callbackUrl:
+          type: string
+          format: url
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+
 
     # role
 
