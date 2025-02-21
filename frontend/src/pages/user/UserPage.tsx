@@ -63,7 +63,7 @@ const UserPage = () => {
                             />
                             <FormInputText name={'lastname'} label={t('user.lastname')} required />
                             <Typography>{userData.email}</Typography>
-                            {/* TODO: Edit Rights */}
+                            {/* TODO: Edit Rights, Edit Password */}
                             <SubmitButton label={t('common.save')} submitting={submitting} disabled={!formContext.formState.isDirty}/>
                         </Stack>
                     </FormContainer>
