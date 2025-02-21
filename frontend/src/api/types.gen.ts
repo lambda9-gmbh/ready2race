@@ -182,6 +182,10 @@ export type Pagination = {
  */
 export type Parameterchallenge = string
 
+export type ParametereventDayId = string
+
+export type ParametereventId = string
+
 /**
  * Captcha solution
  */
@@ -196,6 +200,8 @@ export type Parameterlimit = number
  * Result offset for pagination
  */
 export type Parameteroffset = number
+
+export type ParameterraceId = string
 
 /**
  * Filter result with space-separated search terms for pagination
@@ -366,9 +372,19 @@ export type GetUsersResponse = {
 
 export type GetUsersError = ApiError
 
+export type GetUserData = {
+    path: {
+        userId: string
+    }
+}
+
 export type GetUserResponse = AppUserDto
 
 export type GetUserError = ApiError
+
+export type GetOwnUserResponse = AppUserDto
+
+export type GetOwnUserError = ApiError
 
 export type GetRegistrationsData = {
     query?: {
@@ -580,17 +596,32 @@ export type GetEventsResponse = {
 
 export type GetEventsError = ApiError
 
+export type GetEventData = {
+    path: {
+        eventId: string
+    }
+}
+
 export type GetEventResponse = EventDto
 
 export type GetEventError = ApiError
 
 export type UpdateEventData = {
     body: EventRequest
+    path: {
+        eventId: string
+    }
 }
 
 export type UpdateEventResponse = void
 
 export type UpdateEventError = ApiError
+
+export type DeleteEventData = {
+    path: {
+        eventId: string
+    }
+}
 
 export type DeleteEventResponse = void
 
@@ -598,6 +629,9 @@ export type DeleteEventError = ApiError
 
 export type AddEventDayData = {
     body: EventDayRequest
+    path: {
+        eventId: string
+    }
 }
 
 export type AddEventDayResponse = string
@@ -605,6 +639,9 @@ export type AddEventDayResponse = string
 export type AddEventDayError = ApiError
 
 export type GetEventDaysData = {
+    path: {
+        eventId: string
+    }
     query?: {
         /**
          * Page size for pagination
@@ -636,17 +673,35 @@ export type GetEventDaysResponse = {
 
 export type GetEventDaysError = ApiError
 
+export type GetEventDayData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
+
 export type GetEventDayResponse = EventDayDto
 
 export type GetEventDayError = ApiError
 
 export type UpdateEventDayData = {
     body: EventDayRequest
+    path: {
+        eventDayId: string
+        eventId: string
+    }
 }
 
 export type UpdateEventDayResponse = void
 
 export type UpdateEventDayError = ApiError
+
+export type DeleteEventDayData = {
+    path: {
+        eventDayId: string
+        eventId: string
+    }
+}
 
 export type DeleteEventDayResponse = void
 
@@ -654,6 +709,10 @@ export type DeleteEventDayError = ApiError
 
 export type AssignRacesToEventDayData = {
     body: AssignRacesToDayRequest
+    path: {
+        eventDayId: string
+        eventId: string
+    }
 }
 
 export type AssignRacesToEventDayResponse = void
@@ -662,6 +721,9 @@ export type AssignRacesToEventDayError = ApiError
 
 export type AddRaceData = {
     body: RaceRequest
+    path: {
+        eventId: string
+    }
 }
 
 export type AddRaceResponse = string
@@ -669,6 +731,9 @@ export type AddRaceResponse = string
 export type AddRaceError = ApiError
 
 export type GetRacesData = {
+    path: {
+        eventId: string
+    }
     query?: {
         /**
          * Optional parameter that filters by eventDayId
@@ -700,17 +765,35 @@ export type GetRacesResponse = {
 
 export type GetRacesError = ApiError
 
+export type GetRaceData = {
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
+
 export type GetRaceResponse = RaceDto
 
 export type GetRaceError = ApiError
 
 export type UpdateRaceData = {
     body: RaceRequest
+    path: {
+        eventId: string
+        raceId: string
+    }
 }
 
 export type UpdateRaceResponse = void
 
 export type UpdateRaceError = ApiError
+
+export type DeleteRaceData = {
+    path: {
+        eventId: string
+        raceId: string
+    }
+}
 
 export type DeleteRaceResponse = void
 
@@ -718,6 +801,10 @@ export type DeleteRaceError = ApiError
 
 export type AssignDaysToRaceData = {
     body: AssignDaysToRaceRequest
+    path: {
+        eventId: string
+        raceId: string
+    }
 }
 
 export type AssignDaysToRaceResponse = void
@@ -760,17 +847,32 @@ export type GetRaceTemplatesResponse = {
 
 export type GetRaceTemplatesError = ApiError
 
+export type GetRaceTemplateData = {
+    path: {
+        raceTemplateId: string
+    }
+}
+
 export type GetRaceTemplateResponse = RaceTemplateDto
 
 export type GetRaceTemplateError = ApiError
 
 export type UpdateRaceTemplateData = {
     body: RaceTemplateRequest
+    path: {
+        raceTemplateId: string
+    }
 }
 
 export type UpdateRaceTemplateResponse = void
 
 export type UpdateRaceTemplateError = ApiError
+
+export type DeleteRaceTemplateData = {
+    path: {
+        raceTemplateId: string
+    }
+}
 
 export type DeleteRaceTemplateResponse = void
 
@@ -793,11 +895,20 @@ export type GetNamedParticipantsError = ApiError
 
 export type UpdateNamedParticipantData = {
     body: NamedParticipantRequest
+    path: {
+        namedParticipantId: string
+    }
 }
 
 export type UpdateNamedParticipantResponse = void
 
 export type UpdateNamedParticipantError = ApiError
+
+export type DeleteNamedParticipantData = {
+    path: {
+        namedParticipantId: string
+    }
+}
 
 export type DeleteNamedParticipantResponse = void
 
@@ -820,11 +931,20 @@ export type GetRaceCategoriesError = ApiError
 
 export type UpdateRaceCategoryData = {
     body: RaceCategoryRequest
+    path: {
+        raceCategoryId: string
+    }
 }
 
 export type UpdateRaceCategoryResponse = void
 
 export type UpdateRaceCategoryError = ApiError
+
+export type DeleteRaceCategoryData = {
+    path: {
+        raceCategoryId: string
+    }
+}
 
 export type DeleteRaceCategoryResponse = void
 

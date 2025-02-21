@@ -87,11 +87,38 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /user/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getUser
       responses:
         200:
           description: User successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppUserDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /user/me:
+    get:
+      operationId: getOwnUser
+      responses:
+        200:
+          description: Own user successfully retrieved
           content:
             application/json:
               schema:
@@ -277,8 +304,8 @@ paths:
           $ref: '#/components/responses/500'
   /user/resetPassword/{passwordResetToken}:
     parameters:
-      - in: path
-        name: passwordResetToken
+      - name: passwordResetToken
+        in: path
         required: true
         schema:
           type: string
@@ -353,11 +380,12 @@ paths:
           $ref: '#/components/responses/500'
   /role/{roleId}:
     parameters:
-      - in: path
-        name: roleId
+      - name: roleId
+        in: path
         required: true
         schema:
           type: string
+          format: uuid
     put:
       operationId: updateRole
       requestBody:
@@ -449,6 +477,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getEvent
       responses:
@@ -458,6 +488,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -501,6 +533,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDay:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addEventDay
       requestBody:
@@ -563,6 +597,9 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDay/{eventDayId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
     get:
       operationId: getEventDay
       responses:
@@ -572,6 +609,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventDayDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -615,6 +654,9 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDay/{eventDayId}/races:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
     put:
       operationId: assignRacesToEventDay
       requestBody:
@@ -637,6 +679,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/race:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addRace
       requestBody:
@@ -699,6 +743,9 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/race/{raceId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/raceId'
     get:
       operationId: getRace
       responses:
@@ -708,6 +755,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RaceDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -751,6 +800,9 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/race/{raceId}/days:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/raceId'
     put:
       operationId: assignDaysToRace
       requestBody:
@@ -824,6 +876,13 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /raceTemplate/{raceTemplateId}:
+    parameters:
+      - name: raceTemplateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getRaceTemplate
       responses:
@@ -833,6 +892,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RaceTemplateDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -922,6 +983,13 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /namedParticipant/{namedParticipantId}:
+    parameters:
+      - name: namedParticipantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     put:
       operationId: updateNamedParticipant
       requestBody:
@@ -1005,6 +1073,13 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /raceCategory/{raceCategoryId}:
+    parameters:
+      - name: raceCategoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     put:
       operationId: updateRaceCategory
       requestBody:
@@ -1062,6 +1137,8 @@ components:
 
   parameters:
 
+    # query
+
     limit:
       name: limit
       in: query
@@ -1111,6 +1188,34 @@ components:
       required: true
       schema:
         type: integer
+
+
+    # path params
+
+    eventId:
+      name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    eventDayId:
+      name: eventDayId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    raceId:
+      name: raceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
 
 
   responses:

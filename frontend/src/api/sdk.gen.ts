@@ -12,8 +12,11 @@ import type {
     GetUsersData,
     GetUsersError,
     GetUsersResponse,
+    GetUserData,
     GetUserError,
     GetUserResponse,
+    GetOwnUserError,
+    GetOwnUserResponse,
     GetRegistrationsData,
     GetRegistrationsError,
     GetRegistrationsResponse,
@@ -56,11 +59,13 @@ import type {
     GetEventsData,
     GetEventsError,
     GetEventsResponse,
+    GetEventData,
     GetEventError,
     GetEventResponse,
     UpdateEventData,
     UpdateEventError,
     UpdateEventResponse,
+    DeleteEventData,
     DeleteEventError,
     DeleteEventResponse,
     AddEventDayData,
@@ -69,11 +74,13 @@ import type {
     GetEventDaysData,
     GetEventDaysError,
     GetEventDaysResponse,
+    GetEventDayData,
     GetEventDayError,
     GetEventDayResponse,
     UpdateEventDayData,
     UpdateEventDayError,
     UpdateEventDayResponse,
+    DeleteEventDayData,
     DeleteEventDayError,
     DeleteEventDayResponse,
     AssignRacesToEventDayData,
@@ -85,11 +92,13 @@ import type {
     GetRacesData,
     GetRacesError,
     GetRacesResponse,
+    GetRaceData,
     GetRaceError,
     GetRaceResponse,
     UpdateRaceData,
     UpdateRaceError,
     UpdateRaceResponse,
+    DeleteRaceData,
     DeleteRaceError,
     DeleteRaceResponse,
     AssignDaysToRaceData,
@@ -101,11 +110,13 @@ import type {
     GetRaceTemplatesData,
     GetRaceTemplatesError,
     GetRaceTemplatesResponse,
+    GetRaceTemplateData,
     GetRaceTemplateError,
     GetRaceTemplateResponse,
     UpdateRaceTemplateData,
     UpdateRaceTemplateError,
     UpdateRaceTemplateResponse,
+    DeleteRaceTemplateData,
     DeleteRaceTemplateError,
     DeleteRaceTemplateResponse,
     AddNamedParticipantData,
@@ -116,6 +127,7 @@ import type {
     UpdateNamedParticipantData,
     UpdateNamedParticipantError,
     UpdateNamedParticipantResponse,
+    DeleteNamedParticipantData,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
     AddRaceCategoryData,
@@ -126,6 +138,7 @@ import type {
     UpdateRaceCategoryData,
     UpdateRaceCategoryError,
     UpdateRaceCategoryResponse,
+    DeleteRaceCategoryData,
     DeleteRaceCategoryError,
     DeleteRaceCategoryResponse,
     NewCaptchaError,
@@ -175,11 +188,20 @@ export const getUsers = <ThrowOnError extends boolean = false>(
 }
 
 export const getUser = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<GetUserData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
         ...options,
         url: '/user/{userId}',
+    })
+}
+
+export const getOwnUser = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetOwnUserResponse, GetOwnUserError, ThrowOnError>({
+        ...options,
+        url: '/user/me',
     })
 }
 
@@ -332,7 +354,7 @@ export const getEvents = <ThrowOnError extends boolean = false>(
 }
 
 export const getEvent = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<GetEventData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventResponse, GetEventError, ThrowOnError>({
         ...options,
@@ -350,7 +372,7 @@ export const updateEvent = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteEvent = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<DeleteEventData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<DeleteEventResponse, DeleteEventError, ThrowOnError>({
         ...options,
@@ -368,7 +390,7 @@ export const addEventDay = <ThrowOnError extends boolean = false>(
 }
 
 export const getEventDays = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
+    options: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventDaysResponse, GetEventDaysError, ThrowOnError>({
         ...options,
@@ -377,7 +399,7 @@ export const getEventDays = <ThrowOnError extends boolean = false>(
 }
 
 export const getEventDay = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<GetEventDayData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventDayResponse, GetEventDayError, ThrowOnError>({
         ...options,
@@ -399,7 +421,7 @@ export const updateEventDay = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteEventDay = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<DeleteEventDayData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
         DeleteEventDayResponse,
@@ -434,7 +456,7 @@ export const addRace = <ThrowOnError extends boolean = false>(
 }
 
 export const getRaces = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<GetRacesData, ThrowOnError>,
+    options: OptionsLegacyParser<GetRacesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetRacesResponse, GetRacesError, ThrowOnError>({
         ...options,
@@ -443,7 +465,7 @@ export const getRaces = <ThrowOnError extends boolean = false>(
 }
 
 export const getRace = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<GetRaceData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetRaceResponse, GetRaceError, ThrowOnError>({
         ...options,
@@ -461,7 +483,7 @@ export const updateRace = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteRace = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<DeleteRaceData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<DeleteRaceResponse, DeleteRaceError, ThrowOnError>({
         ...options,
@@ -509,7 +531,7 @@ export const getRaceTemplates = <ThrowOnError extends boolean = false>(
 }
 
 export const getRaceTemplate = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<GetRaceTemplateData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
         GetRaceTemplateResponse,
@@ -535,7 +557,7 @@ export const updateRaceTemplate = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteRaceTemplate = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<DeleteRaceTemplateData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
         DeleteRaceTemplateResponse,
@@ -587,7 +609,7 @@ export const updateNamedParticipant = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<DeleteNamedParticipantData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
         DeleteNamedParticipantResponse,
@@ -639,7 +661,7 @@ export const updateRaceCategory = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteRaceCategory = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<DeleteRaceCategoryData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
         DeleteRaceCategoryResponse,
