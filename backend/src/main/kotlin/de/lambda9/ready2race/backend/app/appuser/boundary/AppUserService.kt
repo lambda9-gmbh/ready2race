@@ -151,7 +151,7 @@ object AppUserService {
         )
     }
 
-    // Should another "Conflict" Error-Code (other than "Email already in use") be created, the Error Display in the Frontend-Application needs to be updated
+    // Error-Code 409 "Conflict" is reserved by the "Email already in use" error. Should another 409 be created, the Error Display in the Frontend-Application needs to be updated
     fun register(
         request: RegisterRequest,
     ): App<AppUserError, ApiResponse.NoData> = KIO.comprehension {
@@ -195,6 +195,7 @@ object AppUserService {
     }
 
 
+    // Error-Codes 404 and 409 are reserved by the Captcha errors. Should another 404 or 409 be created, the Error Display in the Frontend-Application needs to be updated
     fun initPasswordReset(
         request: PasswordResetInitRequest,
     ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
@@ -239,13 +240,9 @@ object AppUserService {
             !AppUserPasswordResetRepo.consume(token).orDie().onNullFail { AppUserError.PasswordResetNotFound }
 
         val newPassword = !PasswordUtilities.hash(request.password)
-        val updated = !AppUserRepo.update(passwordReset.appUser) { password = newPassword }.orDie()
+        !AppUserRepo.update(passwordReset.appUser) { password = newPassword }.orDie()
 
-        /*if (updated == null) {
-            KIO.fail(AppUserError.NotFound) // Todo: Can this case be possible? Do we want to give this info to the user?
-        } else {*/
         noData
-        //}
     }
 
 

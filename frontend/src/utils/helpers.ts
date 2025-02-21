@@ -12,3 +12,11 @@ export const formRegexNumber: RegExp = /^\d+([.,]\d+)?$/
 export const formRegexInteger: RegExp = /^-?\d+$/
 
 export const formRegexCurrency: RegExp = /^-?(([1-9]\d*)|0)([.,]\d{2})?$/
+
+export const touchSupported = () => {
+    try {
+        return ('ontouchstart' in window || navigator.maxTouchPoints) === true
+    } catch {
+        return false
+    }
+}

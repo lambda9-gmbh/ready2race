@@ -5,10 +5,12 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetRequest
+import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.andThen
+import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
 import java.util.*
 
@@ -106,13 +108,17 @@ fun Route.user() {
             }
         }
         route("/resetPassword"){
-            post{
-                val payload = call.receiveV(PasswordResetInitRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val captchaId = !queryParam("challenge") { UUID.fromString(it) }
-                        val captchaInput = !queryParam("input") { it.toInt() }
-                        AppUserService.initPasswordReset(!payload)
+            rateLimit(RateLimitName("resetPassword")) {
+                post{
+                    val payload = call.receiveV(PasswordResetInitRequest.example)
+                    call.respondKIO {
+                        KIO.comprehension {
+                            val captchaId = !queryParam("challenge") { UUID.fromString(it) }
+                            val captchaInput = !queryParam("input") { it.toInt() }
+                            !CaptchaService.trySolution(captchaId, captchaInput)
+
+                            AppUserService.initPasswordReset(!payload)
+                        }
                     }
                 }
             }

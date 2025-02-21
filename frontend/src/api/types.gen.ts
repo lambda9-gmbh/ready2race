@@ -63,6 +63,15 @@ export type AssignRacesToDayRequest = {
     races: Array<string>
 }
 
+export type CaptchaDto = {
+    id: string
+    imgSrc: string
+    solutionMin: number
+    solutionMax: number
+    handleToHeightRatio: number
+    start: number
+}
+
 export type CreatedByDto = {
     firstname: string
     lastname: string
@@ -167,6 +176,16 @@ export type Pagination = {
     sort: Array<Order>
     search: string
 }
+
+/**
+ * Captcha challenge id
+ */
+export type Parameterchallenge = string
+
+/**
+ * Captcha solution
+ */
+export type Parameterinput = number
 
 /**
  * Page size for pagination
@@ -441,6 +460,16 @@ export type AcceptUserInvitationError = ApiError
 
 export type InitPasswordResetData = {
     body: PasswordResetInitRequest
+    query: {
+        /**
+         * Captcha challenge id
+         */
+        challenge: string
+        /**
+         * Captcha solution
+         */
+        input: number
+    }
 }
 
 export type InitPasswordResetResponse = void
@@ -800,3 +829,7 @@ export type UpdateRaceCategoryError = ApiError
 export type DeleteRaceCategoryResponse = void
 
 export type DeleteRaceCategoryError = ApiError
+
+export type NewCaptchaResponse = CaptchaDto
+
+export type NewCaptchaError = ApiError

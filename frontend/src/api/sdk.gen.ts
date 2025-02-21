@@ -128,6 +128,8 @@ import type {
     UpdateRaceCategoryResponse,
     DeleteRaceCategoryError,
     DeleteRaceCategoryResponse,
+    NewCaptchaError,
+    NewCaptchaResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -646,5 +648,14 @@ export const deleteRaceCategory = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/raceCategory/{raceCategoryId}',
+    })
+}
+
+export const newCaptcha = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<NewCaptchaResponse, NewCaptchaError, ThrowOnError>({
+        ...options,
+        url: '/captcha',
     })
 }

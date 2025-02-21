@@ -209,6 +209,19 @@
           "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
           "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
         }
+      },
+      "captcha": {
+        "instruction": {
+          "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
+          "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
+        },
+        "error": {
+          "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
+          "submit": "CAPTCHA wurde nicht korrekt gelöst",
+          "notFound": "Der CAPTCHA ist veraltet",
+          "tooManyRequests": "Zu viele Versuche. Versuchen Sie es später erneut."
+        },
+        "loading": "Lade CAPTCHA..."
       }
     }
   },

@@ -255,6 +255,9 @@ paths:
   /user/resetPassword:
     post:
       operationId: initPasswordReset
+      parameters:
+        - $ref: '#/components/parameters/challenge'
+        - $ref: '#/components/parameters/input'
       requestBody:
         required: true
         content:
@@ -264,6 +267,12 @@ paths:
       responses:
         204:
           $ref: '#/components/responses/204'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        429:
+          $ref: '#/components/responses/429'
         500:
           $ref: '#/components/responses/500'
   /user/resetPassword/{passwordResetToken}:
@@ -1030,6 +1039,18 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /captcha:
+    post:
+      operationId: newCaptcha
+      responses:
+        200:
+          description: New Captcha successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaptchaDto'
+        500:
+          $ref: '#/components/responses/500'
 
 
 
@@ -1072,6 +1093,25 @@ components:
       required: false
       schema:
         type: string
+
+
+    challenge:
+      name: challenge
+      in: query
+      description: Captcha challenge id
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    input:
+      name: input
+      in: query
+      description: Captcha solution
+      required: true
+      schema:
+        type: integer
+
 
   responses:
 
@@ -1637,8 +1677,7 @@ components:
 
 
     AssignRacesToDayRequest:
-      type:
-        object
+      type: object
       required:
         - races
       properties:
@@ -1830,8 +1869,7 @@ components:
 
 
     AssignDaysToRaceRequest:
-      type:
-        object
+      type: object
       required:
         - days
       properties:
@@ -1871,8 +1909,7 @@ components:
     # namedParticipant
 
     NamedParticipantDto:
-      type:
-        object
+      type: object
       required:
         - id
         - name
@@ -1886,8 +1923,7 @@ components:
           type: string
 
     NamedParticipantRequest:
-      type:
-        object
+      type: object
       required:
         - name
       properties:
@@ -1900,8 +1936,7 @@ components:
     # raceCategory
 
     RaceCategoryDto:
-      type:
-        object
+      type: object
       required:
         - id
         - name
@@ -1915,8 +1950,7 @@ components:
           type: string
 
     RaceCategoryRequest:
-      type:
-        object
+      type: object
       required:
         - name
       properties:
@@ -1924,3 +1958,32 @@ components:
           type: string
         description:
           type: string
+
+
+
+    # captcha
+
+    CaptchaDto:
+      type: object
+      required:
+        - id
+        - imgSrc
+        - solutionMin
+        - solutionMax
+        - handleToHeightRatio
+        - start
+      properties:
+        id:
+          type: string
+          format: uuid
+        imgSrc:
+          type: string
+          format: base64
+        solutionMin:
+          type: integer
+        solutionMax:
+          type: integer
+        handleToHeightRatio:
+          type: number
+        start:
+          type: integer

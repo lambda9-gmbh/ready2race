@@ -209,6 +209,19 @@
           "part1": "An error has occurred when resetting your password.",
           "part2": "Make sure that you are using the correct and complete link from the email. Only the last link sent is valid. The link is valid for 24 hours."
         }
+      },
+      "captcha": {
+        "instruction": {
+          "desktop": "Use the mouse to move the logo into the small circle",
+          "mobile": "Use your finger to move the logo into the small circle"
+        },
+        "error": {
+          "createCaptcha": "An unexpected error has occurred when creating a CAPTCHA",
+          "submit": "CAPTCHA was not solved correctly",
+          "notFound": "The CAPTCHA is outdated",
+          "tooManyRequests": "Too many requests. Try again later."
+        },
+        "loading": "Loading CAPTCHA..."
       }
     }
   },

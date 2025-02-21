@@ -1,7 +1,10 @@
 import {RequestResult} from '@hey-api/client-fetch'
-import {DependencyList, useEffect, useState} from 'react'
+import {DependencyList, useEffect, useLayoutEffect, useState} from 'react'
 import {useSnackbar} from 'notistack'
 import {GridValidRowModel} from '@mui/x-data-grid'
+import {useTranslation} from 'react-i18next'
+import {ApiError, CaptchaDto} from '@api/types.gen.ts'
+import {newCaptcha} from '@api/sdk.gen.ts'
 
 type UseFetchOptions<T, E> = {
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
@@ -185,4 +188,53 @@ export const useDebounce = <T>(value: T, delay?: number) => {
     }, [value, delay])
 
     return debounced
+}
+
+export const useWindowSize = (delay?: number) => {
+    const [size, setSize] = useState<[number, number]>([window.innerWidth, window.innerHeight])
+
+    useLayoutEffect(() => {
+        let timer: ReturnType<typeof setTimeout>
+        const updateSize = () => {
+            clearTimeout(timer)
+            timer = setTimeout(() => setSize([window.innerWidth, window.innerHeight]), delay ?? 500)
+        }
+        window.addEventListener('resize', updateSize)
+        return () => {
+            clearTimeout(timer)
+            window.removeEventListener('resize', updateSize)
+        }
+    }, [delay])
+    return size
+}
+
+type CaptchaFetchProps = {
+    captchaProps: UseFetchReturn<CaptchaDto, ApiError>
+    onSubmitResult: () => void
+}
+type CaptchaInputProps = {
+    onCaptchaCreated: (start: number) => void
+}
+export const useFormWithCaptcha = (props: CaptchaInputProps): CaptchaFetchProps => {
+    const {t} = useTranslation()
+    const feedback = useFeedback()
+    const [lastRequested, setLastRequested] = useState(Date.now())
+
+    const captchaData = useFetch(signal => newCaptcha({signal}), {
+        onResponse: ({data, error}) => {
+            if (error) {
+                feedback.error(t('common.error.unexpected'))
+            } else {
+                props.onCaptchaCreated(data.start)
+            }
+        },
+        deps: [lastRequested],
+    })
+
+    return {
+        captchaProps: captchaData,
+        onSubmitResult: () => {
+            setLastRequested(Date.now())
+        },
+    }
 }

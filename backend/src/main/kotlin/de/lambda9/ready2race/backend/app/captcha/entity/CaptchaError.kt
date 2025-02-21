@@ -10,7 +10,7 @@ enum class CaptchaError : ServiceError {
 
     override fun respond(): ApiError = when (this) {
         // todo: other Error Codes than "BadRequest"?
-        ChallengeNotFound -> ApiError(status = HttpStatusCode.BadRequest, message = "Captcha Challenge not found")
-        WrongSolution -> ApiError(status = HttpStatusCode.BadRequest, message = "WrongSolution")
+        ChallengeNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Captcha Challenge not found")
+        WrongSolution -> ApiError(status = HttpStatusCode.Conflict, message = "Wrong Solution")
     }
 }

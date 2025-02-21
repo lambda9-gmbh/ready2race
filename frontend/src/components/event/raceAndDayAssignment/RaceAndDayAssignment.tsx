@@ -38,8 +38,6 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
 
     const {eventId} = eventRoute.useParams()
 
-    console.log(props.assignedEntities)
-
     const formContext = useForm<AssignmentForm>({
         values: {selected: props.assignedEntities.map(value => ({entry: value}))},
     })

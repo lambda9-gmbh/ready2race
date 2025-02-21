@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserHasRoleRepo
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
@@ -269,6 +270,12 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             scheduleFixed(1.hours) {
                 AppUserService.deleteExpiredPasswordResets().map {
                     logger.info { "${"expired password resets".count(it)} deleted" }
+                }
+            }
+
+            scheduleFixed(5.minutes){
+                CaptchaService.deleteExpired().map{
+                    logger.info { "${"expired captchas".count(it)} deleted" }
                 }
             }
 

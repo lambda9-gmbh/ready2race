@@ -4,10 +4,12 @@ import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.captcha.control.CaptchaRepo
 import de.lambda9.ready2race.backend.app.captcha.entity.CaptchaChallengeDto
+import de.lambda9.ready2race.backend.app.captcha.entity.CaptchaError
 import de.lambda9.ready2race.backend.database.generated.tables.records.CaptchaRecord
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.toBase64
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.awt.BasicStroke
 import java.awt.Color
@@ -99,4 +101,22 @@ object CaptchaService {
             )
         )
     }
+
+    fun trySolution(
+        id: UUID,
+        input: Int,
+    ): App<CaptchaError, Unit> = KIO.comprehension {
+        val solution = !CaptchaRepo.consume(id).orDie()
+
+        when {
+            solution == null -> App.fail(CaptchaError.ChallengeNotFound)
+
+            input !in (solution.solution - ALLOWED_INACCURACY).rangeTo(solution.solution + ALLOWED_INACCURACY) ->
+                App.fail(CaptchaError.WrongSolution)
+
+            else -> unit
+        }
+    }
+
+    fun deleteExpired(): App<Nothing, Int> = CaptchaRepo.deleteExpired().orDie()
 }
