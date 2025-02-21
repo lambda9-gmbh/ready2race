@@ -113,24 +113,6 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /user/me:
-    get:
-      operationId: getOwnUser
-      responses:
-        200:
-          description: Own user successfully retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppUserDto'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
   /user/registration:
     get:
       operationId: getRegistrations

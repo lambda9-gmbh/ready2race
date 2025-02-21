@@ -52,6 +52,10 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
             columns={columns}
             dataRequest={dataRequest}
             resource={'USER'}
+            linkColumn={entity => ({
+                to: '/user/$userId',
+                params: {userId: entity.id}
+            })}
         />
     )
 }

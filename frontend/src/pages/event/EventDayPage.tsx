@@ -6,9 +6,9 @@ import Throbber from '@components/Throbber.tsx'
 import RaceAndDayAssignment from '@components/event/raceAndDayAssignment/RaceAndDayAssignment.tsx'
 import {AutocompleteOption} from '@utils/types.ts'
 import {raceLabelName} from '@components/event/race/common.ts'
-import {useState} from "react";
-import EntityDetailsEntry from "@components/EntityDetailsEntry.tsx";
-import {getEventDay, getRaces} from "@api/sdk.gen.ts";
+import {useState} from 'react'
+import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
+import {getEventDay, getRaces} from '@api/sdk.gen.ts'
 
 const EventDayPage = () => {
     const {t} = useTranslation()
@@ -19,7 +19,7 @@ const EventDayPage = () => {
 
     const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
 
-    const {data: eventDayData} = useFetch(
+    const {data: eventDayData, pending: eventDayPending} = useFetch(
         signal => getEventDay({signal, path: {eventId: eventId, eventDayId: eventDayId}}),
         {
             onResponse: ({error}) => {
@@ -34,7 +34,7 @@ const EventDayPage = () => {
         },
     )
 
-    const {data: assignedRacesData} = useFetch(
+    const {data: assignedRacesData, pending: assignedRacesPending} = useFetch(
         signal => getRaces({signal, path: {eventId: eventId}, query: {eventDayId: eventDayId}}),
         {
             onResponse: ({error}) => {
@@ -52,15 +52,18 @@ const EventDayPage = () => {
             label: raceLabelName(value.properties.identifier, value.properties.name),
         })) ?? []
 
-    const {data: racesData} = useFetch(signal => getRaces({signal, path: {eventId: eventId}}), {
-        onResponse: ({error}) => {
-            if (error) {
-                feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
-                console.log(error)
-            }
+    const {data: racesData, pending: racesPending} = useFetch(
+        signal => getRaces({signal, path: {eventId: eventId}}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
+                    console.log(error)
+                }
+            },
+            deps: [eventId, reloadDataTrigger],
         },
-        deps: [eventId, reloadDataTrigger],
-    })
+    )
 
     const selection: AutocompleteOption[] =
         racesData?.data.map(value => ({
@@ -73,10 +76,17 @@ const EventDayPage = () => {
             <Box sx={{flex: 1, maxWidth: 600}}>
                 {(eventDayData && (
                     <Stack spacing={2}>
-                        <EntityDetailsEntry content={eventDayData.date + ( eventDayData.name ? " | " + eventDayData.name : "")} variant="h1"/>
-                        <EntityDetailsEntry content={eventDayData.description}/>
+                        <EntityDetailsEntry
+                            content={
+                                eventDayData.date +
+                                (eventDayData.name ? ' | ' + eventDayData.name : '')
+                            }
+                            variant="h1"
+                        />
+                        <EntityDetailsEntry content={eventDayData.description} />
                     </Stack>
-                )) || <Throbber />}
+                )) ||
+                    (eventDayPending && <Throbber />)}
             </Box>
             <Divider orientation="vertical" />
             <Box sx={{flex: 1, maxWidth: 400}}>
@@ -89,7 +99,8 @@ const EventDayPage = () => {
                         racesToDay={true}
                         onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
                     />
-                )) || <Throbber />}
+                )) ||
+                    ((racesPending || assignedRacesPending) && <Throbber />)}
             </Box>
         </Grid2>
     )

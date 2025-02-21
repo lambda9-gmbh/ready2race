@@ -21,11 +21,10 @@ const RootLayout = () => {
                             position: 'static',
                             zIndex: theme => theme.zIndex.drawer + 1,
                         }}>
-                        <Toolbar>
+                        <Toolbar sx={{justifyContent: 'space-between'}}>
                             <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
                                 {drawerExpanded ? <MenuOpen /> : <Menu />}
                             </IconButton>
-                            <Box sx={{flexGrow: 1}}></Box>
                             <UserWidget />
                         </Toolbar>
                     </AppBar>

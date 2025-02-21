@@ -7,8 +7,9 @@ import {AutocompleteOption} from '@utils/types.ts'
 import Throbber from '@components/Throbber.tsx'
 import RaceAndDayAssignment from '@components/event/raceAndDayAssignment/RaceAndDayAssignment.tsx'
 import {useState} from 'react'
-import EntityDetailsEntry from "@components/EntityDetailsEntry.tsx";
-import {getEventDays, getRace} from "@api/sdk.gen.ts";
+import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
+import {getEventDays, getRace} from '@api/sdk.gen.ts'
+import RaceCountEntry from '@components/event/race/RaceCountEntry.tsx'
 
 const RacePage = () => {
     const {t} = useTranslation()
@@ -19,7 +20,7 @@ const RacePage = () => {
 
     const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
 
-    const {data: raceData} = useFetch(
+    const {data: raceData, pending: racePending} = useFetch(
         signal => getRace({signal, path: {eventId: eventId, raceId: raceId}}),
         {
             onResponse: ({error}) => {
@@ -32,7 +33,7 @@ const RacePage = () => {
         },
     )
 
-    const {data: assignedEventDaysData} = useFetch(
+    const {data: assignedEventDaysData, pending: assignedEventDaysPending} = useFetch(
         signal => getEventDays({signal, path: {eventId: eventId}, query: {raceId: raceId}}),
         {
             onResponse: ({error}) => {
@@ -52,7 +53,7 @@ const RacePage = () => {
             label: eventDayName(value.date, value.name),
         })) ?? []
 
-    const {data: eventDaysData} = useFetch(
+    const {data: eventDaysData, pending: eventDaysPending} = useFetch(
         signal => getEventDays({signal, path: {eventId: eventId}}),
         {
             onResponse: ({error}) => {
@@ -78,29 +79,56 @@ const RacePage = () => {
             <Box sx={{flex: 1, maxWidth: 600}}>
                 {(raceData && (
                     <Stack spacing={2}>
-                        <EntityDetailsEntry content={raceData.properties.identifier + " | " + raceData.properties.name} variant="h1"/>
-                        <EntityDetailsEntry content={raceData.properties.shortName}/>
-                        <EntityDetailsEntry content={raceData.properties.description}/>
+                        <EntityDetailsEntry
+                            content={
+                                raceData.properties.identifier + ' | ' + raceData.properties.name
+                            }
+                            variant="h1"
+                        />
+                        <EntityDetailsEntry content={raceData.properties.shortName} />
+                        <EntityDetailsEntry content={raceData.properties.description} />
                         {raceData.properties.raceCategory && (
                             <Box sx={{py: 2}}>
-                                <EntityDetailsEntry content={raceData.properties.raceCategory.name}/>
-                                <EntityDetailsEntry content={raceData.properties.raceCategory.description}/>
+                                <EntityDetailsEntry
+                                    content={raceData.properties.raceCategory.name}
+                                />
+                                <EntityDetailsEntry
+                                    content={raceData.properties.raceCategory.description}
+                                />
                             </Box>
                         )}
 
                         <Divider orientation="horizontal" />
-                        <EntityDetailsEntry label={t('event.race.participationFee')} content={raceData.properties.participationFee}/>
-                        <EntityDetailsEntry label={t('event.race.rentalFee')} content={raceData.properties.rentalFee}/>
+                        <EntityDetailsEntry
+                            label={t('event.race.participationFee')}
+                            content={raceData.properties.participationFee}
+                        />
+                        <EntityDetailsEntry
+                            label={t('event.race.rentalFee')}
+                            content={raceData.properties.rentalFee}
+                        />
 
                         <Divider orientation="horizontal" />
-                        <EntityDetailsEntry label={t('event.race.count.males')} content={raceData.properties.countMales}/>
-                        <EntityDetailsEntry label={t('event.race.count.females')} content={raceData.properties.countFemales}/>
-                        <EntityDetailsEntry label={t('event.race.count.nonBinary')} content={raceData.properties.countNonBinary}/>
-                        <EntityDetailsEntry label={t('event.race.count.mixed')} content={raceData.properties.countMixed}/>
+                        <RaceCountEntry
+                            label={t('event.race.count.males')}
+                            content={raceData.properties.countMales}
+                        />
+                        <RaceCountEntry
+                            label={t('event.race.count.females')}
+                            content={raceData.properties.countFemales}
+                        />
+                        <RaceCountEntry
+                            label={t('event.race.count.nonBinary')}
+                            content={raceData.properties.countNonBinary}
+                        />
+                        <RaceCountEntry
+                            label={t('event.race.count.mixed')}
+                            content={raceData.properties.countMixed}
+                        />
 
                         {raceData.properties.namedParticipants.map((np, index) => (
                             <>
-                                <Divider orientation="horizontal" key={`divider${index}`}/>
+                                <Divider orientation="horizontal" key={`divider${index}`} />
                                 <Box key={`box${index}`}>
                                     <Typography variant="subtitle1">{np.name}</Typography>
                                     <Typography>{np.description}</Typography>
@@ -109,15 +137,28 @@ const RacePage = () => {
                                             ? t('event.race.namedParticipant.required.required')
                                             : t('event.race.namedParticipant.required.notRequired')}
                                     </Typography>
-                                    <EntityDetailsEntry label={t('event.race.count.males')} content={np.countMales}/>
-                                    <EntityDetailsEntry label={t('event.race.count.females')} content={np.countFemales}/>
-                                    <EntityDetailsEntry label={t('event.race.count.nonBinary')} content={np.countNonBinary}/>
-                                    <EntityDetailsEntry label={t('event.race.count.mixed')} content={np.countMixed}/>
+                                    <RaceCountEntry
+                                        label={t('event.race.count.males')}
+                                        content={np.countMales}
+                                    />
+                                    <RaceCountEntry
+                                        label={t('event.race.count.females')}
+                                        content={np.countFemales}
+                                    />
+                                    <RaceCountEntry
+                                        label={t('event.race.count.nonBinary')}
+                                        content={np.countNonBinary}
+                                    />
+                                    <RaceCountEntry
+                                        label={t('event.race.count.mixed')}
+                                        content={np.countMixed}
+                                    />
                                 </Box>
                             </>
                         ))}
                     </Stack>
-                )) || <Throbber />}
+                )) ||
+                    (racePending && <Throbber />)}
             </Box>
             <Divider orientation="vertical" />
             <Box sx={{flex: 1, maxWidth: 400}}>
@@ -130,7 +171,8 @@ const RacePage = () => {
                         racesToDay={false}
                         onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
                     />
-                )) || <Throbber />}
+                )) ||
+                    ((eventDaysPending || assignedEventDaysPending) && <Throbber />)}
             </Box>
         </Grid2>
     )

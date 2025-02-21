@@ -21,7 +21,15 @@ const InitResetPasswordPage = () => {
     const [submitting, setSubmitting] = useState(false)
     const [requested, setRequested] = useState(false)
 
-    const formContext = useForm<Form>()
+    const defaultValues: Form = {
+        email: '',
+        captcha: {
+            input: 0,
+            challenge: ''
+        }
+    }
+
+    const formContext = useForm<Form>({values: defaultValues})
 
     const setCaptchaStart = (captchaStart: number) => {
         formContext.setValue('captcha.input', captchaStart)
@@ -45,6 +53,7 @@ const InitResetPasswordPage = () => {
         setSubmitting(false)
         onSubmitResult()
         formContext.resetField('captcha.input')
+
         if (result.error) {
             if (result.error.status.value === 404) {
                 feedback.error(t('user.resetPassword.captcha.error.notFound'))
@@ -72,7 +81,7 @@ const InitResetPasswordPage = () => {
                     <Divider sx={{my: 4}} />
                     <Typography sx={{mb: 4}}>{t('user.resetPassword.init.instruction')}</Typography>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
-                        <Stack spacing={2}>
+                        <Stack spacing={4}>
                             <FormInputText name={'email'} label={t('user.email')} required />
                             <FormInputCaptcha
                                 captchaProps={captchaProps}

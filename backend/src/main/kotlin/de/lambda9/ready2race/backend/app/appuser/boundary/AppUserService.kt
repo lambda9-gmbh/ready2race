@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
+import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -189,9 +190,18 @@ object AppUserService {
             .onNullFail { AppUserError.RegistrationNotFound }
 
         val record = !registration.toAppUser()
-        AppUserRepo.create(record).orDie().map {
-            ApiResponse.Created(it)
-        }
+        val userId = !AppUserRepo.create(record).orDie()
+
+        !AppUserHasRoleRepo.create(
+            AppUserHasRoleRecord(
+                appUser = userId,
+                role = USER_ROLE,
+            )
+        ).orDie()
+
+        KIO.ok(
+            ApiResponse.Created(userId)
+        )
     }
 
 

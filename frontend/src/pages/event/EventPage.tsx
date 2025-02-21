@@ -7,8 +7,8 @@ import RaceDialog from '@components/event/race/RaceDialog.tsx'
 import Throbber from '@components/Throbber.tsx'
 import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
 import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
-import {getEvent} from "@api/sdk.gen.ts";
-import {EventDayDto, RaceDto} from "@api/types.gen.ts";
+import {getEvent} from '@api/sdk.gen.ts'
+import {EventDayDto, RaceDto} from '@api/types.gen.ts'
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -16,7 +16,7 @@ const EventPage = () => {
 
     const {eventId} = eventRoute.useParams()
 
-    const {data} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
+    const {data, pending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
@@ -51,7 +51,8 @@ const EventPage = () => {
                         <EventDayDialog {...eventDayAdministrationProps.dialog} />
                     </Box>
                 </>
-            )) || <Throbber />}
+            )) ||
+                (pending && <Throbber />)}
         </Box>
     )
 }

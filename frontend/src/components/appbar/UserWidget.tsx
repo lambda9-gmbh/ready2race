@@ -1,6 +1,6 @@
 import {useUser} from '@contexts/user/UserContext.ts'
-import {IconButton} from '@mui/material'
-import {Login, Logout} from '@mui/icons-material'
+import {IconButton, Stack} from '@mui/material'
+import {Login, Logout, Person} from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'
 
 const UserWidget = () => {
@@ -12,9 +12,16 @@ const UserWidget = () => {
         }
 
         return (
-            <IconButton onClick={handleLogout}>
-                <Logout />
-            </IconButton>
+            <Stack direction='row' spacing={1}>
+                <Link to={'/user/$userId'} params={{userId: user.id}}>
+                    <IconButton>
+                        <Person />
+                    </IconButton>
+                </Link>
+                <IconButton onClick={handleLogout}>
+                    <Logout />
+                </IconButton>
+            </Stack>
         )
     } else {
         return (

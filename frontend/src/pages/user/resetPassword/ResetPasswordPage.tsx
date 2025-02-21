@@ -19,10 +19,14 @@ const ResetPasswordPage = () => {
     const {passwordResetToken} = resetPasswordTokenRoute.useParams()
 
     const [submitting, setSubmitting] = useState(false)
-
     const [requestSuccessful, setRequestSuccessful] = useState<boolean | undefined>(undefined)
 
-    const formContext = useForm<Form>()
+    const defaultValues: Form = {
+        password: '',
+        confirmPassword: ''
+    }
+
+    const formContext = useForm<Form>({values: defaultValues})
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)

@@ -153,6 +153,11 @@
         "tooManyRequests": "Too many login requests. Try again later."
       }
     },
+    "page": {
+      "error": {
+        "load": "Profile could not be loaded"
+      }
+    },
     "registration": {
       "register": "Register",
       "email": {

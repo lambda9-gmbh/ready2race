@@ -10,6 +10,7 @@ import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
 import ConfirmationMailSent from "@components/user/ConfirmationMailSent.tsx";
 import {NewPassword, PasswortFormPart} from "@components/form/NewPassword.tsx";
+import {RegisterRequest} from "@api/types.gen.ts";
 
 type Form = {
     email: string
@@ -26,19 +27,20 @@ const RegistrationPage = () => {
 
     const [requested, setRequested] = useState(false)
 
-    const formContext = useForm<Form>()
+    const defaultValues: Form = {
+        email: '',
+        firstname: '',
+        lastname: '',
+        password: '',
+        confirmPassword: ''
+    }
+
+    const formContext = useForm<Form>({values: defaultValues})
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
         const {error} = await registerUser({
-            body: {
-                email: formData.email,
-                password: formData.password,
-                firstname: formData.firstname,
-                lastname: formData.lastname,
-                language: 'de', // todo, read from i18n
-                callbackUrl: location.origin + location.pathname + '/',
-            },
+            body: mapFormToRequest(formData),
         })
         setSubmitting(false)
         if (error) {
@@ -115,3 +117,14 @@ const RegistrationPage = () => {
 }
 
 export default RegistrationPage
+
+function mapFormToRequest(formData: Form): RegisterRequest  {
+    return {
+        email: formData.email,
+        password: formData.password,
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        language: 'de', // todo, read from i18n
+        callbackUrl: location.origin + location.pathname + '/',
+    }
+}

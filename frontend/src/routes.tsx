@@ -44,7 +44,7 @@ const checkAuthWith = (
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
     const scope = context.getPrivilegeScope(action, resource)
-    if (!scope || !f(context, scope)) {
+    if (!scope || !f(context, scope)) { // Todo: Shouldn't it be && instead of ||?
         throw redirect({to: '/dashboard'})
     }
 }
