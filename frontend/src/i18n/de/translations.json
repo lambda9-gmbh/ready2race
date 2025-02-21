@@ -57,13 +57,19 @@
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
     },
     "description": "Description",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Letzte Änderung",
     "edit": {
       "action": "{{entity}} bearbeiten",
       "success": "{{entity}} aktualisiert",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
     },
     "entity": "Objekt",
-    "name": "Name"
+    "name": "Name",
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "gender": "Geschlecht",
+    "phone": "Telefon"
   },
   "navigation": {
     "titles": {
@@ -71,7 +77,15 @@
       "events": "Veranstaltungen",
       "raceConfig": "Rennen Einstellungen",
       "roles": "Rollen",
-      "users": "Benutzer"
+      "users": "Benutzer",
+      "clubs": "Vereine"
+    }
+  },
+  "club": {
+    "club": "Verein",
+    "participant": {
+      "title": "Teilnehmer",
+      "year": "Geburtsjahr"
     }
   },
   "event": {

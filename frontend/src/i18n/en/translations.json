@@ -57,13 +57,19 @@
       "error": "An error has occurred when deleting the {{entity}}"
     },
     "description": "Description",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
       "error": "An error has occurred when updating the {{entity}}"
     },
     "entity": "Object",
-    "name": "Name"
+    "name": "Name",
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "gender": "Gender",
+    "phone": "Phone"
   },
   "navigation": {
     "titles": {
@@ -71,7 +77,15 @@
       "events": "Events",
       "raceConfig": "Race Settings",
       "roles": "Roles",
-      "users": "Users"
+      "users": "Users",
+      "clubs": "Clubs"
+    }
+  },
+  "club": {
+    "club": "Club",
+    "participant" : {
+      "title": "Participant",
+      "year": "Year of birth"
     }
   },
   "event": {

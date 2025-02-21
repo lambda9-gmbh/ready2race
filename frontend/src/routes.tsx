@@ -21,7 +21,9 @@ import EventDayPage from './pages/event/EventDayPage.tsx'
 import RaceConfigPage from './pages/event/RaceConfigPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
-import InitResetPasswordPage from "./pages/user/resetPassword/InitResetPasswordPage.tsx";
+import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
+import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubPage from './pages/club/ClubPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -238,6 +240,34 @@ export const raceConfigIndexRoute = createRoute({
     },
 })
 
+export const clubRoute = createRoute({
+    getParentRoute: () => clubsRoute,
+    path: '$clubId',
+})
+
+export const clubIndexRoute = createRoute({
+    getParentRoute: () => clubRoute,
+    path: '/',
+    component: () => <ClubPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readEventGlobal)
+    },
+})
+
+export const clubsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'club',
+})
+
+export const clubsIndexRoute = createRoute({
+    getParentRoute: () => clubsRoute,
+    path: '/',
+    component: () => <ClubsPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
+})
+
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
@@ -254,6 +284,10 @@ const routeTree = rootRoute.addChildren([
     raceConfigRoute.addChildren([raceConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
+    clubsRoute.addChildren([
+        clubsIndexRoute,
+        clubRoute.addChildren([clubIndexRoute]),
+    ]),
     passwordResetRoute.addChildren([
         passwordResetIndexRoute,
         passwordResetTokenRoute.addChildren([

@@ -63,6 +63,17 @@ export type AssignRacesToDayRequest = {
     races: Array<string>
 }
 
+export type ClubDto = {
+    id: string
+    name: string
+    createdAt: string
+    updatedAt: string
+}
+
+export type ClubUpsertDto = {
+    name: string
+}
+
 export type CreatedByDto = {
     firstname: string
     lastname: string
@@ -188,6 +199,31 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
+export type ParticipantDto = {
+    id: string
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: 'M' | 'F' | 'O'
+    phone?: string | null
+    external?: boolean | null
+    externalClubName?: string | null
+    createdAt: string
+    updatedAt: string
+}
+
+export type gender = 'M' | 'F' | 'O'
+
+export type ParticipantUpsertDto = {
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: 'M' | 'F' | 'O'
+    phone?: string | null
+    external?: boolean | null
+    externalClubName?: string | null
+}
+
 export type Privilege = {
     action: Action
     resource: Resource
@@ -272,7 +308,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT'
 
 export type RoleDto = {
     id: string
@@ -771,3 +807,146 @@ export type UpdateRaceCategoryError = ApiError
 export type DeleteRaceCategoryResponse = void
 
 export type DeleteRaceCategoryError = ApiError
+
+export type AddClubData = {
+    body: ClubUpsertDto
+}
+
+export type AddClubResponse = string
+
+export type AddClubError = ApiError
+
+export type GetClubsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetClubsResponse = {
+    data: Array<ClubDto>
+    pagination: Pagination
+}
+
+export type GetClubsError = ApiError
+
+export type GetClubData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type GetClubResponse = ClubDto
+
+export type GetClubError = ApiError
+
+export type UpdateClubData = {
+    body: ClubUpsertDto
+    path: {
+        clubId: string
+    }
+}
+
+export type UpdateClubResponse = void
+
+export type UpdateClubError = ApiError
+
+export type DeleteClubData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type DeleteClubResponse = void
+
+export type DeleteClubError = ApiError
+
+export type GetClubParticipantsData = {
+    path: {
+        clubId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetClubParticipantsResponse = {
+    data: Array<ParticipantDto>
+    pagination: Pagination
+}
+
+export type GetClubParticipantsError = ApiError
+
+export type AddClubParticipantData = {
+    body: ParticipantUpsertDto
+    path: {
+        clubId: string
+    }
+}
+
+export type AddClubParticipantResponse = string
+
+export type AddClubParticipantError = ApiError
+
+export type GetClubParticipantData = {
+    path: {
+        clubId: string
+        participantId: string
+    }
+}
+
+export type GetClubParticipantResponse = ParticipantDto
+
+export type GetClubParticipantError = ApiError
+
+export type UpdateClubParticipantData = {
+    body: ParticipantUpsertDto
+    path: {
+        clubId: string
+        participantId: string
+    }
+}
+
+export type UpdateClubParticipantResponse = void
+
+export type UpdateClubParticipantError = ApiError
+
+export type DeleteClubParticipantData = {
+    path: {
+        clubId: string
+        participantId: string
+    }
+}
+
+export type DeleteClubParticipantResponse = void
+
+export type DeleteClubParticipantError = ApiError

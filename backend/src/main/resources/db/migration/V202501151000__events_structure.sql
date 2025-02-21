@@ -9,6 +9,7 @@ create table event
     registration_available_from timestamp,
     registration_available_to   timestamp,
     invoice_prefix              text,
+    -- #M base_fee, optional_base_fee (&_label), base_fee_per_participant,... (evtl alles auch jeweils nochmal an event_day, um flexibel zu bleiben)
     created_at                  timestamp not null,
     created_by                  uuid      references app_user on delete set null,
     updated_at                  timestamp not null,
@@ -90,6 +91,7 @@ create table race_properties
     count_mixed       integer        not null,
     participation_fee decimal(10, 2) not null,
     rental_fee        decimal(10, 2) not null,
+    -- #M rental_fee -> optional_fee & optional_fee_label
     race_category     uuid           references race_category on delete set null,
     constraint chk_either_race_or_race_template check ( (race is null and race_template is not null) or
                                                         (race is not null and race_template is null) )
