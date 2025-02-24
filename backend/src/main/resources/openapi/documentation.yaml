@@ -280,6 +280,8 @@ paths:
           $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
         429:
           $ref: '#/components/responses/429'
         500:
@@ -304,6 +306,8 @@ paths:
           $ref: '#/components/responses/204'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -1218,7 +1222,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/BadRequestError'
 
     401:
       description: Unauthorized
@@ -1253,14 +1257,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/UnprocessableEntityError'
 
     429:
       description: Too many requests
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/TooManyRequestsError'
 
     500:
       description: Server Error
@@ -1321,7 +1325,121 @@ components:
               type: string
         message:
           type: string
-        details: { }
+
+
+    BadRequestError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            details:
+              type: object
+              properties:
+                validExample: { }
+
+
+    UnprocessableEntityError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          required:
+            - details
+          properties:
+            details:
+              oneOf:
+                - type: object
+                  required:
+                    - reason
+                  properties:
+                    reason:
+                      $ref: '#/components/schemas/Invalid'
+                - type: object
+                  required:
+                    - result
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/Invalid'
+
+
+    TooManyRequestsError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          required:
+            - details
+          properties:
+            details:
+              type: object
+              required:
+                - retryAfter
+              properties:
+                retryAfter:
+                  type: integer
+
+    Invalid:
+      oneOf:
+        - type: string
+        - type: object
+          required:
+            - field
+            - error
+          properties:
+            field:
+              type: string
+            error:
+              $ref: '#/components/schemas/Invalid'
+        - type: object
+          required:
+            - errorPositions
+          properties:
+            errorPositions: { }
+        - $ref: '#/components/schemas/Duplicate'
+        - type: object
+          required:
+            - duplicates
+          properties:
+            duplicates:
+              type: array
+              items:
+                $ref: '#/components/schemas/Duplicate'
+        - type: object
+          required:
+            - value
+            - pattern
+          properties:
+            value:
+              type: string
+            pattern:
+              type: string
+        - type: object
+          required:
+            - allOf
+          properties:
+            allOf:
+              type: array
+              items:
+                $ref: '#/components/schemas/Invalid'
+        - type: object
+          required:
+            - anyOf
+          properties:
+            anyOf:
+              type: array
+              items:
+                $ref: '#/components/schemas/Invalid'
+
+
+    Duplicate:
+      type: object
+      required:
+        - value
+        - count
+      properties:
+        value: { }
+        count:
+          type: integer
+
+
 
 
     # authentication / authorization

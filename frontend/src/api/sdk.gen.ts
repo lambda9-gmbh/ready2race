@@ -15,8 +15,6 @@ import type {
     GetUserData,
     GetUserError,
     GetUserResponse,
-    GetOwnUserError,
-    GetOwnUserResponse,
     GetRegistrationsData,
     GetRegistrationsError,
     GetRegistrationsResponse,
@@ -193,15 +191,6 @@ export const getUser = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
         ...options,
         url: '/user/{userId}',
-    })
-}
-
-export const getOwnUser = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<GetOwnUserResponse, GetOwnUserError, ThrowOnError>({
-        ...options,
-        url: '/user/me',
     })
 }
 

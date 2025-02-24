@@ -60,7 +60,8 @@ sealed interface RequestError : ToApiError {
                     } else {
                         "later"
                     }
-                }"
+                }",
+                details = mapOf("retryAfter" to retryAfter)
             )
 
         is Other ->

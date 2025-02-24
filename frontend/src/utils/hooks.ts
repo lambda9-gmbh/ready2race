@@ -209,13 +209,10 @@ export const useWindowSize = (delay?: number) => {
 }
 
 type CaptchaFetchProps = {
-    captchaProps: UseFetchReturn<CaptchaDto, ApiError>
+    captcha: UseFetchReturn<CaptchaDto, ApiError>
     onSubmitResult: () => void
 }
-type CaptchaInputProps = {
-    onCaptchaCreated: (start: number) => void
-}
-export const useFormWithCaptcha = (props: CaptchaInputProps): CaptchaFetchProps => {
+export const useCaptcha = (onSuccess: (captcha: CaptchaDto) => void): CaptchaFetchProps => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const [lastRequested, setLastRequested] = useState(Date.now())
@@ -225,14 +222,14 @@ export const useFormWithCaptcha = (props: CaptchaInputProps): CaptchaFetchProps 
             if (error) {
                 feedback.error(t('common.error.unexpected'))
             } else {
-                props.onCaptchaCreated(data.start)
+                onSuccess(data)
             }
         },
         deps: [lastRequested],
     })
 
     return {
-        captchaProps: captchaData,
+        captcha: captchaData,
         onSubmitResult: () => {
             setLastRequested(Date.now())
         },

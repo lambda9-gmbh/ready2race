@@ -1,19 +1,14 @@
 // TODO: selbst hosten und auswählbar
 import {useTranslation} from 'react-i18next'
 import {useMemo, useRef, useState} from 'react'
-import {FieldValues, SliderElement, useFormContext, UseFormReturn} from 'react-hook-form-mui'
+import {SliderElement} from 'react-hook-form-mui'
 import {UseFetchReturn, useWindowSize} from '@utils/hooks.ts'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {Box, Stack, Typography} from '@mui/material'
 import {touchSupported} from "@utils/helpers.ts";
 
-export type Captcha = {challenge: string; input: number}
-export type CaptchaFormPart = {captcha: Captcha}
-type Form<F extends FieldValues> = CaptchaFormPart & F
-
-type Props<F extends FieldValues> = {
+type Props = {
     captchaProps: UseFetchReturn<CaptchaDto, ApiError>
-    formContext: UseFormReturn<Form<F>>
 }
 
 type CaptchaSizes = {
@@ -25,13 +20,12 @@ type CaptchaSizes = {
 const logoUrl =
     'https://www.coastal-rowing-flensburg.de/wp-content/uploads/2021/09/Coastal_FL_Logo_rgb-e1630489498379.png'
 
-const FormInputCaptcha = <F extends FieldValues> (props: Props<F>) => {
+const FormInputCaptcha = (props: Props) => {
     const {t} = useTranslation()
 
     const windowSize = useWindowSize()
     const imgRef = useRef<HTMLDivElement>(null)
     const [loaded, setLoaded] = useState(false)
-    const formContext = useFormContext()
 
     const {data, pending} = props.captchaProps
 
@@ -57,28 +51,26 @@ const FormInputCaptcha = <F extends FieldValues> (props: Props<F>) => {
                         width={`${sizes.width - sizes.logo}px`}
                         height={`${sizes.height}px`}
                         px={`${sizes.logo / 2}px`}>
-                        {formContext.getValues('captchaInput') !== 0 && (
-                            <SliderElement
-                                name={'captcha.input'}
-                                min={data.solutionMin}
-                                max={data.solutionMax}
-                                track={false}
-                                valueLabelDisplay={'off'}
-                                sx={{
-                                    '& .MuiSlider-thumb': {
-                                        background: `url('${logoUrl}')`,
-                                        backgroundColor: 'white',
-                                        border: '1px solid black',
-                                        backgroundSize: sizes.logo,
-                                        width: sizes.logo,
-                                        height: sizes.logo,
-                                    },
-                                    '& .MuiSlider-rail': {
-                                        display: 'none',
-                                    },
-                                }}
-                            />
-                        )}
+                        <SliderElement
+                            name={'captcha'}
+                            min={data.solutionMin}
+                            max={data.solutionMax}
+                            track={false}
+                            valueLabelDisplay={'off'}
+                            sx={{
+                                '& .MuiSlider-thumb': {
+                                    background: `url('${logoUrl}')`,
+                                    backgroundColor: 'white',
+                                    border: '1px solid black',
+                                    backgroundSize: sizes.logo,
+                                    width: sizes.logo,
+                                    height: sizes.logo,
+                                },
+                                '& .MuiSlider-rail': {
+                                    display: 'none',
+                                },
+                            }}
+                        />
                     </Box>
                     <Box
                         ref={imgRef}

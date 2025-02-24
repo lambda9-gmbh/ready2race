@@ -1,4 +1,6 @@
-import {Scope} from '@api/types.gen.ts'
+import {EmailLanguage, Scope} from '@api/types.gen.ts'
+import {fallbackLng, isLanguage, Language} from "@i18n/config.ts";
+import i18next from "i18next";
 
 export const getRootElement = () => document.getElementById('ready2race-root')!
 
@@ -20,3 +22,10 @@ export const touchSupported = () => {
         return false
     }
 }
+
+export const languageMapping: Record<Language, EmailLanguage> = {
+    de: 'de',
+    en: 'en',
+}
+
+export const i18nLanguage = (): Language => isLanguage(i18next.language) ? i18next.language : fallbackLng

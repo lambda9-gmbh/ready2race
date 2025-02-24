@@ -21,6 +21,9 @@
       "dateTime": {
         "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
       },
+      "email": {
+        "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+      },
       "number": {
         "invalid": {
           "pattern": {
@@ -222,9 +225,10 @@
         },
         "error": {
           "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
-          "submit": "CAPTCHA wurde nicht korrekt gelöst",
+          "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
           "notFound": "Der CAPTCHA ist veraltet",
-          "tooManyRequests": "Zu viele Versuche. Versuchen Sie es später erneut."
+          "invalid": "Das versendete Formular war fehlerhaft",
+          "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
         },
         "loading": "Lade CAPTCHA..."
       }

@@ -11,6 +11,8 @@ import {Link} from '@tanstack/react-router'
 import ConfirmationMailSent from "@components/user/ConfirmationMailSent.tsx";
 import {NewPassword, PasswortFormPart} from "@components/form/NewPassword.tsx";
 import {RegisterRequest} from "@api/types.gen.ts";
+import {i18nLanguage, languageMapping} from "@utils/helpers.ts";
+import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
 
 type Form = {
     email: string
@@ -70,7 +72,7 @@ const RegistrationPage = () => {
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            <FormInputText name={'email'} label={t('user.email')} required />
+                            <FormInputEmail name={'email'} label={t('user.email')} required />
                             <NewPassword formContext={formContext} horizontal/>
                             <Stack spacing={2} direction="row">
                                 <FormInputText
@@ -124,7 +126,7 @@ function mapFormToRequest(formData: Form): RegisterRequest  {
         password: formData.password,
         firstname: formData.firstname,
         lastname: formData.lastname,
-        language: 'de', // todo, read from i18n
+        language: languageMapping[i18nLanguage()],
         callbackUrl: location.origin + location.pathname + '/',
     }
 }

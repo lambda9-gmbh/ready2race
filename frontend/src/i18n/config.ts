@@ -14,7 +14,9 @@ import {enUS as enDatePicker} from '@mui/x-date-pickers/locales/enUS'
 import {deDE as deDatePicker} from '@mui/x-date-pickers/locales/deDE'
 import {PickersLocaleText} from '@mui/x-date-pickers'
 
-export type Language = 'de' | 'en'
+export const LANGUAGES = ['de', 'en'] as const
+export type Language = typeof LANGUAGES[number]
+export const isLanguage = (s: string): s is Language => LANGUAGES.includes(s as Language)
 
 export type Locale = {
     date: DateLocale | undefined
@@ -38,6 +40,7 @@ export const locales: Record<Language, Locale> = {
     },
 }
 
+export const fallbackLng: Language = 'en'
 export const defaultNS = 'translations'
 export const resources = {
     en: {
@@ -51,5 +54,5 @@ export const resources = {
 i18next.use(I18nextBrowserLanguageDetector).use(initReactI18next).init({
     resources,
     defaultNS,
-    fallbackLng: 'en',
+    fallbackLng,
 })
