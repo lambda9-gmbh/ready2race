@@ -20,7 +20,6 @@ import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -35,12 +34,12 @@ object AppUserService {
 
     fun get(
         id: UUID,
-    ): App<AppUserError, ApiResponse.Dto<AppUserDto>> =
-        AppUserRepo.getWithRoles(id).orDie().onNullFail { AppUserError.NotFound }.andThen {
-            it.appUserDto()
-        }.map {
+    ): App<AppUserError, ApiResponse.Dto<AppUserDto>> = KIO.comprehension {
+        val record = !AppUserRepo.getWithRoles(id).orDie().onNullFail { AppUserError.NotFound }
+        record.appUserDto().map {
             ApiResponse.Dto(it)
         }
+    }
 
     fun page(
         params: PaginationParameters<AppUserWithRolesSort>,
@@ -133,7 +132,7 @@ object AppUserService {
             .onNullFail { AppUserError.InvitationNotFound }
 
         val record = !invitation.toAppUser(request.password)
-        val id = !AppUserRepo.create(record).orDie()
+        val id = !createUser(record)
 
         val roles = invitation.roles!!.map { it!!.id!! }
 
@@ -190,14 +189,7 @@ object AppUserService {
             .onNullFail { AppUserError.RegistrationNotFound }
 
         val record = !registration.toAppUser()
-        val userId = !AppUserRepo.create(record).orDie()
-
-        !AppUserHasRoleRepo.create(
-            AppUserHasRoleRecord(
-                appUser = userId,
-                role = USER_ROLE,
-            )
-        ).orDie()
+        val userId = !createUser(record)
 
         KIO.ok(
             ApiResponse.Created(userId)
@@ -253,6 +245,21 @@ object AppUserService {
         !AppUserRepo.update(passwordReset.appUser) { password = newPassword }.orDie()
 
         noData
+    }
+
+    fun createUser(
+        record: AppUserRecord,
+    ): App<Nothing, UUID> = KIO.comprehension {
+        val userId = !AppUserRepo.create(record).orDie()
+
+        !AppUserHasRoleRepo.create(
+            AppUserHasRoleRecord(
+                appUser = userId,
+                role = USER_ROLE,
+            )
+        ).orDie()
+
+        KIO.ok(userId)
     }
 
 

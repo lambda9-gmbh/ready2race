@@ -66,7 +66,7 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
             styleOverrides: {
                 root: {
                     ".input-label-optional-text":{
-                        fontSize: '0.8rem',
+                        fontSize: _theme.typography.body1.fontSize,
                         color: 'grey',
                     },
                     "&.MuiInputLabel-shrink": {

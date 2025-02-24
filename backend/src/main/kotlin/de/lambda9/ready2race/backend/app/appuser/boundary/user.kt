@@ -9,7 +9,6 @@ import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
 import java.util.*
@@ -51,8 +50,9 @@ fun Route.user() {
             post {
                 val payload = call.receiveV(RegisterRequest.example)
                 call.respondKIO {
-                    payload.andThen {
-                        AppUserService.register(it)
+                    KIO.comprehension {
+                        val body = !payload
+                        AppUserService.register(body)
                     }
                 }
             }
@@ -70,8 +70,9 @@ fun Route.user() {
             post("/verify") {
                 val payload = call.receiveV(VerifyRegistrationRequest.example)
                 call.respondKIO {
-                    payload.andThen {
-                        AppUserService.verifyRegistration(it)
+                    KIO.comprehension {
+                        val body = !payload
+                        AppUserService.verifyRegistration(body)
                     }
                 }
             }
@@ -101,8 +102,9 @@ fun Route.user() {
             post("/accept") {
                 val payload = call.receiveV(AcceptInvitationRequest.example)
                 call.respondKIO {
-                    payload.andThen {
-                        AppUserService.acceptInvitation(it)
+                    KIO.comprehension {
+                        val body = !payload
+                        AppUserService.acceptInvitation(body)
                     }
                 }
             }

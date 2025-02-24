@@ -14,7 +14,7 @@ const FormInputLabel = (props: Props) => {
                 <Typography
                     className={'input-label-optional-text'}
                     alignSelf="center"
-                >{` - ${props.optional}`}</Typography>
+                >{` – ${props.optional}`}</Typography>
             )}
         </Stack>
     )
