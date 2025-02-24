@@ -24,7 +24,7 @@ const VerifyRegistrationPage = () => {
             setVerifying(false)
 
             if (error) {
-                console.log(error)
+                console.error(error)
             }
         }
         sendVerification().catch(console.error)

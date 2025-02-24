@@ -20,7 +20,7 @@ const EventPage = () => {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                console.log(error)
+                console.error(error)
             }
         },
         deps: [eventId],

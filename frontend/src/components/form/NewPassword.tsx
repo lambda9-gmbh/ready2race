@@ -44,10 +44,10 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
 
             formContext
                 .trigger(['password' as Path<Form<F>>]) // todo: Better way to do this than cast?
-                .catch(error => console.log(error))
+                .catch(error => console.error(error))
             formContext
                 .trigger(['confirmPassword' as Path<Form<F>>])
-                .catch(error => console.log(error))
+                .catch(error => console.error(error))
         }
     }, [passwordsWatch])
 

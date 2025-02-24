@@ -17,7 +17,8 @@ import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
 type Form = {
     email: string
     firstname: string
-    lastname: string
+    lastname: string,
+    captcha: number
 } & PasswortFormPart
 
 const RegistrationPage = () => {
@@ -34,7 +35,8 @@ const RegistrationPage = () => {
         firstname: '',
         lastname: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        captcha: 0,
     }
 
     const formContext = useForm<Form>({values: defaultValues})
@@ -58,7 +60,7 @@ const RegistrationPage = () => {
             } else {
                 feedback.error(t('user.registration.error'))
             }
-            console.log(error)
+            console.error(error)
         }
         setRequested(true)
     }

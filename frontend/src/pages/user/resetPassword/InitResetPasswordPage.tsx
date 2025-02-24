@@ -83,7 +83,7 @@ const InitResetPasswordPage = () => {
             } else {
                 feedback.error(t('common.error.unexpected'))
             }
-            console.log(result.error)
+            console.error(result.error)
         } else {
             setRequested(true)
         }

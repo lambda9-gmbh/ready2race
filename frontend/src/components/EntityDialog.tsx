@@ -64,7 +64,7 @@ const EntityDialog = <
         if (requestResult) {
             if (requestResult.error) {
                 // todo better error display with specific error types
-                console.log(requestResult.error)
+                console.error(requestResult.error)
                 if (entity) {
                     feedback.error(t('entity.edit.error', {entity: entityName}))
                 } else {

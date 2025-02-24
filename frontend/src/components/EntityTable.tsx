@@ -210,7 +210,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
                                       setIsDeletingRow(false)
                                       if (error) {
                                           // todo better error display with specific error types
-                                          console.log(error)
+                                          console.error(error)
                                           feedback.error(
                                               t('entity.delete.error', {entity: entityName}),
                                           )

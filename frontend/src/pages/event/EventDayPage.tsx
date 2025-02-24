@@ -27,7 +27,7 @@ const EventDayPage = () => {
                     feedback.error(
                         t('common.load.error.single', {entity: t('event.eventDay.eventDay')}),
                     )
-                    console.log(error)
+                    console.error(error)
                 }
             },
             deps: [eventId, eventDayId],
@@ -40,7 +40,7 @@ const EventDayPage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
-                    console.log(error)
+                    console.error(error)
                 }
             },
             deps: [eventId, eventDayId, reloadDataTrigger],
@@ -58,7 +58,7 @@ const EventDayPage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
-                    console.log(error)
+                    console.error(error)
                 }
             },
             deps: [eventId, reloadDataTrigger],

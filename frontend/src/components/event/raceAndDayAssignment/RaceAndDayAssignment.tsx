@@ -88,7 +88,7 @@ const RaceAndDayAssignment = ({racesToDay, ...props}: Props) => {
 
         if (error) {
             // todo better error display with specific error types
-            console.log(error)
+            console.error(error)
             feedback.error(t('event.assign.save.error', entityNames))
         } else {
             closeDialog()

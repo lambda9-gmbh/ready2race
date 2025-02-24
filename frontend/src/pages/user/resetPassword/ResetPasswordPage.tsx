@@ -40,7 +40,7 @@ const ResetPasswordPage = () => {
         if (error) {
             setRequestSuccessful(false)
             feedback.error(t('user.resetPassword.error.header'))
-            console.log(error)
+            console.error(error)
         } else {
             setRequestSuccessful(true)
         }
