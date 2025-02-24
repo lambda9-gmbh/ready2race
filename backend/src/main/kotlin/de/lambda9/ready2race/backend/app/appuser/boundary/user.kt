@@ -46,11 +46,15 @@ fun Route.user() {
         }
 
         route("/registration") {
-            // todo: evaluate rate limiting
+            // todo: evaluate rate limiting. How?
             post {
                 val payload = call.receiveV(RegisterRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
+                        val captchaId = !queryParam("challenge") { UUID.fromString(it) } // todo: put captcha in helper function
+                        val captchaInput = !queryParam("input") { it.toInt() }
+                        !CaptchaService.trySolution(captchaId, captchaInput)
+
                         val body = !payload
                         AppUserService.register(body)
                     }

@@ -8,7 +8,8 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "error": {
-      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut."
+      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+      "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
     },
     "form": {
       "autocomplete": {
@@ -216,25 +217,24 @@
         "message": {
           "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
           "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
-        }
-      },
-      "captcha": {
-        "instruction": {
-          "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
-          "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
         },
-        "error": {
-          "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
-          "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
-          "notFound": "Der CAPTCHA ist veraltet",
-          "invalid": "Das versendete Formular war fehlerhaft",
-          "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
-        },
-        "loading": "Lade CAPTCHA..."
+        "invalid": "Das versendete Formular war fehlerhaft"
       }
     }
   },
   "role": {
     "role": "Rolle"
+  },
+  "captcha": {
+    "instruction": {
+      "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
+      "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
+    },
+    "error": {
+      "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
+      "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
+      "notFound": "Der CAPTCHA ist veraltet"
+    },
+    "loading": "Lade CAPTCHA..."
   }
 }

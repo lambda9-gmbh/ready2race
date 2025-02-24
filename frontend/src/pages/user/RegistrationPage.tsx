@@ -3,16 +3,17 @@ import {useTranslation} from 'react-i18next'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {registerUser} from 'api/sdk.gen.ts'
 import {useState} from 'react'
-import {useFeedback} from '@utils/hooks.ts'
+import {useCaptcha, useFeedback} from '@utils/hooks.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
 import ConfirmationMailSent from "@components/user/ConfirmationMailSent.tsx";
 import {NewPassword, PasswortFormPart} from "@components/form/NewPassword.tsx";
-import {RegisterRequest} from "@api/types.gen.ts";
+import {CaptchaDto, RegisterRequest} from "@api/types.gen.ts";
 import {i18nLanguage, languageMapping} from "@utils/helpers.ts";
 import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
+import FormInputCaptcha from "@components/form/input/FormInputCaptcha.tsx";
 
 type Form = {
     email: string
@@ -41,15 +42,32 @@ const RegistrationPage = () => {
 
     const formContext = useForm<Form>({values: defaultValues})
 
+    const setCaptchaStart = ({start}: CaptchaDto) => {
+        formContext.setValue('captcha', start)
+    }
+
+    const {captcha, onSubmitResult} = useCaptcha(setCaptchaStart)
+
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
+
         const {error} = await registerUser({
+            query:{
+                challenge: captcha.data!.id,
+                input: formData.captcha,
+            },
             body: mapFormToRequest(formData),
         })
+
         setSubmitting(false)
+        onSubmitResult()
+        formContext.resetField('captcha')
+
         if (error) {
-            if (error.status.value === 409) {
-                formContext.setError('email', {
+            if (error.status.value === 404) {
+                feedback.error(t('captcha.error.notFound'))
+            } else if (error.status.value === 409) {
+                formContext.setError('email', { // todo: wrong captcha solution also has 409
                     type: 'validate',
                     message:
                         t('user.registration.email.inUse.statement') +
@@ -61,13 +79,14 @@ const RegistrationPage = () => {
                 feedback.error(t('user.registration.error'))
             }
             console.error(error)
+        } else{
+            setRequested(true)
         }
-        setRequested(true)
     }
 
     return (
         <SimpleFormLayout maxWidth={500}>
-            {(!requested && (
+            {!requested ? (
                 <>
                     <Box sx={{mb: 4}}>
                         <Typography variant="h1" textAlign='center'>{t('user.registration.register')}</Typography>
@@ -90,6 +109,7 @@ const RegistrationPage = () => {
                                     sx={{flex: 1}}
                                 />
                             </Stack>
+                            <FormInputCaptcha captchaProps={captcha} />
                             <SubmitButton
                                 label={t('user.registration.register')}
                                 submitting={submitting}
@@ -106,7 +126,7 @@ const RegistrationPage = () => {
                         </Link>
                     </Stack>
                 </>
-            )) || (
+            ) : (
                 <ConfirmationMailSent header={t('user.registration.email.emailSent.header')}>
                     <Typography textAlign="center">
                         {t('user.registration.email.emailSent.message.part1')}

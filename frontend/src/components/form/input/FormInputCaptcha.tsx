@@ -40,7 +40,7 @@ const FormInputCaptcha = (props: Props) => {
         {data ? (
             <Stack>
                 <Typography>
-                    {touchSupported() ? t('user.resetPassword.captcha.instruction.mobile') : t('user.resetPassword.captcha.instruction.desktop')}
+                    {touchSupported() ? t('captcha.instruction.mobile') : t('captcha.instruction.desktop')}
                 </Typography>
                 <Box position={'relative'} boxSizing={'unset'}>
                     <Box
@@ -85,7 +85,7 @@ const FormInputCaptcha = (props: Props) => {
                 </Box>
             </Stack>
         ) : pending ? (
-            <Typography>{t('user.resetPassword.captcha.loading')}</Typography>
+            <Typography>{t('captcha.loading')}</Typography>
         ) : (
             <Typography>{t('common.error.unexpected')}</Typography>
         )}
