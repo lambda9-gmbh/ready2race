@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -115,11 +116,18 @@ object AppUserService {
             )
         }
 
-        !EmailService.enqueue(
+        val emailId = !EmailService.enqueue(
             recipient = request.email,
             content = content,
             priority = EmailPriority.HIGH,
         )
+
+        !AppUserInvitationToEmailRepo.create(
+            AppUserInvitationToEmailRecord(
+                appUserInvitation = id,
+                email = emailId,
+            )
+        ).orDie()
 
         noData
     }
@@ -160,7 +168,7 @@ object AppUserService {
             .onTrueFail { AppUserError.EmailAlreadyInUse }
 
         val record = !request.toRecord(registrationLifeTime)
-        val token = !AppUserRegistrationRepo.create(record).orDie()
+        val id = !AppUserRegistrationRepo.create(record).orDie()
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.USER_REGISTRATION,
@@ -168,15 +176,22 @@ object AppUserService {
         ).map { template ->
             template.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to request.firstname + " " + request.lastname,
-                EmailTemplatePlaceholder.LINK to request.callbackUrl + token
+                EmailTemplatePlaceholder.LINK to request.callbackUrl + record.token
             )
         }
 
-        !EmailService.enqueue(
+        val emailId = !EmailService.enqueue(
             recipient = request.email,
             content = content,
             priority = EmailPriority.HIGH,
         )
+
+        !AppUserRegistrationToEmailRepo.create(
+            AppUserRegistrationToEmailRecord(
+                appUserRegistration = id,
+                email = emailId,
+            )
+        ).orDie()
 
         noData
     }

@@ -87,7 +87,7 @@ create rule delete_email_app_user_invitation as on delete
 
 create table app_user_invitation_to_email
 (
-    app_user_invitation uuid references app_user_invitation on delete cascade,
+    app_user_invitation uuid not null references app_user_invitation on delete cascade,
     email uuid references email on delete set null
 );
 
@@ -96,7 +96,7 @@ create index on app_user_invitation_to_email (email);
 
 create table app_user_registration_to_email
 (
-    app_user_registration uuid references app_user_registration on delete cascade,
+    app_user_registration uuid not null references app_user_registration on delete cascade,
     email uuid references email on delete set null
 );
 
