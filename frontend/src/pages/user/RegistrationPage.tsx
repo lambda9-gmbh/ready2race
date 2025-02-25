@@ -8,22 +8,21 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
-import ConfirmationMailSent from "@components/user/ConfirmationMailSent.tsx";
-import {NewPassword, PasswortFormPart} from "@components/form/NewPassword.tsx";
-import {CaptchaDto, RegisterRequest} from "@api/types.gen.ts";
-import {i18nLanguage, languageMapping} from "@utils/helpers.ts";
-import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
-import FormInputCaptcha from "@components/form/input/FormInputCaptcha.tsx";
+import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
+import {NewPassword, PasswortFormPart} from '@components/form/NewPassword.tsx'
+import {CaptchaDto, RegisterRequest} from '@api/types.gen.ts'
+import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
+import FormInputCaptcha from '@components/form/input/FormInputCaptcha.tsx'
 
 type Form = {
     email: string
     firstname: string
-    lastname: string,
+    lastname: string
     captcha: number
 } & PasswortFormPart
 
 const RegistrationPage = () => {
-
     const {t} = useTranslation()
     const feedback = useFeedback()
 
@@ -52,7 +51,7 @@ const RegistrationPage = () => {
         setSubmitting(true)
 
         const {error} = await registerUser({
-            query:{
+            query: {
                 challenge: captcha.data!.id,
                 input: formData.captcha,
             },
@@ -67,19 +66,22 @@ const RegistrationPage = () => {
             if (error.status.value === 404) {
                 feedback.error(t('captcha.error.notFound'))
             } else if (error.status.value === 409) {
-                formContext.setError('email', { // todo: wrong captcha solution also has 409
-                    type: 'validate',
-                    message:
-                        t('user.registration.email.inUse.statement') +
-                        ' ' +
-                        t('user.registration.email.inUse.callToAction'),
-                })
-                feedback.error(t('user.registration.email.inUse.statement'))
+                if (error.errorCode === 'EMAIL_IN_USE') {
+                    formContext.setError('email', {
+                        type: 'validate',
+                        message:
+                            t('user.registration.email.inUse.statement') +
+                            ' ' +
+                            t('user.registration.email.inUse.callToAction'),
+                    })
+                } else if (error.errorCode === 'CAPTCHA_WRONG') {
+                    feedback.error(t('captcha.error.incorrect'))
+                }
             } else {
                 feedback.error(t('user.registration.error'))
             }
             console.error(error)
-        } else{
+        } else {
             setRequested(true)
         }
     }
@@ -89,12 +91,14 @@ const RegistrationPage = () => {
             {!requested ? (
                 <>
                     <Box sx={{mb: 4}}>
-                        <Typography variant="h1" textAlign='center'>{t('user.registration.register')}</Typography>
+                        <Typography variant="h1" textAlign="center">
+                            {t('user.registration.register')}
+                        </Typography>
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
                             <FormInputEmail name={'email'} label={t('user.email')} required />
-                            <NewPassword formContext={formContext} horizontal/>
+                            <NewPassword formContext={formContext} horizontal />
                             <Stack spacing={2} direction="row">
                                 <FormInputText
                                     name={'firstname'}
@@ -142,7 +146,7 @@ const RegistrationPage = () => {
 
 export default RegistrationPage
 
-function mapFormToRequest(formData: Form): RegisterRequest  {
+function mapFormToRequest(formData: Form): RegisterRequest {
     return {
         email: formData.email,
         password: formData.password,

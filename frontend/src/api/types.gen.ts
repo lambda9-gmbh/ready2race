@@ -13,6 +13,7 @@ export type ApiError = {
         description: string
     }
     message: string
+    errorCode?: ErrorCode
 }
 
 export type AppUserDto = {
@@ -87,7 +88,9 @@ export type Duplicate = {
     count: number
 }
 
-export type EmailLanguage = 'de' | 'en'
+export type EmailLanguage = 'DE' | 'EN'
+
+export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE'
 
 export type EventDayDto = {
     id: string
@@ -462,6 +465,16 @@ export type GetRegistrationsError = BadRequestError | ApiError | UnprocessableEn
 
 export type RegisterUserData = {
     body: RegisterRequest
+    query: {
+        /**
+         * Captcha challenge id
+         */
+        challenge: string
+        /**
+         * Captcha solution
+         */
+        input: number
+    }
 }
 
 export type RegisterUserResponse = void

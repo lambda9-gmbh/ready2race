@@ -8,4 +8,5 @@ data class ApiError(
     val message: String,
     @JsonIgnore val headers: Map<String, String> = emptyMap(),
     val details: Map<String, Any?>? = null,
+    val errorCode: ErrorCode? = null
 )

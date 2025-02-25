@@ -44,7 +44,7 @@ object EmailService {
     private val retryAfterError = 5.minutes
     private val defaultTemplates =
         EmailLanguage.entries.flatMap { lng ->
-            val lngFile = "${lng.value}.json"
+            val lngFile = "${lng}.json"
             logger.info { "Reading email language file $lngFile" }
             val resource = javaClass.classLoader
                 .getResourceAsStream("internationalization/email/templates/$lngFile")

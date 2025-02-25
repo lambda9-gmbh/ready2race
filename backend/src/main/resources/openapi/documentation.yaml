@@ -1278,6 +1278,14 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
 
+
+    409EmailInUse:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntityError'
+
   schemas:
 
     # enums
@@ -1305,9 +1313,14 @@ components:
     EmailLanguage:
       type: string
       enum:
-        - de
-        - en
+        - DE
+        - EN
 
+    ErrorCode:
+      type: string
+      enum:
+        - CAPTCHA_WRONG
+        - EMAIL_IN_USE
 
 
     # error
@@ -1330,6 +1343,8 @@ components:
               type: string
         message:
           type: string
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
 
 
     BadRequestError:
@@ -1443,7 +1458,6 @@ components:
         value: { }
         count:
           type: integer
-
 
 
 

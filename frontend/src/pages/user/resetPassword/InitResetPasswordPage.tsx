@@ -72,7 +72,7 @@ const InitResetPasswordPage = () => {
                 feedback.error(t('captcha.error.incorrect'))
             } else if (result.error.status.value === 422) {
                 feedback.error(t('user.resetPassword.error.invalid'))
-            } else if (result.error.status.value === 429) {
+            } else if (result.error.status.value === 429) { // todo: It's possible to get RateLimits remaining from the response header before
                 try {
                     const tooManyRequestsError = result.error as TooManyRequestsError
                     feedback.error(
