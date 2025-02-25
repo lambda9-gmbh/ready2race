@@ -157,6 +157,11 @@
         "tooManyRequests": "Too many login requests. Try again later."
       }
     },
+    "settings": {
+      "menu": "User settings",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
     "page": {
       "error": {
         "load": "Profile could not be loaded"

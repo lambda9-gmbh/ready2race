@@ -157,6 +157,11 @@
         "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
       }
     },
+    "settings": {
+      "menu": "Nutzereinstellungen",
+      "profile": "Profil",
+      "logout": "Abmelden"
+    },
     "page": {
       "error": {
         "load": "Profile could not be loaded"
