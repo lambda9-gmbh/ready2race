@@ -1447,6 +1447,17 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Invalid'
+        - type: object
+          required:
+            - oneOf
+          properties:
+            oneOf:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/Invalid'
+                  - type: object
+
 
 
     Duplicate:
@@ -2082,8 +2093,6 @@ components:
 
     RaceRequest:
       type: object
-      required:
-        - properties
       properties:
         properties:
           $ref: '#/components/schemas/RacePropertiesRequestDto'

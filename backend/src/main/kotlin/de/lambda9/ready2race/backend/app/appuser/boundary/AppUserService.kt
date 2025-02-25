@@ -262,7 +262,7 @@ object AppUserService {
         noData
     }
 
-    fun createUser(
+    private fun createUser(
         record: AppUserRecord,
     ): App<Nothing, UUID> = KIO.comprehension {
         val userId = !AppUserRepo.create(record).orDie()

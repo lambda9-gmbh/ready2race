@@ -10,11 +10,12 @@ import {
     mapRaceFormToRacePropertiesRequest,
     mapRacePropertiesToRaceForm,
     RaceForm,
-    raceFormDefaultValues, raceLabelName,
+    raceFormDefaultValues,
+    raceLabelName,
 } from './common.ts'
 import {RacePropertiesFormInputs} from './RacePropertiesFormInputs.tsx'
-import {RaceDto, RaceRequest} from "@api/types.gen.ts";
-import {addRace, getRaceTemplates, updateRace} from "@api/sdk.gen.ts";
+import {RaceDto, RaceRequest} from '@api/types.gen.ts'
+import {addRace, getRaceTemplates, updateRace} from '@api/sdk.gen.ts'
 
 const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
     const {t} = useTranslation()
@@ -49,7 +50,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                 }
             },
         },
-         // todo: consider if the templates, raceCategories and namedParticipants are stale data and should be reloaded
+        // todo: consider if the templates, raceCategories and namedParticipants are stale data and should be reloaded
     )
     const templates: AutocompleteOption[] =
         templatesData?.data.map(dto => ({
@@ -101,7 +102,7 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
                 // render only when all is loaded (templates, categories, namedParticipants)
                 // also in RaceTemplates
             }
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <Box sx={{pb: 4}}>
                     <Autocomplete
                         options={templates}
@@ -129,10 +130,10 @@ const RaceDialog = (props: BaseEntityDialogProps<RaceDto>) => {
 
 function mapFormToRequest(formData: RaceForm, templateId: string | undefined): RaceRequest {
     return {
-        properties: mapRaceFormToRacePropertiesRequest(formData),
+        properties:
+            templateId === undefined ? mapRaceFormToRacePropertiesRequest(formData) : undefined,
         template: templateId,
     }
 }
-
 
 export default RaceDialog

@@ -57,7 +57,7 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}>
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <FormInputText name={'name'} label={'[todo] Bezeichnung'} required />
                 <FormInputText name={'description'} label={'[todo] Beschreibung'} />
             </Stack>

@@ -49,7 +49,7 @@ const NamedParticipantDialog = (props: BaseEntityDialogProps<NamedParticipantDto
             onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}>
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <FormInputText name="name" label={t('entity.name')} required />
                 <FormInputText name="description" label={t('entity.description')} />
             </Stack>

@@ -46,7 +46,7 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
 
     return (
         <EntityDialog {...props} formContext={formContext} onOpen={onOpen} addAction={addAction}>
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <FormInputText name={'firstname'} label={'[todo] Vorname'} required />
                 <FormInputText name={'lastname'} label={'[todo] Nachname'} required />
                 <FormInputEmail name={'email'} label={'[todo] E-Mail'} required />

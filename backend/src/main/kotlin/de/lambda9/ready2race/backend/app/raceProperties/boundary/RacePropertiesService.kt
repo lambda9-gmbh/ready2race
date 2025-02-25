@@ -1,11 +1,14 @@
 package de.lambda9.ready2race.backend.app.raceProperties.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceCategory.control.RaceCategoryRepo
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesError
+import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesRequestDto
 import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.util.*
 
@@ -38,4 +41,13 @@ object RacePropertiesService {
                     RacePropertiesError.RaceCategoryUnknown
                 }.map {}
         }
+
+    fun checkRequestReferences(
+        request: RacePropertiesRequestDto,
+    ): App<ServiceError, Unit> = KIO.comprehension {
+        !checkNamedParticipantsExisting(request.namedParticipants.map { it.namedParticipant })
+        !checkRaceCategoryExisting(request.raceCategory)
+
+        unit
+    }
 }

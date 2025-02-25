@@ -10,13 +10,11 @@ import de.lambda9.ready2race.backend.app.race.control.toDto
 import de.lambda9.ready2race.backend.app.race.control.toRecord
 import de.lambda9.ready2race.backend.app.race.entity.*
 import de.lambda9.ready2race.backend.app.raceProperties.boundary.RacePropertiesService
-import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
-import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
-import de.lambda9.ready2race.backend.app.raceProperties.control.record
-import de.lambda9.ready2race.backend.app.raceProperties.control.toUpdateFunction
+import de.lambda9.ready2race.backend.app.raceProperties.control.*
 import de.lambda9.ready2race.backend.app.raceTemplate.control.RaceTemplateRepo
+import de.lambda9.ready2race.backend.app.raceTemplate.control.applyRaceProperties
+import de.lambda9.ready2race.backend.app.raceTemplate.control.toUpdateFunction
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -37,21 +35,34 @@ object RaceService {
 
         !EventService.checkEventExisting(eventId)
 
-        if (request.template != null) {
-            !RaceTemplateRepo.exists(request.template).orDie().onFalseFail { RaceError.RaceTemplateUnknown }
-        }
-
-        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
-        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
-
         val record = !request.toRecord(userId, eventId)
         val raceId = !RaceRepo.create(record).orDie()
-        val racePropertiesId = !RacePropertiesRepo.create(request.properties.record(raceId, null)).orDie()
-        !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-            it.record(
-                racePropertiesId
-            )
-        }).orDie()
+
+        if (request.template != null) {
+            val templateRecord = !RaceTemplateRepo.getWithProperties(request.template).orDie()
+                .onNullFail { RaceError.RaceTemplateUnknown }
+            val propsRecord = !templateRecord.applyRaceProperties(raceId)
+
+            val racePropertiesId = !RacePropertiesRepo.create(propsRecord).orDie()
+
+
+            val namedParticipantRecords = templateRecord.namedParticipants?.map {
+                !it!!.applyRacePropertiesHasNamedParticipant(racePropertiesId, it.id!!).orDie()
+            }
+            if (namedParticipantRecords != null) {
+                !RacePropertiesHasNamedParticipantRepo.create(namedParticipantRecords).orDie()
+            }
+        } else {
+            !RacePropertiesService.checkRequestReferences(request.properties!!)
+
+            val racePropertiesId = !RacePropertiesRepo.create(request.properties.toRecord(raceId, null)).orDie()
+
+            !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
+                it.toRecord(
+                    racePropertiesId
+                )
+            }).orDie()
+        }
 
         KIO.ok(ApiResponse.Created(raceId))
     }
@@ -93,36 +104,48 @@ object RaceService {
         raceId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        // todo: extract duplicated code to function
-        if (request.template != null) {
-            !RaceTemplateRepo.exists(request.template).orDie().onFalseFail { RaceError.RaceTemplateUnknown }
-        }
-
-        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
-        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
-
         !RaceRepo.update(raceId) {
             template = request.template
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie().onNullFail { RaceError.RaceNotFound }
 
-        // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
-        !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toUpdateFunction())
-            .orDie()
-            .onNullFail { RaceError.RacePropertiesNotFound }
+        if (request.template != null) {
+            val templateRecord = !RaceTemplateRepo.getWithProperties(request.template).orDie()
+                .onNullFail { RaceError.RaceTemplateUnknown }
 
-        val racePropertiesId =
-            !RacePropertiesRepo.getIdByRaceOrTemplateId(raceId).orDie().onNullFail { RaceError.RacePropertiesNotFound }
+            // In theory the RacePropertiesRepo functions can't fail because there has to be a "raceProperties" for the "race" to exist
+            val propertiesRecord = !RacePropertiesRepo.updateByRaceOrTemplate(raceId, templateRecord.toUpdateFunction())
+                .orDie()
+                .onNullFail { RaceError.RacePropertiesNotFound }
 
-        // delete and re-add the named participant entries
-        !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
-        !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-            it.record(
-                racePropertiesId
-            )
-        }).orDie()
+            // delete and re-add the named participant entries
+            !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(propertiesRecord.id).orDie()
+            val namedParticipantRecords = templateRecord.namedParticipants?.map {
+                !it!!.applyRacePropertiesHasNamedParticipant(raceId, it.id!!)
+            }
+            if (namedParticipantRecords != null) {
+                !RacePropertiesHasNamedParticipantRepo.create(namedParticipantRecords).orDie()
+            }
 
+        } else {
+            !RacePropertiesService.checkRequestReferences(request.properties!!)
+
+            !RacePropertiesRepo.updateByRaceOrTemplate(raceId, request.properties.toUpdateFunction())
+                .orDie()
+
+            val racePropertiesId =
+                !RacePropertiesRepo.getIdByRaceOrTemplateId(raceId).orDie()
+                    .onNullFail { RaceError.RacePropertiesNotFound }
+
+            // delete and re-add the named participant entries
+            !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
+            !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
+                it.toRecord(
+                    racePropertiesId
+                )
+            }).orDie()
+        }
         noData
     }
 

@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.raceProperties.boundary.RacePropertiesService
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesRepo
-import de.lambda9.ready2race.backend.app.raceProperties.control.record
+import de.lambda9.ready2race.backend.app.raceProperties.control.toRecord
 import de.lambda9.ready2race.backend.app.raceProperties.control.toUpdateFunction
 import de.lambda9.ready2race.backend.app.raceTemplate.control.RaceTemplateRepo
 import de.lambda9.ready2race.backend.app.raceTemplate.control.toDto
@@ -42,13 +42,12 @@ object RaceTemplateService {
             }
         ).orDie()
 
-        !RacePropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
-        !RacePropertiesService.checkRaceCategoryExisting(request.properties.raceCategory)
+        !RacePropertiesService.checkRequestReferences(request.properties)
 
-        val racePropertiesId = !RacePropertiesRepo.create(request.properties.record(null, raceTemplateId)).orDie()
+        val racePropertiesId = !RacePropertiesRepo.create(request.properties.toRecord(null, raceTemplateId)).orDie()
 
         !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-            it.record(
+            it.toRecord(
                 racePropertiesId
             )
         }).orDie()
@@ -106,7 +105,7 @@ object RaceTemplateService {
         // delete and re-add the named participant entries
         !RacePropertiesHasNamedParticipantRepo.deleteManyByRaceProperties(racePropertiesId).orDie()
         !RacePropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-            it.record(
+            it.toRecord(
                 racePropertiesId
             )
         }).orDie()

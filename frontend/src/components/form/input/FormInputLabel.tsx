@@ -4,14 +4,14 @@ import {useTranslation} from 'react-i18next'
 
 type Props = {
     label: ReactNode
-    required: boolean
+    required?: boolean
 }
 const FormInputLabel = (props: PropsWithChildren<Props>) => {
     const {t} = useTranslation()
 
     return (
         <label>
-            <Stack direction="row" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{mb: 1}}>
                 <Typography sx={{fontSize: '1.1rem'}}>{props.label}</Typography>
                 {!props.required && (
                     <Typography

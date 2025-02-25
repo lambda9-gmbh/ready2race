@@ -148,6 +148,14 @@ export type Invalid =
     | {
           anyOf: Array<Invalid>
       }
+    | {
+          oneOf: Array<
+              | Invalid
+              | {
+                    [key: string]: unknown
+                }
+          >
+      }
 
 export type InviteRequest = {
     email: string
@@ -322,7 +330,7 @@ export type RacePropertiesRequestDto = {
 }
 
 export type RaceRequest = {
-    properties: RacePropertiesRequestDto
+    properties?: RacePropertiesRequestDto
     template?: string
 }
 

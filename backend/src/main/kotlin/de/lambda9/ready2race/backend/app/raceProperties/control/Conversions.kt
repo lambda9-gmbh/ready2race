@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.raceProperties.control
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.raceProperties.entity.NamedParticipantForRaceDto
 import de.lambda9.ready2race.backend.app.raceProperties.entity.NamedParticipantForRaceRequestDto
+import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesDto
 import de.lambda9.ready2race.backend.app.raceProperties.entity.RacePropertiesRequestDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantForRacePropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RacePropertiesHasNamedParticipantRecord
@@ -10,7 +11,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.RacePrope
 import de.lambda9.tailwind.core.KIO
 import java.util.*
 
-fun RacePropertiesRequestDto.record(raceId: UUID?, raceTemplateId: UUID?) = RacePropertiesRecord(
+fun RacePropertiesRequestDto.toRecord(raceId: UUID?, raceTemplateId: UUID?) = RacePropertiesRecord(
     id = UUID.randomUUID(),
     race = raceId,
     raceTemplate = raceTemplateId,
@@ -27,7 +28,7 @@ fun RacePropertiesRequestDto.record(raceId: UUID?, raceTemplateId: UUID?) = Race
     raceCategory = raceCategory,
 )
 
-fun NamedParticipantForRaceRequestDto.record(propertiesId: UUID) = RacePropertiesHasNamedParticipantRecord(
+fun NamedParticipantForRaceRequestDto.toRecord(propertiesId: UUID) = RacePropertiesHasNamedParticipantRecord(
     raceProperties = propertiesId,
     namedParticipant = namedParticipant,
     required = required,
@@ -42,6 +43,18 @@ fun NamedParticipantForRacePropertiesRecord.toDto(): App<Nothing, NamedParticipa
         id = id!!,
         name = name!!,
         description = description,
+        required = required!!,
+        countMales = countMales!!,
+        countFemales = countFemales!!,
+        countNonBinary = countNonBinary!!,
+        countMixed = countMixed!!
+    )
+)
+
+fun NamedParticipantForRacePropertiesRecord.applyRacePropertiesHasNamedParticipant(racePropertiesId: UUID, namedParticipantId: UUID): App<Nothing, RacePropertiesHasNamedParticipantRecord> = KIO.ok(
+    RacePropertiesHasNamedParticipantRecord(
+        raceProperties = racePropertiesId,
+        namedParticipant = namedParticipantId,
         required = required!!,
         countMales = countMales!!,
         countFemales = countFemales!!,

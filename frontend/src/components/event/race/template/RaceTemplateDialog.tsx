@@ -48,7 +48,7 @@ const RaceTemplateDialog = (props: BaseEntityDialogProps<RaceTemplateDto>) => {
             onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}>
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <RacePropertiesFormInputs formContext={formContext} />
             </Stack>
         </EntityDialog>

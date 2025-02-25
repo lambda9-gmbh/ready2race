@@ -2,7 +2,7 @@ import {AutocompleteOption} from '@utils/types.ts'
 import {SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {Box, Button, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
+import {Box, Button, Divider, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {RaceForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -16,6 +16,8 @@ type Props = {
     formContext: UseFormReturn<RaceForm>
     fieldArrayModified?: () => void
 }
+
+// todo: rework styling
 export const RacePropertiesFormInputs = (props: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
@@ -128,11 +130,12 @@ export const RacePropertiesFormInputs = (props: Props) => {
                     getOptionKey: field => field.id,
                 }}
             />
-
+            <Divider/>
+            <FormInputLabel label={t('event.race.namedParticipant.namedParticipants')}>
             {namedParticipantFields.map((field, index) => (
                 <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
                     <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
-                        <Grid2 container flexDirection="row" spacing={2} sx={{mb: 2}}>
+                        <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
                             <Grid2 size="grow" sx={{minWidth: 250}}>
                                 <FormInputAutocomplete
                                     name={'namedParticipants[' + index + '].namedParticipant'}
@@ -156,7 +159,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
                                 />
                             </Box>
                         </Grid2>
-                        <Stack direction="column" spacing={2}>
+                        <Stack spacing={4}>
                             <Stack direction="row" spacing={2}>
                                 <FormInputNumber
                                     name={'namedParticipants[' + index + '].countMales'}
@@ -211,6 +214,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
                     </Tooltip>
                 </Stack>
             ))}
+            </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>
                 <Button
                     onClick={() => {
