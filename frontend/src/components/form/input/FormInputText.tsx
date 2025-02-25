@@ -8,21 +8,20 @@ export const FormInputText = (props: BaseFormInputProps) => {
     const {t} = useTranslation()
 
     return (
-        <TextFieldElement
-            {...props}
-            type={'text'}
-            rules={{
-                ...props.rules,
-                ...(props.required &&
-                    !props.rules?.required && {required: t('common.form.required')}),
-            }}
-            label={
-                <FormInputLabel
-                    label={props.label}
-                    required={props.required === true || props.rules?.required !== undefined}
-                    optional={t('common.form.optional')}
-                />
-            }
-        />
+        <FormInputLabel
+            label={props.label}
+            required={props.required === true || props.rules?.required !== undefined}>
+            <TextFieldElement
+                {...props}
+                type={'text'}
+                rules={{
+                    ...props.rules,
+                    ...(props.required &&
+                        !props.rules?.required && {required: t('common.form.required')}),
+                }}
+                label={null}
+                sx={{width: 1}}
+            />
+        </FormInputLabel>
     )
 }

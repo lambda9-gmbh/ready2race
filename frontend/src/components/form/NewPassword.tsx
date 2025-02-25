@@ -1,6 +1,6 @@
 import {useTranslation} from 'react-i18next'
 import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
-import {FieldValues, PasswordElement, Path, UseFormReturn} from 'react-hook-form-mui'
+import {FieldValues, Path, UseFormReturn} from 'react-hook-form-mui'
 import {Stack} from '@mui/material'
 import {useEffect} from 'react'
 
@@ -73,13 +73,11 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
                         }
                     },
                 }}
-                sx={{flex: 1}}
             />
-            <PasswordElement
+            <FormInputPassword
                 name="confirmPassword"
                 label={t('user.registration.password.confirm')}
                 required
-                type="password"
                 rules={{
                     required: t('common.form.required'),
                     validate: (val, vals) => {
@@ -88,7 +86,6 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
                         }
                     },
                 }}
-                sx={{flex: 1}}
             />
         </Stack>
     )

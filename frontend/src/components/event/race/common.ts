@@ -33,8 +33,8 @@ export const raceFormDefaultValues: RaceForm = {
     countFemales: '0',
     countNonBinary: '0',
     countMixed: '0',
-    participationFee: '',
-    rentalFee: '',
+    participationFee: '0',
+    rentalFee: '0',
     raceCategory: {id: '', label: ''},
     namedParticipants: [],
 }

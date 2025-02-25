@@ -65,6 +65,7 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
         },MuiFormLabel: {
             styleOverrides: {
                 root: {
+                    display: 'none',
                     ".input-label-optional-text":{
                         fontSize: _theme.typography.body1.fontSize,
                         color: 'grey',

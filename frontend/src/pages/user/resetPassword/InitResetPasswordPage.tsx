@@ -74,7 +74,7 @@ const InitResetPasswordPage = () => {
                 feedback.error(t('user.resetPassword.error.invalid'))
             } else if (result.error.status.value === 429) { // todo: It's possible to get RateLimits remaining from the response header before
                 try {
-                    const tooManyRequestsError = result.error as TooManyRequestsError
+                    const tooManyRequestsError = result.error as TooManyRequestsError // todo: better way than try catch?
                     feedback.error(
                         t('common.error.tooManyRequests', {
                             val: Math.ceil(tooManyRequestsError.details.retryAfter / 60),

@@ -1,14 +1,16 @@
 import {AutocompleteOption} from '@utils/types.ts'
-import {AutocompleteElement, SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
+import {SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {Box, Button, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {RaceForm} from './common.ts'
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
-import {getNamedParticipants, getRaceCategories} from "@api/sdk.gen.ts";
+import {getNamedParticipants, getRaceCategories} from '@api/sdk.gen.ts'
+import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
 type Props = {
     formContext: UseFormReturn<RaceForm>
@@ -117,7 +119,7 @@ export const RacePropertiesFormInputs = (props: Props) => {
                 required
             />
             <FormInputCurrency name="rentalFee" label={t('event.race.rentalFee')} required />
-            <AutocompleteElement
+            <FormInputAutocomplete
                 name="raceCategory"
                 options={categories}
                 label={t('event.race.category.category')}
@@ -126,22 +128,31 @@ export const RacePropertiesFormInputs = (props: Props) => {
                     getOptionKey: field => field.id,
                 }}
             />
+
             {namedParticipantFields.map((field, index) => (
                 <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
                     <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
                         <Grid2 container flexDirection="row" spacing={2} sx={{mb: 2}}>
                             <Grid2 size="grow" sx={{minWidth: 250}}>
-                                <AutocompleteElement
+                                <FormInputAutocomplete
                                     name={'namedParticipants[' + index + '].namedParticipant'}
                                     options={namedParticipants}
                                     label={t('event.race.namedParticipant.role')}
                                     loading={namedParticipantsPending}
+                                    required
                                 />
                             </Grid2>
                             <Box sx={{my: 'auto'}}>
                                 <SwitchElement
                                     name={'namedParticipants[' + index + '].required'}
-                                    label={t('event.race.namedParticipant.required.required')}
+                                    label={
+                                        <FormInputLabel
+                                            label={t(
+                                                'event.race.namedParticipant.required.required',
+                                            )}
+                                            required={true}
+                                        />
+                                    }
                                 />
                             </Box>
                         </Grid2>
