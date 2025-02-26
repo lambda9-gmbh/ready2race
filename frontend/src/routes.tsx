@@ -21,8 +21,10 @@ import EventDayPage from './pages/event/EventDayPage.tsx'
 import CompetitionConfigPage from './pages/event/CompetitionConfigPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
-import InitResetPasswordPage from "./pages/user/resetPassword/InitResetPasswordPage.tsx";
-import VerifyRegistrationPage from "./pages/user/VerifyRegistrationPage.tsx";
+import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
+import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
+import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubPage from './pages/club/ClubPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -250,6 +252,34 @@ export const competitionConfigIndexRoute = createRoute({
     },
 })
 
+export const clubRoute = createRoute({
+    getParentRoute: () => clubsRoute,
+    path: '$clubId',
+})
+
+export const clubIndexRoute = createRoute({
+    getParentRoute: () => clubRoute,
+    path: '/',
+    component: () => <ClubPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readEventGlobal)
+    },
+})
+
+export const clubsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'club',
+})
+
+export const clubsIndexRoute = createRoute({
+    getParentRoute: () => clubsRoute,
+    path: '/',
+    component: () => <ClubsPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
+})
+
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
@@ -267,11 +297,15 @@ const routeTree = rootRoute.addChildren([
     rolesRoute.addChildren([rolesIndexRoute]),
     registrationRoute.addChildren([
         registrationIndexRoute,
-        registrationTokenRoute
+        registrationTokenRoute,
     ]),
     resetPasswordRoute.addChildren([
         resetPasswordIndexRoute,
         resetPasswordTokenRoute,
+        clubsRoute.addChildren([
+            clubsIndexRoute,
+            clubRoute.addChildren([clubIndexRoute]),
+        ]),
     ]),
 ])
 

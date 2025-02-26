@@ -12,7 +12,6 @@ import type {
     GetUsersData,
     GetUsersError,
     GetUsersResponse,
-    GetUserData,
     GetUserError,
     GetUserResponse,
     GetRegistrationsData,
@@ -33,12 +32,6 @@ import type {
     AcceptUserInvitationData,
     AcceptUserInvitationError,
     AcceptUserInvitationResponse,
-    InitPasswordResetData,
-    InitPasswordResetError,
-    InitPasswordResetResponse,
-    ResetPasswordData,
-    ResetPasswordError,
-    ResetPasswordResponse,
     AddRoleData,
     AddRoleError,
     AddRoleResponse,
@@ -57,13 +50,11 @@ import type {
     GetEventsData,
     GetEventsError,
     GetEventsResponse,
-    GetEventData,
     GetEventError,
     GetEventResponse,
     UpdateEventData,
     UpdateEventError,
     UpdateEventResponse,
-    DeleteEventData,
     DeleteEventError,
     DeleteEventResponse,
     AddEventDayData,
@@ -72,51 +63,45 @@ import type {
     GetEventDaysData,
     GetEventDaysError,
     GetEventDaysResponse,
-    GetEventDayData,
     GetEventDayError,
     GetEventDayResponse,
     UpdateEventDayData,
     UpdateEventDayError,
     UpdateEventDayResponse,
-    DeleteEventDayData,
     DeleteEventDayError,
     DeleteEventDayResponse,
-    AssignCompetitionsToEventDayData,
-    AssignCompetitionsToEventDayError,
-    AssignCompetitionsToEventDayResponse,
-    AddCompetitionData,
-    AddCompetitionError,
-    AddCompetitionResponse,
-    GetCompetitionsData,
-    GetCompetitionsError,
-    GetCompetitionsResponse,
-    GetCompetitionData,
-    GetCompetitionError,
-    GetCompetitionResponse,
-    UpdateCompetitionData,
-    UpdateCompetitionError,
-    UpdateCompetitionResponse,
-    DeleteCompetitionData,
-    DeleteCompetitionError,
-    DeleteCompetitionResponse,
-    AssignDaysToCompetitionData,
-    AssignDaysToCompetitionError,
-    AssignDaysToCompetitionResponse,
-    AddCompetitionTemplateData,
-    AddCompetitionTemplateError,
-    AddCompetitionTemplateResponse,
-    GetCompetitionTemplatesData,
-    GetCompetitionTemplatesError,
-    GetCompetitionTemplatesResponse,
-    GetCompetitionTemplateData,
-    GetCompetitionTemplateError,
-    GetCompetitionTemplateResponse,
-    UpdateCompetitionTemplateData,
-    UpdateCompetitionTemplateError,
-    UpdateCompetitionTemplateResponse,
-    DeleteCompetitionTemplateData,
-    DeleteCompetitionTemplateError,
-    DeleteCompetitionTemplateResponse,
+    AssignRacesToEventDayData,
+    AssignRacesToEventDayError,
+    AssignRacesToEventDayResponse,
+    AddRaceData,
+    AddRaceError,
+    AddRaceResponse,
+    GetRacesData,
+    GetRacesError,
+    GetRacesResponse,
+    GetRaceError,
+    GetRaceResponse,
+    UpdateRaceData,
+    UpdateRaceError,
+    UpdateRaceResponse,
+    DeleteRaceError,
+    DeleteRaceResponse,
+    AssignDaysToRaceData,
+    AssignDaysToRaceError,
+    AssignDaysToRaceResponse,
+    AddRaceTemplateData,
+    AddRaceTemplateError,
+    AddRaceTemplateResponse,
+    GetRaceTemplatesData,
+    GetRaceTemplatesError,
+    GetRaceTemplatesResponse,
+    GetRaceTemplateError,
+    GetRaceTemplateResponse,
+    UpdateRaceTemplateData,
+    UpdateRaceTemplateError,
+    UpdateRaceTemplateResponse,
+    DeleteRaceTemplateError,
+    DeleteRaceTemplateResponse,
     AddNamedParticipantData,
     AddNamedParticipantError,
     AddNamedParticipantResponse,
@@ -125,22 +110,48 @@ import type {
     UpdateNamedParticipantData,
     UpdateNamedParticipantError,
     UpdateNamedParticipantResponse,
-    DeleteNamedParticipantData,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
-    AddCompetitionCategoryData,
-    AddCompetitionCategoryError,
-    AddCompetitionCategoryResponse,
-    GetCompetitionCategoriesError,
-    GetCompetitionCategoriesResponse,
-    UpdateCompetitionCategoryData,
-    UpdateCompetitionCategoryError,
-    UpdateCompetitionCategoryResponse,
-    DeleteCompetitionCategoryData,
-    DeleteCompetitionCategoryError,
-    DeleteCompetitionCategoryResponse,
-    NewCaptchaError,
-    NewCaptchaResponse,
+    AddRaceCategoryData,
+    AddRaceCategoryError,
+    AddRaceCategoryResponse,
+    GetRaceCategoriesError,
+    GetRaceCategoriesResponse,
+    UpdateRaceCategoryData,
+    UpdateRaceCategoryError,
+    UpdateRaceCategoryResponse,
+    DeleteRaceCategoryError,
+    DeleteRaceCategoryResponse,
+    AddClubData,
+    AddClubError,
+    AddClubResponse,
+    GetClubsData,
+    GetClubsError,
+    GetClubsResponse,
+    GetClubData,
+    GetClubError,
+    GetClubResponse,
+    UpdateClubData,
+    UpdateClubError,
+    UpdateClubResponse,
+    DeleteClubData,
+    DeleteClubError,
+    DeleteClubResponse,
+    GetClubParticipantsData,
+    GetClubParticipantsError,
+    GetClubParticipantsResponse,
+    AddClubParticipantData,
+    AddClubParticipantError,
+    AddClubParticipantResponse,
+    GetClubParticipantData,
+    GetClubParticipantError,
+    GetClubParticipantResponse,
+    UpdateClubParticipantData,
+    UpdateClubParticipantError,
+    UpdateClubParticipantResponse,
+    DeleteClubParticipantData,
+    DeleteClubParticipantError,
+    DeleteClubParticipantResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -186,7 +197,7 @@ export const getUsers = <ThrowOnError extends boolean = false>(
 }
 
 export const getUser = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetUserData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
         ...options,
@@ -264,30 +275,6 @@ export const acceptUserInvitation = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const initPasswordReset = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<InitPasswordResetData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<
-        InitPasswordResetResponse,
-        InitPasswordResetError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/user/resetPassword',
-    })
-}
-
-export const resetPassword = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<ResetPasswordData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<ResetPasswordResponse, ResetPasswordError, ThrowOnError>(
-        {
-            ...options,
-            url: '/user/resetPassword/{passwordResetToken}',
-        },
-    )
-}
-
 export const addRole = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddRoleData, ThrowOnError>,
 ) => {
@@ -343,7 +330,7 @@ export const getEvents = <ThrowOnError extends boolean = false>(
 }
 
 export const getEvent = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetEventData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventResponse, GetEventError, ThrowOnError>({
         ...options,
@@ -361,7 +348,7 @@ export const updateEvent = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteEvent = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteEventData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<DeleteEventResponse, DeleteEventError, ThrowOnError>({
         ...options,
@@ -379,7 +366,7 @@ export const addEventDay = <ThrowOnError extends boolean = false>(
 }
 
 export const getEventDays = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
+    options?: OptionsLegacyParser<GetEventDaysData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventDaysResponse, GetEventDaysError, ThrowOnError>({
         ...options,
@@ -388,7 +375,7 @@ export const getEventDays = <ThrowOnError extends boolean = false>(
 }
 
 export const getEventDay = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetEventDayData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetEventDayResponse, GetEventDayError, ThrowOnError>({
         ...options,
@@ -410,7 +397,7 @@ export const updateEventDay = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteEventDay = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteEventDayData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
         DeleteEventDayResponse,
@@ -422,159 +409,139 @@ export const deleteEventDay = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const assignCompetitionsToEventDay = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AssignCompetitionsToEventDayData, ThrowOnError>,
+export const assignRacesToEventDay = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignRacesToEventDayData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        AssignCompetitionsToEventDayResponse,
-        AssignCompetitionsToEventDayError,
+        AssignRacesToEventDayResponse,
+        AssignRacesToEventDayError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/eventDay/{eventDayId}/competitions',
+        url: '/event/{eventId}/eventDay/{eventDayId}/races',
     })
 }
 
-export const addCompetition = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddCompetitionData, ThrowOnError>,
+export const addRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddRaceResponse, AddRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race',
+    })
+}
+
+export const getRaces = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRacesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetRacesResponse, GetRacesError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race',
+    })
+}
+
+export const getRace = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetRaceResponse, GetRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const updateRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateRaceResponse, UpdateRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const deleteRace = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteRaceResponse, DeleteRaceError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}',
+    })
+}
+
+export const assignDaysToRace = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignDaysToRaceData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignDaysToRaceResponse,
+        AssignDaysToRaceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/race/{raceId}/days',
+    })
+}
+
+export const addRaceTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceTemplateData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).post<
-        AddCompetitionResponse,
-        AddCompetitionError,
+        AddRaceTemplateResponse,
+        AddRaceTemplateError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition',
+        url: '/raceTemplate',
     })
 }
 
-export const getCompetitions = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetCompetitionsData, ThrowOnError>,
+export const getRaceTemplates = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRaceTemplatesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetCompetitionsResponse,
-        GetCompetitionsError,
+        GetRaceTemplatesResponse,
+        GetRaceTemplatesError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition',
+        url: '/raceTemplate',
     })
 }
 
-export const getCompetition = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetCompetitionData, ThrowOnError>,
+export const getRaceTemplate = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetCompetitionResponse,
-        GetCompetitionError,
+        GetRaceTemplateResponse,
+        GetRaceTemplateError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}',
+        url: '/raceTemplate/{raceTemplateId}',
     })
 }
 
-export const updateCompetition = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateCompetitionData, ThrowOnError>,
+export const updateRaceTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceTemplateData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        UpdateCompetitionResponse,
-        UpdateCompetitionError,
+        UpdateRaceTemplateResponse,
+        UpdateRaceTemplateError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}',
+        url: '/raceTemplate/{raceTemplateId}',
     })
 }
 
-export const deleteCompetition = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteCompetitionData, ThrowOnError>,
+export const deleteRaceTemplate = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
-        DeleteCompetitionResponse,
-        DeleteCompetitionError,
+        DeleteRaceTemplateResponse,
+        DeleteRaceTemplateError,
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}',
-    })
-}
-
-export const assignDaysToCompetition = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AssignDaysToCompetitionData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<
-        AssignDaysToCompetitionResponse,
-        AssignDaysToCompetitionError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/competition/{competitionId}/days',
-    })
-}
-
-export const addCompetitionTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddCompetitionTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<
-        AddCompetitionTemplateResponse,
-        AddCompetitionTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/competitionTemplate',
-    })
-}
-
-export const getCompetitionTemplates = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<GetCompetitionTemplatesData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetCompetitionTemplatesResponse,
-        GetCompetitionTemplatesError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/competitionTemplate',
-    })
-}
-
-export const getCompetitionTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetCompetitionTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetCompetitionTemplateResponse,
-        GetCompetitionTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/competitionTemplate/{competitionTemplateId}',
-    })
-}
-
-export const updateCompetitionTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateCompetitionTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<
-        UpdateCompetitionTemplateResponse,
-        UpdateCompetitionTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/competitionTemplate/{competitionTemplateId}',
-    })
-}
-
-export const deleteCompetitionTemplate = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteCompetitionTemplateData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).delete<
-        DeleteCompetitionTemplateResponse,
-        DeleteCompetitionTemplateError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/competitionTemplate/{competitionTemplateId}',
+        url: '/raceTemplate/{raceTemplateId}',
     })
 }
 
@@ -618,7 +585,7 @@ export const updateNamedParticipant = <ThrowOnError extends boolean = false>(
 }
 
 export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteNamedParticipantData, ThrowOnError>,
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).delete<
         DeleteNamedParticipantResponse,
@@ -630,63 +597,164 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const addCompetitionCategory = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddCompetitionCategoryData, ThrowOnError>,
+export const addRaceCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRaceCategoryData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).post<
-        AddCompetitionCategoryResponse,
-        AddCompetitionCategoryError,
+        AddRaceCategoryResponse,
+        AddRaceCategoryError,
         ThrowOnError
     >({
         ...options,
-        url: '/competitionCategory',
+        url: '/raceCategory',
     })
 }
 
-export const getCompetitionCategories = <ThrowOnError extends boolean = false>(
+export const getRaceCategories = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetCompetitionCategoriesResponse,
-        GetCompetitionCategoriesError,
+        GetRaceCategoriesResponse,
+        GetRaceCategoriesError,
         ThrowOnError
     >({
         ...options,
-        url: '/competitionCategory',
+        url: '/raceCategory',
     })
 }
 
-export const updateCompetitionCategory = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateCompetitionCategoryData, ThrowOnError>,
+export const updateRaceCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRaceCategoryData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
-        UpdateCompetitionCategoryResponse,
-        UpdateCompetitionCategoryError,
+        UpdateRaceCategoryResponse,
+        UpdateRaceCategoryError,
         ThrowOnError
     >({
         ...options,
-        url: '/competitionCategory/{competitionCategoryId}',
+        url: '/raceCategory/{raceCategoryId}',
     })
 }
 
-export const deleteCompetitionCategory = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteCompetitionCategoryData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).delete<
-        DeleteCompetitionCategoryResponse,
-        DeleteCompetitionCategoryError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/competitionCategory/{competitionCategoryId}',
-    })
-}
-
-export const newCaptcha = <ThrowOnError extends boolean = false>(
+export const deleteRaceCategory = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).post<NewCaptchaResponse, NewCaptchaError, ThrowOnError>({
+    return (options?.client ?? client).delete<
+        DeleteRaceCategoryResponse,
+        DeleteRaceCategoryError,
+        ThrowOnError
+    >({
         ...options,
-        url: '/captcha',
+        url: '/raceCategory/{raceCategoryId}',
+    })
+}
+
+export const addClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddClubResponse, AddClubError, ThrowOnError>({
+        ...options,
+        url: '/club',
+    })
+}
+
+export const getClubs = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetClubsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubsResponse, GetClubsError, ThrowOnError>({
+        ...options,
+        url: '/club',
+    })
+}
+
+export const getClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubResponse, GetClubError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}',
+    })
+}
+
+export const updateClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateClubResponse, UpdateClubError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}',
+    })
+}
+
+export const deleteClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteClubResponse, DeleteClubError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}',
+    })
+}
+
+export const getClubParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubParticipantsResponse,
+        GetClubParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant',
+    })
+}
+
+export const addClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddClubParticipantResponse,
+        AddClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant',
+    })
+}
+
+export const getClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubParticipantResponse,
+        GetClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}',
+    })
+}
+
+export const updateClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubParticipantResponse,
+        UpdateClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}',
+    })
+}
+
+export const deleteClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteClubParticipantResponse,
+        DeleteClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}',
     })
 }

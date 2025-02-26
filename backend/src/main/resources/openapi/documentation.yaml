@@ -1117,11 +1117,241 @@ paths:
                 $ref: '#/components/schemas/CaptchaDto'
         500:
           $ref: '#/components/responses/500'
-
-
-
-
-
+  /club:
+    post:
+      operationId: addClub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getClubs
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Club page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClubDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /club/{clubId}:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getClub
+      responses:
+        200:
+          description: Club successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClubDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateClub
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClubUpsertDto'
+      responses:
+        204:
+          description: Club successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteClub
+      responses:
+        204:
+          description: Club successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /club/{clubId}/participant:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getClubParticipants
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Participant page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addClubParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /club/{clubId}/participant/{participantId}:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getClubParticipant
+      responses:
+        200:
+          description: Participant successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateClubParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantUpsertDto'
+      responses:
+        204:
+          description: Participant successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteClubParticipant
+      responses:
+        204:
+          description: Participant successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
 
 components:
@@ -1303,6 +1533,8 @@ components:
       enum:
         - USER
         - EVENT
+        - CLUB
+        - PARTICIPANT
 
     Scope:
       type: string
@@ -2204,3 +2436,105 @@ components:
           type: number
         start:
           type: integer
+
+    # club
+
+    ClubUpsertDto:
+      type:
+        object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    ClubDto:
+      type:
+        object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    ParticipantDto:
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - gender
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+        phone:
+          type: string
+          nullable: true
+        external:
+          type: boolean
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ParticipantUpsertDto:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - gender
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+        phone:
+          type: string
+          nullable: true
+        external:
+          type: boolean
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true

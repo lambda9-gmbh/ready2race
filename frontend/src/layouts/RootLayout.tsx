@@ -1,12 +1,12 @@
 import {Outlet} from '@tanstack/react-router'
-import {AppBar, Box, Container, IconButton, Paper, Toolbar} from '@mui/material'
+import {AppBar, Box, Container, Divider, IconButton, Paper, Toolbar} from '@mui/material'
 import {useState} from 'react'
-import {Dashboard, EditCalendar, Event, Menu, MenuOpen, People, Work} from '@mui/icons-material'
+import {Dashboard, EditCalendar, Event, Menu, MenuOpen, People, Work, Workspaces} from '@mui/icons-material'
 import Sidebar from '@components/sidebar/Sidebar.tsx'
 import SidebarItem from '@components/sidebar/SidebarItem.tsx'
 import UserWidget from '@components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
-import {readUserGlobal, updateEventGlobal} from '@authorization/privileges.ts'
+import {readClubGlobal, readUserGlobal, updateEventGlobal} from '@authorization/privileges.ts'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -40,18 +40,11 @@ const RootLayout = () => {
                                 to={'/dashboard'}
                             />
                             <SidebarItem
-                                text={t('navigation.titles.users')}
-                                icon={<People />}
+                                text={t('navigation.titles.clubs')}
+                                icon={<Workspaces />}
                                 authenticatedOnly
-                                privilege={readUserGlobal}
-                                to={'/user'}
-                            />
-                            <SidebarItem
-                                text={t('navigation.titles.roles')}
-                                icon={<Work />}
-                                authenticatedOnly
-                                privilege={readUserGlobal}
-                                to={'/role'}
+                                privilege={readClubGlobal}
+                                to={'/club'}
                             />
                             <SidebarItem
                                 text={t('navigation.titles.events')}
@@ -66,6 +59,21 @@ const RootLayout = () => {
                                 authenticatedOnly
                                 privilege={updateEventGlobal}
                                 to={'/raceConfig'}
+                            />
+                            <Divider/>
+                            <SidebarItem
+                                text={t('navigation.titles.users')}
+                                icon={<People />}
+                                authenticatedOnly
+                                privilege={readUserGlobal}
+                                to={'/user'}
+                            />
+                            <SidebarItem
+                                text={t('navigation.titles.roles')}
+                                icon={<Work />}
+                                authenticatedOnly
+                                privilege={readUserGlobal}
+                                to={'/role'}
                             />
                         </Sidebar>
                         <Box

@@ -6,6 +6,9 @@ object StringValidators : Validators<String?>() {
     val notBlank
         get() = simple("is blank") { it.isNotBlank() }
 
+    val isBlank
+        get() = simple("is not blank") { it.isBlank() }
+
     fun pattern(regex: Regex) = Validator<String?> { value ->
         if (value != null && !regex.matches(value)) {
             ValidationResult.Invalid.PatternMismatch(value, regex)
