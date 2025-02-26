@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.competitionCategory.boundary.competitio
 import de.lambda9.ready2race.backend.app.appuser.boundary.user
 import de.lambda9.ready2race.backend.app.captcha.boundary.captcha
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.competitionTemplate
-import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumentType
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import io.ktor.server.application.*
@@ -25,7 +24,6 @@ fun Application.configureRouting() {
             competitionTemplate()
             captcha()
             eventDocumentType()
-            eventDocument()
         }
     }
 }

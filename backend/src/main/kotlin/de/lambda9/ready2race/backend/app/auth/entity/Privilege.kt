@@ -1,5 +1,7 @@
 package de.lambda9.ready2race.backend.app.auth.entity
 
+// TODO: check all endpoints for correct usage
+
 sealed class Privilege(
     val action: Action,
     val resource: Resource,
