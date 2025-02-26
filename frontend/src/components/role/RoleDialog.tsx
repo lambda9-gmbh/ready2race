@@ -1,11 +1,12 @@
-import EntityDialog from '../EntityDialog.tsx'
-import {BaseEntityDialogProps} from '../../utils/types.ts'
-import {addRole, RoleDto, RoleRequest, updateRole} from '../../api'
+import EntityDialog from '@components/EntityDialog.tsx'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
 import {Stack} from '@mui/material'
-import {FormInputText} from '../form/input/FormInputText.tsx'
-import {takeIfNotEmpty} from '../../utils/ApiUtils.ts'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {addRole, updateRole} from "@api/sdk.gen.ts";
+import {RoleDto, RoleRequest} from "@api/types.gen.ts";
 
 type RoleForm = {
     name: string
@@ -56,7 +57,7 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}>
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <FormInputText name={'name'} label={'[todo] Bezeichnung'} required />
                 <FormInputText name={'description'} label={'[todo] Beschreibung'} />
             </Stack>

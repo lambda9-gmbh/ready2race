@@ -3,8 +3,8 @@ import {useTranslation} from 'react-i18next'
 import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
 import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
 import {RequestResult} from '@hey-api/client-fetch'
-import {BaseEntityDialogProps} from '../utils/types.ts'
-import {useFeedback} from '../utils/hooks.ts'
+import {BaseEntityDialogProps} from '@utils/types.ts'
+import {useFeedback} from '@utils/hooks.ts'
 import {SubmitButton} from './form/SubmitButton.tsx'
 import DialogCloseButton from './DialogCloseButton.tsx'
 import {GridValidRowModel} from '@mui/x-data-grid'
@@ -28,6 +28,7 @@ type ExtendedEntityDialogProps<
     editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
 }
 
+//todo: add semantic tabs
 const EntityDialog = <
     Entity extends GridValidRowModel,
     Form extends FieldValues,
@@ -56,7 +57,7 @@ const EntityDialog = <
 
     const onSubmit = async (formData: Form) => {
         setSubmitting(true)
-        let requestResult = entity
+        const requestResult = entity
             ? await editAction?.(formData, entity)
             : await addAction?.(formData)
         setSubmitting(false)
@@ -64,7 +65,7 @@ const EntityDialog = <
         if (requestResult) {
             if (requestResult.error) {
                 // todo better error display with specific error types
-                console.log(requestResult.error)
+                console.error(requestResult.error)
                 if (entity) {
                     feedback.error(t('entity.edit.error', {entity: entityName}))
                 } else {

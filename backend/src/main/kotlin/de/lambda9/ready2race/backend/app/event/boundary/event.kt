@@ -1,10 +1,10 @@
 package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
-import de.lambda9.ready2race.backend.app.race.boundary.race
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
@@ -40,7 +40,7 @@ fun Route.event() {
         route("/{eventId}") {
 
             eventDay()
-            race()
+            competition()
 
             get {
                 call.respondKIO {

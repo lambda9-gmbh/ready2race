@@ -7,6 +7,10 @@
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "error": {
+      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+      "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
+    },
     "form": {
       "autocomplete": {
         "noOptions": "Keine Auswahl",
@@ -18,6 +22,9 @@
       "dateTime": {
         "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
       },
+      "email": {
+        "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+      },
       "number": {
         "invalid": {
           "pattern": {
@@ -27,6 +34,7 @@
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
         }
       },
+      "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus."
     },
     "load": {
@@ -52,7 +60,7 @@
       "success": "{{entity}} gelöscht",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
     },
-    "description": "Description",
+    "description": "Beschreibung",
     "edit": {
       "action": "{{entity}} bearbeiten",
       "success": "{{entity}} aktualisiert",
@@ -65,26 +73,21 @@
     "titles": {
       "dashboard": "Dashboard",
       "events": "Veranstaltungen",
-      "raceConfig": "Rennen Einstellungen",
+      "competitionConfig": "Wettkampf Einstellungen",
       "roles": "Rollen",
       "users": "Benutzer"
     }
-  },
-  "login": {
-    "email": "E-Mail",
-    "password": "Passwort"
   },
   "event": {
     "assign": {
       "save": {
         "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
         "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
-      },
-      "title": "{{toBeAssigned}} für den {{assignedTo}}"
+      }
     },
     "event": "Veranstaltung",
     "eventDay": {
-      "assignedRaces": "Rennen für den Tag",
+      "assignedCompetitions": "Wettkämpfe für den Tag",
       "date": "Datum",
       "eventDay": "Tag",
       "eventDays": "Tage"
@@ -93,7 +96,8 @@
       "prefix": "Rechnungspräfix"
     },
     "location": "Ort",
-    "race": {
+    "competition": {
+      "assignedDays": "Tage des Wettkampfs",
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien"
@@ -115,10 +119,8 @@
         },
         "role": "Rolle"
       },
-      "participationFee": "Meldegebühr",
-      "race": "Rennen",
-      "races": "Rennen",
-      "rentalFee": "Leihgebühr",
+      "competition": "Wettkampf",
+      "competitions": "Wettkämpfe",
       "shortName": "Kurzname",
       "template": {
         "template": "Vorlage",
@@ -131,6 +133,7 @@
     }
   },
   "user": {
+    "user": "Benutzer",
     "email": "E-Mail",
     "firstname": "Vorname",
     "invitation": {
@@ -138,27 +141,103 @@
     },
     "lastname": "Nachname",
     "password": "Passwort",
+    "login": {
+      "login": "Anmelden",
+      "password": "Passwort",
+      "forgotPassword": "Passwort vergessen?",
+      "signUp": {
+        "link": "Hier registrieren",
+        "message": "Sie haben noch kein Konto?"
+      },
+      "submit": "Anmelden",
+      "error": {
+        "credentials": "Logindaten inkorrekt",
+        "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
+      }
+    },
+    "settings": {
+      "menu": "Nutzereinstellungen",
+      "profile": "Profil",
+      "logout": "Abmelden"
+    },
+    "page": {
+      "error": {
+        "load": "Profile could not be loaded"
+      }
+    },
     "registration": {
+      "register": "Registrieren",
       "email": {
+        "emailSent": {
+          "header": "Bestätigen Sie Ihre E-Mail-Adresse",
+          "message": {
+            "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
+            "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+          }
+        },
         "inUse": {
-          "statement": "Die eingegebene E-Mail Adresse ist bereits in Verwendung.",
-          "callToAction": "Bitte verwenden Sie eine andere E-Mail Adresse oder melden Sie sich mit der bestehenden an."
+          "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
+          "callToAction": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
+        },
+        "verified": {
+          "header": "E-Mail bestätigt",
+          "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
         }
       },
       "error": "Bei der Registrierung ist ein Fehler aufgetreten",
       "password": {
         "confirm": "Passwort bestätigen",
+        "minLength": "{{min}} oder mehr Zeichen",
         "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
         "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
       },
-      "register": "Registrieren",
-      "registration": "Registrierung"
+      "login": {
+        "link": "Hier anmelden",
+        "message": "Sie besitzen bereits ein Konto?"
+      }
     },
-    "user": "Benutzer"
+    "resetPassword": {
+      "resetPassword": "Passwort zurücksetzen",
+      "forgotPassword": "Passwort vergessen?",
+      "init": {
+        "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
+        "submit": "Passwort zurücksetzen"
+      },
+      "emailSent": {
+        "header": "Prüfen Sie Ihr Postfach",
+        "message": {
+          "part1": "Wir haben Ihnen eine E-Mail mit weiteren Anweisungen zum Zurücksetzen Ihres Passworts geschickt.",
+          "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+        }
+      },
+      "newPassword": "Neues Passwort",
+      "success": {
+        "header": "Passwort geändert!",
+        "message": "Ihr Passwort wurde erfolgreich geändert."
+      },
+      "error": {
+        "header": "Ein Fehler ist aufgetreten",
+        "message": {
+          "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
+          "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
+        },
+        "invalid": "Das versendete Formular war fehlerhaft"
+      }
+    }
   },
   "role": {
-    "role": "Rolle",
-    "name": "Name",
-    "description": "Beschreibung"
+    "role": "Rolle"
+  },
+  "captcha": {
+    "instruction": {
+      "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
+      "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
+    },
+    "error": {
+      "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
+      "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
+      "notFound": "Der CAPTCHA ist veraltet"
+    },
+    "loading": "Lade CAPTCHA..."
   }
 }

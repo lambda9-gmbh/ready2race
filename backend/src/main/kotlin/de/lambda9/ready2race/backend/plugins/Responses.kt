@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.responses.ToApiError
 import de.lambda9.ready2race.backend.responses.respondDefect
 import de.lambda9.ready2race.backend.responses.respondError
 import de.lambda9.tailwind.core.KIOException
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
@@ -34,6 +35,10 @@ fun Application.configureResponses() {
                     call.respondDefect(cause)
                 }
             }
+        }
+        status(HttpStatusCode.TooManyRequests) { call, _ ->
+            val retryAfter = call.response.headers["Retry-After"]
+            call.respondError(RequestError.TooManyRequests(retryAfter))
         }
     }
 }

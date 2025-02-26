@@ -16,10 +16,13 @@ import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
 import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage from './pages/event/EventPage.tsx'
-import RacePage from './pages/event/RacePage.tsx'
+import CompetitionPage from './pages/event/CompetitionPage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
-import RaceConfigPage from './pages/event/RaceConfigPage.tsx'
+import CompetitionConfigPage from './pages/event/CompetitionConfigPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
+import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
+import InitResetPasswordPage from "./pages/user/resetPassword/InitResetPasswordPage.tsx";
+import VerifyRegistrationPage from "./pages/user/VerifyRegistrationPage.tsx";
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -41,7 +44,7 @@ const checkAuthWith = (
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
     const scope = context.getPrivilegeScope(action, resource)
-    if (!scope || !f(context, scope)) {
+    if (!scope || !f(context, scope)) { // Todo: Shouldn't it be && instead of ||?
         throw redirect({to: '/dashboard'})
     }
 }
@@ -79,12 +82,45 @@ export const loginRoute = createRoute({
 export const registrationRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'registration',
+})
+
+export const registrationIndexRoute = createRoute({
+    getParentRoute: () => registrationRoute,
+    path: '/',
     component: () => <RegistrationPage />,
     beforeLoad: ({context}) => {
         if (context.loggedIn) {
             throw redirect({to: '/dashboard'})
         }
     },
+})
+
+export const registrationTokenRoute = createRoute({
+    getParentRoute: () => registrationRoute,
+    path: '$registrationToken',
+    component: () => <VerifyRegistrationPage />,
+    beforeLoad: ({context}) => {
+        if (context.loggedIn) {
+            throw redirect({to: '/dashboard'})
+        }
+    },
+})
+
+export const resetPasswordRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'resetPassword',
+})
+
+export const resetPasswordIndexRoute = createRoute({
+    getParentRoute: () => resetPasswordRoute,
+    path: '/',
+    component: () => <InitResetPasswordPage />,
+})
+
+export const resetPasswordTokenRoute = createRoute({
+    getParentRoute: () => resetPasswordRoute,
+    path: '$passwordResetToken',
+    component: () => <ResetPasswordPage />,
 })
 
 export const dashboardRoute = createRoute({
@@ -186,29 +222,29 @@ export const eventDayIndexRoute = createRoute({
     },
 })
 
-export const raceRoute = createRoute({
+export const competitionRoute = createRoute({
     getParentRoute: () => eventRoute,
-    path: 'race/$raceId',
+    path: 'competition/$competitionId',
 })
 
-export const raceIndexRoute = createRoute({
-    getParentRoute: () => raceRoute,
+export const competitionIndexRoute = createRoute({
+    getParentRoute: () => competitionRoute,
     path: '/',
-    component: () => <RacePage />,
+    component: () => <CompetitionPage />,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
 })
 
-export const raceConfigRoute = createRoute({
+export const competitionConfigRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: 'raceConfig',
+    path: 'competitionConfig',
 })
 
-export const raceConfigIndexRoute = createRoute({
-    getParentRoute: () => raceConfigRoute,
+export const competitionConfigIndexRoute = createRoute({
+    getParentRoute: () => competitionConfigRoute,
     path: '/',
-    component: () => <RaceConfigPage />,
+    component: () => <CompetitionConfigPage />,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
@@ -217,19 +253,26 @@ export const raceConfigIndexRoute = createRoute({
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
-    registrationRoute,
     dashboardRoute,
     eventsRoute.addChildren([
         eventsIndexRoute,
         eventRoute.addChildren([
             eventIndexRoute,
             eventDayRoute.addChildren([eventDayIndexRoute]),
-            raceRoute.addChildren([raceIndexRoute]),
+            competitionRoute.addChildren([competitionIndexRoute]),
         ]),
     ]),
-    raceConfigRoute.addChildren([raceConfigIndexRoute]),
+    competitionConfigRoute.addChildren([competitionConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
+    registrationRoute.addChildren([
+        registrationIndexRoute,
+        registrationTokenRoute
+    ]),
+    resetPasswordRoute.addChildren([
+        resetPasswordIndexRoute,
+        resetPasswordTokenRoute,
+    ]),
 ])
 
 export const router = createRouter({

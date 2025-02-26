@@ -1,9 +1,10 @@
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {deleteEvent, EventDto, getEvents} from '../../api'
+import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
-import EntityTable from '../EntityTable.tsx'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
+import EntityTable from '@components/EntityTable.tsx'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {deleteEvent, getEvents} from "@api/sdk.gen.ts";
+import {EventDto} from "@api/types.gen.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -30,13 +31,12 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
         {
             field: 'name',
             headerName: t('entity.name'),
-            minWidth: 200,
+            minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
             headerName: t('entity.description'),
-            minWidth: 200,
             flex: 2,
             sortable: false,
         },

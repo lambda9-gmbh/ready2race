@@ -1,9 +1,10 @@
-import EntityTable from '../EntityTable.tsx'
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {deleteRole, getRoles, RoleDto} from '../../api'
+import EntityTable from '@components/EntityTable.tsx'
+import {BaseEntityTableProps} from '@utils/types.ts'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {useTranslation} from 'react-i18next'
+import {RoleDto} from "@api/types.gen.ts";
+import {deleteRole, getRoles} from "@api/sdk.gen.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -26,13 +27,13 @@ const RoleTable = (props: BaseEntityTableProps<RoleDto>) => {
     const columns: GridColDef<RoleDto>[] = [
         {
             field: 'name',
-            headerName: t('role.name'),
+            headerName: t('entity.name'),
             minWidth: 200,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('role.description'),
+            headerName: t('entity.description'),
             minWidth: 200,
             flex: 1,
             sortable: false,

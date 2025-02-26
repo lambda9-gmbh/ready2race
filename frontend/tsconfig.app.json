@@ -20,7 +20,17 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": "src",
+    "paths": {
+      "@api/*": ["api/*"],
+      "@authorization/*": ["authorization/*"],
+      "@components/*": ["components/*"],
+      "@contexts/*": ["contexts/*"],
+      "@i18n/*": ["i18n/*"],
+      "@routes":  ["routes.tsx"],
+      "@utils/*": ["utils/*"]
+    }
   },
   "include": ["src"]
 }

@@ -1,18 +1,10 @@
 import {PropsWithChildren, useEffect, useRef, useState} from 'react'
 import {AnonymousUser, AuthenticatedUser, User, UserContext} from './UserContext.ts'
-import {
-    Action,
-    checkUserLogin,
-    client,
-    LoginDto,
-    Privilege,
-    Resource,
-    Scope,
-    userLogout,
-} from '../../api'
-import {router} from '../../routes.tsx'
-import {useFetch} from '../../utils/hooks.ts'
-import {scopeLevel} from '../../utils/helpers.ts'
+import {router} from '@routes'
+import {useFetch} from '@utils/hooks.ts'
+import {scopeLevel} from '@utils/helpers.ts'
+import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
+import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 
 type UserData = LoginDto
 

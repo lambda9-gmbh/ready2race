@@ -26,6 +26,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        429:
+          $ref: '#/components/responses/429'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -85,6 +87,13 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /user/{userId}:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getUser
       responses:
@@ -94,6 +103,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppUserDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -139,6 +150,9 @@ paths:
           $ref: '#/components/responses/500'
     post:
       operationId: registerUser
+      parameters:
+        - $ref: '#/components/parameters/challenge'
+        - $ref: '#/components/parameters/input'
       requestBody:
         required: true
         content:
@@ -150,6 +164,8 @@ paths:
           description: Registration initiated
         400:
           $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
         422:
@@ -250,6 +266,56 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /user/resetPassword:
+    post:
+      operationId: initPasswordReset
+      parameters:
+        - $ref: '#/components/parameters/challenge'
+        - $ref: '#/components/parameters/input'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetInitRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        429:
+          $ref: '#/components/responses/429'
+        500:
+          $ref: '#/components/responses/500'
+  /user/resetPassword/{passwordResetToken}:
+    parameters:
+      - name: passwordResetToken
+        in: path
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: resetPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
 
   /role:
     post:
@@ -305,11 +371,12 @@ paths:
           $ref: '#/components/responses/500'
   /role/{roleId}:
     parameters:
-      - in: path
-        name: roleId
+      - name: roleId
+        in: path
         required: true
         schema:
           type: string
+          format: uuid
     put:
       operationId: updateRole
       requestBody:
@@ -401,6 +468,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getEvent
       responses:
@@ -410,6 +479,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -453,6 +524,8 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDay:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addEventDay
       requestBody:
@@ -481,12 +554,12 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
-        - name: raceId
+        - name: competitionId
           in: query
           schema:
             type: string
             format: uuid
-          description: Optional parameter that filters by raceId
+          description: Optional parameter that filters by competitionId
           required: false
       responses:
         200:
@@ -515,6 +588,9 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDay/{eventDayId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
     get:
       operationId: getEventDay
       responses:
@@ -524,6 +600,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EventDayDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -566,18 +644,21 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/eventDay/{eventDayId}/races:
+  /event/{eventId}/eventDay/{eventDayId}/competitions:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/eventDayId'
     put:
-      operationId: assignRacesToEventDay
+      operationId: assignCompetitionsToEventDay
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignRacesToDayRequest'
+              $ref: '#/components/schemas/AssignCompetitionsToDayRequest'
       responses:
         204:
-          description: Races successfully assigned to day
+          description: Competitions successfully assigned to day
         400:
           $ref: '#/components/responses/400'
         401:
@@ -588,15 +669,17 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/race:
+  /event/{eventId}/competition:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     post:
-      operationId: addRace
+      operationId: addCompetition
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceRequest'
+              $ref: '#/components/schemas/CompetitionRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -611,7 +694,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaces
+      operationId: getCompetitions
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -626,7 +709,7 @@ paths:
           required: false
       responses:
         200:
-          description: Race page successfully retrieved
+          description: Competition page successfully retrieved
           content:
             application/json:
               schema:
@@ -639,7 +722,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RaceDto'
+                      $ref: '#/components/schemas/CompetitionDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -650,16 +733,21 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/race/{raceId}:
+  /event/{eventId}/competition/{competitionId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
     get:
-      operationId: getRace
+      operationId: getCompetition
       responses:
         200:
-          description: Race successfully retrieved
+          description: Competition successfully retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceDto'
+                $ref: '#/components/schemas/CompetitionDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -669,16 +757,16 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
-      operationId: updateRace
+      operationId: updateCompetition
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceRequest'
+              $ref: '#/components/schemas/CompetitionRequest'
       responses:
         204:
-          description: Race successfully updated
+          description: Competition successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -690,10 +778,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteRace
+      operationId: deleteCompetition
       responses:
         204:
-          description: Race successfully deleted
+          description: Competition successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
@@ -702,18 +790,21 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/race/{raceId}/days:
+  /event/{eventId}/competition/{competitionId}/days:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
     put:
-      operationId: assignDaysToRace
+      operationId: assignDaysToCompetition
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignDaysToRaceRequest'
+              $ref: '#/components/schemas/AssignDaysToCompetitionRequest'
       responses:
         204:
-          description: Days successfully assigned to race
+          description: Days successfully assigned to competition
         400:
           $ref: '#/components/responses/400'
         401:
@@ -724,15 +815,15 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /raceTemplate:
+  /competitionTemplate:
     post:
-      operationId: addRaceTemplate
+      operationId: addCompetitionTemplate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceTemplateRequest'
+              $ref: '#/components/schemas/CompetitionTemplateRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -745,7 +836,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaceTemplates
+      operationId: getCompetitionTemplates
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -753,7 +844,7 @@ paths:
         - $ref: '#/components/parameters/search'
       responses:
         200:
-          description: RaceTemplate page successfully retrieved
+          description: CompetitionTemplate page successfully retrieved
           content:
             application/json:
               schema:
@@ -766,7 +857,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RaceTemplateDto'
+                      $ref: '#/components/schemas/CompetitionTemplateDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -775,16 +866,25 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /raceTemplate/{raceTemplateId}:
+  /competitionTemplate/{competitionTemplateId}:
+    parameters:
+      - name: competitionTemplateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     get:
-      operationId: getRaceTemplate
+      operationId: getCompetitionTemplate
       responses:
         200:
-          description: RaceTemplate successfully retrieved
+          description: CompetitionTemplate successfully retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceTemplateDto'
+                $ref: '#/components/schemas/CompetitionTemplateDto'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -794,16 +894,16 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
-      operationId: updateRaceTemplate
+      operationId: updateCompetitionTemplate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceTemplateRequest'
+              $ref: '#/components/schemas/CompetitionTemplateRequest'
       responses:
         204:
-          description: RaceTemplate successfully updated
+          description: CompetitionTemplate successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -815,10 +915,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteRaceTemplate
+      operationId: deleteCompetitionTemplate
       responses:
         204:
-          description: RaceTemplate successfully deleted
+          description: CompetitionTemplate successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
@@ -874,6 +974,13 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /namedParticipant/{namedParticipantId}:
+    parameters:
+      - name: namedParticipantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     put:
       operationId: updateNamedParticipant
       requestBody:
@@ -910,15 +1017,15 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /raceCategory:
+  /competitionCategory:
     post:
-      operationId: addRaceCategory
+      operationId: addCompetitionCategory
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceCategoryRequest'
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -931,10 +1038,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaceCategories
+      operationId: getCompetitionCategories
       responses:
         200:
-          description: RaceCategory list successfully retrieved
+          description: CompetitionCategory list successfully retrieved
           content:
             application/json:
               schema:
@@ -947,7 +1054,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RaceCategoryDto'
+                      $ref: '#/components/schemas/CompetitionCategoryDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -956,18 +1063,25 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /raceCategory/{raceCategoryId}:
+  /competitionCategory/{competitionCategoryId}:
+    parameters:
+      - name: competitionCategoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     put:
-      operationId: updateRaceCategory
+      operationId: updateCompetitionCategory
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceCategoryRequest'
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
       responses:
         204:
-          description: RaceCategory successfully updated
+          description: CompetitionCategory successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -979,16 +1093,28 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteRaceCategory
+      operationId: deleteCompetitionCategory
       responses:
         204:
-          description: RaceCategory successfully deleted
+          description: CompetitionCategory successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /captcha:
+    post:
+      operationId: newCaptcha
+      responses:
+        200:
+          description: New Captcha successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaptchaDto'
         500:
           $ref: '#/components/responses/500'
 
@@ -1001,6 +1127,8 @@ paths:
 components:
 
   parameters:
+
+    # query
 
     limit:
       name: limit
@@ -1034,6 +1162,53 @@ components:
       schema:
         type: string
 
+
+    challenge:
+      name: challenge
+      in: query
+      description: Captcha challenge id
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    input:
+      name: input
+      in: query
+      description: Captcha solution
+      required: true
+      schema:
+        type: integer
+
+
+    # path params
+
+    eventId:
+      name: eventId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    eventDayId:
+      name: eventDayId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    competitionId:
+      name: competitionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+
+
   responses:
 
     201:
@@ -1052,7 +1227,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/BadRequestError'
 
     401:
       description: Unauthorized
@@ -1087,7 +1262,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/UnprocessableEntityError'
+
+    429:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TooManyRequestsError'
 
     500:
       description: Server Error
@@ -1095,6 +1277,14 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiError'
+
+
+    409EmailInUse:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UnprocessableEntityError'
 
   schemas:
 
@@ -1123,9 +1313,14 @@ components:
     EmailLanguage:
       type: string
       enum:
-        - de
-        - en
+        - DE
+        - EN
 
+    ErrorCode:
+      type: string
+      enum:
+        - CAPTCHA_WRONG
+        - EMAIL_IN_USE
 
 
     # error
@@ -1148,7 +1343,133 @@ components:
               type: string
         message:
           type: string
-        details: {}
+        errorCode:
+          $ref: '#/components/schemas/ErrorCode'
+
+
+    BadRequestError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          properties:
+            details:
+              type: object
+              properties:
+                validExample: { }
+
+
+    UnprocessableEntityError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          required:
+            - details
+          properties:
+            details:
+              oneOf:
+                - type: object
+                  required:
+                    - reason
+                  properties:
+                    reason:
+                      $ref: '#/components/schemas/Invalid'
+                - type: object
+                  required:
+                    - result
+                  properties:
+                    result:
+                      $ref: '#/components/schemas/Invalid'
+
+
+    TooManyRequestsError:
+      allOf:
+        - $ref: '#/components/schemas/ApiError'
+        - type: object
+          required:
+            - details
+          properties:
+            details:
+              type: object
+              required:
+                - retryAfter
+              properties:
+                retryAfter:
+                  type: integer
+
+    Invalid:
+      oneOf:
+        - type: string
+        - type: object
+          required:
+            - field
+            - error
+          properties:
+            field:
+              type: string
+            error:
+              $ref: '#/components/schemas/Invalid'
+        - type: object
+          required:
+            - errorPositions
+          properties:
+            errorPositions: { }
+        - $ref: '#/components/schemas/Duplicate'
+        - type: object
+          required:
+            - duplicates
+          properties:
+            duplicates:
+              type: array
+              items:
+                $ref: '#/components/schemas/Duplicate'
+        - type: object
+          required:
+            - value
+            - pattern
+          properties:
+            value:
+              type: string
+            pattern:
+              type: string
+        - type: object
+          required:
+            - allOf
+          properties:
+            allOf:
+              type: array
+              items:
+                $ref: '#/components/schemas/Invalid'
+        - type: object
+          required:
+            - anyOf
+          properties:
+            anyOf:
+              type: array
+              items:
+                $ref: '#/components/schemas/Invalid'
+        - type: object
+          required:
+            - oneOf
+          properties:
+            oneOf:
+              type: array
+              items:
+                oneOf:
+                  - $ref: '#/components/schemas/Invalid'
+                  - type: object
+
+
+
+    Duplicate:
+      type: object
+      required:
+        - value
+        - count
+      properties:
+        value: { }
+        count:
+          type: integer
+
 
 
     # authentication / authorization
@@ -1443,6 +1764,31 @@ components:
         password:
           type: string
 
+
+    PasswordResetInitRequest:
+      type: object
+      required:
+        - email
+        - language
+        - callbackUrl
+      properties:
+        email:
+          type: string
+        language:
+          $ref: '#/components/schemas/EmailLanguage'
+        callbackUrl:
+          type: string
+          format: url
+
+    PasswordResetRequest:
+      type: object
+      required:
+        - password
+      properties:
+        password:
+          type: string
+
+
     # role
 
     RoleDto:
@@ -1565,13 +1911,12 @@ components:
           type: string
 
 
-    AssignRacesToDayRequest:
-      type:
-        object
+    AssignCompetitionsToDayRequest:
+      type: object
       required:
-        - races
+        - competitions
       properties:
-        races:
+        competitions:
           type: array
           items:
             type: string
@@ -1579,9 +1924,9 @@ components:
 
 
 
-    # raceProperties
+    # competitionProperties
 
-    RacePropertiesDto:
+    CompetitionPropertiesDto:
       type: object
       required:
         - identifier
@@ -1590,8 +1935,6 @@ components:
         - countFemales
         - countNonBinary
         - countMixed
-        - participationFee
-        - rentalFee
         - namedParticipants
       properties:
         identifier:
@@ -1610,21 +1953,15 @@ components:
           type: integer
         countMixed:
           type: integer
-        participationFee:
-          type: string
-          format: decimal
-        rentalFee:
-          type: string
-          format: decimal
-        raceCategory:
-          $ref: '#/components/schemas/RaceCategoryDto'
+        competitionCategory:
+          $ref: '#/components/schemas/CompetitionCategoryDto'
         namedParticipants:
           type: array
           items:
-            $ref: '#/components/schemas/NamedParticipantForRaceDto'
+            $ref: '#/components/schemas/NamedParticipantForCompetitionDto'
 
 
-    NamedParticipantForRaceDto:
+    NamedParticipantForCompetitionDto:
       type: object
       required:
         - id
@@ -1654,7 +1991,7 @@ components:
           type: integer
 
 
-    RacePropertiesRequestDto:
+    CompetitionPropertiesRequestDto:
       type: object
       required:
         - identifier
@@ -1663,8 +2000,6 @@ components:
         - countFemales
         - countNonBinary
         - countMixed
-        - participationFee
-        - rentalFee
         - namedParticipants
       properties:
         identifier:
@@ -1683,22 +2018,16 @@ components:
           type: integer
         countMixed:
           type: integer
-        participationFee:
-          type: string
-          format: decimal
-        rentalFee:
-          type: string
-          format: decimal
-        raceCategory:
+        competitionCategory:
           type: string
           format: uuid
         namedParticipants:
           type: array
           items:
-            $ref: '#/components/schemas/NamedParticipantForRaceRequestDto'
+            $ref: '#/components/schemas/NamedParticipantForCompetitionRequestDto'
 
 
-    NamedParticipantForRaceRequestDto:
+    NamedParticipantForCompetitionRequestDto:
       type: object
       required:
         - namedParticipant
@@ -1724,9 +2053,9 @@ components:
 
 
 
-    # race
+    # competition
 
-    RaceDto:
+    CompetitionDto:
       type: object
       required:
         - id
@@ -1740,27 +2069,24 @@ components:
           type: string
           format: uuid
         properties:
-          $ref: '#/components/schemas/RacePropertiesDto'
+          $ref: '#/components/schemas/CompetitionPropertiesDto'
         template:
           type: string
           format: uuid
 
 
-    RaceRequest:
+    CompetitionRequest:
       type: object
-      required:
-        - properties
       properties:
         properties:
-          $ref: '#/components/schemas/RacePropertiesRequestDto'
+          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
         template:
           type: string
           format: uuid
 
 
-    AssignDaysToRaceRequest:
-      type:
-        object
+    AssignDaysToCompetitionRequest:
+      type: object
       required:
         - days
       properties:
@@ -1772,9 +2098,9 @@ components:
 
 
 
-    # raceTemplate
+    # competitionTemplate
 
-    RaceTemplateDto:
+    CompetitionTemplateDto:
       type: object
       required:
         - id
@@ -1784,24 +2110,23 @@ components:
           type: string
           format: uuid
         properties:
-          $ref: '#/components/schemas/RacePropertiesDto'
+          $ref: '#/components/schemas/CompetitionPropertiesDto'
 
 
-    RaceTemplateRequest:
+    CompetitionTemplateRequest:
       type: object
       required:
         - properties
       properties:
         properties:
-          $ref: '#/components/schemas/RacePropertiesRequestDto'
+          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
 
 
 
     # namedParticipant
 
     NamedParticipantDto:
-      type:
-        object
+      type: object
       required:
         - id
         - name
@@ -1815,8 +2140,7 @@ components:
           type: string
 
     NamedParticipantRequest:
-      type:
-        object
+      type: object
       required:
         - name
       properties:
@@ -1826,11 +2150,10 @@ components:
           type: string
 
 
-    # raceCategory
+    # competitionCategory
 
-    RaceCategoryDto:
-      type:
-        object
+    CompetitionCategoryDto:
+      type: object
       required:
         - id
         - name
@@ -1843,9 +2166,8 @@ components:
         description:
           type: string
 
-    RaceCategoryRequest:
-      type:
-        object
+    CompetitionCategoryRequest:
+      type: object
       required:
         - name
       properties:
@@ -1853,3 +2175,32 @@ components:
           type: string
         description:
           type: string
+
+
+
+    # captcha
+
+    CaptchaDto:
+      type: object
+      required:
+        - id
+        - imgSrc
+        - solutionMin
+        - solutionMax
+        - handleToHeightRatio
+        - start
+      properties:
+        id:
+          type: string
+          format: uuid
+        imgSrc:
+          type: string
+          format: base64
+        solutionMin:
+          type: integer
+        solutionMax:
+          type: integer
+        handleToHeightRatio:
+          type: number
+        start:
+          type: integer

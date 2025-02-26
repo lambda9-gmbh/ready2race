@@ -1,9 +1,9 @@
 import {ReactElement} from 'react'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
-import {Privilege} from '../../api'
 import {ListItem, ListItemButton, ListItemIcon, ListItemText} from '@mui/material'
 import {useSidebar} from './SidebarContext.ts'
-import {useUser} from '../../contexts/user/UserContext.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {Privilege} from "@api/types.gen.ts";
 
 type Props = {
     text: string

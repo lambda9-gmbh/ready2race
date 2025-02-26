@@ -32,3 +32,5 @@ create table app_user_password_reset
     app_user   uuid      not null references app_user on delete cascade,
     expires_at timestamp not null
 );
+
+create index on app_user_password_reset (expires_at);

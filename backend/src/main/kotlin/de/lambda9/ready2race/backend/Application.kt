@@ -11,10 +11,11 @@ import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.control.PrivilegeRepo
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
+import de.lambda9.ready2race.backend.app.role.control.RoleRepo
+import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
-import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
@@ -262,6 +263,18 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             scheduleFixed(1.hours) {
                 AppUserService.deleteExpiredInvitations().map {
                     logger.info { "${"expired invitations".count(it)} deleted" }
+                }
+            }
+
+            scheduleFixed(1.hours) {
+                AppUserService.deleteExpiredPasswordResets().map {
+                    logger.info { "${"expired password resets".count(it)} deleted" }
+                }
+            }
+
+            scheduleFixed(5.minutes){
+                CaptchaService.deleteExpired().map{
+                    logger.info { "${"expired captchas".count(it)} deleted" }
                 }
             }
 

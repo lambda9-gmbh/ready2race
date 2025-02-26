@@ -7,6 +7,10 @@
     },
     "delete": "Delete",
     "edit": "Edit",
+    "error": {
+      "unexpected": "An unexpected error has occurred. Please try again later.",
+      "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
+    },
     "form": {
       "autocomplete": {
         "noOptions": "No options",
@@ -18,6 +22,9 @@
       "dateTime": {
         "invalid": "Please select a valid date and time."
       },
+      "email": {
+        "invalid": "Please enter a valid email adress."
+      },
       "number": {
         "invalid": {
           "pattern": {
@@ -27,6 +34,7 @@
           "range": "Please enter a number between {{min}} and {{max}}."
         }
       },
+      "optional": "Optional",
       "required": "Please fill in this field."
     },
     "load": {
@@ -65,26 +73,21 @@
     "titles": {
       "dashboard": "Dashboard",
       "events": "Events",
-      "raceConfig": "Race Settings",
+      "competitionConfig": "Competition Settings",
       "roles": "Roles",
       "users": "Users"
     }
-  },
-  "login": {
-    "email": "Email",
-    "password": "Password"
   },
   "event": {
     "assign": {
       "save": {
         "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
         "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
-      },
-      "title": "{{toBeAssigned}} for the {{assignedTo}}"
+      }
     },
     "event": "Event",
     "eventDay": {
-      "assignedRaces": "Races for the day",
+      "assignedCompetitions": "Competitions for the day",
       "date": "Date",
       "eventDay": "Day",
       "eventDays": "Days"
@@ -93,7 +96,8 @@
       "prefix": "Invoice prefix"
     },
     "location": "Location",
-    "race": {
+    "competition": {
+      "assignedDays": "Days of the competition",
       "category": {
         "category": "Category",
         "categories": "Categories"
@@ -115,10 +119,8 @@
         },
         "role": "Role"
       },
-      "participationFee": "Registration fee",
-      "race": "Race",
-      "races": "Races",
-      "rentalFee": "Rental fee",
+      "competition": "Competition",
+      "competitions": "Competitions",
       "shortName": "Short name",
       "template": {
         "template": "Template",
@@ -131,6 +133,7 @@
     }
   },
   "user": {
+    "user": "User",
     "email": "Email",
     "firstname": "Firstname",
     "invitation": {
@@ -138,27 +141,103 @@
     },
     "lastname": "Lastname",
     "password": "Password",
+    "login": {
+      "login": "Login",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "signUp": {
+        "link": "Register here",
+        "message": "Don't have an account?"
+      },
+      "submit": "Login",
+      "error": {
+        "credentials": "Incorrect credentials",
+        "tooManyRequests": "Too many login requests. Try again later."
+      }
+    },
+    "settings": {
+      "menu": "User settings",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "page": {
+      "error": {
+        "load": "Profile could not be loaded"
+      }
+    },
     "registration": {
+      "register": "Register",
       "email": {
+        "emailSent": {
+          "header": "Please verify your email",
+          "message": {
+            "part1": "We've sent you an email to verify your email adress and activate your account.",
+            "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+          }
+        },
         "inUse": {
           "statement": "The email address you entered is already in use.",
           "callToAction": "Please use a different email address or log in with the existing one."
+        },
+        "verified": {
+          "header": "Email verified",
+          "message": "Your email adress has been successfully verified. Your account is now activated."
         }
       },
       "error": "An error has occurred during registration",
       "password": {
         "confirm": "Confirm password",
+        "minLength": "{{min}} or more characters",
         "notMatching": "The two passwords you entered do not match. Please ensure that they are identical.",
         "tooShort": "Please enter a password with at least {{min}} characters"
       },
-      "register": "Register",
-      "registration": "Registration"
+      "login": {
+        "link": "Login here",
+        "message": "Already have an account?"
+      }
     },
-    "user": "User"
+    "resetPassword": {
+      "resetPassword": "Reset password",
+      "forgotPassword": "Forgot your password?",
+      "init": {
+        "instruction": "Enter your email adress and we'll send you a link to reset your password.",
+        "submit": "Reset password"
+      },
+      "emailSent": {
+        "header": "Check your email",
+        "message": {
+          "part1": "We've sent you an email with further instructions to reset your password.",
+          "part2": "If you don't see it, you may need to check your spam folder."
+        }
+      },
+      "newPassword": "New Passwort",
+      "success": {
+        "header": "Password changed!",
+        "message": "Your password has been successfully changed."
+      },
+      "error": {
+        "header": "An error has occurred",
+        "message": {
+          "part1": "An error has occurred when resetting your password.",
+          "part2": "Make sure that you are using the correct and complete link from the email. Only the last link sent is valid. The link is valid for 24 hours."
+        },
+        "invalid": "The form sent was invalid"
+      }
+    }
   },
   "role": {
-    "role": "Role",
-    "name": "Name",
-    "description": "Description"
+    "role": "Role"
+  },
+  "captcha": {
+    "instruction": {
+      "desktop": "Use the mouse to move the logo into the small circle",
+      "mobile": "Use your finger to move the logo into the small circle"
+    },
+    "error": {
+      "createCaptcha": "An unexpected error has occurred when creating a CAPTCHA",
+      "incorrect": "CAPTCHA was not solved correctly",
+      "notFound": "The CAPTCHA is outdated"
+    },
+    "loading": "Loading CAPTCHA..."
   }
 }

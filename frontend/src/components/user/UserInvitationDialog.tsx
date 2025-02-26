@@ -1,11 +1,13 @@
-import {BaseEntityDialogProps} from '../../utils/types.ts'
-import {AppUserInvitationDto, EmailLanguage, InviteRequest, inviteUser} from '../../api'
-import i18next from 'i18next'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
-import EntityDialog from '../EntityDialog.tsx'
+import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
-import {FormInputText} from '../form/input/FormInputText.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {AppUserInvitationDto, InviteRequest} from "@api/types.gen.ts";
+import {inviteUser} from "@api/sdk.gen.ts";
+import {i18nLanguage, languageMapping} from "@utils/helpers.ts";
+import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
 
 type InvitationForm = {
     email: string
@@ -26,7 +28,7 @@ const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
     firstname: formData.firstname,
     lastname: formData.lastname,
     roles: formData.roles,
-    language: i18next.language as EmailLanguage,
+    language: languageMapping[i18nLanguage()],
     callbackUrl: location.origin + location.pathname + '/',
 })
 
@@ -44,10 +46,10 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
 
     return (
         <EntityDialog {...props} formContext={formContext} onOpen={onOpen} addAction={addAction}>
-            <Stack spacing={2}>
+            <Stack spacing={4}>
                 <FormInputText name={'firstname'} label={'[todo] Vorname'} required />
                 <FormInputText name={'lastname'} label={'[todo] Nachname'} required />
-                <FormInputText name={'email'} label={'[todo] E-Mail'} required />
+                <FormInputEmail name={'email'} label={'[todo] E-Mail'} required />
             </Stack>
         </EntityDialog>
     )

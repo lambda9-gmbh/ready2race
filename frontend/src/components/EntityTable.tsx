@@ -1,4 +1,3 @@
-import {Pagination, Resource} from '../api'
 import {
     DataGrid,
     DataGridProps,
@@ -12,16 +11,17 @@ import {
     GridValidRowModel,
 } from '@mui/x-data-grid'
 import {ReactElement, useState} from 'react'
-import {paginationParameters, PaginationParameters} from '../utils/ApiUtils.ts'
-import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '../utils/types.ts'
+import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
+import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
-import {useDebounce, useFeedback, useFetch} from '../utils/hooks.ts'
-import {useConfirmation} from '../contexts/confirmation/ConfirmationContext.ts'
+import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Box, Button, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
-import {useUser} from '../contexts/user/UserContext.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {Pagination, Resource} from "@api/types.gen.ts";
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
@@ -210,7 +210,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
                                       setIsDeletingRow(false)
                                       if (error) {
                                           // todo better error display with specific error types
-                                          console.log(error)
+                                          console.error(error)
                                           feedback.error(
                                               t('entity.delete.error', {entity: entityName}),
                                           )
@@ -250,7 +250,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
 
     return (
         <Box>
-            {title && <Typography variant={'h6'}>{title}</Typography>}
+            {title && <Typography variant={'h2'}>{title}</Typography>}
             <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
                 {withSearch && (
                     <TextField

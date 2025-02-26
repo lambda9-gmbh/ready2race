@@ -1,5 +1,5 @@
 import {GridActionsCellItemProps} from '@mui/x-data-grid'
-import {Privilege} from '../api'
+import {Privilege} from '@api/types.gen.ts'
 import {ReactElement} from 'react'
 import {UseEntityAdministrationOptions} from './hooks.ts'
 
