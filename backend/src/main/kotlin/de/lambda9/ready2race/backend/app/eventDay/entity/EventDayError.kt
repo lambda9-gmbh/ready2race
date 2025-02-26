@@ -9,14 +9,14 @@ import java.util.*
 sealed interface EventDayError : ServiceError {
     data object EventDayNotFound : EventDayError
 
-    data class RacesNotFound(val races: List<UUID>) : EventDayError
+    data class CompetitionsNotFound(val competitions: List<UUID>) : EventDayError
 
     override fun respond(): ApiError = when (this) {
         EventDayNotFound -> ApiError(HttpStatusCode.NotFound, message = "EventDay not found")
-        is RacesNotFound -> ApiError(
+        is CompetitionsNotFound -> ApiError(
             HttpStatusCode.BadRequest,
-            message = "Races not found",
-            details = mapOf("unknownIds" to races)
+            message = "Competitions not found",
+            details = mapOf("unknownIds" to competitions)
         )
     }
 }

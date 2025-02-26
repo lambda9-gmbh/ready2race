@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.database.generated.tables.EventDay
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_RACE
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -47,9 +47,9 @@ object EventDayRepo {
         }
     }
 
-    fun countByEventAndRace(
+    fun countByEventAndCompetition(
         eventId: UUID,
-        raceId: UUID,
+        competitionId: UUID,
         search: String?
     ): JIO<Int> = Jooq.query {
         with(EVENT_DAY) {
@@ -57,9 +57,9 @@ object EventDayRepo {
                 this, DSL.and(
                     EVENT.eq(eventId).and(
                         ID.`in`(
-                            select(EVENT_DAY_HAS_RACE.EVENT_DAY)
-                                .from(EVENT_DAY_HAS_RACE)
-                                .where(EVENT_DAY_HAS_RACE.RACE.eq(raceId))
+                            select(EVENT_DAY_HAS_COMPETITION.EVENT_DAY)
+                                .from(EVENT_DAY_HAS_COMPETITION)
+                                .where(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(competitionId))
                         )
                     ), search.metaSearch(searchFields())
                 )
@@ -80,9 +80,9 @@ object EventDayRepo {
         }
     }
 
-    fun pageByEventAndRace(
+    fun pageByEventAndCompetition(
         eventId: UUID,
-        raceId: UUID,
+        competitionId: UUID,
         params: PaginationParameters<EventDaySort>
     ): JIO<List<EventDayRecord>> = Jooq.query {
         with(EVENT_DAY) {
@@ -91,9 +91,9 @@ object EventDayRepo {
                     EVENT.eq(eventId)
                         .and(
                             ID.`in`(
-                                select(EVENT_DAY_HAS_RACE.EVENT_DAY)
-                                    .from(EVENT_DAY_HAS_RACE)
-                                    .where(EVENT_DAY_HAS_RACE.RACE.eq(raceId))
+                                select(EVENT_DAY_HAS_COMPETITION.EVENT_DAY)
+                                    .from(EVENT_DAY_HAS_COMPETITION)
+                                    .where(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(competitionId))
                             )
                         )
                 }

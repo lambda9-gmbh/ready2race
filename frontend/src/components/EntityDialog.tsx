@@ -28,6 +28,7 @@ type ExtendedEntityDialogProps<
     editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
 }
 
+//todo: add semantic tabs
 const EntityDialog = <
     Entity extends GridValidRowModel,
     Form extends FieldValues,

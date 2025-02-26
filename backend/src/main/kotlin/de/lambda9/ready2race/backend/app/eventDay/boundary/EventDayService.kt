@@ -4,13 +4,13 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
-import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasRaceRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.control.toRecord
 import de.lambda9.ready2race.backend.app.eventDay.entity.*
-import de.lambda9.ready2race.backend.app.race.control.RaceRepo
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasRaceRecord
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -39,18 +39,18 @@ object EventDayService {
     fun pageByEvent(
         eventId: UUID,
         params: PaginationParameters<EventDaySort>,
-        raceId: UUID?
+        competitionId: UUID?
     ): App<ServiceError, ApiResponse.Page<EventDayDto, EventDaySort>> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
 
         val total =
-            if (raceId == null) !EventDayRepo.countByEvent(eventId, params.search).orDie()
-            else !EventDayRepo.countByEventAndRace(eventId, raceId, params.search).orDie()
+            if (competitionId == null) !EventDayRepo.countByEvent(eventId, params.search).orDie()
+            else !EventDayRepo.countByEventAndCompetition(eventId, competitionId, params.search).orDie()
 
         val page =
-            if (raceId == null) !EventDayRepo.pageByEvent(eventId, params).orDie()
-            else !EventDayRepo.pageByEventAndRace(eventId, raceId, params).orDie()
+            if (competitionId == null) !EventDayRepo.pageByEvent(eventId, params).orDie()
+            else !EventDayRepo.pageByEventAndCompetition(eventId, competitionId, params).orDie()
 
         page.forEachM { it.eventDayDto() }.map {
             ApiResponse.Page(
@@ -94,8 +94,8 @@ object EventDayService {
         }
     }
 
-    fun updateEventDayHasRace(
-        request: AssignRacesToDayRequest,
+    fun updateEventDayHasCompetition(
+        request: AssignCompetitionsToDayRequest,
         userId: UUID,
         eventDayId: UUID
     ): App<EventDayError, ApiResponse.NoData> = KIO.comprehension {
@@ -103,14 +103,14 @@ object EventDayService {
         val eventDayExists = !EventDayRepo.exists(eventDayId).orDie()
         if (!eventDayExists) KIO.fail(EventDayError.EventDayNotFound)
 
-        val unknownRaces = !RaceRepo.findUnknown(request.races).orDie()
-        if (unknownRaces.isNotEmpty()) KIO.fail(EventDayError.RacesNotFound(unknownRaces))
+        val unknownCompetitions = !CompetitionRepo.findUnknown(request.competitions).orDie()
+        if (unknownCompetitions.isNotEmpty()) KIO.fail(EventDayError.CompetitionsNotFound(unknownCompetitions))
 
-        !EventDayHasRaceRepo.deleteByEventDay(eventDayId).orDie()
-        !EventDayHasRaceRepo.create(request.races.map {
-            EventDayHasRaceRecord(
+        !EventDayHasCompetitionRepo.deleteByEventDay(eventDayId).orDie()
+        !EventDayHasCompetitionRepo.create(request.competitions.map {
+            EventDayHasCompetitionRecord(
                 eventDay = eventDayId,
-                race = it,
+                competition = it,
                 createdAt = LocalDateTime.now(),
                 createdBy = userId
             )

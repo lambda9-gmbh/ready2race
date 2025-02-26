@@ -8,8 +8,8 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipan
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantError
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
-import de.lambda9.ready2race.backend.app.raceProperties.control.RacePropertiesHasNamedParticipantRepo
-import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
+import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionsOrTemplatesContainingNamedParticipant
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -64,16 +64,16 @@ object NamedParticipantService {
         namedParticipantId: UUID,
     ): App<NamedParticipantError, ApiResponse.NoData> = KIO.comprehension {
 
-        // Checks if NamedParticipant is referenced by either Race or RaceTemplate - If so, it fails
+        // Checks if NamedParticipant is referenced by either Competition or CompetitionTemplate - If so, it fails
         val propertiesContainingNamedParticipants =
-            !RacePropertiesHasNamedParticipantRepo.getByNamedParticipant(namedParticipantId).orDie()
+            !CompetitionPropertiesHasNamedParticipantRepo.getByNamedParticipant(namedParticipantId).orDie()
                 .map { list ->
-                    RacesOrTemplatesContainingNamedParticipant(
-                        templates = list.filter { it.raceTemplateId != null }.ifEmpty { null },
-                        races = list.filter { it.raceId != null }.ifEmpty { null },
+                    CompetitionsOrTemplatesContainingNamedParticipant(
+                        templates = list.filter { it.competitionTemplateId != null }.ifEmpty { null },
+                        competitions = list.filter { it.competitionId != null }.ifEmpty { null },
                     )
                 }
-        if (!propertiesContainingNamedParticipants.races.isNullOrEmpty() || !propertiesContainingNamedParticipants.templates.isNullOrEmpty()) {
+        if (!propertiesContainingNamedParticipants.competitions.isNullOrEmpty() || !propertiesContainingNamedParticipants.templates.isNullOrEmpty()) {
             return@comprehension KIO.fail(
                 NamedParticipantError.NamedParticipantIsInUse(
                     propertiesContainingNamedParticipants

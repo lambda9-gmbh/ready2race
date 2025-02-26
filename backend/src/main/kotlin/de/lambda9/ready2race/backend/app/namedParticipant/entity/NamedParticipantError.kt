@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.raceProperties.entity.RacesOrTemplatesContainingNamedParticipant
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionsOrTemplatesContainingNamedParticipant
 import de.lambda9.ready2race.backend.count
 import de.lambda9.ready2race.backend.responses.ApiError
 import io.ktor.http.*
@@ -9,7 +9,7 @@ import io.ktor.http.*
 sealed interface NamedParticipantError : ServiceError {
     data object NamedParticipantNotFound : NamedParticipantError
 
-    data class NamedParticipantIsInUse(val racesOrTemplates: RacesOrTemplatesContainingNamedParticipant) :
+    data class NamedParticipantIsInUse(val competitionsOrTemplates: CompetitionsOrTemplatesContainingNamedParticipant) :
         NamedParticipantError
 
     override fun respond(): ApiError = when (this) {
@@ -21,9 +21,9 @@ sealed interface NamedParticipantError : ServiceError {
         is NamedParticipantIsInUse -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "NamedParticipant is contained in " +
-                if (racesOrTemplates.races != null) {
-                    "race".count(racesOrTemplates.races.size) +
-                        if (racesOrTemplates.templates != null) {
+                if (competitionsOrTemplates.competitions != null) {
+                    "competition".count(competitionsOrTemplates.competitions.size) +
+                        if (competitionsOrTemplates.templates != null) {
                             " and "
                         } else {
                             ""
@@ -31,12 +31,12 @@ sealed interface NamedParticipantError : ServiceError {
                 } else {
                     ""
                 } +
-                if (racesOrTemplates.templates != null) {
-                    "templates".count(racesOrTemplates.templates.size)
+                if (competitionsOrTemplates.templates != null) {
+                    "templates".count(competitionsOrTemplates.templates.size)
                 } else {
                     ""
                 },
-            details = mapOf("entitiesContainingNamedParticipants" to racesOrTemplates)
+            details = mapOf("entitiesContainingNamedParticipants" to competitionsOrTemplates)
         )
     }
 }

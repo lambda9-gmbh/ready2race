@@ -73,7 +73,7 @@
     "titles": {
       "dashboard": "Dashboard",
       "events": "Events",
-      "raceConfig": "Race Settings",
+      "competitionConfig": "Competition Settings",
       "roles": "Roles",
       "users": "Users"
     }
@@ -87,7 +87,7 @@
     },
     "event": "Event",
     "eventDay": {
-      "assignedRaces": "Races for the day",
+      "assignedCompetitions": "Competitions for the day",
       "date": "Date",
       "eventDay": "Day",
       "eventDays": "Days"
@@ -96,8 +96,8 @@
       "prefix": "Invoice prefix"
     },
     "location": "Location",
-    "race": {
-      "assignedDays": "Days of the race",
+    "competition": {
+      "assignedDays": "Days of the competition",
       "category": {
         "category": "Category",
         "categories": "Categories"
@@ -119,10 +119,8 @@
         },
         "role": "Role"
       },
-      "participationFee": "Registration fee",
-      "race": "Race",
-      "races": "Races",
-      "rentalFee": "Rental fee",
+      "competition": "Competition",
+      "competitions": "Competitions",
       "shortName": "Short name",
       "template": {
         "template": "Template",

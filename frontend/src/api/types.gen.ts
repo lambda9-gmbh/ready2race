@@ -48,7 +48,11 @@ export type AppUserRegistrationDto = {
     assignedEmail?: AssignedEmailDto
 }
 
-export type AssignDaysToRaceRequest = {
+export type AssignCompetitionsToDayRequest = {
+    competitions: Array<string>
+}
+
+export type AssignDaysToCompetitionRequest = {
     days: Array<string>
 }
 
@@ -57,10 +61,6 @@ export type AssignedEmailDto = {
     sentAt?: string
     lastErrorAt?: string
     lastError?: string
-}
-
-export type AssignRacesToDayRequest = {
-    races: Array<string>
 }
 
 export type BadRequestError = ApiError & {
@@ -76,6 +76,64 @@ export type CaptchaDto = {
     solutionMax: number
     handleToHeightRatio: number
     start: number
+}
+
+export type CompetitionCategoryDto = {
+    id: string
+    name: string
+    description?: string
+}
+
+export type CompetitionCategoryRequest = {
+    name: string
+    description?: string
+}
+
+export type CompetitionDto = {
+    id: string
+    event: string
+    properties: CompetitionPropertiesDto
+    template?: string
+}
+
+export type CompetitionPropertiesDto = {
+    identifier: string
+    name: string
+    shortName?: string
+    description?: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+    competitionCategory?: CompetitionCategoryDto
+    namedParticipants: Array<NamedParticipantForCompetitionDto>
+}
+
+export type CompetitionPropertiesRequestDto = {
+    identifier: string
+    name: string
+    shortName?: string
+    description?: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+    competitionCategory?: string
+    namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
+}
+
+export type CompetitionRequest = {
+    properties?: CompetitionPropertiesRequestDto
+    template?: string
+}
+
+export type CompetitionTemplateDto = {
+    id: string
+    properties: CompetitionPropertiesDto
+}
+
+export type CompetitionTemplateRequest = {
+    properties: CompetitionPropertiesRequestDto
 }
 
 export type CreatedByDto = {
@@ -182,7 +240,7 @@ export type NamedParticipantDto = {
     description?: string
 }
 
-export type NamedParticipantForRaceDto = {
+export type NamedParticipantForCompetitionDto = {
     id: string
     name: string
     description?: string
@@ -193,7 +251,7 @@ export type NamedParticipantForRaceDto = {
     countMixed: number
 }
 
-export type NamedParticipantForRaceRequestDto = {
+export type NamedParticipantForCompetitionRequestDto = {
     namedParticipant: string
     required: boolean
     countMales: number
@@ -227,6 +285,8 @@ export type Pagination = {
  */
 export type Parameterchallenge = string
 
+export type ParametercompetitionId = string
+
 export type ParametereventDayId = string
 
 export type ParametereventId = string
@@ -245,8 +305,6 @@ export type Parameterlimit = number
  * Result offset for pagination
  */
 export type Parameteroffset = number
-
-export type ParameterraceId = string
 
 /**
  * Filter result with space-separated search terms for pagination
@@ -279,68 +337,6 @@ export type PrivilegeDto = {
     action: Action
     resource: Resource
     scope: Scope
-}
-
-export type RaceCategoryDto = {
-    id: string
-    name: string
-    description?: string
-}
-
-export type RaceCategoryRequest = {
-    name: string
-    description?: string
-}
-
-export type RaceDto = {
-    id: string
-    event: string
-    properties: RacePropertiesDto
-    template?: string
-}
-
-export type RacePropertiesDto = {
-    identifier: string
-    name: string
-    shortName?: string
-    description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-    participationFee: string
-    rentalFee: string
-    raceCategory?: RaceCategoryDto
-    namedParticipants: Array<NamedParticipantForRaceDto>
-}
-
-export type RacePropertiesRequestDto = {
-    identifier: string
-    name: string
-    shortName?: string
-    description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-    participationFee: string
-    rentalFee: string
-    raceCategory?: string
-    namedParticipants: Array<NamedParticipantForRaceRequestDto>
-}
-
-export type RaceRequest = {
-    properties?: RacePropertiesRequestDto
-    template?: string
-}
-
-export type RaceTemplateDto = {
-    id: string
-    properties: RacePropertiesDto
-}
-
-export type RaceTemplateRequest = {
-    properties: RacePropertiesRequestDto
 }
 
 export type RegisterRequest = {
@@ -711,6 +707,10 @@ export type GetEventDaysData = {
     }
     query?: {
         /**
+         * Optional parameter that filters by competitionId
+         */
+        competitionId?: string
+        /**
          * Page size for pagination
          */
         limit?: number
@@ -718,10 +718,6 @@ export type GetEventDaysData = {
          * Result offset for pagination
          */
         offset?: number
-        /**
-         * Optional parameter that filters by raceId
-         */
-        raceId?: string
         /**
          * Filter result with space-separated search terms for pagination
          */
@@ -774,30 +770,30 @@ export type DeleteEventDayResponse = void
 
 export type DeleteEventDayError = ApiError
 
-export type AssignRacesToEventDayData = {
-    body: AssignRacesToDayRequest
+export type AssignCompetitionsToEventDayData = {
+    body: AssignCompetitionsToDayRequest
     path: {
         eventDayId: string
         eventId: string
     }
 }
 
-export type AssignRacesToEventDayResponse = void
+export type AssignCompetitionsToEventDayResponse = void
 
-export type AssignRacesToEventDayError = BadRequestError | ApiError
+export type AssignCompetitionsToEventDayError = BadRequestError | ApiError
 
-export type AddRaceData = {
-    body: RaceRequest
+export type AddCompetitionData = {
+    body: CompetitionRequest
     path: {
         eventId: string
     }
 }
 
-export type AddRaceResponse = string
+export type AddCompetitionResponse = string
 
-export type AddRaceError = BadRequestError | ApiError
+export type AddCompetitionError = BadRequestError | ApiError
 
-export type GetRacesData = {
+export type GetCompetitionsData = {
     path: {
         eventId: string
     }
@@ -825,68 +821,68 @@ export type GetRacesData = {
     }
 }
 
-export type GetRacesResponse = {
-    data: Array<RaceDto>
+export type GetCompetitionsResponse = {
+    data: Array<CompetitionDto>
     pagination: Pagination
 }
 
-export type GetRacesError = ApiError
+export type GetCompetitionsError = ApiError
 
-export type GetRaceData = {
+export type GetCompetitionData = {
     path: {
+        competitionId: string
         eventId: string
-        raceId: string
     }
 }
 
-export type GetRaceResponse = RaceDto
+export type GetCompetitionResponse = CompetitionDto
 
-export type GetRaceError = BadRequestError | ApiError
+export type GetCompetitionError = BadRequestError | ApiError
 
-export type UpdateRaceData = {
-    body: RaceRequest
+export type UpdateCompetitionData = {
+    body: CompetitionRequest
     path: {
+        competitionId: string
         eventId: string
-        raceId: string
     }
 }
 
-export type UpdateRaceResponse = void
+export type UpdateCompetitionResponse = void
 
-export type UpdateRaceError = BadRequestError | ApiError
+export type UpdateCompetitionError = BadRequestError | ApiError
 
-export type DeleteRaceData = {
+export type DeleteCompetitionData = {
     path: {
+        competitionId: string
         eventId: string
-        raceId: string
     }
 }
 
-export type DeleteRaceResponse = void
+export type DeleteCompetitionResponse = void
 
-export type DeleteRaceError = ApiError
+export type DeleteCompetitionError = ApiError
 
-export type AssignDaysToRaceData = {
-    body: AssignDaysToRaceRequest
+export type AssignDaysToCompetitionData = {
+    body: AssignDaysToCompetitionRequest
     path: {
+        competitionId: string
         eventId: string
-        raceId: string
     }
 }
 
-export type AssignDaysToRaceResponse = void
+export type AssignDaysToCompetitionResponse = void
 
-export type AssignDaysToRaceError = BadRequestError | ApiError
+export type AssignDaysToCompetitionError = BadRequestError | ApiError
 
-export type AddRaceTemplateData = {
-    body: RaceTemplateRequest
+export type AddCompetitionTemplateData = {
+    body: CompetitionTemplateRequest
 }
 
-export type AddRaceTemplateResponse = string
+export type AddCompetitionTemplateResponse = string
 
-export type AddRaceTemplateError = BadRequestError | ApiError
+export type AddCompetitionTemplateError = BadRequestError | ApiError
 
-export type GetRaceTemplatesData = {
+export type GetCompetitionTemplatesData = {
     query?: {
         /**
          * Page size for pagination
@@ -907,43 +903,43 @@ export type GetRaceTemplatesData = {
     }
 }
 
-export type GetRaceTemplatesResponse = {
-    data: Array<RaceTemplateDto>
+export type GetCompetitionTemplatesResponse = {
+    data: Array<CompetitionTemplateDto>
     pagination: Pagination
 }
 
-export type GetRaceTemplatesError = ApiError
+export type GetCompetitionTemplatesError = ApiError
 
-export type GetRaceTemplateData = {
+export type GetCompetitionTemplateData = {
     path: {
-        raceTemplateId: string
+        competitionTemplateId: string
     }
 }
 
-export type GetRaceTemplateResponse = RaceTemplateDto
+export type GetCompetitionTemplateResponse = CompetitionTemplateDto
 
-export type GetRaceTemplateError = BadRequestError | ApiError
+export type GetCompetitionTemplateError = BadRequestError | ApiError
 
-export type UpdateRaceTemplateData = {
-    body: RaceTemplateRequest
+export type UpdateCompetitionTemplateData = {
+    body: CompetitionTemplateRequest
     path: {
-        raceTemplateId: string
+        competitionTemplateId: string
     }
 }
 
-export type UpdateRaceTemplateResponse = void
+export type UpdateCompetitionTemplateResponse = void
 
-export type UpdateRaceTemplateError = BadRequestError | ApiError
+export type UpdateCompetitionTemplateError = BadRequestError | ApiError
 
-export type DeleteRaceTemplateData = {
+export type DeleteCompetitionTemplateData = {
     path: {
-        raceTemplateId: string
+        competitionTemplateId: string
     }
 }
 
-export type DeleteRaceTemplateResponse = void
+export type DeleteCompetitionTemplateResponse = void
 
-export type DeleteRaceTemplateError = ApiError
+export type DeleteCompetitionTemplateError = ApiError
 
 export type AddNamedParticipantData = {
     body: NamedParticipantRequest
@@ -981,41 +977,41 @@ export type DeleteNamedParticipantResponse = void
 
 export type DeleteNamedParticipantError = ApiError
 
-export type AddRaceCategoryData = {
-    body: RaceCategoryRequest
+export type AddCompetitionCategoryData = {
+    body: CompetitionCategoryRequest
 }
 
-export type AddRaceCategoryResponse = string
+export type AddCompetitionCategoryResponse = string
 
-export type AddRaceCategoryError = BadRequestError | ApiError
+export type AddCompetitionCategoryError = BadRequestError | ApiError
 
-export type GetRaceCategoriesResponse = {
-    data: Array<RaceCategoryDto>
+export type GetCompetitionCategoriesResponse = {
+    data: Array<CompetitionCategoryDto>
     pagination: Pagination
 }
 
-export type GetRaceCategoriesError = ApiError
+export type GetCompetitionCategoriesError = ApiError
 
-export type UpdateRaceCategoryData = {
-    body: RaceCategoryRequest
+export type UpdateCompetitionCategoryData = {
+    body: CompetitionCategoryRequest
     path: {
-        raceCategoryId: string
+        competitionCategoryId: string
     }
 }
 
-export type UpdateRaceCategoryResponse = void
+export type UpdateCompetitionCategoryResponse = void
 
-export type UpdateRaceCategoryError = BadRequestError | ApiError
+export type UpdateCompetitionCategoryError = BadRequestError | ApiError
 
-export type DeleteRaceCategoryData = {
+export type DeleteCompetitionCategoryData = {
     path: {
-        raceCategoryId: string
+        competitionCategoryId: string
     }
 }
 
-export type DeleteRaceCategoryResponse = void
+export type DeleteCompetitionCategoryResponse = void
 
-export type DeleteRaceCategoryError = ApiError
+export type DeleteCompetitionCategoryError = ApiError
 
 export type NewCaptchaResponse = CaptchaDto
 

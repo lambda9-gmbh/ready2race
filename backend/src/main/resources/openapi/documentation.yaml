@@ -554,12 +554,12 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
-        - name: raceId
+        - name: competitionId
           in: query
           schema:
             type: string
             format: uuid
-          description: Optional parameter that filters by raceId
+          description: Optional parameter that filters by competitionId
           required: false
       responses:
         200:
@@ -644,21 +644,21 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/eventDay/{eventDayId}/races:
+  /event/{eventId}/eventDay/{eventDayId}/competitions:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/eventDayId'
     put:
-      operationId: assignRacesToEventDay
+      operationId: assignCompetitionsToEventDay
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignRacesToDayRequest'
+              $ref: '#/components/schemas/AssignCompetitionsToDayRequest'
       responses:
         204:
-          description: Races successfully assigned to day
+          description: Competitions successfully assigned to day
         400:
           $ref: '#/components/responses/400'
         401:
@@ -669,17 +669,17 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/race:
+  /event/{eventId}/competition:
     parameters:
       - $ref: '#/components/parameters/eventId'
     post:
-      operationId: addRace
+      operationId: addCompetition
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceRequest'
+              $ref: '#/components/schemas/CompetitionRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -694,7 +694,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaces
+      operationId: getCompetitions
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -709,7 +709,7 @@ paths:
           required: false
       responses:
         200:
-          description: Race page successfully retrieved
+          description: Competition page successfully retrieved
           content:
             application/json:
               schema:
@@ -722,7 +722,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RaceDto'
+                      $ref: '#/components/schemas/CompetitionDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -733,19 +733,19 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/race/{raceId}:
+  /event/{eventId}/competition/{competitionId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
-      - $ref: '#/components/parameters/raceId'
+      - $ref: '#/components/parameters/competitionId'
     get:
-      operationId: getRace
+      operationId: getCompetition
       responses:
         200:
-          description: Race successfully retrieved
+          description: Competition successfully retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceDto'
+                $ref: '#/components/schemas/CompetitionDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -757,16 +757,16 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
-      operationId: updateRace
+      operationId: updateCompetition
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceRequest'
+              $ref: '#/components/schemas/CompetitionRequest'
       responses:
         204:
-          description: Race successfully updated
+          description: Competition successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -778,10 +778,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteRace
+      operationId: deleteCompetition
       responses:
         204:
-          description: Race successfully deleted
+          description: Competition successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
@@ -790,21 +790,21 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/race/{raceId}/days:
+  /event/{eventId}/competition/{competitionId}/days:
     parameters:
       - $ref: '#/components/parameters/eventId'
-      - $ref: '#/components/parameters/raceId'
+      - $ref: '#/components/parameters/competitionId'
     put:
-      operationId: assignDaysToRace
+      operationId: assignDaysToCompetition
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssignDaysToRaceRequest'
+              $ref: '#/components/schemas/AssignDaysToCompetitionRequest'
       responses:
         204:
-          description: Days successfully assigned to race
+          description: Days successfully assigned to competition
         400:
           $ref: '#/components/responses/400'
         401:
@@ -815,15 +815,15 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /raceTemplate:
+  /competitionTemplate:
     post:
-      operationId: addRaceTemplate
+      operationId: addCompetitionTemplate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceTemplateRequest'
+              $ref: '#/components/schemas/CompetitionTemplateRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -836,7 +836,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaceTemplates
+      operationId: getCompetitionTemplates
       parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
@@ -844,7 +844,7 @@ paths:
         - $ref: '#/components/parameters/search'
       responses:
         200:
-          description: RaceTemplate page successfully retrieved
+          description: CompetitionTemplate page successfully retrieved
           content:
             application/json:
               schema:
@@ -857,7 +857,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RaceTemplateDto'
+                      $ref: '#/components/schemas/CompetitionTemplateDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -866,23 +866,23 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /raceTemplate/{raceTemplateId}:
+  /competitionTemplate/{competitionTemplateId}:
     parameters:
-      - name: raceTemplateId
+      - name: competitionTemplateId
         in: path
         required: true
         schema:
           type: string
           format: uuid
     get:
-      operationId: getRaceTemplate
+      operationId: getCompetitionTemplate
       responses:
         200:
-          description: RaceTemplate successfully retrieved
+          description: CompetitionTemplate successfully retrieved
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RaceTemplateDto'
+                $ref: '#/components/schemas/CompetitionTemplateDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -894,16 +894,16 @@ paths:
         500:
           $ref: '#/components/responses/500'
     put:
-      operationId: updateRaceTemplate
+      operationId: updateCompetitionTemplate
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceTemplateRequest'
+              $ref: '#/components/schemas/CompetitionTemplateRequest'
       responses:
         204:
-          description: RaceTemplate successfully updated
+          description: CompetitionTemplate successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -915,10 +915,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteRaceTemplate
+      operationId: deleteCompetitionTemplate
       responses:
         204:
-          description: RaceTemplate successfully deleted
+          description: CompetitionTemplate successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
@@ -1017,15 +1017,15 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /raceCategory:
+  /competitionCategory:
     post:
-      operationId: addRaceCategory
+      operationId: addCompetitionCategory
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceCategoryRequest'
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -1038,10 +1038,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getRaceCategories
+      operationId: getCompetitionCategories
       responses:
         200:
-          description: RaceCategory list successfully retrieved
+          description: CompetitionCategory list successfully retrieved
           content:
             application/json:
               schema:
@@ -1054,7 +1054,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/RaceCategoryDto'
+                      $ref: '#/components/schemas/CompetitionCategoryDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -1063,25 +1063,25 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /raceCategory/{raceCategoryId}:
+  /competitionCategory/{competitionCategoryId}:
     parameters:
-      - name: raceCategoryId
+      - name: competitionCategoryId
         in: path
         required: true
         schema:
           type: string
           format: uuid
     put:
-      operationId: updateRaceCategory
+      operationId: updateCompetitionCategory
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RaceCategoryRequest'
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
       responses:
         204:
-          description: RaceCategory successfully updated
+          description: CompetitionCategory successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1093,10 +1093,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteRaceCategory
+      operationId: deleteCompetitionCategory
       responses:
         204:
-          description: RaceCategory successfully deleted
+          description: CompetitionCategory successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
@@ -1199,8 +1199,8 @@ components:
         type: string
         format: uuid
 
-    raceId:
-      name: raceId
+    competitionId:
+      name: competitionId
       in: path
       required: true
       schema:
@@ -1911,12 +1911,12 @@ components:
           type: string
 
 
-    AssignRacesToDayRequest:
+    AssignCompetitionsToDayRequest:
       type: object
       required:
-        - races
+        - competitions
       properties:
-        races:
+        competitions:
           type: array
           items:
             type: string
@@ -1924,9 +1924,9 @@ components:
 
 
 
-    # raceProperties
+    # competitionProperties
 
-    RacePropertiesDto:
+    CompetitionPropertiesDto:
       type: object
       required:
         - identifier
@@ -1935,8 +1935,6 @@ components:
         - countFemales
         - countNonBinary
         - countMixed
-        - participationFee
-        - rentalFee
         - namedParticipants
       properties:
         identifier:
@@ -1955,21 +1953,15 @@ components:
           type: integer
         countMixed:
           type: integer
-        participationFee:
-          type: string
-          format: decimal
-        rentalFee:
-          type: string
-          format: decimal
-        raceCategory:
-          $ref: '#/components/schemas/RaceCategoryDto'
+        competitionCategory:
+          $ref: '#/components/schemas/CompetitionCategoryDto'
         namedParticipants:
           type: array
           items:
-            $ref: '#/components/schemas/NamedParticipantForRaceDto'
+            $ref: '#/components/schemas/NamedParticipantForCompetitionDto'
 
 
-    NamedParticipantForRaceDto:
+    NamedParticipantForCompetitionDto:
       type: object
       required:
         - id
@@ -1999,7 +1991,7 @@ components:
           type: integer
 
 
-    RacePropertiesRequestDto:
+    CompetitionPropertiesRequestDto:
       type: object
       required:
         - identifier
@@ -2008,8 +2000,6 @@ components:
         - countFemales
         - countNonBinary
         - countMixed
-        - participationFee
-        - rentalFee
         - namedParticipants
       properties:
         identifier:
@@ -2028,22 +2018,16 @@ components:
           type: integer
         countMixed:
           type: integer
-        participationFee:
-          type: string
-          format: decimal
-        rentalFee:
-          type: string
-          format: decimal
-        raceCategory:
+        competitionCategory:
           type: string
           format: uuid
         namedParticipants:
           type: array
           items:
-            $ref: '#/components/schemas/NamedParticipantForRaceRequestDto'
+            $ref: '#/components/schemas/NamedParticipantForCompetitionRequestDto'
 
 
-    NamedParticipantForRaceRequestDto:
+    NamedParticipantForCompetitionRequestDto:
       type: object
       required:
         - namedParticipant
@@ -2069,9 +2053,9 @@ components:
 
 
 
-    # race
+    # competition
 
-    RaceDto:
+    CompetitionDto:
       type: object
       required:
         - id
@@ -2085,23 +2069,23 @@ components:
           type: string
           format: uuid
         properties:
-          $ref: '#/components/schemas/RacePropertiesDto'
+          $ref: '#/components/schemas/CompetitionPropertiesDto'
         template:
           type: string
           format: uuid
 
 
-    RaceRequest:
+    CompetitionRequest:
       type: object
       properties:
         properties:
-          $ref: '#/components/schemas/RacePropertiesRequestDto'
+          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
         template:
           type: string
           format: uuid
 
 
-    AssignDaysToRaceRequest:
+    AssignDaysToCompetitionRequest:
       type: object
       required:
         - days
@@ -2114,9 +2098,9 @@ components:
 
 
 
-    # raceTemplate
+    # competitionTemplate
 
-    RaceTemplateDto:
+    CompetitionTemplateDto:
       type: object
       required:
         - id
@@ -2126,16 +2110,16 @@ components:
           type: string
           format: uuid
         properties:
-          $ref: '#/components/schemas/RacePropertiesDto'
+          $ref: '#/components/schemas/CompetitionPropertiesDto'
 
 
-    RaceTemplateRequest:
+    CompetitionTemplateRequest:
       type: object
       required:
         - properties
       properties:
         properties:
-          $ref: '#/components/schemas/RacePropertiesRequestDto'
+          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
 
 
 
@@ -2166,9 +2150,9 @@ components:
           type: string
 
 
-    # raceCategory
+    # competitionCategory
 
-    RaceCategoryDto:
+    CompetitionCategoryDto:
       type: object
       required:
         - id
@@ -2182,7 +2166,7 @@ components:
         description:
           type: string
 
-    RaceCategoryRequest:
+    CompetitionCategoryRequest:
       type: object
       required:
         - name

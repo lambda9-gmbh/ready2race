@@ -73,7 +73,7 @@
     "titles": {
       "dashboard": "Dashboard",
       "events": "Veranstaltungen",
-      "raceConfig": "Rennen Einstellungen",
+      "competitionConfig": "Wettkampf Einstellungen",
       "roles": "Rollen",
       "users": "Benutzer"
     }
@@ -87,7 +87,7 @@
     },
     "event": "Veranstaltung",
     "eventDay": {
-      "assignedRaces": "Rennen für den Tag",
+      "assignedCompetitions": "Wettkämpfe für den Tag",
       "date": "Datum",
       "eventDay": "Tag",
       "eventDays": "Tage"
@@ -96,8 +96,8 @@
       "prefix": "Rechnungspräfix"
     },
     "location": "Ort",
-    "race": {
-      "assignedDays": "Tage des Rennens",
+    "competition": {
+      "assignedDays": "Tage des Wettkampfs",
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien"
@@ -119,10 +119,8 @@
         },
         "role": "Rolle"
       },
-      "participationFee": "Meldegebühr",
-      "race": "Rennen",
-      "races": "Rennen",
-      "rentalFee": "Leihgebühr",
+      "competition": "Wettkampf",
+      "competitions": "Wettkämpfe",
       "shortName": "Kurzname",
       "template": {
         "template": "Vorlage",

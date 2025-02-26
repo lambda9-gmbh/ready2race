@@ -3,12 +3,12 @@ import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventDayRoute, eventRoute} from '@routes'
 import Throbber from '@components/Throbber.tsx'
-import RaceAndDayAssignment from '@components/event/raceAndDayAssignment/RaceAndDayAssignment.tsx'
+import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
 import {AutocompleteOption} from '@utils/types.ts'
-import {raceLabelName} from '@components/event/race/common.ts'
+import {competitionLabelName} from '@components/event/competition/common.ts'
 import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
-import {getEventDay, getRaces} from '@api/sdk.gen.ts'
+import {getEventDay, getCompetitions} from '@api/sdk.gen.ts'
 
 const EventDayPage = () => {
     const {t} = useTranslation()
@@ -34,30 +34,30 @@ const EventDayPage = () => {
         },
     )
 
-    const {data: assignedRacesData, pending: assignedRacesPending} = useFetch(
-        signal => getRaces({signal, path: {eventId: eventId}, query: {eventDayId: eventDayId}}),
+    const {data: assignedCompetitionsData, pending: assignedCompetitionsPending} = useFetch(
+        signal => getCompetitions({signal, path: {eventId: eventId}, query: {eventDayId: eventDayId}}),
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
+                    feedback.error(t('common.load.error.multiple', {entity: t('event.competition.competitions')}))
                     console.error(error)
                 }
             },
             deps: [eventId, eventDayId, reloadDataTrigger],
         },
     )
-    const assignedRaces =
-        assignedRacesData?.data.map(value => ({
+    const assignedCompetitions =
+        assignedCompetitionsData?.data.map(value => ({
             id: value.id,
-            label: raceLabelName(value.properties.identifier, value.properties.name),
+            label: competitionLabelName(value.properties.identifier, value.properties.name),
         })) ?? []
 
-    const {data: racesData, pending: racesPending} = useFetch(
-        signal => getRaces({signal, path: {eventId: eventId}}),
+    const {data: competitionsData, pending: competitionsPending} = useFetch(
+        signal => getCompetitions({signal, path: {eventId: eventId}}),
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.multiple', {entity: t('event.race.races')}))
+                    feedback.error(t('common.load.error.multiple', {entity: t('event.competition.competitions')}))
                     console.error(error)
                 }
             },
@@ -66,9 +66,9 @@ const EventDayPage = () => {
     )
 
     const selection: AutocompleteOption[] =
-        racesData?.data.map(value => ({
+        competitionsData?.data.map(value => ({
             id: value.id,
-            label: raceLabelName(value.properties.identifier, value.properties.name),
+            label: competitionLabelName(value.properties.identifier, value.properties.name),
         })) ?? []
 
     return (
@@ -90,17 +90,17 @@ const EventDayPage = () => {
             </Box>
             <Divider orientation="vertical" />
             <Box sx={{flex: 1, maxWidth: 400}}>
-                {(racesData && assignedRacesData && (
-                    <RaceAndDayAssignment
+                {(competitionsData && assignedCompetitionsData && (
+                    <CompetitionAndDayAssignment
                         entityPathId={eventDayId}
                         options={selection}
-                        assignedEntities={assignedRaces}
-                        assignEntityLabel={t('event.race.race')}
-                        racesToDay={true}
+                        assignedEntities={assignedCompetitions}
+                        assignEntityLabel={t('event.competition.competition')}
+                        competitionsToDay={true}
                         onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
                     />
                 )) ||
-                    ((racesPending || assignedRacesPending) && <Throbber />)}
+                    ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}
             </Box>
         </Grid2>
     )

@@ -99,7 +99,6 @@ const RegistrationPage = () => {
                         <Stack spacing={4}>
                             <FormInputEmail name={'email'} label={t('user.email')} required />
                             <NewPassword formContext={formContext} horizontal />
-                            <Stack spacing={2} direction="row">
                                 <FormInputText
                                     name={'firstname'}
                                     label={t('user.firstname')}
@@ -112,7 +111,6 @@ const RegistrationPage = () => {
                                     required
                                     sx={{flex: 1}}
                                 />
-                            </Stack>
                             <FormInputCaptcha captchaProps={captcha} />
                             <SubmitButton
                                 label={t('user.registration.register')}
