@@ -24,8 +24,6 @@ fun Application.configureRouting() {
             competitionCategory()
             competitionTemplate()
             captcha()
-            eventDocumentType()
-            eventDocument()
         }
     }
 }
