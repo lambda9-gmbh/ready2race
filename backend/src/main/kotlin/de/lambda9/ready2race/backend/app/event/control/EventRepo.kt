@@ -1,11 +1,11 @@
 package de.lambda9.ready2race.backend.app.event.control
 
+import de.lambda9.ready2race.backend.app.event.control.EventRepo.update
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Event
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -15,25 +15,11 @@ object EventRepo {
 
     private fun Event.searchFields() = listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
 
-    fun create(
-        record: EventRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(EVENT) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: EventRecord) = EVENT.insertReturning(record) { ID }
 
-    fun exists(
-        id: UUID
-    ): JIO<Boolean> = Jooq.query {
-        with(EVENT) {
-            fetchExists(this, ID.eq(id))
-        }
-    }
+    fun exists(id: UUID) = EVENT.exists { ID.eq(id) }
+
+    fun update(id: UUID, f: EventRecord.() -> Unit) = EVENT.update(f) { ID.eq(id) }
 
     fun count(
         search: String?
@@ -60,21 +46,6 @@ object EventRepo {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
-        }
-    }
-
-    fun update(
-        id: UUID,
-        f: EventRecord.() -> Unit
-    ): JIO<EventRecord?> = Jooq.query {
-        with(EVENT) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
         }
     }
 

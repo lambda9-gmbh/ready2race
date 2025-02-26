@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
@@ -8,8 +9,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -19,13 +18,11 @@ object AppUserRepo {
 
     private fun AppUserWithRoles.searchFields() = listOf(FIRSTNAME, LASTNAME, EMAIL)
 
-    fun exists(
-        id: UUID,
-    ): JIO<Boolean> = Jooq.query {
-        with(APP_USER) {
-            fetchExists(this, ID.eq(id))
-        }
-    }
+    fun exists(id: UUID) = APP_USER.exists { ID.eq(id) }
+
+    fun create(record: AppUserRecord) = APP_USER.insertReturning(record) { ID }
+
+    fun update(id: UUID, f: AppUserRecord.() -> Unit) = APP_USER.update(f) { ID.eq(id) }
 
     fun getByEmail(
         email: String,
@@ -85,26 +82,4 @@ object AppUserRepo {
         }
     }
 
-    fun create(
-        record: AppUserRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(APP_USER) {
-            insertInto(this).set(record).returningResult(ID).fetchOne()!!.value1()!!
-        }
-    }
-
-    fun update(
-        id: UUID,
-        f: AppUserRecord.() -> Unit,
-    ): JIO<AppUserRecord?> = Jooq.query {
-        with(APP_USER) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
-        }
-    }
 }

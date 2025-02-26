@@ -1,12 +1,12 @@
 package de.lambda9.ready2race.backend.app.eventDay.control
 
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo.update
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventDay
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -17,26 +17,11 @@ object EventDayRepo {
 
     private fun EventDay.searchFields() = listOf(DATE, NAME, DESCRIPTION)
 
+    fun create(record: EventDayRecord) = EVENT_DAY.insertReturning(record) { ID }
 
-    fun create(
-        record: EventDayRecord
-    ): JIO<UUID> = Jooq.query {
-        with(EVENT_DAY) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun exists(id: UUID) = EVENT_DAY.exists { ID.eq(id) }
 
-    fun exists(
-        id: UUID
-    ): JIO<Boolean> = Jooq.query {
-        with(EVENT_DAY) {
-            fetchExists(this, ID.eq(id))
-        }
-    }
+    fun update(id: UUID, f: EventDayRecord.() -> Unit) = EVENT_DAY.update(f) { ID.eq(id) }
 
     fun countByEvent(
         eventId: UUID,
@@ -108,21 +93,6 @@ object EventDayRepo {
             selectFrom(this)
                 .where(ID.eq(eventDayId))
                 .fetchOne()
-        }
-    }
-
-    fun update(
-        eventDayId: UUID,
-        f: EventDayRecord.() -> Unit
-    ): JIO<EventDayRecord?> = Jooq.query {
-        with(EVENT_DAY) {
-            selectFrom(this)
-                .where(ID.eq(eventDayId))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
         }
     }
 

@@ -34,6 +34,17 @@ create index on invoice_position (invoice);
 
 create table invoice_document
 (
-    invoice uuid primary key references invoice on delete cascade,
-    data    bytea not null
+    invoice    uuid primary key references invoice on delete cascade,
+    name       text      not null,
+    created_at timestamp not null
 );
+
+create index on invoice_document (invoice);
+
+create table invoice_document_data
+(
+    invoice_document uuid primary key references invoice_document on delete cascade,
+    data             bytea not null
+);
+
+create index on invoice_document_data (invoice_document);

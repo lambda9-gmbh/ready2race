@@ -1,12 +1,12 @@
 package de.lambda9.ready2race.backend.app.competitionTemplate.control
 
+import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo.update
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateWithPropertiesSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionTemplateToPropertiesWithNamedParticipants
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateToPropertiesWithNamedParticipantsRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -17,25 +17,11 @@ object CompetitionTemplateRepo {
     private fun CompetitionTemplateToPropertiesWithNamedParticipants.searchFields() =
         listOf(ID, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
-    fun create(
-        record: CompetitionTemplateRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(COMPETITION_TEMPLATE) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: CompetitionTemplateRecord) = COMPETITION_TEMPLATE.insertReturning(record) { ID }
 
-    fun exists(
-        id: UUID,
-    ): JIO<Boolean> = Jooq.query {
-        with(COMPETITION_TEMPLATE) {
-            fetchExists(this, ID.eq(id))
-        }
-    }
+    fun exists(id: UUID) = COMPETITION_TEMPLATE.exists { ID.eq(id) }
+
+    fun update(id: UUID, f: CompetitionTemplateRecord.() -> Unit) = COMPETITION_TEMPLATE.update(f) { ID.eq(id) }
 
     fun countWithProperties(
         search: String?
@@ -62,22 +48,6 @@ object CompetitionTemplateRepo {
             selectFrom(this)
                 .where(ID.eq(templateId))
                 .fetchOne()
-        }
-    }
-
-
-    fun update(
-        id: UUID,
-        f: CompetitionTemplateRecord.() -> Unit
-    ): JIO<CompetitionTemplateRecord?> = Jooq.query {
-        with(COMPETITION_TEMPLATE) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
         }
     }
 

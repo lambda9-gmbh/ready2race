@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserPasswordResetRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_PASSWORD_RESET
+import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
@@ -9,17 +10,7 @@ import java.util.UUID
 
 object AppUserPasswordResetRepo {
 
-    fun create(
-        record: AppUserPasswordResetRecord,
-    ): JIO<String> = Jooq.query {
-        with(APP_USER_PASSWORD_RESET) {
-            insertInto(this)
-                .set(record)
-                .returningResult(TOKEN)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: AppUserPasswordResetRecord) = APP_USER_PASSWORD_RESET.insertReturning(record) { TOKEN }
 
     fun consume(
         token: String,

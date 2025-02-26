@@ -6,6 +6,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserIn
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserInvitationWithRolesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_INVITATION
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_INVITATION_WITH_ROLES
+import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -18,17 +20,7 @@ object AppUserInvitationRepo {
 
     private fun AppUserInvitationWithRoles.searchFields() = listOf(FIRSTNAME, LASTNAME, EMAIL)
 
-    fun create(
-        record: AppUserInvitationRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(APP_USER_INVITATION) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: AppUserInvitationRecord) = APP_USER_INVITATION.insertReturning(record) { ID }
 
     fun countWithRoles(
         search: String?,

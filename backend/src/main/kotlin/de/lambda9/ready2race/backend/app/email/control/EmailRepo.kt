@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.email.control
 import de.lambda9.ready2race.backend.beforeNow
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EMAIL
+import de.lambda9.ready2race.backend.database.insertReturning
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.DatePart
@@ -13,17 +15,10 @@ import kotlin.time.Duration
 
 object EmailRepo {
 
-    fun create(
-        record: EmailRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(EMAIL) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: EmailRecord) = EMAIL.insertReturning(record) { ID }
+
+    fun update(id: UUID, f: EmailRecord.() -> Unit) = EMAIL.update(f) { ID.eq(id) }
+    fun update(record: EmailRecord, f: EmailRecord.() -> Unit) = EMAIL.update(record, f)
 
     fun getAndLockNext(
         retryAfterError: Duration,
@@ -44,21 +39,6 @@ object EmailRepo {
                     .skipLocked()
                     .fetchAny()
             }
-        }
-    }
-
-    fun update(
-        id: UUID,
-        f: EmailRecord.() -> Unit
-    ): JIO<EmailRecord?> = Jooq.query {
-        with(EMAIL) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
         }
     }
 

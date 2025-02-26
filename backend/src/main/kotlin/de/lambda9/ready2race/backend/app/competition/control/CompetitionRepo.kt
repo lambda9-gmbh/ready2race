@@ -1,14 +1,14 @@
 package de.lambda9.ready2race.backend.app.competition.control
 
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo.update
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionToPropertiesWithNamedParticipants
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionToPropertiesWithNamedParticipantsRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -20,26 +20,11 @@ object CompetitionRepo {
     private fun CompetitionToPropertiesWithNamedParticipants.searchFields() =
         listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
-    fun create(
-        record: CompetitionRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(COMPETITION) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: CompetitionRecord) = COMPETITION.insertReturning(record) { ID }
 
+    fun exists(id: UUID) = COMPETITION.exists { ID.eq(id) }
 
-    fun exists(
-        id: UUID
-    ): JIO<Boolean> = Jooq.query {
-        with(COMPETITION) {
-            fetchExists(this, ID.eq(id))
-        }
-    }
+    fun update(id: UUID, f: CompetitionRecord.() -> Unit) = COMPETITION.update(f) { ID.eq(id) }
 
     fun countWithPropertiesByEvent(
         eventId: UUID,
@@ -111,21 +96,6 @@ object CompetitionRepo {
             selectFrom(this)
                 .where(ID.eq(competitionId))
                 .fetchOne()
-        }
-    }
-
-    fun update(
-        id: UUID,
-        f: CompetitionRecord.() -> Unit
-    ): JIO<CompetitionRecord?> = Jooq.query {
-        with(COMPETITION) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
         }
     }
 

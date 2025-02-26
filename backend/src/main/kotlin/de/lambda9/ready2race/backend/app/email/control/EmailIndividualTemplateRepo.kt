@@ -4,20 +4,13 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailIndividualTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EMAIL_INDIVIDUAL_TEMPLATE
+import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 
-object EmailTemplateRepo {
+object EmailIndividualTemplateRepo {
 
-    fun create(
-        record: EmailIndividualTemplateRecord,
-    ): JIO<Unit> = Jooq.query {
-        with(EMAIL_INDIVIDUAL_TEMPLATE) {
-            insertInto(this)
-                .set(record)
-                .execute()
-        }
-    }
+    fun create(record: EmailIndividualTemplateRecord) = EMAIL_INDIVIDUAL_TEMPLATE.insert(record)
 
     fun get(
         key: EmailTemplateKey,
