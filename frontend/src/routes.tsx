@@ -24,6 +24,7 @@ import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import ClubsPage from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
+import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -198,6 +199,20 @@ export const eventIndexRoute = createRoute({
     },
 })
 
+export const eventRegisterRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: '/register',
+})
+
+export const eventRegisterIndexRoute = createRoute({
+    getParentRoute: () => eventRegisterRoute,
+    path: '/',
+    component: () => <EventRegistrationCreatePage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
+})
+
 export const eventDayRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'eventDay/$eventDayId',
@@ -279,6 +294,7 @@ const routeTree = rootRoute.addChildren([
             eventIndexRoute,
             eventDayRoute.addChildren([eventDayIndexRoute]),
             raceRoute.addChildren([raceIndexRoute]),
+            eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),
     ]),
     raceConfigRoute.addChildren([raceConfigIndexRoute]),

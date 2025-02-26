@@ -70,6 +70,11 @@ export type ClubDto = {
     updatedAt: string
 }
 
+export type ClubSearchDto = {
+    id: string
+    name: string
+}
+
 export type ClubUpsertDto = {
     name: string
 }
@@ -103,6 +108,70 @@ export type EventDto = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+}
+
+export type EventRegistrationDayDto = {
+    id: string
+    date: string
+    name?: string | null
+    description?: string | null
+}
+
+export type EventRegistrationNamedParticipantDto = {
+    id: string
+    name: string
+    description?: string
+    required?: boolean
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+}
+
+export type EventRegistrationParticipantUpsertDto = {
+    id: string
+    isNew?: boolean
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: 'M' | 'F' | 'O'
+    external?: boolean | null
+    externalClubName?: string | null
+    racesSingle?: Array<string>
+}
+
+export type gender = 'M' | 'F' | 'O'
+
+export type EventRegistrationRaceDto = {
+    id: string
+    identifier: string
+    name: string
+    shortName?: string
+    description?: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+    participationFee?: string
+    rentalFee?: string
+    raceCategory: string
+    namedParticipant?: Array<EventRegistrationNamedParticipantDto>
+    days: Array<string>
+}
+
+export type EventRegistrationTemplateDto = {
+    name: string
+    description?: string
+    location?: string
+    days: Array<EventRegistrationDayDto>
+    racesSingle: Array<EventRegistrationRaceDto>
+    racesTeam: Array<EventRegistrationRaceDto>
+}
+
+export type EventRegistrationUpsertDto = {
+    participants: Array<EventRegistrationParticipantUpsertDto>
+    raceRegistrations: Array<RaceRegistrationUpsertDto>
+    message?: string
 }
 
 export type EventRequest = {
@@ -212,8 +281,6 @@ export type ParticipantDto = {
     updatedAt: string
 }
 
-export type gender = 'M' | 'F' | 'O'
-
 export type ParticipantUpsertDto = {
     firstname: string
     lastname: string
@@ -283,6 +350,22 @@ export type RacePropertiesRequestDto = {
     rentalFee: string
     raceCategory?: string
     namedParticipants: Array<NamedParticipantForRaceRequestDto>
+}
+
+export type RaceRegistrationNamedParticipantUpsertDto = {
+    namedParticipantId: string
+    participantId: string
+}
+
+export type RaceRegistrationTeamUpsertDto = {
+    id: string
+    participants?: Array<string>
+    namedParticipants?: Array<RaceRegistrationNamedParticipantUpsertDto>
+}
+
+export type RaceRegistrationUpsertDto = {
+    raceId: string
+    teams?: Array<RaceRegistrationTeamUpsertDto>
 }
 
 export type RaceRequest = {
@@ -950,3 +1033,49 @@ export type DeleteClubParticipantData = {
 export type DeleteClubParticipantResponse = void
 
 export type DeleteClubParticipantError = ApiError
+
+export type GetClubNamesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetClubNamesResponse = {
+    data: Array<ClubSearchDto>
+    pagination: Pagination
+}
+
+export type GetClubNamesError = ApiError
+
+export type GetEventRegistrationTemplateData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventRegistrationTemplateResponse = EventRegistrationTemplateDto
+
+export type GetEventRegistrationTemplateError = ApiError
+
+export type AddEventRegistrationData = {
+    body: EventRegistrationUpsertDto
+}
+
+export type AddEventRegistrationResponse = string
+
+export type AddEventRegistrationError = ApiError

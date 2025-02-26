@@ -152,6 +152,15 @@ import type {
     DeleteClubParticipantData,
     DeleteClubParticipantError,
     DeleteClubParticipantResponse,
+    GetClubNamesData,
+    GetClubNamesError,
+    GetClubNamesResponse,
+    GetEventRegistrationTemplateData,
+    GetEventRegistrationTemplateError,
+    GetEventRegistrationTemplateResponse,
+    AddEventRegistrationData,
+    AddEventRegistrationError,
+    AddEventRegistrationResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -756,5 +765,40 @@ export const deleteClubParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/club/{clubId}/participant/{participantId}',
+    })
+}
+
+export const getClubNames = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetClubNamesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubNamesResponse, GetClubNamesError, ThrowOnError>({
+        ...options,
+        url: '/club/search',
+    })
+}
+
+export const getEventRegistrationTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventRegistrationTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventRegistrationTemplateResponse,
+        GetEventRegistrationTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationTemplate',
+    })
+}
+
+export const addEventRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddEventRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddEventRegistrationResponse,
+        AddEventRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/register',
     })
 }

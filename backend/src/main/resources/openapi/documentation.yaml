@@ -1227,6 +1227,88 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /club/search:
+    get:
+      operationId: getClubNames
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Club page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClubSearchDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
+
+
+  /event/{eventId}/registrationTemplate:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getEventRegistrationTemplate
+      responses:
+        200:
+          description: EventRegistrationTemplate successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistrationTemplateDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/register:
+    post:
+      operationId: addEventRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventRegistrationUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 
 components:
 
@@ -2116,6 +2198,20 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    ClubSearchDto:
+      type:
+        object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
     ParticipantDto:
       type: object
       required:
@@ -2158,6 +2254,8 @@ components:
           type: string
           format: date-time
 
+    # participant
+
     ParticipantUpsertDto:
       type: object
       required:
@@ -2187,3 +2285,228 @@ components:
         externalClubName:
           type: string
           nullable: true
+
+    # event registration
+
+    EventRegistrationTemplateDto:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationDayDto'
+        racesSingle:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationRaceDto'
+        racesTeam:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationRaceDto'
+      required:
+        - name
+        - days
+        - racesSingle
+        - racesTeam
+
+    EventRegistrationDayDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        name:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+      required:
+        - id
+        - date
+
+    EventRegistrationRaceDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        shortName:
+          type: string
+        description:
+          type: string
+        countMales:
+          type: integer
+        countFemales:
+          type: integer
+        countNonBinary:
+          type: integer
+        countMixed:
+          type: integer
+        participationFee:
+          type: string
+          format: decimal
+        rentalFee:
+          type: string
+          format: decimal
+        raceCategory:
+          type: string
+        namedParticipant:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationNamedParticipantDto'
+        days:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - id
+        - name
+        - identifier
+        - countMales
+        - countFemales
+        - countMixed
+        - countNonBinary
+        - raceCategory
+        - days
+
+    EventRegistrationNamedParticipantDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+        countMales:
+          type: integer
+        countFemales:
+          type: integer
+        countNonBinary:
+          type: integer
+        countMixed:
+          type: integer
+      required:
+        - id
+        - name
+        - countMales
+        - countFemales
+        - countMixed
+        - countNonBinary
+
+    EventRegistrationUpsertDto:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationParticipantUpsertDto'
+        raceRegistrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/RaceRegistrationUpsertDto'
+        message:
+          type: string
+      required:
+        - participants
+        - raceRegistrations
+
+    RaceRegistrationUpsertDto:
+      type: object
+      properties:
+        raceId:
+          type: string
+          format: uuid
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/RaceRegistrationTeamUpsertDto'
+      required:
+        - raceId
+
+    RaceRegistrationTeamUpsertDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        participants:
+          type: array
+          items:
+            type: string
+            format: uuid
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/RaceRegistrationNamedParticipantUpsertDto'
+      required:
+        - id
+
+    RaceRegistrationNamedParticipantUpsertDto:
+      type: object
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+      required:
+        - namedParticipantId
+        - participantId
+
+    EventRegistrationParticipantUpsertDto:
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - gender
+      properties:
+        id:
+          type: string
+          format: uuid
+        isNew:
+          type: boolean
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          enum:
+            - M
+            - F
+            - O
+        external:
+          type: boolean
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true
+        racesSingle:
+          type: array
+          items:
+            type: string
+            format: uuid

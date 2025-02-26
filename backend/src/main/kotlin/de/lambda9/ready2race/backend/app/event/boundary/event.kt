@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.race.boundary.race
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
@@ -41,6 +42,7 @@ fun Route.event() {
 
             eventDay()
             race()
+            eventRegistration()
 
             get {
                 call.respondKIO {

@@ -41,7 +41,9 @@
     },
     "ok": "Ok",
     "save": "Speichern",
-    "search": "Suchen"
+    "search": "Suchen",
+    "back": "Zurück",
+    "next": "Weiter"
   },
   "decimal": {
     "point": ","
@@ -85,7 +87,8 @@
     "club": "Verein",
     "participant": {
       "title": "Teilnehmer",
-      "year": "Geburtsjahr"
+      "year": "Geburtsjahr",
+      "external": "Extern"
     }
   },
   "event": {
@@ -142,6 +145,19 @@
     "registrationAvailable": {
       "from": "Anmeldezeitraum von",
       "to": "Anmeldezeitraum bis"
+    },
+    "registration": {
+      "addParticipant": "Teilnehmer hinzufügen",
+      "singleRace": "Einzelrennen",
+      "teamRace": "Teamrennen",
+      "summary": "Zusammenfassung",
+      "schedule": "Programm",
+      "message": "Nachricht",
+      "finish": "Anmeldung abschicken",
+      "success": {
+        "title": "Erfolgreich angemeldet!",
+        "subtitle": "Du bekommst eine Bestätigung per Mail."
+      }
     }
   },
   "user": {

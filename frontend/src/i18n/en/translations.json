@@ -41,7 +41,9 @@
     },
     "ok": "Ok",
     "save": "Save",
-    "search": "Search"
+    "search": "Search",
+    "back" : "Back",
+    "next" : "Next"
   },
   "decimal": {
     "point": "."
@@ -85,7 +87,8 @@
     "club": "Club",
     "participant" : {
       "title": "Participant",
-      "year": "Year of birth"
+      "year": "Year of birth",
+      "external" : "External"
     }
   },
   "event": {
@@ -142,6 +145,19 @@
     "registrationAvailable": {
       "from": "Registration period start",
       "to": "Registration period end"
+    },
+    "registration": {
+      "addParticipant" : "Add Participant",
+      "singleRace" : "Single Race",
+      "teamRace" : "Team Race",
+      "summary" : "Summary",
+      "schedule" : "Schedule",
+      "message": "Message",
+      "finish" : "Submit registration",
+      "success" : {
+        "title" : "Registration successful!",
+        "subtitle" : "You will receive a confirmation by e-mail."
+      }
     }
   },
   "user": {
