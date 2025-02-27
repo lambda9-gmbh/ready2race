@@ -53,11 +53,12 @@ object RoleService {
         val record = !RoleRepo.get(id).orDie()
             .onNullFail { RoleError.NotFound }
             .failIf(condition = { it.static }) { RoleError.Static }
-        record.name = request.name
-        record.description = request.description
-        record.updatedAt = LocalDateTime.now()
-        record.updatedBy = userId
-        record.update()
+        !RoleRepo.update(record) {
+            name = request.name
+            description = request.description
+            updatedAt = LocalDateTime.now()
+            updatedBy = userId
+        }.orDie()
 
         noData
     }

@@ -1,15 +1,16 @@
-import {useUser} from '../../contexts/user/UserContext.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
 import {useState} from 'react'
-import {LoginRequest, userLogin} from '../../api'
 import {useTranslation} from 'react-i18next'
-import {useFeedback} from '../../utils/hooks.ts'
+import {useFeedback} from '@utils/hooks.ts'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {Box, Divider, Stack, Typography} from '@mui/material'
-import SimpleFormLayout from '../../components/SimpleFormLayout.tsx'
-import {SubmitButton} from '../../components/form/SubmitButton.tsx'
-import {FormInputText} from '../../components/form/input/FormInputText.tsx'
-import FormInputPassword from '../../components/form/input/FormInputPassword.tsx'
+import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
 import {Link} from '@tanstack/react-router'
+import {userLogin} from "@api/sdk.gen.ts";
+import {LoginRequest} from "@api/types.gen.ts";
 
 type Form = LoginRequest
 
@@ -32,10 +33,13 @@ const LoginPage = () => {
         if (data !== undefined) {
             login(data)
         } else if (error) {
-            if (error.status.value === 500) {
+            console.error(error)
+            if (error.status.value === 429) {
+                feedback.error(t('user.login.error.tooManyRequests'))
+            } else if (error.status.value === 500) {
                 feedback.error(t('common.error.unexpected'))
             } else {
-                feedback.error(t('user.login.error'))
+                feedback.error(t('user.login.error.credentials'))
             }
         }
     }
@@ -43,15 +47,15 @@ const LoginPage = () => {
     return (
         <SimpleFormLayout maxWidth={400}>
             <Box sx={{mb: 4}}>
-                <Typography variant="h1">{t('user.login.login')}</Typography>
+                <Typography variant="h1" textAlign='center'>{t('user.login.login')}</Typography>
             </Box>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                 <Stack spacing={4}>
-                    <FormInputText name="email" label={t('user.login.email')} required />
+                    <FormInputText name="email" label={t('user.email')} required />
                     <Box sx={{display: 'flex', flexDirection: 'column'}}>
                         <FormInputPassword name="password" label={t('user.login.password')} required />
                         <Box sx={{display: 'flex', justifyContent: 'end', mt: 2}}>
-                            <Link to='/passwordReset'>
+                            <Link to='/resetPassword'>
                                 <Typography>{t('user.login.forgotPassword')}</Typography>
                             </Link>
                         </Box>

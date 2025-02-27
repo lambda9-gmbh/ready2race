@@ -1,4 +1,4 @@
-import {Privilege} from '../api'
+import {Privilege} from '@api/types.gen.ts'
 
 export const createUserGlobal: Privilege = {action: 'CREATE', resource: 'USER', scope: 'GLOBAL'}
 export const readUserGlobal: Privilege = {action: 'READ', resource: 'USER', scope: 'GLOBAL'}

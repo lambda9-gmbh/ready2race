@@ -1,6 +1,6 @@
 import {BaseFormInputProps, FormInputText} from './FormInputText.tsx'
 import {useTranslation} from 'react-i18next'
-import {formRegexCurrency} from '../../../utils/helpers.ts'
+import {formRegexCurrency} from '@utils/helpers.ts'
 import {InputAdornment} from '@mui/material'
 
 type FormInputCurrencyProps = Omit<BaseFormInputProps, 'type'>

@@ -1,13 +1,12 @@
 package de.lambda9.ready2race.backend.app.role.control
 
 import de.lambda9.ready2race.backend.app.role.entity.RoleWithPrivilegesSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.RoleWithPrivileges
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_WITH_PRIVILEGES
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -18,13 +17,11 @@ object RoleRepo {
 
     private fun RoleWithPrivileges.searchFields() = listOf(NAME)
 
-    fun exists(
-        id: UUID,
-    ): JIO<Boolean> = Jooq.query {
-        with(ROLE) {
-            fetchExists(this, ID.eq(id))
-        }
-    }
+    fun exists(id: UUID) = ROLE.exists { ID.eq(id) }
+
+    fun create(record: RoleRecord) = ROLE.insertReturning(record) { ID }
+
+    fun update(record: RoleRecord, f: RoleRecord.() -> Unit) = ROLE.update(record, f)
 
     fun get(
         id: UUID,
@@ -44,12 +41,6 @@ object RoleRepo {
                 .where(DSL.or(ids.map { ID.eq(it) }))
                 .fetch()
         }
-    }
-
-    fun create(
-        record: RoleRecord,
-    ): JIO<UUID> = Jooq.query {
-        insertInto(ROLE).set(record).returningResult(ROLE.ID).fetchOne()!!.value1()!!
     }
 
     fun countWithPrivileges(

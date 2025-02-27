@@ -5,13 +5,14 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserHasRoleRepo
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.control.PrivilegeRepo
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
-import de.lambda9.ready2race.backend.app.appuser.control.AppUserHasRoleRepo
-import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
@@ -27,7 +28,6 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.catchError
-import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -263,6 +263,18 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             scheduleFixed(1.hours) {
                 AppUserService.deleteExpiredInvitations().map {
                     logger.info { "${"expired invitations".count(it)} deleted" }
+                }
+            }
+
+            scheduleFixed(1.hours) {
+                AppUserService.deleteExpiredPasswordResets().map {
+                    logger.info { "${"expired password resets".count(it)} deleted" }
+                }
+            }
+
+            scheduleFixed(5.minutes){
+                CaptchaService.deleteExpired().map{
+                    logger.info { "${"expired captchas".count(it)} deleted" }
                 }
             }
 

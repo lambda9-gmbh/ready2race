@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.appuser.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.responses.ErrorCode
 import io.ktor.http.*
 
 enum class AppUserError : ServiceError {
@@ -9,13 +10,15 @@ enum class AppUserError : ServiceError {
     EmailAlreadyInUse,
     NotFound,
     RegistrationNotFound,
-    InvitationNotFound;
+    InvitationNotFound,
+    PasswordResetNotFound;
 
     override fun respond(): ApiError = when (this) {
         EmailAlreadyInUse ->
             ApiError(
                 status = HttpStatusCode.Conflict,
                 message = "Email already in use",
+                errorCode = ErrorCode.EMAIL_IN_USE
             )
 
         NotFound ->
@@ -34,6 +37,12 @@ enum class AppUserError : ServiceError {
             ApiError(
                 status = HttpStatusCode.NotFound,
                 message = "Invitation not found",
+            )
+
+        PasswordResetNotFound ->
+            ApiError(
+                status = HttpStatusCode.NotFound,
+                message = "Reset password request not found",
             )
     }
 }

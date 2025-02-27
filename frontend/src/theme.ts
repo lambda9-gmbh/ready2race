@@ -4,6 +4,27 @@ import {Locale} from './i18n/config.ts'
 const baseThemeOptions: ThemeOptions = {}
 
 const componentOverrides = (_theme: Theme): ThemeOptions => ({
+    palette: {
+        mode: 'light',
+        success: {
+            main: '#cbe694',
+        },
+        warning: {
+            main: '#f5d9b0',
+        },
+        error: {
+            main: '#da4d4d',
+        },
+        info: {
+            main: '#6fb0d4',
+        },
+        background: {
+            paper: '#fafafa',
+        },
+        common:{
+            black: '#1d1d1d'
+        }
+    },
     typography: {
         h1: {
             fontSize: '3rem',
@@ -33,30 +54,16 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
                 },
             },
         },
-        MuiTextField: {
+        MuiToolbar: {
             styleOverrides: {
                 root: {
-                    "& label span": {
-                        display: "none" // Removes the "Required" Asterisk to follow KERN-Recommendations (Optional Fields are marked with "(optional)")
-                    },
-                },
+                    '& .MuiSvgIcon-root': {
+                        height: '25px',
+                        width: '25px'
+                    }
+                }
             }
-        },MuiFormLabel: {
-            styleOverrides: {
-                root: {
-                    ".input-label-optional-text":{
-                        fontSize: '0.8rem',
-                        color: 'grey',
-                    },
-                    "&.MuiInputLabel-shrink": {
-                        ".input-label-optional-text":{
-                            fontSize: _theme.typography.body1.fontSize, // When a Form-Field is focused the "optional"-text fontSize of the input label is set to the same size of the rest of the label (body1)
-                            color: 'inherit'
-                        },
-                    },
-                },
-            }
-        },
+        }
     },
 })
 

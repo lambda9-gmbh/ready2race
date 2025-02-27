@@ -1,134 +1,104 @@
 import {Box, Divider, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {FormContainer, PasswordElement, useForm} from 'react-hook-form-mui'
-import {registerUser} from '../../api'
+import {FormContainer, useForm} from 'react-hook-form-mui'
+import {registerUser} from 'api/sdk.gen.ts'
 import {useState} from 'react'
-import {useFeedback} from '../../utils/hooks.ts'
-import {FormInputText} from '../../components/form/input/FormInputText.tsx'
-import {SubmitButton} from '../../components/form/SubmitButton.tsx'
-import {EmailOutlined} from '@mui/icons-material'
-import FormInputPassword from '../../components/form/input/FormInputPassword.tsx'
-import SimpleFormLayout from '../../components/SimpleFormLayout.tsx'
+import {useCaptcha, useFeedback} from '@utils/hooks.ts'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
+import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
+import {NewPassword, PasswortFormPart} from '@components/form/NewPassword.tsx'
+import {CaptchaDto, RegisterRequest} from '@api/types.gen.ts'
+import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
+import FormInputCaptcha from '@components/form/input/FormInputCaptcha.tsx'
 
 type Form = {
     email: string
-    password: string
-    confirmPassword: string
     firstname: string
     lastname: string
-}
+    captcha: number
+} & PasswortFormPart
 
 const RegistrationPage = () => {
-    const minPasswordLength = 10
-
     const {t} = useTranslation()
     const feedback = useFeedback()
 
     const [submitting, setSubmitting] = useState(false)
 
-    const [mailSent, setMailSent] = useState(false)
+    const [requested, setRequested] = useState(false)
 
-    const formContext = useForm<Form>()
+    const defaultValues: Form = {
+        email: '',
+        firstname: '',
+        lastname: '',
+        password: '',
+        confirmPassword: '',
+        captcha: 0,
+    }
+
+    const formContext = useForm<Form>({values: defaultValues})
+
+    const setCaptchaStart = ({start}: CaptchaDto) => {
+        formContext.setValue('captcha', start)
+    }
+
+    const {captcha, onSubmitResult} = useCaptcha(setCaptchaStart)
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
+
         const {error} = await registerUser({
-            body: {
-                email: formData.email,
-                password: formData.password,
-                firstname: formData.firstname,
-                lastname: formData.lastname,
-                language: 'de', // todo, read from i18n
-                callbackUrl: location.origin + location.pathname,
+            query: {
+                challenge: captcha.data!.id,
+                input: formData.captcha,
             },
+            body: mapFormToRequest(formData),
         })
+
         setSubmitting(false)
+        onSubmitResult()
+        formContext.resetField('captcha')
+
         if (error) {
-            if (error.status.value === 409) {
-                formContext.setError('email', {
-                    type: 'validate',
-                    message:
-                        t('user.registration.email.inUse.statement') +
-                        ' ' +
-                        t('user.registration.email.inUse.callToAction'),
-                })
-                feedback.error(t('user.registration.email.inUse.statement'))
+            if (error.status.value === 404) {
+                feedback.error(t('captcha.error.notFound'))
+            } else if (error.status.value === 409) {
+                if (error.errorCode === 'EMAIL_IN_USE') {
+                    formContext.setError('email', {
+                        type: 'validate',
+                        message:
+                            t('user.registration.email.inUse.statement') +
+                            ' ' +
+                            t('user.registration.email.inUse.callToAction'),
+                    })
+                } else if (error.errorCode === 'CAPTCHA_WRONG') {
+                    feedback.error(t('captcha.error.incorrect'))
+                }
             } else {
                 feedback.error(t('user.registration.error'))
             }
-            console.log(error)
+            console.error(error)
         } else {
-            setMailSent(true)
+            setRequested(true)
         }
     }
 
     return (
         <SimpleFormLayout maxWidth={500}>
-            {(!mailSent && (
+            {!requested ? (
                 <>
-                    <Box sx={{mb:4}} >
-                        <Typography variant="h1">{t('user.registration.register')}</Typography>
+                    <Box sx={{mb: 4}}>
+                        <Typography variant="h1" textAlign="center">
+                            {t('user.registration.register')}
+                        </Typography>
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            <FormInputText name={'email'} label={t('user.email')} required />
-                            <Stack direction="row" spacing={2}>
-                                <FormInputPassword
-                                    name={'password'}
-                                    label={t('user.password')}
-                                    required
-                                    helperText={t('user.registration.password.minLength', {
-                                        min: minPasswordLength,
-                                    })}
-                                    rules={{
-                                        minLength: {
-                                            value: minPasswordLength,
-                                            message: t('user.registration.password.tooShort', {
-                                                min: minPasswordLength,
-                                            }),
-                                        },
-                                        validate: (val, vals) => {
-                                            if (val !== vals['confirmPassword']) {
-                                                formContext.setError('confirmPassword', {
-                                                    type: 'validate',
-                                                    message: t(
-                                                        'user.registration.password.notMatching',
-                                                    ),
-                                                })
-                                                return t('user.registration.password.notMatching')
-                                            } else {
-                                                formContext.clearErrors('confirmPassword')
-                                            }
-                                        },
-                                    }}
-                                    sx={{flex: 1}}
-                                />
-                                <PasswordElement
-                                    name="confirmPassword"
-                                    label={t('user.registration.password.confirm')}
-                                    required
-                                    type="password"
-                                    rules={{
-                                        required: t('common.form.required'),
-                                        validate: (val, vals) => {
-                                            if (val !== vals['password']) {
-                                                formContext.setError('password', {
-                                                    type: 'validate',
-                                                    message: t(
-                                                        'user.registration.password.notMatching',
-                                                    ),
-                                                })
-                                                return t('user.registration.password.notMatching')
-                                            } else {
-                                                formContext.clearErrors('password')
-                                            }
-                                        },
-                                    }}
-                                    sx={{flex: 1}}
-                                />
-                            </Stack>
-                            <Stack spacing={2} direction="row">
+                            <FormInputEmail name={'email'} label={t('user.email')} required />
+                            <NewPassword formContext={formContext} horizontal />
                                 <FormInputText
                                     name={'firstname'}
                                     label={t('user.firstname')}
@@ -141,7 +111,7 @@ const RegistrationPage = () => {
                                     required
                                     sx={{flex: 1}}
                                 />
-                            </Stack>
+                            <FormInputCaptcha captchaProps={captcha} />
                             <SubmitButton
                                 label={t('user.registration.register')}
                                 submitting={submitting}
@@ -158,21 +128,29 @@ const RegistrationPage = () => {
                         </Link>
                     </Stack>
                 </>
-            )) || (
-                <>
-                    <Box sx={{display: 'flex'}}>
-                        <EmailOutlined sx={{height: 100, width: 100, margin: 'auto'}} />
-                    </Box>
-                    <Typography textAlign="center" variant="h2">
-                        {t('user.registration.email.emailSent.header')}
+            ) : (
+                <ConfirmationMailSent header={t('user.registration.email.emailSent.header')}>
+                    <Typography textAlign="center">
+                        {t('user.registration.email.emailSent.message.part1')}
                     </Typography>
-                    <Typography variant="body1">
-                        {t('user.registration.email.emailSent.message')}
+                    <Typography textAlign="center">
+                        {t('user.registration.email.emailSent.message.part2')}
                     </Typography>
-                </>
+                </ConfirmationMailSent>
             )}
         </SimpleFormLayout>
     )
 }
 
 export default RegistrationPage
+
+function mapFormToRequest(formData: Form): RegisterRequest {
+    return {
+        email: formData.email,
+        password: formData.password,
+        firstname: formData.firstname,
+        lastname: formData.lastname,
+        language: languageMapping[i18nLanguage()],
+        callbackUrl: location.origin + location.pathname + '/',
+    }
+}

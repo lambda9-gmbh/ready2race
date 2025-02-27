@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventDay.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.eventDay.entity.AssignRacesToDayRequest
+import de.lambda9.ready2race.backend.app.eventDay.entity.AssignCompetitionsToDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.requests.*
@@ -31,9 +31,9 @@ fun Route.eventDay() {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
                     val params = !pagination<EventDaySort>()
-                    val raceId = !optionalQueryParam("raceId") { UUID.fromString(it) }
+                    val competitionId = !optionalQueryParam("competitionId") { UUID.fromString(it) }
 
-                    EventDayService.pageByEvent(eventId, params, raceId)
+                    EventDayService.pageByEvent(eventId, params, competitionId)
                 }
             }
         }
@@ -74,15 +74,15 @@ fun Route.eventDay() {
                 }
             }
 
-            route("/races"){
+            route("/competitions"){
 
                 put {
-                    val payload = call.receiveV(AssignRacesToDayRequest.example)
+                    val payload = call.receiveV(AssignCompetitionsToDayRequest.example)
                     call.respondKIO {
                         KIO.comprehension {
                             val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                             val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
-                            EventDayService.updateEventDayHasRace(!payload, user.id!!, eventDayId)
+                            EventDayService.updateEventDayHasCompetition(!payload, user.id!!, eventDayId)
                         }
                     }
                 }

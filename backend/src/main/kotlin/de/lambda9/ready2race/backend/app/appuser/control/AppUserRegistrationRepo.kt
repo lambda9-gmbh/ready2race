@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRe
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_REGISTRATION
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_REGISTRATION_VIEW
+import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -17,17 +18,7 @@ object AppUserRegistrationRepo {
 
     private fun AppUserRegistrationView.searchFields() = listOf(EMAIL, FIRSTNAME, LASTNAME)
 
-    fun create(
-        record: AppUserRegistrationRecord,
-    ): JIO<String> = Jooq.query {
-        with(APP_USER_REGISTRATION) {
-            insertInto(this)
-                .set(record)
-                .returningResult(TOKEN)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: AppUserRegistrationRecord) = APP_USER_REGISTRATION.insertReturning(record) { ID }
 
     fun count(
         search: String?,

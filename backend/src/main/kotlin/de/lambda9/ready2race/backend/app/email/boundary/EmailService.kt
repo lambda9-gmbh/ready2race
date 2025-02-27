@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.*
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.email.control.EmailAttachmentRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailRepo
-import de.lambda9.ready2race.backend.app.email.control.EmailTemplateRepo
+import de.lambda9.ready2race.backend.app.email.control.EmailIndividualTemplateRepo
 import de.lambda9.ready2race.backend.app.email.entity.*
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailAttachmentRecord
@@ -44,7 +44,7 @@ object EmailService {
     private val retryAfterError = 5.minutes
     private val defaultTemplates =
         EmailLanguage.entries.flatMap { lng ->
-            val lngFile = "${lng.value}.json"
+            val lngFile = "${lng}.json"
             logger.info { "Reading email language file $lngFile" }
             val resource = javaClass.classLoader
                 .getResourceAsStream("internationalization/email/templates/$lngFile")
@@ -120,13 +120,13 @@ object EmailService {
         val smtp = (!accessConfig()).smtp
 
         val email = !EmailRepo.getAndLockNext(retryAfterError).orDie().onNullFail { EmailError.NoEmailsToSend }
-        val attachments = !EmailAttachmentRepo.getByEmail(email.id!!).orDie().map { records ->
+        val attachments = !EmailAttachmentRepo.getByEmail(email.id).orDie().map { records ->
             records.map {
                 AttachmentResource(
-                    it.name!!,
+                    it.name,
                     ByteArrayDataSource(
-                        it.data!!,
-                        MimetypesFileTypeMap().getContentType(it.name!!)
+                        it.data,
+                        MimetypesFileTypeMap().getContentType(it.name)
                     )
                 )
             }
@@ -136,12 +136,12 @@ object EmailService {
             smtp.createMailer().sendMail(
                 EmailBuilder.startingBlank()
                     .from(smtp.from.name, smtp.from.address)
-                    .to(email.recipient!!)
+                    .to(email.recipient)
                     .applyNotNull(email.cc) { cc(it) }
                     .applyNotNull(email.bcc) { bcc(it) }
                     .withSubject(email.subject)
                     .applyEither(
-                        email.bodyIsHtml!!,
+                        email.bodyIsHtml,
                         { withHTMLText(email.body) },
                         { withPlainText(email.body) }
                     )
@@ -151,19 +151,21 @@ object EmailService {
             )
         }.mapError {
             val now = LocalDateTime.now()
-            email.lastError = it.stackTraceToString()
-            email.lastErrorAt = now
-            email.updatedAt = now
-            email.updatedBy = SYSTEM_USER
-            email.update()
-            EmailError.SendingFailed(email.id!!, it)
+            !EmailRepo.update(email) {
+                lastError = it.stackTraceToString()
+                lastErrorAt = now
+                updatedAt = now
+                updatedBy = SYSTEM_USER
+            }.orDie()
+            EmailError.SendingFailed(email.id, it)
         }
 
         val now = LocalDateTime.now()
-        email.sentAt = now
-        email.updatedAt = now
-        email.updatedBy = SYSTEM_USER
-        email.update()
+        !EmailRepo.update(email) {
+            sentAt = now
+            updatedAt = now
+            updatedBy = SYSTEM_USER
+        }.orDie()
 
         KIO.unit
     }
@@ -175,7 +177,7 @@ object EmailService {
         key: EmailTemplateKey,
         language: EmailLanguage,
     ): App<Nothing, EmailContentTemplate> =
-        EmailTemplateRepo.get(key, language).orDie()
+        EmailIndividualTemplateRepo.get(key, language).orDie()
             .map {
                 it?.let { EmailContentTemplate.Individual(it) }
                     ?: defaultTemplates[key to language]!!

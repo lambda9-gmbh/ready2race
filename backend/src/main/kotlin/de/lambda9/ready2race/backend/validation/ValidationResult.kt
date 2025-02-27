@@ -3,7 +3,7 @@ package de.lambda9.ready2race.backend.validation
 import com.fasterxml.jackson.annotation.JsonValue
 
 sealed interface ValidationResult {
-    data object Valid : ValidationResult
+    data object Valid : ValidationResult // todo: serialize
     sealed interface Invalid : ValidationResult {
 
         fun interface Message : Invalid {
@@ -19,6 +19,7 @@ sealed interface ValidationResult {
 
         data class AllOf(val allOf: List<Invalid>) : Invalid
         data class AnyOf(val anyOf: List<Invalid>) : Invalid
+        data class OneOf(val oneOf: List<ValidationResult>) : Invalid
     }
 
     fun <A> fold(
@@ -49,5 +50,13 @@ sealed interface ValidationResult {
                     }
                 }
                 ?: Valid
+
+        fun oneOf(vararg results: ValidationResult) =
+            if(results.filterIsInstance<Valid>().size != 1){
+                Invalid.OneOf(results.toList())
+            } else {
+                Valid
+            }
+
     }
 }

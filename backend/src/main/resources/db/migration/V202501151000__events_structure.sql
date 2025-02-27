@@ -9,7 +9,6 @@ create table event
     registration_available_from timestamp,
     registration_available_to   timestamp,
     invoice_prefix              text,
-    -- #M base_fee, optional_base_fee (&_label), base_fee_per_participant,... (evtl alles auch jeweils nochmal an event_day, um flexibel zu bleiben)
     created_at                  timestamp not null,
     created_by                  uuid      references app_user on delete set null,
     updated_at                  timestamp not null,
@@ -31,7 +30,7 @@ create table event_day
 
 create index on event_day (event);
 
-create table race_template
+create table competition_template
 (
     id         uuid primary key,
     created_at timestamp not null,
@@ -40,32 +39,32 @@ create table race_template
     updated_by uuid      references app_user on delete set null
 );
 
-create table race
+create table competition
 (
     id         uuid primary key,
     event      uuid      not null references event on delete cascade,
-    template   uuid      references race_template on delete set null,
+    template   uuid      references competition_template on delete set null,
     created_at timestamp not null,
     created_by uuid      references app_user on delete set null,
     updated_at timestamp not null,
     updated_by uuid      references app_user on delete set null
 );
 
-create index on race (event);
+create index on competition (event);
 
-create table event_day_has_race
+create table event_day_has_competition
 (
     event_day  uuid      not null references event_day on delete cascade,
-    race       uuid      not null references race on delete cascade,
+    competition       uuid      not null references competition on delete cascade,
     created_at timestamp not null,
     created_by uuid      references app_user on delete set null,
-    primary key (event_day, race)
+    primary key (event_day, competition)
 );
 
-create index on event_day_has_race (event_day);
-create index on event_day_has_race (race);
+create index on event_day_has_competition (event_day);
+create index on event_day_has_competition (competition);
 
-create table race_category
+create table competition_category
 (
     id          uuid primary key,
     name        text      not null,
@@ -76,11 +75,11 @@ create table race_category
     updated_by  uuid      references app_user on delete set null
 );
 
-create table race_properties
+create table competition_properties
 (
     id                uuid primary key,
-    race              uuid references race on delete cascade,
-    race_template     uuid references race_template on delete cascade,
+    competition              uuid references competition on delete cascade,
+    competition_template     uuid references competition_template on delete cascade,
     identifier        text           not null,
     name              text           not null,
     short_name        text,
@@ -89,15 +88,35 @@ create table race_properties
     count_females     integer        not null,
     count_non_binary  integer        not null,
     count_mixed       integer        not null,
-    participation_fee decimal(10, 2) not null,
-    rental_fee        decimal(10, 2) not null,
-    -- #M rental_fee -> optional_fee & optional_fee_label
-    race_category     uuid           references race_category on delete set null,
-    constraint chk_either_race_or_race_template check ( (race is null and race_template is not null) or
-                                                        (race is not null and race_template is null) )
+    competition_category     uuid           references competition_category on delete set null,
+    constraint chk_either_competition_or_competition_template check ( (competition is null and competition_template is not null) or
+                                                        (competition is not null and competition_template is null) )
 );
-create index on race_properties (race);
-create index on race_properties (race_template);
+create index on competition_properties (competition);
+create index on competition_properties (competition_template);
+
+create table fee
+(
+    id          uuid primary key,
+    name        text      not null,
+    label       text,
+    description text,
+    created_at  timestamp not null,
+    created_by  uuid      references app_user on delete set null,
+    updated_at  timestamp not null,
+    updated_by  uuid      references app_user on delete set null
+);
+
+create table competition_properties_has_fee
+(
+    competition_properties uuid           not null references competition_properties on delete cascade,
+    fee             uuid           not null references fee,
+    required        boolean        not null,
+    amount          decimal(10, 2) not null,
+    primary key (competition_properties, fee, required)
+);
+
+create index on competition_properties_has_fee (competition_properties);
 
 create table named_participant
 (
@@ -110,17 +129,17 @@ create table named_participant
     updated_by  uuid      references app_user on delete set null
 );
 
-create table race_properties_has_named_participant
+create table competition_properties_has_named_participant
 (
-    race_properties   uuid    not null references race_properties on delete cascade,
+    competition_properties   uuid    not null references competition_properties on delete cascade,
     named_participant uuid    not null references named_participant,
     required          boolean not null,
     count_males       integer not null,
     count_females     integer not null,
     count_non_binary  integer not null,
     count_mixed       integer not null,
-    primary key (race_properties, named_participant, required),
+    primary key (competition_properties, named_participant, required),
     constraint chk_count_sum_greater_0 check (count_males + count_females + count_non_binary + count_mixed > 0)
 );
 
-create index on race_properties_has_named_participant (race_properties);
+create index on competition_properties_has_named_participant (competition_properties);
