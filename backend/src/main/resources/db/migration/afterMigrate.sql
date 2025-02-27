@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_document_download;
+drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
 drop view if exists app_user_invitation_with_roles;
 drop view if exists competition_template_to_properties_with_named_participants;
@@ -77,9 +79,9 @@ select c.id,
        cp.count_females,
        cp.count_non_binary,
        cp.count_mixed,
-       cc.id                                                                               as category_id,
-       cc.name                                                                             as category_name,
-       cc.description                                                                      as category_description,
+       cc.id                                                                                      as category_id,
+       cc.name                                                                                    as category_name,
+       cc.description                                                                             as category_description,
        coalesce(array_agg(npfrp) filter ( where npfrp.competition_properties is not null ), '{}') as named_participants
 from competition c
          left join competition_properties cp on c.id = cp.competition
@@ -117,9 +119,9 @@ select aui.id,
        aui.language,
        aui.expires_at,
        aui.created_at,
-       e                                                                             as email_entity,
+       e                                                                  as email_entity,
        coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles,
-       cb                                                                            as created_by
+       cb                                                                 as created_by
 from app_user_invitation aui
          left join app_user_invitation_to_email auite on aui.id = auite.app_user_invitation
          left join email e on auite.email = e.id
@@ -140,3 +142,21 @@ select aur.id,
 from app_user_registration aur
          left join app_user_registration_to_email aurte on aur.id = aurte.app_user_registration
          left join email e on aurte.email = e.id;
+
+create view event_document_view as
+select ed.id,
+       ed.event,
+       edt.name as document_type,
+       ed.name,
+       ed.created_at,
+       cb       as created_by
+from event_document ed
+         left join event_document_type edt on ed.event_document_type = edt.id
+         left join created_by cb on ed.created_by = cb.id;
+
+create view event_document_download as
+select ed.id,
+       ed.name,
+       edd.data
+from event_document ed
+         join event_document_data edd on ed.id = edd.event_document;
