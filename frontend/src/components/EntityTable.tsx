@@ -2,7 +2,6 @@ import {
     DataGrid,
     DataGridProps,
     GridActionsCellItem,
-    GridActionsCellItemProps,
     GridColDef,
     GridPaginationModel,
     GridRenderCellParams,
@@ -21,7 +20,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Box, Button, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {Pagination, Resource} from "@api/types.gen.ts";
+import {Pagination, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
@@ -42,6 +41,7 @@ type ExtendedEntityTableProps<Entity extends GridValidRowModel, GetError, Delete
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
+    customAdd?: ReactElement
 } & (
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false> // todo: specific error type
@@ -137,6 +137,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     linkColumn,
     gridProps,
     withSearch = true,
+    customAdd,
     crud,
     deleteRequest,
     onDelete,
@@ -176,15 +177,10 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
             getActions: (params: GridRowParams<Entity>) => [
                 ...customActions(params.row)
                     .map(action => {
-                        const {privilege, ...rest} = action.props
-                        const gridAction: ReactElement<GridActionsCellItemProps> = {
-                            type: action.type,
-                            props: rest,
-                            key: action.key,
-                        }
-                        action.props = rest
+                        const {privilege} = action.props
+                        delete action.props.privilege
                         return !privilege || (user.loggedIn && user.checkPrivilege(privilege))
-                            ? gridAction
+                            ? action
                             : null
                     })
                     .filter(action => action !== null),
@@ -263,11 +259,16 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
                         }}
                     />
                 )}
-                {crud.create && options.entityCreate && (
-                    <Button variant={'outlined'} startIcon={<Add />} onClick={() => openDialog()}>
-                        {t('entity.add.action', {entity: entityName})}
-                    </Button>
-                )}
+                {crud.create &&
+                    options.entityCreate &&
+                    (customAdd ?? (
+                        <Button
+                            variant={'outlined'}
+                            startIcon={<Add />}
+                            onClick={() => openDialog()}>
+                            {t('entity.add.action', {entity: entityName})}
+                        </Button>
+                    ))}
             </Box>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
                 <DataGrid

@@ -1,7 +1,16 @@
 import {Outlet} from '@tanstack/react-router'
 import {AppBar, Box, Container, IconButton, Paper, Toolbar} from '@mui/material'
 import {useState} from 'react'
-import {Dashboard, EditCalendar, Event, Menu, MenuOpen, People, Work} from '@mui/icons-material'
+import {
+    Dashboard,
+    EditCalendar,
+    Event,
+    Menu,
+    MenuOpen,
+    People,
+    Settings,
+    Work,
+} from '@mui/icons-material'
 import Sidebar from '@components/sidebar/Sidebar.tsx'
 import SidebarItem from '@components/sidebar/SidebarItem.tsx'
 import UserWidget from '@components/appbar/UserWidget.tsx'
@@ -61,11 +70,18 @@ const RootLayout = () => {
                                 to={'/event'}
                             />
                             <SidebarItem
-                                text={t('navigation.titles.raceConfig')}
+                                text={t('navigation.titles.competitionConfig')}
                                 icon={<EditCalendar />} //todo: better icon
                                 authenticatedOnly
                                 privilege={updateEventGlobal}
-                                to={'/raceConfig'}
+                                to={'/competitionConfig'}
+                            />
+                            <SidebarItem
+                                text={'[todo] config'}
+                                icon={<Settings />}
+                                authenticatedOnly
+                                privilege={updateEventGlobal}
+                                to={'/config'}
                             />
                         </Sidebar>
                         <Box

@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventDocument.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
+import de.lambda9.ready2race.backend.requests.RequestError
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
@@ -11,6 +12,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import io.ktor.utils.io.*
 import java.util.*
 
 private val logger = KotlinLogging.logger { }
@@ -19,21 +21,57 @@ fun Route.eventDocument() {
     route("/eventDocument") {
 
         post {
-            // upload
             val multiPartData = call.receiveMultipart() // todo: default limit 50MB, need custom value?
 
-            multiPartData.readPart()
-            multiPartData.forEachPart { part ->
-                when (part) {
-                    is PartData.FileItem -> {
-                        logger.error { part.originalFileName }
+            // todo: why?
+            /*
+            * multiPartData.forEachPart { }
+            * ->
+            * Flow invariant is violated:
+		        Flow was collected in [NettyDispatcher@1912dfa1, io.ktor.server.engine.DefaultUncaughtExceptionHandler@be039ae, CoroutineName(call-handler), io.ktor.server.netty.NettyDispatcher$CurrentContext@44e05ec2, ScopeCoroutine{Active}@7a709893, io.ktor.server.application.ClassLoaderAwareContinuationInterceptor@7510bfab],
+		        but emission happened in [NettyDispatcher@1912dfa1, io.ktor.server.engine.DefaultUncaughtExceptionHandler@be039ae, CoroutineName(call-handler), io.ktor.server.netty.NettyDispatcher$CurrentContext@44e05ec2, ScopeCoroutine{Active}@7a709893, io.ktor.server.application.ClassLoaderAwareContinuationInterceptor@7510bfab].
+		        Please refer to 'flow' documentation or use 'flowOn' instead
+            * */
+
+            val uploads = mutableListOf<Pair<String, ByteArray>>()
+            var documentType: String? = null
+
+            var done = false
+            while (!done) {
+                val part = multiPartData.readPart()
+                if (part == null) {
+                    done = true
+                } else {
+                    when (part) {
+                        is PartData.FileItem -> {
+                            uploads.add(
+                                part.originalFileName!! to part.provider().toByteArray()
+                            )
+                        }
+
+                        is PartData.FormItem -> {
+                            if (part.name == "documentType") {
+                                documentType = part.value
+                            }
+                        }
+
+                        else -> {}
                     }
-                    is PartData.FormItem -> {
-                        logger.error { part.name + ": " + part.value }
-                    }
-                    else -> {}
+                    part.dispose()
                 }
             }
+
+            call.respondKIO {
+                KIO.comprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId") { UUID.fromString(it) }
+                    val type = !KIO.effect {
+                        documentType?.let { UUID.fromString(it) }
+                    }.mapError { RequestError.ParameterUnparsable("documentType") } // todo: better Error type
+                    EventDocumentService.saveDocuments(eventId, uploads, type, user.id!!)
+                }
+            }
+
         }
 
         get {
