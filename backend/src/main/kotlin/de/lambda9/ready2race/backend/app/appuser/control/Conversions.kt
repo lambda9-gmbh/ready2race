@@ -93,19 +93,17 @@ fun AppUserInvitationWithRolesRecord.toAppUser(password: String): App<Nothing, A
         }
     }
 
-fun CreatedByRecord?.toDto(): App<Nothing, CreatedByDto?> =
+fun AppUserNameRecord.toDto(): App<Nothing, AppUserNameDto> =
     KIO.ok(
-        this?.let {
-            CreatedByDto(
-                firstname = it.firstname!!,
-                lastname = it.lastname!!
-            )
-        }
+        AppUserNameDto(
+            firstname = firstname!!,
+            lastname = lastname!!
+        )
     )
 
 fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto> = KIO.comprehension {
-    val createdByDto = !createdBy.toDto()
-    val assignedEmailDto = !emailEntity.toAssignedDto()
+    val createdByDto = createdBy?.let { !it.toDto() }
+    val assignedEmailDto = emailEntity?.let { !it.toAssignedDto() }
     val roleDtos = !roles!!.toList().forEachM { it!!.toDto() }
 
     KIO.ok(
@@ -124,8 +122,9 @@ fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto>
     )
 }
 
-fun AppUserRegistrationViewRecord.toDto(): App<Nothing, AppUserRegistrationDto> =
-    emailEntity.toAssignedDto().map {
+fun AppUserRegistrationViewRecord.toDto(): App<Nothing, AppUserRegistrationDto> = KIO.comprehension {
+    val assignedEmailDto = emailEntity?.let { !it.toAssignedDto() }
+    KIO.ok(
         AppUserRegistrationDto(
             id = id!!,
             email = email!!,
@@ -134,6 +133,7 @@ fun AppUserRegistrationViewRecord.toDto(): App<Nothing, AppUserRegistrationDto> 
             language = EmailLanguage.valueOf(language!!),
             expiresAt = expiresAt!!,
             createdAt = createdAt!!,
-            assignedEmail = it
+            assignedEmail = assignedEmailDto
         )
-    }
+    )
+}

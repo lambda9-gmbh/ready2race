@@ -11,6 +11,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import jakarta.activation.MimetypesFileTypeMap
 import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -81,12 +82,17 @@ suspend fun ApplicationCall.respondKIO(
                 }
 
                 is ApiResponse.File -> {
-                    val extension = apiResponse.name.substringAfterLast('.').lowercase()
-                    val contentType = when (extension) {
-                        // todo: extend, if needed
-                        "pdf" -> ContentType.Application.Pdf
-                        else -> null
+
+                    // todo: @fix @incomplete: getContentType() always returns octet-stream,
+                    //  probably missing mimes.types
+
+                    val contentType = try {
+                        ContentType.parse(MimetypesFileTypeMap().getContentType(apiResponse.name))
+                    } catch(e: BadContentTypeFormatException) {
+                        logger.warn(e) { "Could not parse content-type from Document/File ${apiResponse.name}" }
+                        ContentType.Application.OctetStream
                     }
+
                     response.header(
                         HttpHeaders.ContentDisposition,
                         ContentDisposition.Attachment.withParameter(
@@ -94,6 +100,7 @@ suspend fun ApplicationCall.respondKIO(
                             apiResponse.name
                         ).toString()
                     )
+
                     respondBytes(apiResponse.bytes, contentType)
                 }
 

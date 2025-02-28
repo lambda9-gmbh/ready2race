@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -21,6 +22,8 @@ object EventDocumentRepo {
     private fun EventDocumentView.searchFields() = listOf(NAME, DOCUMENT_TYPE)
 
     fun create(record: EventDocumentRecord) = EVENT_DOCUMENT.insertReturning(record) { ID }
+
+    fun update(id: UUID, f: EventDocumentRecord.() -> Unit) = EVENT_DOCUMENT.update(f) { ID.eq(id) }
 
     fun count(
         search: String?

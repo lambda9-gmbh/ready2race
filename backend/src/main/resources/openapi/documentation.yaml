@@ -1197,6 +1197,8 @@ paths:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -1328,6 +1330,29 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     delete:
@@ -1813,7 +1838,7 @@ components:
 
     # user
 
-    CreatedByDto:
+    AppUserNameDto:
       type: object
       required:
         - firstname
@@ -1946,7 +1971,7 @@ components:
           items:
             $ref: '#/components/schemas/RoleDto'
         createdBy:
-          $ref: '#/components/schemas/CreatedByDto'
+          $ref: '#/components/schemas/AppUserNameDto'
 
     InviteRequest:
       type: object
@@ -2459,22 +2484,35 @@ components:
         confirmationRequired:
           type: boolean
 
+    EventDocumentRequest:
+      type: object
+      properties:
+        documentType:
+          type: string
+          format: uuid
+
     EventDocumentDto:
       type: object
       required:
         - id
         - name
         - createdAt
+        - updatedAt
       properties:
         id:
           type: string
           format: uuid
         documentType:
-          type: string
+          $ref: '#/components/schemas/EventDocumentTypeDto'
         name:
           type: string
         createdAt:
           type: string
           format: date-time
         createdBy:
-          $ref: '#/components/schemas/CreatedByDto'
+          $ref: '#/components/schemas/AppUserNameDto'
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: '#/components/schemas/AppUserNameDto'

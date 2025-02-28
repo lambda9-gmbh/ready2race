@@ -34,7 +34,12 @@ export type AppUserInvitationDto = {
     createdAt: string
     assignedEmail?: AssignedEmailDto
     roles: Array<RoleDto>
-    createdBy?: CreatedByDto
+    createdBy?: AppUserNameDto
+}
+
+export type AppUserNameDto = {
+    firstname: string
+    lastname: string
 }
 
 export type AppUserRegistrationDto = {
@@ -136,11 +141,6 @@ export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
 }
 
-export type CreatedByDto = {
-    firstname: string
-    lastname: string
-}
-
 export type Duplicate = {
     value: unknown
     count: number
@@ -166,10 +166,16 @@ export type EventDayRequest = {
 
 export type EventDocumentDto = {
     id: string
-    documentType?: string
+    documentType?: EventDocumentTypeDto
     name: string
     createdAt: string
-    createdBy?: CreatedByDto
+    createdBy?: AppUserNameDto
+    updatedAt: string
+    updatedBy?: AppUserNameDto
+}
+
+export type EventDocumentRequest = {
+    documentType?: string
 }
 
 export type EventDocumentTypeDto = {
@@ -1151,6 +1157,18 @@ export type DownloadDocumentData = {
 export type DownloadDocumentResponse = Blob | File
 
 export type DownloadDocumentError = BadRequestError | ApiError
+
+export type UpdateDocumentData = {
+    body: EventDocumentRequest
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type UpdateDocumentResponse = void
+
+export type UpdateDocumentError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type DeleteDocumentData = {
     path: {

@@ -41,7 +41,7 @@ const DocumentTypeDialog = (props: BaseEntityDialogProps<EventDocumentTypeDto>) 
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapEntityToForm(props.entity) : defaultValues)
-    }, [])
+    }, [props.entity])
 
     return (
         <EntityDialog

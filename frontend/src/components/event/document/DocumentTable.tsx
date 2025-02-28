@@ -3,9 +3,8 @@ import {BaseEntityTableProps, EntityTableAction} from '@utils/types.ts'
 import {EventDocumentDto} from '@api/types.gen.ts'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {addDocuments, deleteDocument, downloadDocument, getDocuments} from '@api/sdk.gen.ts'
+import {deleteDocument, downloadDocument, getDocuments} from '@api/sdk.gen.ts'
 import {eventIndexRoute} from '@routes'
-import SelectFileButton from '@components/SelectFileButton.tsx'
 import {Download} from '@mui/icons-material'
 import {useRef} from 'react'
 import {Link} from '@mui/material'
@@ -38,19 +37,6 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
             },
         })
 
-    const uploadFiles = async (files: FileList) => {
-        // todo: error handling
-        await addDocuments({
-            path: {
-                eventId,
-            },
-            body: {
-                files: Array.from(files),
-            },
-        })
-        props.reloadData()
-    }
-
     const columns: GridColDef<EventDocumentDto>[] = [
         {
             field: 'name',
@@ -63,6 +49,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
             headerName: '[todo] Typ',
             minWidth: 200,
             flex: 1,
+            valueGetter: (_, row) => row.documentType?.name,
         },
     ]
 
@@ -78,7 +65,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
         if (data != undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
             anchor.download = entity.name
-            anchor.click()
+            //anchor.click()
             anchor.href = ''
             anchor.download = ''
         }
@@ -105,15 +92,6 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
-                customAdd={
-                    <SelectFileButton
-                        variant={'outlined'}
-                        multiple
-                        onSelected={uploadFiles}
-                        accept={'application/pdf'}>
-                        todo Upload
-                    </SelectFileButton>
-                }
                 customActions={customActions}
             />
         </>

@@ -19,7 +19,9 @@ create table event_document
     event_document_type uuid      references event_document_type on delete set null,
     name                text      not null,
     created_at          timestamp not null,
-    created_by          uuid      references app_user on delete set null
+    created_by          uuid      references app_user on delete set null,
+    updated_at          timestamp not null,
+    updated_by          uuid      references app_user on delete set null
 );
 
 create table event_document_data

@@ -4,10 +4,10 @@ import {useCallback} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import {AppUserInvitationDto, InviteRequest} from "@api/types.gen.ts";
-import {inviteUser} from "@api/sdk.gen.ts";
-import {i18nLanguage, languageMapping} from "@utils/helpers.ts";
-import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
+import {AppUserInvitationDto, InviteRequest} from '@api/types.gen.ts'
+import {inviteUser} from '@api/sdk.gen.ts'
+import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 
 type InvitationForm = {
     email: string
@@ -42,7 +42,7 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
 
     const onOpen = useCallback(() => {
         formContext.reset(defaultValues)
-    }, [])
+    }, [props.entity])
 
     return (
         <EntityDialog {...props} formContext={formContext} onOpen={onOpen} addAction={addAction}>

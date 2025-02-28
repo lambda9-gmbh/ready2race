@@ -9,7 +9,7 @@ import {
     GridSortModel,
     GridValidRowModel,
 } from '@mui/x-data-grid'
-import {ReactElement, useState} from 'react'
+import {useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
@@ -41,7 +41,6 @@ type ExtendedEntityTableProps<Entity extends GridValidRowModel, GetError, Delete
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
-    customAdd?: ReactElement
 } & (
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false> // todo: specific error type
@@ -76,6 +75,8 @@ type Crud = {
     update: boolean
     delete: boolean
 }
+
+// todo: @fix: sometimes on refreshing content, datagrid is simple empty
 
 const EntityTable = <Entity extends GridValidRowModel, GetError, DeleteError>({
     resource,
@@ -137,7 +138,6 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     linkColumn,
     gridProps,
     withSearch = true,
-    customAdd,
     crud,
     deleteRequest,
     onDelete,
@@ -259,16 +259,11 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
                         }}
                     />
                 )}
-                {crud.create &&
-                    options.entityCreate &&
-                    (customAdd ?? (
-                        <Button
-                            variant={'outlined'}
-                            startIcon={<Add />}
-                            onClick={() => openDialog()}>
-                            {t('entity.add.action', {entity: entityName})}
-                        </Button>
-                    ))}
+                {crud.create && options.entityCreate && (
+                    <Button variant={'outlined'} startIcon={<Add />} onClick={() => openDialog()}>
+                        {t('entity.add.action', {entity: entityName})}
+                    </Button>
+                )}
             </Box>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
                 <DataGrid

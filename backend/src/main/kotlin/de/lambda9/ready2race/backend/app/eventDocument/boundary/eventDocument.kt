@@ -1,28 +1,23 @@
 package de.lambda9.ready2race.backend.app.eventDocument.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentRequest
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
-import de.lambda9.ready2race.backend.requests.RequestError
-import de.lambda9.ready2race.backend.requests.authenticate
-import de.lambda9.ready2race.backend.requests.pagination
-import de.lambda9.ready2race.backend.requests.pathParam
+import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import java.util.*
 
-private val logger = KotlinLogging.logger { }
-
 fun Route.eventDocument() {
     route("/eventDocument") {
 
         post {
             val multiPartData = call.receiveMultipart() // todo: default limit 50MB, need custom value?
-
+            // todo: extract for reuse
             // todo: why?
             /*
             * multiPartData.forEachPart { }
@@ -92,6 +87,18 @@ fun Route.eventDocument() {
                         !authenticate(Privilege.ReadEventGlobal)
                         val id = !pathParam("eventDocumentId") { UUID.fromString(it) }
                         EventDocumentService.downloadDocument(id)
+                    }
+                }
+            }
+
+            put {
+                val payload = call.receiveV(EventDocumentRequest.example)
+                call.respondKIO {
+                    KIO.comprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val id = !pathParam("eventDocumentId") { UUID.fromString(it) }
+                        val body = !payload
+                        EventDocumentService.updateDocument(id, body, user.id!!)
                     }
                 }
             }

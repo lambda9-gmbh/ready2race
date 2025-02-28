@@ -10,6 +10,7 @@ import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
 import {getEvent} from '@api/sdk.gen.ts'
 import {EventDayDto, CompetitionDto, EventDocumentDto} from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
+import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -33,10 +34,8 @@ const EventPage = () => {
     const eventDayAdministrationProps = useEntityAdministration<EventDayDto>(
         t('event.eventDay.eventDay'),
     )
-    const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
-        '[todo] Dokumente',
-        {entityUpdate: false},
-    )
+    const documentAdministrationProps =
+        useEntityAdministration<EventDocumentDto>('[todo] Dokumente')
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -57,6 +56,7 @@ const EventPage = () => {
                         {...documentAdministrationProps.table}
                         title={'[todo] Dokumente'}
                     />
+                    <DocumentDialog {...documentAdministrationProps.dialog} />
                 </Stack>
             ) : (
                 pending && <Throbber />

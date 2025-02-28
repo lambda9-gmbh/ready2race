@@ -48,7 +48,7 @@ object EventService {
     fun getEvent(
         id: UUID,
     ): App<EventError, ApiResponse.Dto<EventDto>> = KIO.comprehension {
-        val event = !EventRepo.getEvent(id).orDie().onNullFail { EventError.EventNotFound }
+        val event = !EventRepo.getEvent(id).orDie().onNullFail { EventError.NotFound }
         event.eventDto().map { ApiResponse.Dto(it) }
     }
 
@@ -67,7 +67,7 @@ object EventService {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
-            .onNullFail { EventError.EventNotFound }
+            .onNullFail { EventError.NotFound }
             .map { ApiResponse.NoData }
 
     fun deleteEvent(
@@ -76,7 +76,7 @@ object EventService {
         val deleted = !EventRepo.delete(id).orDie()
 
         if (deleted < 1) {
-            KIO.fail(EventError.EventNotFound)
+            KIO.fail(EventError.NotFound)
         } else {
             noData
         }
@@ -87,6 +87,6 @@ object EventService {
     ): App<EventError, Unit> = EventRepo.exists(eventId)
         .orDie()
         .failIf(condition = { !it }) {
-            EventError.EventNotFound
+            EventError.NotFound
         }.map {}
 }

@@ -167,6 +167,9 @@ import type {
     DownloadDocumentData,
     DownloadDocumentError,
     DownloadDocumentResponse,
+    UpdateDocumentData,
+    UpdateDocumentError,
+    UpdateDocumentResponse,
     DeleteDocumentData,
     DeleteDocumentError,
     DeleteDocumentResponse,
@@ -801,6 +804,19 @@ export const downloadDocument = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<
         DownloadDocumentResponse,
         DownloadDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
+export const updateDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateDocumentResponse,
+        UpdateDocumentError,
         ThrowOnError
     >({
         ...options,
