@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {getNamedParticipants, getCompetitionCategories} from '@api/sdk.gen.ts'
+import {getNamedParticipants, getCompetitionCategories, getFees} from '@api/sdk.gen.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
@@ -42,6 +42,27 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             label: dto.name,
         })) ?? []
 
+    const {data: feesData, pending: feesPending} = useFetch(
+        signal => getFees({signal}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.multiple', {
+                            entity: '[todo] Fee',
+                        }),
+                    )
+                }
+            },
+        },
+    )
+
+    const fees: AutocompleteOption[] =
+        feesData?.data.map(dto => ({
+            id: dto.id,
+            label: dto.name,
+        })) ?? []
+
     const {data: categoriesData, pending: categoriesPending} = useFetch(
         signal => getCompetitionCategories({signal}),
         {
@@ -72,12 +93,23 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         keyName: 'fieldId',
     })
 
+    const {
+        fields: feeFields,
+        append: appendFee,
+        remove: removeFee,
+    } = useFieldArray({
+        control: props.formContext.control,
+        name: 'fees',
+        keyName: 'fieldId',
+    })
+
     return (
         <>
             <FormInputText name="identifier" label={t('event.competition.identifier')} required />
             <FormInputText name="name" label={t('entity.name')} required />
             <FormInputText name="shortName" label={t('event.competition.shortName')} />
             <FormInputText name="description" label={t('entity.description')} />
+            {/* todo: validate if at least one count is set */}
             <Stack direction="row" spacing={2} sx={{mb: 4}}>
                 <FormInputNumber
                     name="countMales"
@@ -223,6 +255,75 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     }}
                     sx={{width: 1}}>
                     {t('event.competition.namedParticipant.add')}
+                </Button>
+            </Box>
+            <Divider/>
+            <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
+            {feeFields.map((field, index) => (
+                <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
+                    <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
+                        <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
+                            <Grid2 size="grow" sx={{minWidth: 250}}>
+                                <FormInputAutocomplete
+                                    name={'fees[' + index + '].fee'}
+                                    options={fees}
+                                    label={'[todo] Fee Type'}
+                                    loading={feesPending}
+                                    required
+                                />
+                            </Grid2>
+                            <Box sx={{my: 'auto'}}>
+                                <SwitchElement
+                                    name={'fees[' + index + '].required'}
+                                    label={
+                                        <FormInputLabel
+                                            label={'[todo] Fee required'}
+                                            required={true}
+                                        />
+                                    }
+                                />
+                            </Box>
+                        </Grid2>
+                        <Stack spacing={4}>
+                            <FormInputNumber
+                                name={'fees[' + index + '].amount'}
+                                label={'[todo] MONETEN'}
+                                min={0}
+                                integer={true}
+                                required
+                                sx={{flex: 1}}
+                            />
+                        </Stack>
+                    </Box>
+                    <Tooltip
+                        title={t('common.delete')}
+                        disableInteractive
+                        slots={{
+                            transition: Zoom,
+                        }}>
+                        <IconButton
+                            onClick={() => {
+                                removeFee(index)
+                                props.fieldArrayModified?.()
+                            }}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
+            ))}
+            </FormInputLabel>
+            <Box sx={{minWidth: 200, margin: 'auto'}}>
+                <Button
+                    onClick={() => {
+                        appendFee({
+                            fee: {id: '', label: ''},
+                            required: false,
+                            amount: '0',
+                        })
+                        props.fieldArrayModified?.()
+                    }}
+                    sx={{width: 1}}>
+                    {'[todo] Add fee]'}
                 </Button>
             </Box>
         </>

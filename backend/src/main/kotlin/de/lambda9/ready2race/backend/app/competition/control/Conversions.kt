@@ -7,9 +7,10 @@ import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryDto
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionToPropertiesWithNamedParticipantsRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
 import java.util.*
 
@@ -28,10 +29,16 @@ fun CompetitionRequest.toRecord(userId: UUID, eventId: UUID): App<Nothing, Compe
         }
     )
 
-fun CompetitionToPropertiesWithNamedParticipantsRecord.toDto(): App<Nothing, CompetitionDto> =
-    namedParticipants!!.toList().forEachM {
+fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehension {
+    val feeDtos = !fees!!.toList().forEachM {
         it!!.toDto()
-    }.map {
+    }.orDie()
+
+    val namedParticipantDtos = !namedParticipants!!.toList().forEachM {
+        it!!.toDto()
+    }.orDie()
+
+    KIO.ok(
         CompetitionDto(
             id = id!!,
             event = event!!,
@@ -51,8 +58,10 @@ fun CompetitionToPropertiesWithNamedParticipantsRecord.toDto(): App<Nothing, Com
                         description = categoryDescription
                     )
                 } else null,
-                namedParticipants = it
+                namedParticipants = namedParticipantDtos,
+                fees = feeDtos
             ),
             template = template,
         )
-    }
+    )
+}

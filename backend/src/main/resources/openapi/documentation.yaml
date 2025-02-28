@@ -927,6 +927,96 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /competitionCategory:
+    post:
+      operationId: addCompetitionCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionCategories
+      responses:
+        200:
+          description: CompetitionCategory list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionCategoryDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /competitionCategory/{competitionCategoryId}:
+    parameters:
+      - name: competitionCategoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateCompetitionCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
+      responses:
+        204:
+          description: CompetitionCategory successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionCategory
+      responses:
+        204:
+          description: CompetitionCategory successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
   /namedParticipant:
     post:
       operationId: addNamedParticipant
@@ -1017,15 +1107,15 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /competitionCategory:
+  /fee:
     post:
-      operationId: addCompetitionCategory
+      operationId: addFee
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionCategoryRequest'
+              $ref: '#/components/schemas/FeeRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -1038,10 +1128,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getCompetitionCategories
+      operationId: getFees
       responses:
         200:
-          description: CompetitionCategory list successfully retrieved
+          description: Fee list successfully retrieved
           content:
             application/json:
               schema:
@@ -1054,7 +1144,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/CompetitionCategoryDto'
+                      $ref: '#/components/schemas/FeeDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -1063,25 +1153,25 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /competitionCategory/{competitionCategoryId}:
+  /fee/{feeId}:
     parameters:
-      - name: competitionCategoryId
+      - name: feeId
         in: path
         required: true
         schema:
           type: string
           format: uuid
     put:
-      operationId: updateCompetitionCategory
+      operationId: updateFee
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionCategoryRequest'
+              $ref: '#/components/schemas/FeeRequest'
       responses:
         204:
-          description: CompetitionCategory successfully updated
+          description: Fee successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1093,16 +1183,18 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteCompetitionCategory
+      operationId: deleteFee
       responses:
         204:
-          description: CompetitionCategory successfully deleted
+          description: Fee successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
   /captcha:
@@ -1936,6 +2028,7 @@ components:
         - countNonBinary
         - countMixed
         - namedParticipants
+        - fees
       properties:
         identifier:
           type: string
@@ -1959,6 +2052,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NamedParticipantForCompetitionDto'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeForCompetitionDto'
 
 
     NamedParticipantForCompetitionDto:
@@ -1990,6 +2087,27 @@ components:
         countMixed:
           type: integer
 
+    FeeForCompetitionDto:
+      type: object
+      required:
+        - id
+        - name
+        - required
+        - amount
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+        amount:
+          type: number
+          format: decimal
+
 
     CompetitionPropertiesRequestDto:
       type: object
@@ -2001,6 +2119,7 @@ components:
         - countNonBinary
         - countMixed
         - namedParticipants
+        - fees
       properties:
         identifier:
           type: string
@@ -2025,6 +2144,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NamedParticipantForCompetitionRequestDto'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeForCompetitionRequestDto'
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -2050,6 +2173,22 @@ components:
           type: integer
         countMixed:
           type: integer
+
+    FeeForCompetitionRequestDto:
+      type: object
+      required:
+        - fee
+        - required
+        - amount
+      properties:
+        fee:
+          type: string
+          format: uuid
+        required:
+          type: boolean
+        amount:
+          type: number
+          format: decimal
 
 
 
@@ -2122,6 +2261,32 @@ components:
           $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
 
 
+    # competitionCategory
+
+    CompetitionCategoryDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    CompetitionCategoryRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
 
     # namedParticipant
 
@@ -2150,9 +2315,9 @@ components:
           type: string
 
 
-    # competitionCategory
+    # fee
 
-    CompetitionCategoryDto:
+    FeeDto:
       type: object
       required:
         - id
@@ -2166,7 +2331,7 @@ components:
         description:
           type: string
 
-    CompetitionCategoryRequest:
+    FeeRequest:
       type: object
       required:
         - name
@@ -2175,7 +2340,6 @@ components:
           type: string
         description:
           type: string
-
 
 
     # captcha

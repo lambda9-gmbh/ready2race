@@ -9,7 +9,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipan
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
-import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionsOrTemplatesContainingNamedParticipant
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.splitTemplatesAndCompetitions
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -38,7 +38,7 @@ object NamedParticipantService {
         val total = !NamedParticipantRepo.count(params.search).orDie()
         val page = !NamedParticipantRepo.page(params).orDie()
 
-        page.forEachM { it.namedParticipantDto() }.map{
+        page.forEachM { it.namedParticipantDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
@@ -57,7 +57,7 @@ object NamedParticipantService {
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()
-            .onNullFail { NamedParticipantError.NamedParticipantNotFound }
+            .onNullFail { NamedParticipantError.NotFound }
             .map { ApiResponse.NoData }
 
     fun deleteNamedParticipant(
@@ -67,25 +67,17 @@ object NamedParticipantService {
         // Checks if NamedParticipant is referenced by either Competition or CompetitionTemplate - If so, it fails
         val propertiesContainingNamedParticipants =
             !CompetitionPropertiesHasNamedParticipantRepo.getByNamedParticipant(namedParticipantId).orDie()
-                .map { list ->
-                    CompetitionsOrTemplatesContainingNamedParticipant(
-                        templates = list.filter { it.competitionTemplateId != null }.ifEmpty { null },
-                        competitions = list.filter { it.competitionId != null }.ifEmpty { null },
-                    )
-                }
+                .map { list -> list.splitTemplatesAndCompetitions()  }
         if (!propertiesContainingNamedParticipants.competitions.isNullOrEmpty() || !propertiesContainingNamedParticipants.templates.isNullOrEmpty()) {
             return@comprehension KIO.fail(
-                NamedParticipantError.NamedParticipantIsInUse(
-                    propertiesContainingNamedParticipants
-                )
+                NamedParticipantError.NamedParticipantInUse(propertiesContainingNamedParticipants)
             )
         }
-
 
         val deleted = !NamedParticipantRepo.delete(namedParticipantId).orDie()
 
         if (deleted < 1) {
-            KIO.fail(NamedParticipantError.NamedParticipantNotFound)
+            KIO.fail(NamedParticipantError.NotFound)
         } else {
             noData
         }

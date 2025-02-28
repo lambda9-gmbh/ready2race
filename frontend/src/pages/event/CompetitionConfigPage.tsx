@@ -7,7 +7,14 @@ import CompetitionCategoryTable from '@components/event/competition/category/Com
 import CompetitionCategoryDialog from '@components/event/competition/category/CompetitionCategoryDialog.tsx'
 import NamedParticipantTable from '@components/event/competition/namedParticipant/NamedParticipantTable.tsx'
 import NamedParticipantDialog from '@components/event/competition/namedParticipant/NamedParticipantDialog.tsx'
-import {NamedParticipantDto, CompetitionCategoryDto, CompetitionTemplateDto} from "@api/types.gen.ts";
+import FeeTable from '@components/event/competition/fee/FeeTable.tsx'
+import FeeDialog from '@components/event/competition/fee/FeeDialog.tsx'
+import {
+    NamedParticipantDto,
+    CompetitionCategoryDto,
+    CompetitionTemplateDto,
+    FeeDto,
+} from '@api/types.gen.ts'
 
 const CompetitionConfigPage = () => {
     const {t} = useTranslation()
@@ -21,6 +28,7 @@ const CompetitionConfigPage = () => {
     const namedParticipantAdministrationProps = useEntityAdministration<NamedParticipantDto>(
         t('event.competition.namedParticipant.namedParticipant'),
     )
+    const feeAdministrationProps = useEntityAdministration<FeeDto>('[todo] Fee')
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -31,7 +39,7 @@ const CompetitionConfigPage = () => {
                 />
                 <CompetitionTemplateDialog {...competitionTemplateAdministrationProps.dialog} />
             </Box>
-            <Stack spacing={10} direction="row" justifyContent='space-between' sx={{mt: 4}}>
+            <Stack spacing={10} direction="row" justifyContent="space-between" sx={{mt: 4}}>
                 <Box sx={{flex: 1}}>
                     <CompetitionCategoryTable
                         {...competitionCategoryAdministrationProps.table}
@@ -45,6 +53,11 @@ const CompetitionConfigPage = () => {
                         title={t('event.competition.namedParticipant.namedParticipants')}
                     />
                     <NamedParticipantDialog {...namedParticipantAdministrationProps.dialog} />
+                </Box>
+
+                <Box sx={{flex: 1}}>
+                    <FeeTable {...feeAdministrationProps.table} title={'[todo] Fees'} />
+                    <FeeDialog {...feeAdministrationProps.dialog} />
                 </Box>
             </Stack>
         </Box>

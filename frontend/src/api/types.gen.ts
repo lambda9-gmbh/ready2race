@@ -107,6 +107,7 @@ export type CompetitionPropertiesDto = {
     countMixed: number
     competitionCategory?: CompetitionCategoryDto
     namedParticipants: Array<NamedParticipantForCompetitionDto>
+    fees: Array<FeeForCompetitionDto>
 }
 
 export type CompetitionPropertiesRequestDto = {
@@ -120,6 +121,7 @@ export type CompetitionPropertiesRequestDto = {
     countMixed: number
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
+    fees: Array<FeeForCompetitionRequestDto>
 }
 
 export type CompetitionRequest = {
@@ -181,6 +183,31 @@ export type EventRequest = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+}
+
+export type FeeDto = {
+    id: string
+    name: string
+    description?: string
+}
+
+export type FeeForCompetitionDto = {
+    id: string
+    name: string
+    description?: string
+    required: boolean
+    amount: number
+}
+
+export type FeeForCompetitionRequestDto = {
+    fee: string
+    required: boolean
+    amount: number
+}
+
+export type FeeRequest = {
+    name: string
+    description?: string
 }
 
 export type Invalid =
@@ -941,6 +968,42 @@ export type DeleteCompetitionTemplateResponse = void
 
 export type DeleteCompetitionTemplateError = ApiError
 
+export type AddCompetitionCategoryData = {
+    body: CompetitionCategoryRequest
+}
+
+export type AddCompetitionCategoryResponse = string
+
+export type AddCompetitionCategoryError = BadRequestError | ApiError
+
+export type GetCompetitionCategoriesResponse = {
+    data: Array<CompetitionCategoryDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionCategoriesError = ApiError
+
+export type UpdateCompetitionCategoryData = {
+    body: CompetitionCategoryRequest
+    path: {
+        competitionCategoryId: string
+    }
+}
+
+export type UpdateCompetitionCategoryResponse = void
+
+export type UpdateCompetitionCategoryError = BadRequestError | ApiError
+
+export type DeleteCompetitionCategoryData = {
+    path: {
+        competitionCategoryId: string
+    }
+}
+
+export type DeleteCompetitionCategoryResponse = void
+
+export type DeleteCompetitionCategoryError = ApiError
+
 export type AddNamedParticipantData = {
     body: NamedParticipantRequest
 }
@@ -977,41 +1040,41 @@ export type DeleteNamedParticipantResponse = void
 
 export type DeleteNamedParticipantError = ApiError
 
-export type AddCompetitionCategoryData = {
-    body: CompetitionCategoryRequest
+export type AddFeeData = {
+    body: FeeRequest
 }
 
-export type AddCompetitionCategoryResponse = string
+export type AddFeeResponse = string
 
-export type AddCompetitionCategoryError = BadRequestError | ApiError
+export type AddFeeError = BadRequestError | ApiError
 
-export type GetCompetitionCategoriesResponse = {
-    data: Array<CompetitionCategoryDto>
+export type GetFeesResponse = {
+    data: Array<FeeDto>
     pagination: Pagination
 }
 
-export type GetCompetitionCategoriesError = ApiError
+export type GetFeesError = ApiError
 
-export type UpdateCompetitionCategoryData = {
-    body: CompetitionCategoryRequest
+export type UpdateFeeData = {
+    body: FeeRequest
     path: {
-        competitionCategoryId: string
+        feeId: string
     }
 }
 
-export type UpdateCompetitionCategoryResponse = void
+export type UpdateFeeResponse = void
 
-export type UpdateCompetitionCategoryError = BadRequestError | ApiError
+export type UpdateFeeError = BadRequestError | ApiError
 
-export type DeleteCompetitionCategoryData = {
+export type DeleteFeeData = {
     path: {
-        competitionCategoryId: string
+        feeId: string
     }
 }
 
-export type DeleteCompetitionCategoryResponse = void
+export type DeleteFeeResponse = void
 
-export type DeleteCompetitionCategoryError = ApiError
+export type DeleteFeeError = ApiError
 
 export type NewCaptchaResponse = CaptchaDto
 
