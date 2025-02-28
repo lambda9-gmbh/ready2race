@@ -120,7 +120,7 @@ object CompetitionService {
                 .onNullFail { CompetitionError.CompetitionPropertiesNotFound }
 
             // delete and re-add the named participant entries
-            !CompetitionPropertiesHasNamedParticipantRepo.deleteManyByCompetitionProperties(propertiesRecord.id).orDie()
+            !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(propertiesRecord.id).orDie()
             val namedParticipantRecords = templateRecord.namedParticipants?.map {
                 !it!!.applyCompetitionPropertiesHasNamedParticipant(competitionId, it.id!!)
             }
@@ -139,7 +139,7 @@ object CompetitionService {
                     .onNullFail { CompetitionError.CompetitionPropertiesNotFound }
 
             // delete and re-add the named participant entries
-            !CompetitionPropertiesHasNamedParticipantRepo.deleteManyByCompetitionProperties(competitionPropertiesId).orDie()
+            !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(competitionPropertiesId).orDie()
             !CompetitionPropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
                 it.toRecord(
                     competitionPropertiesId

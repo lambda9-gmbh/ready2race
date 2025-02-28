@@ -1,13 +1,10 @@
 package de.lambda9.ready2race.backend.app.namedParticipant.control
 
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.NamedParticipant
 import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.NAMED_PARTICIPANT
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.update
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -21,6 +18,8 @@ object NamedParticipantRepo {
     fun create(record: NamedParticipantRecord) = NAMED_PARTICIPANT.insertReturning(record) { ID }
 
     fun update(id: UUID, f: NamedParticipantRecord.() -> Unit) = NAMED_PARTICIPANT.update(f) { ID.eq(id) }
+
+    fun delete(id: UUID) = NAMED_PARTICIPANT.delete { ID.eq(id) }
 
     fun all(): JIO<List<NamedParticipantRecord>> = Jooq.query {
         with(NAMED_PARTICIPANT) {
@@ -54,16 +53,6 @@ object NamedParticipantRepo {
             selectFrom(this)
                 .page(params, searchFields())
                 .fetch()
-        }
-    }
-
-    fun delete(
-        namedParticipantId: UUID,
-    ): JIO<Int> = Jooq.query {
-        with(NAMED_PARTICIPANT) {
-            deleteFrom(this)
-                .where(ID.eq(namedParticipantId))
-                .execute()
         }
     }
 

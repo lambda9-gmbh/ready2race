@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionProperties.control
 
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesContainingNamedParticipant
+import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT
@@ -13,15 +14,7 @@ object CompetitionPropertiesHasNamedParticipantRepo {
 
     fun create(records: Collection<CompetitionPropertiesHasNamedParticipantRecord>) = COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.insert(records)
 
-    fun deleteManyByCompetitionProperties(
-        competitionPropertiesId: UUID,
-    ): JIO<Int> = Jooq.query {
-        with(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT) {
-            deleteFrom(this)
-                .where(COMPETITION_PROPERTIES.eq(competitionPropertiesId))
-                .execute()
-        }
-    }
+    fun deleteByCompetitionPropertiesId(competitionPropertiesId: UUID) = COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.delete { COMPETITION_PROPERTIES.eq(competitionPropertiesId) }
 
     fun getByNamedParticipant(
         namedParticipant: UUID

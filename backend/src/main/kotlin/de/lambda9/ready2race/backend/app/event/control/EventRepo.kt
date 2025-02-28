@@ -21,6 +21,8 @@ object EventRepo {
 
     fun update(id: UUID, f: EventRecord.() -> Unit) = EVENT.update(f) { ID.eq(id) }
 
+    fun delete(id: UUID) = EVENT.delete { ID.eq(id) }
+
     fun count(
         search: String?
     ): JIO<Int> = Jooq.query {
@@ -46,16 +48,6 @@ object EventRepo {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
-        }
-    }
-
-    fun delete(
-        id: UUID
-    ): JIO<Int> = Jooq.query {
-        with(EVENT) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .execute()
         }
     }
 }

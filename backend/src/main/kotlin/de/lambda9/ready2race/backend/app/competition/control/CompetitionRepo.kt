@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.competition.control
 
-import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo.update
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionToPropertiesWithNamedParticipants
@@ -25,6 +24,8 @@ object CompetitionRepo {
     fun exists(id: UUID) = COMPETITION.exists { ID.eq(id) }
 
     fun update(id: UUID, f: CompetitionRecord.() -> Unit) = COMPETITION.update(f) { ID.eq(id) }
+
+    fun delete(id: UUID) = COMPETITION.delete { ID.eq(id) }
 
     fun countWithPropertiesByEvent(
         eventId: UUID,
@@ -96,16 +97,6 @@ object CompetitionRepo {
             selectFrom(this)
                 .where(ID.eq(competitionId))
                 .fetchOne()
-        }
-    }
-
-    fun delete(
-        id: UUID
-    ): JIO<Int> = Jooq.query {
-        with(COMPETITION) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .execute()
         }
     }
 

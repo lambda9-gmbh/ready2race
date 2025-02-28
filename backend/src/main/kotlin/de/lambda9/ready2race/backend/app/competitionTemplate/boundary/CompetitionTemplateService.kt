@@ -103,7 +103,7 @@ object CompetitionTemplateService {
                 .onNullFail { CompetitionTemplateError.CompetitionPropertiesNotFound }
 
         // delete and re-add the named participant entries
-        !CompetitionPropertiesHasNamedParticipantRepo.deleteManyByCompetitionProperties(competitionPropertiesId).orDie()
+        !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(competitionPropertiesId).orDie()
         !CompetitionPropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
             it.toRecord(
                 competitionPropertiesId
