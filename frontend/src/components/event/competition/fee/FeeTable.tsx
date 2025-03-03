@@ -54,7 +54,7 @@ const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            entityName={"[todo] Fee"}
+            entityName={t('event.competition.fee.fee')}
             deleteRequest={deleteRequest}
         />
     )
