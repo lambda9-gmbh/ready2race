@@ -12,7 +12,6 @@ import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
 import java.util.*
 
-// todo: Specific rights?
 fun Route.fee() {
     route("/fee") {
         post {

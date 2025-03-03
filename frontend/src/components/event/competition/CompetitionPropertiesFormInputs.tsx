@@ -10,6 +10,7 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {getNamedParticipants, getCompetitionCategories, getFees} from '@api/sdk.gen.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
+import {FormInputCurrency} from "@components/form/input/FormInputCurrency.tsx";
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -285,13 +286,10 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             </Box>
                         </Grid2>
                         <Stack spacing={4}>
-                            <FormInputNumber
+                            <FormInputCurrency
                                 name={'fees[' + index + '].amount'}
                                 label={t('event.competition.fee.amount')}
-                                min={0}
-                                integer={true}
                                 required
-                                sx={{flex: 1}}
                             />
                         </Stack>
                     </Box>

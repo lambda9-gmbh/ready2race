@@ -28,7 +28,7 @@ const CompetitionConfigPage = () => {
     const namedParticipantAdministrationProps = useEntityAdministration<NamedParticipantDto>(
         t('event.competition.namedParticipant.namedParticipant'),
     )
-    const feeAdministrationProps = useEntityAdministration<FeeDto>('[todo] Fee')
+    const feeAdministrationProps = useEntityAdministration<FeeDto>(t('event.competition.fee.fee'))
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -56,7 +56,10 @@ const CompetitionConfigPage = () => {
                 </Box>
 
                 <Box sx={{flex: 1}}>
-                    <FeeTable {...feeAdministrationProps.table} title={'[todo] Fees'} />
+                    <FeeTable
+                        {...feeAdministrationProps.table}
+                        title={t('event.competition.fee.fees')}
+                    />
                     <FeeDialog {...feeAdministrationProps.dialog} />
                 </Box>
             </Stack>
