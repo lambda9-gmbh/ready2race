@@ -119,6 +119,17 @@
         },
         "role": "Role"
       },
+      "fee": {
+        "fee": "Fee",
+        "fees": "Fees",
+        "add": "Add Fee",
+        "type": "Fee type",
+        "required": {
+          "notRequired": "Not required",
+          "required": "Required"
+        },
+        "amount": "Amount"
+      },
       "competition": "Competition",
       "competitions": "Competitions",
       "shortName": "Short name",

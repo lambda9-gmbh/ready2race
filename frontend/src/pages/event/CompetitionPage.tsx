@@ -154,13 +154,13 @@ const CompetitionPage = () => {
                                     <Typography>{f.description}</Typography>
                                     <Typography>
                                         {f.required
-                                            ? '[todo] Fee required'
-                                            : '[todo] Fee not required'
+                                            ? t('event.competition.fee.required.required')
+                                            : t('event.competition.fee.required.notRequired')
                                         }
                                     </Typography>
                                     <CompetitionCountEntry
-                                        label={t('event.competition.count.males')}
-                                        content={f.amount}
+                                        label={t('event.competition.fee.amount')}
+                                        content={f.amount + "€"}
                                     />
                                 </Box>
                             </>

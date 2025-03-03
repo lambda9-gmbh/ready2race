@@ -49,7 +49,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 if (error) {
                     feedback.error(
                         t('common.load.error.multiple', {
-                            entity: '[todo] Fee',
+                            entity: t('event.competition.fee.fees'),
                         }),
                     )
                 }
@@ -258,7 +258,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 </Button>
             </Box>
             <Divider/>
-            <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
+            <FormInputLabel label={t('event.competition.fee.fees')}>
             {feeFields.map((field, index) => (
                 <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
                     <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
@@ -267,7 +267,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                 <FormInputAutocomplete
                                     name={'fees[' + index + '].fee'}
                                     options={fees}
-                                    label={'[todo] Fee Type'}
+                                    label={t('event.competition.fee.type')}
                                     loading={feesPending}
                                     required
                                 />
@@ -277,7 +277,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                     name={'fees[' + index + '].required'}
                                     label={
                                         <FormInputLabel
-                                            label={'[todo] Fee required'}
+                                            label={t('event.competition.fee.required.required')}
                                             required={true}
                                         />
                                     }
@@ -287,7 +287,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                         <Stack spacing={4}>
                             <FormInputNumber
                                 name={'fees[' + index + '].amount'}
-                                label={'[todo] MONETEN'}
+                                label={t('event.competition.fee.amount')}
                                 min={0}
                                 integer={true}
                                 required
@@ -323,7 +323,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                         props.fieldArrayModified?.()
                     }}
                     sx={{width: 1}}>
-                    {'[todo] Add fee]'}
+                    {t('event.competition.fee.add')}
                 </Button>
             </Box>
         </>
