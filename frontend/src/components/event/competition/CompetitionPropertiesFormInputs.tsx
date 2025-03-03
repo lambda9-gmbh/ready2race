@@ -1,8 +1,18 @@
 import {AutocompleteOption} from '@utils/types.ts'
-import {SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
+import {FieldValues, SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {Box, Button, Divider, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
+import {
+    Box,
+    Button,
+    Divider,
+    Grid2,
+    IconButton,
+    Stack,
+    Tooltip,
+    Typography,
+    Zoom,
+} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -11,6 +21,7 @@ import {getNamedParticipants, getCompetitionCategories, getFees} from '@api/sdk.
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
+import {useState} from 'react'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -81,6 +92,8 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             label: dto.name,
         })) ?? []
 
+    const [namedParticipantsError, setNamedParticipantsError] = useState<string | null>(null)
+
     const {
         fields: namedParticipantFields,
         append: appendNamedParticipant,
@@ -89,7 +102,69 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         control: props.formContext.control,
         name: 'namedParticipants',
         keyName: 'fieldId',
+        rules: {
+            validate: values => {
+                // todo: Validate for duplicates via reduce
+                if (values.length < 1) {
+                    setNamedParticipantsError(
+                        t('event.competition.namedParticipant.error.emptyList'),
+                    )
+                    return t('event.competition.namedParticipant.error.emptyList')
+                } else {
+                    setNamedParticipantsError(null)
+                    return undefined
+                }
+            },
+        },
     })
+
+    const validateCounts = (vals: FieldValues, index: number): string | undefined => {
+        if (
+            vals['namedParticipants'][index]['countMales'] +
+                vals['namedParticipants'][index]['countFemales'] +
+                vals['namedParticipants'][index]['countNonBinary'] +
+                vals['namedParticipants'][index]['countMixed'] <
+            1
+        ) {
+            props.formContext.setError(
+                `namedParticipants[${index}].countMales` as `namedParticipants.${number}.countMales`,
+                {
+                    type: 'custom',
+                    message: t('event.competition.namedParticipant.error.noCount'),
+                },
+            )
+            props.formContext.setError(
+                `namedParticipants[${index}].countFemales` as `namedParticipants.${number}.countFemales`,
+                {
+                    type: 'custom',
+                    message: t('event.competition.namedParticipant.error.noCount'),
+                },
+            )
+            props.formContext.setError(
+                `namedParticipants[${index}].countNonBinary` as `namedParticipants.${number}.countNonBinary`,
+                {
+                    type: 'custom',
+                    message: t('event.competition.namedParticipant.error.noCount'),
+                },
+            )
+            props.formContext.setError(
+                `namedParticipants[${index}].countMixed` as `namedParticipants.${number}.countMixed`,
+                {
+                    type: 'custom',
+                    message: t('event.competition.namedParticipant.error.noCount'),
+                },
+            )
+            return t('event.competition.namedParticipant.error.noCount')
+        } else {
+            props.formContext.clearErrors([
+                `namedParticipants[${index}].countMales` as `namedParticipants.${number}.countMales`,
+                `namedParticipants[${index}].countFemales` as `namedParticipants.${number}.countFemales`,
+                `namedParticipants[${index}].countNonBinary` as `namedParticipants.${number}.countNonBinary`,
+                `namedParticipants[${index}].countMixed` as `namedParticipants.${number}.countMixed`,
+            ])
+            return undefined
+        }
+    }
 
     const {
         fields: feeFields,
@@ -128,6 +203,14 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                     label={t('event.competition.namedParticipant.role')}
                                     loading={namedParticipantsPending}
                                     required
+                                    rules={{
+                                        validate: (val) => {
+                                            // Extra Required Check (the normal rule wasn't consistent when a new entry was created)
+                                            if (val.id === '') {
+                                                return t('common.form.required')
+                                            }
+                                        },
+                                    }}
                                 />
                                 <Stack direction="row" spacing={2}>
                                     <FormInputNumber
@@ -137,6 +220,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         integer={true}
                                         required
                                         sx={{flex: 1}}
+                                        rules={{
+                                            validate: (_, vals) => validateCounts(vals, index),
+                                        }}
                                     />
                                     <FormInputNumber
                                         name={'namedParticipants[' + index + '].countFemales'}
@@ -145,6 +231,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         integer={true}
                                         required
                                         sx={{flex: 1}}
+                                        rules={{
+                                            validate: (_, vals) => validateCounts(vals, index),
+                                        }}
                                     />
                                 </Stack>
                                 <Stack direction="row" spacing={2}>
@@ -155,6 +244,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         integer={true}
                                         required
                                         sx={{flex: 1}}
+                                        rules={{
+                                            validate: (_, vals) => validateCounts(vals, index),
+                                        }}
                                     />
                                     <FormInputNumber
                                         name={'namedParticipants[' + index + '].countMixed'}
@@ -163,6 +255,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         integer={true}
                                         required
                                         sx={{flex: 1}}
+                                        rules={{
+                                            validate: (_, vals) => validateCounts(vals, index),
+                                        }}
                                     />
                                 </Stack>
                             </Stack>
@@ -183,6 +278,10 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                         </Tooltip>
                     </Stack>
                 ))}
+                {/* todo: @incomplete: improve visualization in case of error */}
+                {namedParticipantsError && (
+                    <Typography color={'error'}>{namedParticipantsError}</Typography>
+                )}
             </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>
                 <Button

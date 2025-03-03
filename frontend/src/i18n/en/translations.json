@@ -113,7 +113,11 @@
         "add": "Add Named Participant",
         "namedParticipant": "Named Participant",
         "namedParticipants": "Named Participants",
-        "role": "Role"
+        "role": "Role",
+        "error": {
+          "emptyList": "Please add one or more Named Participants",
+          "noCount": "Please enter at least one participant of any kind for this role"
+        }
       },
       "fee": {
         "fee": "Fee",

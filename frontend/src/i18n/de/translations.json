@@ -113,7 +113,11 @@
         "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
-        "role": "Rolle"
+        "role": "Rolle",
+        "error": {
+          "emptyList": "Bitte fügen Sie mindestens einen spezifischen Teilnehmer hinzu",
+          "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein"
+        }
       },
       "fee": {
         "fee": "Gebühr",
