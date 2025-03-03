@@ -14,17 +14,12 @@ fun CompetitionPropertiesRequestDto.toRecord(competitionId: UUID?, competitionTe
     name = name,
     shortName = shortName,
     description = description,
-    countMales = countMales,
-    countFemales = countFemales,
-    countNonBinary = countNonBinary,
-    countMixed = countMixed,
     competitionCategory = competitionCategory,
 )
 
 fun NamedParticipantForCompetitionRequestDto.toRecord(propertiesId: UUID) = CompetitionPropertiesHasNamedParticipantRecord(
     competitionProperties = propertiesId,
     namedParticipant = namedParticipant,
-    required = required,
     countMales = countMales,
     countFemales = countFemales,
     countNonBinary = countNonBinary,
@@ -44,7 +39,6 @@ fun NamedParticipantForCompetitionPropertiesRecord.toDto(): App<Nothing, NamedPa
         id = id!!,
         name = name!!,
         description = description,
-        required = required!!,
         countMales = countMales!!,
         countFemales = countFemales!!,
         countNonBinary = countNonBinary!!,
@@ -66,7 +60,6 @@ fun NamedParticipantForCompetitionPropertiesRecord.applyCompetitionPropertiesHas
     CompetitionPropertiesHasNamedParticipantRecord(
         competitionProperties = competitionPropertiesId,
         namedParticipant = namedParticipantId,
-        required = required!!,
         countMales = countMales!!,
         countFemales = countFemales!!,
         countNonBinary = countNonBinary!!,
@@ -90,10 +83,6 @@ fun CompetitionPropertiesRequestDto.toUpdateFunction(): CompetitionPropertiesRec
         name = it.name
         shortName = it.shortName
         description = it.description
-        countMales = it.countMales
-        countFemales = it.countFemales
-        countNonBinary = it.countNonBinary
-        countMixed = it.countMixed
         competitionCategory = it.competitionCategory
     }
 }

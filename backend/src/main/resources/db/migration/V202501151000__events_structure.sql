@@ -84,10 +84,6 @@ create table competition_properties
     name                 text    not null,
     short_name           text,
     description          text,
-    count_males          integer not null,
-    count_females        integer not null,
-    count_non_binary     integer not null,
-    count_mixed          integer not null,
     competition_category uuid    references competition_category on delete set null,
     constraint chk_either_competition_or_competition_template check (
         (competition is null and competition_template is not null) or
@@ -133,12 +129,11 @@ create table competition_properties_has_named_participant
 (
     competition_properties uuid    not null references competition_properties on delete cascade,
     named_participant      uuid    not null references named_participant,
-    required               boolean not null,
     count_males            integer not null,
     count_females          integer not null,
     count_non_binary       integer not null,
     count_mixed            integer not null,
-    primary key (competition_properties, named_participant, required),
+    primary key (competition_properties, named_participant),
     constraint chk_count_sum_greater_0 check (count_males + count_females + count_non_binary + count_mixed > 0)
 );
 

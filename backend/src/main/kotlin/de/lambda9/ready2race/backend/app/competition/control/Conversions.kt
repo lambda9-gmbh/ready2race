@@ -47,10 +47,6 @@ fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehens
                 name = name!!,
                 shortName = shortName,
                 description = description,
-                countMales = countMales!!,
-                countFemales = countFemales!!,
-                countNonBinary = countNonBinary!!,
-                countMixed = countMixed!!,
                 competitionCategory = if (categoryId !== null) {
                     CompetitionCategoryDto(
                         id = categoryId!!,

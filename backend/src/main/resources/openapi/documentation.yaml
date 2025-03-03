@@ -2023,10 +2023,6 @@ components:
       required:
         - identifier
         - name
-        - countMales
-        - countFemales
-        - countNonBinary
-        - countMixed
         - namedParticipants
         - fees
       properties:
@@ -2038,14 +2034,6 @@ components:
           type: string
         description:
           type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
         competitionCategory:
           $ref: '#/components/schemas/CompetitionCategoryDto'
         namedParticipants:
@@ -2076,8 +2064,6 @@ components:
           type: string
         description:
           type: string
-        required:
-          type: boolean
         countMales:
           type: integer
         countFemales:
@@ -2114,10 +2100,6 @@ components:
       required:
         - identifier
         - name
-        - countMales
-        - countFemales
-        - countNonBinary
-        - countMixed
         - namedParticipants
         - fees
       properties:
@@ -2129,14 +2111,6 @@ components:
           type: string
         description:
           type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
         competitionCategory:
           type: string
           format: uuid
@@ -2154,7 +2128,6 @@ components:
       type: object
       required:
         - namedParticipant
-        - required
         - countMales
         - countFemales
         - countNonBinary
@@ -2163,8 +2136,6 @@ components:
         namedParticipant:
           type: string
           format: uuid
-        required:
-          type: boolean
         countMales:
           type: integer
         countFemales:
