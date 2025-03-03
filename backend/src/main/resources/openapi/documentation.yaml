@@ -2105,7 +2105,7 @@ components:
         required:
           type: boolean
         amount:
-          type: number
+          type: string
           format: decimal
 
 
@@ -2187,7 +2187,7 @@ components:
         required:
           type: boolean
         amount:
-          type: number
+          type: string
           format: decimal
 
 

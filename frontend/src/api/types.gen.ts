@@ -196,13 +196,13 @@ export type FeeForCompetitionDto = {
     name: string
     description?: string
     required: boolean
-    amount: number
+    amount: string
 }
 
 export type FeeForCompetitionRequestDto = {
     fee: string
     required: boolean
-    amount: number
+    amount: string
 }
 
 export type FeeRequest = {
