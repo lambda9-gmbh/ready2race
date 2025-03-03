@@ -88,17 +88,24 @@ select c.id,
        cp.count_females,
        cp.count_non_binary,
        cp.count_mixed,
-       cc.id                                                                                      as category_id,
-       cc.name                                                                                    as category_name,
-       cc.description                                                                             as category_description,
-       coalesce(array_agg(npfrp) filter ( where npfrp.competition_properties is not null ), '{}') as named_participants,
-       coalesce(array_agg(ffrp) filter ( where ffrp.competition_properties is not null ), '{}')   as fees
+       cc.id                                  as category_id,
+       cc.name                                as category_name,
+       cc.description                         as category_description,
+       coalesce(nps.named_participants, '{}') as named_participants,
+       coalesce(fs.fees, '{}')                as fees
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
-         left join named_participant_for_competition_properties npfrp on cp.id = npfrp.competition_properties
-         left join fee_for_competition_properties ffrp on cp.id = ffrp.competition_properties
-group by c.id, cp.id, cc.id;
+         left join (select npfcp.competition_properties,
+                           array_agg(npfcp)
+                           filter (where npfcp.competition_properties is not null ) as named_participants
+                    from named_participant_for_competition_properties npfcp
+                    group by npfcp.competition_properties) nps on cp.id = nps.competition_properties
+         left join (select ffcp.competition_properties,
+                           array_agg(ffcp)
+                           filter (where ffcp.competition_properties is not null ) as fees
+                    from fee_for_competition_properties ffcp
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
 
 
 create view competition_template_view as
@@ -111,17 +118,24 @@ select ct.id,
        cp.count_females,
        cp.count_non_binary,
        cp.count_mixed,
-       cc.id                                                                                      as category_id,
-       cc.name                                                                                    as category_name,
-       cc.description                                                                             as category_description,
-       coalesce(array_agg(npfrp) filter ( where npfrp.competition_properties is not null ), '{}') as named_participants,
-       coalesce(array_agg(ffrp) filter ( where ffrp.competition_properties is not null ), '{}')   as fees
+       cc.id                                  as category_id,
+       cc.name                                as category_name,
+       cc.description                         as category_description,
+       coalesce(nps.named_participants, '{}') as named_participants,
+       coalesce(fs.fees, '{}')                as fees
 from competition_template ct
          left join competition_properties cp on ct.id = cp.competition_template
          left join competition_category cc on cp.competition_category = cc.id
-         left join named_participant_for_competition_properties npfrp on cp.id = npfrp.competition_properties
-         left join fee_for_competition_properties ffrp on cp.id = ffrp.competition_properties
-group by ct.id, cp.id, cc.id;
+         left join (select npfcp.competition_properties,
+                           array_agg(npfcp)
+                           filter (where npfcp.competition_properties is not null ) as named_participants
+                    from named_participant_for_competition_properties npfcp
+                    group by npfcp.competition_properties) nps on cp.id = nps.competition_properties
+         left join (select ffcp.competition_properties,
+                           array_agg(ffcp)
+                           filter (where ffcp.competition_properties is not null ) as fees
+                    from fee_for_competition_properties ffcp
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
 
 create view app_user_invitation_with_roles as
 select aui.id,
