@@ -113,10 +113,6 @@
         "add": "Add Named Participant",
         "namedParticipant": "Named Participant",
         "namedParticipants": "Named Participants",
-        "required": {
-          "notRequired": "Not required",
-          "required": "Required"
-        },
         "role": "Role"
       },
       "fee": {

@@ -10,7 +10,7 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {getNamedParticipants, getCompetitionCategories, getFees} from '@api/sdk.gen.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
-import {FormInputCurrency} from "@components/form/input/FormInputCurrency.tsx";
+import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -43,20 +43,17 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             label: dto.name,
         })) ?? []
 
-    const {data: feesData, pending: feesPending} = useFetch(
-        signal => getFees({signal}),
-        {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(
-                        t('common.load.error.multiple', {
-                            entity: t('event.competition.fee.fees'),
-                        }),
-                    )
-                }
-            },
+    const {data: feesData, pending: feesPending} = useFetch(signal => getFees({signal}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(
+                    t('common.load.error.multiple', {
+                        entity: t('event.competition.fee.fees'),
+                    }),
+                )
+            }
         },
-    )
+    })
 
     const fees: AutocompleteOption[] =
         feesData?.data.map(dto => ({
@@ -110,43 +107,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             <FormInputText name="name" label={t('entity.name')} required />
             <FormInputText name="shortName" label={t('event.competition.shortName')} />
             <FormInputText name="description" label={t('entity.description')} />
-            {/* todo: validate if at least one count is set */}
-            <Stack direction="row" spacing={2} sx={{mb: 4}}>
-                <FormInputNumber
-                    name="countMales"
-                    label={t('event.competition.count.males')}
-                    min={0}
-                    integer={true}
-                    required
-                    sx={{flex: 1}}
-                />
-                <FormInputNumber
-                    name="countFemales"
-                    label={t('event.competition.count.females')}
-                    min={0}
-                    integer={true}
-                    required
-                    sx={{flex: 1}}
-                />
-            </Stack>
-            <Stack direction="row" spacing={2} sx={{mb: 4}}>
-                <FormInputNumber
-                    name="countNonBinary"
-                    label={t('event.competition.count.nonBinary')}
-                    min={0}
-                    integer={true}
-                    required
-                    sx={{flex: 1}}
-                />
-                <FormInputNumber
-                    name="countMixed"
-                    label={t('event.competition.count.mixed')}
-                    min={0}
-                    integer={true}
-                    required
-                    sx={{flex: 1}}
-                />
-            </Stack>
             <FormInputAutocomplete
                 name="competitionCategory"
                 options={categories}
@@ -156,13 +116,12 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     getOptionKey: field => field.id,
                 }}
             />
-            <Divider/>
+            <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
-            {namedParticipantFields.map((field, index) => (
-                <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
-                    <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
-                        <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
-                            <Grid2 size="grow" sx={{minWidth: 250}}>
+                {namedParticipantFields.map((field, index) => (
+                    <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
+                        <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
+                            <Stack spacing={4}>
                                 <FormInputAutocomplete
                                     name={'namedParticipants[' + index + '].namedParticipant'}
                                     options={namedParticipants}
@@ -170,83 +129,66 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                     loading={namedParticipantsPending}
                                     required
                                 />
-                            </Grid2>
-                            <Box sx={{my: 'auto'}}>
-                                <SwitchElement
-                                    name={'namedParticipants[' + index + '].required'}
-                                    label={
-                                        <FormInputLabel
-                                            label={t(
-                                                'event.competition.namedParticipant.required.required',
-                                            )}
-                                            required={true}
-                                        />
-                                    }
-                                />
-                            </Box>
-                        </Grid2>
-                        <Stack spacing={4}>
-                            <Stack direction="row" spacing={2}>
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countMales'}
-                                    label={t('event.competition.count.males')}
-                                    min={0}
-                                    integer={true}
-                                    required
-                                    sx={{flex: 1}}
-                                />
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countFemales'}
-                                    label={t('event.competition.count.females')}
-                                    min={0}
-                                    integer={true}
-                                    required
-                                    sx={{flex: 1}}
-                                />
+                                <Stack direction="row" spacing={2}>
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countMales'}
+                                        label={t('event.competition.count.males')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countFemales'}
+                                        label={t('event.competition.count.females')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                </Stack>
+                                <Stack direction="row" spacing={2}>
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countNonBinary'}
+                                        label={t('event.competition.count.nonBinary')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                    <FormInputNumber
+                                        name={'namedParticipants[' + index + '].countMixed'}
+                                        label={t('event.competition.count.mixed')}
+                                        min={0}
+                                        integer={true}
+                                        required
+                                        sx={{flex: 1}}
+                                    />
+                                </Stack>
                             </Stack>
-                            <Stack direction="row" spacing={2}>
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countNonBinary'}
-                                    label={t('event.competition.count.nonBinary')}
-                                    min={0}
-                                    integer={true}
-                                    required
-                                    sx={{flex: 1}}
-                                />
-                                <FormInputNumber
-                                    name={'namedParticipants[' + index + '].countMixed'}
-                                    label={t('event.competition.count.mixed')}
-                                    min={0}
-                                    integer={true}
-                                    required
-                                    sx={{flex: 1}}
-                                />
-                            </Stack>
-                        </Stack>
-                    </Box>
-                    <Tooltip
-                        title={t('common.delete')}
-                        disableInteractive
-                        slots={{
-                            transition: Zoom,
-                        }}>
-                        <IconButton
-                            onClick={() => {
-                                removeNamedParticipant(index)
-                                props.fieldArrayModified?.()
+                        </Box>
+                        <Tooltip
+                            title={t('common.delete')}
+                            disableInteractive
+                            slots={{
+                                transition: Zoom,
                             }}>
-                            <DeleteIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Stack>
-            ))}
+                            <IconButton
+                                onClick={() => {
+                                    removeNamedParticipant(index)
+                                    props.fieldArrayModified?.()
+                                }}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                ))}
             </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>
                 <Button
                     onClick={() => {
                         appendNamedParticipant({
                             namedParticipant: {id: '', label: ''},
-                            required: false,
                             countMales: '0',
                             countFemales: '0',
                             countNonBinary: '0',
@@ -258,57 +200,57 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     {t('event.competition.namedParticipant.add')}
                 </Button>
             </Box>
-            <Divider/>
+            <Divider />
             <FormInputLabel label={t('event.competition.fee.fees')}>
-            {feeFields.map((field, index) => (
-                <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
-                    <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
-                        <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
-                            <Grid2 size="grow" sx={{minWidth: 250}}>
-                                <FormInputAutocomplete
-                                    name={'fees[' + index + '].fee'}
-                                    options={fees}
-                                    label={t('event.competition.fee.type')}
-                                    loading={feesPending}
+                {feeFields.map((field, index) => (
+                    <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
+                        <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
+                            <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
+                                <Grid2 size="grow" sx={{minWidth: 250}}>
+                                    <FormInputAutocomplete
+                                        name={'fees[' + index + '].fee'}
+                                        options={fees}
+                                        label={t('event.competition.fee.type')}
+                                        loading={feesPending}
+                                        required
+                                    />
+                                </Grid2>
+                                <Box sx={{my: 'auto'}}>
+                                    <SwitchElement
+                                        name={'fees[' + index + '].required'}
+                                        label={
+                                            <FormInputLabel
+                                                label={t('event.competition.fee.required.required')}
+                                                required={true}
+                                            />
+                                        }
+                                    />
+                                </Box>
+                            </Grid2>
+                            <Stack spacing={4}>
+                                <FormInputCurrency
+                                    name={'fees[' + index + '].amount'}
+                                    label={t('event.competition.fee.amount')}
                                     required
                                 />
-                            </Grid2>
-                            <Box sx={{my: 'auto'}}>
-                                <SwitchElement
-                                    name={'fees[' + index + '].required'}
-                                    label={
-                                        <FormInputLabel
-                                            label={t('event.competition.fee.required.required')}
-                                            required={true}
-                                        />
-                                    }
-                                />
-                            </Box>
-                        </Grid2>
-                        <Stack spacing={4}>
-                            <FormInputCurrency
-                                name={'fees[' + index + '].amount'}
-                                label={t('event.competition.fee.amount')}
-                                required
-                            />
-                        </Stack>
-                    </Box>
-                    <Tooltip
-                        title={t('common.delete')}
-                        disableInteractive
-                        slots={{
-                            transition: Zoom,
-                        }}>
-                        <IconButton
-                            onClick={() => {
-                                removeFee(index)
-                                props.fieldArrayModified?.()
+                            </Stack>
+                        </Box>
+                        <Tooltip
+                            title={t('common.delete')}
+                            disableInteractive
+                            slots={{
+                                transition: Zoom,
                             }}>
-                            <DeleteIcon />
-                        </IconButton>
-                    </Tooltip>
-                </Stack>
-            ))}
+                            <IconButton
+                                onClick={() => {
+                                    removeFee(index)
+                                    props.fieldArrayModified?.()
+                                }}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                ))}
             </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>
                 <Button

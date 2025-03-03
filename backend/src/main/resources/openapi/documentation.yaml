@@ -2051,7 +2051,6 @@ components:
       required:
         - id
         - name
-        - required
         - countMales
         - countFemales
         - countNonBinary

@@ -113,10 +113,6 @@
         "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
-        "required": {
-          "notRequired": "Nicht verpflichtend",
-          "required": "Verpflichtend"
-        },
         "role": "Rolle"
       },
       "fee": {
