@@ -11,6 +11,7 @@ import {eventIndexRoute} from '@routes'
 import {Box, IconButton, Stack, Typography} from '@mui/material'
 import {Delete} from '@mui/icons-material'
 import SelectFileButton from '@components/SelectFileButton.tsx'
+import {useTranslation} from "react-i18next";
 
 type Form = {
     documentType: AutocompleteOption
@@ -43,16 +44,18 @@ const mapEntityToForm = (entity: EventDocumentDto): Form => ({
 
 const FileSelection = () => {
     const formContext = useFormContext<Form>()
+    const {t} = useTranslation()
 
     const {fields, append, remove} = useFieldArray({
         control: formContext.control,
         name: 'files',
         keyName: 'fieldId',
         rules: {
-            required: '[todo] not empty',
+            required: t('event.document.error.emptyList'),
         },
     })
 
+    // todo: This should be solved as in "CompetitionPropertiesFormInputs" without touching the formState
     const emptyList = formContext.formState.errors.files?.root?.message
 
     return (
@@ -80,7 +83,7 @@ const FileSelection = () => {
                     Array.from(files).forEach(file => append({file}))
                 }}
                 accept={'application/pdf'}>
-                [todo] add
+                {t('event.document.add.add')}
             </SelectFileButton>
             {/* todo: @incomplete: improve visualization in case of error */}
             {emptyList && <Typography color={'error'}>{emptyList}</Typography>}
@@ -90,6 +93,7 @@ const FileSelection = () => {
 
 const DocumentDialog = (props: BaseEntityDialogProps<EventDocumentDto>) => {
     const {eventId} = eventIndexRoute.useParams()
+    const {t} = useTranslation()
 
     const formContext = useForm<Form>()
 
@@ -132,7 +136,7 @@ const DocumentDialog = (props: BaseEntityDialogProps<EventDocumentDto>) => {
                 <FormInputAutocomplete
                     name={'documentType'}
                     options={typeOptions}
-                    label={'[todo] Typ'}
+                    label={t('event.document.type.type')}
                     autocompleteProps={{
                         getOptionKey: option => option.id,
                     }}

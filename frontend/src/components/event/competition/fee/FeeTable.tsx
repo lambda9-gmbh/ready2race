@@ -32,13 +32,13 @@ const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
     const columns: GridColDef<FeeDto>[] = [
         {
             field: 'name',
-            headerName: t('entity.name'),
+            headerName: t('event.competition.fee.name'),
             minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('entity.description'),
+            headerName: t('event.competition.fee.description'),
             flex: 2,
             sortable: false,
         },

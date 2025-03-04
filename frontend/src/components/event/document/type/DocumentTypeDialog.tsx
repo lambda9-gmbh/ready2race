@@ -7,6 +7,7 @@ import {useCallback} from 'react'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {Stack} from '@mui/material'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
+import {useTranslation} from 'react-i18next'
 
 type Form = EventDocumentTypeRequest
 
@@ -38,6 +39,7 @@ const editAction = (formData: Form, entity: EventDocumentTypeDto) =>
 
 const DocumentTypeDialog = (props: BaseEntityDialogProps<EventDocumentTypeDto>) => {
     const formContext = useForm<Form>()
+    const {t} = useTranslation()
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapEntityToForm(props.entity) : defaultValues)
@@ -51,14 +53,16 @@ const DocumentTypeDialog = (props: BaseEntityDialogProps<EventDocumentTypeDto>) 
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={'[todo] Bezeichnung'} required />
+                <FormInputText name={'name'} label={t('event.document.type.name')} required />
                 <SwitchElement
                     name={'required'}
-                    label={<FormInputLabel label={'[todo] erforderlich für Event'} />}
+                    label={<FormInputLabel label={t('event.document.type.required.forEvent')} />}
                 />
                 <SwitchElement
                     name={'confirmationRequired'}
-                    label={<FormInputLabel label={'[todo] Bestätigung erforderlich'} />}
+                    label={
+                        <FormInputLabel label={t('event.document.type.required.confirmation')} />
+                    }
                 />
                 {/*todo: change slider required, shows optional, doesnt force true when required*/}
             </Stack>

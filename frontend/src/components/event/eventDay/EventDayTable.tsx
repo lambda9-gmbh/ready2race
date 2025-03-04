@@ -40,13 +40,13 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
         },
         {
             field: 'name',
-            headerName: t('entity.name'),
+            headerName: t('event.eventDay.name'),
             minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('entity.description'),
+            headerName: t('event.eventDay.description'),
             flex: 2,
             sortable: false,
         },

@@ -30,13 +30,13 @@ const CompetitionCategoryTable = (props: BaseEntityTableProps<CompetitionCategor
     const columns: GridColDef<CompetitionCategoryDto>[] = [
         {
             field: 'name',
-            headerName: t('entity.name'),
+            headerName: t('event.competition.category.name'),
             minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('entity.description'),
+            headerName: t('event.competition.category.description'),
             flex: 2,
             sortable: false,
         }
