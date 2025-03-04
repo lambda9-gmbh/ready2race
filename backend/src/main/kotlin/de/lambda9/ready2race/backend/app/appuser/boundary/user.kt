@@ -46,7 +46,6 @@ fun Route.user() {
         }
 
         route("/registration") {
-            // todo: evaluate rate limiting. How?
             post {
                 val payload = call.receiveV(RegisterRequest.example)
                 call.respondKIO {

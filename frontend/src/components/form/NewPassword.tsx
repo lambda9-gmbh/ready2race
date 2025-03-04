@@ -26,6 +26,7 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
         'confirmPassword' as Path<Form<F>>,
     ])
 
+    // todo: use repeat password element from hook form
     useEffect(() => {
         if (formContext.formState.isSubmitted) {
             if (passwordsWatch[0] !== passwordsWatch[1]) {
@@ -67,11 +68,6 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
                             min: minPasswordLength,
                         }),
                     },
-                    validate: (val, vals) => {
-                        if (val !== vals['confirmPassword']) {
-                            return t('user.registration.password.notMatching')
-                        }
-                    },
                 }}
             />
             <FormInputPassword
@@ -80,11 +76,6 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
                 required
                 rules={{
                     required: t('common.form.required'),
-                    validate: (val, vals) => {
-                        if (val !== vals['password']) {
-                            return t('user.registration.password.notMatching')
-                        }
-                    },
                 }}
             />
         </Stack>

@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.auth.control
 
+import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserSessionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_SESSION
 import de.lambda9.ready2race.backend.database.insertReturning
@@ -20,21 +21,6 @@ object AppUserSessionRepo {
         )
     }
 
-    fun delete(
-        token: String?,
-    ): JIO<Unit> = Jooq.query {
-        with(APP_USER_SESSION) {
-            deleteFrom(this)
-                .where(TOKEN.eq(token))
-                .execute()
-        }
-    }
-
-    fun deleteExpired(): JIO<Int> = Jooq.query {
-        with(APP_USER_SESSION) {
-            deleteFrom(this)
-                .where(EXPIRES_AT.le(LocalDateTime.now()))
-                .execute()
-        }
-    }
+    fun delete(token: String?) = APP_USER_SESSION.delete { TOKEN.eq(token) }
+    fun deleteExpired() = APP_USER_SESSION.delete { EXPIRES_AT.le(LocalDateTime.now()) }
 }

@@ -122,17 +122,6 @@ import type {
     DeleteCompetitionTemplateData,
     DeleteCompetitionTemplateError,
     DeleteCompetitionTemplateResponse,
-    AddNamedParticipantData,
-    AddNamedParticipantError,
-    AddNamedParticipantResponse,
-    GetNamedParticipantsError,
-    GetNamedParticipantsResponse,
-    UpdateNamedParticipantData,
-    UpdateNamedParticipantError,
-    UpdateNamedParticipantResponse,
-    DeleteNamedParticipantData,
-    DeleteNamedParticipantError,
-    DeleteNamedParticipantResponse,
     AddCompetitionCategoryData,
     AddCompetitionCategoryError,
     AddCompetitionCategoryResponse,
@@ -144,6 +133,28 @@ import type {
     DeleteCompetitionCategoryData,
     DeleteCompetitionCategoryError,
     DeleteCompetitionCategoryResponse,
+    AddNamedParticipantData,
+    AddNamedParticipantError,
+    AddNamedParticipantResponse,
+    GetNamedParticipantsError,
+    GetNamedParticipantsResponse,
+    UpdateNamedParticipantData,
+    UpdateNamedParticipantError,
+    UpdateNamedParticipantResponse,
+    DeleteNamedParticipantData,
+    DeleteNamedParticipantError,
+    DeleteNamedParticipantResponse,
+    AddFeeData,
+    AddFeeError,
+    AddFeeResponse,
+    GetFeesError,
+    GetFeesResponse,
+    UpdateFeeData,
+    UpdateFeeError,
+    UpdateFeeResponse,
+    DeleteFeeData,
+    DeleteFeeError,
+    DeleteFeeResponse,
     NewCaptchaError,
     NewCaptchaResponse,
     AddDocumentTypeData,
@@ -610,6 +621,58 @@ export const deleteCompetitionTemplate = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const addCompetitionCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddCompetitionCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddCompetitionCategoryResponse,
+        AddCompetitionCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionCategory',
+    })
+}
+
+export const getCompetitionCategories = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionCategoriesResponse,
+        GetCompetitionCategoriesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionCategory',
+    })
+}
+
+export const updateCompetitionCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionCategoryResponse,
+        UpdateCompetitionCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionCategory/{competitionCategoryId}',
+    })
+}
+
+export const deleteCompetitionCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCompetitionCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCompetitionCategoryResponse,
+        DeleteCompetitionCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionCategory/{competitionCategoryId}',
+    })
+}
+
 export const addNamedParticipant = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddNamedParticipantData, ThrowOnError>,
 ) => {
@@ -662,55 +725,39 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const addCompetitionCategory = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddCompetitionCategoryData, ThrowOnError>,
+export const addFee = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddFeeData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).post<
-        AddCompetitionCategoryResponse,
-        AddCompetitionCategoryError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).post<AddFeeResponse, AddFeeError, ThrowOnError>({
         ...options,
-        url: '/competitionCategory',
+        url: '/fee',
     })
 }
 
-export const getCompetitionCategories = <ThrowOnError extends boolean = false>(
+export const getFees = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).get<
-        GetCompetitionCategoriesResponse,
-        GetCompetitionCategoriesError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).get<GetFeesResponse, GetFeesError, ThrowOnError>({
         ...options,
-        url: '/competitionCategory',
+        url: '/fee',
     })
 }
 
-export const updateCompetitionCategory = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateCompetitionCategoryData, ThrowOnError>,
+export const updateFee = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateFeeData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).put<
-        UpdateCompetitionCategoryResponse,
-        UpdateCompetitionCategoryError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).put<UpdateFeeResponse, UpdateFeeError, ThrowOnError>({
         ...options,
-        url: '/competitionCategory/{competitionCategoryId}',
+        url: '/fee/{feeId}',
     })
 }
 
-export const deleteCompetitionCategory = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteCompetitionCategoryData, ThrowOnError>,
+export const deleteFee = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteFeeData, ThrowOnError>,
 ) => {
-    return (options?.client ?? client).delete<
-        DeleteCompetitionCategoryResponse,
-        DeleteCompetitionCategoryError,
-        ThrowOnError
-    >({
+    return (options?.client ?? client).delete<DeleteFeeResponse, DeleteFeeError, ThrowOnError>({
         ...options,
-        url: '/competitionCategory/{competitionCategoryId}',
+        url: '/fee/{feeId}',
     })
 }
 

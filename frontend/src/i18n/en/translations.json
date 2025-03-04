@@ -45,7 +45,8 @@
     },
     "ok": "Ok",
     "save": "Save",
-    "search": "Search"
+    "search": "Search",
+    "and": "and"
   },
   "decimal": {
     "point": "."
@@ -113,11 +114,27 @@
         "add": "Add Named Participant",
         "namedParticipant": "Named Participant",
         "namedParticipants": "Named Participants",
+        "role": "Role",
+        "error": {
+          "emptyList": "Please add one or more named participants",
+          "noCount": "Please enter at least one participant of any kind for this role",
+          "duplicates": {
+            "one": "The role {{label}} is used several times.",
+            "multiple": "The roles {{labels}} are used several times.",
+            "message": "Please select a unique role for each named participant."
+          }
+        }
+      },
+      "fee": {
+        "fee": "Fee",
+        "fees": "Fees",
+        "add": "Add Fee",
+        "type": "Fee type",
         "required": {
           "notRequired": "Not required",
           "required": "Required"
         },
-        "role": "Role"
+        "amount": "Amount"
       },
       "competition": "Competition",
       "competitions": "Competitions",

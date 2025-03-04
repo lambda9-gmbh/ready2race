@@ -98,35 +98,13 @@ const CompetitionPage = () => {
                             </Box>
                         )}
 
-                        <Divider orientation="horizontal" />
-                        <CompetitionCountEntry
-                            label={t('event.competition.count.males')}
-                            content={competitionData.properties.countMales}
-                        />
-                        <CompetitionCountEntry
-                            label={t('event.competition.count.females')}
-                            content={competitionData.properties.countFemales}
-                        />
-                        <CompetitionCountEntry
-                            label={t('event.competition.count.nonBinary')}
-                            content={competitionData.properties.countNonBinary}
-                        />
-                        <CompetitionCountEntry
-                            label={t('event.competition.count.mixed')}
-                            content={competitionData.properties.countMixed}
-                        />
+                        <Divider />
 
                         {competitionData.properties.namedParticipants.map((np, index) => (
                             <>
-                                <Divider orientation="horizontal" key={`divider${index}`} />
                                 <Box key={`box${index}`}>
                                     <Typography variant="subtitle1">{np.name}</Typography>
                                     <Typography>{np.description}</Typography>
-                                    <Typography>
-                                        {np.required
-                                            ? t('event.competition.namedParticipant.required.required')
-                                            : t('event.competition.namedParticipant.required.notRequired')}
-                                    </Typography>
                                     <CompetitionCountEntry
                                         label={t('event.competition.count.males')}
                                         content={np.countMales}
@@ -146,11 +124,29 @@ const CompetitionPage = () => {
                                 </Box>
                             </>
                         ))}
+                        <Divider />
+                        {competitionData.properties.fees.map((f, index) => (
+                            <>
+                                <Box key={`box${index}`}>
+                                    <Typography variant="subtitle1">{f.name}</Typography>
+                                    <Typography>{f.description}</Typography>
+                                    <Typography>
+                                        {f.required
+                                            ? t('event.competition.fee.required.required')
+                                            : t('event.competition.fee.required.notRequired')
+                                        }
+                                    </Typography>
+                                    <CompetitionCountEntry
+                                        label={t('event.competition.fee.amount')}
+                                        content={f.amount + "€"}
+                                    />
+                                </Box>
+                            </>
+                        ))}
                     </Stack>
                 )) ||
                     (competitionPending && <Throbber />)}
             </Box>
-            <Divider orientation="vertical" />
             <Box sx={{flex: 1, maxWidth: 400}}>
                 {(eventDaysData && assignedEventDaysData && (
                     <CompetitionAndDayAssignment

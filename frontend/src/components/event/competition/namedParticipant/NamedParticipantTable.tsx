@@ -54,7 +54,7 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            entityName={t('event.competition.template.template')}
+            entityName={t('event.competition.namedParticipant.namedParticipant')}
             deleteRequest={deleteRequest}
         />
     )

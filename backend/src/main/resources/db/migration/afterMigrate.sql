@@ -4,8 +4,9 @@ drop view if exists event_document_download;
 drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
 drop view if exists app_user_invitation_with_roles;
-drop view if exists competition_template_to_properties_with_named_participants;
-drop view if exists competition_to_properties_with_named_participants;
+drop view if exists competition_template_view;
+drop view if exists competition_view;
+drop view if exists fee_for_competition_properties;
 drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
@@ -55,7 +56,6 @@ group by au.id;
 
 create view named_participant_for_competition_properties as
 select cphnp.competition_properties,
-       cphnp.required,
        cphnp.count_males,
        cphnp.count_females,
        cphnp.count_non_binary,
@@ -66,8 +66,18 @@ select cphnp.competition_properties,
 from competition_properties_has_named_participant cphnp
          left join named_participant np on cphnp.named_participant = np.id;
 
+create view fee_for_competition_properties as
+select cphf.competition_properties,
+       cphf.required,
+       cphf.amount,
+       f.id,
+       f.name,
+       f.description
+from competition_properties_has_fee cphf
+         left join fee f on cphf.fee = f.id;
 
-create view competition_to_properties_with_named_participants as
+
+create view competition_view as
 select c.id,
        c.event,
        c.template,
@@ -75,40 +85,50 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
-       cp.count_males,
-       cp.count_females,
-       cp.count_non_binary,
-       cp.count_mixed,
-       cc.id                                                                                      as category_id,
-       cc.name                                                                                    as category_name,
-       cc.description                                                                             as category_description,
-       coalesce(array_agg(npfrp) filter ( where npfrp.competition_properties is not null ), '{}') as named_participants
+       cc.id                                  as category_id,
+       cc.name                                as category_name,
+       cc.description                         as category_description,
+       coalesce(nps.named_participants, '{}') as named_participants,
+       coalesce(fs.fees, '{}')                as fees
 from competition c
          left join competition_properties cp on c.id = cp.competition
-         left join named_participant_for_competition_properties npfrp on cp.id = npfrp.competition_properties
          left join competition_category cc on cp.competition_category = cc.id
-group by c.id, cp.id, cc.id;
+         left join (select npfcp.competition_properties,
+                           array_agg(npfcp)
+                           filter (where npfcp.competition_properties is not null ) as named_participants
+                    from named_participant_for_competition_properties npfcp
+                    group by npfcp.competition_properties) nps on cp.id = nps.competition_properties
+         left join (select ffcp.competition_properties,
+                           array_agg(ffcp)
+                           filter (where ffcp.competition_properties is not null ) as fees
+                    from fee_for_competition_properties ffcp
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
 
 
-create view competition_template_to_properties_with_named_participants as
+create view competition_template_view as
 select ct.id,
        cp.identifier,
        cp.name,
        cp.short_name,
        cp.description,
-       cp.count_males,
-       cp.count_females,
-       cp.count_non_binary,
-       cp.count_mixed,
-       cc.id                                                                                      as category_id,
-       cc.name                                                                                    as category_name,
-       cc.description                                                                             as category_description,
-       coalesce(array_agg(npfrp) filter ( where npfrp.competition_properties is not null ), '{}') as named_participants
+       cc.id                                  as category_id,
+       cc.name                                as category_name,
+       cc.description                         as category_description,
+       coalesce(nps.named_participants, '{}') as named_participants,
+       coalesce(fs.fees, '{}')                as fees
 from competition_template ct
          left join competition_properties cp on ct.id = cp.competition_template
-         left join named_participant_for_competition_properties npfrp on cp.id = npfrp.competition_properties
          left join competition_category cc on cp.competition_category = cc.id
-group by ct.id, cp.id, cc.id;
+         left join (select npfcp.competition_properties,
+                           array_agg(npfcp)
+                           filter (where npfcp.competition_properties is not null ) as named_participants
+                    from named_participant_for_competition_properties npfcp
+                    group by npfcp.competition_properties) nps on cp.id = nps.competition_properties
+         left join (select ffcp.competition_properties,
+                           array_agg(ffcp)
+                           filter (where ffcp.competition_properties is not null ) as fees
+                    from fee_for_competition_properties ffcp
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
 
 create view app_user_invitation_with_roles as
 select aui.id,
