@@ -45,7 +45,8 @@
     },
     "ok": "Ok",
     "save": "Save",
-    "search": "Search"
+    "search": "Search",
+    "and": "and"
   },
   "decimal": {
     "point": "."
@@ -115,8 +116,13 @@
         "namedParticipants": "Named Participants",
         "role": "Role",
         "error": {
-          "emptyList": "Please add one or more Named Participants",
-          "noCount": "Please enter at least one participant of any kind for this role"
+          "emptyList": "Please add one or more named participants",
+          "noCount": "Please enter at least one participant of any kind for this role",
+          "duplicates": {
+            "one": "The role {{label}} is used several times.",
+            "multiple": "The roles {{labels}} are used several times.",
+            "message": "Please select a unique role for each named participant."
+          }
         }
       },
       "fee": {

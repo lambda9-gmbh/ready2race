@@ -104,16 +104,44 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         keyName: 'fieldId',
         rules: {
             validate: values => {
-                // todo: Validate for duplicates via reduce
+
                 if (values.length < 1) {
                     setNamedParticipantsError(
                         t('event.competition.namedParticipant.error.emptyList'),
                     )
-                    return t('event.competition.namedParticipant.error.emptyList')
-                } else {
-                    setNamedParticipantsError(null)
-                    return undefined
+                    return 'empty'
                 }
+
+                const countedMap = values.reduce<Map<string, number>>((acc, val) => {
+                    if (val.namedParticipant) {
+                        const id = val.namedParticipant.id
+                        const old = acc.get(id)
+                        acc.set(id, old ? old + 1 : 1)
+                    }
+                    return acc
+                }, new Map())
+                const duplicates = Array.from(countedMap.entries())
+                    .filter(([,count]) => count > 1)
+                    .map(([id,]) => namedParticipants.find(x => x?.id === id)?.label)
+                    .filter(label => label !== undefined)
+
+                if (duplicates.length > 0) {
+                    setNamedParticipantsError(
+                        duplicates.length > 1
+                            ? t('event.competition.namedParticipant.error.duplicates.multiple', {
+                                  labels: duplicates.reduce((acc, val) => acc + val + ' '),
+                              })
+                            : t('event.competition.namedParticipant.error.duplicates.one', {
+                                  label: duplicates[0],
+                              }) +
+                                  ' ' +
+                                  t('event.competition.namedParticipant.error.duplicates.message'),
+                    )
+                    return 'duplicates'
+                }
+
+                setNamedParticipantsError(null)
+                return undefined
             },
         },
     })
@@ -204,7 +232,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                     loading={namedParticipantsPending}
                                     required
                                     rules={{
-                                        validate: (val) => {
+                                        validate: val => {
                                             // Extra Required Check (the normal rule wasn't consistent when a new entry was created)
                                             if (val.id === '') {
                                                 return t('common.form.required')

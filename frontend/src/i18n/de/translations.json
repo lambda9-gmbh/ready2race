@@ -45,7 +45,8 @@
     },
     "ok": "Ok",
     "save": "Speichern",
-    "search": "Suchen"
+    "search": "Suchen",
+    "and": "und"
   },
   "decimal": {
     "point": ","
@@ -116,7 +117,12 @@
         "role": "Rolle",
         "error": {
           "emptyList": "Bitte fügen Sie mindestens einen spezifischen Teilnehmer hinzu",
-          "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein"
+          "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
+          "duplicates": {
+            "one": "Die Rolle {{label}} wird mehrfach verwendet.",
+            "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
+            "message": "Bitte wählen Sie für jeden spezifischen Teilnehmer eine einzigartige Rolle aus."
+          }
         }
       },
       "fee": {
