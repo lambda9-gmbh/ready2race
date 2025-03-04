@@ -15,7 +15,7 @@ import {eventRoute} from '@routes'
 import {useState} from 'react'
 import CompetitionAndDayAssignmentList from './CompetitionAndDayAssignmentList.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import {assignDaysToCompetition, assignCompetitionsToEventDay} from "@api/sdk.gen.ts";
+import {assignDaysToCompetition, assignCompetitionsToEventDay} from '@api/sdk.gen.ts'
 
 type AssignmentEntry = {
     entry: AutocompleteOption
@@ -65,8 +65,12 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     }
 
     const entityNames = {
-        toBeAssigned: competitionsToDay ? t('event.competition.competitions') : t('event.eventDay.eventDays'),
-        assignedTo: competitionsToDay ? t('event.eventDay.eventDay') : t('event.competition.competition'),
+        toBeAssigned: competitionsToDay
+            ? t('event.competition.competitions')
+            : t('event.eventDay.eventDays'),
+        assignedTo: competitionsToDay
+            ? t('event.eventDay.eventDay')
+            : t('event.competition.competition'),
     }
 
     const onSubmit = async (formData: AssignmentForm) => {
@@ -75,13 +79,17 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
             ? await assignCompetitionsToEventDay({
                   path: {eventId: eventId, eventDayId: props.entityPathId},
                   body: {
-                      competitions: formData.selected.map(value => value.entry.id),
+                      competitions: formData.selected
+                          .map(value => value.entry?.id)
+                          .filter(value => value !== undefined),
                   },
               })
             : await assignDaysToCompetition({
                   path: {eventId: eventId, competitionId: props.entityPathId},
                   body: {
-                      days: formData.selected.map(value => value.entry.id),
+                      days: formData.selected
+                          .map(value => value.entry?.id)
+                          .filter(value => value !== undefined),
                   },
               })
         setSubmitting(false)
@@ -99,15 +107,17 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     }
 
     const filteredOptions = props.options.filter(
-        value => !entityFields.some(ar => ar.entry.id === value.id),
+        value => !entityFields.some(ar => ar.entry?.id === value?.id),
     )
 
-    const [autocompleteContent, setAutocompleteContent] = useState({id: '', label: ''})
+    const [autocompleteContent, setAutocompleteContent] = useState<AutocompleteOption>(null)
 
     return (
         <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
             <Typography variant="h2">
-                {competitionsToDay ? t('event.eventDay.assignedCompetitions') : t('event.competition.assignedDays')}
+                {competitionsToDay
+                    ? t('event.eventDay.assignedCompetitions')
+                    : t('event.competition.assignedDays')}
             </Typography>
             <Button onClick={openDialog} variant="outlined" sx={{mt: 1, mb: 2}}>
                 {t('common.edit')}
@@ -129,7 +139,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                         onChange={(_e, newValue) => {
                             if (newValue) {
                                 appendEntity({entry: newValue})
-                                setAutocompleteContent({id: '', label: ''})
+                                setAutocompleteContent(null)
                             }
                         }}
                         renderInput={params => (

@@ -315,7 +315,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 <Button
                     onClick={() => {
                         appendNamedParticipant({
-                            namedParticipant: {id: '', label: ''},
+                            namedParticipant: null,
                             countMales: '0',
                             countFemales: '0',
                             countNonBinary: '0',
@@ -383,7 +383,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 <Button
                     onClick={() => {
                         appendFee({
-                            fee: {id: '', label: ''},
+                            fee: null,
                             required: false,
                             amount: '0',
                         })
