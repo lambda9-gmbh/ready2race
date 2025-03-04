@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_document_download;
+drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
 drop view if exists app_user_invitation_with_roles;
 drop view if exists competition_template_view;
@@ -9,9 +11,9 @@ drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
-drop view if exists created_by;
+drop view if exists app_user_name;
 
-create view created_by as
+create view app_user_name as
 select au.id,
        au.firstname,
        au.lastname
@@ -145,7 +147,7 @@ from app_user_invitation aui
          left join email e on auite.email = e.id
          left join app_user_invitation_has_role auihr on aui.id = auihr.app_user_invitation
          left join role_with_privileges rwp on auihr.role = rwp.id
-         left join created_by cb on aui.created_by = cb.id
+         left join app_user_name cb on aui.created_by = cb.id
 group by aui.id, e, cb;
 
 create view app_user_registration_view as
@@ -160,3 +162,24 @@ select aur.id,
 from app_user_registration aur
          left join app_user_registration_to_email aurte on aur.id = aurte.app_user_registration
          left join email e on aurte.email = e.id;
+
+create view event_document_view as
+select ed.id,
+       ed.event,
+       edt as document_type,
+       ed.name,
+       ed.created_at,
+       cb       as created_by,
+       ed.updated_at,
+       ub       as updated_by
+from event_document ed
+         left join event_document_type edt on ed.event_document_type = edt.id
+         left join app_user_name cb on ed.created_by = cb.id
+         left join app_user_name ub on ed.updated_by = ub.id;
+
+create view event_document_download as
+select ed.id,
+       ed.name,
+       edd.data
+from event_document ed
+         join event_document_data edd on ed.id = edd.event_document;

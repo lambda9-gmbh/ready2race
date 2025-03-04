@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
+import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
@@ -41,6 +42,7 @@ fun Route.event() {
 
             eventDay()
             competition()
+            eventDocument()
 
             get {
                 call.respondKIO {

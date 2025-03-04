@@ -5,9 +5,9 @@ import de.lambda9.ready2race.backend.responses.ApiError
 import io.ktor.http.*
 
 enum class EventError : ServiceError {
-    EventNotFound;
+    NotFound;
 
     override fun respond(): ApiError = when (this) {
-        EventNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Event not found")
+        NotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Event not found")
     }
 }

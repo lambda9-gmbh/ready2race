@@ -10,7 +10,12 @@ import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
-import {readEventGlobal, readUserGlobal, updateUserGlobal} from './authorization/privileges.ts'
+import {
+    readEventGlobal,
+    readUserGlobal,
+    updateEventGlobal,
+    updateUserGlobal,
+} from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
@@ -21,8 +26,9 @@ import EventDayPage from './pages/event/EventDayPage.tsx'
 import CompetitionConfigPage from './pages/event/CompetitionConfigPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
-import InitResetPasswordPage from "./pages/user/resetPassword/InitResetPasswordPage.tsx";
-import VerifyRegistrationPage from "./pages/user/VerifyRegistrationPage.tsx";
+import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
+import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
+import ConfigurationPage from './pages/ConfigurationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -44,7 +50,8 @@ const checkAuthWith = (
         throw redirect({to: '/login', search: {redirect: location.href}})
     }
     const scope = context.getPrivilegeScope(action, resource)
-    if (!scope || !f(context, scope)) { // Todo: Shouldn't it be && instead of ||?
+    if (!scope || !f(context, scope)) {
+        // Todo: Shouldn't it be && instead of ||?
         throw redirect({to: '/dashboard'})
     }
 }
@@ -180,6 +187,20 @@ export const rolesIndexRoute = createRoute({
     },
 })
 
+export const configurationRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'config',
+})
+
+export const configurationIndexRoute = createRoute({
+    getParentRoute: () => configurationRoute,
+    path: '/',
+    component: () => <ConfigurationPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, updateEventGlobal)
+    },
+})
+
 export const eventsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'event',
@@ -254,6 +275,7 @@ const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
     dashboardRoute,
+    configurationRoute.addChildren([configurationIndexRoute]),
     eventsRoute.addChildren([
         eventsIndexRoute,
         eventRoute.addChildren([
@@ -265,14 +287,8 @@ const routeTree = rootRoute.addChildren([
     competitionConfigRoute.addChildren([competitionConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
-    registrationRoute.addChildren([
-        registrationIndexRoute,
-        registrationTokenRoute
-    ]),
-    resetPasswordRoute.addChildren([
-        resetPasswordIndexRoute,
-        resetPasswordTokenRoute,
-    ]),
+    registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
+    resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
 ])
 
 export const router = createRouter({

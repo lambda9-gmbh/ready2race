@@ -34,7 +34,12 @@ export type AppUserInvitationDto = {
     createdAt: string
     assignedEmail?: AssignedEmailDto
     roles: Array<RoleDto>
-    createdBy?: CreatedByDto
+    createdBy?: AppUserNameDto
+}
+
+export type AppUserNameDto = {
+    firstname: string
+    lastname: string
 }
 
 export type AppUserRegistrationDto = {
@@ -130,11 +135,6 @@ export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
 }
 
-export type CreatedByDto = {
-    firstname: string
-    lastname: string
-}
-
 export type Duplicate = {
     value: unknown
     count: number
@@ -156,6 +156,33 @@ export type EventDayRequest = {
     date: string
     name?: string
     description?: string
+}
+
+export type EventDocumentDto = {
+    id: string
+    documentType?: EventDocumentTypeDto
+    name: string
+    createdAt: string
+    createdBy?: AppUserNameDto
+    updatedAt: string
+    updatedBy?: AppUserNameDto
+}
+
+export type EventDocumentRequest = {
+    documentType?: string
+}
+
+export type EventDocumentTypeDto = {
+    id: string
+    name: string
+    required: boolean
+    confirmationRequired: boolean
+}
+
+export type EventDocumentTypeRequest = {
+    name: string
+    required: boolean
+    confirmationRequired: boolean
 }
 
 export type EventDto = {
@@ -1069,3 +1096,140 @@ export type DeleteFeeError = ApiError
 export type NewCaptchaResponse = CaptchaDto
 
 export type NewCaptchaError = ApiError
+
+export type AddDocumentTypeData = {
+    body: EventDocumentTypeRequest
+}
+
+export type AddDocumentTypeResponse = string
+
+export type AddDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentTypesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetDocumentTypesResponse = {
+    data: Array<EventDocumentTypeDto>
+    pagination: Pagination
+}
+
+export type GetDocumentTypesError = BadRequestError | ApiError
+
+export type UpdateDocumentTypeData = {
+    body: EventDocumentTypeRequest
+    path: {
+        eventDocumentTypeId: string
+    }
+}
+
+export type UpdateDocumentTypeResponse = void
+
+export type UpdateDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteDocumentTypeData = {
+    path: {
+        eventDocumentTypeId: string
+    }
+}
+
+export type DeleteDocumentTypeResponse = void
+
+export type DeleteDocumentTypeError = BadRequestError | ApiError
+
+export type AddDocumentsData = {
+    body: {
+        documentType?: string
+        files?: Array<Blob | File>
+    }
+    path: {
+        eventId: string
+    }
+}
+
+export type AddDocumentsResponse = void
+
+export type AddDocumentsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        documentType?: string
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetDocumentsResponse = {
+    data: Array<EventDocumentDto>
+    pagination: Pagination
+}
+
+export type GetDocumentsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadDocumentData = {
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type DownloadDocumentResponse = Blob | File
+
+export type DownloadDocumentError = BadRequestError | ApiError
+
+export type UpdateDocumentData = {
+    body: EventDocumentRequest
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type UpdateDocumentResponse = void
+
+export type UpdateDocumentError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteDocumentData = {
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type DeleteDocumentResponse = void
+
+export type DeleteDocumentError = BadRequestError | ApiError

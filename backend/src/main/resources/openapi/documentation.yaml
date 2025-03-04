@@ -1210,11 +1210,258 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-
-
-
-
-
+  /eventDocumentType:
+    post:
+      operationId: addDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentTypeRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getDocumentTypes
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDocumentTypeDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /eventDocumentType/{eventDocumentTypeId}:
+    parameters:
+      - name: eventDocumentTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentTypeRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocumentType
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/eventDocument:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: addDocuments
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                documentType:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getDocuments
+      parameters:
+        - name: documentType
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDocumentDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/eventDocument/{eventDocumentId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: eventDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadDocument
+      responses:
+        200:
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocument
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -1683,7 +1930,7 @@ components:
 
     # user
 
-    CreatedByDto:
+    AppUserNameDto:
       type: object
       required:
         - firstname
@@ -1816,7 +2063,7 @@ components:
           items:
             $ref: '#/components/schemas/RoleDto'
         createdBy:
-          $ref: '#/components/schemas/CreatedByDto'
+          $ref: '#/components/schemas/AppUserNameDto'
 
     InviteRequest:
       type: object
@@ -2311,7 +2558,6 @@ components:
         description:
           type: string
 
-
     # captcha
 
     CaptchaDto:
@@ -2338,3 +2584,70 @@ components:
           type: number
         start:
           type: integer
+
+    # eventDocuments
+
+    EventDocumentTypeRequest:
+      type: object
+      required:
+        - name
+        - required
+        - confirmationRequired
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        confirmationRequired:
+          type: boolean
+
+    EventDocumentTypeDto:
+      type: object
+      required:
+        - id
+        - name
+        - required
+        - confirmationRequired
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        required:
+          type: boolean
+        confirmationRequired:
+          type: boolean
+
+    EventDocumentRequest:
+      type: object
+      properties:
+        documentType:
+          type: string
+          format: uuid
+
+    EventDocumentDto:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        documentType:
+          $ref: '#/components/schemas/EventDocumentTypeDto'
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: '#/components/schemas/AppUserNameDto'

@@ -11,6 +11,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
+import jakarta.activation.MimetypesFileTypeMap
+import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -18,12 +20,15 @@ private val logger = KotlinLogging.logger {}
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,
+) = respondError(error.respond())
+
+suspend fun ApplicationCall.respondError(
+    error: ApiError,
 ) {
-    val apiError = error.respond()
-    apiError.headers.forEach { entry ->
+    error.headers.forEach { entry ->
         response.headers.append(entry.key, entry.value)
     }
-    respond(apiError.status, apiError)
+    respond(error.status, error)
 }
 
 suspend fun ApplicationCall.respondDefect(
@@ -46,16 +51,11 @@ suspend fun ApplicationCall.respondDefect(
             null
     }
 
-    val apiError = ApiError(
-        status = HttpStatusCode.InternalServerError,
-        message = "An unexpected error has occurred.",
-        details = details
-    )
-
-    respond(
-        HttpStatusCode.InternalServerError, mapOf(
-            "message" to "An unexpected error has occurred.",
-            "details" to details,
+    respondError(
+        ApiError(
+            status = HttpStatusCode.InternalServerError,
+            message = "An unexpected error has occurred.",
+            details = details
         )
     )
 }
@@ -68,20 +68,44 @@ suspend fun ApplicationCall.respondKIO(
         onError = { respondError(it) },
         onDefect = { respondDefect(it) },
         onSuccess = { apiResponse ->
-            response.status(apiResponse.status)
             when (apiResponse) {
-                ApiResponse.NoData -> { }
+                ApiResponse.NoData -> {
+                    response.status(HttpStatusCode.NoContent)
+                }
+
                 is ApiResponse.Dto<*> -> {
                     respond(apiResponse.dto)
                 }
-                is ApiResponse.Page<*,*> -> {
+
+                is ApiResponse.Page<*, *> -> {
                     respond(apiResponse)
                 }
+
                 is ApiResponse.File -> {
-                    respondBytes(apiResponse.bytes, contentType = apiResponse.contentType)
+
+                    // todo: @fix @incomplete: getContentType() always returns octet-stream,
+                    //  probably missing mimes.types
+
+                    val contentType = try {
+                        ContentType.parse(MimetypesFileTypeMap().getContentType(apiResponse.name))
+                    } catch(e: BadContentTypeFormatException) {
+                        logger.warn(e) { "Could not parse content-type from Document/File ${apiResponse.name}" }
+                        ContentType.Application.OctetStream
+                    }
+
+                    response.header(
+                        HttpHeaders.ContentDisposition,
+                        ContentDisposition.Attachment.withParameter(
+                            ContentDisposition.Parameters.FileName,
+                            apiResponse.name
+                        ).toString()
+                    )
+
+                    respondBytes(apiResponse.bytes, contentType)
                 }
+
                 is ApiResponse.Created -> {
-                    respondText(text = apiResponse.id.toString(), status = apiResponse.status)
+                    respondText(apiResponse.id.toString(), status = HttpStatusCode.Created)
                 }
             }
         }
