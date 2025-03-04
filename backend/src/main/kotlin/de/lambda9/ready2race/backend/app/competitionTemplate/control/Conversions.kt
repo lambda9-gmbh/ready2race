@@ -29,10 +29,6 @@ fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> 
                 name = name!!,
                 shortName = shortName,
                 description = description,
-                countMales = countMales!!,
-                countFemales = countFemales!!,
-                countNonBinary = countNonBinary!!,
-                countMixed = countMixed!!,
                 competitionCategory = if (categoryId !== null) {
                     CompetitionCategoryDto(
                         id = categoryId!!,
@@ -57,10 +53,6 @@ fun CompetitionTemplateViewRecord.applyCompetitionProperties(competitionId: UUID
             name = name!!,
             shortName = shortName,
             description = description,
-            countMales = countMales!!,
-            countFemales = countFemales!!,
-            countNonBinary = countNonBinary!!,
-            countMixed = countMixed!!,
             competitionCategory = categoryId
         ),
     )
@@ -71,10 +63,6 @@ fun CompetitionTemplateViewRecord.toUpdateFunction(): CompetitionPropertiesRecor
         name = it.name!!
         shortName = it.shortName
         description = it.description
-        countMales = it.countMales!!
-        countFemales = it.countFemales!!
-        countNonBinary = it.countNonBinary!!
-        countMixed = it.countMixed!!
         competitionCategory = it.categoryId
     }
 }

@@ -18,10 +18,6 @@ data class CompetitionPropertiesRequestDto(
     val name: String,
     val shortName: String?,
     val description: String?,
-    val countMales: Int,
-    val countFemales: Int,
-    val countNonBinary: Int,
-    val countMixed: Int,
     val competitionCategory: UUID?,
     val namedParticipants: List<NamedParticipantForCompetitionRequestDto>,
     val fees: List<FeeForCompetitionRequestDto>
@@ -32,23 +28,12 @@ data class CompetitionPropertiesRequestDto(
             this::name validate notBlank,
             this::shortName validate notBlank,
             this::description validate notBlank,
-            this::countMales validate IntValidators.notNegative,
-            this::countFemales validate IntValidators.notNegative,
-            this::countNonBinary validate IntValidators.notNegative,
-            this::countMixed validate IntValidators.notNegative,
             this::namedParticipants validate allOf(
                 collection,
                 noDuplicates(
                     NamedParticipantForCompetitionRequestDto::namedParticipant,
-                    NamedParticipantForCompetitionRequestDto::required,
-                )
-            ),
-            ValidationResult.anyOf(
-                this::countMales validate IntValidators.min(1),
-                this::countFemales validate IntValidators.min(1),
-                this::countNonBinary validate IntValidators.min(1),
-                this::countMixed validate IntValidators.min(1),
-                this::namedParticipants validate notEmpty
+                ),
+                notEmpty
             ),
             this::fees validate collection
         )
@@ -60,10 +45,6 @@ data class CompetitionPropertiesRequestDto(
                 name = "Name",
                 shortName = "N",
                 description = "Description of name",
-                countMales = 0,
-                countFemales = 0,
-                countNonBinary = 0,
-                countMixed = 1,
                 competitionCategory = UUID.randomUUID(),
                 namedParticipants = listOf(NamedParticipantForCompetitionRequestDto.example),
                 fees = listOf(FeeForCompetitionRequestDto.example)

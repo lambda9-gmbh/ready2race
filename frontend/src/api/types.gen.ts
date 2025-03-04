@@ -101,10 +101,6 @@ export type CompetitionPropertiesDto = {
     name: string
     shortName?: string
     description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
     competitionCategory?: CompetitionCategoryDto
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
@@ -115,10 +111,6 @@ export type CompetitionPropertiesRequestDto = {
     name: string
     shortName?: string
     description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
@@ -271,7 +263,6 @@ export type NamedParticipantForCompetitionDto = {
     id: string
     name: string
     description?: string
-    required: boolean
     countMales: number
     countFemales: number
     countNonBinary: number
@@ -280,7 +271,6 @@ export type NamedParticipantForCompetitionDto = {
 
 export type NamedParticipantForCompetitionRequestDto = {
     namedParticipant: string
-    required: boolean
     countMales: number
     countFemales: number
     countNonBinary: number
