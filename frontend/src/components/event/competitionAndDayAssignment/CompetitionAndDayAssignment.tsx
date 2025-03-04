@@ -110,7 +110,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
         value => !entityFields.some(ar => ar.entry?.id === value?.id),
     )
 
-    const [autocompleteContent, setAutocompleteContent] = useState({id: '', label: ''})
+    const [autocompleteContent, setAutocompleteContent] = useState<AutocompleteOption>(null)
 
     return (
         <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
@@ -139,7 +139,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                         onChange={(_e, newValue) => {
                             if (newValue) {
                                 appendEntity({entry: newValue})
-                                setAutocompleteContent({id: '', label: ''})
+                                setAutocompleteContent(null)
                             }
                         }}
                         renderInput={params => (

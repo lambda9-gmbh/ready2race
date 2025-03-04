@@ -1,6 +1,6 @@
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {AutocompleteOption} from '@utils/types.ts'
-import {CompetitionPropertiesDto, CompetitionPropertiesRequestDto} from "@api/types.gen.ts";
+import {CompetitionPropertiesDto, CompetitionPropertiesRequestDto} from '@api/types.gen.ts'
 
 export type CompetitionForm = {
     identifier: string
@@ -27,12 +27,14 @@ export const competitionFormDefaultValues: CompetitionForm = {
     name: '',
     shortName: '',
     description: '',
-    competitionCategory: {id: '', label: ''},
+    competitionCategory: null,
     namedParticipants: [],
     fees: [],
 }
 
-export function mapCompetitionFormToCompetitionPropertiesRequest(formData: CompetitionForm): CompetitionPropertiesRequestDto {
+export function mapCompetitionFormToCompetitionPropertiesRequest(
+    formData: CompetitionForm,
+): CompetitionPropertiesRequestDto {
     return {
         identifier: formData.identifier,
         name: formData.name,
@@ -40,14 +42,14 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(formData: Compe
         description: takeIfNotEmpty(formData.description),
         competitionCategory: takeIfNotEmpty(formData.competitionCategory?.id),
         namedParticipants: formData.namedParticipants.map(value => ({
-            namedParticipant: value.namedParticipant?.id ?? "",
+            namedParticipant: value.namedParticipant?.id ?? '',
             countMales: Number(value.countMales),
             countFemales: Number(value.countFemales),
             countNonBinary: Number(value.countNonBinary),
             countMixed: Number(value.countMixed),
         })),
         fees: formData.fees.map(value => ({
-            fee: value.fee?.id ?? "",
+            fee: value.fee?.id ?? '',
             required: value.required,
             amount: value.amount.replace(',', '.'),
         })),
@@ -65,10 +67,10 @@ export function mapCompetitionPropertiesToCompetitionForm(
         description: dto.description ?? '',
         competitionCategory: dto.competitionCategory
             ? {
-                  id: dto.competitionCategory?.id,
+                  id: dto.competitionCategory.id,
                   label: dto.competitionCategory.name,
               }
-            : {id: '', label: ''},
+            : null,
         namedParticipants: dto.namedParticipants.map(value => ({
             namedParticipant: {id: value.id, label: value.name},
             countMales: value.countMales.toString(),
@@ -83,7 +85,6 @@ export function mapCompetitionPropertiesToCompetitionForm(
         })),
     }
 }
-
 
 export function competitionLabelName(identifier: string, name: string) {
     return `${identifier} | ${name}`
