@@ -20,7 +20,8 @@ fun Route.eventDay() {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
 
-                    EventDayService.addEventDay(!payload, user.id!!, eventId)
+                    val body = !payload
+                    EventDayService.addEventDay(body, user.id!!, eventId)
                 }
             }
         }
@@ -58,7 +59,8 @@ fun Route.eventDay() {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                        EventDayService.updateEvent(!payload, user.id!!, eventDayId)
+                        val body = !payload
+                        EventDayService.updateEvent(body, user.id!!, eventDayId)
                     }
                 }
             }
@@ -82,7 +84,9 @@ fun Route.eventDay() {
                         KIO.comprehension {
                             val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                             val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
-                            EventDayService.updateEventDayHasCompetition(!payload, user.id!!, eventDayId)
+
+                            val body = !payload
+                            EventDayService.updateEventDayHasCompetition(body, user.id!!, eventDayId)
                         }
                     }
                 }

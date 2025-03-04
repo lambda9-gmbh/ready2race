@@ -16,11 +16,12 @@ fun Route.competitionTemplate() {
     route("/competitionTemplate") {
         post {
             val payload = call.receiveV(CompetitionTemplateRequest.example)
-
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    CompetitionTemplateService.addCompetitionTemplate(!payload, user.id!!)
+
+                    val body = !payload
+                    CompetitionTemplateService.addCompetitionTemplate(body, user.id!!)
                 }
             }
         }
@@ -51,7 +52,9 @@ fun Route.competitionTemplate() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val competitionTemplateId = !pathParam("competitionTemplateId") { UUID.fromString(it) }
-                        CompetitionTemplateService.updateCompetitionTemplate(competitionTemplateId, !payload, user.id!!)
+
+                        val body = !payload
+                        CompetitionTemplateService.updateCompetitionTemplate(competitionTemplateId, body, user.id!!)
                     }
                 }
             }

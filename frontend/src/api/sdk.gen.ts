@@ -20,21 +20,21 @@ import type {
     GetUserData,
     GetUserError,
     GetUserResponse,
-    GetRegistrationsData,
-    GetRegistrationsError,
-    GetRegistrationsResponse,
     RegisterUserData,
     RegisterUserError,
     RegisterUserResponse,
+    GetRegistrationsData,
+    GetRegistrationsError,
+    GetRegistrationsResponse,
     VerifyUserRegistrationData,
     VerifyUserRegistrationError,
     VerifyUserRegistrationResponse,
-    GetInvitationsData,
-    GetInvitationsError,
-    GetInvitationsResponse,
     InviteUserData,
     InviteUserError,
     InviteUserResponse,
+    GetInvitationsData,
+    GetInvitationsError,
+    GetInvitationsResponse,
     AcceptUserInvitationData,
     AcceptUserInvitationError,
     AcceptUserInvitationResponse,
@@ -107,6 +107,21 @@ import type {
     AssignDaysToCompetitionData,
     AssignDaysToCompetitionError,
     AssignDaysToCompetitionResponse,
+    AddDocumentsData,
+    AddDocumentsError,
+    AddDocumentsResponse,
+    GetDocumentsData,
+    GetDocumentsError,
+    GetDocumentsResponse,
+    DownloadDocumentData,
+    DownloadDocumentError,
+    DownloadDocumentResponse,
+    UpdateDocumentData,
+    UpdateDocumentError,
+    UpdateDocumentResponse,
+    DeleteDocumentData,
+    DeleteDocumentError,
+    DeleteDocumentResponse,
     AddCompetitionTemplateData,
     AddCompetitionTemplateError,
     AddCompetitionTemplateResponse,
@@ -169,21 +184,6 @@ import type {
     DeleteDocumentTypeData,
     DeleteDocumentTypeError,
     DeleteDocumentTypeResponse,
-    AddDocumentsData,
-    AddDocumentsError,
-    AddDocumentsResponse,
-    GetDocumentsData,
-    GetDocumentsError,
-    GetDocumentsResponse,
-    DownloadDocumentData,
-    DownloadDocumentError,
-    DownloadDocumentResponse,
-    UpdateDocumentData,
-    UpdateDocumentError,
-    UpdateDocumentResponse,
-    DeleteDocumentData,
-    DeleteDocumentError,
-    DeleteDocumentResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -237,6 +237,15 @@ export const getUser = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const registerUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RegisterUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<RegisterUserResponse, RegisterUserError, ThrowOnError>({
+        ...options,
+        url: '/user/registration',
+    })
+}
+
 export const getRegistrations = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<GetRegistrationsData, ThrowOnError>,
 ) => {
@@ -245,15 +254,6 @@ export const getRegistrations = <ThrowOnError extends boolean = false>(
         GetRegistrationsError,
         ThrowOnError
     >({
-        ...options,
-        url: '/user/registration',
-    })
-}
-
-export const registerUser = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<RegisterUserData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<RegisterUserResponse, RegisterUserError, ThrowOnError>({
         ...options,
         url: '/user/registration',
     })
@@ -272,6 +272,15 @@ export const verifyUserRegistration = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const inviteUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<InviteUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<InviteUserResponse, InviteUserError, ThrowOnError>({
+        ...options,
+        url: '/user/invitation',
+    })
+}
+
 export const getInvitations = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<GetInvitationsData, ThrowOnError>,
 ) => {
@@ -280,15 +289,6 @@ export const getInvitations = <ThrowOnError extends boolean = false>(
         GetInvitationsError,
         ThrowOnError
     >({
-        ...options,
-        url: '/user/invitation',
-    })
-}
-
-export const inviteUser = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<InviteUserData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<InviteUserResponse, InviteUserError, ThrowOnError>({
         ...options,
         url: '/user/invitation',
     })
@@ -556,6 +556,68 @@ export const assignDaysToCompetition = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const addDocuments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddDocumentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddDocumentsResponse, AddDocumentsError, ThrowOnError>({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/eventDocument',
+    })
+}
+
+export const getDocuments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetDocumentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetDocumentsResponse, GetDocumentsError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/eventDocument',
+    })
+}
+
+export const downloadDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadDocumentResponse,
+        DownloadDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
+export const updateDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateDocumentResponse,
+        UpdateDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
+export const deleteDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteDocumentResponse,
+        DeleteDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
 export const addCompetitionTemplate = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddCompetitionTemplateData, ThrowOnError>,
 ) => {
@@ -819,67 +881,5 @@ export const deleteDocumentType = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/eventDocumentType/{eventDocumentTypeId}',
-    })
-}
-
-export const addDocuments = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddDocumentsData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<AddDocumentsResponse, AddDocumentsError, ThrowOnError>({
-        ...options,
-        ...formDataBodySerializer,
-        headers: {
-            'Content-Type': null,
-            ...options?.headers,
-        },
-        url: '/event/{eventId}/eventDocument',
-    })
-}
-
-export const getDocuments = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetDocumentsData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<GetDocumentsResponse, GetDocumentsError, ThrowOnError>({
-        ...options,
-        url: '/event/{eventId}/eventDocument',
-    })
-}
-
-export const downloadDocument = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DownloadDocumentData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        DownloadDocumentResponse,
-        DownloadDocumentError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
-    })
-}
-
-export const updateDocument = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateDocumentData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<
-        UpdateDocumentResponse,
-        UpdateDocumentError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
-    })
-}
-
-export const deleteDocument = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteDocumentData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).delete<
-        DeleteDocumentResponse,
-        DeleteDocumentError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/eventDocument/{eventDocumentId}',
     })
 }

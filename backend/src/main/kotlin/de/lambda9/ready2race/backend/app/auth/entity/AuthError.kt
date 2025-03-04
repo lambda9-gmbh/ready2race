@@ -2,9 +2,10 @@ package de.lambda9.ready2race.backend.app.auth.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.responses.ErrorCode
 import io.ktor.http.*
 
-enum class AuthError: ServiceError {
+enum class AuthError : ServiceError {
 
     CredentialsIncorrect,
     TokenInvalid,
@@ -13,6 +14,10 @@ enum class AuthError: ServiceError {
     override fun respond(): ApiError = when (this) {
         CredentialsIncorrect -> ApiError(status = HttpStatusCode.Unauthorized, message = "Incorrect credentials")
         TokenInvalid -> ApiError(status = HttpStatusCode.Unauthorized, message = "Invalid session token")
-        PrivilegeMissing -> ApiError(status = HttpStatusCode.Forbidden, message = "Missing privilege")
+        PrivilegeMissing -> ApiError(
+            status = HttpStatusCode.Forbidden,
+            message = "Missing privilege",
+            errorCode = ErrorCode.PRIVILEGE_MISSING
+        )
     }
 }

@@ -30,6 +30,7 @@ sealed class Privilege(
     data object ReadUserOwn: Privilege(Action.READ, Resource.USER, Scope.OWN)
     data object UpdateUserGlobal: Privilege(Action.UPDATE, Resource.USER, Scope.GLOBAL)
     data object UpdateUserOwn: Privilege(Action.UPDATE, Resource.USER, Scope.OWN)
+    data object DeleteUserGlobal: Privilege(Action.DELETE, Resource.USER, Scope.GLOBAL)
 
     data object CreateEventGlobal: Privilege(Action.CREATE, Resource.EVENT, Scope.GLOBAL)
     data object ReadEventGlobal: Privilege(Action.READ, Resource.EVENT, Scope.GLOBAL)

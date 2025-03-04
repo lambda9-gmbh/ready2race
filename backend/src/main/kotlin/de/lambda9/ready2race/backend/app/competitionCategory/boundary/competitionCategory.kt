@@ -19,7 +19,9 @@ fun Route.competitionCategory() {
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    CompetitionCategoryService.addCompetitionCategory(!payload, user.id!!)
+
+                    val body = !payload
+                    CompetitionCategoryService.addCompetitionCategory(body, user.id!!)
                 }
             }
         }
@@ -41,7 +43,9 @@ fun Route.competitionCategory() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val competitionCategoryId = !pathParam("competitionCategoryId") { UUID.fromString(it) }
-                        CompetitionCategoryService.updateCompetitionCategory(competitionCategoryId, !payload, user.id!!)
+
+                        val body = !payload
+                        CompetitionCategoryService.updateCompetitionCategory(competitionCategoryId, body, user.id!!)
                     }
                 }
             }

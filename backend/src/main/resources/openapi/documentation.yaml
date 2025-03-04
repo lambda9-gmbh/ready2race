@@ -26,6 +26,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        422:
+          $ref: '#/components/responses/422'
         429:
           $ref: '#/components/responses/429'
         500:
@@ -114,6 +116,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /user/registration:
+    post:
+      operationId: registerUser
+      parameters:
+        - $ref: '#/components/parameters/challenge'
+        - $ref: '#/components/parameters/input'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        204:
+          description: Registration initiated
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
     get:
       operationId: getRegistrations
       parameters:
@@ -148,30 +174,6 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-    post:
-      operationId: registerUser
-      parameters:
-        - $ref: '#/components/parameters/challenge'
-        - $ref: '#/components/parameters/input'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterRequest'
-      responses:
-        204:
-          description: Registration initiated
-        400:
-          $ref: '#/components/responses/400'
-        404:
-          $ref: '#/components/responses/404'
-        409:
-          $ref: '#/components/responses/409'
-        422:
-          $ref: '#/components/responses/422'
-        500:
-          $ref: '#/components/responses/500'
   /user/registration/verify:
     post:
       operationId: verifyUserRegistration
@@ -193,6 +195,29 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /user/invitation:
+    post:
+      operationId: inviteUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteRequest'
+      responses:
+        204:
+          description: Invitation initiated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        409:
+          $ref: '#/components/responses/409'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
     get:
       operationId: getInvitations
       parameters:
@@ -227,25 +252,6 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-    post:
-      operationId: inviteUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InviteRequest'
-      responses:
-        204:
-          description: Invitation initiated
-        400:
-          $ref: '#/components/responses/400'
-        409:
-          $ref: '#/components/responses/409'
-        422:
-          $ref: '#/components/responses/422'
-        500:
-          $ref: '#/components/responses/500'
   /user/invitation/accept:
     post:
       operationId: acceptUserInvitation
@@ -262,6 +268,8 @@ paths:
           $ref: '#/components/responses/400'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -281,6 +289,8 @@ paths:
       responses:
         204:
           $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
         404:
           $ref: '#/components/responses/404'
         409:
@@ -309,6 +319,8 @@ paths:
       responses:
         204:
           $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
         404:
           $ref: '#/components/responses/404'
         422:
@@ -363,10 +375,14 @@ paths:
                       $ref: '#/components/schemas/RoleDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /role/{roleId}:
@@ -405,6 +421,8 @@ paths:
       responses:
         204:
           description: Role successfully deleted
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -461,10 +479,14 @@ paths:
                       $ref: '#/components/schemas/EventDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}:
@@ -508,6 +530,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     delete:
@@ -515,6 +539,8 @@ paths:
       responses:
         204:
           description: Event successfully deleted
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -545,6 +571,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -579,12 +607,16 @@ paths:
                       $ref: '#/components/schemas/EventDayDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDay/{eventDayId}:
@@ -629,6 +661,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     delete:
@@ -636,6 +670,8 @@ paths:
       responses:
         204:
           description: EventDay successfully deleted
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -667,6 +703,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/competition:
@@ -691,6 +729,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     get:
@@ -725,12 +765,16 @@ paths:
                       $ref: '#/components/schemas/CompetitionDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}:
@@ -775,6 +819,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
     delete:
@@ -782,6 +828,8 @@ paths:
       responses:
         204:
           description: Competition successfully deleted
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
@@ -813,503 +861,162 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-  /competitionTemplate:
-    post:
-      operationId: addCompetitionTemplate
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompetitionTemplateRequest'
-      responses:
-        201:
-          $ref: '#/components/responses/201'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-    get:
-      operationId: getCompetitionTemplates
-      parameters:
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-        - $ref: '#/components/parameters/sort'
-        - $ref: '#/components/parameters/search'
-      responses:
-        200:
-          description: CompetitionTemplate page successfully retrieved
-          content:
-            application/json:
-              schema:
-                type:
-                  object
-                required:
-                  - data
-                  - pagination
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/CompetitionTemplateDto'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-  /competitionTemplate/{competitionTemplateId}:
-    parameters:
-      - name: competitionTemplateId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      operationId: getCompetitionTemplate
-      responses:
-        200:
-          description: CompetitionTemplate successfully retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CompetitionTemplateDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-    put:
-      operationId: updateCompetitionTemplate
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompetitionTemplateRequest'
-      responses:
-        204:
-          description: CompetitionTemplate successfully updated
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-    delete:
-      operationId: deleteCompetitionTemplate
-      responses:
-        204:
-          description: CompetitionTemplate successfully deleted
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-  /competitionCategory:
-    post:
-      operationId: addCompetitionCategory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompetitionCategoryRequest'
-      responses:
-        201:
-          $ref: '#/components/responses/201'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-    get:
-      operationId: getCompetitionCategories
-      responses:
-        200:
-          description: CompetitionCategory list successfully retrieved
-          content:
-            application/json:
-              schema:
-                type:
-                  object
-                required:
-                  - data
-                  - pagination
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/CompetitionCategoryDto'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-  /competitionCategory/{competitionCategoryId}:
-    parameters:
-      - name: competitionCategoryId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    put:
-      operationId: updateCompetitionCategory
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CompetitionCategoryRequest'
-      responses:
-        204:
-          description: CompetitionCategory successfully updated
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-    delete:
-      operationId: deleteCompetitionCategory
-      responses:
-        204:
-          description: CompetitionCategory successfully deleted
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        409:
-          $ref: '#/components/responses/409'
-        500:
-          $ref: '#/components/responses/500'
-  /namedParticipant:
-    post:
-      operationId: addNamedParticipant
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NamedParticipantRequest'
-      responses:
-        201:
-          $ref: '#/components/responses/201'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-    get:
-      operationId: getNamedParticipants
-      responses:
-        200:
-          description: NamedParticipant list successfully retrieved
-          content:
-            application/json:
-              schema:
-                type:
-                  object
-                required:
-                  - data
-                  - pagination
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/NamedParticipantDto'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-  /namedParticipant/{namedParticipantId}:
-    parameters:
-      - name: namedParticipantId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    put:
-      operationId: updateNamedParticipant
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NamedParticipantRequest'
-      responses:
-        204:
-          description: NamedParticipant successfully updated
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-    delete:
-      operationId: deleteNamedParticipant
-      responses:
-        204:
-          description: NamedParticipant successfully deleted
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        409:
-          $ref: '#/components/responses/409'
-        500:
-          $ref: '#/components/responses/500'
-  /fee:
-    post:
-      operationId: addFee
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeeRequest'
-      responses:
-        201:
-          $ref: '#/components/responses/201'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-    get:
-      operationId: getFees
-      responses:
-        200:
-          description: Fee list successfully retrieved
-          content:
-            application/json:
-              schema:
-                type:
-                  object
-                required:
-                  - data
-                  - pagination
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/FeeDto'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-  /fee/{feeId}:
-    parameters:
-      - name: feeId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    put:
-      operationId: updateFee
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeeRequest'
-      responses:
-        204:
-          description: Fee successfully updated
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-    delete:
-      operationId: deleteFee
-      responses:
-        204:
-          description: Fee successfully deleted
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        409:
-          $ref: '#/components/responses/409'
-        500:
-          $ref: '#/components/responses/500'
-  /captcha:
-    post:
-      operationId: newCaptcha
-      responses:
-        200:
-          description: New Captcha successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CaptchaDto'
-        500:
-          $ref: '#/components/responses/500'
-
-  /eventDocumentType:
-    post:
-      operationId: addDocumentType
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventDocumentTypeRequest'
-      responses:
-        201:
-          $ref: '#/components/responses/201'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
         422:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-    get:
-      operationId: getDocumentTypes
-      parameters:
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/offset'
-        - $ref: '#/components/parameters/sort'
-        - $ref: '#/components/parameters/search'
-      responses:
-        200:
-          content:
-            application/json:
-              schema:
-                type:
-                  object
-                required:
-                  - data
-                  - pagination
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/EventDocumentTypeDto'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        500:
-          $ref: '#/components/responses/500'
-  /eventDocumentType/{eventDocumentTypeId}:
-    parameters:
-      - name: eventDocumentTypeId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    put:
-      operationId: updateDocumentType
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EventDocumentTypeRequest'
-      responses:
-        204:
-          $ref: '#/components/responses/204'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        422:
-          $ref: '#/components/responses/422'
-        500:
-          $ref: '#/components/responses/500'
-    delete:
-      operationId: deleteDocumentType
-      responses:
-        204:
-          $ref: '#/components/responses/204'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
+          /event/{eventId}/eventDocument:
+            parameters:
+              - name: eventId
+                in: path
+                required: true
+                schema:
+                  type: string
+                  format: uuid
+            post:
+              operationId: addDocuments
+              requestBody:
+                required: true
+                content:
+                  multipart/form-data:
+                    schema:
+                      type: object
+                      properties:
+                        documentType:
+                          type: string
+                        files:
+                          type: array
+                          items:
+                            type: string
+                            format: binary
+              responses:
+                204:
+                  $ref: '#/components/responses/204'
+                400:
+                  $ref: '#/components/responses/400'
+                401:
+                  $ref: '#/components/responses/401'
+                403:
+                  $ref: '#/components/responses/403'
+                422:
+                  $ref: '#/components/responses/422'
+                500:
+                  $ref: '#/components/responses/500'
+            get:
+              operationId: getDocuments
+              parameters:
+                - name: documentType
+                  in: query
+                  required: false
+                  schema:
+                    type: string
+                    format: uuid
+                - $ref: '#/components/parameters/limit'
+                - $ref: '#/components/parameters/offset'
+                - $ref: '#/components/parameters/sort'
+                - $ref: '#/components/parameters/search'
+              responses:
+                200:
+                  content:
+                    application/json:
+                      schema:
+                        type:
+                          object
+                        required:
+                          - data
+                          - pagination
+                        properties:
+                          data:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/EventDocumentDto'
+                          pagination:
+                            $ref: '#/components/schemas/Pagination'
+                400:
+                  $ref: '#/components/responses/400'
+                401:
+                  $ref: '#/components/responses/401'
+                403:
+                  $ref: '#/components/responses/403'
+                422:
+                  $ref: '#/components/responses/422'
+                500:
+                  $ref: '#/components/responses/500'
+          /event/{eventId}/eventDocument/{eventDocumentId}:
+            parameters:
+              - name: eventId
+                in: path
+                required: true
+                schema:
+                  type: string
+                  format: uuid
+              - name: eventDocumentId
+                in: path
+                required: true
+                schema:
+                  type: string
+                  format: uuid
+            get:
+              operationId: downloadDocument
+              responses:
+                200:
+                  headers:
+                    Content-Disposition:
+                      schema:
+                        type: string
+                  content:
+                    '*/*':
+                      schema:
+                        type: string
+                        format: binary
+                400:
+                  $ref: '#/components/responses/400'
+                401:
+                  $ref: '#/components/responses/401'
+                403:
+                  $ref: '#/components/responses/403'
+                404:
+                  $ref: '#/components/responses/404'
+                500:
+                  $ref: '#/components/responses/500'
+            put:
+              operationId: updateDocument
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/EventDocumentRequest'
+              responses:
+                204:
+                  $ref: '#/components/responses/204'
+                400:
+                  $ref: '#/components/responses/400'
+                401:
+                  $ref: '#/components/responses/401'
+                403:
+                  $ref: '#/components/responses/403'
+                404:
+                  $ref: '#/components/responses/404'
+                422:
+                  $ref: '#/components/responses/422'
+                500:
+                  $ref: '#/components/responses/500'
+            delete:
+              operationId: deleteDocument
+              responses:
+                204:
+                  $ref: '#/components/responses/204'
+                400:
+                  $ref: '#/components/responses/400'
+                401:
+                  $ref: '#/components/responses/401'
+                403:
+                  $ref: '#/components/responses/403'
+                404:
+                  $ref: '#/components/responses/404'
+                500:
+                  $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - name: eventId
@@ -1343,6 +1050,8 @@ paths:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -1462,6 +1171,543 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /competitionTemplate:
+    post:
+      operationId: addCompetitionTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionTemplateRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionTemplates
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: CompetitionTemplate page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionTemplateDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /competitionTemplate/{competitionTemplateId}:
+    parameters:
+      - name: competitionTemplateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getCompetitionTemplate
+      responses:
+        200:
+          description: CompetitionTemplate successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionTemplateDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateCompetitionTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionTemplateRequest'
+      responses:
+        204:
+          description: CompetitionTemplate successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionTemplate
+      responses:
+        204:
+          description: CompetitionTemplate successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /competitionCategory:
+    post:
+      operationId: addCompetitionCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionCategories
+      responses:
+        200:
+          description: CompetitionCategory list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionCategoryDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /competitionCategory/{competitionCategoryId}:
+    parameters:
+      - name: competitionCategoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateCompetitionCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
+      responses:
+        204:
+          description: CompetitionCategory successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionCategory
+      responses:
+        204:
+          description: CompetitionCategory successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /namedParticipant:
+    post:
+      operationId: addNamedParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedParticipantRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getNamedParticipants
+      responses:
+        200:
+          description: NamedParticipant list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NamedParticipantDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /namedParticipant/{namedParticipantId}:
+    parameters:
+      - name: namedParticipantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateNamedParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NamedParticipantRequest'
+      responses:
+        204:
+          description: NamedParticipant successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteNamedParticipant
+      responses:
+        204:
+          description: NamedParticipant successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /fee:
+    post:
+      operationId: addFee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getFees
+      responses:
+        200:
+          description: Fee list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FeeDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /fee/{feeId}:
+    parameters:
+      - name: feeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateFee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeeRequest'
+      responses:
+        204:
+          description: Fee successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteFee
+      responses:
+        204:
+          description: Fee successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /captcha:
+    post:
+      operationId: newCaptcha
+      responses:
+        200:
+          description: New Captcha successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaptchaDto'
+        500:
+          $ref: '#/components/responses/500'
+  /eventDocumentType:
+    post:
+      operationId: addDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentTypeRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getDocumentTypes
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDocumentTypeDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /eventDocumentType/{eventDocumentTypeId}:
+    parameters:
+      - name: eventDocumentTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentTypeRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocumentType
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 
 components:
 
@@ -1658,8 +1904,11 @@ components:
     ErrorCode:
       type: string
       enum:
+        - PRIVILEGE_MISSING
+        - ROLE_IS_STATIC
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
+        - CANNOT_ASSIGN_ROLES
 
 
     # error

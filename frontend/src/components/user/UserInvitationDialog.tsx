@@ -33,7 +33,7 @@ const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
 })
 
 const addAction = (formData: InvitationForm) =>
-    inviteUser({
+    inviteUser({ // todo: This can result in Error 409: "Email in use" or 409: "Cannot assign roles". That should be displayed
         body: mapFormToRequest(formData),
     })
 

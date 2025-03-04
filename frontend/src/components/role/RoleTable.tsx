@@ -19,7 +19,7 @@ const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParame
         query: paginationParameters,
     })
 
-const deleteRequest = (entity: RoleDto) => deleteRole({path: {roleId: entity.id}})
+const deleteRequest = (entity: RoleDto) => deleteRole({path: {roleId: entity.id}}) // todo: this can result in 403: "Privilege Missing" or 403: "Role is Static"
 
 const RoleTable = (props: BaseEntityTableProps<RoleDto>) => {
     const {t} = useTranslation()

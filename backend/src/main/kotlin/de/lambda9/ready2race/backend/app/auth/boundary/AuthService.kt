@@ -58,7 +58,7 @@ object AuthService {
     fun logout(
         token: String?,
         onSuccess: () -> Unit,
-    ): App<AuthError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<AuthError/* todo: could be "Nothing"?*/, ApiResponse.NoData> = KIO.comprehension {
 
         !AppUserSessionRepo.delete(token).orDie()
         onSuccess()

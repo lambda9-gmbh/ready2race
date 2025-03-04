@@ -8,14 +8,14 @@ import java.util.*
 
 
 sealed interface CompetitionTemplateError : ServiceError {
-    data object CompetitionTemplateNotFound : CompetitionTemplateError
+    data object NotFound : CompetitionTemplateError
     data object CompetitionPropertiesNotFound : CompetitionTemplateError
     data object CompetitionCategoryUnknown : CompetitionTemplateError
 
     data class NamedParticipantsUnknown(val namedParticipants: List<UUID>) : CompetitionTemplateError
 
     override fun respond(): ApiError = when (this) {
-        is CompetitionTemplateNotFound -> ApiError(
+        is NotFound -> ApiError(
             status = HttpStatusCode.NotFound,
             message = "CompetitionTemplate not found"
         )

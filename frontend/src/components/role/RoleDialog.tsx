@@ -38,7 +38,7 @@ const addAction = (formData: RoleForm) =>
     })
 
 const editAction = (formData: RoleForm, entity: RoleDto) =>
-    updateRole({
+    updateRole({ // todo: this can result in 403: "Privilege Missing" or 403: "Role is Static"
         path: {roleId: entity.id},
         body: mapFormToRequest(formData),
     })

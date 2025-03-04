@@ -87,7 +87,8 @@ fun Route.user() {
                 call.respondKIO {
                     KIO.comprehension {
                         val user = !authenticate(Privilege.CreateUserGlobal)
-                        AppUserService.invite(!payload, user)
+                        val body = !payload
+                        AppUserService.invite(body, user)
                     }
                 }
             }
@@ -122,7 +123,8 @@ fun Route.user() {
                             val captchaInput = !queryParam("input") { it.toInt() }
                             !CaptchaService.trySolution(captchaId, captchaInput)
 
-                            AppUserService.initPasswordReset(!payload)
+                            val body = !payload
+                            AppUserService.initPasswordReset(body)
                         }
                     }
                 }
