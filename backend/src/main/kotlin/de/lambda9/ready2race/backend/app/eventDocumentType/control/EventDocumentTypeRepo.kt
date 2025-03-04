@@ -20,6 +20,8 @@ object EventDocumentTypeRepo {
 
     fun update(id: UUID, f: EventDocumentTypeRecord.() -> Unit) = EVENT_DOCUMENT_TYPE.update(f) { ID.eq(id) }
 
+    fun delete(id: UUID) = EVENT_DOCUMENT_TYPE.delete { ID.eq(id) }
+
     fun count(
         search: String?,
     ): JIO<Int> = Jooq.query {
@@ -35,16 +37,6 @@ object EventDocumentTypeRepo {
             selectFrom(this)
                 .page(params, searchFields())
                 .fetch()
-        }
-    }
-
-    fun delete(
-        id: UUID,
-    ): JIO<Int> = Jooq.query {
-        with(EVENT_DOCUMENT_TYPE) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .execute()
         }
     }
 }

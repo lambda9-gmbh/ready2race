@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventDocument.control
 
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventDocumentView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDownloadRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
@@ -8,10 +9,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocu
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_DOWNLOAD
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_VIEW
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.update
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -24,6 +21,8 @@ object EventDocumentRepo {
     fun create(record: EventDocumentRecord) = EVENT_DOCUMENT.insertReturning(record) { ID }
 
     fun update(id: UUID, f: EventDocumentRecord.() -> Unit) = EVENT_DOCUMENT.update(f) { ID.eq(id) }
+
+    fun delete(id: UUID) = EVENT_DOCUMENT.delete { ID.eq(id) }
 
     fun count(
         search: String?
@@ -50,16 +49,6 @@ object EventDocumentRepo {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
-        }
-    }
-
-    fun delete(
-        id: UUID,
-    ): JIO<Int> = Jooq.query {
-        with(EVENT_DOCUMENT) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .execute()
         }
     }
 }
