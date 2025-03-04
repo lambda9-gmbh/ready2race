@@ -1,7 +1,7 @@
 import {Outlet} from '@tanstack/react-router'
 import {AppBar, Box, Container, Divider, IconButton, Paper, Toolbar} from '@mui/material'
 import {useState} from 'react'
-import {Dashboard, EditCalendar, Event, Menu, MenuOpen, People, Work, Workspaces} from '@mui/icons-material'
+import {Dashboard, EditCalendar, Event, Menu, MenuOpen, People, Settings, Work, Workspaces} from '@mui/icons-material'
 import Sidebar from '@components/sidebar/Sidebar.tsx'
 import SidebarItem from '@components/sidebar/SidebarItem.tsx'
 import UserWidget from '@components/appbar/UserWidget.tsx'
@@ -74,6 +74,13 @@ const RootLayout = () => {
                                 authenticatedOnly
                                 privilege={readUserGlobal}
                                 to={'/role'}
+                            />
+                            <SidebarItem
+                                text={'[todo] config'}
+                                icon={<Settings />}
+                                authenticatedOnly
+                                privilege={updateEventGlobal}
+                                to={'/config'}
                             />
                         </Sidebar>
                         <Box

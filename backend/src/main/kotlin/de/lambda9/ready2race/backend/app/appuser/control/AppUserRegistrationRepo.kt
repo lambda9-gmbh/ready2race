@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserRegistrationSort
+import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserRegistrationView
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRegistrationViewRecord
@@ -19,6 +20,8 @@ object AppUserRegistrationRepo {
     private fun AppUserRegistrationView.searchFields() = listOf(EMAIL, FIRSTNAME, LASTNAME)
 
     fun create(record: AppUserRegistrationRecord) = APP_USER_REGISTRATION.insertReturning(record) { ID }
+
+    fun deleteExpired() = APP_USER_REGISTRATION.delete { EXPIRES_AT.le(LocalDateTime.now()) }
 
     fun count(
         search: String?,
@@ -47,14 +50,6 @@ object AppUserRegistrationRepo {
                 .and(EXPIRES_AT.gt(LocalDateTime.now()))
                 .returning()
                 .fetchOne()
-        }
-    }
-
-    fun deleteExpired(): JIO<Int> = Jooq.query {
-        with(APP_USER_REGISTRATION) {
-            deleteFrom(this)
-                .where(EXPIRES_AT.le(LocalDateTime.now()))
-                .execute()
         }
     }
 }

@@ -16,5 +16,5 @@ data class AppUserInvitationDto(
     val createdAt: LocalDateTime,
     val assignedEmail: AssignedEmailDto?,
     val roles: List<RoleDto>,
-    val createdBy: CreatedByDto?
+    val createdBy: AppUserNameDto?
 )

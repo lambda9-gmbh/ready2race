@@ -56,29 +56,32 @@ const EntityDialog = <
     }
 
     const onSubmit = async (formData: Form) => {
+        if (entity) {
+            if (!editAction) throw Error('Missing edit action')
+        } else {
+            if (!addAction) throw Error('Missing add action')
+        }
         setSubmitting(true)
-        const requestResult = entity
-            ? await editAction?.(formData, entity)
-            : await addAction?.(formData)
+        const {error} = (
+            entity ? await editAction?.(formData, entity) : await addAction?.(formData)
+        )!
         setSubmitting(false)
 
-        if (requestResult) {
-            if (requestResult.error) {
-                // todo better error display with specific error types
-                console.error(requestResult.error)
-                if (entity) {
-                    feedback.error(t('entity.edit.error', {entity: entityName}))
-                } else {
-                    feedback.error(t('entity.add.error', {entity: entityName}))
-                }
+        if (error != undefined) {
+            // todo better error display with specific error types
+            console.error(error)
+            if (entity) {
+                feedback.error(t('entity.edit.error', {entity: entityName}))
             } else {
-                handleClose()
-                reloadData()
-                if (entity) {
-                    feedback.success(t('entity.edit.success', {entity: entityName}))
-                } else {
-                    feedback.success(t('entity.add.success', {entity: entityName}))
-                }
+                feedback.error(t('entity.add.error', {entity: entityName}))
+            }
+        } else {
+            handleClose()
+            reloadData()
+            if (entity) {
+                feedback.success(t('entity.edit.success', {entity: entityName}))
+            } else {
+                feedback.success(t('entity.add.success', {entity: entityName}))
             }
         }
     }

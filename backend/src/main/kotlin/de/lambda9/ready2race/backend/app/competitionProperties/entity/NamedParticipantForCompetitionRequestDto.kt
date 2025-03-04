@@ -9,7 +9,6 @@ import java.util.UUID
 
 data class NamedParticipantForCompetitionRequestDto(
     val namedParticipant: UUID,
-    val required: Boolean,
     val countMales: Int,
     val countFemales: Int,
     val countNonBinary: Int,
@@ -32,7 +31,6 @@ data class NamedParticipantForCompetitionRequestDto(
     companion object{
         val example get() = NamedParticipantForCompetitionRequestDto(
             namedParticipant = UUID.randomUUID(),
-            required = true,
             countMales = 0,
             countFemales = 0,
             countNonBinary = 0,

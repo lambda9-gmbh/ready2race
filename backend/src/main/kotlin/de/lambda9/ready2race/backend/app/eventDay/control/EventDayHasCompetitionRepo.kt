@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventDay.control
 
+import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
 import de.lambda9.ready2race.backend.database.insert
@@ -11,23 +12,7 @@ object EventDayHasCompetitionRepo {
 
     fun create(records: List<EventDayHasCompetitionRecord>) = EVENT_DAY_HAS_COMPETITION.insert(records)
 
-    fun deleteByEventDay(
-        eventDayId: UUID,
-    ): JIO<Int> = Jooq.query {
-        with(EVENT_DAY_HAS_COMPETITION) {
-            deleteFrom(this)
-                .where(EVENT_DAY.eq(eventDayId))
-                .execute()
-        }
-    }
+    fun deleteByEventDay(eventDayId: UUID) = EVENT_DAY_HAS_COMPETITION.delete { EVENT_DAY.eq(eventDayId) }
+    fun deleteByCompetition(competitionId: UUID) = EVENT_DAY_HAS_COMPETITION.delete { COMPETITION.eq(competitionId) }
 
-    fun deleteByCompetition(
-        competitionId: UUID,
-    ): JIO<Int> = Jooq.query {
-        with(EVENT_DAY_HAS_COMPETITION) {
-            deleteFrom(this)
-                .where(COMPETITION.eq(competitionId))
-                .execute()
-        }
-    }
 }

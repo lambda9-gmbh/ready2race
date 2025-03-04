@@ -28,4 +28,4 @@ export type BaseEntityDialogProps<E> = {
     entity?: E
 }
 
-export type AutocompleteOption = {id: string; label: string}
+export type AutocompleteOption = {id: string; label: string} | null

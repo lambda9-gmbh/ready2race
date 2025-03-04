@@ -54,10 +54,10 @@ create index on competition (event);
 
 create table event_day_has_competition
 (
-    event_day  uuid      not null references event_day on delete cascade,
-    competition       uuid      not null references competition on delete cascade,
-    created_at timestamp not null,
-    created_by uuid      references app_user on delete set null,
+    event_day   uuid      not null references event_day on delete cascade,
+    competition uuid      not null references competition on delete cascade,
+    created_at  timestamp not null,
+    created_by  uuid      references app_user on delete set null,
     primary key (event_day, competition)
 );
 
@@ -77,20 +77,17 @@ create table competition_category
 
 create table competition_properties
 (
-    id                uuid primary key,
-    competition              uuid references competition on delete cascade,
-    competition_template     uuid references competition_template on delete cascade,
-    identifier        text           not null,
-    name              text           not null,
-    short_name        text,
-    description       text,
-    count_males       integer        not null,
-    count_females     integer        not null,
-    count_non_binary  integer        not null,
-    count_mixed       integer        not null,
-    competition_category     uuid           references competition_category on delete set null,
-    constraint chk_either_competition_or_competition_template check ( (competition is null and competition_template is not null) or
-                                                        (competition is not null and competition_template is null) )
+    id                   uuid primary key,
+    competition          uuid references competition on delete cascade,
+    competition_template uuid references competition_template on delete cascade,
+    identifier           text    not null,
+    name                 text    not null,
+    short_name           text,
+    description          text,
+    competition_category uuid    references competition_category on delete set null,
+    constraint chk_either_competition_or_competition_template check (
+        (competition is null and competition_template is not null) or
+        (competition is not null and competition_template is null) )
 );
 create index on competition_properties (competition);
 create index on competition_properties (competition_template);
@@ -99,7 +96,6 @@ create table fee
 (
     id          uuid primary key,
     name        text      not null,
-    label       text,
     description text,
     created_at  timestamp not null,
     created_by  uuid      references app_user on delete set null,
@@ -109,11 +105,11 @@ create table fee
 
 create table competition_properties_has_fee
 (
+    id                     uuid primary key,
     competition_properties uuid           not null references competition_properties on delete cascade,
-    fee             uuid           not null references fee,
-    required        boolean        not null,
-    amount          decimal(10, 2) not null,
-    primary key (competition_properties, fee, required)
+    fee                    uuid           not null references fee,
+    required               boolean        not null,
+    amount                 decimal(10, 2) not null
 );
 
 create index on competition_properties_has_fee (competition_properties);
@@ -131,14 +127,13 @@ create table named_participant
 
 create table competition_properties_has_named_participant
 (
-    competition_properties   uuid    not null references competition_properties on delete cascade,
-    named_participant uuid    not null references named_participant,
-    required          boolean not null,
-    count_males       integer not null,
-    count_females     integer not null,
-    count_non_binary  integer not null,
-    count_mixed       integer not null,
-    primary key (competition_properties, named_participant, required),
+    competition_properties uuid    not null references competition_properties on delete cascade,
+    named_participant      uuid    not null references named_participant,
+    count_males            integer not null,
+    count_females          integer not null,
+    count_non_binary       integer not null,
+    count_mixed            integer not null,
+    primary key (competition_properties, named_participant),
     constraint chk_count_sum_greater_0 check (count_males + count_females + count_non_binary + count_mixed > 0)
 );
 

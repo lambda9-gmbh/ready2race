@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.email.control
 
 import de.lambda9.ready2race.backend.beforeNow
+import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EMAIL
 import de.lambda9.ready2race.backend.database.insertReturning
@@ -19,6 +20,17 @@ object EmailRepo {
 
     fun update(id: UUID, f: EmailRecord.() -> Unit) = EMAIL.update(f) { ID.eq(id) }
     fun update(record: EmailRecord, f: EmailRecord.() -> Unit) = EMAIL.update(record, f)
+
+    fun deleteSent() = EMAIL.delete {
+        DSL.and(
+            SENT_AT.isNotNull,
+            DSL.localDateTimeAdd(
+                SENT_AT,
+                KEEP_AFTER_SENDING,
+                DatePart.SECOND
+            ).lt(LocalDateTime.now())
+        )
+    }
 
     fun getAndLockNext(
         retryAfterError: Duration,
@@ -39,21 +51,6 @@ object EmailRepo {
                     .skipLocked()
                     .fetchAny()
             }
-        }
-    }
-
-    fun deleteSent(): JIO<Int> = Jooq.query {
-        with(EMAIL) {
-            deleteFrom(this)
-                .where(SENT_AT.isNotNull)
-                .and(
-                    DSL.localDateTimeAdd(
-                        SENT_AT,
-                        KEEP_AFTER_SENDING,
-                        DatePart.SECOND
-                    ).lt(LocalDateTime.now())
-                )
-                .execute()
         }
     }
 }

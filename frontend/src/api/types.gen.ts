@@ -34,7 +34,12 @@ export type AppUserInvitationDto = {
     createdAt: string
     assignedEmail?: AssignedEmailDto
     roles: Array<RoleDto>
-    createdBy?: CreatedByDto
+    createdBy?: AppUserNameDto
+}
+
+export type AppUserNameDto = {
+    firstname: string
+    lastname: string
 }
 
 export type AppUserRegistrationDto = {
@@ -78,22 +83,6 @@ export type CaptchaDto = {
     start: number
 }
 
-export type ClubDto = {
-    id: string
-    name: string
-    createdAt: string
-    updatedAt: string
-}
-
-export type ClubSearchDto = {
-    id: string
-    name: string
-}
-
-export type ClubUpsertDto = {
-    name: string
-}
-
 export type CompetitionCategoryDto = {
     id: string
     name: string
@@ -117,12 +106,9 @@ export type CompetitionPropertiesDto = {
     name: string
     shortName?: string
     description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
     competitionCategory?: CompetitionCategoryDto
     namedParticipants: Array<NamedParticipantForCompetitionDto>
+    fees: Array<FeeForCompetitionDto>
 }
 
 export type CompetitionPropertiesRequestDto = {
@@ -130,34 +116,9 @@ export type CompetitionPropertiesRequestDto = {
     name: string
     shortName?: string
     description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
-}
-
-export type CompetitionRegistrationNamedParticipantUpsertDto = {
-    namedParticipantId: string
-    participantIds: Array<string>
-}
-
-export type CompetitionRegistrationSingleUpsertDto = {
-    competitionId: string
-    optionalFees?: Array<string>
-}
-
-export type CompetitionRegistrationTeamUpsertDto = {
-    id: string
-    participants?: Array<string>
-    optionalFees?: Array<string>
-    namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
-}
-
-export type CompetitionRegistrationUpsertDto = {
-    competitionId: string
-    teams?: Array<CompetitionRegistrationTeamUpsertDto>
+    fees: Array<FeeForCompetitionRequestDto>
 }
 
 export type CompetitionRequest = {
@@ -172,11 +133,6 @@ export type CompetitionTemplateDto = {
 
 export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
-}
-
-export type CreatedByDto = {
-    firstname: string
-    lastname: string
 }
 
 export type Duplicate = {
@@ -202,6 +158,33 @@ export type EventDayRequest = {
     description?: string
 }
 
+export type EventDocumentDto = {
+    id: string
+    documentType?: EventDocumentTypeDto
+    name: string
+    createdAt: string
+    createdBy?: AppUserNameDto
+    updatedAt: string
+    updatedBy?: AppUserNameDto
+}
+
+export type EventDocumentRequest = {
+    documentType?: string
+}
+
+export type EventDocumentTypeDto = {
+    id: string
+    name: string
+    required: boolean
+    confirmationRequired: boolean
+}
+
+export type EventDocumentTypeRequest = {
+    name: string
+    required: boolean
+    confirmationRequired: boolean
+}
+
 export type EventDto = {
     id: string
     name: string
@@ -212,77 +195,6 @@ export type EventDto = {
     invoicePrefix?: string
 }
 
-export type EventRegistrationCompetitionDto = {
-    id: string
-    identifier: string
-    name: string
-    shortName?: string
-    description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-    competitionCategory: string
-    namedParticipant?: Array<EventRegistrationNamedParticipantDto>
-    fees?: Array<EventRegistrationFeeDto>
-    days: Array<string>
-}
-
-export type EventRegistrationDayDto = {
-    id: string
-    date: string
-    name?: string | null
-    description?: string | null
-}
-
-export type EventRegistrationFeeDto = {
-    id: string
-    label: string
-    description?: string | null
-    required: boolean
-    amount: number
-}
-
-export type EventRegistrationNamedParticipantDto = {
-    id: string
-    name: string
-    description?: string
-    required?: boolean
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-}
-
-export type EventRegistrationParticipantUpsertDto = {
-    id: string
-    isNew?: boolean
-    firstname: string
-    lastname: string
-    year?: number | null
-    gender: 'M' | 'F' | 'O'
-    external?: boolean | null
-    externalClubName?: string | null
-    competitionsSingle?: Array<CompetitionRegistrationSingleUpsertDto>
-}
-
-export type gender = 'M' | 'F' | 'O'
-
-export type EventRegistrationTemplateDto = {
-    name: string
-    description?: string
-    location?: string
-    days: Array<EventRegistrationDayDto>
-    competitionsSingle: Array<EventRegistrationCompetitionDto>
-    competitionsTeam: Array<EventRegistrationCompetitionDto>
-}
-
-export type EventRegistrationUpsertDto = {
-    participants: Array<EventRegistrationParticipantUpsertDto>
-    competitionRegistrations: Array<CompetitionRegistrationUpsertDto>
-    message?: string
-}
-
 export type EventRequest = {
     name: string
     description?: string
@@ -290,6 +202,31 @@ export type EventRequest = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+}
+
+export type FeeDto = {
+    id: string
+    name: string
+    description?: string
+}
+
+export type FeeForCompetitionDto = {
+    id: string
+    name: string
+    description?: string
+    required: boolean
+    amount: string
+}
+
+export type FeeForCompetitionRequestDto = {
+    fee: string
+    required: boolean
+    amount: string
+}
+
+export type FeeRequest = {
+    name: string
+    description?: string
 }
 
 export type Invalid =
@@ -336,7 +273,6 @@ export type InviteRequest = {
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
-    clubId?: string
 }
 
 export type LoginRequest = {
@@ -354,7 +290,6 @@ export type NamedParticipantForCompetitionDto = {
     id: string
     name: string
     description?: string
-    required: boolean
     countMales: number
     countFemales: number
     countNonBinary: number
@@ -363,7 +298,6 @@ export type NamedParticipantForCompetitionDto = {
 
 export type NamedParticipantForCompetitionRequestDto = {
     namedParticipant: string
-    required: boolean
     countMales: number
     countFemales: number
     countNonBinary: number
@@ -426,29 +360,6 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
-export type ParticipantDto = {
-    id: string
-    firstname: string
-    lastname: string
-    year?: number | null
-    gender: 'M' | 'F' | 'O'
-    phone?: string | null
-    external?: boolean | null
-    externalClubName?: string | null
-    createdAt: string
-    updatedAt: string
-}
-
-export type ParticipantUpsertDto = {
-    firstname: string
-    lastname: string
-    year?: number | null
-    gender: 'M' | 'F' | 'O'
-    phone?: string | null
-    external?: boolean | null
-    externalClubName?: string | null
-}
-
 export type PasswordResetInitRequest = {
     email: string
     language: EmailLanguage
@@ -481,7 +392,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT'
+export type Resource = 'USER' | 'EVENT'
 
 export type RoleDto = {
     id: string
@@ -1074,42 +985,6 @@ export type DeleteCompetitionTemplateResponse = void
 
 export type DeleteCompetitionTemplateError = ApiError
 
-export type AddNamedParticipantData = {
-    body: NamedParticipantRequest
-}
-
-export type AddNamedParticipantResponse = string
-
-export type AddNamedParticipantError = BadRequestError | ApiError
-
-export type GetNamedParticipantsResponse = {
-    data: Array<NamedParticipantDto>
-    pagination: Pagination
-}
-
-export type GetNamedParticipantsError = ApiError
-
-export type UpdateNamedParticipantData = {
-    body: NamedParticipantRequest
-    path: {
-        namedParticipantId: string
-    }
-}
-
-export type UpdateNamedParticipantResponse = void
-
-export type UpdateNamedParticipantError = BadRequestError | ApiError
-
-export type DeleteNamedParticipantData = {
-    path: {
-        namedParticipantId: string
-    }
-}
-
-export type DeleteNamedParticipantResponse = void
-
-export type DeleteNamedParticipantError = ApiError
-
 export type AddCompetitionCategoryData = {
     body: CompetitionCategoryRequest
 }
@@ -1146,19 +1021,91 @@ export type DeleteCompetitionCategoryResponse = void
 
 export type DeleteCompetitionCategoryError = ApiError
 
+export type AddNamedParticipantData = {
+    body: NamedParticipantRequest
+}
+
+export type AddNamedParticipantResponse = string
+
+export type AddNamedParticipantError = BadRequestError | ApiError
+
+export type GetNamedParticipantsResponse = {
+    data: Array<NamedParticipantDto>
+    pagination: Pagination
+}
+
+export type GetNamedParticipantsError = ApiError
+
+export type UpdateNamedParticipantData = {
+    body: NamedParticipantRequest
+    path: {
+        namedParticipantId: string
+    }
+}
+
+export type UpdateNamedParticipantResponse = void
+
+export type UpdateNamedParticipantError = BadRequestError | ApiError
+
+export type DeleteNamedParticipantData = {
+    path: {
+        namedParticipantId: string
+    }
+}
+
+export type DeleteNamedParticipantResponse = void
+
+export type DeleteNamedParticipantError = ApiError
+
+export type AddFeeData = {
+    body: FeeRequest
+}
+
+export type AddFeeResponse = string
+
+export type AddFeeError = BadRequestError | ApiError
+
+export type GetFeesResponse = {
+    data: Array<FeeDto>
+    pagination: Pagination
+}
+
+export type GetFeesError = ApiError
+
+export type UpdateFeeData = {
+    body: FeeRequest
+    path: {
+        feeId: string
+    }
+}
+
+export type UpdateFeeResponse = void
+
+export type UpdateFeeError = BadRequestError | ApiError
+
+export type DeleteFeeData = {
+    path: {
+        feeId: string
+    }
+}
+
+export type DeleteFeeResponse = void
+
+export type DeleteFeeError = ApiError
+
 export type NewCaptchaResponse = CaptchaDto
 
 export type NewCaptchaError = ApiError
 
-export type AddClubData = {
-    body: ClubUpsertDto
+export type AddDocumentTypeData = {
+    body: EventDocumentTypeRequest
 }
 
-export type AddClubResponse = string
+export type AddDocumentTypeResponse = string
 
-export type AddClubError = BadRequestError | ApiError | UnprocessableEntityError
+export type AddDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type GetClubsData = {
+export type GetDocumentTypesData = {
     query?: {
         /**
          * Page size for pagination
@@ -1179,162 +1126,110 @@ export type GetClubsData = {
     }
 }
 
-export type GetClubsResponse = {
-    data: Array<ClubDto>
+export type GetDocumentTypesResponse = {
+    data: Array<EventDocumentTypeDto>
     pagination: Pagination
 }
 
-export type GetClubsError = ApiError
+export type GetDocumentTypesError = BadRequestError | ApiError
 
-export type GetClubData = {
+export type UpdateDocumentTypeData = {
+    body: EventDocumentTypeRequest
     path: {
-        clubId: string
+        eventDocumentTypeId: string
     }
 }
 
-export type GetClubResponse = ClubDto
+export type UpdateDocumentTypeResponse = void
 
-export type GetClubError = ApiError
+export type UpdateDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type UpdateClubData = {
-    body: ClubUpsertDto
+export type DeleteDocumentTypeData = {
     path: {
-        clubId: string
+        eventDocumentTypeId: string
     }
 }
 
-export type UpdateClubResponse = void
+export type DeleteDocumentTypeResponse = void
 
-export type UpdateClubError = BadRequestError | ApiError | UnprocessableEntityError
+export type DeleteDocumentTypeError = BadRequestError | ApiError
 
-export type DeleteClubData = {
-    path: {
-        clubId: string
+export type AddDocumentsData = {
+    body: {
+        documentType?: string
+        files?: Array<Blob | File>
     }
-}
-
-export type DeleteClubResponse = void
-
-export type DeleteClubError = ApiError
-
-export type GetClubParticipantsData = {
-    path: {
-        clubId: string
-    }
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetClubParticipantsResponse = {
-    data: Array<ParticipantDto>
-    pagination: Pagination
-}
-
-export type GetClubParticipantsError = ApiError
-
-export type AddClubParticipantData = {
-    body: ParticipantUpsertDto
-    path: {
-        clubId: string
-    }
-}
-
-export type AddClubParticipantResponse = string
-
-export type AddClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type GetClubParticipantData = {
-    path: {
-        clubId: string
-        participantId: string
-    }
-}
-
-export type GetClubParticipantResponse = ParticipantDto
-
-export type GetClubParticipantError = ApiError
-
-export type UpdateClubParticipantData = {
-    body: ParticipantUpsertDto
-    path: {
-        clubId: string
-        participantId: string
-    }
-}
-
-export type UpdateClubParticipantResponse = void
-
-export type UpdateClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type DeleteClubParticipantData = {
-    path: {
-        clubId: string
-        participantId: string
-    }
-}
-
-export type DeleteClubParticipantResponse = void
-
-export type DeleteClubParticipantError = ApiError
-
-export type GetClubNamesData = {
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetClubNamesResponse = {
-    data: Array<ClubSearchDto>
-    pagination: Pagination
-}
-
-export type GetClubNamesError = ApiError
-
-export type GetEventRegistrationTemplateData = {
     path: {
         eventId: string
     }
 }
 
-export type GetEventRegistrationTemplateResponse = EventRegistrationTemplateDto
+export type AddDocumentsResponse = void
 
-export type GetEventRegistrationTemplateError = ApiError
+export type AddDocumentsError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type AddEventRegistrationData = {
-    body: EventRegistrationUpsertDto
+export type GetDocumentsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        documentType?: string
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
 }
 
-export type AddEventRegistrationResponse = string
+export type GetDocumentsResponse = {
+    data: Array<EventDocumentDto>
+    pagination: Pagination
+}
 
-export type AddEventRegistrationError = BadRequestError | ApiError
+export type GetDocumentsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadDocumentData = {
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type DownloadDocumentResponse = Blob | File
+
+export type DownloadDocumentError = BadRequestError | ApiError
+
+export type UpdateDocumentData = {
+    body: EventDocumentRequest
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type UpdateDocumentResponse = void
+
+export type UpdateDocumentError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteDocumentData = {
+    path: {
+        eventDocumentId: string
+        eventId: string
+    }
+}
+
+export type DeleteDocumentResponse = void
+
+export type DeleteDocumentError = BadRequestError | ApiError

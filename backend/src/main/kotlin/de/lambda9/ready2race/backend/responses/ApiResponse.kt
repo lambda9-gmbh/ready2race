@@ -7,43 +7,45 @@ import de.lambda9.ready2race.backend.pagination.Sortable
 import io.ktor.http.*
 import java.util.*
 
-sealed class ApiResponse(
-    open val status: HttpStatusCode = HttpStatusCode.OK
-) {
+sealed interface ApiResponse {
 
-    data object NoData : ApiResponse(HttpStatusCode.NoContent)
+    data object NoData : ApiResponse
 
     data class Dto<T: Any>(
-        val dto: T,
-        override val status: HttpStatusCode = HttpStatusCode.OK
-    ): ApiResponse(status)
+        val dto: T
+    ): ApiResponse
 
     data class Page<T: Any, S: Sortable>(
         override val data: List<T>,
         override val pagination: Pagination<S>,
-    ): ApiResponse(), ResponsePage<T, S>
+    ): ApiResponse, ResponsePage<T, S>
 
     data class File(
-        val bytes: ByteArray,
-        val contentType: ContentType
-    ): ApiResponse() {
+        val name: String,
+        val bytes: ByteArray
+    ): ApiResponse {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
 
             other as File
 
-            return bytes.contentEquals(other.bytes)
+            if (name != other.name) return false
+            if (!bytes.contentEquals(other.bytes)) return false
+
+            return true
         }
 
         override fun hashCode(): Int {
-            return bytes.contentHashCode()
+            var result = name.hashCode()
+            result = 31 * result + bytes.contentHashCode()
+            return result
         }
     }
 
     data class Created(
         val id: UUID
-    ): ApiResponse(HttpStatusCode.Created)
+    ): ApiResponse
 
     companion object {
         val noData get() = App.ok(NoData)

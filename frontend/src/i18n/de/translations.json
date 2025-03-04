@@ -47,7 +47,8 @@
     "save": "Speichern",
     "search": "Suchen",
     "back": "Zurück",
-    "next": "Weiter"
+    "next": "Weiter",
+    "and": "und"
   },
   "decimal": {
     "point": ","
@@ -130,11 +131,27 @@
         "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
+        "role": "Rolle",
+        "error": {
+          "emptyList": "Bitte fügen Sie mindestens einen spezifischen Teilnehmer hinzu",
+          "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
+          "duplicates": {
+            "one": "Die Rolle {{label}} wird mehrfach verwendet.",
+            "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
+            "message": "Bitte wählen Sie für jeden spezifischen Teilnehmer eine einzigartige Rolle aus."
+          }
+        }
+      },
+      "fee": {
+        "fee": "Gebühr",
+        "fees": "Gebühren",
+        "add": "Gebühr hinzufügen",
+        "type": "Gebührenart",
         "required": {
           "notRequired": "Nicht verpflichtend",
           "required": "Verpflichtend"
         },
-        "role": "Rolle"
+        "amount": "Menge"
       },
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",

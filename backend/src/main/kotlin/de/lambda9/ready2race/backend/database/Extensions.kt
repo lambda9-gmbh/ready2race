@@ -97,3 +97,11 @@ fun <R : Record, T : TableImpl<R>> T.exists(
 ): JIO<Boolean> = Jooq.query {
     fetchExists(this@exists, condition())
 }
+
+fun <R : Record, T : TableImpl<R>> T.delete(
+    condition: T.() -> Condition
+): JIO<Int> = Jooq.query {
+    deleteFrom(this@delete)
+        .where(condition())
+        .execute()
+}

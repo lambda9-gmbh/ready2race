@@ -16,7 +16,7 @@ data class EventDayRequest(
         this::description validate notBlank
     )
 
-    companion object{
+    companion object {
         val example get() = EventDayRequest(
             date = LocalDate.now(),
             name = "Name",

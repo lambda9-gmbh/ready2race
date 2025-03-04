@@ -2,7 +2,6 @@ import {
     DataGrid,
     DataGridProps,
     GridActionsCellItem,
-    GridActionsCellItemProps,
     GridColDef,
     GridPaginationModel,
     GridRenderCellParams,
@@ -10,7 +9,7 @@ import {
     GridSortModel,
     GridValidRowModel,
 } from '@mui/x-data-grid'
-import {ReactElement, useState} from 'react'
+import {useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
@@ -21,7 +20,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Box, Button, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {Pagination, Resource} from "@api/types.gen.ts";
+import {Pagination, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
@@ -76,6 +75,8 @@ type Crud = {
     update: boolean
     delete: boolean
 }
+
+// todo: @fix: sometimes on refreshing content, datagrid is simple empty
 
 const EntityTable = <Entity extends GridValidRowModel, GetError, DeleteError>({
     resource,
@@ -176,15 +177,10 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
             getActions: (params: GridRowParams<Entity>) => [
                 ...customActions(params.row)
                     .map(action => {
-                        const {privilege, ...rest} = action.props
-                        const gridAction: ReactElement<GridActionsCellItemProps> = {
-                            type: action.type,
-                            props: rest,
-                            key: action.key,
-                        }
-                        action.props = rest
+                        const {privilege} = action.props
+                        delete action.props.privilege
                         return !privilege || (user.loggedIn && user.checkPrivilege(privilege))
-                            ? gridAction
+                            ? action
                             : null
                     })
                     .filter(action => action !== null),

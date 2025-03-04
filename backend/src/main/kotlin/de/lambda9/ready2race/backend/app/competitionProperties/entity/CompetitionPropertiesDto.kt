@@ -8,10 +8,7 @@ data class CompetitionPropertiesDto(
     val name: String,
     val shortName: String?,
     val description: String?,
-    val countMales: Int,
-    val countFemales: Int,
-    val countNonBinary: Int,
-    val countMixed: Int,
     val competitionCategory: CompetitionCategoryDto?,
-    val namedParticipants: List<NamedParticipantForCompetitionDto>
+    val namedParticipants: List<NamedParticipantForCompetitionDto>,
+    val fees: List<FeeForCompetitionDto>
 )

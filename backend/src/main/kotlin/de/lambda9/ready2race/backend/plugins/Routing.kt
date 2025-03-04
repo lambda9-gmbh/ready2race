@@ -7,6 +7,8 @@ import de.lambda9.ready2race.backend.app.club.boundary.club
 import de.lambda9.ready2race.backend.app.competitionCategory.boundary.competitionCategory
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.competitionTemplate
 import de.lambda9.ready2race.backend.app.event.boundary.event
+import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumentType
+import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.role.boundary.role
@@ -23,9 +25,11 @@ fun Application.configureRouting() {
             club()
             participant()
             namedParticipant()
+            fee()
             competitionCategory()
             competitionTemplate()
             captcha()
+            eventDocumentType()
         }
     }
 }

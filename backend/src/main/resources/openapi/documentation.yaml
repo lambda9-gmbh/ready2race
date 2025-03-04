@@ -927,6 +927,96 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /competitionCategory:
+    post:
+      operationId: addCompetitionCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionCategories
+      responses:
+        200:
+          description: CompetitionCategory list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionCategoryDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /competitionCategory/{competitionCategoryId}:
+    parameters:
+      - name: competitionCategoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateCompetitionCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionCategoryRequest'
+      responses:
+        204:
+          description: CompetitionCategory successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionCategory
+      responses:
+        204:
+          description: CompetitionCategory successfully deleted
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
   /namedParticipant:
     post:
       operationId: addNamedParticipant
@@ -1017,15 +1107,15 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /competitionCategory:
+  /fee:
     post:
-      operationId: addCompetitionCategory
+      operationId: addFee
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionCategoryRequest'
+              $ref: '#/components/schemas/FeeRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -1038,10 +1128,10 @@ paths:
         500:
           $ref: '#/components/responses/500'
     get:
-      operationId: getCompetitionCategories
+      operationId: getFees
       responses:
         200:
-          description: CompetitionCategory list successfully retrieved
+          description: Fee list successfully retrieved
           content:
             application/json:
               schema:
@@ -1054,7 +1144,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/CompetitionCategoryDto'
+                      $ref: '#/components/schemas/FeeDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         401:
@@ -1063,25 +1153,25 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /competitionCategory/{competitionCategoryId}:
+  /fee/{feeId}:
     parameters:
-      - name: competitionCategoryId
+      - name: feeId
         in: path
         required: true
         schema:
           type: string
           format: uuid
     put:
-      operationId: updateCompetitionCategory
+      operationId: updateFee
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionCategoryRequest'
+              $ref: '#/components/schemas/FeeRequest'
       responses:
         204:
-          description: CompetitionCategory successfully updated
+          description: Fee successfully updated
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1093,16 +1183,18 @@ paths:
         500:
           $ref: '#/components/responses/500'
     delete:
-      operationId: deleteCompetitionCategory
+      operationId: deleteFee
       responses:
         204:
-          description: CompetitionCategory successfully deleted
+          description: Fee successfully deleted
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
   /captcha:
@@ -1435,6 +1527,258 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /eventDocumentType:
+    post:
+      operationId: addDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentTypeRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getDocumentTypes
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDocumentTypeDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /eventDocumentType/{eventDocumentTypeId}:
+    parameters:
+      - name: eventDocumentTypeId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateDocumentType
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentTypeRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocumentType
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/eventDocument:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: addDocuments
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                documentType:
+                  type: string
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getDocuments
+      parameters:
+        - name: documentType
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventDocumentDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/eventDocument/{eventDocumentId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: eventDocumentId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadDocument
+      responses:
+        200:
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventDocumentRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocument
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -1908,7 +2252,7 @@ components:
 
     # user
 
-    CreatedByDto:
+    AppUserNameDto:
       type: object
       required:
         - firstname
@@ -2041,7 +2385,7 @@ components:
           items:
             $ref: '#/components/schemas/RoleDto'
         createdBy:
-          $ref: '#/components/schemas/CreatedByDto'
+          $ref: '#/components/schemas/AppUserNameDto'
 
     InviteRequest:
       type: object
@@ -2248,11 +2592,8 @@ components:
       required:
         - identifier
         - name
-        - countMales
-        - countFemales
-        - countNonBinary
-        - countMixed
         - namedParticipants
+        - fees
       properties:
         identifier:
           type: string
@@ -2262,20 +2603,16 @@ components:
           type: string
         description:
           type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
         competitionCategory:
           $ref: '#/components/schemas/CompetitionCategoryDto'
         namedParticipants:
           type: array
           items:
             $ref: '#/components/schemas/NamedParticipantForCompetitionDto'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeForCompetitionDto'
 
 
     NamedParticipantForCompetitionDto:
@@ -2283,7 +2620,6 @@ components:
       required:
         - id
         - name
-        - required
         - countMales
         - countFemales
         - countNonBinary
@@ -2296,8 +2632,6 @@ components:
           type: string
         description:
           type: string
-        required:
-          type: boolean
         countMales:
           type: integer
         countFemales:
@@ -2307,17 +2641,35 @@ components:
         countMixed:
           type: integer
 
+    FeeForCompetitionDto:
+      type: object
+      required:
+        - id
+        - name
+        - required
+        - amount
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+        amount:
+          type: string
+          format: decimal
+
 
     CompetitionPropertiesRequestDto:
       type: object
       required:
         - identifier
         - name
-        - countMales
-        - countFemales
-        - countNonBinary
-        - countMixed
         - namedParticipants
+        - fees
       properties:
         identifier:
           type: string
@@ -2327,14 +2679,6 @@ components:
           type: string
         description:
           type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
         competitionCategory:
           type: string
           format: uuid
@@ -2342,13 +2686,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/NamedParticipantForCompetitionRequestDto'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeForCompetitionRequestDto'
 
 
     NamedParticipantForCompetitionRequestDto:
       type: object
       required:
         - namedParticipant
-        - required
         - countMales
         - countFemales
         - countNonBinary
@@ -2357,8 +2704,6 @@ components:
         namedParticipant:
           type: string
           format: uuid
-        required:
-          type: boolean
         countMales:
           type: integer
         countFemales:
@@ -2367,6 +2712,22 @@ components:
           type: integer
         countMixed:
           type: integer
+
+    FeeForCompetitionRequestDto:
+      type: object
+      required:
+        - fee
+        - required
+        - amount
+      properties:
+        fee:
+          type: string
+          format: uuid
+        required:
+          type: boolean
+        amount:
+          type: string
+          format: decimal
 
 
 
@@ -2439,6 +2800,32 @@ components:
           $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
 
 
+    # competitionCategory
+
+    CompetitionCategoryDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    CompetitionCategoryRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
 
     # namedParticipant
 
@@ -2467,9 +2854,9 @@ components:
           type: string
 
 
-    # competitionCategory
+    # fee
 
-    CompetitionCategoryDto:
+    FeeDto:
       type: object
       required:
         - id
@@ -2483,7 +2870,7 @@ components:
         description:
           type: string
 
-    CompetitionCategoryRequest:
+    FeeRequest:
       type: object
       required:
         - name
@@ -2492,8 +2879,6 @@ components:
           type: string
         description:
           type: string
-
-
 
     # captcha
 
@@ -2521,6 +2906,74 @@ components:
           type: number
         start:
           type: integer
+
+    # eventDocuments
+
+    EventDocumentTypeRequest:
+      type: object
+      required:
+        - name
+        - required
+        - confirmationRequired
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        confirmationRequired:
+          type: boolean
+
+    EventDocumentTypeDto:
+      type: object
+      required:
+        - id
+        - name
+        - required
+        - confirmationRequired
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        required:
+          type: boolean
+        confirmationRequired:
+          type: boolean
+
+    EventDocumentRequest:
+      type: object
+      properties:
+        documentType:
+          type: string
+          format: uuid
+
+    EventDocumentDto:
+      type: object
+      required:
+        - id
+        - name
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        documentType:
+          $ref: '#/components/schemas/EventDocumentTypeDto'
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
 
     # club
 

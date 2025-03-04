@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.competitionTemplate.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competitionProperties.boundary.CompetitionPropertiesService
-import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toRecord
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toUpdateFunction
@@ -44,30 +43,31 @@ object CompetitionTemplateService {
 
         !CompetitionPropertiesService.checkRequestReferences(request.properties)
 
-        val competitionPropertiesId = !CompetitionPropertiesRepo.create(request.properties.toRecord(null, competitionTemplateId)).orDie()
+        val competitionPropertiesId =
+            !CompetitionPropertiesRepo.create(request.properties.toRecord(null, competitionTemplateId)).orDie()
 
-        !CompetitionPropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-            it.toRecord(
-                competitionPropertiesId
-            )
-        }).orDie()
+        !CompetitionPropertiesService.addCompetitionPropertiesReferences(
+            namedParticipants = request.properties.namedParticipants.map { it.toRecord(competitionPropertiesId) },
+            fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) }
+        )
 
         KIO.ok(ApiResponse.Created(competitionTemplateId))
     }
 
     fun page(
         params: PaginationParameters<CompetitionTemplateWithPropertiesSort>
-    ): App<Nothing, ApiResponse.Page<CompetitionTemplateDto, CompetitionTemplateWithPropertiesSort>> = KIO.comprehension {
-        val total = !CompetitionTemplateRepo.countWithProperties(params.search).orDie()
-        val page = !CompetitionTemplateRepo.pageWithProperties(params).orDie()
+    ): App<Nothing, ApiResponse.Page<CompetitionTemplateDto, CompetitionTemplateWithPropertiesSort>> =
+        KIO.comprehension {
+            val total = !CompetitionTemplateRepo.countWithProperties(params.search).orDie()
+            val page = !CompetitionTemplateRepo.pageWithProperties(params).orDie()
 
-        page.forEachM { it.toDto() }.map {
-            ApiResponse.Page(
-                data = it,
-                pagination = params.toPagination(total)
-            )
+            page.forEachM { it.toDto() }.map {
+                ApiResponse.Page(
+                    data = it,
+                    pagination = params.toPagination(total)
+                )
+            }
         }
-    }
 
     fun getCompetitionTemplateWithProperties(
         templateId: UUID
@@ -83,8 +83,7 @@ object CompetitionTemplateService {
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        !CompetitionPropertiesService.checkNamedParticipantsExisting(request.properties.namedParticipants.map { it.namedParticipant })
-        !CompetitionPropertiesService.checkCompetitionCategoryExisting(request.properties.competitionCategory)
+        !CompetitionPropertiesService.checkRequestReferences(request.properties)
 
         !CompetitionTemplateRepo.update(templateId) {
             updatedBy = userId
@@ -102,13 +101,10 @@ object CompetitionTemplateService {
                 .orDie()
                 .onNullFail { CompetitionTemplateError.CompetitionPropertiesNotFound }
 
-        // delete and re-add the named participant entries
-        !CompetitionPropertiesHasNamedParticipantRepo.deleteManyByCompetitionProperties(competitionPropertiesId).orDie()
-        !CompetitionPropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-            it.toRecord(
-                competitionPropertiesId
-            )
-        }).orDie()
+        !CompetitionPropertiesService.updateCompetitionPropertiesReferences(
+            competitionPropertiesId = competitionPropertiesId,
+            namedParticipants = request.properties.namedParticipants.map { it.toRecord(competitionPropertiesId) },
+            fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) })
 
         noData
     }

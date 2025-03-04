@@ -25,14 +25,12 @@ fun EmailContentTemplate.toDto(): App<Nothing, EmailTemplateDto> = KIO.ok(
     }
 )
 
-fun EmailRecord?.toAssignedDto(): App<Nothing, AssignedEmailDto?> =
+fun EmailRecord.toAssignedDto(): App<Nothing, AssignedEmailDto> =
     KIO.ok(
-        this?.let {
-            AssignedEmailDto(
-                recipient = it.recipient,
-                sentAt = it.sentAt,
-                lastErrorAt = it.lastErrorAt,
-                lastError = it.lastError,
-            )
-        }
+        AssignedEmailDto(
+            recipient = recipient,
+            sentAt = sentAt,
+            lastErrorAt = lastErrorAt,
+            lastError = lastError,
+        )
     )

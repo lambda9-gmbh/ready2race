@@ -20,6 +20,7 @@ fun Application.configureHTTP(mode: Config.Mode) {
         install(CORS) {
             anyHost()
             allowHeader(HttpHeaders.ContentType)
+            exposeHeader(HttpHeaders.ContentDisposition)
             allowMethod(HttpMethod.Options)
             allowMethod(HttpMethod.Put)
             allowMethod(HttpMethod.Delete)

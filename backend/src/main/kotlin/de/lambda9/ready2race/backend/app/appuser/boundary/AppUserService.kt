@@ -219,7 +219,7 @@ object AppUserService {
         val appUser = !AppUserRepo.getByEmail(request.email).orDie()
 
         if (appUser != null) {
-            !AppUserPasswordResetRepo.delete(appUser.id).orDie()
+            !AppUserPasswordResetRepo.deleteByAppUserId(appUser.id).orDie()
 
             val token = !AppUserPasswordResetRepo.create(
                 AppUserPasswordResetRecord(
