@@ -13,5 +13,6 @@ data class CompetitionPropertiesDto(
     val countNonBinary: Int,
     val countMixed: Int,
     val competitionCategory: CompetitionCategoryDto?,
-    val namedParticipants: List<NamedParticipantForCompetitionDto>
+    val namedParticipants: List<NamedParticipantForCompetitionDto>,
+    val fees: List<FeeForCompetitionDto>
 )

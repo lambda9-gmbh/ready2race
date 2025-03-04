@@ -1,11 +1,10 @@
 package de.lambda9.ready2race.backend.app.competitionTemplate.control
 
-import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo.update
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.database.*
-import de.lambda9.ready2race.backend.database.generated.tables.CompetitionTemplateToPropertiesWithNamedParticipants
+import de.lambda9.ready2race.backend.database.generated.tables.CompetitionTemplateView
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateToPropertiesWithNamedParticipantsRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
@@ -14,7 +13,7 @@ import java.util.*
 
 object CompetitionTemplateRepo {
 
-    private fun CompetitionTemplateToPropertiesWithNamedParticipants.searchFields() =
+    private fun CompetitionTemplateView.searchFields() =
         listOf(ID, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     fun create(record: CompetitionTemplateRecord) = COMPETITION_TEMPLATE.insertReturning(record) { ID }
@@ -28,15 +27,15 @@ object CompetitionTemplateRepo {
     fun countWithProperties(
         search: String?
     ): JIO<Int> = Jooq.query {
-        with(COMPETITION_TEMPLATE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+        with(COMPETITION_TEMPLATE_VIEW) {
             fetchCount(this, search.metaSearch(searchFields()))
         }
     }
 
     fun pageWithProperties(
         params: PaginationParameters<CompetitionTemplateWithPropertiesSort>
-    ): JIO<List<CompetitionTemplateToPropertiesWithNamedParticipantsRecord>> = Jooq.query {
-        with(COMPETITION_TEMPLATE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+    ): JIO<List<CompetitionTemplateViewRecord>> = Jooq.query {
+        with(COMPETITION_TEMPLATE_VIEW) {
             selectFrom(this)
                 .page(params, searchFields())
                 .fetch()
@@ -45,8 +44,8 @@ object CompetitionTemplateRepo {
 
     fun getWithProperties(
         templateId: UUID
-    ): JIO<CompetitionTemplateToPropertiesWithNamedParticipantsRecord?> = Jooq.query {
-        with(COMPETITION_TEMPLATE_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+    ): JIO<CompetitionTemplateViewRecord?> = Jooq.query {
+        with(COMPETITION_TEMPLATE_VIEW) {
             selectFrom(this)
                 .where(ID.eq(templateId))
                 .fetchOne()

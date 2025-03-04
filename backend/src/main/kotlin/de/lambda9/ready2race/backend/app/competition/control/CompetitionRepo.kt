@@ -2,12 +2,12 @@ package de.lambda9.ready2race.backend.app.competition.control
 
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
 import de.lambda9.ready2race.backend.database.*
-import de.lambda9.ready2race.backend.database.generated.tables.CompetitionToPropertiesWithNamedParticipants
+import de.lambda9.ready2race.backend.database.generated.tables.CompetitionView
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionToPropertiesWithNamedParticipantsRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_VIEW
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -16,7 +16,7 @@ import java.util.*
 
 object CompetitionRepo {
 
-    private fun CompetitionToPropertiesWithNamedParticipants.searchFields() =
+    private fun CompetitionView.searchFields() =
         listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     fun create(record: CompetitionRecord) = COMPETITION.insertReturning(record) { ID }
@@ -31,7 +31,7 @@ object CompetitionRepo {
         eventId: UUID,
         search: String?
     ): JIO<Int> = Jooq.query {
-        with(COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+        with(COMPETITION_VIEW) {
             fetchCount(this, DSL.and(EVENT.eq(eventId), search.metaSearch(searchFields())))
         }
     }
@@ -41,7 +41,7 @@ object CompetitionRepo {
         eventDayId: UUID,
         search: String?
     ): JIO<Int> = Jooq.query {
-        with(COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+        with(COMPETITION_VIEW) {
             fetchCount(
                 this, DSL.and(
                     EVENT.eq(eventId).and(
@@ -59,8 +59,8 @@ object CompetitionRepo {
     fun pageWithPropertiesByEvent(
         eventId: UUID,
         params: PaginationParameters<CompetitionWithPropertiesSort>
-    ): JIO<List<CompetitionToPropertiesWithNamedParticipantsRecord>> = Jooq.query {
-        with(COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+    ): JIO<List<CompetitionViewRecord>> = Jooq.query {
+        with(COMPETITION_VIEW) {
             selectFrom(this)
                 .page(params, searchFields()) {
                     EVENT.eq(eventId)
@@ -73,8 +73,8 @@ object CompetitionRepo {
         eventId: UUID,
         eventDayId: UUID,
         params: PaginationParameters<CompetitionWithPropertiesSort>
-    ): JIO<List<CompetitionToPropertiesWithNamedParticipantsRecord>> = Jooq.query {
-        with(COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+    ): JIO<List<CompetitionViewRecord>> = Jooq.query {
+        with(COMPETITION_VIEW) {
             selectFrom(this)
                 .page(params, searchFields()) {
                     EVENT.eq(eventId)
@@ -92,8 +92,8 @@ object CompetitionRepo {
 
     fun getWithProperties(
         competitionId: UUID
-    ): JIO<CompetitionToPropertiesWithNamedParticipantsRecord?> = Jooq.query {
-        with(COMPETITION_TO_PROPERTIES_WITH_NAMED_PARTICIPANTS) {
+    ): JIO<CompetitionViewRecord?> = Jooq.query {
+        with(COMPETITION_VIEW) {
             selectFrom(this)
                 .where(ID.eq(competitionId))
                 .fetchOne()

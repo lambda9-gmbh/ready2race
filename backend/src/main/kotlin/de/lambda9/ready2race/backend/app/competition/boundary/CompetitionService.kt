@@ -38,6 +38,7 @@ object CompetitionService {
         val record = !request.toRecord(userId, eventId)
         val competitionId = !CompetitionRepo.create(record).orDie()
 
+        //todo: @style: refactor possible?
         if (request.template != null) {
             val templateRecord = !CompetitionTemplateRepo.getWithProperties(request.template).orDie()
                 .onNullFail { CompetitionError.CompetitionTemplateUnknown }
@@ -45,23 +46,25 @@ object CompetitionService {
 
             val competitionPropertiesId = !CompetitionPropertiesRepo.create(propsRecord).orDie()
 
+            !CompetitionPropertiesService.addCompetitionPropertiesReferences(
+                namedParticipants = templateRecord.namedParticipants!!.map {
+                    !it!!.applyCompetitionPropertiesHasNamedParticipant(competitionPropertiesId, it.id!!).orDie()
+                },
+                fees = templateRecord.fees!!.map {
+                    !it!!.applyCompetitionPropertiesHasFee(competitionPropertiesId, it.id!!).orDie()
+                }
+            )
 
-            val namedParticipantRecords = templateRecord.namedParticipants?.map {
-                !it!!.applyCompetitionPropertiesHasNamedParticipant(competitionPropertiesId, it.id!!).orDie()
-            }
-            if (namedParticipantRecords != null) {
-                !CompetitionPropertiesHasNamedParticipantRepo.create(namedParticipantRecords).orDie()
-            }
         } else {
             !CompetitionPropertiesService.checkRequestReferences(request.properties!!)
 
-            val competitionPropertiesId = !CompetitionPropertiesRepo.create(request.properties.toRecord(competitionId, null)).orDie()
+            val competitionPropertiesId =
+                !CompetitionPropertiesRepo.create(request.properties.toRecord(competitionId, null)).orDie()
 
-            !CompetitionPropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-                it.toRecord(
-                    competitionPropertiesId
-                )
-            }).orDie()
+            !CompetitionPropertiesService.addCompetitionPropertiesReferences(
+                namedParticipants = request.properties.namedParticipants.map { it.toRecord(competitionPropertiesId) },
+                fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) }
+            )
         }
 
         KIO.ok(ApiResponse.Created(competitionId))
@@ -94,7 +97,8 @@ object CompetitionService {
     fun getCompetitionWithProperties(
         competitionId: UUID
     ): App<CompetitionError, ApiResponse> = KIO.comprehension {
-        val competition = !CompetitionRepo.getWithProperties(competitionId).orDie().onNullFail { CompetitionError.CompetitionNotFound }
+        val competition = !CompetitionRepo.getWithProperties(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
         competition.toDto().map { ApiResponse.Dto(it) }
     }
 
@@ -110,46 +114,58 @@ object CompetitionService {
             updatedAt = LocalDateTime.now()
         }.orDie().onNullFail { CompetitionError.CompetitionNotFound }
 
+        // todo: @style: refactoring possible?
         if (request.template != null) {
             val templateRecord = !CompetitionTemplateRepo.getWithProperties(request.template).orDie()
                 .onNullFail { CompetitionError.CompetitionTemplateUnknown }
 
             // In theory the CompetitionPropertiesRepo functions can't fail because there has to be a "competitionProperties" for the "competition" to exist
-            val propertiesRecord = !CompetitionPropertiesRepo.updateByCompetitionOrTemplate(competitionId, templateRecord.toUpdateFunction())
+            val propertiesRecord = !CompetitionPropertiesRepo.updateByCompetitionOrTemplate(
+                competitionId,
+                templateRecord.toUpdateFunction()
+            )
                 .orDie()
                 .onNullFail { CompetitionError.CompetitionPropertiesNotFound }
 
-            // delete and re-add the named participant entries
-            !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(propertiesRecord.id).orDie()
-            val namedParticipantRecords = templateRecord.namedParticipants?.map {
-                !it!!.applyCompetitionPropertiesHasNamedParticipant(competitionId, it.id!!)
-            }
-            if (namedParticipantRecords != null) {
-                !CompetitionPropertiesHasNamedParticipantRepo.create(namedParticipantRecords).orDie()
-            }
+            !CompetitionPropertiesService.updateCompetitionPropertiesReferences(
+                competitionPropertiesId = propertiesRecord.id,
+                namedParticipants = templateRecord.namedParticipants!!.map {
+                    !it!!.applyCompetitionPropertiesHasNamedParticipant(
+                        propertiesRecord.id,
+                        it.id!!
+                    )
+                },
+                fees = templateRecord.fees!!.map {
+                    !it!!.applyCompetitionPropertiesHasFee(
+                        propertiesRecord.id,
+                        it.id!!
+                    )
+                },
+            )
 
         } else {
             !CompetitionPropertiesService.checkRequestReferences(request.properties!!)
 
-            !CompetitionPropertiesRepo.updateByCompetitionOrTemplate(competitionId, request.properties.toUpdateFunction())
+            !CompetitionPropertiesRepo.updateByCompetitionOrTemplate(
+                competitionId,
+                request.properties.toUpdateFunction()
+            )
                 .orDie()
 
             val competitionPropertiesId =
                 !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(competitionId).orDie()
                     .onNullFail { CompetitionError.CompetitionPropertiesNotFound }
 
-            // delete and re-add the named participant entries
-            !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(competitionPropertiesId).orDie()
-            !CompetitionPropertiesHasNamedParticipantRepo.create(request.properties.namedParticipants.map {
-                it.toRecord(
-                    competitionPropertiesId
-                )
-            }).orDie()
+            !CompetitionPropertiesService.updateCompetitionPropertiesReferences(
+                competitionPropertiesId = competitionPropertiesId,
+                namedParticipants = request.properties.namedParticipants.map { it.toRecord(competitionPropertiesId) },
+                fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) }
+            )
         }
         noData
     }
 
-    // Competition Properties and Named Participants are deleted by cascade
+    // Competition Properties, Named Participants and Fees are deleted by cascade
     fun deleteCompetition(
         id: UUID,
     ): App<CompetitionError, ApiResponse.NoData> = KIO.comprehension {

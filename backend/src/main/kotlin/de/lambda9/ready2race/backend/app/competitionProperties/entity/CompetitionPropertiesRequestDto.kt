@@ -23,7 +23,8 @@ data class CompetitionPropertiesRequestDto(
     val countNonBinary: Int,
     val countMixed: Int,
     val competitionCategory: UUID?,
-    val namedParticipants: List<NamedParticipantForCompetitionRequestDto>
+    val namedParticipants: List<NamedParticipantForCompetitionRequestDto>,
+    val fees: List<FeeForCompetitionRequestDto>
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -48,7 +49,8 @@ data class CompetitionPropertiesRequestDto(
                 this::countNonBinary validate IntValidators.min(1),
                 this::countMixed validate IntValidators.min(1),
                 this::namedParticipants validate notEmpty
-            )
+            ),
+            this::fees validate collection
         )
 
     companion object {
@@ -63,7 +65,8 @@ data class CompetitionPropertiesRequestDto(
                 countNonBinary = 0,
                 countMixed = 1,
                 competitionCategory = UUID.randomUUID(),
-                namedParticipants = listOf(NamedParticipantForCompetitionRequestDto.example)
+                namedParticipants = listOf(NamedParticipantForCompetitionRequestDto.example),
+                fees = listOf(FeeForCompetitionRequestDto.example)
             )
     }
 }

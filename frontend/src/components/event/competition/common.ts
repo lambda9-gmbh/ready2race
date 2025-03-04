@@ -20,6 +20,11 @@ export type CompetitionForm = {
         countNonBinary: string
         countMixed: string
     }[]
+    fees: {
+        fee: AutocompleteOption
+        required: boolean
+        amount: string
+    }[]
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -33,6 +38,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     countMixed: '0',
     competitionCategory: {id: '', label: ''},
     namedParticipants: [],
+    fees: [],
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(formData: CompetitionForm): CompetitionPropertiesRequestDto {
@@ -53,6 +59,11 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(formData: Compe
             countFemales: Number(value.countFemales),
             countNonBinary: Number(value.countNonBinary),
             countMixed: Number(value.countMixed),
+        })),
+        fees: formData.fees.map(value => ({
+            fee: value.fee.id,
+            required: value.required,
+            amount: value.amount.replace(',', '.'),
         })),
     }
 }
@@ -83,6 +94,11 @@ export function mapCompetitionPropertiesToCompetitionForm(
             countFemales: value.countFemales.toString(),
             countNonBinary: value.countNonBinary.toString(),
             countMixed: value.countMixed.toString(),
+        })),
+        fees: dto.fees.map(value => ({
+            fee: {id: value.id, label: value.name},
+            required: value.required,
+            amount: value.amount.replace('.', decimalPoint),
         })),
     }
 }

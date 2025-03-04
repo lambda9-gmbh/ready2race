@@ -119,6 +119,17 @@
         },
         "role": "Rolle"
       },
+      "fee": {
+        "fee": "Gebühr",
+        "fees": "Gebühren",
+        "add": "Gebühr hinzufügen",
+        "type": "Gebührenart",
+        "required": {
+          "notRequired": "Nicht verpflichtend",
+          "required": "Verpflichtend"
+        },
+        "amount": "Menge"
+      },
       "competition": "Wettkampf",
       "competitions": "Wettkämpfe",
       "shortName": "Kurzname",

@@ -8,6 +8,9 @@ import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionC
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryError
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryRequest
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategorySort
+import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionsOrTemplatesContainingReference
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.splitTemplatesAndCompetitions
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -35,7 +38,7 @@ object CompetitionCategoryService {
         val total = !CompetitionCategoryRepo.count(params.search).orDie()
         val page = !CompetitionCategoryRepo.page(params).orDie()
 
-        page.forEachM { it.competitionCategoryDto() }.map{
+        page.forEachM { it.competitionCategoryDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
@@ -54,7 +57,7 @@ object CompetitionCategoryService {
             description = request.description
             updatedAt = LocalDateTime.now()
             updatedBy = userId
-        }.orDie().onNullFail { CompetitionCategoryError.CompetitionCategoryNotFound }
+        }.orDie().onNullFail { CompetitionCategoryError.NotFound }
 
         noData
     }
@@ -62,10 +65,21 @@ object CompetitionCategoryService {
     fun deleteCompetitionCategory(
         competitionCategoryId: UUID
     ): App<CompetitionCategoryError, ApiResponse.NoData> = KIO.comprehension {
+        val propertiesContainingCategory =
+            !CompetitionPropertiesRepo.getByCompetitionCategory(competitionCategoryId).orDie()
+                .map { it.splitTemplatesAndCompetitions() }
+
+        if (propertiesContainingCategory.containsEntries()) {
+            return@comprehension KIO.fail(
+                CompetitionCategoryError.CompetitionCategoryInUse(propertiesContainingCategory)
+            )
+        }
+
         val deleted = !CompetitionCategoryRepo.delete(competitionCategoryId).orDie()
-        if(deleted < 1) {
-            KIO.fail(CompetitionCategoryError.CompetitionCategoryNotFound)
-        } else{
+
+        if (deleted < 1) {
+            KIO.fail(CompetitionCategoryError.NotFound)
+        } else {
             noData
         }
     }

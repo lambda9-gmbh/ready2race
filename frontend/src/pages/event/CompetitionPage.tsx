@@ -146,6 +146,25 @@ const CompetitionPage = () => {
                                 </Box>
                             </>
                         ))}
+                        {competitionData.properties.fees.map((f, index) => (
+                            <>
+                                <Divider orientation="horizontal" key={`divider${index}`} />
+                                <Box key={`box${index}`}>
+                                    <Typography variant="subtitle1">{f.name}</Typography>
+                                    <Typography>{f.description}</Typography>
+                                    <Typography>
+                                        {f.required
+                                            ? t('event.competition.fee.required.required')
+                                            : t('event.competition.fee.required.notRequired')
+                                        }
+                                    </Typography>
+                                    <CompetitionCountEntry
+                                        label={t('event.competition.fee.amount')}
+                                        content={f.amount + "€"}
+                                    />
+                                </Box>
+                            </>
+                        ))}
                     </Stack>
                 )) ||
                     (competitionPending && <Throbber />)}

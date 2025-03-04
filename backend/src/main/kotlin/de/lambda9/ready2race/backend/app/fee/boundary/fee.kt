@@ -1,8 +1,8 @@
-package de.lambda9.ready2race.backend.app.competitionCategory.boundary
+package de.lambda9.ready2race.backend.app.fee.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryRequest
-import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategorySort
+import de.lambda9.ready2race.backend.app.fee.entity.FeeRequest
+import de.lambda9.ready2race.backend.app.fee.entity.FeeSort
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
@@ -12,14 +12,14 @@ import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
 import java.util.*
 
-fun Route.competitionCategory() {
-    route("/competitionCategory") {
+fun Route.fee() {
+    route("/fee") {
         post {
-            val payload = call.receiveV(CompetitionCategoryRequest.example)
+            val payload = call.receiveV(FeeRequest.example)
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    CompetitionCategoryService.addCompetitionCategory(!payload, user.id!!)
+                    FeeService.addFee(!payload, user.id!!)
                 }
             }
         }
@@ -28,30 +28,30 @@ fun Route.competitionCategory() {
             call.respondKIO {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val params = !pagination<CompetitionCategorySort>()
-                    CompetitionCategoryService.page(params)
+                    val params = !pagination<FeeSort>()
+                    FeeService.page(params)
                 }
             }
         }
 
-        route("/{competitionCategoryId}") {
+        route("/{feeId}"){
             put{
-                val payload = call.receiveV(CompetitionCategoryRequest.example)
+                val payload = call.receiveV(FeeRequest.example)
                 call.respondKIO {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                        val competitionCategoryId = !pathParam("competitionCategoryId") { UUID.fromString(it) }
-                        CompetitionCategoryService.updateCompetitionCategory(competitionCategoryId, !payload, user.id!!)
+                        val feeId = !pathParam("feeId") { UUID.fromString(it) }
+                        FeeService.updateFee(feeId, !payload, user.id!!)
                     }
                 }
             }
 
-            delete {
+            delete{
                 call.respondKIO {
                     KIO.comprehension {
                         !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                        val competitionCategoryId = !pathParam("competitionCategoryId") { UUID.fromString(it) }
-                        CompetitionCategoryService.deleteCompetitionCategory(competitionCategoryId)
+                        val feeId = !pathParam("feeId") { UUID.fromString(it) }
+                        FeeService.deleteFee(feeId)
                     }
                 }
             }

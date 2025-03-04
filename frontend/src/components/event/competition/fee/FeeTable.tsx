@@ -1,10 +1,10 @@
 import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
 import {PaginationParameters} from "@utils/ApiUtils.ts";
+import {deleteFee, getFees} from "@api/sdk.gen.ts";
+import {FeeDto} from "@api/types.gen.ts";
 import {BaseEntityTableProps} from "@utils/types.ts";
 import {useTranslation} from "react-i18next";
 import EntityTable from "@components/EntityTable.tsx";
-import {deleteNamedParticipant, getNamedParticipants} from "@api/sdk.gen.ts";
-import {NamedParticipantDto} from "@api/types.gen.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -15,21 +15,21 @@ const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
-    return getNamedParticipants({
+    return getFees({
         signal,
         query: {...paginationParameters},
     })
 }
 
-const deleteRequest = (dto: NamedParticipantDto) => {
-    return deleteNamedParticipant({path: {namedParticipantId: dto.id}})
+const deleteRequest = (dto: FeeDto) => {
+    return deleteFee({path: {feeId: dto.id}})
 }
 
 
-const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>) => {
+const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
     const {t} = useTranslation()
 
-    const columns: GridColDef<NamedParticipantDto>[] = [
+    const columns: GridColDef<FeeDto>[] = [
         {
             field: 'name',
             headerName: t('entity.name'),
@@ -54,10 +54,10 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            entityName={t('event.competition.namedParticipant.namedParticipant')}
+            entityName={t('event.competition.fee.fee')}
             deleteRequest={deleteRequest}
         />
     )
 }
 
-export default NamedParticipantTable
+export default FeeTable
