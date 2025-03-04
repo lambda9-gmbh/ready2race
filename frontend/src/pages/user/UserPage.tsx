@@ -44,7 +44,7 @@ const UserPage = () => {
         deps: [userId],
     })
 
-    const handleSubmit = async (formData: Form) => {
+    const handleSubmit = async () => {
         setSubmitting(true)
         // TODO: updateUser()
         setSubmitting(false)

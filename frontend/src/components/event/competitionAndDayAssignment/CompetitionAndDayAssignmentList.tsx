@@ -10,51 +10,57 @@ type Props = {
     competitionsToDay: boolean
     removeElement?: (index: number) => void
 }
-const CompetitionAndDayAssignmentList = ({assignedEntities, competitionsToDay, removeElement}: Props) => {
+const CompetitionAndDayAssignmentList = ({
+    assignedEntities,
+    competitionsToDay,
+    removeElement,
+}: Props) => {
     const {t} = useTranslation()
     const {eventId} = eventRoute.useParams()
     return (
         // todo: maybe use mui List component
         <>
-            {assignedEntities.map((field, index) => (
-                <Box key={`entry${index}`}>
-                    <Stack
-                        direction="row"
-                        spacing={2}
-                        alignItems="center"
-                        justifyContent="space-between"
-                        sx={{mt: 1}}>
-                        <Link
-                            to={
-                                competitionsToDay
-                                    ? '/event/$eventId/competition/$competitionId'
-                                    : '/event/$eventId/eventDay/$eventDayId'
-                            }
-                            params={
-                                competitionsToDay
-                                    ? {eventId: eventId, competitionId: field.id}
-                                    : {eventId: eventId, eventDayId: field.id}
-                            }>
-                            <Typography variant="body1">{field.label}</Typography>
-                        </Link>
-                        {removeElement && (
-                            <Tooltip
-                                title={t('common.delete')}
-                                disableInteractive
-                                slots={{
-                                    transition: Zoom,
-                                }}>
-                                <IconButton onClick={() => removeElement(index)}>
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
+            {assignedEntities
+                .filter(field => field !== null)
+                .map((field, index) => (
+                    <Box key={`entry${index}`}>
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{mt: 1}}>
+                            <Link
+                                to={
+                                    competitionsToDay
+                                        ? '/event/$eventId/competition/$competitionId'
+                                        : '/event/$eventId/eventDay/$eventDayId'
+                                }
+                                params={
+                                    competitionsToDay
+                                        ? {eventId: eventId, competitionId: field.id}
+                                        : {eventId: eventId, eventDayId: field.id}
+                                }>
+                                <Typography variant="body1">{field?.label}</Typography>
+                            </Link>
+                            {removeElement && (
+                                <Tooltip
+                                    title={t('common.delete')}
+                                    disableInteractive
+                                    slots={{
+                                        transition: Zoom,
+                                    }}>
+                                    <IconButton onClick={() => removeElement(index)}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                        </Stack>
+                        {index < assignedEntities.length - 1 && (
+                            <Divider orientation="horizontal" sx={{mt: 1}} />
                         )}
-                    </Stack>
-                    {index < assignedEntities.length - 1 && (
-                        <Divider orientation="horizontal" sx={{mt: 1}} />
-                    )}
-                </Box>
-            ))}
+                    </Box>
+                ))}
         </>
     )
 }

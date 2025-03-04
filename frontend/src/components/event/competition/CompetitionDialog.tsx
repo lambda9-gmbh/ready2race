@@ -88,7 +88,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                 ? mapCompetitionPropertiesToCompetitionForm(props.entity.properties, t('decimal.point'))
                 : competitionFormDefaultValues,
         )
-        setTemplate(templates.find(t => t.id === props.entity?.template) ?? null)
+        setTemplate(templates.find(t => t?.id === props.entity?.template) ?? null)
     }, [props.entity, templatesData])
 
     return (
