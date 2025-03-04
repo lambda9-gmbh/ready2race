@@ -1,7 +1,6 @@
 import {Stack, styled, Tooltip, tooltipClasses, TooltipProps, Typography} from '@mui/material'
 import {Info} from '@mui/icons-material'
-import {EventRegistrationRaceDto} from '../../api'
-import {useTranslation} from 'react-i18next'
+import {EventRegistrationCompetitionDto} from '../../api'
 
 const HtmlTooltip = styled(({className, ...props}: TooltipProps) => (
     <Tooltip {...props} classes={{popper: className}} />
@@ -15,26 +14,34 @@ const HtmlTooltip = styled(({className, ...props}: TooltipProps) => (
     },
 }))
 
-export const EventRegistrationPriceTooltip = (props: {race: EventRegistrationRaceDto}) => {
-    const {t} = useTranslation()
+export const EventRegistrationPriceTooltip = (props: {competition: EventRegistrationCompetitionDto}) => {
 
     return (
         <HtmlTooltip
             title={
                 <Stack>
                     <Typography variant={'h6'} mb={1}>
-                        {props.race.identifier} {props.race.name} (
-                        {props.race.shortName})
+                        {props.competition.identifier} {props.competition.name} (
+                        {props.competition.shortName})
                     </Typography>
-                    <Typography variant={'subtitle2'}>{props.race.description}</Typography>
-                    <Stack direction={'row'} justifyContent={'space-between'}>
-                        <Typography>{t('event.race.participationFee')}:</Typography>
-                        <Typography fontWeight={600}>{props.race.participationFee}€</Typography>
-                    </Stack>
-                    <Stack direction={'row'} justifyContent={'space-between'}>
-                        <Typography>{t('event.race.rentalFee')}:</Typography>
-                        <Typography fontWeight={600}>{props.race.rentalFee}€</Typography>
-                    </Stack>
+                    <Typography variant={'subtitle2'}>{props.competition.description}</Typography>
+                    {
+                        props.competition.fees?.filter(f => f.required)?.map((fee, index) =>
+                            <Stack direction={'row'} justifyContent={'space-between'} key={`${fee}-${index}`}>
+                                <Typography>{fee.label}:</Typography>
+                                <Typography fontWeight={600}>{fee.amount}€</Typography>
+                            </Stack>,
+                        )
+                    }
+                    {
+                        props.competition.fees?.filter(f => !f.required)?.map((fee, index) =>
+                            <Stack direction={'row'} justifyContent={'space-between'} key={`${fee}-${index}`}>
+                                <Typography>{fee.label}:</Typography>
+                                <Typography fontWeight={600}>{fee.amount}€</Typography>
+                            </Stack>,
+                        )
+                    }
+
                 </Stack>
             }>
             <Info color={'info'} fontSize={'small'} />

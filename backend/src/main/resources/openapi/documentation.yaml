@@ -1844,6 +1844,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PrivilegeDto'
+        clubId:
+          type: string
+          format: uuid
 
 
     # pagination
@@ -2652,19 +2655,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventRegistrationDayDto'
-        racesSingle:
+        competitionsSingle:
           type: array
           items:
-            $ref: '#/components/schemas/EventRegistrationRaceDto'
-        racesTeam:
+            $ref: '#/components/schemas/EventRegistrationCompetitionDto'
+        competitionsTeam:
           type: array
           items:
-            $ref: '#/components/schemas/EventRegistrationRaceDto'
+            $ref: '#/components/schemas/EventRegistrationCompetitionDto'
       required:
         - name
         - days
-        - racesSingle
-        - racesTeam
+        - competitionsSingle
+        - competitionsTeam
 
     EventRegistrationDayDto:
       type: object
@@ -2685,7 +2688,7 @@ components:
         - id
         - date
 
-    EventRegistrationRaceDto:
+    EventRegistrationCompetitionDto:
       type: object
       properties:
         id:
@@ -2707,18 +2710,16 @@ components:
           type: integer
         countMixed:
           type: integer
-        participationFee:
-          type: string
-          format: decimal
-        rentalFee:
-          type: string
-          format: decimal
-        raceCategory:
+        competitionCategory:
           type: string
         namedParticipant:
           type: array
           items:
             $ref: '#/components/schemas/EventRegistrationNamedParticipantDto'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationFeeDto'
         days:
           type: array
           items:
@@ -2732,7 +2733,7 @@ components:
         - countFemales
         - countMixed
         - countNonBinary
-        - raceCategory
+        - competitionCategory
         - days
 
     EventRegistrationNamedParticipantDto:
@@ -2763,6 +2764,27 @@ components:
         - countMixed
         - countNonBinary
 
+    EventRegistrationFeeDto:
+      type: object
+      required:
+        - id
+        - label
+        - required
+        - amount
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        description:
+          type: string
+          nullable: true
+        required:
+          type: boolean
+        amount:
+          type: number
+
     EventRegistrationUpsertDto:
       type: object
       properties:
@@ -2770,30 +2792,30 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventRegistrationParticipantUpsertDto'
-        raceRegistrations:
+        competitionRegistrations:
           type: array
           items:
-            $ref: '#/components/schemas/RaceRegistrationUpsertDto'
+            $ref: '#/components/schemas/CompetitionRegistrationUpsertDto'
         message:
           type: string
       required:
         - participants
-        - raceRegistrations
+        - competitionRegistrations
 
-    RaceRegistrationUpsertDto:
+    CompetitionRegistrationUpsertDto:
       type: object
       properties:
-        raceId:
+        competitionId:
           type: string
           format: uuid
         teams:
           type: array
           items:
-            $ref: '#/components/schemas/RaceRegistrationTeamUpsertDto'
+            $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
       required:
-        - raceId
+        - competitionId
 
-    RaceRegistrationTeamUpsertDto:
+    CompetitionRegistrationTeamUpsertDto:
       type: object
       properties:
         id:
@@ -2804,25 +2826,32 @@ components:
           items:
             type: string
             format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
         namedParticipants:
           type: array
           items:
-            $ref: '#/components/schemas/RaceRegistrationNamedParticipantUpsertDto'
+            $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantUpsertDto'
       required:
         - id
 
-    RaceRegistrationNamedParticipantUpsertDto:
+    CompetitionRegistrationNamedParticipantUpsertDto:
       type: object
       properties:
         namedParticipantId:
           type: string
           format: uuid
-        participantId:
-          type: string
-          format: uuid
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
       required:
         - namedParticipantId
-        - participantId
+        - participantIds
 
     EventRegistrationParticipantUpsertDto:
       type: object
@@ -2856,8 +2885,21 @@ components:
         externalClubName:
           type: string
           nullable: true
-        racesSingle:
+        competitionsSingle:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationSingleUpsertDto'
+
+    CompetitionRegistrationSingleUpsertDto:
+      type: object
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        optionalFees:
           type: array
           items:
             type: string
             format: uuid
+      required:
+        - competitionId

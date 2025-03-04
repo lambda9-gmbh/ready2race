@@ -54,11 +54,11 @@ const RootLayout = () => {
                                 to={'/event'}
                             />
                             <SidebarItem
-                                text={t('navigation.titles.raceConfig')}
+                                text={t('navigation.titles.competitionConfig')}
                                 icon={<EditCalendar />} //todo: better icon
                                 authenticatedOnly
                                 privilege={updateEventGlobal}
-                                to={'/raceConfig'}
+                                to={'/competitionConfig'}
                             />
                             <Divider/>
                             <SidebarItem

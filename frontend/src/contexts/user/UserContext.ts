@@ -4,6 +4,7 @@ import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
 export type AuthenticatedUser = {
     loggedIn: true
     id: string
+    clubId?: string
     login: (data: LoginDto) => void
     logout: () => void
     getPrivilegeScope: (action: Action, resource: Resource) => Scope | undefined

@@ -1,9 +1,8 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
-import java.math.BigDecimal
 import java.util.*
 
-data class EventRegistrationRaceDto(
+data class EventRegistrationCompetitionDto(
     val id: UUID,
     val identifier: String,
     val name: String,
@@ -13,9 +12,8 @@ data class EventRegistrationRaceDto(
     val countFemales: Int,
     val countNonBinary: Int,
     val countMixed: Int,
-    val participationFee: BigDecimal?,
-    val rentalFee: BigDecimal?,
-    val raceCategory: String?,
+    val competitionCategory: String?,
     val namedParticipant: List<EventRegistrationNamedParticipantDto>?,
+    val fees: List<EventRegistrationFeeDto>,
     val days: List<UUID>
 )

@@ -5,7 +5,7 @@ data class EventRegistrationTemplateDto(
     val description: String?,
     val location: String?,
     val days: List<EventRegistrationDayDto>,
-    val racesSingle: List<EventRegistrationRaceDto>,
-    val racesTeam: List<EventRegistrationRaceDto>
+    val competitionsSingle: List<EventRegistrationCompetitionDto>,
+    val competitionsTeam: List<EventRegistrationCompetitionDto>
 )
 

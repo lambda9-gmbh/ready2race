@@ -150,11 +150,13 @@
     },
     "registration": {
       "addParticipant": "Teilnehmer hinzufügen",
-      "singleRace": "Einzelrennen",
-      "teamRace": "Teamrennen",
+      "singleCompetition": "Einzelwettkampf",
+      "teamCompetition": "Teamwettkampf",
       "summary": "Zusammenfassung",
       "schedule": "Programm",
       "message": "Nachricht",
+      "optionalFee": "Optional",
+      "totalFees" : "Meldegebühr",
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",

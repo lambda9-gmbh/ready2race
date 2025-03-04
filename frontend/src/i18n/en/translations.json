@@ -150,11 +150,13 @@
     },
     "registration": {
       "addParticipant" : "Add Participant",
-      "singleRace" : "Single Race",
-      "teamRace" : "Team Race",
+      "singleCompetition" : "Single Competition",
+      "teamCompetition" : "Team Competition",
       "summary" : "Summary",
       "schedule" : "Schedule",
       "message": "Message",
+      "optionalFee": "Optional",
+      "totalFees" : "Registration Fee",
       "finish" : "Submit registration",
       "success" : {
         "title" : "Registration successful!",

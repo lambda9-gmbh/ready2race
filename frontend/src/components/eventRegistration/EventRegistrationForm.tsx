@@ -3,14 +3,15 @@ import {useMemo} from 'react'
 import {Alert, AlertTitle, Box, Button, Stack, Step, StepLabel, Stepper, Typography} from '@mui/material'
 import {FormContainer, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {PersonAdd} from '@mui/icons-material'
-import {EventRegistrationRaceDto, EventRegistrationTemplateDto, EventRegistrationUpsertDto} from '../../api'
+import {EventRegistrationCompetitionDto, EventRegistrationTemplateDto, EventRegistrationUpsertDto} from '../../api'
 import {EventRegistrationParticipantForm} from './EventRegistrationParticipantForm.tsx'
 import {useTranslation} from 'react-i18next'
 import {v4 as uuid} from 'uuid'
 import {formatISO} from 'date-fns'
 import {FormInputText} from '../form/input/FormInputText.tsx'
-import {EventRegistrationSingleRaceForm} from './EventRegistrationSingleRaceForm.tsx'
-import EventRegistrationTeamRaceForm from './EventRegistrationTeamRaceForm.tsx'
+import {EventRegistrationSingleCompetitionForm} from './EventRegistrationSingleCompetitionForm.tsx'
+import EventRegistrationTeamCompetitionForm from './EventRegistrationTeamCompetitionForm.tsx'
+import {EventRegistrationFeeDisplay} from '@components/eventRegistration/EventRegistrationFeeDisplay.tsx'
 
 export type EventRegistrationStep = {
     label: string
@@ -63,26 +64,26 @@ const EventRegistrationForm = ({
         setActiveStep(prevActiveStep => prevActiveStep - 1)
     }
 
-    const singleRaces: Map<string, Array<EventRegistrationRaceDto>> = useMemo(() => {
+    const competitionsSingle: Map<string, Array<EventRegistrationCompetitionDto>> = useMemo(() => {
         return new Map([
             [
                 'M',
-                template?.racesSingle?.filter(
+                template?.competitionsSingle?.filter(
                     r => r.countMales === 1 || r.countMixed === 1 || r.countNonBinary === 1,
                 ) ?? [],
             ],
             [
                 'F',
-                template?.racesSingle?.filter(
+                template?.competitionsSingle?.filter(
                     r => r.countFemales === 1 || r.countMixed === 1 || r.countNonBinary === 1,
                 ) ?? [],
             ],
             [
                 'D',
-                template?.racesSingle ?? [],
+                template?.competitionsSingle ?? [],
             ],
         ])
-    }, [template?.racesSingle])
+    }, [template?.competitionsSingle])
 
     const {
         fields: participantFields,
@@ -118,6 +119,7 @@ const EventRegistrationForm = ({
                                 lastname: '',
                                 year: 1990,
                                 gender: 'F',
+                                isNew: true
                             })
                         }>
                         <PersonAdd />
@@ -127,14 +129,14 @@ const EventRegistrationForm = ({
             ),
         },
         {
-            label: t('event.registration.singleRace'),
+            label: t('event.registration.singleCompetition'),
             validateKeys: ['participants'],
-            content: <EventRegistrationSingleRaceForm singleRaces={singleRaces} />,
+            content: <EventRegistrationSingleCompetitionForm competitionsSingle={competitionsSingle} />,
         },
         {
-            label: t('event.registration.teamRace'),
-            validateKeys: ['raceRegistrations'],
-            content: <EventRegistrationTeamRaceForm registrationTemplate={template} />,
+            label: t('event.registration.teamCompetition'),
+            validateKeys: ['competitionRegistrations'],
+            content: <EventRegistrationTeamCompetitionForm registrationTemplate={template} />,
         },
         ...(adminEdit
             ? []
@@ -183,7 +185,7 @@ const EventRegistrationForm = ({
             <FormContainer formContext={formContext} onSuccess={onSubmit}>
                 <Stack>
                     <Stack direction={'row'} justifyContent={'end'} alignItems={'center'}>
-                        {/* TODO <EventAnmeldungGebuehr anmeldungsvorlage={template} />*/}
+                         <EventRegistrationFeeDisplay registrationTemplate={template} />
                     </Stack>
                     <Stepper activeStep={activeStep}>
                         {steps.map(({label}) => {

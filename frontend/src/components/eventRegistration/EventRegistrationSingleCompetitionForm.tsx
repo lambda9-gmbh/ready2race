@@ -1,42 +1,43 @@
-import {useFormContext, useWatch} from 'react-hook-form-mui'
+import {CheckboxButtonGroup, useFormContext, useWatch} from 'react-hook-form-mui'
 import {Checkbox, FormControlLabel, Paper, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {Person} from '@mui/icons-material'
-import {EventRegistrationRaceDto, EventRegistrationUpsertDto} from '../../api'
+import {EventRegistrationCompetitionDto, EventRegistrationUpsertDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
+import {useTranslation} from 'react-i18next'
 
-const EventSingleRaceField = (props: {
-    option: EventRegistrationRaceDto
-    participantIndex: number
+const EventSingleCompetitionField = (props: {
+    option: EventRegistrationCompetitionDto
+    participantIndex: number,
 }) => {
+    const {t} = useTranslation()
+
     const formContext = useFormContext<EventRegistrationUpsertDto>()
 
     const [active, setActive] = useState(false)
+    const [competitionIndex, setCompetitionIndex] = useState<number | undefined>(undefined)
 
-    const singleRaces = useWatch({
+    const singleCompetitions = useWatch({
         control: formContext.control,
-        name: `participants.${props.participantIndex}.racesSingle`,
+        name: `participants.${props.participantIndex}.competitionsSingle`,
     })
 
     useEffect(() => {
-        const isActive = singleRaces?.find(r => r === props.option.id)
-        if (isActive) {
-            setActive(true)
-        } else {
-            setActive(false)
-        }
-    }, [singleRaces])
+        let index = singleCompetitions?.findIndex(r => r.competitionId === props.option.id) ?? -1
+        setCompetitionIndex(index !== -1 ? index : undefined)
+        setActive(index !== -1)
+    }, [singleCompetitions])
 
     const onChange = (checked: boolean) => {
         if (checked) {
-            formContext.setValue(`participants.${props.participantIndex}.racesSingle`, [
-                ...(singleRaces ?? []),
-                props.option.id,
+            formContext.setValue(`participants.${props.participantIndex}.competitionsSingle`, [
+                ...(singleCompetitions ?? []),
+                {competitionId: props.option.id},
             ])
         } else {
             formContext.setValue(
-                `participants.${props.participantIndex}.racesSingle`,
-                singleRaces?.filter(r => r != props.option.id),
+                `participants.${props.participantIndex}.competitionsSingle`,
+                singleCompetitions?.filter(c => c.competitionId != props.option.id),
             )
         }
     }
@@ -50,19 +51,27 @@ const EventSingleRaceField = (props: {
                 label={
                     <Stack direction={'row'} alignItems={'center'} spacing={1}>
                         <Typography>
-                            {props.option.name} (
-                            {props.option.description})
+                            {props.option.name}
                         </Typography>
-                        <EventRegistrationPriceTooltip race={props.option} />
+                        <EventRegistrationPriceTooltip competition={props.option} />
                     </Stack>
                 }
             />
+            {
+                active &&
+                <CheckboxButtonGroup
+                    label={t('event.registration.optionalFee')}
+                    name={`participants.${props.participantIndex}.competitionsSingle.${competitionIndex}.optionalFees`}
+                    options={props.option.fees?.filter(f => !f.required) ?? []}
+                    row
+                />
+            }
         </Stack>
     )
 }
 
-export const EventRegistrationSingleRaceForm = (props: {
-    singleRaces: Map<string, Array<EventRegistrationRaceDto>>
+export const EventRegistrationSingleCompetitionForm = (props: {
+    competitionsSingle: Map<string, Array<EventRegistrationCompetitionDto>>
 }) => {
     const formContext = useFormContext<EventRegistrationUpsertDto>()
 
@@ -84,8 +93,8 @@ export const EventRegistrationSingleRaceForm = (props: {
                                 </Typography>
                             </Stack>
                             <Stack spacing={2} flex={1} direction="row">
-                                {props.singleRaces.get(participant.gender ?? 'O')?.map(option => (
-                                    <EventSingleRaceField
+                                {props.competitionsSingle.get(participant.gender ?? 'O')?.map((option) => (
+                                    <EventSingleCompetitionField
                                         key={option.id}
                                         participantIndex={index}
                                         option={option}

@@ -9,6 +9,7 @@ drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists created_by;
+drop view if exists fee_for_competition;
 
 create view created_by as
 select au.id,
@@ -64,6 +65,17 @@ select cphnp.competition_properties,
 from competition_properties_has_named_participant cphnp
          left join named_participant np on cphnp.named_participant = np.id;
 
+create view fee_for_competition as
+select f.id,
+       f.label,
+       f.description,
+       cphf.amount,
+       cphf.required,
+       c.id as competition_id
+from competition_properties_has_fee cphf
+         join fee f on cphf.fee = f.id
+         join competition_properties cp on cphf.competition_properties = cp.id
+         join competition c on cp.competition = c.id;
 
 create view competition_to_properties_with_named_participants as
 select c.id,
@@ -85,10 +97,10 @@ select c.id,
         coalesce(sum(npfrp.count_females), 0) +
         coalesce(sum(npfrp.count_non_binary), 0) +
         coalesce(sum(npfrp.count_mixed), 0)
-           )
-    cc.id                                                                               as category_id,
-       cc.name                                                                             as category_name,
-       cc.description                                                                      as category_description,
+           )                                                                                      as total_count,
+       cc.id                                                                                      as category_id,
+       cc.name                                                                                    as category_name,
+       cc.description                                                                             as category_description,
        coalesce(array_agg(npfrp) filter ( where npfrp.competition_properties is not null ), '{}') as named_participants
 from competition c
          left join competition_properties cp on c.id = cp.competition

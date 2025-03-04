@@ -1,98 +1,98 @@
-CREATE TABLE CLUB
+create table club
 (
-    ID         UUID      NOT NULL PRIMARY KEY,
-    NAME       TEXT      NOT NULL,
-    CREATED_AT TIMESTAMP NOT NULL,
-    CREATED_BY UUID      REFERENCES APP_USER ON DELETE SET NULL,
-    UPDATED_AT TIMESTAMP NOT NULL,
-    UPDATED_BY UUID      REFERENCES APP_USER ON DELETE SET NULL
+    id         uuid      not null primary key,
+    name       text      not null,
+    created_at timestamp not null,
+    created_by uuid      references app_user on delete set null,
+    updated_at timestamp not null,
+    updated_by uuid      references app_user on delete set null
 );
 
-CREATE TYPE GENDER AS ENUM ('M', 'F', 'O');
+create type gender as enum ('M', 'F', 'O');
 
-CREATE TABLE PARTICIPANT
+create table participant
 (
-    ID                 UUID                 NOT NULL PRIMARY KEY,
-    CLUB               UUID REFERENCES CLUB NOT NULL,
-    FIRSTNAME          TEXT                 NOT NULL,
-    LASTNAME           TEXT                 NOT NULL,
-    YEAR               INTEGER,
-    GENDER             GENDER               NOT NULL,
-    PHONE              TEXT,
-    EXTERNAL           BOOLEAN              NOT NULL DEFAULT FALSE,
-    EXTERNAL_CLUB_NAME TEXT,
-    CREATED_AT         TIMESTAMP            NOT NULL,
-    CREATED_BY         UUID                 REFERENCES APP_USER ON DELETE SET NULL,
-    UPDATED_AT         TIMESTAMP            NOT NULL,
-    UPDATED_BY         UUID                 REFERENCES APP_USER ON DELETE SET NULL
-        CONSTRAINT CHK_EXTERN_HAS_CLUB_NAME CHECK ((EXTERNAL = TRUE AND EXTERNAL_CLUB_NAME IS NOT NULL) OR
-                                                   (EXTERNAL = FALSE AND EXTERNAL_CLUB_NAME IS NULL))
+    id                 uuid                 not null primary key,
+    club               uuid references club not null,
+    firstname          text                 not null,
+    lastname           text                 not null,
+    year               integer,
+    gender             gender               not null,
+    phone              text,
+    external           boolean              not null default false,
+    external_club_name text,
+    created_at         timestamp            not null,
+    created_by         uuid                 references app_user on delete set null,
+    updated_at         timestamp            not null,
+    updated_by         uuid                 references app_user on delete set null
+        constraint chk_extern_has_club_name check ((external = true and external_club_name is not null) or
+                                                   (external = false and external_club_name is null))
 );
 
-CREATE INDEX ON PARTICIPANT (CLUB);
+create index on participant (club);
 
-CREATE TABLE EVENT_REGISTRATION
+create table event_registration
 (
-    ID                   UUID PRIMARY KEY,
-    EVENT                UUID REFERENCES EVENT NOT NULL,
-    CLUB                 UUID REFERENCES CLUB  NOT NULL,
-    OPTIONAL_FEE_CHECKED BOOLEAN               NOT NULL DEFAULT FALSE,
-    CREATED_AT           TIMESTAMP             NOT NULL,
-    CREATED_BY           UUID                  REFERENCES APP_USER ON DELETE SET NULL,
-    UPDATED_AT           TIMESTAMP             NOT NULL,
-    UPDATED_BY           UUID                  REFERENCES APP_USER ON DELETE SET NULL
+    id                   uuid primary key,
+    event                uuid references event not null,
+    club                 uuid references club  not null,
+    optional_fee_checked boolean               not null default false,
+    created_at           timestamp             not null,
+    created_by           uuid                  references app_user on delete set null,
+    updated_at           timestamp             not null,
+    updated_by           uuid                  references app_user on delete set null
 );
-CREATE UNIQUE INDEX EVENT_REGISTRATION_UNIQUE_FOR_CLUB ON EVENT_REGISTRATION (EVENT, CLUB);
+create unique index event_registration_unique_for_club on event_registration (event, club);
 
-CREATE INDEX ON EVENT_REGISTRATION (CLUB);
-CREATE INDEX ON EVENT_REGISTRATION (EVENT);
+create index on event_registration (club);
+create index on event_registration (event);
 
-CREATE TABLE EVENT_DAY_REGISTRATION
+create table event_day_registration
 (
-    ID                   UUID      NOT NULL PRIMARY KEY,
-    EVENT_DAY            UUID      NOT NULL REFERENCES EVENT_DAY,
-    CLUB                 UUID      NOT NULL REFERENCES CLUB,
-    OPTIONAL_FEE_CHECKED BOOLEAN   NOT NULL DEFAULT FALSE,
-    CREATED_AT           TIMESTAMP NOT NULL,
-    CREATED_BY           UUID      REFERENCES APP_USER ON DELETE SET NULL,
-    UPDATED_AT           TIMESTAMP NOT NULL,
-    UPDATED_BY           UUID      REFERENCES APP_USER ON DELETE SET NULL
-);
-
-CREATE INDEX ON EVENT_DAY_REGISTRATION (EVENT_DAY);
-CREATE INDEX ON EVENT_DAY_REGISTRATION (CLUB);
-
-CREATE TABLE RACE_REGISTRATION
-(
-    ID                   UUID      NOT NULL PRIMARY KEY,
-    RACE                 UUID      NOT NULL REFERENCES RACE,
-    CLUB                 UUID      NOT NULL REFERENCES CLUB,
-    NAME                 TEXT,
-    OPTIONAL_FEE_CHECKED BOOLEAN   NOT NULL DEFAULT FALSE,
-    CREATED_AT           TIMESTAMP NOT NULL,
-    CREATED_BY           UUID      REFERENCES APP_USER ON DELETE SET NULL,
-    UPDATED_AT           TIMESTAMP NOT NULL,
-    UPDATED_BY           UUID      REFERENCES APP_USER ON DELETE SET NULL,
-    UNIQUE (RACE, CLUB, NAME)
+    id                   uuid      not null primary key,
+    event_day            uuid      not null references event_day,
+    club                 uuid      not null references club,
+    optional_fee_checked boolean   not null default false,
+    created_at           timestamp not null,
+    created_by           uuid      references app_user on delete set null,
+    updated_at           timestamp not null,
+    updated_by           uuid      references app_user on delete set null
 );
 
-CREATE INDEX ON RACE_REGISTRATION (RACE);
-CREATE INDEX ON RACE_REGISTRATION (CLUB);
+create index on event_day_registration (event_day);
+create index on event_day_registration (club);
 
-CREATE TABLE RACE_REGISTRATION_PARTICIPANT
+create table competition_registration
 (
-    RACE_REGISTRATION UUID NOT NULL REFERENCES RACE_REGISTRATION ON DELETE CASCADE,
-    PARTICIPANT       UUID NOT NULL REFERENCES PARTICIPANT,
-    PRIMARY KEY (RACE_REGISTRATION, PARTICIPANT)
+    id                   uuid      not null primary key,
+    competition          uuid      not null references competition,
+    club                 uuid      not null references club,
+    name                 text,
+    optional_fee_checked boolean   not null default false,
+    created_at           timestamp not null,
+    created_by           uuid      references app_user on delete set null,
+    updated_at           timestamp not null,
+    updated_by           uuid      references app_user on delete set null,
+    unique (competition, club, name)
 );
 
-CREATE TABLE RACE_REGISTRATION_NAMED_PARTICIPANT
-(
-    RACE_REGISTRATION UUID NOT NULL REFERENCES RACE_REGISTRATION ON DELETE CASCADE,
-    NAMED_PARTICIPANT UUID NOT NULL REFERENCES NAMED_PARTICIPANT,
-    PARTICIPANT       UUID NOT NULL REFERENCES PARTICIPANT,
+create index on competition_registration (competition);
+create index on competition_registration (club);
 
-    PRIMARY KEY (RACE_REGISTRATION, PARTICIPANT)
+create table competition_registration_participant
+(
+    competition_registration uuid not null references competition_registration on delete cascade,
+    participant              uuid not null references participant,
+    primary key (competition_registration, participant)
 );
 
-CREATE INDEX ON RACE_REGISTRATION_NAMED_PARTICIPANT (NAMED_PARTICIPANT);
+create table competition_registration_named_participant
+(
+    competition_registration uuid not null references competition_registration on delete cascade,
+    named_participant        uuid not null references named_participant,
+    participant              uuid not null references participant,
+
+    primary key (competition_registration, participant)
+);
+
+create index on competition_registration_named_participant (named_participant);
