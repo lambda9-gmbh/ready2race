@@ -95,7 +95,7 @@ object CompetitionPropertiesService {
         fees: Collection<CompetitionPropertiesHasFeeRecord>
     ): App<Nothing, Unit> = KIO.comprehension {
 
-        !CompetitionPropertiesHasNamedParticipantRepo.deleteManyByCompetitionProperties(competitionPropertiesId).orDie()
+        !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(competitionPropertiesId).orDie()
         !CompetitionPropertiesHasFeeRepo.deleteManyByCompetitionProperties(competitionPropertiesId).orDie()
 
         !addCompetitionPropertiesReferences(namedParticipants, fees)

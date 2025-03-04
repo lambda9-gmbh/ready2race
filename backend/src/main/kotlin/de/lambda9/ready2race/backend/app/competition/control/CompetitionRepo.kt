@@ -25,6 +25,8 @@ object CompetitionRepo {
 
     fun update(id: UUID, f: CompetitionRecord.() -> Unit) = COMPETITION.update(f) { ID.eq(id) }
 
+    fun delete(id: UUID) = COMPETITION.delete { ID.eq(id) }
+
     fun countWithPropertiesByEvent(
         eventId: UUID,
         search: String?
@@ -95,16 +97,6 @@ object CompetitionRepo {
             selectFrom(this)
                 .where(ID.eq(competitionId))
                 .fetchOne()
-        }
-    }
-
-    fun delete(
-        id: UUID
-    ): JIO<Int> = Jooq.query {
-        with(COMPETITION) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .execute()
         }
     }
 

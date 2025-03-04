@@ -70,7 +70,7 @@ object RoleService {
         val record = !RoleRepo.get(id).orDie()
             .onNullFail { RoleError.NotFound }
             .failIf(condition = { it.static }) { RoleError.Static }
-        record.delete()
+        record.delete() // todo: @style  -> Repo
 
         noData
     }
