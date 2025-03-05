@@ -8,6 +8,7 @@ import {eventIndexRoute} from '@routes'
 import {Download} from '@mui/icons-material'
 import {useRef} from 'react'
 import {Link} from '@mui/material'
+import {useFeedback} from "@utils/hooks.ts";
 import {useTranslation} from "react-i18next";
 
 const initialPagination: GridPaginationModel = {
@@ -18,9 +19,11 @@ const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 
 const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
+    const {t} = useTranslation()
+    const feedback = useFeedback()
+
     const downloadRef = useRef<HTMLAnchorElement>(null)
     const {eventId} = eventIndexRoute.useParams()
-    const {t} = useTranslation()
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) =>
         getDocuments({
@@ -56,18 +59,21 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
     ]
 
     const handleDownloadDocument = async (entity: EventDocumentDto) => {
-        // todo: error handling
-        const {data} = await downloadDocument({
+        const {data, error} = await downloadDocument({
             path: {
                 eventId,
                 eventDocumentId: entity.id,
             },
         })
         const anchor = downloadRef.current
-        if (data != undefined && anchor) {
+
+        if(error){
+            feedback.error(t('event.document.download.error'))
+            console.error(error)
+        } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
             anchor.download = entity.name
-            //anchor.click()
+            //anchor.click() todo: activate this
             anchor.href = ''
             anchor.download = ''
         }

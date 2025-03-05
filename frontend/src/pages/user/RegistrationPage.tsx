@@ -70,9 +70,9 @@ const RegistrationPage = () => {
                     formContext.setError('email', {
                         type: 'validate',
                         message:
-                            t('user.registration.email.inUse.statement') +
+                            t('user.email.inUse.statement') +
                             ' ' +
-                            t('user.registration.email.inUse.callToAction'),
+                            t('user.email.inUse.callToAction.registration'),
                     })
                 } else if (error.errorCode === 'CAPTCHA_WRONG') {
                     feedback.error(t('captcha.error.incorrect'))
@@ -97,20 +97,20 @@ const RegistrationPage = () => {
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            <FormInputEmail name={'email'} label={t('user.email')} required />
+                            <FormInputEmail name={'email'} label={t('user.email.email')} required />
                             <NewPassword formContext={formContext} horizontal />
-                                <FormInputText
-                                    name={'firstname'}
-                                    label={t('user.firstname')}
-                                    required
-                                    sx={{flex: 1}}
-                                />
-                                <FormInputText
-                                    name={'lastname'}
-                                    label={t('user.lastname')}
-                                    required
-                                    sx={{flex: 1}}
-                                />
+                            <FormInputText
+                                name={'firstname'}
+                                label={t('user.firstname')}
+                                required
+                                sx={{flex: 1}}
+                            />
+                            <FormInputText
+                                name={'lastname'}
+                                label={t('user.lastname')}
+                                required
+                                sx={{flex: 1}}
+                            />
                             <FormInputCaptcha captchaProps={captcha} />
                             <SubmitButton
                                 label={t('user.registration.register')}

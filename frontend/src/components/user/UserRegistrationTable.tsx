@@ -37,7 +37,7 @@ const UserRegistrationTable = (props: BaseEntityTableProps<AppUserRegistrationDt
         },
         {
             field: 'email',
-            headerName: t('user.email'),
+            headerName: t('user.email.email'),
             minWidth: 200,
             flex: 1,
         },

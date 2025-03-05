@@ -33,7 +33,6 @@ sealed interface RoleError : ServiceError {
             ApiError(
                 status = HttpStatusCode.Forbidden,
                 message = "Role is static and cannot be changed or assigned",
-                errorCode = ErrorCode.ROLE_IS_STATIC,
             )
     }
 }

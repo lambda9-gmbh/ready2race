@@ -19,7 +19,6 @@ export const FormInputCurrency = (props: FormInputCurrencyProps) => {
                     },
                 }),
             }}
-            // todo: does this work correctly?
             slotProps={{
                 ...props.slotProps,
                 input: props.slotProps?.input

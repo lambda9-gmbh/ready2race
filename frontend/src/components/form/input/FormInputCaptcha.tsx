@@ -1,4 +1,3 @@
-// TODO: selbst hosten und auswählbar
 import {useTranslation} from 'react-i18next'
 import {useMemo, useRef, useState} from 'react'
 import {SliderElement} from 'react-hook-form-mui'
@@ -17,6 +16,7 @@ type CaptchaSizes = {
     logo: number
 }
 
+// TODO: Make this modifiable
 const logoUrl =
     'https://www.coastal-rowing-flensburg.de/wp-content/uploads/2021/09/Coastal_FL_Logo_rgb-e1630489498379.png'
 

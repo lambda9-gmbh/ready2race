@@ -142,12 +142,7 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
-export type ErrorCode =
-    | 'PRIVILEGE_MISSING'
-    | 'ROLE_IS_STATIC'
-    | 'CAPTCHA_WRONG'
-    | 'EMAIL_IN_USE'
-    | 'CANNOT_ASSIGN_ROLES'
+export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE' | 'CANNOT_ASSIGN_ROLES'
 
 export type EventDayDto = {
     id: string

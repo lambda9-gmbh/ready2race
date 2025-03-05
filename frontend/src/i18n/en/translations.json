@@ -39,7 +39,10 @@
     },
     "load": {
       "error": {
-        "multiple": "{{entity}} could not be loaded",
+        "multiple": {
+          "short": "{{entity}} could not be loaded",
+          "detailed": "An error occurred while loading {{entity}}. Please try again later."
+        },
         "single": "{{entity}} could not be loaded"
       }
     },
@@ -56,16 +59,16 @@
     "add": {
       "action": "Add {{entity}}",
       "success": "{{entity}} added",
-      "error": "An error has occurred when adding the {{entity}}"
+      "error": "An error has occurred when adding {{entity}}"
     },
     "delete": {
       "success": "{{entity}} deleted",
-      "error": "An error has occurred when deleting the {{entity}}"
+      "error": "An error has occurred when deleting {{entity}}"
     },
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
-      "error": "An error has occurred when updating the {{entity}}"
+      "error": "An error has occurred when updating {{entity}}"
     }
   },
   "navigation": {
@@ -144,8 +147,8 @@
         "add": "Add Fee",
         "type": "Fee type",
         "required": {
-          "notRequired": "Not required",
-          "required": "Required"
+          "notRequired": "Fee is optional",
+          "required": "Fee is mandatory"
         }
       },
       "template": {
@@ -180,7 +183,8 @@
         "add": "Dokument hinzufügen"
       },
       "download": {
-        "download": "Download"
+        "download": "Download",
+        "error": "An error occurred when downloading the document"
       },
       "error": {
         "emptyList": "Please add one or more documents"
@@ -190,7 +194,16 @@
   "user": {
     "user": "User",
     "users": "Users",
-    "email": "Email",
+    "email": {
+      "email": "Email",
+      "inUse": {
+        "statement": "The email address you entered is already in use.",
+        "callToAction": {
+          "invitation": "Please verify the current use of the email address or select a different one.",
+          "registration": "Please use a different email address or log in with the existing one."
+        }
+      }
+    },
     "firstname": "Firstname",
     "lastname": "Lastname",
     "password": "Password",
@@ -232,10 +245,6 @@
             "part1": "We've sent you an email to verify your email adress and activate your account.",
             "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
           }
-        },
-        "inUse": {
-          "statement": "The email address you entered is already in use.",
-          "callToAction": "Please use a different email address or log in with the existing one."
         },
         "verified": {
           "header": "Email verified",
@@ -287,7 +296,10 @@
     "role": "Role",
     "userRoles": "User Roles",
     "name": "Name",
-    "description": "Description"
+    "description": "Description",
+    "error": {
+      "cannotAssign": "Role(s) could not be assigned to the user"
+    }
   },
   "captcha": {
     "instruction": {

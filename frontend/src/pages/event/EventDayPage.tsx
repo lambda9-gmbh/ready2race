@@ -39,7 +39,7 @@ const EventDayPage = () => {
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.multiple', {entity: t('event.competition.competitions')}))
+                    feedback.error(t('common.load.error.multiple.short', {entity: t('event.competition.competitions')}))
                     console.error(error)
                 }
             },
@@ -57,7 +57,7 @@ const EventDayPage = () => {
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.multiple', {entity: t('event.competition.competitions')}))
+                    feedback.error(t('common.load.error.multiple.short', {entity: t('event.competition.competitions')}))
                     console.error(error)
                 }
             },

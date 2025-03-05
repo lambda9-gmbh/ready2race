@@ -17,7 +17,6 @@ enum class AuthError : ServiceError {
         PrivilegeMissing -> ApiError(
             status = HttpStatusCode.Forbidden,
             message = "Missing privilege",
-            errorCode = ErrorCode.PRIVILEGE_MISSING
         )
     }
 }

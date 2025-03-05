@@ -4,11 +4,12 @@ import {useCallback} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import {AppUserInvitationDto, InviteRequest} from '@api/types.gen.ts'
+import {AppUserInvitationDto, InviteRequest, InviteUserError} from '@api/types.gen.ts'
 import {inviteUser} from '@api/sdk.gen.ts'
 import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
-import {useTranslation} from "react-i18next";
+import {useTranslation} from 'react-i18next'
+import {useFeedback} from '@utils/hooks.ts'
 
 type InvitationForm = {
     email: string
@@ -34,24 +35,49 @@ const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
 })
 
 const addAction = (formData: InvitationForm) =>
-    inviteUser({ // todo: This can result in Error 409: "Email in use" or 409: "Cannot assign roles". That should be displayed
+    inviteUser({
         body: mapFormToRequest(formData),
     })
 
 const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
     const formContext = useForm<InvitationForm>()
 
     const onOpen = useCallback(() => {
         formContext.reset(defaultValues)
     }, [props.entity])
 
+    const onAddError = (error: InviteUserError) => {
+        if (error.status.value === 409) {
+            if (error.errorCode === 'EMAIL_IN_USE') {
+                formContext.setError('email', {
+                    type: 'validate',
+                    message:
+                        t('user.email.inUse.statement') +
+                        ' ' +
+                        t('user.email.inUse.callToAction.invitation'),
+                })
+            } else if (error.errorCode === 'CANNOT_ASSIGN_ROLES') {
+                feedback.error(t('role.error.cannotAssign'))
+            }
+        } else {
+            feedback.error(t('entity.add.error', {entity: props.entityName}))
+        }
+        console.error(error)
+    }
+
     return (
-        <EntityDialog {...props} formContext={formContext} onOpen={onOpen} addAction={addAction}>
+        <EntityDialog
+            {...props}
+            formContext={formContext}
+            onOpen={onOpen}
+            addAction={addAction}
+            onAddError={onAddError}>
             <Stack spacing={4}>
                 <FormInputText name={'firstname'} label={t('user.firstname')} required />
                 <FormInputText name={'lastname'} label={t('user.lastname')} required />
-                <FormInputEmail name={'email'} label={t('user.email')} required />
+                <FormInputEmail name={'email'} label={t('user.email.email')} required />
             </Stack>
         </EntityDialog>
     )
