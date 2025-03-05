@@ -38,7 +38,7 @@
         <kotlinx.coroutines.debug>1.8.0</kotlinx.coroutines.debug>
         <kotlin.dotenv.version>6.5.0</kotlin.dotenv.version>
         <kotlin.logging.version>6.0.9</kotlin.logging.version>
-        <tailwind.version>1.0.2-SNAPSHOT</tailwind.version>
+        <tailwind.version>0.1.0</tailwind.version>
         <testcontainers.version>1.20.4</testcontainers.version>
         <simple.mail.version>8.8.1</simple.mail.version>
         <password4j.version>1.8.2</password4j.version>
@@ -60,13 +60,13 @@
             <version>${ktor.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.lambda9</groupId>
-            <artifactId>tailwind-core</artifactId>
+            <groupId>de.lambda9.tailwind</groupId>
+            <artifactId>tailwind-kio</artifactId>
             <version>${tailwind.version}</version>
         </dependency>
         <dependency>
-            <groupId>de.lambda9</groupId>
-            <artifactId>tailwind-jooq</artifactId>
+            <groupId>de.lambda9.tailwind</groupId>
+            <artifactId>tailwind-kio-jooq</artifactId>
             <version>${tailwind.version}</version>
         </dependency>
         <dependency>
