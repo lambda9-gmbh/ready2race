@@ -1,10 +1,11 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
-import {PaginationParameters} from "@utils/ApiUtils.ts";
-import {deleteFee, getFees} from "@api/sdk.gen.ts";
-import {FeeDto} from "@api/types.gen.ts";
-import {BaseEntityTableProps} from "@utils/types.ts";
-import {useTranslation} from "react-i18next";
-import EntityTable from "@components/EntityTable.tsx";
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {deleteFee, getFees} from '@api/sdk.gen.ts'
+import {DeleteNamedParticipantError, FeeDto} from '@api/types.gen.ts'
+import {BaseEntityTableProps} from '@utils/types.ts'
+import {useTranslation} from 'react-i18next'
+import EntityTable from '@components/EntityTable.tsx'
+import {useFeedback} from '@utils/hooks.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -12,7 +13,6 @@ const initialPagination: GridPaginationModel = {
 }
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
-
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
     return getFees({
@@ -25,9 +25,9 @@ const deleteRequest = (dto: FeeDto) => {
     return deleteFee({path: {feeId: dto.id}})
 }
 
-
 const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const columns: GridColDef<FeeDto>[] = [
         {
@@ -44,6 +44,14 @@ const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
         },
     ]
 
+    const onDeleteError = (error: DeleteNamedParticipantError) => {
+        if (error.status.value === 409) {
+            feedback.error(t('event.competition.error.referenced', {entity: props.entityName}))
+        } else {
+            feedback.error(t('entity.delete.error', {entity: props.entityName}))
+        }
+        console.error(error)
+    }
 
     return (
         <EntityTable
@@ -56,6 +64,7 @@ const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
             dataRequest={dataRequest}
             entityName={t('event.competition.fee.fee')}
             deleteRequest={deleteRequest}
+            onDeleteError={onDeleteError}
         />
     )
 }

@@ -49,11 +49,13 @@ type ExtendedEntityTableProps<
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false>
           onDelete?: () => void
+          onDeleteError?: (error: DeleteError) => void
           deletableIf?: (entity: Entity) => boolean
       }
     | {
           deleteRequest?: never
           onDelete?: never
+          onDeleteError?: never
           deletableIf?: never
       }
 ) &
@@ -154,6 +156,7 @@ const EntityTableInternal = <
     crud,
     deleteRequest,
     onDelete,
+    onDeleteError,
     deletableIf,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
@@ -162,6 +165,11 @@ const EntityTableInternal = <
     const {confirmAction} = useConfirmation()
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
+
+    const handleDeleteErrorGeneric = (error: DeleteError) => {
+        feedback.error(t('entity.delete.error', {entity: entityName}))
+        console.error(error)
+    }
 
     const cols: GridColDef<Entity>[] = [
         ...(linkColumn
@@ -218,10 +226,9 @@ const EntityTableInternal = <
                                       const {error} = await deleteRequest(params.row)
                                       setIsDeletingRow(false)
                                       if (error) {
-                                          console.error(error)
-                                          feedback.error(
-                                              t('entity.delete.error', {entity: entityName}),
-                                          )
+                                          onDeleteError
+                                              ? onDeleteError(error)
+                                              : handleDeleteErrorGeneric(error)
                                       } else {
                                           onDelete?.()
                                           feedback.success(

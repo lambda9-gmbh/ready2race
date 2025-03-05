@@ -157,7 +157,10 @@
         "name": "Name",
         "description": "Beschreibung"
       },
-      "assignedDays": "Tage des Wettkampfs"
+      "assignedDays": "Tage des Wettkampfs",
+      "error": {
+        "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+      }
     },
     "assign": {
       "save": {

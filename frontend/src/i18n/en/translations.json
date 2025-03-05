@@ -157,7 +157,10 @@
         "name": "Name",
         "description": "Description"
       },
-      "assignedDays": "Days of the competition"
+      "assignedDays": "Days of the competition",
+      "error": {
+        "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      }
     },
     "assign": {
       "save": {

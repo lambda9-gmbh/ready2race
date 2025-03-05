@@ -1,10 +1,11 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
-import {PaginationParameters} from "@utils/ApiUtils.ts";
-import {BaseEntityTableProps} from "@utils/types.ts";
-import {useTranslation} from "react-i18next";
-import EntityTable from "@components/EntityTable.tsx";
-import {deleteNamedParticipant, getNamedParticipants} from "@api/sdk.gen.ts";
-import {NamedParticipantDto} from "@api/types.gen.ts";
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {BaseEntityTableProps} from '@utils/types.ts'
+import {useTranslation} from 'react-i18next'
+import EntityTable from '@components/EntityTable.tsx'
+import {deleteNamedParticipant, getNamedParticipants} from '@api/sdk.gen.ts'
+import {DeleteNamedParticipantError, NamedParticipantDto} from '@api/types.gen.ts'
+import {useFeedback} from '@utils/hooks.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -12,7 +13,6 @@ const initialPagination: GridPaginationModel = {
 }
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
-
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
     return getNamedParticipants({
@@ -25,9 +25,9 @@ const deleteRequest = (dto: NamedParticipantDto) => {
     return deleteNamedParticipant({path: {namedParticipantId: dto.id}})
 }
 
-
 const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const columns: GridColDef<NamedParticipantDto>[] = [
         {
@@ -44,6 +44,14 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
         },
     ]
 
+    const onDeleteError = (error: DeleteNamedParticipantError) => {
+        if (error.status.value === 409) {
+            feedback.error(t('event.competition.error.referenced', {entity: props.entityName}))
+        } else {
+            feedback.error(t('entity.delete.error', {entity: props.entityName}))
+        }
+        console.error(error)
+    }
 
     return (
         <EntityTable
@@ -56,6 +64,7 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
             dataRequest={dataRequest}
             entityName={t('event.competition.namedParticipant.namedParticipant')}
             deleteRequest={deleteRequest}
+            onDeleteError={onDeleteError}
         />
     )
 }
