@@ -104,7 +104,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         keyName: 'fieldId',
         rules: {
             validate: values => {
-
                 if (values.length < 1) {
                     setNamedParticipantsError(
                         t('event.competition.namedParticipant.error.emptyList'),
@@ -121,8 +120,8 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     return acc
                 }, new Map())
                 const duplicates = Array.from(countedMap.entries())
-                    .filter(([,count]) => count > 1)
-                    .map(([id,]) => namedParticipants.find(x => x?.id === id)?.label)
+                    .filter(([, count]) => count > 1)
+                    .map(([id]) => namedParticipants.find(x => x?.id === id)?.label)
                     .filter(label => label !== undefined)
 
                 if (duplicates.length > 0) {
@@ -221,95 +220,101 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             />
             <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
-                {namedParticipantFields.map((field, index) => (
-                    <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
-                        <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
-                            <Stack spacing={4}>
-                                <FormInputAutocomplete
-                                    name={'namedParticipants[' + index + '].namedParticipant'}
-                                    options={namedParticipants}
-                                    label={t('event.competition.namedParticipant.role')}
-                                    loading={namedParticipantsPending}
-                                    required
-                                    rules={{
-                                        validate: val => {
-                                            // Extra Required Check (the normal rule wasn't consistent when a new entry was created)
-                                            if (val.id === '') {
-                                                return t('common.form.required')
-                                            }
-                                        },
-                                    }}
-                                />
-                                <Stack direction="row" spacing={2}>
-                                    <FormInputNumber
-                                        name={'namedParticipants[' + index + '].countMales'}
-                                        label={t('event.competition.count.males')}
-                                        min={0}
-                                        integer={true}
+                <Stack spacing={2}>
+                    {namedParticipantFields.map((field, index) => (
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems={'center'}
+                            key={field.fieldId}>
+                            <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box', flex: 1}}>
+                                <Stack spacing={4}>
+                                    <FormInputAutocomplete
+                                        name={'namedParticipants[' + index + '].namedParticipant'}
+                                        options={namedParticipants}
+                                        label={t('event.competition.namedParticipant.role')}
+                                        loading={namedParticipantsPending}
                                         required
-                                        sx={{flex: 1}}
                                         rules={{
-                                            validate: (_, vals) => validateCounts(vals, index),
+                                            validate: val => {
+                                                // Extra Required Check (the normal rule wasn't consistent when a new entry was created)
+                                                if (val.id === '') {
+                                                    return t('common.form.required')
+                                                }
+                                            },
                                         }}
                                     />
-                                    <FormInputNumber
-                                        name={'namedParticipants[' + index + '].countFemales'}
-                                        label={t('event.competition.count.females')}
-                                        min={0}
-                                        integer={true}
-                                        required
-                                        sx={{flex: 1}}
-                                        rules={{
-                                            validate: (_, vals) => validateCounts(vals, index),
-                                        }}
-                                    />
+                                    <Stack direction="row" spacing={2}>
+                                        <FormInputNumber
+                                            name={'namedParticipants[' + index + '].countMales'}
+                                            label={t('event.competition.count.males')}
+                                            min={0}
+                                            integer={true}
+                                            required
+                                            sx={{flex: 1}}
+                                            rules={{
+                                                validate: (_, vals) => validateCounts(vals, index),
+                                            }}
+                                        />
+                                        <FormInputNumber
+                                            name={'namedParticipants[' + index + '].countFemales'}
+                                            label={t('event.competition.count.females')}
+                                            min={0}
+                                            integer={true}
+                                            required
+                                            sx={{flex: 1}}
+                                            rules={{
+                                                validate: (_, vals) => validateCounts(vals, index),
+                                            }}
+                                        />
+                                    </Stack>
+                                    <Stack direction="row" spacing={2}>
+                                        <FormInputNumber
+                                            name={'namedParticipants[' + index + '].countNonBinary'}
+                                            label={t('event.competition.count.nonBinary')}
+                                            min={0}
+                                            integer={true}
+                                            required
+                                            sx={{flex: 1}}
+                                            rules={{
+                                                validate: (_, vals) => validateCounts(vals, index),
+                                            }}
+                                        />
+                                        <FormInputNumber
+                                            name={'namedParticipants[' + index + '].countMixed'}
+                                            label={t('event.competition.count.mixed')}
+                                            min={0}
+                                            integer={true}
+                                            required
+                                            sx={{flex: 1}}
+                                            rules={{
+                                                validate: (_, vals) => validateCounts(vals, index),
+                                            }}
+                                        />
+                                    </Stack>
                                 </Stack>
-                                <Stack direction="row" spacing={2}>
-                                    <FormInputNumber
-                                        name={'namedParticipants[' + index + '].countNonBinary'}
-                                        label={t('event.competition.count.nonBinary')}
-                                        min={0}
-                                        integer={true}
-                                        required
-                                        sx={{flex: 1}}
-                                        rules={{
-                                            validate: (_, vals) => validateCounts(vals, index),
-                                        }}
-                                    />
-                                    <FormInputNumber
-                                        name={'namedParticipants[' + index + '].countMixed'}
-                                        label={t('event.competition.count.mixed')}
-                                        min={0}
-                                        integer={true}
-                                        required
-                                        sx={{flex: 1}}
-                                        rules={{
-                                            validate: (_, vals) => validateCounts(vals, index),
-                                        }}
-                                    />
-                                </Stack>
-                            </Stack>
-                        </Box>
-                        <Tooltip
-                            title={t('common.delete')}
-                            disableInteractive
-                            slots={{
-                                transition: Zoom,
-                            }}>
-                            <IconButton
-                                onClick={() => {
-                                    removeNamedParticipant(index)
-                                    props.fieldArrayModified?.()
+                            </Box>
+                            <Tooltip
+                                title={t('common.delete')}
+                                disableInteractive
+                                slots={{
+                                    transition: Zoom,
                                 }}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
-                ))}
-                {/* todo: @incomplete: improve visualization in case of error */}
-                {namedParticipantsError && (
-                    <Typography color={'error'}>{namedParticipantsError}</Typography>
-                )}
+                                <IconButton
+                                    onClick={() => {
+                                        removeNamedParticipant(index)
+                                        props.fieldArrayModified?.()
+                                    }}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </Stack>
+                    ))}
+                    {/* todo: @incomplete: improve visualization in case of error */}
+                    {namedParticipantsError && (
+                        <Typography color={'error'}>{namedParticipantsError}</Typography>
+                    )}
+                </Stack>
             </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>
                 <Button
@@ -329,11 +334,15 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             </Box>
             <Divider />
             <FormInputLabel label={t('event.competition.fee.fees')}>
-                {feeFields.map((field, index) => (
-                    <Stack direction="row" spacing={2} alignItems={'center'} key={field.fieldId}>
-                        <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box'}}>
-                            <Grid2 container flexDirection="row" spacing={2} sx={{mb: 4}}>
-                                <Grid2 size="grow" sx={{minWidth: 250}}>
+                <Stack spacing={2}>
+                    {feeFields.map((field, index) => (
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems={'center'}
+                            key={field.fieldId}>
+                            <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box', flex: 1}}>
+                                <Stack spacing={4}>
                                     <FormInputAutocomplete
                                         name={'fees[' + index + '].fee'}
                                         options={fees}
@@ -341,43 +350,42 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         loading={feesPending}
                                         required
                                     />
-                                </Grid2>
-                                <Box sx={{my: 'auto'}}>
                                     <SwitchElement
                                         name={'fees[' + index + '].required'}
+                                        labelPlacement='start'
+                                        sx={{alignSelf: 'start'}}
                                         label={
                                             <FormInputLabel
                                                 label={t('event.competition.fee.required.required')}
                                                 required={true}
+                                                horizontal
                                             />
                                         }
                                     />
-                                </Box>
-                            </Grid2>
-                            <Stack spacing={4}>
-                                <FormInputCurrency
-                                    name={'fees[' + index + '].amount'}
-                                    label={t('event.competition.fee.amount')}
-                                    required
-                                />
-                            </Stack>
-                        </Box>
-                        <Tooltip
-                            title={t('common.delete')}
-                            disableInteractive
-                            slots={{
-                                transition: Zoom,
-                            }}>
-                            <IconButton
-                                onClick={() => {
-                                    removeFee(index)
-                                    props.fieldArrayModified?.()
+                                    <FormInputCurrency
+                                        name={'fees[' + index + '].amount'}
+                                        label={t('event.competition.fee.amount')}
+                                        required
+                                    />
+                                </Stack>
+                            </Box>
+                            <Tooltip
+                                title={t('common.delete')}
+                                disableInteractive
+                                slots={{
+                                    transition: Zoom,
                                 }}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </Stack>
-                ))}
+                                <IconButton
+                                    onClick={() => {
+                                        removeFee(index)
+                                        props.fieldArrayModified?.()
+                                    }}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </Stack>
+                    ))}
+                </Stack>
             </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>
                 <Button
