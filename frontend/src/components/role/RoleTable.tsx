@@ -27,13 +27,13 @@ const RoleTable = (props: BaseEntityTableProps<RoleDto>) => {
     const columns: GridColDef<RoleDto>[] = [
         {
             field: 'name',
-            headerName: t('entity.name'),
+            headerName: t('role.name'),
             minWidth: 200,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('entity.description'),
+            headerName: t('role.description'),
             minWidth: 200,
             flex: 1,
             sortable: false,

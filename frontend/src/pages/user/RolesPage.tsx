@@ -11,7 +11,7 @@ const RolesPage = () => {
 
     return (
         <Box>
-            <RoleTable {...administrationProps.table} />
+            <RoleTable {...administrationProps.table} title={t('role.userRoles')} />
             <RoleDialog {...administrationProps.dialog} />
         </Box>
     )

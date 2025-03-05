@@ -48,7 +48,7 @@ const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
         },
         {
             field: 'name',
-            headerName: t('entity.name'),
+            headerName: t('event.competition.name'),
             minWidth: 150,
             flex: 1,
             valueGetter: (_, e) => e.properties.name,
