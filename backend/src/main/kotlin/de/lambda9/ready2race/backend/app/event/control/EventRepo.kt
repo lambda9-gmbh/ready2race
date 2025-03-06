@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.event.control
 
-import de.lambda9.ready2race.backend.app.event.control.EventRepo.update
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Event
@@ -9,7 +8,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
-import java.util.UUID
+import java.util.*
 
 object EventRepo {
 

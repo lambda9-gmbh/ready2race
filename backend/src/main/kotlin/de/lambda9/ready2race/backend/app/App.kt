@@ -3,10 +3,6 @@ package de.lambda9.ready2race.backend.app
 import de.lambda9.ready2race.backend.Config
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
-import org.jooq.impl.DSL
-import org.jooq.impl.DefaultConfiguration
-import java.io.PrintWriter
-import java.util.*
 import javax.sql.DataSource
 
 data class Env(

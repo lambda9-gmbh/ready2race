@@ -20,6 +20,7 @@ import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.kio.recoverDefault
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.JobQueueState
 import de.lambda9.ready2race.backend.schedule.Scheduler
@@ -28,6 +29,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.catchError
+import de.lambda9.tailwind.core.extensions.kio.recover
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -229,16 +231,14 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             scheduleDynamic(10.seconds) {
                 EmailService.sendNext()
                     .map { JobQueueState.PROCESSED }
-                    .catchError { error ->
-                        KIO.ok(
-                            when (error) {
-                                EmailError.NoEmailsToSend -> JobQueueState.EMPTY
-                                is EmailError.SendingFailed -> {
-                                    logger.warn(error.cause) { "Error sending email ${error.emailId}" }
-                                    JobQueueState.PROCESSED
-                                }
+                    .recoverDefault { error ->
+                        when (error) {
+                            EmailError.NoEmailsToSend -> JobQueueState.EMPTY
+                            is EmailError.SendingFailed -> {
+                                logger.warn(error.cause) { "Error sending email ${error.emailId}" }
+                                JobQueueState.PROCESSED
                             }
-                        )
+                        }
                     }
             }
 

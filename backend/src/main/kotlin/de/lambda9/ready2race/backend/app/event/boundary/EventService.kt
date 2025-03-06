@@ -8,7 +8,7 @@ import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
-import de.lambda9.ready2race.backend.kio.failIf
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
@@ -86,7 +86,5 @@ object EventService {
         eventId: UUID,
     ): App<EventError, Unit> = EventRepo.exists(eventId)
         .orDie()
-        .failIf(condition = { !it }) {
-            EventError.NotFound
-        }.map {}
+        .onFalseFail { EventError.NotFound }
 }

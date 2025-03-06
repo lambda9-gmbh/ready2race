@@ -9,7 +9,6 @@ import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionC
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryRequest
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategorySort
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
-import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionsOrTemplatesContainingReference
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.splitTemplatesAndCompetitions
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
@@ -19,7 +18,7 @@ import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 object CompetitionCategoryService {
 

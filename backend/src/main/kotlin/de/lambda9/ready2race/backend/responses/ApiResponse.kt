@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.pagination.Pagination
 import de.lambda9.ready2race.backend.pagination.ResponsePage
 import de.lambda9.ready2race.backend.pagination.Sortable
-import io.ktor.http.*
 import java.util.*
 
 sealed interface ApiResponse {
