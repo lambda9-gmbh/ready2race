@@ -18,14 +18,6 @@ fun accessConfig(): KIO<JEnv, Nothing, Config> = KIO.access { it.env.config }
 fun <R, E, A> KIO<R, E, A>.recoverDefault(default: (E) -> A) =
     recover { KIO.ok(default(it)) }
 
-/*fun <R, E : E1, E1, A> KIO<R, E, A>.failIf(condition: (A) -> Boolean, then: (A) -> E1): KIO<R, E1, A> =
-    andThen {
-        if (condition(it))
-            KIO.fail(then(it))
-        else
-            KIO.ok(it)
-    }*/
-
 fun <R, E : E1, E1> KIO<R, E, Boolean>.onTrueFail(error: () -> E1): KIO<R, E1, Unit> =
     failIf(
         condition = { it },
