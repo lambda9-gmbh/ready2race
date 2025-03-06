@@ -26,21 +26,22 @@
         <maven.compiler.source>17</maven.compiler.source>
 
         <!-- DEPENDENCY VERSIONS -->
-        <ktor.version>3.0.3</ktor.version>
+        <ktor.version>3.1.1</ktor.version>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.version>2.0.21</kotlin.version>
-        <slf4j.version>2.0.12</slf4j.version>
-        <log4j2.version>2.23.1</log4j2.version>
-        <postgres.version>42.7.3</postgres.version>
-        <flyway.version>11.2.0</flyway.version>
-        <jooq.version>3.19.7</jooq.version>
-        <jackson.version>2.17.0</jackson.version>
-        <kotlinx.coroutines.debug>1.8.0</kotlinx.coroutines.debug>
-        <kotlin.dotenv.version>6.5.0</kotlin.dotenv.version>
-        <kotlin.logging.version>6.0.9</kotlin.logging.version>
+        <kotlin.version>2.1.10</kotlin.version>
+        <kotlin.api.version>2.1</kotlin.api.version>
+        <slf4j.version>2.0.17</slf4j.version>
+        <log4j2.version>2.24.3</log4j2.version>
+        <postgres.version>42.7.5</postgres.version>
+        <flyway.version>11.3.4</flyway.version>
+        <jooq.version>3.20.1</jooq.version>
+        <jackson.version>2.18.3</jackson.version>
+        <kotlinx.coroutines.debug>1.10.1</kotlinx.coroutines.debug>
+        <kotlin.dotenv.version>6.5.1</kotlin.dotenv.version>
+        <kotlin.logging.version>7.0.4</kotlin.logging.version>
         <tailwind.version>0.1.0</tailwind.version>
-        <testcontainers.version>1.20.4</testcontainers.version>
-        <simple.mail.version>8.8.1</simple.mail.version>
+        <testcontainers.version>1.20.6</testcontainers.version>
+        <simple.mail.version>8.12.4</simple.mail.version>
         <password4j.version>1.8.2</password4j.version>
     </properties>
     <dependencies>
@@ -204,13 +205,24 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit5</artifactId> <version>${kotlin.version}</version>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-debug</artifactId>
-            <version>1.8.0</version>
+            <version>${kotlinx.coroutines.debug}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -239,6 +251,7 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <version>${kotlin.version}</version>
                 <configuration>
+                    <apiVersion>${kotlin.api.version}</apiVersion>
                     <jvmTarget>${maven.compiler.target}</jvmTarget>
                     <compilerPlugins>
                         <plugin>kotlinx-serialization</plugin>
