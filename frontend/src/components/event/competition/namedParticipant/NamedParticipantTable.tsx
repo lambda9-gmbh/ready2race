@@ -32,13 +32,13 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
     const columns: GridColDef<NamedParticipantDto>[] = [
         {
             field: 'name',
-            headerName: t('entity.name'),
+            headerName: t('event.competition.namedParticipant.name'),
             minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('entity.description'),
+            headerName: t('event.competition.namedParticipant.description'),
             flex: 2,
             sortable: false,
         },

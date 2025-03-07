@@ -29,15 +29,15 @@ const UsersPage = () => {
 
     return (
         <Stack spacing={2}>
-            <UserTable {...userAdministrationProps.table} title={'[todo] Benutzer'} />
+            <UserTable {...userAdministrationProps.table} title={t('user.users')} />
             <UserInvitationTable
                 {...invitationAdministrationProps.table}
-                title={'[todo] Ausstehende Einladungen'}
+                title={t('user.invitation.pendingInvitations')}
             />
             <UserInvitationDialog {...invitationAdministrationProps.dialog} />
             <UserRegistrationTable
                 {...registrationAdministrationProps.table}
-                title={'[todo] Offene Registrierungen'}
+                title={t('user.registration.pendingRegistrations')}
             />
         </Stack>
     )

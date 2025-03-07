@@ -77,7 +77,7 @@ const RootLayout = () => {
                                 to={'/competitionConfig'}
                             />
                             <SidebarItem
-                                text={'[todo] config'}
+                                text={t('navigation.titles.config')}
                                 icon={<Settings />}
                                 authenticatedOnly
                                 privilege={updateEventGlobal}

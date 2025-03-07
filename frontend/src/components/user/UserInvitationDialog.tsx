@@ -8,6 +8,7 @@ import {AppUserInvitationDto, InviteRequest} from '@api/types.gen.ts'
 import {inviteUser} from '@api/sdk.gen.ts'
 import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
+import {useTranslation} from "react-i18next";
 
 type InvitationForm = {
     email: string
@@ -38,6 +39,7 @@ const addAction = (formData: InvitationForm) =>
     })
 
 const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>) => {
+    const {t} = useTranslation()
     const formContext = useForm<InvitationForm>()
 
     const onOpen = useCallback(() => {
@@ -47,9 +49,9 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
     return (
         <EntityDialog {...props} formContext={formContext} onOpen={onOpen} addAction={addAction}>
             <Stack spacing={4}>
-                <FormInputText name={'firstname'} label={'[todo] Vorname'} required />
-                <FormInputText name={'lastname'} label={'[todo] Nachname'} required />
-                <FormInputEmail name={'email'} label={'[todo] E-Mail'} required />
+                <FormInputText name={'firstname'} label={t('user.firstname')} required />
+                <FormInputText name={'lastname'} label={t('user.lastname')} required />
+                <FormInputEmail name={'email'} label={t('user.email')} required />
             </Stack>
         </EntityDialog>
     )

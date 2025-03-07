@@ -2,14 +2,17 @@ import DocumentTypeTable from '@components/event/document/type/DocumentTypeTable
 import DocumentTypeDialog from '@components/event/document/type/DocumentTypeDialog.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {EventDocumentTypeDto} from '@api/types.gen.ts'
+import {useTranslation} from 'react-i18next'
 
 const ConfigurationPage = () => {
-    const documentTypeAdministrationProps =
-        useEntityAdministration<EventDocumentTypeDto>('[todo] document type')
+    const {t} = useTranslation()
+    const documentTypeAdministrationProps = useEntityAdministration<EventDocumentTypeDto>(
+        t('event.document.type.documentType'),
+    )
 
     return (
         <>
-            <DocumentTypeTable {...documentTypeAdministrationProps.table} />
+            <DocumentTypeTable {...documentTypeAdministrationProps.table} title={t('event.document.type.documentTypes')} />
             <DocumentTypeDialog {...documentTypeAdministrationProps.dialog} />
         </>
     )

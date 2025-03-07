@@ -59,8 +59,8 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={t('entity.name')} required />
-                <FormInputText name={'description'} label={t('entity.description')} />
+                <FormInputText name={'name'} label={t('event.name')} required />
+                <FormInputText name={'description'} label={t('event.description')} />
                 <FormInputText name={'location'} label={t('event.location')} />
                 <FormInputDateTime
                     name={'registrationAvailableFrom'}

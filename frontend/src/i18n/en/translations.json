@@ -52,6 +52,7 @@
     "point": "."
   },
   "entity": {
+    "entity": "Object",
     "add": {
       "action": "Add {{entity}}",
       "success": "{{entity}} added",
@@ -61,14 +62,11 @@
       "success": "{{entity}} deleted",
       "error": "An error has occurred when deleting the {{entity}}"
     },
-    "description": "Description",
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
       "error": "An error has occurred when updating the {{entity}}"
-    },
-    "entity": "Object",
-    "name": "Name"
+    }
   },
   "navigation": {
     "titles": {
@@ -76,32 +74,43 @@
       "events": "Events",
       "competitionConfig": "Competition Settings",
       "roles": "Roles",
-      "users": "Users"
+      "users": "Users",
+      "config": "Configurations"
     }
   },
   "event": {
-    "assign": {
-      "save": {
-        "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
-        "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
-      }
-    },
     "event": "Event",
-    "eventDay": {
-      "assignedCompetitions": "Competitions for the day",
-      "date": "Date",
-      "eventDay": "Day",
-      "eventDays": "Days"
-    },
+    "events": "Events",
+    "name": "Name",
+    "description": "Description",
     "invoice": {
       "prefix": "Invoice prefix"
     },
     "location": "Location",
+    "registrationAvailable": {
+      "from": "Registration period start",
+      "to": "Registration period end"
+    },
+    "eventDay": {
+      "eventDay": "Day",
+      "eventDays": "Days",
+      "date": "Date",
+      "name": "Name",
+      "description": "Description",
+      "assignedCompetitions": "Competitions for the day"
+    },
     "competition": {
-      "assignedDays": "Days of the competition",
+      "competition": "Competition",
+      "competitions": "Competitions",
+      "identifier": "Identifier",
+      "name": "Name",
+      "description": "Description",
+      "shortName": "Short name",
       "category": {
         "category": "Category",
-        "categories": "Categories"
+        "categories": "Categories",
+        "name": "Name",
+        "description": "Description"
       },
       "count": {
         "males": "Number of men",
@@ -109,12 +118,13 @@
         "nonBinary": "Number of non-binary",
         "mixed": "Number of any"
       },
-      "identifier": "Identifier",
       "namedParticipant": {
-        "add": "Add Named Participant",
         "namedParticipant": "Named Participant",
         "namedParticipants": "Named Participants",
+        "name": "Name",
+        "description": "Description",
         "role": "Role",
+        "add": "Add Named Participant",
         "error": {
           "emptyList": "Please add one or more named participants",
           "noCount": "Please enter at least one participant of any kind for this role",
@@ -128,34 +138,60 @@
       "fee": {
         "fee": "Fee",
         "fees": "Fees",
+        "name": "Name",
+        "description": "Description",
+        "amount": "Amount",
         "add": "Add Fee",
         "type": "Fee type",
         "required": {
           "notRequired": "Not required",
           "required": "Required"
-        },
-        "amount": "Amount"
+        }
       },
-      "competition": "Competition",
-      "competitions": "Competitions",
-      "shortName": "Short name",
       "template": {
         "template": "Template",
-        "templates": "Templates"
+        "templates": "Templates",
+        "name": "Name",
+        "description": "Description"
+      },
+      "assignedDays": "Days of the competition"
+    },
+    "assign": {
+      "save": {
+        "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
+        "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
       }
     },
-    "registrationAvailable": {
-      "from": "Registration period start",
-      "to": "Registration period end"
+    "document": {
+      "document": "Document",
+      "documents": "Documents",
+      "name": "Name",
+      "type": {
+        "type": "Type",
+        "documentType": "Document Type",
+        "documentTypes": "Document Types",
+        "name": "Name",
+        "required": {
+          "forEvent": "Erforderlich für Event",
+          "confirmation": "Confirmation required"
+        }
+      },
+      "add": {
+        "add": "Dokument hinzufügen"
+      },
+      "download": {
+        "download": "Download"
+      },
+      "error": {
+        "emptyList": "Please add one or more documents"
+      }
     }
   },
   "user": {
     "user": "User",
+    "users": "Users",
     "email": "Email",
     "firstname": "Firstname",
-    "invitation": {
-      "invitation": "Invitation"
-    },
     "lastname": "Lastname",
     "password": "Password",
     "login": {
@@ -163,8 +199,8 @@
       "password": "Password",
       "forgotPassword": "Forgot password?",
       "signUp": {
-        "link": "Register here",
-        "message": "Don't have an account?"
+        "message": "Don't have an account?",
+        "link": "Register here"
       },
       "submit": "Login",
       "error": {
@@ -182,8 +218,13 @@
         "load": "Profile could not be loaded"
       }
     },
+    "invitation": {
+      "invitation": "Invitation",
+      "pendingInvitations": "Pending invitations"
+    },
     "registration": {
       "register": "Register",
+      "pendingRegistrations": "Pending registrations",
       "email": {
         "emailSent": {
           "header": "Please verify your email",
@@ -209,13 +250,14 @@
         "tooShort": "Please enter a password with at least {{min}} characters"
       },
       "login": {
-        "link": "Login here",
-        "message": "Already have an account?"
+        "message": "Already have an account?",
+        "link": "Login here"
       }
     },
     "resetPassword": {
       "resetPassword": "Reset password",
       "forgotPassword": "Forgot your password?",
+      "newPassword": "New Passwort",
       "init": {
         "instruction": "Enter your email adress and we'll send you a link to reset your password.",
         "submit": "Reset password"
@@ -227,7 +269,6 @@
           "part2": "If you don't see it, you may need to check your spam folder."
         }
       },
-      "newPassword": "New Passwort",
       "success": {
         "header": "Password changed!",
         "message": "Your password has been successfully changed."
@@ -243,7 +284,10 @@
     }
   },
   "role": {
-    "role": "Role"
+    "role": "Role",
+    "userRoles": "User Roles",
+    "name": "Name",
+    "description": "Description"
   },
   "captcha": {
     "instruction": {
