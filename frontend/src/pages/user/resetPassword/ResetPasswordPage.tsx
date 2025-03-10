@@ -23,7 +23,7 @@ const ResetPasswordPage = () => {
 
     const defaultValues: Form = {
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
     }
 
     const formContext = useForm<Form>({values: defaultValues})
@@ -57,7 +57,10 @@ const ResetPasswordPage = () => {
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            <NewPassword formContext={formContext} resetPasswort />
+                            <NewPassword
+                                formContext={formContext}
+                                passwordFieldLabel={t('user.resetPassword.newPassword')}
+                            />
                             <SubmitButton
                                 label={t('user.resetPassword.resetPassword')}
                                 submitting={submitting}
