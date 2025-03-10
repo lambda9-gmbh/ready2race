@@ -8,7 +8,7 @@ import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.
 import {useFetch} from '@utils/hooks.ts'
 import {addDocuments, getDocumentTypes, updateDocument} from '@api/sdk.gen.ts'
 import {eventIndexRoute} from '@routes'
-import {Alert, Box, IconButton, Stack, Typography} from '@mui/material'
+import {Box, IconButton, Stack, Typography} from '@mui/material'
 import {Delete} from '@mui/icons-material'
 import SelectFileButton from '@components/SelectFileButton.tsx'
 import {useTranslation} from 'react-i18next'
@@ -68,7 +68,7 @@ const FileSelection = () => {
                 display: 'flex',
                 flexDirection: 'column',
             }}>
-            {emptyListError && <Alert severity="error">{emptyListError}</Alert>}
+            {emptyListError && <Typography color={'error'}>{emptyListError}</Typography>}
             {fields.map((field, index) => (
                 <Stack
                     direction={'row'}

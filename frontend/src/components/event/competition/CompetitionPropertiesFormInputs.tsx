@@ -8,7 +8,7 @@ import {
 } from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {Alert, Box, Button, Divider, Grid2, IconButton, Stack, Tooltip, Zoom} from '@mui/material'
+import {Box, Button, Divider, IconButton, Stack, Tooltip, Typography, Zoom} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -208,7 +208,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             />
             <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
-                {namedParticipantsError && <Alert severity="error">{namedParticipantsError}</Alert>}
+                {namedParticipantsError && <Typography color={'error'}>{namedParticipantsError}</Typography>}
                 <Stack spacing={2}>
                     {namedParticipantFields.map((field, index) => (
                         <Stack
