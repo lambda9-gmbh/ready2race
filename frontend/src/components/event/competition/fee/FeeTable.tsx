@@ -50,7 +50,6 @@ const FeeTable = (props: BaseEntityTableProps<FeeDto>) => {
         } else {
             feedback.error(t('entity.delete.error', {entity: props.entityName}))
         }
-        console.error(error)
     }
 
     return (

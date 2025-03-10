@@ -168,7 +168,6 @@ const EntityTableInternal = <
 
     const handleDeleteErrorGeneric = (error: DeleteError) => {
         feedback.error(t('entity.delete.error', {entity: entityName}))
-        console.error(error)
     }
 
     const cols: GridColDef<Entity>[] = [
@@ -259,11 +258,6 @@ const EntityTableInternal = <
                 paginationParameters(paginationModel, sortModel, debouncedSearchInput),
             ),
         {
-            onResponse: ({error}) => {
-                if (error) {
-                    console.error(error)
-                }
-            },
             deps: [paginationModel, sortModel, debouncedSearchInput, lastRequested],
         },
     )

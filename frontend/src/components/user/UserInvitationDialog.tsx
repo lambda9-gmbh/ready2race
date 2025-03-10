@@ -64,7 +64,6 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
         } else {
             feedback.error(t('entity.add.error', {entity: props.entityName}))
         }
-        console.error(error)
     }
 
     return (
