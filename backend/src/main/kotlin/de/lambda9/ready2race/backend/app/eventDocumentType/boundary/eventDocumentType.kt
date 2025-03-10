@@ -20,6 +20,7 @@ fun Route.eventDocumentType() {
             call.respondKIO {
                 KIO.comprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
+
                     val body = !payload
                     EventDocumentTypeService.addDocumentType(body, user.id!!)
                 }
@@ -44,6 +45,7 @@ fun Route.eventDocumentType() {
                     KIO.comprehension {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
                         val id = !pathParam("eventDocumentTypeId") { UUID.fromString(it) }
+
                         val body = !payload
                         EventDocumentTypeService.updateDocumentType(id, body, user.id!!)
                     }

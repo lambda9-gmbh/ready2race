@@ -19,7 +19,9 @@ fun Route.namedParticipant() {
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    NamedParticipantService.addNamedParticipant(!payload, user.id!!)
+
+                    val body = !payload
+                    NamedParticipantService.addNamedParticipant(body, user.id!!)
                 }
             }
         }
@@ -41,7 +43,9 @@ fun Route.namedParticipant() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val namedParticipantId = !pathParam("namedParticipantId") { UUID.fromString(it) }
-                        NamedParticipantService.updateNamedParticipant(namedParticipantId, !payload, user.id!!)
+
+                        val body = !payload
+                        NamedParticipantService.updateNamedParticipant(namedParticipantId, body, user.id!!)
                     }
                 }
             }

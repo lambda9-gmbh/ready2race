@@ -17,18 +17,22 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
 import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {Box, Button, TextField, Typography} from '@mui/material'
+import {Alert, Box, Button, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {Pagination, Resource} from '@api/types.gen.ts'
+import {ApiError, Pagination, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
-    GetError,
-    DeleteError,
+    GetError extends ApiError,
+    DeleteError extends ApiError,
 > = BaseEntityTableProps<Entity> & ExtendedEntityTableProps<Entity, GetError, DeleteError>
 
-type ExtendedEntityTableProps<Entity extends GridValidRowModel, GetError, DeleteError> = {
+type ExtendedEntityTableProps<
+    Entity extends GridValidRowModel,
+    GetError extends ApiError,
+    DeleteError extends ApiError,
+> = {
     initialPagination: GridPaginationModel
     pageSizeOptions: (number | {value: number; label: string})[]
     initialSort: GridSortModel
@@ -43,13 +47,15 @@ type ExtendedEntityTableProps<Entity extends GridValidRowModel, GetError, Delete
     withSearch?: boolean
 } & (
     | {
-          deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false> // todo: specific error type
+          deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false>
           onDelete?: () => void
+          onDeleteError?: (error: DeleteError) => void
           deletableIf?: (entity: Entity) => boolean
       }
     | {
           deleteRequest?: never
           onDelete?: never
+          onDeleteError?: never
           deletableIf?: never
       }
 ) &
@@ -78,7 +84,11 @@ type Crud = {
 
 // todo: @fix: sometimes on refreshing content, datagrid is simple empty
 
-const EntityTable = <Entity extends GridValidRowModel, GetError, DeleteError>({
+const EntityTable = <
+    Entity extends GridValidRowModel,
+    GetError extends ApiError,
+    DeleteError extends ApiError,
+>({
     resource,
     parentResource,
     ...props
@@ -117,12 +127,17 @@ const EntityTable = <Entity extends GridValidRowModel, GetError, DeleteError>({
     return crud?.read && <EntityTableInternal {...props} crud={crud} />
 }
 
-type EntityTableInternalProps<Entity extends GridValidRowModel, GetError, DeleteError> = Omit<
-    EntityTableProps<Entity, GetError, DeleteError>,
-    'resource' | 'privilege'
-> & {crud: Crud}
+type EntityTableInternalProps<
+    Entity extends GridValidRowModel,
+    GetError extends ApiError,
+    DeleteError extends ApiError,
+> = Omit<EntityTableProps<Entity, GetError, DeleteError>, 'resource' | 'privilege'> & {crud: Crud}
 
-const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteError>({
+const EntityTableInternal = <
+    Entity extends GridValidRowModel,
+    GetError extends ApiError,
+    DeleteError extends ApiError,
+>({
     entityName,
     title,
     lastRequested,
@@ -141,6 +156,7 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     crud,
     deleteRequest,
     onDelete,
+    onDeleteError,
     deletableIf,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
@@ -149,6 +165,11 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     const {confirmAction} = useConfirmation()
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
+
+    const handleDeleteErrorGeneric = (error: DeleteError) => {
+        feedback.error(t('entity.delete.error', {entity: entityName}))
+        console.error(error)
+    }
 
     const cols: GridColDef<Entity>[] = [
         ...(linkColumn
@@ -205,18 +226,16 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
                                       const {error} = await deleteRequest(params.row)
                                       setIsDeletingRow(false)
                                       if (error) {
-                                          // todo better error display with specific error types
-                                          console.error(error)
-                                          feedback.error(
-                                              t('entity.delete.error', {entity: entityName}),
-                                          )
+                                          onDeleteError
+                                              ? onDeleteError(error)
+                                              : handleDeleteErrorGeneric(error)
                                       } else {
-                                          reloadData()
                                           onDelete?.()
                                           feedback.success(
                                               t('entity.delete.success', {entity: entityName}),
                                           )
                                       }
+                                      reloadData()
                                   })
                               }}
                               showInMenu={true}
@@ -233,13 +252,18 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     const [searchInput, setSearchInput] = useState<string>('')
     const debouncedSearchInput = useDebounce(searchInput, 700)
 
-    const {data, pending} = useFetch(
+    const {data, error, pending} = useFetch(
         signal =>
             dataRequest(
                 signal,
                 paginationParameters(paginationModel, sortModel, debouncedSearchInput),
             ),
         {
+            onResponse: ({error}) => {
+                if (error) {
+                    console.error(error)
+                }
+            },
             deps: [paginationModel, sortModel, debouncedSearchInput, lastRequested],
         },
     )
@@ -247,56 +271,71 @@ const EntityTableInternal = <Entity extends GridValidRowModel, GetError, DeleteE
     return (
         <Box>
             {title && <Typography variant={'h2'}>{title}</Typography>}
-            <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
-                {withSearch && (
-                    <TextField
-                        size={'small'}
-                        variant={'outlined'}
-                        label={t('common.search')}
-                        value={searchInput}
-                        onChange={e => {
-                            setSearchInput(e.target.value)
-                        }}
-                    />
-                )}
-                {crud.create && options.entityCreate && (
-                    <Button variant={'outlined'} startIcon={<Add />} onClick={() => openDialog()}>
-                        {t('entity.add.action', {entity: entityName})}
-                    </Button>
-                )}
-            </Box>
-            <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                <DataGrid
-                    isRowSelectable={() => false}
-                    paginationMode="server"
-                    pageSizeOptions={[
-                        ...pageSizeOptions,
-                        ...(pageSizeOptions.includes(initialPagination.pageSize)
-                            ? []
-                            : [initialPagination.pageSize]),
-                    ]}
-                    disableColumnFilter={true}
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    sortingMode="server"
-                    sortModel={sortModel}
-                    onSortModelChange={setSortModel}
-                    columns={cols}
-                    rows={data?.data ?? []}
-                    rowCount={data?.pagination?.total ?? 0}
-                    loading={pending || isDeletingRow}
-                    density={'compact'}
-                    getRowHeight={() => 'auto'}
-                    sx={{
-                        '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
-                        '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {py: '15px'},
-                        '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
-                            py: '22px',
-                        },
-                    }}
-                    {...gridProps}
-                />
-            </Box>
+            {!error ? (
+                <>
+                    <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
+                        {withSearch && (
+                            <TextField
+                                size={'small'}
+                                variant={'outlined'}
+                                label={t('common.search')}
+                                value={searchInput}
+                                onChange={e => {
+                                    setSearchInput(e.target.value)
+                                }}
+                            />
+                        )}
+                        {crud.create && options.entityCreate && (
+                            <Button
+                                variant={'outlined'}
+                                startIcon={<Add />}
+                                onClick={() => openDialog()}>
+                                {t('entity.add.action', {entity: entityName})}
+                            </Button>
+                        )}
+                    </Box>
+                    <Box sx={{display: 'flex', flexDirection: 'column'}}>
+                        <DataGrid
+                            isRowSelectable={() => false}
+                            paginationMode="server"
+                            pageSizeOptions={[
+                                ...pageSizeOptions,
+                                ...(pageSizeOptions.includes(initialPagination.pageSize)
+                                    ? []
+                                    : [initialPagination.pageSize]),
+                            ]}
+                            disableColumnFilter={true}
+                            paginationModel={paginationModel}
+                            onPaginationModelChange={setPaginationModel}
+                            sortingMode="server"
+                            sortModel={sortModel}
+                            onSortModelChange={setSortModel}
+                            columns={cols}
+                            rows={data?.data ?? []}
+                            rowCount={data?.pagination?.total ?? 0}
+                            loading={pending || isDeletingRow}
+                            density={'compact'}
+                            getRowHeight={() => 'auto'}
+                            sx={{
+                                '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': {py: '8px'},
+                                '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {
+                                    py: '15px',
+                                },
+                                '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
+                                    py: '22px',
+                                },
+                            }}
+                            {...gridProps}
+                        />
+                    </Box>
+                </>
+            ) : (
+                <Alert severity="error">
+                    {t('common.load.error.multiple.detailed', {
+                        entity: title ?? entityName,
+                    })}
+                </Alert>
+            )}
         </Box>
     )
 }

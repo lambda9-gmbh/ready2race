@@ -1,18 +1,14 @@
 import {AutocompleteOption} from '@utils/types.ts'
-import {FieldValues, SwitchElement, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
+import {
+    ErrorOption,
+    FieldValues,
+    SwitchElement,
+    useFieldArray,
+    UseFormReturn,
+} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {
-    Box,
-    Button,
-    Divider,
-    Grid2,
-    IconButton,
-    Stack,
-    Tooltip,
-    Typography,
-    Zoom,
-} from '@mui/material'
+import {Box, Button, Divider, IconButton, Stack, Tooltip, Typography, Zoom} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -39,7 +35,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple', {
+                        t('common.load.error.multiple.short', {
                             entity: t('event.competition.namedParticipant.namedParticipants'),
                         }),
                     )
@@ -58,7 +54,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(
-                    t('common.load.error.multiple', {
+                    t('common.load.error.multiple.short', {
                         entity: t('event.competition.fee.fees'),
                     }),
                 )
@@ -78,7 +74,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple', {
+                        t('common.load.error.multiple.short', {
                             entity: t('event.competition.category.categories'),
                         }),
                     )
@@ -153,33 +149,25 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 vals['namedParticipants'][index]['countMixed'] <
             1
         ) {
+            const noCountError: ErrorOption = {
+                type: 'validate',
+                message: t('event.competition.namedParticipant.error.noCount'),
+            }
             props.formContext.setError(
                 `namedParticipants[${index}].countMales` as `namedParticipants.${number}.countMales`,
-                {
-                    type: 'custom',
-                    message: t('event.competition.namedParticipant.error.noCount'),
-                },
+                noCountError,
             )
             props.formContext.setError(
                 `namedParticipants[${index}].countFemales` as `namedParticipants.${number}.countFemales`,
-                {
-                    type: 'custom',
-                    message: t('event.competition.namedParticipant.error.noCount'),
-                },
+                noCountError,
             )
             props.formContext.setError(
                 `namedParticipants[${index}].countNonBinary` as `namedParticipants.${number}.countNonBinary`,
-                {
-                    type: 'custom',
-                    message: t('event.competition.namedParticipant.error.noCount'),
-                },
+                noCountError,
             )
             props.formContext.setError(
                 `namedParticipants[${index}].countMixed` as `namedParticipants.${number}.countMixed`,
-                {
-                    type: 'custom',
-                    message: t('event.competition.namedParticipant.error.noCount'),
-                },
+                noCountError,
             )
             return t('event.competition.namedParticipant.error.noCount')
         } else {
@@ -208,7 +196,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             <FormInputText name="identifier" label={t('event.competition.identifier')} required />
             <FormInputText name="name" label={t('event.competition.name')} required />
             <FormInputText name="shortName" label={t('event.competition.shortName')} />
-            <FormInputText name="description" label={t('entity.description')} />
+            <FormInputText name="description" label={t('event.competition.description')} />
             <FormInputAutocomplete
                 name="competitionCategory"
                 options={categories}
@@ -220,6 +208,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             />
             <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
+                {namedParticipantsError && <Typography color={'error'}>{namedParticipantsError}</Typography>}
                 <Stack spacing={2}>
                     {namedParticipantFields.map((field, index) => (
                         <Stack
@@ -310,10 +299,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             </Tooltip>
                         </Stack>
                     ))}
-                    {/* todo: @incomplete: improve visualization in case of error */}
-                    {namedParticipantsError && (
-                        <Typography color={'error'}>{namedParticipantsError}</Typography>
-                    )}
                 </Stack>
             </FormInputLabel>
             <Box sx={{minWidth: 200, margin: 'auto'}}>

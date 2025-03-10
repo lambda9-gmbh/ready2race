@@ -2,7 +2,7 @@ import EntityDialog from '@components/EntityDialog.tsx'
 import {AutocompleteOption, BaseEntityDialogProps} from '@utils/types.ts'
 import {EventDocumentDto, EventDocumentRequest, EventDocumentTypeDto} from '@api/types.gen.ts'
 import {useFieldArray, useForm, useFormContext} from 'react-hook-form-mui'
-import {useCallback} from 'react'
+import {useCallback, useState} from 'react'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {useFetch} from '@utils/hooks.ts'
@@ -11,7 +11,7 @@ import {eventIndexRoute} from '@routes'
 import {Box, IconButton, Stack, Typography} from '@mui/material'
 import {Delete} from '@mui/icons-material'
 import SelectFileButton from '@components/SelectFileButton.tsx'
-import {useTranslation} from "react-i18next";
+import {useTranslation} from 'react-i18next'
 
 type Form = {
     documentType: AutocompleteOption
@@ -51,12 +51,16 @@ const FileSelection = () => {
         name: 'files',
         keyName: 'fieldId',
         rules: {
-            required: t('event.document.error.emptyList'),
+            validate: values => {
+                if (values.length < 1) {
+                    setEmptyListError(t('event.document.error.emptyList'))
+                }
+                return 'empty'
+            },
         },
     })
 
-    // todo: This should be solved as in "CompetitionPropertiesFormInputs" without touching the formState
-    const emptyList = formContext.formState.errors.files?.root?.message
+    const [emptyListError, setEmptyListError] = useState<string | null>(null)
 
     return (
         <Box
@@ -64,6 +68,7 @@ const FileSelection = () => {
                 display: 'flex',
                 flexDirection: 'column',
             }}>
+            {emptyListError && <Typography color={'error'}>{emptyListError}</Typography>}
             {fields.map((field, index) => (
                 <Stack
                     direction={'row'}
@@ -85,8 +90,6 @@ const FileSelection = () => {
                 accept={'application/pdf'}>
                 {t('event.document.add.add')}
             </SelectFileButton>
-            {/* todo: @incomplete: improve visualization in case of error */}
-            {emptyList && <Typography color={'error'}>{emptyList}</Typography>}
         </Box>
     )
 }

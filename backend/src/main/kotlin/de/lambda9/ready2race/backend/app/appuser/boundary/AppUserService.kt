@@ -249,7 +249,7 @@ object AppUserService {
     fun resetPassword(
         token: String,
         request: PasswordResetRequest,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<AppUserError, ApiResponse.NoData> = KIO.comprehension {
 
         val passwordReset =
             !AppUserPasswordResetRepo.consume(token).orDie().onNullFail { AppUserError.PasswordResetNotFound }

@@ -51,7 +51,7 @@ const LoginPage = () => {
             </Box>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                 <Stack spacing={4}>
-                    <FormInputText name="email" label={t('user.email')} required />
+                    <FormInputText name="email" label={t('user.email.email')} required />
                     <Box sx={{display: 'flex', flexDirection: 'column'}}>
                         <FormInputPassword name="password" label={t('user.login.password')} required />
                         <Box sx={{display: 'flex', justifyContent: 'end', mt: 2}}>

@@ -39,7 +39,7 @@ const CompetitionPage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple', {entity: t('event.eventDay.eventDays')}),
+                        t('common.load.error.multiple.short', {entity: t('event.eventDay.eventDays')}),
                     )
                     console.error(error)
                 }
@@ -59,7 +59,7 @@ const CompetitionPage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple', {entity: t('event.eventDay.eventDays')}),
+                        t('common.load.error.multiple.short', {entity: t('event.eventDay.eventDays')}),
                     )
                     console.error(error)
                 }

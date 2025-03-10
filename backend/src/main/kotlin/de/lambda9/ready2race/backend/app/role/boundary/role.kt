@@ -19,7 +19,9 @@ fun Route.role() {
             call.respondKIO {
                 KIO.comprehension {
                     val user = !authenticate(Privilege.UpdateUserGlobal)
-                    RoleService.addRole(!payload, user.id!!)
+
+                    val body = !payload
+                    RoleService.addRole(body, user.id!!)
                 }
             }
         }
@@ -42,7 +44,9 @@ fun Route.role() {
                     KIO.comprehension {
                         val user = !authenticate(Privilege.UpdateUserGlobal)
                         val id = !pathParam("roleId") { UUID.fromString(it) }
-                        RoleService.updateRole(id, !payload, user.id!!)
+
+                        val body = !payload
+                        RoleService.updateRole(id, body, user.id!!)
                     }
                 }
             }
@@ -50,6 +54,7 @@ fun Route.role() {
             delete {
                 call.respondKIO {
                     KIO.comprehension {
+                        !authenticate(Privilege.UpdateUserGlobal)
                         val id = !pathParam("roleId") { UUID.fromString(it) }
                         RoleService.deleteRole(id)
                     }

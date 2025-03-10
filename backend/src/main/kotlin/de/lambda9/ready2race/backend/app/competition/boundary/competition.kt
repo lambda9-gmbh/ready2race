@@ -19,7 +19,9 @@ fun Route.competition() {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
                     val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                    CompetitionService.addCompetition(!payload, user.id!!, eventId)
+
+                    val body = !payload
+                    CompetitionService.addCompetition(body, user.id!!, eventId)
                 }
             }
         }
@@ -55,7 +57,9 @@ fun Route.competition() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
-                        CompetitionService.updateCompetition(!payload, user.id!!, competitionId)
+
+                        val body = !payload
+                        CompetitionService.updateCompetition(body, user.id!!, competitionId)
                     }
                 }
             }
@@ -78,7 +82,9 @@ fun Route.competition() {
                         KIO.comprehension {
                             val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                             val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
-                            CompetitionService.updateEventDayHasCompetition(!payload, user.id!!, competitionId)
+
+                            val body = !payload
+                            CompetitionService.updateEventDayHasCompetition(body, user.id!!, competitionId)
                         }
                     }
                 }

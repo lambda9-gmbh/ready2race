@@ -43,7 +43,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple', {
+                        t('common.load.error.multiple.short', {
                             entity: t('event.competition.template.templates'),
                         }),
                     )
@@ -78,14 +78,19 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     function fillFormWithTemplate(templateId: string) {
         const template = templatesData?.data.find(dto => dto?.id === templateId)
         if (template) {
-            formContext.reset(mapCompetitionPropertiesToCompetitionForm(template.properties, t('decimal.point')))
+            formContext.reset(
+                mapCompetitionPropertiesToCompetitionForm(template.properties, t('decimal.point')),
+            )
         }
     }
 
     const onOpen = useCallback(() => {
         formContext.reset(
             props.entity
-                ? mapCompetitionPropertiesToCompetitionForm(props.entity.properties, t('decimal.point'))
+                ? mapCompetitionPropertiesToCompetitionForm(
+                      props.entity.properties,
+                      t('decimal.point'),
+                  )
                 : competitionFormDefaultValues,
         )
         setTemplate(templates.find(t => t?.id === props.entity?.template) ?? null)
@@ -107,7 +112,10 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                     <Autocomplete
                         options={templates}
                         renderInput={params => (
-                            <TextField {...params} label={t('event.competition.template.template')} />
+                            <TextField
+                                {...params}
+                                label={t('event.competition.template.template')}
+                            />
                         )}
                         value={template}
                         onChange={(_e, newValue: AutocompleteOption | null) => {
@@ -128,10 +136,15 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     )
 }
 
-function mapFormToRequest(formData: CompetitionForm, templateId: string | undefined): CompetitionRequest {
+function mapFormToRequest(
+    formData: CompetitionForm,
+    templateId: string | undefined,
+): CompetitionRequest {
     return {
         properties:
-            templateId === undefined ? mapCompetitionFormToCompetitionPropertiesRequest(formData) : undefined,
+            templateId === undefined
+                ? mapCompetitionFormToCompetitionPropertiesRequest(formData)
+                : undefined,
         template: templateId,
     }
 }

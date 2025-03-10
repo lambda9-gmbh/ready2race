@@ -95,12 +95,10 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
         setSubmitting(false)
 
         if (error) {
-            // todo better error display with specific error types
             console.error(error)
             feedback.error(t('event.assign.save.error', entityNames))
         } else {
             closeDialog()
-            // todo reloadData()
             props.onSuccess()
             feedback.success(t('event.assign.save.success', entityNames))
         }

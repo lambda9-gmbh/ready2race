@@ -44,6 +44,7 @@ const editAction = (formData: RoleForm, entity: RoleDto) =>
         body: mapFormToRequest(formData),
     })
 
+
 const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
     const {t} = useTranslation()
     const formContext = useForm<RoleForm>()

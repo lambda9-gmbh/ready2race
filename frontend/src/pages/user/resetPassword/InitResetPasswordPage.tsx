@@ -102,7 +102,7 @@ const InitResetPasswordPage = () => {
                     <Typography sx={{mb: 4}}>{t('user.resetPassword.init.instruction')}</Typography>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
-                            <FormInputEmail name={'email'} label={t('user.email')} required />
+                            <FormInputEmail name={'email'} label={t('user.email.email')} required />
                             {tooManyRequestsTimer <= 0 ? (
                                 <FormInputCaptcha captchaProps={captcha} />
                             ) : (
