@@ -10,7 +10,6 @@ import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.*
 import org.jooq.impl.DSL
 import org.jooq.impl.TableImpl
-import org.jooq.impl.TableRecordImpl
 
 fun Collection<Condition>.and() = DSL.and(*this.toTypedArray())
 fun Collection<Condition>.or() = DSL.or(*this.toTypedArray())

@@ -12,7 +12,6 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import jakarta.activation.MimetypesFileTypeMap
-import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 

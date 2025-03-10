@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.plugins
 
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
-import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetRequest
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
 import de.lambda9.ready2race.backend.plugins.requests.validation.ValidatableValidation
 import de.lambda9.ready2race.backend.requests.receiveV

@@ -4,9 +4,6 @@ import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_HAS_ROLE
 import de.lambda9.ready2race.backend.database.insert
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.tailwind.jooq.JIO
-import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import java.util.*
 

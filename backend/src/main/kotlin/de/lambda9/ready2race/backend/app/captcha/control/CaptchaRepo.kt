@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.captcha.control
 
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.CaptchaRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_PASSWORD_RESET
 import de.lambda9.ready2race.backend.database.generated.tables.references.CAPTCHA
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.tailwind.jooq.JIO
