@@ -332,7 +332,7 @@ const EntityTableInternal = <
             ) : (
                 <Alert severity="error">
                     {t('common.load.error.multiple.detailed', {
-                        entity: title ?? entityName, // todo: Other entity name than "title". "entityName" is singular, this message needs plural
+                        entity: title ?? entityName,
                     })}
                 </Alert>
             )}

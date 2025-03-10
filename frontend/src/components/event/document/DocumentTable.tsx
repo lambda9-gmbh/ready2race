@@ -73,7 +73,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
             anchor.download = entity.name
-            //anchor.click() todo: activate this
+            anchor.click()
             anchor.href = ''
             anchor.download = ''
         }

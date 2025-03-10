@@ -54,7 +54,7 @@ fun Route.role() {
             delete {
                 call.respondKIO {
                     KIO.comprehension {
-                        !authenticate(Privilege.DeleteUserGlobal)
+                        !authenticate(Privilege.UpdateUserGlobal)
                         val id = !pathParam("roleId") { UUID.fromString(it) }
                         RoleService.deleteRole(id)
                     }
