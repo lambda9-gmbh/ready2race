@@ -11,7 +11,7 @@ export const FormInputAutocompleteClub = (props: {
     label: string
     required?: boolean
     disabled?: boolean
-    onChange: () => void
+    onChange?: () => void
 }) => {
     const {t} = useTranslation()
 

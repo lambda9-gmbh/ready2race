@@ -1,19 +1,28 @@
-import {BaseEntityDialogProps} from '../../utils/types.ts'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '../EntityDialog.tsx'
-import {Stack} from '@mui/material'
+import {Box, Stack} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import {useForm} from 'react-hook-form-mui'
-import {useCallback} from 'react'
-import {addClubParticipant, ParticipantDto, ParticipantUpsertDto, updateClubParticipant} from '../../api'
+import {useCallback, useState} from 'react'
+import {
+    addClubParticipant,
+    Gender,
+    ParticipantDto,
+    ParticipantUpsertDto,
+    updateClubParticipant,
+} from '../../api'
 import FormInputNumber from '../form/input/FormInputNumber.tsx'
-import {clubIndexRoute} from '../../routes.tsx'
+import {clubIndexRoute} from '@routes'
+import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import {FormInputAutocompleteClub} from '@components/form/input/FormInputAutocompleteClub.tsx'
 
 type ParticipantForm = {
     firstname: string
     lastname: string
     year?: number | null
-    gender: 'M' | 'F' | 'O'
+    gender: Gender
     phone?: string | null
     external?: boolean | null
     externalClubName?: string | null
@@ -23,6 +32,8 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
     const {t} = useTranslation()
 
     const {clubId} = clubIndexRoute.useParams()
+
+    const [isExternal, setIsExternal] = useState(false)
 
     const addAction = (formData: ParticipantForm) => {
         return addClubParticipant({
@@ -41,15 +52,22 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
     const defaultValues: ParticipantForm = {
         firstname: '',
         lastname: '',
-        gender: 'M',
+        gender: 'F',
+    }
+
+    const handleExternalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setIsExternal(e.target.checked)
+        if (!e.target.checked) {
+            formContext.setValue('externalClubName', '')
+        }
     }
 
     const formContext = useForm<ParticipantForm>()
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
+        setIsExternal(props.entity?.external ?? false)
     }, [props.entity])
-
 
     return (
         <EntityDialog
@@ -61,8 +79,43 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
             <Stack spacing={2}>
                 <FormInputText name={'firstname'} label={t('entity.firstname')} required />
                 <FormInputText name={'lastname'} label={t('entity.lastname')} required />
+                <FormInputRadioButtonGroup
+                    name={'gender'}
+                    label={t('entity.gender')}
+                    required
+                    row
+                    options={[
+                        {
+                            id: 'F',
+                            label: 'F',
+                        },
+                        {
+                            id: 'M',
+                            label: 'M',
+                        },
+                        {
+                            id: 'D',
+                            label: 'D',
+                        },
+                    ]}
+                />
                 <FormInputNumber name={'year'} label={t('club.participant.year')} />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
+                <Stack direction="row" spacing={2} alignItems={'center'}>
+                    <FormInputCheckbox
+                        onChange={handleExternalChange}
+                        name={`external`}
+                        label={t('club.participant.external')}
+                    />
+                    <Box flex={1}>
+                        <FormInputAutocompleteClub
+                            disabled={!isExternal}
+                            name={`externalClubName`}
+                            label={t('club.club')}
+                            required
+                        />
+                    </Box>
+                </Stack>
             </Stack>
         </EntityDialog>
     )

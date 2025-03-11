@@ -69,6 +69,8 @@ object ParticipantService {
             year = request.year
             gender = request.gender
             phone = request.phone
+            external = request.external
+            externalClubName = request.externalClubName?.trim()?.takeIf { it.isNotBlank() }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

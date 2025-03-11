@@ -1,9 +1,9 @@
 import {useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {clubIndexRoute} from '../../routes.tsx'
+import {clubIndexRoute} from '@routes'
 import {deleteClubParticipant, getClubParticipants, ParticipantDto} from '../../api'
-import {BaseEntityTableProps} from '../../utils/types.ts'
-import {PaginationParameters} from '../../utils/ApiUtils.ts'
+import {BaseEntityTableProps} from '@utils/types.ts'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
 
 const initialPagination: GridPaginationModel = {
@@ -11,7 +11,7 @@ const initialPagination: GridPaginationModel = {
     pageSize: 10,
 }
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
-const initialSort: GridSortModel = [{field: 'identifier', sort: 'asc'}]
+const initialSort: GridSortModel = [{field: 'firstname', sort: 'asc'}]
 
 const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
     const {t} = useTranslation()
@@ -52,6 +52,12 @@ const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
         {
             field: 'year',
             headerName: t('club.participant.year'),
+            minWidth: 150,
+            flex: 1,
+        },
+        {
+            field: 'externalClubName',
+            headerName: t('club.participant.externalClub'),
             minWidth: 150,
             flex: 1,
         },

@@ -96,7 +96,8 @@
     "participant": {
       "title": "Participant",
       "year": "Year of birth",
-      "external": "External"
+      "external": "External",
+      "externalClub": "External club"
     }
   },
   "event": {

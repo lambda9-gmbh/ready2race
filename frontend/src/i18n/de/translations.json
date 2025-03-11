@@ -96,7 +96,8 @@
     "participant": {
       "title": "Teilnehmer",
       "year": "Geburtsjahr",
-      "external": "Extern"
+      "external": "Extern",
+      "externalClub": "Externer Verein"
     }
   },
   "event": {

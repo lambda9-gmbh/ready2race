@@ -20,7 +20,7 @@ fun ParticipantUpsertDto.toRecord(userId: UUID, clubId: UUID): App<Nothing, Part
                 gender = this.gender,
                 phone = this.phone,
                 external = this.external,
-                externalClubName = this.externalClubName,
+                externalClubName = this.externalClubName?.trim()?.takeIf { it.isNotBlank() },
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
