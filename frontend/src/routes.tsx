@@ -29,6 +29,7 @@ import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
 import ConfigurationPage from './pages/ConfigurationPage.tsx'
+import CompetitionSetupPage from './pages/event/CompetitionSetupPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -257,6 +258,15 @@ export const competitionIndexRoute = createRoute({
     },
 })
 
+export const competitionSetupRoute = createRoute({
+    getParentRoute: () => competitionRoute,
+    path: 'competitionSetup',
+    component: () => <CompetitionSetupPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
+})
+
 export const competitionConfigRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'competitionConfig',
@@ -281,7 +291,10 @@ const routeTree = rootRoute.addChildren([
         eventRoute.addChildren([
             eventIndexRoute,
             eventDayRoute.addChildren([eventDayIndexRoute]),
-            competitionRoute.addChildren([competitionIndexRoute]),
+            competitionRoute.addChildren([
+                competitionIndexRoute,
+                competitionSetupRoute
+            ]),
         ]),
     ]),
     competitionConfigRoute.addChildren([competitionConfigIndexRoute]),

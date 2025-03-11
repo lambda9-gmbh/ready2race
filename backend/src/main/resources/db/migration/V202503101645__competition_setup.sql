@@ -25,7 +25,8 @@ create index on competition_setup_match (competition_setup_round);
 create table competition_setup_match_outcome
 (
     competition_setup_match uuid    not null references competition_setup_match on delete cascade,
-    weighting               integer not null
+    weighting               integer not null,
+    primary key (competition_setup_match, weighting)
 );
 
 create index on competition_setup_match_outcome (competition_setup_match);

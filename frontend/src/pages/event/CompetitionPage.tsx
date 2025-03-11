@@ -102,7 +102,7 @@ const CompetitionPage = () => {
 
                         {competitionData.properties.namedParticipants.map((np, index) => (
                             <>
-                                <Box key={`box${index}`}>
+                                <Box key={`box${index}`}> {/*todo: should have np.id instead of index to prevent updating errors*/}
                                     <Typography variant="subtitle1">{np.name}</Typography>
                                     <Typography>{np.description}</Typography>
                                     <CompetitionCountEntry
@@ -127,7 +127,7 @@ const CompetitionPage = () => {
                         <Divider />
                         {competitionData.properties.fees.map((f, index) => (
                             <>
-                                <Box key={`box${index}`}>
+                                <Box key={`box${index}`}> {/*todo: should have np.id instead of index to prevent updating errors*/}
                                     <Typography variant="subtitle1">{f.name}</Typography>
                                     <Typography>{f.description}</Typography>
                                     <Typography>
