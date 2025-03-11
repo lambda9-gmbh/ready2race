@@ -66,7 +66,6 @@ const EntityDialog = <
         } else {
             feedback.error(t('entity.add.error', {entity: entityName}))
         }
-        console.error(error)
     }
 
     const onSubmit = async (formData: Form) => {

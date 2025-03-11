@@ -50,7 +50,6 @@ const NamedParticipantTable = (props: BaseEntityTableProps<NamedParticipantDto>)
         } else {
             feedback.error(t('entity.delete.error', {entity: props.entityName}))
         }
-        console.error(error)
     }
 
     return (

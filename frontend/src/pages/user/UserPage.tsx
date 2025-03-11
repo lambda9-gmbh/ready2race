@@ -36,7 +36,6 @@ const UserPage = () => {
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(t('user.page.error.load'))
-                console.error(error)
             } else {
                 formContext.reset({firstname: data.firstname, lastname: data.lastname})
             }
