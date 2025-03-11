@@ -2076,6 +2076,12 @@ components:
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES
 
+    Gender:
+      type: string
+      enum:
+        - M
+        - F
+        - D
 
     # error
 
@@ -3136,11 +3142,7 @@ components:
           type: integer
           nullable: true
         gender:
-          type: string
-          enum:
-            - M
-            - F
-            - O
+          $ref: '#/components/schemas/Gender'
         phone:
           type: string
           nullable: true
@@ -3174,11 +3176,7 @@ components:
           type: integer
           nullable: true
         gender:
-          type: string
-          enum:
-            - M
-            - F
-            - O
+          $ref: '#/components/schemas/Gender'
         phone:
           type: string
           nullable: true
@@ -3436,11 +3434,7 @@ components:
           type: integer
           nullable: true
         gender:
-          type: string
-          enum:
-            - M
-            - F
-            - O
+          $ref: '#/components/schemas/Gender'
         external:
           type: boolean
           nullable: true

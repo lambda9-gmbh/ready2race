@@ -291,13 +291,11 @@ export type EventRegistrationParticipantUpsertDto = {
     firstname: string
     lastname: string
     year?: number | null
-    gender: 'M' | 'F' | 'O'
+    gender: Gender
     external?: boolean | null
     externalClubName?: string | null
     competitionsSingle?: Array<CompetitionRegistrationSingleUpsertDto>
 }
-
-export type gender = 'M' | 'F' | 'O'
 
 export type EventRegistrationTemplateDto = {
     info: EventRegistrationInfoDto
@@ -343,6 +341,8 @@ export type FeeRequest = {
     name: string
     description?: string
 }
+
+export type Gender = 'M' | 'F' | 'D'
 
 export type Invalid =
     | string
@@ -481,7 +481,7 @@ export type ParticipantDto = {
     firstname: string
     lastname: string
     year?: number | null
-    gender: 'M' | 'F' | 'O'
+    gender: Gender
     phone?: string | null
     external?: boolean | null
     externalClubName?: string | null
@@ -493,7 +493,7 @@ export type ParticipantUpsertDto = {
     firstname: string
     lastname: string
     year?: number | null
-    gender: 'M' | 'F' | 'O'
+    gender: Gender
     phone?: string | null
     external?: boolean | null
     externalClubName?: string | null

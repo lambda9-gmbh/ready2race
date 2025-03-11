@@ -13,7 +13,7 @@ alter table app_user
         club uuid references club on delete set null
 ;
 
-create type gender as enum ('M', 'F', 'O');
+create type gender as enum ('M', 'F', 'D');
 
 create table participant
 (
