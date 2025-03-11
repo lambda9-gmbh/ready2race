@@ -157,6 +157,45 @@ import type {
     DeleteFeeResponse,
     NewCaptchaError,
     NewCaptchaResponse,
+    AddClubData,
+    AddClubError,
+    AddClubResponse,
+    GetClubsData,
+    GetClubsError,
+    GetClubsResponse,
+    GetClubData,
+    GetClubError,
+    GetClubResponse,
+    UpdateClubData,
+    UpdateClubError,
+    UpdateClubResponse,
+    DeleteClubData,
+    DeleteClubError,
+    DeleteClubResponse,
+    GetClubParticipantsData,
+    GetClubParticipantsError,
+    GetClubParticipantsResponse,
+    AddClubParticipantData,
+    AddClubParticipantError,
+    AddClubParticipantResponse,
+    GetClubParticipantData,
+    GetClubParticipantError,
+    GetClubParticipantResponse,
+    UpdateClubParticipantData,
+    UpdateClubParticipantError,
+    UpdateClubParticipantResponse,
+    DeleteClubParticipantData,
+    DeleteClubParticipantError,
+    DeleteClubParticipantResponse,
+    GetClubNamesData,
+    GetClubNamesError,
+    GetClubNamesResponse,
+    GetEventRegistrationTemplateData,
+    GetEventRegistrationTemplateError,
+    GetEventRegistrationTemplateResponse,
+    AddEventRegistrationData,
+    AddEventRegistrationError,
+    AddEventRegistrationResponse,
     AddDocumentTypeData,
     AddDocumentTypeError,
     AddDocumentTypeResponse,
@@ -767,6 +806,151 @@ export const newCaptcha = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).post<NewCaptchaResponse, NewCaptchaError, ThrowOnError>({
         ...options,
         url: '/captcha',
+    })
+}
+
+export const addClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddClubResponse, AddClubError, ThrowOnError>({
+        ...options,
+        url: '/club',
+    })
+}
+
+export const getClubs = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetClubsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubsResponse, GetClubsError, ThrowOnError>({
+        ...options,
+        url: '/club',
+    })
+}
+
+export const getClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubResponse, GetClubError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}',
+    })
+}
+
+export const updateClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateClubResponse, UpdateClubError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}',
+    })
+}
+
+export const deleteClub = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteClubResponse, DeleteClubError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}',
+    })
+}
+
+export const getClubParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubParticipantsResponse,
+        GetClubParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant',
+    })
+}
+
+export const addClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddClubParticipantResponse,
+        AddClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant',
+    })
+}
+
+export const getClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubParticipantResponse,
+        GetClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}',
+    })
+}
+
+export const updateClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateClubParticipantResponse,
+        UpdateClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}',
+    })
+}
+
+export const deleteClubParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteClubParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteClubParticipantResponse,
+        DeleteClubParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/{participantId}',
+    })
+}
+
+export const getClubNames = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetClubNamesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubNamesResponse, GetClubNamesError, ThrowOnError>({
+        ...options,
+        url: '/club/search',
+    })
+}
+
+export const getEventRegistrationTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventRegistrationTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventRegistrationTemplateResponse,
+        GetEventRegistrationTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationTemplate',
+    })
+}
+
+export const addEventRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddEventRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddEventRegistrationResponse,
+        AddEventRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/register',
     })
 }
 

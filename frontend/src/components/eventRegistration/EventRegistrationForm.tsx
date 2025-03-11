@@ -1,9 +1,23 @@
 import * as React from 'react'
 import {useMemo} from 'react'
-import {Alert, AlertTitle, Box, Button, Stack, Step, StepLabel, Stepper, Typography} from '@mui/material'
+import {
+    Alert,
+    AlertTitle,
+    Box,
+    Button,
+    Stack,
+    Step,
+    StepLabel,
+    Stepper,
+    Typography,
+} from '@mui/material'
 import {FormContainer, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {PersonAdd} from '@mui/icons-material'
-import {EventRegistrationCompetitionDto, EventRegistrationTemplateDto, EventRegistrationUpsertDto} from '../../api'
+import {
+    EventRegistrationCompetitionDto,
+    EventRegistrationInfoDto,
+    EventRegistrationUpsertDto,
+} from '../../api'
 import {EventRegistrationParticipantForm} from './EventRegistrationParticipantForm.tsx'
 import {useTranslation} from 'react-i18next'
 import {v4 as uuid} from 'uuid'
@@ -29,23 +43,21 @@ function RegistrationEventDayInfo(props: {
             <Typography variant="body2">
                 {formatISO(props.date, {representation: 'date'})} {props.name}
             </Typography>
-            <Typography variant="body2">
-                {props.description}
-            </Typography>
+            <Typography variant="body2">{props.description}</Typography>
         </Stack>
     )
 }
 
 const EventRegistrationForm = ({
-                                   stepsBefore,
-                                   onSubmit,
-                                   template,
-                                   formContext,
-                                   adminEdit,
-                               }: {
+    stepsBefore,
+    onSubmit,
+    info,
+    formContext,
+    adminEdit,
+}: {
     stepsBefore?: EventRegistrationStep[]
     onSubmit: (data: Partial<EventRegistrationUpsertDto>) => void
-    template: EventRegistrationTemplateDto | null
+    info: EventRegistrationInfoDto | null
     formContext: UseFormReturn<EventRegistrationUpsertDto>
     adminEdit?: boolean
 }) => {
@@ -68,22 +80,25 @@ const EventRegistrationForm = ({
         return new Map([
             [
                 'M',
-                template?.competitionsSingle?.filter(
-                    r => r.countMales === 1 || r.countMixed === 1 || r.countNonBinary === 1,
+                info?.competitionsSingle?.filter(
+                    c =>
+                        c.namedParticipant?.[0].countMales === 1 ||
+                        c.namedParticipant?.[0].countMixed === 1 ||
+                        c.namedParticipant?.[0].countNonBinary === 1,
                 ) ?? [],
             ],
             [
                 'F',
-                template?.competitionsSingle?.filter(
-                    r => r.countFemales === 1 || r.countMixed === 1 || r.countNonBinary === 1,
+                info?.competitionsSingle?.filter(
+                    c =>
+                        c.namedParticipant?.[0].countFemales === 1 ||
+                        c.namedParticipant?.[0].countMixed === 1 ||
+                        c.namedParticipant?.[0].countNonBinary === 1,
                 ) ?? [],
             ],
-            [
-                'D',
-                template?.competitionsSingle ?? [],
-            ],
+            ['D', info?.competitionsSingle ?? []],
         ])
-    }, [template?.competitionsSingle])
+    }, [info?.competitionsSingle])
 
     const {
         fields: participantFields,
@@ -119,10 +134,10 @@ const EventRegistrationForm = ({
                                 lastname: '',
                                 year: 1990,
                                 gender: 'F',
-                                isNew: true
+                                isNew: true,
                             })
                         }>
-                        <PersonAdd />
+                        <PersonAdd sx={{mr: 1}} />
                         {t('event.registration.addParticipant')}
                     </Button>
                 </Stack>
@@ -131,47 +146,53 @@ const EventRegistrationForm = ({
         {
             label: t('event.registration.singleCompetition'),
             validateKeys: ['participants'],
-            content: <EventRegistrationSingleCompetitionForm competitionsSingle={competitionsSingle} />,
+            content: (
+                <EventRegistrationSingleCompetitionForm competitionsSingle={competitionsSingle} />
+            ),
         },
         {
             label: t('event.registration.teamCompetition'),
             validateKeys: ['competitionRegistrations'],
-            content: <EventRegistrationTeamCompetitionForm registrationTemplate={template} />,
+            content: <EventRegistrationTeamCompetitionForm registrationInfo={info} />,
         },
         ...(adminEdit
             ? []
             : [
-                {
-                    label: t('event.registration.summary'),
-                    validateKeys: [],
-                    content: (
-                        <React.Fragment>
-                            <Stack spacing={1}>
-                                <Alert severity={'info'}>
-                                    <AlertTitle>{t('event.registration.schedule')}</AlertTitle>
-                                    <Stack spacing={1}>
-                                        {template?.days.map(day => (
-                                            <RegistrationEventDayInfo
-                                                key={day.name}
-                                                name={day.name}
-                                                description={day.description}
-                                                date={day.date}
-                                            />
-                                        ))}
-                                    </Stack>
-                                </Alert>
-                                <FormInputText
-                                    fullWidth
-                                    multiline={true}
-                                    rows={5}
-                                    name={'message'}
-                                    label={t('event.registration.message')}
-                                />
-                            </Stack>
-                        </React.Fragment>
-                    ),
-                },
-            ]),
+                  {
+                      label: t('event.registration.summary'),
+                      validateKeys: [],
+                      content: (
+                          <React.Fragment>
+                              <Stack spacing={1}>
+                                  {(info?.days?.length ?? 0) > 0 && (
+                                      <Alert severity={'info'}>
+                                          <AlertTitle>
+                                              {t('event.registration.schedule')}
+                                          </AlertTitle>
+                                          <Stack spacing={1}>
+                                              {info?.days.map(day => (
+                                                  <RegistrationEventDayInfo
+                                                      key={day.name}
+                                                      name={day.name}
+                                                      description={day.description}
+                                                      date={day.date}
+                                                  />
+                                              ))}
+                                          </Stack>
+                                      </Alert>
+                                  )}
+                                  <FormInputText
+                                      fullWidth
+                                      multiline={true}
+                                      rows={5}
+                                      name={'message'}
+                                      label={t('event.registration.message')}
+                                  />
+                              </Stack>
+                          </React.Fragment>
+                      ),
+                  },
+              ]),
     ]
 
     return (
@@ -185,7 +206,7 @@ const EventRegistrationForm = ({
             <FormContainer formContext={formContext} onSuccess={onSubmit}>
                 <Stack>
                     <Stack direction={'row'} justifyContent={'end'} alignItems={'center'}>
-                         <EventRegistrationFeeDisplay registrationTemplate={template} />
+                        <EventRegistrationFeeDisplay registrationInfo={info} />
                     </Stack>
                     <Stepper activeStep={activeStep}>
                         {steps.map(({label}) => {

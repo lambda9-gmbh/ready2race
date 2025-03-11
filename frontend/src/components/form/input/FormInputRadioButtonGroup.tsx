@@ -1,28 +1,23 @@
-import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
-import {AutocompleteElement, AutocompleteElementProps} from 'react-hook-form-mui'
-import {RefAttributes} from 'react'
 import {useTranslation} from 'react-i18next'
+import {RadioButtonGroup, RadioButtonGroupProps} from 'react-hook-form-mui'
+import FormInputLabel from './FormInputLabel.tsx'
 
-type FormInputAutocompleteProps = AutocompleteElementProps & RefAttributes<HTMLDivElement>
-
-const FormInputAutocomplete = (props: FormInputAutocompleteProps) => {
+export const FormInputRadioButtonGroup = (props: RadioButtonGroupProps) => {
     const {t} = useTranslation()
 
     return (
         <FormInputLabel
             label={props.label}
             required={props.required === true || props.rules?.required !== undefined}>
-            <AutocompleteElement
+            <RadioButtonGroup
                 {...props}
                 rules={{
                     ...props.rules,
                     ...(props.required &&
                         !props.rules?.required && {required: t('common.form.required')}),
                 }}
-                label={null}
+                label={undefined}
             />
         </FormInputLabel>
     )
 }
-
-export default FormInputAutocomplete

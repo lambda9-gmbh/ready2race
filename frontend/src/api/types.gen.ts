@@ -83,6 +83,22 @@ export type CaptchaDto = {
     start: number
 }
 
+export type ClubDto = {
+    id: string
+    name: string
+    createdAt: string
+    updatedAt: string
+}
+
+export type ClubSearchDto = {
+    id: string
+    name: string
+}
+
+export type ClubUpsertDto = {
+    name: string
+}
+
 export type CompetitionCategoryDto = {
     id: string
     name: string
@@ -119,6 +135,28 @@ export type CompetitionPropertiesRequestDto = {
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
+}
+
+export type CompetitionRegistrationNamedParticipantUpsertDto = {
+    namedParticipantId: string
+    participantIds: Array<string>
+}
+
+export type CompetitionRegistrationSingleUpsertDto = {
+    competitionId: string
+    optionalFees?: Array<string>
+}
+
+export type CompetitionRegistrationTeamUpsertDto = {
+    id: string
+    participants?: Array<string>
+    optionalFees?: Array<string>
+    namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
+}
+
+export type CompetitionRegistrationUpsertDto = {
+    competitionId: string
+    teams?: Array<CompetitionRegistrationTeamUpsertDto>
 }
 
 export type CompetitionRequest = {
@@ -193,6 +231,83 @@ export type EventDto = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+}
+
+export type EventRegistrationCompetitionDto = {
+    id: string
+    identifier: string
+    name: string
+    shortName?: string
+    description?: string
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+    competitionCategory: string
+    namedParticipant?: Array<EventRegistrationNamedParticipantDto>
+    fees?: Array<EventRegistrationFeeDto>
+    days: Array<string>
+}
+
+export type EventRegistrationDayDto = {
+    id: string
+    date: string
+    name?: string | null
+    description?: string | null
+}
+
+export type EventRegistrationFeeDto = {
+    id: string
+    label: string
+    description?: string | null
+    required: boolean
+    amount: number
+}
+
+export type EventRegistrationInfoDto = {
+    name: string
+    description?: string
+    location?: string
+    days: Array<EventRegistrationDayDto>
+    competitionsSingle: Array<EventRegistrationCompetitionDto>
+    competitionsTeam: Array<EventRegistrationCompetitionDto>
+}
+
+export type EventRegistrationNamedParticipantDto = {
+    id: string
+    name: string
+    description?: string
+    required?: boolean
+    countMales: number
+    countFemales: number
+    countNonBinary: number
+    countMixed: number
+}
+
+export type EventRegistrationParticipantUpsertDto = {
+    id: string
+    isNew?: boolean
+    hasChanged?: boolean
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: 'M' | 'F' | 'O'
+    external?: boolean | null
+    externalClubName?: string | null
+    competitionsSingle?: Array<CompetitionRegistrationSingleUpsertDto>
+}
+
+export type gender = 'M' | 'F' | 'O'
+
+export type EventRegistrationTemplateDto = {
+    info: EventRegistrationInfoDto
+    upsertableRegistration: EventRegistrationUpsertDto
+}
+
+export type EventRegistrationUpsertDto = {
+    participants: Array<EventRegistrationParticipantUpsertDto>
+    competitionRegistrations: Array<CompetitionRegistrationUpsertDto>
+    message?: string
 }
 
 export type EventRequest = {
@@ -273,6 +388,7 @@ export type InviteRequest = {
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
+    clubId?: string
 }
 
 export type LoginRequest = {
@@ -360,6 +476,29 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
+export type ParticipantDto = {
+    id: string
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: 'M' | 'F' | 'O'
+    phone?: string | null
+    external?: boolean | null
+    externalClubName?: string | null
+    createdAt: string
+    updatedAt: string
+}
+
+export type ParticipantUpsertDto = {
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: 'M' | 'F' | 'O'
+    phone?: string | null
+    external?: boolean | null
+    externalClubName?: string | null
+}
+
 export type PasswordResetInitRequest = {
     email: string
     language: EmailLanguage
@@ -392,7 +531,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT'
 
 export type RoleDto = {
     id: string
@@ -1096,6 +1235,195 @@ export type DeleteFeeError = ApiError
 export type NewCaptchaResponse = CaptchaDto
 
 export type NewCaptchaError = ApiError
+
+export type AddClubData = {
+    body: ClubUpsertDto
+}
+
+export type AddClubResponse = string
+
+export type AddClubError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetClubsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetClubsResponse = {
+    data: Array<ClubDto>
+    pagination: Pagination
+}
+
+export type GetClubsError = ApiError
+
+export type GetClubData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type GetClubResponse = ClubDto
+
+export type GetClubError = ApiError
+
+export type UpdateClubData = {
+    body: ClubUpsertDto
+    path: {
+        clubId: string
+    }
+}
+
+export type UpdateClubResponse = void
+
+export type UpdateClubError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteClubData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type DeleteClubResponse = void
+
+export type DeleteClubError = ApiError
+
+export type GetClubParticipantsData = {
+    path: {
+        clubId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetClubParticipantsResponse = {
+    data: Array<ParticipantDto>
+    pagination: Pagination
+}
+
+export type GetClubParticipantsError = ApiError
+
+export type AddClubParticipantData = {
+    body: ParticipantUpsertDto
+    path: {
+        clubId: string
+    }
+}
+
+export type AddClubParticipantResponse = string
+
+export type AddClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetClubParticipantData = {
+    path: {
+        clubId: string
+        participantId: string
+    }
+}
+
+export type GetClubParticipantResponse = ParticipantDto
+
+export type GetClubParticipantError = ApiError
+
+export type UpdateClubParticipantData = {
+    body: ParticipantUpsertDto
+    path: {
+        clubId: string
+        participantId: string
+    }
+}
+
+export type UpdateClubParticipantResponse = void
+
+export type UpdateClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteClubParticipantData = {
+    path: {
+        clubId: string
+        participantId: string
+    }
+}
+
+export type DeleteClubParticipantResponse = void
+
+export type DeleteClubParticipantError = ApiError
+
+export type GetClubNamesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetClubNamesResponse = {
+    data: Array<ClubSearchDto>
+    pagination: Pagination
+}
+
+export type GetClubNamesError = ApiError
+
+export type GetEventRegistrationTemplateData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventRegistrationTemplateResponse = EventRegistrationTemplateDto
+
+export type GetEventRegistrationTemplateError = ApiError
+
+export type AddEventRegistrationData = {
+    body: EventRegistrationUpsertDto
+}
+
+export type AddEventRegistrationResponse = string
+
+export type AddEventRegistrationError = BadRequestError | ApiError
 
 export type AddDocumentTypeData = {
     body: EventDocumentTypeRequest

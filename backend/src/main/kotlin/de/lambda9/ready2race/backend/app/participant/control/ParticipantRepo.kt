@@ -1,11 +1,12 @@
 package de.lambda9.ready2race.backend.app.participant.control
 
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Participant
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -16,17 +17,11 @@ object ParticipantRepo {
 
     private fun Participant.searchFields() = listOf(FIRSTNAME, LASTNAME, EXTERNAL_CLUB_NAME)
 
-    fun create(
-        record: ParticipantRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(PARTICIPANT) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    fun create(record: ParticipantRecord) = PARTICIPANT.insertReturning(record) { PARTICIPANT.ID }
+
+    fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
+
+    fun existsByIdAndClub(id: UUID, clubId: UUID) = PARTICIPANT.exists { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
 
     fun count(
         search: String?,

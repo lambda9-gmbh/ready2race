@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import de.lambda9.ready2race.backend.Config
+import de.lambda9.ready2race.backend.database.JooqQueryPrinter
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -49,7 +50,7 @@ data class Env(
 
             val configuration = DefaultConfiguration()
                 .set(ds)
-                /*.set(JooqQueryPrinter())*/
+                .set(JooqQueryPrinter())
                 .set(config.dialect)
 
             return Jooq(

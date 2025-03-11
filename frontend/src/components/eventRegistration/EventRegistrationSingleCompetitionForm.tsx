@@ -1,17 +1,14 @@
 import {CheckboxButtonGroup, useFormContext, useWatch} from 'react-hook-form-mui'
-import {Checkbox, FormControlLabel, Paper, Stack, Typography} from '@mui/material'
+import {Checkbox, Divider, FormControlLabel, Paper, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {Person} from '@mui/icons-material'
 import {EventRegistrationCompetitionDto, EventRegistrationUpsertDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
-import {useTranslation} from 'react-i18next'
 
 const EventSingleCompetitionField = (props: {
     option: EventRegistrationCompetitionDto
-    participantIndex: number,
+    participantIndex: number
 }) => {
-    const {t} = useTranslation()
-
     const formContext = useFormContext<EventRegistrationUpsertDto>()
 
     const [active, setActive] = useState(false)
@@ -43,29 +40,28 @@ const EventSingleCompetitionField = (props: {
     }
 
     return (
-        <Stack direction="row" justifyContent={'space-between'}>
+        <Stack direction="row">
             <FormControlLabel
                 control={<Checkbox />}
                 checked={active}
                 onChange={(_, checked) => onChange(checked)}
                 label={
                     <Stack direction={'row'} alignItems={'center'} spacing={1}>
-                        <Typography>
-                            {props.option.name}
-                        </Typography>
+                        <Typography>{props.option.name}</Typography>
                         <EventRegistrationPriceTooltip competition={props.option} />
                     </Stack>
                 }
             />
-            {
-                active &&
-                <CheckboxButtonGroup
-                    label={t('event.registration.optionalFee')}
-                    name={`participants.${props.participantIndex}.competitionsSingle.${competitionIndex}.optionalFees`}
-                    options={props.option.fees?.filter(f => !f.required) ?? []}
-                    row
-                />
-            }
+            {active && (props.option.fees?.length ?? 0) > 0 && (
+                <>
+                    <Divider orientation={'vertical'} sx={{mr: 2}} />
+                    <CheckboxButtonGroup
+                        name={`participants.${props.participantIndex}.competitionsSingle.${competitionIndex}.optionalFees`}
+                        options={props.option.fees?.filter(f => !f.required) ?? []}
+                        row
+                    />
+                </>
+            )}
         </Stack>
     )
 }
@@ -92,14 +88,16 @@ export const EventRegistrationSingleCompetitionForm = (props: {
                                     {`${participant.firstname} ${participant.lastname}`}
                                 </Typography>
                             </Stack>
-                            <Stack spacing={2} flex={1} direction="row">
-                                {props.competitionsSingle.get(participant.gender ?? 'O')?.map((option) => (
-                                    <EventSingleCompetitionField
-                                        key={option.id}
-                                        participantIndex={index}
-                                        option={option}
-                                    />
-                                ))}
+                            <Stack flex={1}>
+                                {props.competitionsSingle
+                                    .get(participant.gender ?? 'O')
+                                    ?.map(option => (
+                                        <EventSingleCompetitionField
+                                            key={option.id}
+                                            participantIndex={index}
+                                            option={option}
+                                        />
+                                    ))}
                             </Stack>
                         </Stack>
                         <Typography alignSelf={'end'} variant={'overline'} color={'grey'}>

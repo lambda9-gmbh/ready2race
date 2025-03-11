@@ -10,7 +10,6 @@ import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.*
 import org.jooq.impl.DSL
 import org.jooq.impl.TableImpl
-import org.jooq.impl.TableRecordImpl
 
 fun Collection<Condition>.and() = DSL.and(*this.toTypedArray())
 fun Collection<Condition>.or() = DSL.or(*this.toTypedArray())
@@ -20,13 +19,13 @@ fun String?.metaSearch(fields: List<TableField<*, *>>, splitRegex: Regex = Regex
         ?.takeIf { it.isNotBlank() }
         ?.split(splitRegex)
         ?.takeIf { it.isNotEmpty() }
-        ?.map { s -> fields.map { it.cast(String::class.java).containsIgnoreCase(s) }.or()}
+        ?.map { s -> fields.map { it.cast(String::class.java).containsIgnoreCase(s) }.or() }
         ?.and()
         ?: DSL.trueCondition()
 
 fun <R : Record, S : Sortable> SelectWhereStep<R>.page(
     paginationParameter: PaginationParameters<S>,
-    searchFields: List<TableField<*,*>> = emptyList(),
+    searchFields: List<TableField<*, *>> = emptyList(),
     where: () -> Condition = { DSL.trueCondition() }
 ): SelectForUpdateStep<R> =
     this
@@ -104,4 +103,10 @@ fun <R : Record, T : TableImpl<R>> T.delete(
     deleteFrom(this@delete)
         .where(condition())
         .execute()
+}
+
+fun <R : Record, T : TableImpl<R>> T.findFirstBy(
+    condition: T.() -> Condition
+): JIO<R?> = Jooq.query {
+    fetchOne(this@findFirstBy, condition())
 }

@@ -3098,6 +3098,17 @@ components:
     EventRegistrationTemplateDto:
       type: object
       properties:
+        info:
+          $ref: '#/components/schemas/EventRegistrationInfoDto'
+        upsertableRegistration:
+          $ref: '#/components/schemas/EventRegistrationUpsertDto'
+      required:
+        - info
+        - upsertableRegistration
+
+    EventRegistrationInfoDto:
+      type: object
+      properties:
         name:
           type: string
         description:
@@ -3318,6 +3329,8 @@ components:
           type: string
           format: uuid
         isNew:
+          type: boolean
+        hasChanged:
           type: boolean
         firstname:
           type: string

@@ -5,12 +5,12 @@ import {useTranslation} from 'react-i18next'
 import {
     CompetitionRegistrationSingleUpsertDto,
     CompetitionRegistrationTeamUpsertDto,
-    EventRegistrationTemplateDto,
+    EventRegistrationInfoDto,
     EventRegistrationUpsertDto,
 } from '@api/types.gen.ts'
 
 export const EventRegistrationFeeDisplay = (props: {
-    registrationTemplate: EventRegistrationTemplateDto | null
+    registrationInfo: EventRegistrationInfoDto | null
 }) => {
     const {t} = useTranslation()
     const formContext = useFormContext<EventRegistrationUpsertDto>()
@@ -18,19 +18,22 @@ export const EventRegistrationFeeDisplay = (props: {
     const [teamAmount, setTeamAmount] = useState<number>(0)
     const [singleAmount, setSingleAmount] = useState<number>(0)
 
-    const competitionRegistrations = useWatch({control: formContext.control, name: 'competitionRegistrations'})
+    const competitionRegistrations = useWatch({
+        control: formContext.control,
+        name: 'competitionRegistrations',
+    })
     const participants = useWatch({control: formContext.control, name: 'participants'})
 
     const competitionMap = useMemo(() => {
         return new Map(
-            [...props.registrationTemplate?.competitionsSingle ?? [],
-                ...props.registrationTemplate?.competitionsTeam ?? [],
-            ]
-                .map(competition => {
-                    return [competition.id, competition]
-                }),
+            [
+                ...(props.registrationInfo?.competitionsSingle ?? []),
+                ...(props.registrationInfo?.competitionsTeam ?? []),
+            ].map(competition => {
+                return [competition.id, competition]
+            }),
         )
-    }, [props.registrationTemplate?.competitionsSingle, props.registrationTemplate?.competitionsTeam])
+    }, [props.registrationInfo?.competitionsSingle, props.registrationInfo?.competitionsTeam])
 
     useEffect(() => {
         setTeamAmount(
@@ -58,15 +61,19 @@ export const EventRegistrationFeeDisplay = (props: {
         )
     }, [participants])
 
-    const calcAmountForTeam = (competitionId: string, registration: CompetitionRegistrationTeamUpsertDto): number => {
+    const calcAmountForTeam = (
+        competitionId: string,
+        registration: CompetitionRegistrationTeamUpsertDto,
+    ): number => {
         const competition = competitionMap.get(competitionId)
         if (competition) {
-            return competition.fees?.filter(fee =>
-                fee.required || registration.optionalFees?.includes(fee.id),
-            ).reduce((sum, fee) => {
-                return sum + Number(fee.amount)
-            }, 0) ?? 0
-
+            return (
+                competition.fees
+                    ?.filter(fee => fee.required || registration.optionalFees?.includes(fee.id))
+                    .reduce((sum, fee) => {
+                        return sum + Number(fee.amount)
+                    }, 0) ?? 0
+            )
         } else {
             return 0
         }
@@ -75,23 +82,22 @@ export const EventRegistrationFeeDisplay = (props: {
     const calcAmountForSingle = (registration: CompetitionRegistrationSingleUpsertDto): number => {
         const competition = competitionMap.get(registration.competitionId)
         if (competition) {
-            return competition.fees?.filter(fee =>
-                fee.required || registration.optionalFees?.includes(fee.id),
-            ).reduce((sum, fee) => {
-                return sum + Number(fee.amount)
-            }, 0) ?? 0
+            return (
+                competition.fees
+                    ?.filter(fee => fee.required || registration.optionalFees?.includes(fee.id))
+                    .reduce((sum, fee) => {
+                        return sum + Number(fee.amount)
+                    }, 0) ?? 0
+            )
         } else {
             return 0
         }
     }
 
-
     return (
         <Paper elevation={2} sx={{width: '240px', alignSelf: 'end', mb: 3}}>
             <Stack p={1} alignItems={'end'}>
-                <Typography variant={'caption'}>
-                    {t('event.registration.totalFees')}
-                </Typography>
+                <Typography variant={'caption'}>{t('event.registration.totalFees')}</Typography>
                 <Typography variant={'h5'}>{(teamAmount + singleAmount).toFixed(2)}€</Typography>
             </Stack>
         </Paper>

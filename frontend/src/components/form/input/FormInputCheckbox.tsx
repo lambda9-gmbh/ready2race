@@ -1,18 +1,18 @@
-import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
-import {AutocompleteElement, AutocompleteElementProps} from 'react-hook-form-mui'
-import {RefAttributes} from 'react'
 import {useTranslation} from 'react-i18next'
+import {CheckboxElement, CheckboxElementProps} from 'react-hook-form-mui'
+import FormInputLabel from './FormInputLabel.tsx'
+import {RefAttributes} from 'react'
 
-type FormInputAutocompleteProps = AutocompleteElementProps & RefAttributes<HTMLDivElement>
+export type BaseFormInputProps = CheckboxElementProps & RefAttributes<HTMLDivElement>
 
-const FormInputAutocomplete = (props: FormInputAutocompleteProps) => {
+export const FormInputCheckbox = (props: BaseFormInputProps) => {
     const {t} = useTranslation()
 
     return (
         <FormInputLabel
             label={props.label}
             required={props.required === true || props.rules?.required !== undefined}>
-            <AutocompleteElement
+            <CheckboxElement
                 {...props}
                 rules={{
                     ...props.rules,
@@ -20,9 +20,8 @@ const FormInputAutocomplete = (props: FormInputAutocompleteProps) => {
                         !props.rules?.required && {required: t('common.form.required')}),
                 }}
                 label={null}
+                sx={{width: 1}}
             />
         </FormInputLabel>
     )
 }
-
-export default FormInputAutocomplete

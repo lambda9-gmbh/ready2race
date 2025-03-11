@@ -1,11 +1,18 @@
-import {AutocompleteElement, useFormContext, useWatch} from 'react-hook-form-mui'
+import {useFormContext, useWatch} from 'react-hook-form-mui'
 import {useEffect, useMemo, useState} from 'react'
 import {debounce} from '@mui/material'
 import {Search} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {ClubSearchDto, getClubNames} from '../../../api'
+import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 
-export const FormInputAutocompleteClub = (props: {name: string; label: string; required?: boolean, disabled?: boolean}) => {
+export const FormInputAutocompleteClub = (props: {
+    name: string
+    label: string
+    required?: boolean
+    disabled?: boolean
+    onChange: () => void
+}) => {
     const {t} = useTranslation()
 
     const [options, setOptions] = useState<string[]>([])
@@ -49,11 +56,12 @@ export const FormInputAutocompleteClub = (props: {name: string; label: string; r
     }, [inputValue, search])
 
     return (
-        <AutocompleteElement
+        <FormInputAutocomplete
             name={props.name}
             label={props.label}
             options={options}
             loading={loading}
+            onChange={props.onChange}
             required={props.required}
             rules={{
                 ...(props.required && {required: t('common.form.required')}),
@@ -64,9 +72,10 @@ export const FormInputAutocompleteClub = (props: {name: string; label: string; r
                 },
             }}
             autocompleteProps={{
+                size: 'small',
+                // @ts-ignore
                 freeSolo: true,
                 filterSelectedOptions: true,
-                disableClearable: true,
                 autoSelect: true,
                 disabled: props.disabled,
             }}

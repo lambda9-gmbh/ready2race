@@ -5,9 +5,11 @@ import de.lambda9.ready2race.backend.responses.ApiError
 import io.ktor.http.*
 
 enum class EventRegistrationError : ServiceError {
-    EventNotFound;
+    EventNotFound,
+    InvalidRegistration;
 
     override fun respond(): ApiError = when (this) {
         EventNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Event not found")
+        InvalidRegistration -> ApiError(status = HttpStatusCode.BadRequest, message = "Invalid registration")
     }
 }
