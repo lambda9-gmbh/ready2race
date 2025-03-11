@@ -80,7 +80,6 @@ const RegistrationPage = () => {
             } else {
                 feedback.error(t('user.registration.error'))
             }
-            console.error(error)
         } else {
             setRequested(true)
         }

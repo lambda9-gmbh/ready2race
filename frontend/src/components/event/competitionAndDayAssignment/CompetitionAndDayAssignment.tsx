@@ -95,7 +95,6 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
         setSubmitting(false)
 
         if (error) {
-            console.error(error)
             feedback.error(t('event.assign.save.error', entityNames))
         } else {
             closeDialog()

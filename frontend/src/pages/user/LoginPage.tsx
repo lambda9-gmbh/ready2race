@@ -33,7 +33,6 @@ const LoginPage = () => {
         if (data !== undefined) {
             login(data)
         } else if (error) {
-            console.error(error)
             if (error.status.value === 429) {
                 feedback.error(t('user.login.error.tooManyRequests'))
             } else if (error.status.value === 500) {
