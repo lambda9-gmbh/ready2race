@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.competitionCategory.control
 
-import de.lambda9.ready2race.backend.app.competitionCategory.control.CompetitionCategoryRepo.update
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategorySort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionCategory
@@ -9,7 +8,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.COMPET
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
-import java.util.UUID
+import java.util.*
 
 
 object CompetitionCategoryRepo {

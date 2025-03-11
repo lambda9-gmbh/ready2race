@@ -1,15 +1,8 @@
 package de.lambda9.ready2race.backend.app
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import de.lambda9.ready2race.backend.Config
-import de.lambda9.ready2race.backend.database.JooqQueryPrinter
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
-import org.jooq.impl.DSL
-import org.jooq.impl.DefaultConfiguration
-import java.io.PrintWriter
-import java.util.*
 import javax.sql.DataSource
 
 data class Env(
@@ -23,22 +16,14 @@ data class Env(
                 config = config
             )
 
-            return create(env) {
+            return Jooq.create(env) {
                 url = config.database.url
                 user = config.database.user
                 password = config.database.password
                 schema = "ready2race"
+                queryPrinter = null
             }
         }
-
-        private fun <R> create(
-            env: R,
-            init: Jooq.Config.() -> Unit
-        ): Pair<Jooq<R>, HikariDataSource> {
-            val config = Jooq.Config().apply(init)
-            val props = Properties().apply {
-                put("dataSource.logWriter", PrintWriter(System.out))
-            }
 
             val ds = HikariDataSource(HikariConfig(props).apply {
                 jdbcUrl = config.url
@@ -50,7 +35,7 @@ data class Env(
 
             val configuration = DefaultConfiguration()
                 .set(ds)
-                .set(JooqQueryPrinter())
+                /*.set(JooqQueryPrinter())*/
                 .set(config.dialect)
 
             return Jooq(

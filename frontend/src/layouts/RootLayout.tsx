@@ -76,7 +76,7 @@ const RootLayout = () => {
                                 to={'/role'}
                             />
                             <SidebarItem
-                                text={'[todo] config'}
+                                text={t('navigation.titles.config')}
                                 icon={<Settings />}
                                 authenticatedOnly
                                 privilege={updateEventGlobal}

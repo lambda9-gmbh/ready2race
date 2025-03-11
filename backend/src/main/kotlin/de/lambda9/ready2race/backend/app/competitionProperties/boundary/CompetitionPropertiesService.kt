@@ -1,22 +1,18 @@
 package de.lambda9.ready2race.backend.app.competitionProperties.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionCategory.control.CompetitionCategoryRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesError
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequestDto
 import de.lambda9.ready2race.backend.app.fee.control.FeeRepo
-import de.lambda9.ready2race.backend.app.fee.entity.FeeError
+import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasNamedParticipantRecord
-import de.lambda9.ready2race.backend.kio.failIf
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.UIO
-import de.lambda9.tailwind.core.URIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.util.*
 
@@ -61,9 +57,7 @@ object CompetitionPropertiesService {
             unit
         } else {
             CompetitionCategoryRepo.exists(competitionCategory).orDie()
-                .failIf(condition = { !it }) {
-                    CompetitionPropertiesError.CompetitionCategoryUnknown
-                }.map {}
+                .onFalseFail { CompetitionPropertiesError.CompetitionCategoryUnknown }
         }
 
     fun checkRequestReferences(

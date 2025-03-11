@@ -8,6 +8,8 @@ import {eventIndexRoute} from '@routes'
 import {Download} from '@mui/icons-material'
 import {useRef} from 'react'
 import {Link} from '@mui/material'
+import {useFeedback} from "@utils/hooks.ts";
+import {useTranslation} from "react-i18next";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -17,6 +19,9 @@ const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 
 const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
+    const {t} = useTranslation()
+    const feedback = useFeedback()
+
     const downloadRef = useRef<HTMLAnchorElement>(null)
     const {eventId} = eventIndexRoute.useParams()
 
@@ -40,13 +45,13 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
     const columns: GridColDef<EventDocumentDto>[] = [
         {
             field: 'name',
-            headerName: '[todo] Bezeichnung',
+            headerName: t('event.document.name'),
             minWidth: 200,
             flex: 1,
         },
         {
             field: 'documentType',
-            headerName: '[todo] Typ',
+            headerName: t('event.document.type.type'),
             minWidth: 200,
             flex: 1,
             valueGetter: (_, row) => row.documentType?.name,
@@ -54,18 +59,20 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
     ]
 
     const handleDownloadDocument = async (entity: EventDocumentDto) => {
-        // todo: error handling
-        const {data} = await downloadDocument({
+        const {data, error} = await downloadDocument({
             path: {
                 eventId,
                 eventDocumentId: entity.id,
             },
         })
         const anchor = downloadRef.current
-        if (data != undefined && anchor) {
+
+        if(error){
+            feedback.error(t('event.document.download.error'))
+        } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
             anchor.download = entity.name
-            //anchor.click()
+            anchor.click()
             anchor.href = ''
             anchor.download = ''
         }
@@ -74,7 +81,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
     const customActions = (entity: EventDocumentDto): EntityTableAction[] => [
         <GridActionsCellItem
             icon={<Download />}
-            label={'[todo] download'}
+            label={t('event.document.download.download')}
             onClick={() => handleDownloadDocument(entity)}
             showInMenu
         />,

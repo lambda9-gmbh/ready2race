@@ -14,20 +14,15 @@ const VerifyRegistrationPage = () => {
     const [verifying, setVerifying] = useState(false)
 
     useEffect(() => {
-        const sendVerification = async () => {
+        ;(async () => {
             setVerifying(true)
-            const {error} = await verifyUserRegistration({
+            await verifyUserRegistration({
                 body: {
                     token: registrationToken,
                 },
             })
             setVerifying(false)
-
-            if (error) {
-                console.error(error)
-            }
-        }
-        sendVerification().catch(console.error)
+        })()
     }, [])
 
     return (

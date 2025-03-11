@@ -50,8 +50,8 @@ const FeeDialog = (props: BaseEntityDialogProps<FeeDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name="name" label={t('entity.name')} required />
-                <FormInputText name="description" label={t('entity.description')} />
+                <FormInputText name="name" label={t('event.competition.fee.name')} required />
+                <FormInputText name="description" label={t('event.competition.fee.description')} />
             </Stack>
         </EntityDialog>
     )

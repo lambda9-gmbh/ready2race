@@ -24,7 +24,9 @@ fun Route.event() {
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    EventService.addEvent(!payload, user.id!!)
+
+                    val body = !payload
+                    EventService.addEvent(body, user.id!!)
                 }
             }
         }
@@ -62,7 +64,9 @@ fun Route.event() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.updateEvent(!payload, user.id!!, id)
+
+                        val body = !payload
+                        EventService.updateEvent(body, user.id!!, id)
                     }
                 }
             }

@@ -73,7 +73,7 @@ object CompetitionTemplateService {
         templateId: UUID
     ): App<CompetitionTemplateError, ApiResponse> = KIO.comprehension {
         val competition = !CompetitionTemplateRepo.getWithProperties(templateId).orDie()
-            .onNullFail { CompetitionTemplateError.CompetitionTemplateNotFound }
+            .onNullFail { CompetitionTemplateError.NotFound }
         competition.toDto().map { ApiResponse.Dto(it) }
     }
 
@@ -88,7 +88,7 @@ object CompetitionTemplateService {
         !CompetitionTemplateRepo.update(templateId) {
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().onNullFail { CompetitionTemplateError.CompetitionTemplateNotFound }
+        }.orDie().onNullFail { CompetitionTemplateError.NotFound }
 
         // In theory the CompetitionPropertiesRepo functions can't fail because there has to be a "properties" for the "competition" to exist
         !CompetitionPropertiesRepo
@@ -115,7 +115,7 @@ object CompetitionTemplateService {
         val deleted = !CompetitionTemplateRepo.delete(id).orDie()
 
         if (deleted < 1) {
-            KIO.fail(CompetitionTemplateError.CompetitionTemplateNotFound)
+            KIO.fail(CompetitionTemplateError.NotFound)
         } else {
             noData
         }

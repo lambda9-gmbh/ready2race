@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionProperties.entity
 
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryDto
-import java.math.BigDecimal
 
 data class CompetitionPropertiesDto(
     val identifier: String,

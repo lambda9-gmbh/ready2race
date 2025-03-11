@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.eventDay.control
 
-import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo.update
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventDay

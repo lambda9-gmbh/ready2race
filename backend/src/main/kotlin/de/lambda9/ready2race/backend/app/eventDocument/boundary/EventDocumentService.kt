@@ -15,12 +15,12 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.control.EventDocument
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeError
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
-import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie

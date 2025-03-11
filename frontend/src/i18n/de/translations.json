@@ -39,7 +39,10 @@
     },
     "load": {
       "error": {
-        "multiple": "{{entity}} konnten nicht geladen werden",
+        "multiple": {
+          "short": "{{entity}} konnten nicht geladen werden",
+          "detailed": "Beim Laden von {{entity}} ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
+        },
         "single": "{{entity}} konnte nicht geladen werden"
       }
     },
@@ -54,6 +57,7 @@
     "point": ","
   },
   "entity": {
+    "entity": "Objekt",
     "add": {
       "action": "{{entity}} anlegen",
       "success": "{{entity}} angelegt",
@@ -71,8 +75,6 @@
       "success": "{{entity}} aktualisiert",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
     },
-    "entity": "Objekt",
-    "name": "Name",
     "firstname": "Vorname",
     "lastname": "Nachname",
     "gender": "Geschlecht",
@@ -85,6 +87,7 @@
       "competitionConfig": "Wettkampf Einstellungen",
       "roles": "Rollen",
       "users": "Benutzer",
+      "config": "Konfigurationen",
       "clubs": "Vereine"
     }
   },
@@ -97,28 +100,38 @@
     }
   },
   "event": {
-    "assign": {
-      "save": {
-        "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
-        "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
-      }
-    },
     "event": "Veranstaltung",
-    "eventDay": {
-      "assignedCompetitions": "Wettkämpfe für den Tag",
-      "date": "Datum",
-      "eventDay": "Tag",
-      "eventDays": "Tage"
-    },
+    "events": "Veranstaltungen",
+    "name": "Name",
+    "description": "Beschreibung",
     "invoice": {
       "prefix": "Rechnungspräfix"
     },
     "location": "Ort",
+    "registrationAvailable": {
+      "from": "Anmeldezeitraum von",
+      "to": "Anmeldezeitraum bis"
+    },
+    "eventDay": {
+      "eventDay": "Tag",
+      "eventDays": "Tage",
+      "date": "Datum",
+      "name": "Name",
+      "description": "Beschreibung",
+      "assignedCompetitions": "Wettkämpfe für den Tag"
+    },
     "competition": {
-      "assignedDays": "Tage des Wettkampfs",
+      "competition": "Wettkampf",
+      "competitions": "Wettkämpfe",
+      "identifier": "Kennung",
+      "name": "Name",
+      "description": "Beschreibung",
+      "shortName": "Kurzname",
       "category": {
         "category": "Kategorie",
-        "categories": "Kategorien"
+        "categories": "Kategorien",
+        "name": "Name",
+        "description": "Beschreibung"
       },
       "count": {
         "males": "Anzahl Männer",
@@ -126,12 +139,13 @@
         "nonBinary": "Anzahl nichtbinäre Personen",
         "mixed": "Anzahl Beliebige"
       },
-      "identifier": "Kennung",
       "namedParticipant": {
-        "add": "Spezifischen Teilnehmer hinzufügen",
         "namedParticipant": "Spezifizierter Teilnehmer",
         "namedParticipants": "Spezifizierte Teilnehmer",
+        "name": "Name",
+        "description": "Beschreibung",
         "role": "Rolle",
+        "add": "Spezifischen Teilnehmer hinzufügen",
         "error": {
           "emptyList": "Bitte fügen Sie mindestens einen spezifischen Teilnehmer hinzu",
           "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
@@ -145,26 +159,57 @@
       "fee": {
         "fee": "Gebühr",
         "fees": "Gebühren",
+        "name": "Name",
+        "description": "Beschreibung",
+        "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
         "required": {
-          "notRequired": "Nicht verpflichtend",
-          "required": "Verpflichtend"
-        },
-        "amount": "Menge"
+          "notRequired": "Gebühr ist nicht verpflichtend",
+          "required": "Gebühr ist verpflichtend"
+        }
       },
-      "competition": "Wettkampf",
-      "competitions": "Wettkämpfe",
-      "shortName": "Kurzname",
       "template": {
         "template": "Vorlage",
-        "templates": "Vorlagen"
+        "templates": "Vorlagen",
+        "name": "Name",
+        "description": "Beschreibung"
+      },
+      "assignedDays": "Tage des Wettkampfs",
+      "error": {
+        "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       }
     },
-    "registrationAvailable": {
-      "from": "Anmeldezeitraum von",
-      "to": "Anmeldezeitraum bis"
+    "assign": {
+      "save": {
+        "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
+        "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
+      }
     },
+    "document": {
+      "document": "Dokument",
+      "documents": "Dokumente",
+      "name": "Name",
+      "type": {
+        "type": "Typ",
+        "documentType": "Dokumenttyp",
+        "documentTypes": "Dokumenttypen",
+        "name": "Name",
+        "required": {
+          "forEvent": "Erforderlich für Event",
+          "confirmation": "Bestätigung erforderlich"
+        }
+      },
+      "add": {
+        "add": "Dokument hinzufügen"
+      },
+      "download": {
+        "download": "Herunterladen",
+        "error": "Beim Herunterladen des Dokuments ist ein Fehler aufgetreten"
+      },
+      "error": {
+        "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
+      },
     "registration": {
       "addParticipant": "Teilnehmer hinzufügen",
       "singleCompetition": "Einzelwettkampf",
@@ -187,20 +232,33 @@
   },
   "user": {
     "user": "Benutzer",
-    "email": "E-Mail",
-    "firstname": "Vorname",
-    "invitation": {
-      "invitation": "Einladung"
+    "users": "Benutzer",
+    "email": {
+      "email": "E-Mail",
+      "inUse": {
+        "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
+        "callToAction": {
+          "invitation": "Bitte prüfen Sie die derzeitige Verwendung der E-Mail-Adresse oder wählen Sie eine andere.",
+          "registration": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
+        }
+      }
     },
+    "firstname": "Vorname",
     "lastname": "Nachname",
-    "password": "Passwort",
+    "password": {
+      "password": "Passwort",
+      "confirm": "Passwort bestätigen",
+      "minLength": "{{min}} oder mehr Zeichen",
+      "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
+      "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
+    },
     "login": {
       "login": "Anmelden",
       "password": "Passwort",
       "forgotPassword": "Passwort vergessen?",
       "signUp": {
-        "link": "Hier registrieren",
-        "message": "Sie haben noch kein Konto?"
+        "message": "Sie haben noch kein Konto?",
+        "link": "Hier registrieren"
       },
       "submit": "Anmelden",
       "error": {
@@ -218,8 +276,13 @@
         "load": "Profile could not be loaded"
       }
     },
+    "invitation": {
+      "invitation": "Einladung",
+      "pendingInvitations": "Ausstehende Einladungen"
+    },
     "registration": {
       "register": "Registrieren",
+      "pendingRegistrations": "Ausstehende Registrierungen",
       "email": {
         "emailSent": {
           "header": "Bestätigen Sie Ihre E-Mail-Adresse",
@@ -228,30 +291,21 @@
             "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
           }
         },
-        "inUse": {
-          "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
-          "callToAction": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
-        },
         "verified": {
           "header": "E-Mail bestätigt",
           "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
         }
       },
       "error": "Bei der Registrierung ist ein Fehler aufgetreten",
-      "password": {
-        "confirm": "Passwort bestätigen",
-        "minLength": "{{min}} oder mehr Zeichen",
-        "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
-        "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
-      },
       "login": {
-        "link": "Hier anmelden",
-        "message": "Sie besitzen bereits ein Konto?"
+        "message": "Sie besitzen bereits ein Konto?",
+        "link": "Hier anmelden"
       }
     },
     "resetPassword": {
       "resetPassword": "Passwort zurücksetzen",
       "forgotPassword": "Passwort vergessen?",
+      "newPassword": "Neues Passwort",
       "init": {
         "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
         "submit": "Passwort zurücksetzen"
@@ -263,7 +317,6 @@
           "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
         }
       },
-      "newPassword": "Neues Passwort",
       "success": {
         "header": "Passwort geändert!",
         "message": "Ihr Passwort wurde erfolgreich geändert."
@@ -279,7 +332,13 @@
     }
   },
   "role": {
-    "role": "Rolle"
+    "role": "Rolle",
+    "userRoles": "Benutzerrollen",
+    "name": "Name",
+    "description": "Beschreibung",
+    "error": {
+      "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
+    }
   },
   "captcha": {
     "instruction": {

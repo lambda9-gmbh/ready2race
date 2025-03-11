@@ -22,7 +22,6 @@ const EventPage = () => {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                console.error(error)
             }
         },
         deps: [eventId],
@@ -34,8 +33,9 @@ const EventPage = () => {
     const eventDayAdministrationProps = useEntityAdministration<EventDayDto>(
         t('event.eventDay.eventDay'),
     )
-    const documentAdministrationProps =
-        useEntityAdministration<EventDocumentDto>('[todo] Dokumente')
+    const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
+        t('event.document.document'),
+    )
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -54,7 +54,7 @@ const EventPage = () => {
                     <EventDayDialog {...eventDayAdministrationProps.dialog} />
                     <DocumentTable
                         {...documentAdministrationProps.table}
-                        title={'[todo] Dokumente'}
+                        title={t('event.document.documents')}
                     />
                     <DocumentDialog {...documentAdministrationProps.dialog} />
                 </Stack>

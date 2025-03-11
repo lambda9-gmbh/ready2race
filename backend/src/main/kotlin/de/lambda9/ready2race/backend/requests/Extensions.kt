@@ -6,7 +6,6 @@ import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.kio.failIf
 import de.lambda9.ready2race.backend.kio.toKio
 import de.lambda9.ready2race.backend.pagination.Order
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -19,6 +18,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import io.ktor.server.application.*
 import io.ktor.server.plugins.*
@@ -46,7 +46,7 @@ fun ApplicationCall.authenticate(
                         && Privilege.Scope.valueOf(it.scope).level >= privilege.scope.level
                 }
         },
-        then = { AuthError.PrivilegeMissing },
+        transform = { AuthError.PrivilegeMissing },
     )
 
 fun ApplicationCall.authenticate(

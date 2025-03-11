@@ -8,32 +8,35 @@ import {useFeedback} from '@utils/hooks.ts'
 import {SubmitButton} from './form/SubmitButton.tsx'
 import DialogCloseButton from './DialogCloseButton.tsx'
 import {GridValidRowModel} from '@mui/x-data-grid'
+import {ApiError} from '@api/types.gen.ts'
 
 type EntityDialogProps<
     Entity extends GridValidRowModel,
     Form extends FieldValues,
-    AddError,
-    UpdateError,
+    AddError extends ApiError,
+    UpdateError extends ApiError,
 > = BaseEntityDialogProps<Entity> & ExtendedEntityDialogProps<Entity, Form, AddError, UpdateError>
 
 type ExtendedEntityDialogProps<
     Entity extends GridValidRowModel,
     Form extends FieldValues,
-    AddError,
-    UpdateError,
+    AddError extends ApiError,
+    UpdateError extends ApiError,
 > = {
     formContext: UseFormReturn<Form>
     onOpen: () => void
     addAction?: (formData: Form) => RequestResult<any, AddError, false>
     editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
+    onAddError?: (error: AddError) => void
+    onEditError?: (error: UpdateError) => void
 }
 
 //todo: add semantic tabs
 const EntityDialog = <
     Entity extends GridValidRowModel,
     Form extends FieldValues,
-    AddError,
-    UpdateError,
+    AddError extends ApiError,
+    UpdateError extends ApiError,
 >({
     entityName,
     dialogIsOpen,
@@ -44,6 +47,8 @@ const EntityDialog = <
     onOpen,
     addAction,
     editAction,
+    onAddError,
+    onEditError,
     children,
 }: PropsWithChildren<EntityDialogProps<Entity, Form, AddError, UpdateError>>) => {
     const {t} = useTranslation()
@@ -55,6 +60,14 @@ const EntityDialog = <
         closeDialog()
     }
 
+    const handleErrorGeneric = (error: AddError | UpdateError) => {
+        if (entity) {
+            feedback.error(t('entity.edit.error', {entity: entityName}))
+        } else {
+            feedback.error(t('entity.add.error', {entity: entityName}))
+        }
+    }
+
     const onSubmit = async (formData: Form) => {
         if (entity) {
             if (!editAction) throw Error('Missing edit action')
@@ -62,19 +75,14 @@ const EntityDialog = <
             if (!addAction) throw Error('Missing add action')
         }
         setSubmitting(true)
-        const {error} = (
-            entity ? await editAction?.(formData, entity) : await addAction?.(formData)
-        )!
+        const addResult = entity === undefined ? await addAction?.(formData) : undefined
+        const editResult = entity !== undefined ? await editAction?.(formData, entity) : undefined
         setSubmitting(false)
 
-        if (error != undefined) {
-            // todo better error display with specific error types
-            console.error(error)
-            if (entity) {
-                feedback.error(t('entity.edit.error', {entity: entityName}))
-            } else {
-                feedback.error(t('entity.add.error', {entity: entityName}))
-            }
+        if (addResult?.error) {
+            onAddError ? onAddError(addResult.error) : handleErrorGeneric(addResult.error)
+        } else if (editResult?.error) {
+            onEditError ? onEditError(editResult.error) : handleErrorGeneric(editResult.error)
         } else {
             handleClose()
             reloadData()

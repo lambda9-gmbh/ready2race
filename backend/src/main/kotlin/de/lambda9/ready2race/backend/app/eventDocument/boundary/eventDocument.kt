@@ -97,6 +97,7 @@ fun Route.eventDocument() {
                     KIO.comprehension {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
                         val id = !pathParam("eventDocumentId") { UUID.fromString(it) }
+
                         val body = !payload
                         EventDocumentService.updateDocument(id, body, user.id!!)
                     }

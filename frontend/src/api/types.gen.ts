@@ -83,22 +83,6 @@ export type CaptchaDto = {
     start: number
 }
 
-export type ClubDto = {
-    id: string
-    name: string
-    createdAt: string
-    updatedAt: string
-}
-
-export type ClubSearchDto = {
-    id: string
-    name: string
-}
-
-export type ClubUpsertDto = {
-    name: string
-}
-
 export type CompetitionCategoryDto = {
     id: string
     name: string
@@ -137,28 +121,6 @@ export type CompetitionPropertiesRequestDto = {
     fees: Array<FeeForCompetitionRequestDto>
 }
 
-export type CompetitionRegistrationNamedParticipantUpsertDto = {
-    namedParticipantId: string
-    participantIds: Array<string>
-}
-
-export type CompetitionRegistrationSingleUpsertDto = {
-    competitionId: string
-    optionalFees?: Array<string>
-}
-
-export type CompetitionRegistrationTeamUpsertDto = {
-    id: string
-    participants?: Array<string>
-    optionalFees?: Array<string>
-    namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
-}
-
-export type CompetitionRegistrationUpsertDto = {
-    competitionId: string
-    teams?: Array<CompetitionRegistrationTeamUpsertDto>
-}
-
 export type CompetitionRequest = {
     properties?: CompetitionPropertiesRequestDto
     template?: string
@@ -180,7 +142,7 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
-export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE'
+export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE' | 'CANNOT_ASSIGN_ROLES'
 
 export type EventDayDto = {
     id: string
@@ -231,83 +193,6 @@ export type EventDto = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
-}
-
-export type EventRegistrationCompetitionDto = {
-    id: string
-    identifier: string
-    name: string
-    shortName?: string
-    description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-    competitionCategory: string
-    namedParticipant?: Array<EventRegistrationNamedParticipantDto>
-    fees?: Array<EventRegistrationFeeDto>
-    days: Array<string>
-}
-
-export type EventRegistrationDayDto = {
-    id: string
-    date: string
-    name?: string | null
-    description?: string | null
-}
-
-export type EventRegistrationFeeDto = {
-    id: string
-    label: string
-    description?: string | null
-    required: boolean
-    amount: number
-}
-
-export type EventRegistrationInfoDto = {
-    name: string
-    description?: string
-    location?: string
-    days: Array<EventRegistrationDayDto>
-    competitionsSingle: Array<EventRegistrationCompetitionDto>
-    competitionsTeam: Array<EventRegistrationCompetitionDto>
-}
-
-export type EventRegistrationNamedParticipantDto = {
-    id: string
-    name: string
-    description?: string
-    required?: boolean
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
-}
-
-export type EventRegistrationParticipantUpsertDto = {
-    id: string
-    isNew?: boolean
-    hasChanged?: boolean
-    firstname: string
-    lastname: string
-    year?: number | null
-    gender: 'M' | 'F' | 'O'
-    external?: boolean | null
-    externalClubName?: string | null
-    competitionsSingle?: Array<CompetitionRegistrationSingleUpsertDto>
-}
-
-export type gender = 'M' | 'F' | 'O'
-
-export type EventRegistrationTemplateDto = {
-    info: EventRegistrationInfoDto
-    upsertableRegistration: EventRegistrationUpsertDto
-}
-
-export type EventRegistrationUpsertDto = {
-    participants: Array<EventRegistrationParticipantUpsertDto>
-    competitionRegistrations: Array<CompetitionRegistrationUpsertDto>
-    message?: string
 }
 
 export type EventRequest = {
@@ -388,7 +273,6 @@ export type InviteRequest = {
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
-    clubId?: string
 }
 
 export type LoginRequest = {
@@ -476,29 +360,6 @@ export type Parametersearch = string
  */
 export type Parametersort = string
 
-export type ParticipantDto = {
-    id: string
-    firstname: string
-    lastname: string
-    year?: number | null
-    gender: 'M' | 'F' | 'O'
-    phone?: string | null
-    external?: boolean | null
-    externalClubName?: string | null
-    createdAt: string
-    updatedAt: string
-}
-
-export type ParticipantUpsertDto = {
-    firstname: string
-    lastname: string
-    year?: number | null
-    gender: 'M' | 'F' | 'O'
-    phone?: string | null
-    external?: boolean | null
-    externalClubName?: string | null
-}
-
 export type PasswordResetInitRequest = {
     email: string
     language: EmailLanguage
@@ -531,7 +392,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT'
+export type Resource = 'USER' | 'EVENT'
 
 export type RoleDto = {
     id: string
@@ -574,7 +435,11 @@ export type UserLoginData = {
 
 export type UserLoginResponse = LoginDto
 
-export type UserLoginError = BadRequestError | ApiError | TooManyRequestsError
+export type UserLoginError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+    | TooManyRequestsError
 
 export type CheckUserLoginResponse = LoginDto | void
 
@@ -622,6 +487,24 @@ export type GetUserResponse = AppUserDto
 
 export type GetUserError = BadRequestError | ApiError
 
+export type RegisterUserData = {
+    body: RegisterRequest
+    query: {
+        /**
+         * Captcha challenge id
+         */
+        challenge: string
+        /**
+         * Captcha solution
+         */
+        input: number
+    }
+}
+
+export type RegisterUserResponse = void
+
+export type RegisterUserError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type GetRegistrationsData = {
     query?: {
         /**
@@ -650,24 +533,6 @@ export type GetRegistrationsResponse = {
 
 export type GetRegistrationsError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type RegisterUserData = {
-    body: RegisterRequest
-    query: {
-        /**
-         * Captcha challenge id
-         */
-        challenge: string
-        /**
-         * Captcha solution
-         */
-        input: number
-    }
-}
-
-export type RegisterUserResponse = void
-
-export type RegisterUserError = BadRequestError | ApiError | UnprocessableEntityError
-
 export type VerifyUserRegistrationData = {
     body: VerifyRegistrationRequest
 }
@@ -675,6 +540,14 @@ export type VerifyUserRegistrationData = {
 export type VerifyUserRegistrationResponse = unknown
 
 export type VerifyUserRegistrationError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type InviteUserData = {
+    body: InviteRequest
+}
+
+export type InviteUserResponse = void
+
+export type InviteUserError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetInvitationsData = {
     query?: {
@@ -704,14 +577,6 @@ export type GetInvitationsResponse = {
 
 export type GetInvitationsError = BadRequestError | ApiError | UnprocessableEntityError
 
-export type InviteUserData = {
-    body: InviteRequest
-}
-
-export type InviteUserResponse = void
-
-export type InviteUserError = BadRequestError | ApiError | UnprocessableEntityError
-
 export type AcceptUserInvitationData = {
     body: AcceptInvitationRequest
 }
@@ -736,7 +601,11 @@ export type InitPasswordResetData = {
 
 export type InitPasswordResetResponse = void
 
-export type InitPasswordResetError = ApiError | UnprocessableEntityError | TooManyRequestsError
+export type InitPasswordResetError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+    | TooManyRequestsError
 
 export type ResetPasswordData = {
     body: PasswordResetRequest
@@ -747,7 +616,7 @@ export type ResetPasswordData = {
 
 export type ResetPasswordResponse = void
 
-export type ResetPasswordError = ApiError | UnprocessableEntityError
+export type ResetPasswordError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddRoleData = {
     body: RoleRequest
@@ -783,7 +652,7 @@ export type GetRolesResponse = {
     pagination: Pagination
 }
 
-export type GetRolesError = ApiError
+export type GetRolesError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type UpdateRoleData = {
     body: RoleRequest
@@ -804,7 +673,7 @@ export type DeleteRoleData = {
 
 export type DeleteRoleResponse = void
 
-export type DeleteRoleError = ApiError
+export type DeleteRoleError = BadRequestError | ApiError
 
 export type AddEventData = {
     body: EventRequest
@@ -840,7 +709,7 @@ export type GetEventsResponse = {
     pagination: Pagination
 }
 
-export type GetEventsError = ApiError
+export type GetEventsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventData = {
     path: {
@@ -861,7 +730,7 @@ export type UpdateEventData = {
 
 export type UpdateEventResponse = void
 
-export type UpdateEventError = BadRequestError | ApiError
+export type UpdateEventError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type DeleteEventData = {
     path: {
@@ -871,7 +740,7 @@ export type DeleteEventData = {
 
 export type DeleteEventResponse = void
 
-export type DeleteEventError = ApiError
+export type DeleteEventError = BadRequestError | ApiError
 
 export type AddEventDayData = {
     body: EventDayRequest
@@ -882,7 +751,7 @@ export type AddEventDayData = {
 
 export type AddEventDayResponse = string
 
-export type AddEventDayError = BadRequestError | ApiError
+export type AddEventDayError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventDaysData = {
     path: {
@@ -917,7 +786,7 @@ export type GetEventDaysResponse = {
     pagination: Pagination
 }
 
-export type GetEventDaysError = ApiError
+export type GetEventDaysError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventDayData = {
     path: {
@@ -940,7 +809,7 @@ export type UpdateEventDayData = {
 
 export type UpdateEventDayResponse = void
 
-export type UpdateEventDayError = BadRequestError | ApiError
+export type UpdateEventDayError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type DeleteEventDayData = {
     path: {
@@ -951,7 +820,7 @@ export type DeleteEventDayData = {
 
 export type DeleteEventDayResponse = void
 
-export type DeleteEventDayError = ApiError
+export type DeleteEventDayError = BadRequestError | ApiError
 
 export type AssignCompetitionsToEventDayData = {
     body: AssignCompetitionsToDayRequest
@@ -963,7 +832,10 @@ export type AssignCompetitionsToEventDayData = {
 
 export type AssignCompetitionsToEventDayResponse = void
 
-export type AssignCompetitionsToEventDayError = BadRequestError | ApiError
+export type AssignCompetitionsToEventDayError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
 
 export type AddCompetitionData = {
     body: CompetitionRequest
@@ -974,7 +846,7 @@ export type AddCompetitionData = {
 
 export type AddCompetitionResponse = string
 
-export type AddCompetitionError = BadRequestError | ApiError
+export type AddCompetitionError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetCompetitionsData = {
     path: {
@@ -1009,7 +881,7 @@ export type GetCompetitionsResponse = {
     pagination: Pagination
 }
 
-export type GetCompetitionsError = ApiError
+export type GetCompetitionsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetCompetitionData = {
     path: {
@@ -1032,7 +904,7 @@ export type UpdateCompetitionData = {
 
 export type UpdateCompetitionResponse = void
 
-export type UpdateCompetitionError = BadRequestError | ApiError
+export type UpdateCompetitionError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type DeleteCompetitionData = {
     path: {
@@ -1043,7 +915,7 @@ export type DeleteCompetitionData = {
 
 export type DeleteCompetitionResponse = void
 
-export type DeleteCompetitionError = ApiError
+export type DeleteCompetitionError = BadRequestError | ApiError
 
 export type AssignDaysToCompetitionData = {
     body: AssignDaysToCompetitionRequest
@@ -1055,432 +927,7 @@ export type AssignDaysToCompetitionData = {
 
 export type AssignDaysToCompetitionResponse = void
 
-export type AssignDaysToCompetitionError = BadRequestError | ApiError
-
-export type AddCompetitionTemplateData = {
-    body: CompetitionTemplateRequest
-}
-
-export type AddCompetitionTemplateResponse = string
-
-export type AddCompetitionTemplateError = BadRequestError | ApiError
-
-export type GetCompetitionTemplatesData = {
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetCompetitionTemplatesResponse = {
-    data: Array<CompetitionTemplateDto>
-    pagination: Pagination
-}
-
-export type GetCompetitionTemplatesError = ApiError
-
-export type GetCompetitionTemplateData = {
-    path: {
-        competitionTemplateId: string
-    }
-}
-
-export type GetCompetitionTemplateResponse = CompetitionTemplateDto
-
-export type GetCompetitionTemplateError = BadRequestError | ApiError
-
-export type UpdateCompetitionTemplateData = {
-    body: CompetitionTemplateRequest
-    path: {
-        competitionTemplateId: string
-    }
-}
-
-export type UpdateCompetitionTemplateResponse = void
-
-export type UpdateCompetitionTemplateError = BadRequestError | ApiError
-
-export type DeleteCompetitionTemplateData = {
-    path: {
-        competitionTemplateId: string
-    }
-}
-
-export type DeleteCompetitionTemplateResponse = void
-
-export type DeleteCompetitionTemplateError = ApiError
-
-export type AddCompetitionCategoryData = {
-    body: CompetitionCategoryRequest
-}
-
-export type AddCompetitionCategoryResponse = string
-
-export type AddCompetitionCategoryError = BadRequestError | ApiError
-
-export type GetCompetitionCategoriesResponse = {
-    data: Array<CompetitionCategoryDto>
-    pagination: Pagination
-}
-
-export type GetCompetitionCategoriesError = ApiError
-
-export type UpdateCompetitionCategoryData = {
-    body: CompetitionCategoryRequest
-    path: {
-        competitionCategoryId: string
-    }
-}
-
-export type UpdateCompetitionCategoryResponse = void
-
-export type UpdateCompetitionCategoryError = BadRequestError | ApiError
-
-export type DeleteCompetitionCategoryData = {
-    path: {
-        competitionCategoryId: string
-    }
-}
-
-export type DeleteCompetitionCategoryResponse = void
-
-export type DeleteCompetitionCategoryError = ApiError
-
-export type AddNamedParticipantData = {
-    body: NamedParticipantRequest
-}
-
-export type AddNamedParticipantResponse = string
-
-export type AddNamedParticipantError = BadRequestError | ApiError
-
-export type GetNamedParticipantsResponse = {
-    data: Array<NamedParticipantDto>
-    pagination: Pagination
-}
-
-export type GetNamedParticipantsError = ApiError
-
-export type UpdateNamedParticipantData = {
-    body: NamedParticipantRequest
-    path: {
-        namedParticipantId: string
-    }
-}
-
-export type UpdateNamedParticipantResponse = void
-
-export type UpdateNamedParticipantError = BadRequestError | ApiError
-
-export type DeleteNamedParticipantData = {
-    path: {
-        namedParticipantId: string
-    }
-}
-
-export type DeleteNamedParticipantResponse = void
-
-export type DeleteNamedParticipantError = ApiError
-
-export type AddFeeData = {
-    body: FeeRequest
-}
-
-export type AddFeeResponse = string
-
-export type AddFeeError = BadRequestError | ApiError
-
-export type GetFeesResponse = {
-    data: Array<FeeDto>
-    pagination: Pagination
-}
-
-export type GetFeesError = ApiError
-
-export type UpdateFeeData = {
-    body: FeeRequest
-    path: {
-        feeId: string
-    }
-}
-
-export type UpdateFeeResponse = void
-
-export type UpdateFeeError = BadRequestError | ApiError
-
-export type DeleteFeeData = {
-    path: {
-        feeId: string
-    }
-}
-
-export type DeleteFeeResponse = void
-
-export type DeleteFeeError = ApiError
-
-export type NewCaptchaResponse = CaptchaDto
-
-export type NewCaptchaError = ApiError
-
-export type AddClubData = {
-    body: ClubUpsertDto
-}
-
-export type AddClubResponse = string
-
-export type AddClubError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type GetClubsData = {
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetClubsResponse = {
-    data: Array<ClubDto>
-    pagination: Pagination
-}
-
-export type GetClubsError = ApiError
-
-export type GetClubData = {
-    path: {
-        clubId: string
-    }
-}
-
-export type GetClubResponse = ClubDto
-
-export type GetClubError = ApiError
-
-export type UpdateClubData = {
-    body: ClubUpsertDto
-    path: {
-        clubId: string
-    }
-}
-
-export type UpdateClubResponse = void
-
-export type UpdateClubError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type DeleteClubData = {
-    path: {
-        clubId: string
-    }
-}
-
-export type DeleteClubResponse = void
-
-export type DeleteClubError = ApiError
-
-export type GetClubParticipantsData = {
-    path: {
-        clubId: string
-    }
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetClubParticipantsResponse = {
-    data: Array<ParticipantDto>
-    pagination: Pagination
-}
-
-export type GetClubParticipantsError = ApiError
-
-export type AddClubParticipantData = {
-    body: ParticipantUpsertDto
-    path: {
-        clubId: string
-    }
-}
-
-export type AddClubParticipantResponse = string
-
-export type AddClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type GetClubParticipantData = {
-    path: {
-        clubId: string
-        participantId: string
-    }
-}
-
-export type GetClubParticipantResponse = ParticipantDto
-
-export type GetClubParticipantError = ApiError
-
-export type UpdateClubParticipantData = {
-    body: ParticipantUpsertDto
-    path: {
-        clubId: string
-        participantId: string
-    }
-}
-
-export type UpdateClubParticipantResponse = void
-
-export type UpdateClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type DeleteClubParticipantData = {
-    path: {
-        clubId: string
-        participantId: string
-    }
-}
-
-export type DeleteClubParticipantResponse = void
-
-export type DeleteClubParticipantError = ApiError
-
-export type GetClubNamesData = {
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetClubNamesResponse = {
-    data: Array<ClubSearchDto>
-    pagination: Pagination
-}
-
-export type GetClubNamesError = ApiError
-
-export type GetEventRegistrationTemplateData = {
-    path: {
-        eventId: string
-    }
-}
-
-export type GetEventRegistrationTemplateResponse = EventRegistrationTemplateDto
-
-export type GetEventRegistrationTemplateError = ApiError
-
-export type AddEventRegistrationData = {
-    body: EventRegistrationUpsertDto
-}
-
-export type AddEventRegistrationResponse = string
-
-export type AddEventRegistrationError = BadRequestError | ApiError
-
-export type AddDocumentTypeData = {
-    body: EventDocumentTypeRequest
-}
-
-export type AddDocumentTypeResponse = string
-
-export type AddDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type GetDocumentTypesData = {
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetDocumentTypesResponse = {
-    data: Array<EventDocumentTypeDto>
-    pagination: Pagination
-}
-
-export type GetDocumentTypesError = BadRequestError | ApiError
-
-export type UpdateDocumentTypeData = {
-    body: EventDocumentTypeRequest
-    path: {
-        eventDocumentTypeId: string
-    }
-}
-
-export type UpdateDocumentTypeResponse = void
-
-export type UpdateDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type DeleteDocumentTypeData = {
-    path: {
-        eventDocumentTypeId: string
-    }
-}
-
-export type DeleteDocumentTypeResponse = void
-
-export type DeleteDocumentTypeError = BadRequestError | ApiError
+export type AssignDaysToCompetitionError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddDocumentsData = {
     body: {
@@ -1561,3 +1008,239 @@ export type DeleteDocumentData = {
 export type DeleteDocumentResponse = void
 
 export type DeleteDocumentError = BadRequestError | ApiError
+
+export type AddCompetitionTemplateData = {
+    body: CompetitionTemplateRequest
+}
+
+export type AddCompetitionTemplateResponse = string
+
+export type AddCompetitionTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionTemplatesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetCompetitionTemplatesResponse = {
+    data: Array<CompetitionTemplateDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionTemplatesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionTemplateData = {
+    path: {
+        competitionTemplateId: string
+    }
+}
+
+export type GetCompetitionTemplateResponse = CompetitionTemplateDto
+
+export type GetCompetitionTemplateError = BadRequestError | ApiError
+
+export type UpdateCompetitionTemplateData = {
+    body: CompetitionTemplateRequest
+    path: {
+        competitionTemplateId: string
+    }
+}
+
+export type UpdateCompetitionTemplateResponse = void
+
+export type UpdateCompetitionTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteCompetitionTemplateData = {
+    path: {
+        competitionTemplateId: string
+    }
+}
+
+export type DeleteCompetitionTemplateResponse = void
+
+export type DeleteCompetitionTemplateError = BadRequestError | ApiError
+
+export type AddCompetitionCategoryData = {
+    body: CompetitionCategoryRequest
+}
+
+export type AddCompetitionCategoryResponse = string
+
+export type AddCompetitionCategoryError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionCategoriesResponse = {
+    data: Array<CompetitionCategoryDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionCategoriesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateCompetitionCategoryData = {
+    body: CompetitionCategoryRequest
+    path: {
+        competitionCategoryId: string
+    }
+}
+
+export type UpdateCompetitionCategoryResponse = void
+
+export type UpdateCompetitionCategoryError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteCompetitionCategoryData = {
+    path: {
+        competitionCategoryId: string
+    }
+}
+
+export type DeleteCompetitionCategoryResponse = void
+
+export type DeleteCompetitionCategoryError = BadRequestError | ApiError
+
+export type AddNamedParticipantData = {
+    body: NamedParticipantRequest
+}
+
+export type AddNamedParticipantResponse = string
+
+export type AddNamedParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetNamedParticipantsResponse = {
+    data: Array<NamedParticipantDto>
+    pagination: Pagination
+}
+
+export type GetNamedParticipantsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateNamedParticipantData = {
+    body: NamedParticipantRequest
+    path: {
+        namedParticipantId: string
+    }
+}
+
+export type UpdateNamedParticipantResponse = void
+
+export type UpdateNamedParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteNamedParticipantData = {
+    path: {
+        namedParticipantId: string
+    }
+}
+
+export type DeleteNamedParticipantResponse = void
+
+export type DeleteNamedParticipantError = BadRequestError | ApiError
+
+export type AddFeeData = {
+    body: FeeRequest
+}
+
+export type AddFeeResponse = string
+
+export type AddFeeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetFeesResponse = {
+    data: Array<FeeDto>
+    pagination: Pagination
+}
+
+export type GetFeesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateFeeData = {
+    body: FeeRequest
+    path: {
+        feeId: string
+    }
+}
+
+export type UpdateFeeResponse = void
+
+export type UpdateFeeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteFeeData = {
+    path: {
+        feeId: string
+    }
+}
+
+export type DeleteFeeResponse = void
+
+export type DeleteFeeError = BadRequestError | ApiError
+
+export type NewCaptchaResponse = CaptchaDto
+
+export type NewCaptchaError = ApiError
+
+export type AddDocumentTypeData = {
+    body: EventDocumentTypeRequest
+}
+
+export type AddDocumentTypeResponse = string
+
+export type AddDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentTypesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetDocumentTypesResponse = {
+    data: Array<EventDocumentTypeDto>
+    pagination: Pagination
+}
+
+export type GetDocumentTypesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateDocumentTypeData = {
+    body: EventDocumentTypeRequest
+    path: {
+        eventDocumentTypeId: string
+    }
+}
+
+export type UpdateDocumentTypeResponse = void
+
+export type UpdateDocumentTypeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteDocumentTypeData = {
+    path: {
+        eventDocumentTypeId: string
+    }
+}
+
+export type DeleteDocumentTypeResponse = void
+
+export type DeleteDocumentTypeError = BadRequestError | ApiError

@@ -5,8 +5,9 @@ import {useCallback} from 'react'
 import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
-import {addRole, updateRole} from "@api/sdk.gen.ts";
-import {RoleDto, RoleRequest} from "@api/types.gen.ts";
+import {addRole, updateRole} from '@api/sdk.gen.ts'
+import {RoleDto, RoleRequest} from '@api/types.gen.ts'
+import {useTranslation} from 'react-i18next'
 
 type RoleForm = {
     name: string
@@ -43,7 +44,9 @@ const editAction = (formData: RoleForm, entity: RoleDto) =>
         body: mapFormToRequest(formData),
     })
 
+
 const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
+    const {t} = useTranslation()
     const formContext = useForm<RoleForm>()
 
     const onOpen = useCallback(() => {
@@ -58,8 +61,8 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={'[todo] Bezeichnung'} required />
-                <FormInputText name={'description'} label={'[todo] Beschreibung'} />
+                <FormInputText name={'name'} label={t('role.name')} required />
+                <FormInputText name={'description'} label={t('role.description')} />
             </Stack>
         </EntityDialog>
     )

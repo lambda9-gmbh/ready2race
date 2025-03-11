@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionProperties.control
 
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesContainingReference
-import de.lambda9.ready2race.backend.database.generated.tables.CompetitionCategory
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
 import de.lambda9.ready2race.backend.database.insertReturning

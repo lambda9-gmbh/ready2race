@@ -19,7 +19,9 @@ fun Route.fee() {
             call.respondKIO {
                 KIO.comprehension {
                     val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    FeeService.addFee(!payload, user.id!!)
+
+                    val body = !payload
+                    FeeService.addFee(body, user.id!!)
                 }
             }
         }
@@ -41,7 +43,9 @@ fun Route.fee() {
                     KIO.comprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                         val feeId = !pathParam("feeId") { UUID.fromString(it) }
-                        FeeService.updateFee(feeId, !payload, user.id!!)
+
+                        val body = !payload
+                        FeeService.updateFee(feeId, body, user.id!!)
                     }
                 }
             }

@@ -57,8 +57,8 @@ const EventDayDialog = (props: BaseEntityDialogProps<EventDayDto>) => {
             editAction={editAction}>
             <Stack spacing={4}>
                 <FormInputDate name="date" label={t('event.eventDay.date')} required />
-                <FormInputText name="name" label={t('entity.name')} />
-                <FormInputText name="description" label={t('entity.description')} />
+                <FormInputText name="name" label={t('event.eventDay.name')} />
+                <FormInputText name="description" label={t('event.eventDay.description')} />
             </Stack>
         </EntityDialog>
     )

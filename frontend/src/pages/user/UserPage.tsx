@@ -36,7 +36,6 @@ const UserPage = () => {
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(t('user.page.error.load'))
-                console.error(error)
             } else {
                 formContext.reset({firstname: data.firstname, lastname: data.lastname})
             }
@@ -44,7 +43,7 @@ const UserPage = () => {
         deps: [userId],
     })
 
-    const handleSubmit = async (formData: Form) => {
+    const handleSubmit = async () => {
         setSubmitting(true)
         // TODO: updateUser()
         setSubmitting(false)
