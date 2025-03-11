@@ -209,7 +209,13 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
-    "password": "Passwort",
+    "password": {
+      "password": "Passwort",
+      "confirm": "Passwort bestätigen",
+      "minLength": "{{min}} oder mehr Zeichen",
+      "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
+      "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
+    },
     "login": {
       "login": "Anmelden",
       "password": "Passwort",
@@ -255,12 +261,6 @@
         }
       },
       "error": "Bei der Registrierung ist ein Fehler aufgetreten",
-      "password": {
-        "confirm": "Passwort bestätigen",
-        "minLength": "{{min}} oder mehr Zeichen",
-        "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
-        "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
-      },
       "login": {
         "message": "Sie besitzen bereits ein Konto?",
         "link": "Hier anmelden"

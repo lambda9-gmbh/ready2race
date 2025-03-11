@@ -1,8 +1,8 @@
 import {useTranslation} from 'react-i18next'
 import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
-import {FieldValues, Path, UseFormReturn} from 'react-hook-form-mui'
-import {Stack} from '@mui/material'
-import {useEffect} from 'react'
+import {FieldValues, UseFormReturn} from 'react-hook-form-mui'
+import {Grid2} from '@mui/material'
+import FormInputPasswordConfirm from '@components/form/input/FormInputPasswordConfirm.tsx'
 
 export type PasswortFormPart = {
     password: string
@@ -13,7 +13,7 @@ type Form<F extends FieldValues> = PasswortFormPart & F
 type Props<F extends FieldValues> = {
     formContext: UseFormReturn<Form<F>>
     horizontal?: boolean
-    resetPasswort?: boolean
+    passwordFieldLabel?: string
 }
 
 export const NewPassword = <F extends FieldValues>({formContext, ...props}: Props<F>) => {
@@ -21,59 +21,34 @@ export const NewPassword = <F extends FieldValues>({formContext, ...props}: Prop
 
     const {t} = useTranslation()
 
-    const passwordsWatch = formContext.watch([
-        'password' as Path<Form<F>>,
-        'confirmPassword' as Path<Form<F>>,
-    ])
-
-    // todo: use repeat password element from hook form
-    useEffect(() => {
-        if (formContext.formState.isSubmitted) {
-            if (passwordsWatch[0] !== passwordsWatch[1]) {
-                formContext.setError('root.password', {
-                    type: 'validate',
-                    message: t('user.registration.password.notMatching'),
-                })
-                formContext.setError('root.confirmPassword', {
-                    type: 'validate',
-                    message: t('user.registration.password.notMatching'),
-                })
-            } else {
-                formContext.clearErrors('root.password')
-                formContext.clearErrors('root.confirmPassword')
-            }
-
-            formContext
-                .trigger(['password' as Path<Form<F>>, 'confirmPassword' as Path<Form<F>>]).then()
-        }
-    }, [passwordsWatch])
-
     return (
-        <Stack direction={props.horizontal ? "row" : "column"} spacing={props.horizontal ? 2 : 4}>
-            <FormInputPassword
-                name={'password'}
-                label={props.resetPasswort ? t('user.resetPassword.newPassword') : t('user.password')}
-                required
-                helperText={t('user.registration.password.minLength', {
-                    min: minPasswordLength,
-                })}
-                rules={{
-                    minLength: {
-                        value: minPasswordLength,
-                        message: t('user.registration.password.tooShort', {
-                            min: minPasswordLength,
-                        }),
-                    },
-                }}
-            />
-            <FormInputPassword
-                name="confirmPassword"
-                label={t('user.registration.password.confirm')}
-                required
-                rules={{
-                    required: t('common.form.required'),
-                }}
-            />
-        </Stack>
+        <Grid2 container spacing={props.horizontal ? 2 : 4}>
+            <Grid2 size={props.horizontal ? 6 : 12}>
+                <FormInputPassword
+                    name={'password'}
+                    label={props.passwordFieldLabel ?? t('user.password.password')}
+                    required
+                    helperText={t('user.password.minLength', {
+                        min: minPasswordLength,
+                    })}
+                    rules={{
+                        minLength: {
+                            value: minPasswordLength,
+                            message: t('user.password.tooShort', {
+                                min: minPasswordLength,
+                            }),
+                        },
+                    }}
+                />
+            </Grid2>
+            <Grid2 size={props.horizontal ? 6 : 12}>
+                <FormInputPasswordConfirm
+                    name="confirmPassword"
+                    passwordFieldName="password"
+                    label={t('user.password.confirm')}
+                    required
+                />
+            </Grid2>
+        </Grid2>
     )
 }
