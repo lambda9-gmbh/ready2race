@@ -1771,18 +1771,6 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /captcha:
-    post:
-      operationId: newCaptcha
-      responses:
-        200:
-          description: New Captcha successfully created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CaptchaDto'
-        500:
-          $ref: '#/components/responses/500'
   /eventDocumentType:
     post:
       operationId: addDocumentType

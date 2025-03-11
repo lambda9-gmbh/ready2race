@@ -159,17 +159,6 @@ import type {
     DeleteNamedParticipantData,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
-    AddFeeData,
-    AddFeeError,
-    AddFeeResponse,
-    GetFeesError,
-    GetFeesResponse,
-    UpdateFeeData,
-    UpdateFeeError,
-    UpdateFeeResponse,
-    DeleteFeeData,
-    DeleteFeeError,
-    DeleteFeeResponse,
     NewCaptchaError,
     NewCaptchaResponse,
     AddClubData,
@@ -211,6 +200,17 @@ import type {
     AddEventRegistrationData,
     AddEventRegistrationError,
     AddEventRegistrationResponse,
+    AddFeeData,
+    AddFeeError,
+    AddFeeResponse,
+    GetFeesError,
+    GetFeesResponse,
+    UpdateFeeData,
+    UpdateFeeError,
+    UpdateFeeResponse,
+    DeleteFeeData,
+    DeleteFeeError,
+    DeleteFeeResponse,
     AddDocumentTypeData,
     AddDocumentTypeError,
     AddDocumentTypeResponse,
@@ -826,42 +826,6 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const addFee = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<AddFeeData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<AddFeeResponse, AddFeeError, ThrowOnError>({
-        ...options,
-        url: '/fee',
-    })
-}
-
-export const getFees = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<GetFeesResponse, GetFeesError, ThrowOnError>({
-        ...options,
-        url: '/fee',
-    })
-}
-
-export const updateFee = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateFeeData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<UpdateFeeResponse, UpdateFeeError, ThrowOnError>({
-        ...options,
-        url: '/fee/{feeId}',
-    })
-}
-
-export const deleteFee = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<DeleteFeeData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).delete<DeleteFeeResponse, DeleteFeeError, ThrowOnError>({
-        ...options,
-        url: '/fee/{feeId}',
-    })
-}
-
 export const newCaptcha = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
@@ -1013,6 +977,42 @@ export const addEventRegistration = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/register',
+    })
+}
+
+export const addFee = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddFeeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddFeeResponse, AddFeeError, ThrowOnError>({
+        ...options,
+        url: '/fee',
+    })
+}
+
+export const getFees = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetFeesResponse, GetFeesError, ThrowOnError>({
+        ...options,
+        url: '/fee',
+    })
+}
+
+export const updateFee = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateFeeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateFeeResponse, UpdateFeeError, ThrowOnError>({
+        ...options,
+        url: '/fee/{feeId}',
+    })
+}
+
+export const deleteFee = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteFeeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteFeeResponse, DeleteFeeError, ThrowOnError>({
+        ...options,
+        url: '/fee/{feeId}',
     })
 }
 

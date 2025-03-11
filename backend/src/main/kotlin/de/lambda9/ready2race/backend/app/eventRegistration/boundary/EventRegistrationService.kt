@@ -105,14 +105,14 @@ object EventRegistrationService {
             }
 
             if (pDto.hasChanged == true) {
-                ParticipantRepo.update(pDto.id) {
+                !ParticipantRepo.update(pDto.id) {
                     firstname = pDto.firstname
                     lastname = pDto.lastname
                     gender = pDto.gender
                     year = pDto.year
                     external = pDto.external
                     externalClubName = pDto.externalClubName
-                }
+                }.orDie()
             }
 
             pDto.id

@@ -49,8 +49,8 @@
     "ok": "Ok",
     "save": "Save",
     "search": "Search",
-    "back" : "Back",
-    "next" : "Next",
+    "back": "Back",
+    "next": "Next",
     "and": "and"
   },
   "decimal": {
@@ -93,10 +93,10 @@
   },
   "club": {
     "club": "Club",
-    "participant" : {
+    "participant": {
       "title": "Participant",
       "year": "Year of birth",
-      "external" : "External"
+      "external": "External"
     }
   },
   "event": {
@@ -209,24 +209,25 @@
       },
       "error": {
         "emptyList": "Please add one or more documents"
-      },
+      }
+    },
     "registration": {
-      "addParticipant" : "Add Participant",
-      "singleCompetition" : "Single Competition",
-      "teamCompetition" : "Team Competition",
+      "addParticipant": "Add Participant",
+      "singleCompetition": "Single Competition",
+      "teamCompetition": "Team Competition",
       "males": "Men",
       "females": "Women",
       "nonBinary": "Non-binary",
       "mixed": "Any",
-      "summary" : "Summary",
-      "schedule" : "Schedule",
+      "summary": "Summary",
+      "schedule": "Schedule",
       "message": "Message",
       "optionalFee": "Optional",
-      "totalFees" : "Registration Fee",
-      "finish" : "Submit registration",
-      "success" : {
-        "title" : "Registration successful!",
-        "subtitle" : "You will receive a confirmation by e-mail."
+      "totalFees": "Registration Fee",
+      "finish": "Submit registration",
+      "success": {
+        "title": "Registration successful!",
+        "subtitle": "You will receive a confirmation by e-mail."
       }
     }
   },

@@ -209,7 +209,8 @@
       },
       "error": {
         "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
-      },
+      }
+    },
     "registration": {
       "addParticipant": "Teilnehmer hinzufügen",
       "singleCompetition": "Einzelwettkampf",
@@ -222,7 +223,7 @@
       "schedule": "Programm",
       "message": "Nachricht",
       "optionalFee": "Optional",
-      "totalFees" : "Meldegebühr",
+      "totalFees": "Meldegebühr",
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",

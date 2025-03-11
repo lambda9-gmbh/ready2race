@@ -24,25 +24,6 @@ data class Env(
                 queryPrinter = null
             }
         }
-
-            val ds = HikariDataSource(HikariConfig(props).apply {
-                jdbcUrl = config.url
-                driverClassName = config.driver
-                password = config.password
-                username = config.user
-                schema = config.schema
-            })
-
-            val configuration = DefaultConfiguration()
-                .set(ds)
-                /*.set(JooqQueryPrinter())*/
-                .set(config.dialect)
-
-            return Jooq(
-                dsl = DSL.using(configuration),
-                env = env,
-            ) to ds
-        }
     }
 
 }
