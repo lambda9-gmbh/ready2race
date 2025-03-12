@@ -21,15 +21,26 @@ const CompetitionSetupRound = ({roundIndex, roundId, control, removeRound}: Prop
     })
 
     return (
-        <Stack direction="row" spacing={2} justifyContent="space-between" key={`round-${roundId}`}sx={{border: 1, borderColor: 'blue', p:2,alignItems:'center'}} >
-            <Stack direction="row" spacing={2} alignItems={'center'} >
+        <Stack
+            direction="row"
+            spacing={2}
+            justifyContent="space-between"
+            key={`round-${roundId}`}
+            sx={{border: 1, borderColor: 'blue', p: 2, alignItems: 'center'}}>
+            <Stack direction="row" spacing={2} alignItems={'center'}>
                 {matchFields.map((matchField, matchIndex) => (
                     <Stack
                         direction="column"
                         spacing={1}
-                        key={`match-${roundId}-${matchField.fieldId}`}
-                        >
-                        <Stack sx={{border: 1, borderColor: 'grey', width: 1, p:2, boxSizing: 'border-box'}}>
+                        key={`match-${roundId}-${matchField.fieldId}`}>
+                        <Stack
+                            sx={{
+                                border: 1,
+                                borderColor: 'grey',
+                                width: 1,
+                                p: 2,
+                                boxSizing: 'border-box',
+                            }}>
                             <FormInputNumber
                                 name={'rounds[' + roundIndex + '].matches[' + matchIndex + '].name'}
                                 label={'Match name'}
@@ -94,9 +105,10 @@ const CompetitionSetupRound = ({roundIndex, roundId, control, removeRound}: Prop
                 </Box>
             </Stack>
             <Box>
-            <Button variant="outlined" onClick={() => removeRound(roundIndex)}>
-                Remove Round
-            </Button></Box>
+                <Button variant="outlined" onClick={() => removeRound(roundIndex)}>
+                    Remove Round
+                </Button>
+            </Box>
         </Stack>
     )
 }

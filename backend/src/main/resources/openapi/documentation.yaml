@@ -865,6 +865,52 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionSetup:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    put:
+      operationId: updateCompetitionSetup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionSetupDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionSetup
+      responses:
+        200:
+          description: CompetitionSetup successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionSetupDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - name: eventId
@@ -2547,6 +2593,51 @@ components:
             type: string
             format: uuid
 
+
+    # competitionSetup
+
+    CompetitionSetupMatch:
+      type: object
+      required:
+        - weighting
+        - outcomes
+      properties:
+        weighting:
+          type: integer
+        teams:
+          type: integer
+        name:
+          type: string
+        outcomes:
+          type: array
+          items:
+            type: integer
+
+    CompetitionSetupRound:
+      type: object
+      required:
+        - name
+        - required
+        - matches
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupMatch'
+
+    CompetitionSetupDto:
+      type: object
+      required:
+        - rounds
+      properties:
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupRound'
 
 
     # competitionTemplate

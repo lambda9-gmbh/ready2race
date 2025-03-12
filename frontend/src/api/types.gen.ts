@@ -126,6 +126,23 @@ export type CompetitionRequest = {
     template?: string
 }
 
+export type CompetitionSetupDto = {
+    rounds: Array<CompetitionSetupRound>
+}
+
+export type CompetitionSetupMatch = {
+    weighting: number
+    teams?: number
+    name?: string
+    outcomes: Array<number>
+}
+
+export type CompetitionSetupRound = {
+    name: string
+    required: boolean
+    matches: Array<CompetitionSetupMatch>
+}
+
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
@@ -928,6 +945,29 @@ export type AssignDaysToCompetitionData = {
 export type AssignDaysToCompetitionResponse = void
 
 export type AssignDaysToCompetitionError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateCompetitionSetupData = {
+    body: CompetitionSetupDto
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type UpdateCompetitionSetupResponse = string
+
+export type UpdateCompetitionSetupError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionSetupData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionSetupResponse = CompetitionSetupDto
+
+export type GetCompetitionSetupError = BadRequestError | ApiError
 
 export type AddDocumentsData = {
     body: {

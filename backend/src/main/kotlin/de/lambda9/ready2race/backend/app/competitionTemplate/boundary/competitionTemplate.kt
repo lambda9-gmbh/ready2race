@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateRequest
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.requests.authenticate
@@ -67,6 +68,8 @@ fun Route.competitionTemplate() {
                     }
                 }
             }
+
+            competitionSetup("competitionTemplateId")
         }
     }
 }

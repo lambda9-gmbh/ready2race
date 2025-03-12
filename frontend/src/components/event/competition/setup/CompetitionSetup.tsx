@@ -1,5 +1,5 @@
 import {Box, Button, Stack} from '@mui/material'
-import {FormProvider, useFieldArray, useForm} from 'react-hook-form-mui'
+import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
 
 const CompetitionSetup = () => {
@@ -16,7 +16,7 @@ const CompetitionSetup = () => {
     })
 
     return (
-        <FormProvider {...formContext}>
+        <FormContainer formContext={formContext}>
             <Box>
                 <Stack direction="column" spacing={4} alignItems="center">
                     {roundFields.map((roundField, roundIndex) => (
@@ -49,7 +49,7 @@ const CompetitionSetup = () => {
                     Click for dummy data
                 </Button>
             </Box>
-        </FormProvider>
+        </FormContainer>
     )
 }
 

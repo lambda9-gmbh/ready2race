@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
 import de.lambda9.ready2race.backend.requests.*
 import de.lambda9.ready2race.backend.responses.respondKIO
 import de.lambda9.tailwind.core.KIO
@@ -89,6 +90,8 @@ fun Route.competition() {
                     }
                 }
             }
+
+            competitionSetup("competitionId")
         }
     }
 }

@@ -107,6 +107,12 @@ import type {
     AssignDaysToCompetitionData,
     AssignDaysToCompetitionError,
     AssignDaysToCompetitionResponse,
+    UpdateCompetitionSetupData,
+    UpdateCompetitionSetupError,
+    UpdateCompetitionSetupResponse,
+    GetCompetitionSetupData,
+    GetCompetitionSetupError,
+    GetCompetitionSetupResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -553,6 +559,32 @@ export const assignDaysToCompetition = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/days',
+    })
+}
+
+export const updateCompetitionSetup = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionSetupData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionSetupResponse,
+        UpdateCompetitionSetupError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionSetup',
+    })
+}
+
+export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionSetupData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupResponse,
+        GetCompetitionSetupError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionSetup',
     })
 }
 
