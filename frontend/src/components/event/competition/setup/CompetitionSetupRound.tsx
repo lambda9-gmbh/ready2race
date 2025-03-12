@@ -1,12 +1,13 @@
 import {Control, useFieldArray} from 'react-hook-form-mui'
-import {Setup} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import {Box, Button, Stack} from '@mui/material'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import {FormInputText} from "@components/form/input/FormInputText.tsx";
+import {CompetitionSetupForm} from "@components/event/competition/setup/CompetitionSetup.tsx";
 
 type Props = {
     roundIndex: number
     roundId: string
-    control: Control<Setup>
+    control: Control<CompetitionSetupForm>
     removeRound: (index: number) => void
 }
 const CompetitionSetupRound = ({roundIndex, roundId, control, removeRound}: Props) => {
@@ -41,7 +42,7 @@ const CompetitionSetupRound = ({roundIndex, roundId, control, removeRound}: Prop
                                 p: 2,
                                 boxSizing: 'border-box',
                             }}>
-                            <FormInputNumber
+                            <FormInputText
                                 name={'rounds[' + roundIndex + '].matches[' + matchIndex + '].name'}
                                 label={'Match name'}
                             />

@@ -954,7 +954,7 @@ export type UpdateCompetitionSetupData = {
     }
 }
 
-export type UpdateCompetitionSetupResponse = string
+export type UpdateCompetitionSetupResponse = void
 
 export type UpdateCompetitionSetupError = BadRequestError | ApiError | UnprocessableEntityError
 
