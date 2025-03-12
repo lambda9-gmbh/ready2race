@@ -54,8 +54,8 @@ const FileSelection = () => {
             validate: values => {
                 if (values.length < 1) {
                     setEmptyListError(t('event.document.error.emptyList'))
+                    return 'empty'
                 }
-                return 'empty'
             },
         },
     })
