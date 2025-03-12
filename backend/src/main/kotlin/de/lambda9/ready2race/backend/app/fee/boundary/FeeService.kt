@@ -14,7 +14,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
@@ -38,7 +38,7 @@ object FeeService {
         val total = !FeeRepo.count(params.search).orDie()
         val page = !FeeRepo.page(params).orDie()
 
-        page.forEachM { it.feeDto() }.map {
+        page.traverse { it.feeDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

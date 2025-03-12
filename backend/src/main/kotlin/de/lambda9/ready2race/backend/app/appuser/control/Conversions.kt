@@ -11,13 +11,13 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration
 
 fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
-    roles!!.toList().forEachM { it!!.toDto() }.map {
+    roles!!.toList().traverse { it!!.toDto() }.map {
         AppUserDto(
             id = id!!,
             firstname = firstname!!,
@@ -104,7 +104,7 @@ fun AppUserNameRecord.toDto(): App<Nothing, AppUserNameDto> =
 fun AppUserInvitationWithRolesRecord.toDto(): App<Nothing, AppUserInvitationDto> = KIO.comprehension {
     val createdByDto = createdBy?.let { !it.toDto() }
     val assignedEmailDto = emailEntity?.let { !it.toAssignedDto() }
-    val roleDtos = !roles!!.toList().forEachM { it!!.toDto() }
+    val roleDtos = !roles!!.toList().traverse { it!!.toDto() }
 
     KIO.ok(
         AppUserInvitationDto(

@@ -21,13 +21,6 @@ object NamedParticipantRepo {
 
     fun delete(id: UUID) = NAMED_PARTICIPANT.delete { ID.eq(id) }
 
-    fun all(): JIO<List<NamedParticipantRecord>> = Jooq.query {
-        with(NAMED_PARTICIPANT) {
-            selectFrom(this)
-                .fetch()
-        }
-    }
-
     fun getIfExist(
         ids: List<UUID>,
     ): JIO<List<NamedParticipantRecord>> = Jooq.query {
@@ -54,17 +47,5 @@ object NamedParticipantRepo {
                 .page(params, searchFields())
                 .fetch()
         }
-    }
-
-    fun findUnknown(
-        namedParticipants: List<UUID>
-    ): JIO<List<UUID>> = Jooq.query {
-        val found = with(NAMED_PARTICIPANT) {
-            select(ID)
-                .from(this)
-                .where(DSL.or(namedParticipants.map { ID.eq(it) }))
-                .fetch { it.value1() }
-        }
-        namedParticipants.filter { !found.contains(it) }
     }
 }

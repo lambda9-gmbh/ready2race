@@ -15,7 +15,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
@@ -52,7 +52,7 @@ object EventDayService {
             if (competitionId == null) !EventDayRepo.pageByEvent(eventId, params).orDie()
             else !EventDayRepo.pageByEventAndCompetition(eventId, competitionId, params).orDie()
 
-        page.forEachM { it.eventDayDto() }.map {
+        page.traverse { it.eventDayDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

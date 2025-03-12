@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.app.role.entity.RoleRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -28,7 +28,7 @@ fun RoleRequest.toRecord(userId: UUID): App<Nothing, RoleRecord> =
     )
 
 fun RoleWithPrivilegesRecord.toDto(): App<Nothing, RoleDto> =
-    privileges!!.toList().forEachM { it!!.toPrivilegeDto() }.map {
+    privileges!!.toList().traverse { it!!.toPrivilegeDto() }.map {
         RoleDto(
             id = id!!,
             name = name!!,
