@@ -8,9 +8,8 @@ import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
-import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
-import java.util.UUID
+import java.util.*
 
 fun Route.eventDocumentType() {
     route("/eventDocumentType") {

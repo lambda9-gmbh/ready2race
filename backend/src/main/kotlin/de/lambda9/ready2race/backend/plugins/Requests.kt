@@ -17,13 +17,13 @@ fun Application.configureRequests() {
         register(RateLimitName("login")) {
             rateLimiter(limit = 3, refillPeriod = 5.minutes)
             requestKey { call ->
-                call.receiveKIO(LoginRequest.example).unsafeRunSync().getOrThrow()?.email ?: "" // todo: @temporary
+                call.receiveKIO(LoginRequest.example).unsafeRunSync().getOrThrow().email
             }
         }
         register(RateLimitName("resetPassword")){
             rateLimiter(limit = 5, refillPeriod = 5.minutes)
             requestKey { call ->
-                call.receiveKIO(PasswordResetInitRequest.example).unsafeRunSync().getOrThrow()?.email ?: "" // todo: @temporary
+                call.receiveKIO(PasswordResetInitRequest.example).unsafeRunSync().getOrThrow().email
             }
         }
     }

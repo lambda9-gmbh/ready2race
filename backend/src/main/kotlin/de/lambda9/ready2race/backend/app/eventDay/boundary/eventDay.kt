@@ -6,7 +6,6 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
-import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
 import java.util.*
 

@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.calls.responses.respondError
 import de.lambda9.tailwind.core.KIOException
 import io.ktor.http.*
 import io.ktor.server.application.*
-import io.ktor.server.plugins.*
 import io.ktor.server.plugins.statuspages.*
 
 fun Application.configureResponses() {
@@ -25,10 +24,6 @@ fun Application.configureResponses() {
                         },
                         onPanic = { call.respondDefect(it) }
                     )
-                }
-
-                is BadRequestException -> {
-                    call.respondError(RequestError.Other(cause))
                 }
 
                 else -> {
