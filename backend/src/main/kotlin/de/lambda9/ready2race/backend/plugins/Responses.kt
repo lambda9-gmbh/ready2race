@@ -1,9 +1,9 @@
 package de.lambda9.ready2race.backend.plugins
 
-import de.lambda9.ready2race.backend.requests.RequestError
-import de.lambda9.ready2race.backend.responses.ToApiError
-import de.lambda9.ready2race.backend.responses.respondDefect
-import de.lambda9.ready2race.backend.responses.respondError
+import de.lambda9.ready2race.backend.calls.requests.RequestError
+import de.lambda9.ready2race.backend.calls.responses.ToApiError
+import de.lambda9.ready2race.backend.calls.responses.respondDefect
+import de.lambda9.ready2race.backend.calls.responses.respondError
 import de.lambda9.tailwind.core.KIOException
 import io.ktor.http.*
 import io.ktor.server.application.*

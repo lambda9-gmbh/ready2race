@@ -5,9 +5,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
 import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetRequest
-import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
-import de.lambda9.ready2race.backend.requests.*
-import de.lambda9.ready2race.backend.responses.respondKIO
+import de.lambda9.ready2race.backend.calls.requests.*
+import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
@@ -16,26 +15,22 @@ import java.util.*
 fun Route.user() {
     route("/user") {
         get {
-            call.respondKIO {
-                KIO.comprehension {
-                    !authenticate(Privilege.ReadUserGlobal)
-                    val params = !pagination<AppUserWithRolesSort>()
-                    AppUserService.page(params)
-                }
+            call.respondComprehension {
+                !authenticate(Privilege.ReadUserGlobal)
+                val params = !pagination<AppUserWithRolesSort>()
+                AppUserService.page(params)
             }
         }
 
         route("/{userId}") {
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        val id = !pathParam("userId") { UUID.fromString(it) }
-                        val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.USER)
-                        if (scope == Privilege.Scope.OWN && user.id != id) {
-                            KIO.fail(AuthError.PrivilegeMissing)
-                        } else {
-                            AppUserService.get(id)
-                        }
+                call.respondComprehension {
+                    val id = !pathParam("userId") { UUID.fromString(it) }
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.USER)
+                    if (scope == Privilege.Scope.OWN && user.id != id) {
+                        KIO.fail(AuthError.PrivilegeMissing)
+                    } else {
+                        AppUserService.get(id)
                     }
                 }
             }
@@ -47,100 +42,72 @@ fun Route.user() {
 
         route("/registration") {
             post {
-                val payload = call.receiveV(RegisterRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val captchaId = !queryParam("challenge") { UUID.fromString(it) } // todo: put captcha in helper function
-                        val captchaInput = !queryParam("input") { it.toInt() }
-                        !CaptchaService.trySolution(captchaId, captchaInput)
-
-                        val body = !payload
-                        AppUserService.register(body)
-                    }
+                call.respondComprehension {
+                    !checkCaptcha()
+                    val body = !receiveKIO(RegisterRequest.example)
+                    AppUserService.register(body)
                 }
             }
 
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.ReadUserGlobal)
-                        val params = !pagination<AppUserRegistrationSort>()
-                        AppUserService.pageRegistrations(params)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadUserGlobal)
+                    val params = !pagination<AppUserRegistrationSort>()
+                    AppUserService.pageRegistrations(params)
                 }
             }
 
             post("/verify") {
-                val payload = call.receiveV(VerifyRegistrationRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val body = !payload
-                        AppUserService.verifyRegistration(body)
-                    }
+                call.respondComprehension {
+                    val body = !receiveKIO(VerifyRegistrationRequest.example)
+                    AppUserService.verifyRegistration(body)
                 }
             }
         }
 
         route("invitation") {
             post {
-                val payload = call.receiveV(InviteRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val user = !authenticate(Privilege.CreateUserGlobal)
-                        val body = !payload
-                        AppUserService.invite(body, user)
-                    }
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.CreateUserGlobal)
+                    val body = !receiveKIO(InviteRequest.example)
+                    AppUserService.invite(body, user)
                 }
             }
 
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.ReadUserGlobal)
-                        val params = !pagination<AppUserInvitationWithRolesSort>()
-                        AppUserService.pageInvitations(params)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadUserGlobal)
+                    val params = !pagination<AppUserInvitationWithRolesSort>()
+                    AppUserService.pageInvitations(params)
                 }
             }
 
             post("/accept") {
-                val payload = call.receiveV(AcceptInvitationRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val body = !payload
-                        AppUserService.acceptInvitation(body)
-                    }
+                call.respondComprehension {
+                    val body = !receiveKIO(AcceptInvitationRequest.example)
+                    AppUserService.acceptInvitation(body)
                 }
             }
         }
-        route("/resetPassword"){
+        route("/resetPassword") {
             rateLimit(RateLimitName("resetPassword")) {
-                post{
-                    val payload = call.receiveV(PasswordResetInitRequest.example)
-                    call.respondKIO {
-                        KIO.comprehension {
-                            val captchaId = !queryParam("challenge") { UUID.fromString(it) }
-                            val captchaInput = !queryParam("input") { it.toInt() }
-                            !CaptchaService.trySolution(captchaId, captchaInput)
-
-                            val body = !payload
-                            AppUserService.initPasswordReset(body)
-                        }
+                post {
+                    call.respondComprehension {
+                        !checkCaptcha()
+                        val body = !receiveKIO(PasswordResetInitRequest.example)
+                        AppUserService.initPasswordReset(body)
                     }
                 }
             }
 
-            route("/{passwordResetToken}"){
-                put{
-                    val payload = call.receiveV(PasswordResetRequest.example)
-                    call.respondKIO {
-                        KIO.comprehension {
-                            val token = !pathParam("passwordResetToken")
-                            AppUserService.resetPassword(token, !payload)
-                        }
-                    }
+            put("/{passwordResetToken}") {
+                call.respondComprehension {
+                    val token = !pathParam("passwordResetToken")
+                    val body = !receiveKIO(PasswordResetRequest.example)
+                    AppUserService.resetPassword(token, body)
                 }
             }
         }
+
     }
 }

@@ -8,8 +8,8 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentT
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeError
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeRequest
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeSort
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.traverse

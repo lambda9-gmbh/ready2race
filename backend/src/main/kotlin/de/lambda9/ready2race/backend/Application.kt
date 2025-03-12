@@ -20,7 +20,6 @@ import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
-import de.lambda9.ready2race.backend.kio.recoverDefault
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.JobQueueState
 import de.lambda9.ready2race.backend.schedule.Scheduler
@@ -28,6 +27,7 @@ import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrThrow
+import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
 import io.github.oshai.kotlinlogging.KotlinLogging

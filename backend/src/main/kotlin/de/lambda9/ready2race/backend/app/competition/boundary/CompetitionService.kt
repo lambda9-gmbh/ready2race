@@ -15,9 +15,9 @@ import de.lambda9.ready2race.backend.app.competitionTemplate.control.Competition
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.applyCompetitionProperties
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.toUpdateFunction
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail

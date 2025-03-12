@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.responses
+package de.lambda9.ready2race.backend.calls.responses
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import io.ktor.http.*

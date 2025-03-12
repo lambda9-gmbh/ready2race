@@ -4,8 +4,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDay.entity.AssignCompetitionsToDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
-import de.lambda9.ready2race.backend.requests.*
-import de.lambda9.ready2race.backend.responses.respondKIO
+import de.lambda9.ready2race.backend.calls.requests.*
+import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
 import java.util.*
@@ -14,81 +14,64 @@ fun Route.eventDay() {
     route("/eventDay") {
 
         post {
-            val payload = call.receiveV(EventDayRequest.example)
-            call.respondKIO {
-                KIO.comprehension {
-                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    val eventId = !pathParam("eventId") { UUID.fromString(it) }
+            call.respondComprehension {
+                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val eventId = !pathParam("eventId") { UUID.fromString(it) }
 
-                    val body = !payload
-                    EventDayService.addEventDay(body, user.id!!, eventId)
-                }
+                val body = !receiveKIO(EventDayRequest.example)
+                EventDayService.addEventDay(body, user.id!!, eventId)
             }
         }
 
         get {
-            call.respondKIO {
-                KIO.comprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                    val params = !pagination<EventDaySort>()
-                    val competitionId = !optionalQueryParam("competitionId") { UUID.fromString(it) }
+            call.respondComprehension {
+                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val eventId = !pathParam("eventId") { UUID.fromString(it) }
+                val params = !pagination<EventDaySort>()
+                val competitionId = !optionalQueryParam("competitionId") { UUID.fromString(it) }
 
-                    EventDayService.pageByEvent(eventId, params, competitionId)
-                }
+                EventDayService.pageByEvent(eventId, params, competitionId)
             }
         }
 
         route("/{eventDayId}") {
 
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                        val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                        EventDayService.getEventDay(eventDayId)
-                    }
+                    EventDayService.getEventDay(eventDayId)
                 }
             }
 
             put {
-                val payload = call.receiveV(EventDayRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                        val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                        val body = !payload
-                        EventDayService.updateEvent(body, user.id!!, eventDayId)
-                    }
+                    val body = !receiveKIO(EventDayRequest.example)
+                    EventDayService.updateEvent(body, user.id!!, eventDayId)
                 }
             }
 
             delete {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                        val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                        EventDayService.deleteEvent(eventDayId)
-                    }
+                    EventDayService.deleteEvent(eventDayId)
                 }
             }
 
-            route("/competitions"){
+            put("/competitions") {
 
-                put {
-                    val payload = call.receiveV(AssignCompetitionsToDayRequest.example)
-                    call.respondKIO {
-                        KIO.comprehension {
-                            val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                            val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val eventDayId = !pathParam("eventDayId") { UUID.fromString(it) }
 
-                            val body = !payload
-                            EventDayService.updateEventDayHasCompetition(body, user.id!!, eventDayId)
-                        }
-                    }
+                    val body = !receiveKIO(AssignCompetitionsToDayRequest.example)
+                    EventDayService.updateEventDayHasCompetition(body, user.id!!, eventDayId)
                 }
             }
         }

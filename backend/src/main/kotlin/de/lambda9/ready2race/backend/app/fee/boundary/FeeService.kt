@@ -10,9 +10,9 @@ import de.lambda9.ready2race.backend.app.fee.entity.FeeDto
 import de.lambda9.ready2race.backend.app.fee.entity.FeeError
 import de.lambda9.ready2race.backend.app.fee.entity.FeeRequest
 import de.lambda9.ready2race.backend.app.fee.entity.FeeSort
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail

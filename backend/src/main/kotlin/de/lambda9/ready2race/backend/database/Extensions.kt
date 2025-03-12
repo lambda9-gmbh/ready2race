@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.database
 
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.pagination.Sortable
-import de.lambda9.ready2race.backend.pagination.toOrderBy
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.calls.pagination.toOrderBy
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.jooq.JIO

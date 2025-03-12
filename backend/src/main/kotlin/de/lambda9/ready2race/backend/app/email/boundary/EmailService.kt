@@ -11,7 +11,7 @@ import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailAttachmentRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.kio.accessConfig
-import de.lambda9.ready2race.backend.serialization.jsonMapper
+import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie

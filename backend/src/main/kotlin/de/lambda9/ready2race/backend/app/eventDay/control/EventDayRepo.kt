@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.EventDay
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL

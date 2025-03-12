@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.serialization
+package de.lambda9.ready2race.backend.calls.serialization
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
