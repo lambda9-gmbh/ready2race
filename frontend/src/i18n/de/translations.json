@@ -225,6 +225,8 @@
       "message": "Nachricht",
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
+      "acceptDocuments" : "Ich akzeptiere Folgendes:",
+      "infoDocuments" : "Weitere Informationen",
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",

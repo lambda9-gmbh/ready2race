@@ -3,7 +3,8 @@ import {CheckboxElement, CheckboxElementProps} from 'react-hook-form-mui'
 import FormInputLabel from './FormInputLabel.tsx'
 import {RefAttributes} from 'react'
 
-export type BaseFormInputProps = CheckboxElementProps & RefAttributes<HTMLDivElement>
+export type BaseFormInputProps = CheckboxElementProps &
+    RefAttributes<HTMLDivElement> & {horizontal?: boolean; reverse?: boolean}
 
 export const FormInputCheckbox = (props: BaseFormInputProps) => {
     const {t} = useTranslation()
@@ -11,7 +12,9 @@ export const FormInputCheckbox = (props: BaseFormInputProps) => {
     return (
         <FormInputLabel
             label={props.label}
-            required={props.required === true || props.rules?.required !== undefined}>
+            required={props.required === true || props.rules?.required !== undefined}
+            horizontal={props.horizontal}
+            reverse={props.reverse}>
             <CheckboxElement
                 {...props}
                 rules={{

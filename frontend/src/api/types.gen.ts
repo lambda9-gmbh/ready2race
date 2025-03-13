@@ -256,6 +256,18 @@ export type EventRegistrationDayDto = {
     description?: string | null
 }
 
+export type EventRegistrationDocumentFileDto = {
+    id: string
+    name: string
+}
+
+export type EventRegistrationDocumentTypeDto = {
+    id: string
+    name: string
+    confirmationRequired?: boolean
+    files: Array<EventRegistrationDocumentFileDto>
+}
+
 export type EventRegistrationFeeDto = {
     id: string
     label: string
@@ -269,6 +281,7 @@ export type EventRegistrationInfoDto = {
     description?: string
     location?: string
     days: Array<EventRegistrationDayDto>
+    documentTypes?: Array<EventRegistrationDocumentTypeDto>
     competitionsSingle: Array<EventRegistrationCompetitionDto>
     competitionsTeam: Array<EventRegistrationCompetitionDto>
 }

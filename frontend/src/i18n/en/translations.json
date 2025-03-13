@@ -225,6 +225,8 @@
       "message": "Message",
       "optionalFee": "Optional",
       "totalFees": "Registration Fee",
+      "acceptDocuments" : "I accept the following:",
+      "infoDocuments" : "Additional info",
       "finish": "Submit registration",
       "success": {
         "title": "Registration successful!",

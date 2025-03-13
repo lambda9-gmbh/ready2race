@@ -3213,6 +3213,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventRegistrationDayDto'
+        documentTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationDocumentTypeDto'
         competitionsSingle:
           type: array
           items:
@@ -3245,6 +3249,38 @@ components:
       required:
         - id
         - date
+
+    EventRegistrationDocumentTypeDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        confirmationRequired:
+          type: boolean
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationDocumentFileDto'
+      required:
+        - id
+        - name
+        - type
+        - files
+
+    EventRegistrationDocumentFileDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+      - id
+      - name
 
     EventRegistrationCompetitionDto:
       type: object

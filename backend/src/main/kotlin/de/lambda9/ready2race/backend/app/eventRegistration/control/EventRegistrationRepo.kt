@@ -35,6 +35,10 @@ object EventRegistrationRepo {
 
         val namedParticipants = selectNamedParticipants()
 
+        val documents = selectDocuments()
+
+        val documentTypes = selectDocumentTypes(documents)
+
         val competitionsSingle = selectCompetitions(
             namedParticipants,
             competitionDays,
@@ -56,6 +60,7 @@ object EventRegistrationRepo {
             EVENT.DESCRIPTION,
             EVENT.LOCATION,
             eventDays,
+            documentTypes,
             competitionsSingle,
             competitionsTeam
         )
@@ -67,12 +72,53 @@ object EventRegistrationRepo {
                     it[EVENT.DESCRIPTION],
                     it[EVENT.LOCATION],
                     it[eventDays],
+                    it[documentTypes],
                     it[competitionsSingle],
                     it[competitionsTeam],
                 )
             }.firstOrNull()
 
     }
+
+    private fun selectDocumentTypes(
+        documents: Field<MutableList<EventRegistrationDocumentFileDto>>,
+    ) = DSL.select(
+        EVENT_DOCUMENT_TYPE.ID,
+        EVENT_DOCUMENT_TYPE.NAME,
+        EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED,
+        documents
+    ).from(EVENT_DOCUMENT_TYPE)
+        .join(EVENT_DOCUMENT).on(EVENT_DOCUMENT.EVENT_DOCUMENT_TYPE.eq(EVENT_DOCUMENT_TYPE.ID))
+        .where(EVENT_DOCUMENT.EVENT.eq(EVENT.ID))
+        .groupBy(EVENT_DOCUMENT_TYPE.ID, EVENT_DOCUMENT_TYPE.NAME, EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED)
+        .orderBy(EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED.desc(), EVENT_DOCUMENT_TYPE.NAME)
+        .asMultiset("documentTypes")
+        .convertFrom {
+            it.map {
+                EventRegistrationDocumentTypeDto(
+                    it[EVENT_DOCUMENT_TYPE.ID]!!,
+                    it[EVENT_DOCUMENT_TYPE.NAME]!!,
+                    it[EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED]!!,
+                    it[documents]
+                )
+            }
+        }
+
+    private fun selectDocuments() = DSL.select(
+        EVENT_DOCUMENT.ID,
+        EVENT_DOCUMENT.NAME,
+        EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED
+    ).from(EVENT_DOCUMENT)
+        .where(EVENT_DOCUMENT.EVENT_DOCUMENT_TYPE.eq(EVENT_DOCUMENT_TYPE.ID))
+        .asMultiset("documents")
+        .convertFrom {
+            it.map {
+                EventRegistrationDocumentFileDto(
+                    it[EVENT_DOCUMENT.ID]!!,
+                    it[EVENT_DOCUMENT.NAME]!!,
+                )
+            }
+        }
 
     private fun selectCompetitions(
         namedParticipants: Field<MutableList<EventRegistrationNamedParticipantDto>>,

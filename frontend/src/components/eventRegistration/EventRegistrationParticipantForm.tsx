@@ -155,7 +155,7 @@ export const EventRegistrationParticipantForm = (props: {
                             <Typography color={grey[600]}>
                                 {existingParticipantValues?.year}
                             </Typography>
-                            <Typography color={grey[600]}>
+                            <Typography color={grey[600]} fontStyle={'italic'}>
                                 {existingParticipantValues?.externalClubName}
                             </Typography>
                         </Stack>

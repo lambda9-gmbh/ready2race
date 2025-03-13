@@ -26,6 +26,7 @@ import {FormInputText} from '../form/input/FormInputText.tsx'
 import {EventRegistrationSingleCompetitionForm} from './EventRegistrationSingleCompetitionForm.tsx'
 import EventRegistrationTeamCompetitionForm from './EventRegistrationTeamCompetitionForm.tsx'
 import {EventRegistrationFeeDisplay} from '@components/eventRegistration/EventRegistrationFeeDisplay.tsx'
+import {EventRegistrationConfirmDocumentsForm} from '@components/eventRegistration/EventRegistrationConfirmDocumentsForm.tsx'
 
 export type EventRegistrationStep = {
     label: string
@@ -180,6 +181,11 @@ const EventRegistrationForm = ({
                                               ))}
                                           </Stack>
                                       </Alert>
+                                  )}
+                                  {info?.documentTypes && (
+                                      <EventRegistrationConfirmDocumentsForm
+                                          documentTypes={info?.documentTypes}
+                                      />
                                   )}
                                   <FormInputText
                                       fullWidth
