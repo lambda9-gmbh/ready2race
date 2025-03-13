@@ -3,13 +3,13 @@ package de.lambda9.ready2race.backend.app.namedParticipant.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequest
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantSort
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.namedParticipant() {
     route("/namedParticipant") {
@@ -34,7 +34,7 @@ fun Route.namedParticipant() {
             put{
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val namedParticipantId = !pathParam("namedParticipantId") { UUID.fromString(it) }
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
 
                     val body = !receiveKIO(NamedParticipantRequest.example)
                     NamedParticipantService.updateNamedParticipant(namedParticipantId, body, user.id!!)
@@ -44,7 +44,7 @@ fun Route.namedParticipant() {
             delete{
                 call.respondComprehension {
                     !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                    val namedParticipantId = !pathParam("namedParticipantId") { UUID.fromString(it) }
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
                     NamedParticipantService.deleteNamedParticipant(namedParticipantId)
                 }
             }

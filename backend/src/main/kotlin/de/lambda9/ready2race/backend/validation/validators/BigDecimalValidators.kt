@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.validation.validators
 
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import java.math.BigDecimal
 
 object BigDecimalValidators : Validators<BigDecimal?>() {

@@ -3,13 +3,13 @@ package de.lambda9.ready2race.backend.app.competitionCategory.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryRequest
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategorySort
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.competitionCategory() {
     route("/competitionCategory") {
@@ -34,7 +34,7 @@ fun Route.competitionCategory() {
             put{
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val competitionCategoryId = !pathParam("competitionCategoryId") { UUID.fromString(it) }
+                    val competitionCategoryId = !pathParam("competitionCategoryId", uuid)
 
                     val body = !receiveKIO(CompetitionCategoryRequest.example)
                     CompetitionCategoryService.updateCompetitionCategory(competitionCategoryId, body, user.id!!)
@@ -44,7 +44,7 @@ fun Route.competitionCategory() {
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                    val competitionCategoryId = !pathParam("competitionCategoryId") { UUID.fromString(it) }
+                    val competitionCategoryId = !pathParam("competitionCategoryId",uuid)
                     CompetitionCategoryService.deleteCompetitionCategory(competitionCategoryId)
                 }
             }

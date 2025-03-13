@@ -3,13 +3,13 @@ package de.lambda9.ready2race.backend.app.eventDocumentType.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeRequest
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeSort
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.eventDocumentType() {
     route("/eventDocumentType") {
@@ -36,7 +36,7 @@ fun Route.eventDocumentType() {
             put {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
-                    val id = !pathParam("eventDocumentTypeId") { UUID.fromString(it) }
+                    val id = !pathParam("eventDocumentTypeId", uuid)
 
                     val body = !receiveKIO(EventDocumentTypeRequest.example)
                     EventDocumentTypeService.updateDocumentType(id, body, user.id!!)
@@ -46,7 +46,7 @@ fun Route.eventDocumentType() {
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateEventGlobal)
-                    val id = !pathParam("eventDocumentTypeId") { UUID.fromString(it) }
+                    val id = !pathParam("eventDocumentTypeId", uuid)
                     EventDocumentTypeService.deleteDocumentType(id)
                 }
             }

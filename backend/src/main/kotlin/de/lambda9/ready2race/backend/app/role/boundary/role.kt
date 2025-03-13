@@ -3,13 +3,13 @@ package de.lambda9.ready2race.backend.app.role.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.role.entity.RoleRequest
 import de.lambda9.ready2race.backend.app.role.entity.RoleWithPrivilegesSort
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.role() {
     route("/role") {
@@ -35,7 +35,7 @@ fun Route.role() {
             put {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateUserGlobal)
-                    val id = !pathParam("roleId") { UUID.fromString(it) }
+                    val id = !pathParam("roleId", uuid)
 
                     val body = !receiveKIO(RoleRequest.example)
                     RoleService.updateRole(id, body, user.id!!)
@@ -45,7 +45,7 @@ fun Route.role() {
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateUserGlobal)
-                    val id = !pathParam("roleId") { UUID.fromString(it) }
+                    val id = !pathParam("roleId", uuid)
                     RoleService.deleteRole(id)
                 }
             }

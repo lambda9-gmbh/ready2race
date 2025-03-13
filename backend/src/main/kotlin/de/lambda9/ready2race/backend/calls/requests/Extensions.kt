@@ -1,30 +1,32 @@
 package de.lambda9.ready2race.backend.calls.requests
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.calls.pagination.Order
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.int
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.json
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
-import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.sessions.UserSession
-import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validators.IntValidators
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
+import de.lambda9.tailwind.core.extensions.kio.andThenNotNull
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.sessions.*
-import java.util.*
 
 val logger = KotlinLogging.logger {}
 
@@ -78,44 +80,44 @@ fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> 
     AuthService.useSessionToken(userSession?.token)
 }
 
-fun <T> ApplicationCall.pathParam(
+inline fun <reified T : Any> ApplicationCall.pathParam(
     key: String,
-    f: (String) -> T,
-): App<RequestError, T> = KIO.effect {
-    parameters[key]!!.let(f)
-}.mapError { RequestError.ParameterUnparsable(key) }
+    parser: ParamParser<T>,
+): IO<RequestError, T> =
+    KIO.ok(parameters[key])
+        .onNullFail { RequestError.PathParameterMissing(key) }
+        .andThen { parser(key, it, T::class) }
 
 fun ApplicationCall.pathParam(
     key: String,
-): App<RequestError, String> = pathParam(key) { it }
+): IO<RequestError, String> = pathParam(key) { it }
 
-fun <T> ApplicationCall.optionalQueryParam(
+inline fun <reified T : Any> ApplicationCall.optionalQueryParam(
     key: String,
-    f: (String) -> T,
-): App<RequestError, T?> = KIO.effect {
-    request.queryParameters[key]?.let(f)
-}.mapError { RequestError.ParameterUnparsable(key) }
+    parser: ParamParser<T>,
+): IO<RequestError, T?> =
+    KIO.ok(request.queryParameters[key]).andThenNotNull { parser(key, it, T::class) }
 
 fun ApplicationCall.optionalQueryParam(
     key: String,
-): App<RequestError, String?> = optionalQueryParam(key) { it }
+): IO<RequestError, String?> = optionalQueryParam(key) { it }
 
-fun <T> ApplicationCall.queryParam(
+inline fun <reified T : Any> ApplicationCall.queryParam(
     key: String,
-    f: (String) -> T,
-): App<RequestError, T> =
-    optionalQueryParam(key, f).onNullFail { RequestError.RequiredQueryParameterMissing(key) }
+    parser: ParamParser<T>,
+): IO<RequestError, T> =
+    optionalQueryParam(key, parser).onNullFail { RequestError.RequiredQueryParameterMissing(key) }
 
 fun ApplicationCall.queryParam(
     key: String,
-): App<RequestError, String> = queryParam(key) { it }
+): IO<RequestError, String> = queryParam(key) { it }
 
-inline fun <reified S> ApplicationCall.pagination(): App<RequestError, PaginationParameters<S>>
+inline fun <reified S> ApplicationCall.pagination(): IO<RequestError, PaginationParameters<S>>
     where S : Sortable, S : Enum<S> = KIO.comprehension {
 
-    val limit = !optionalQueryParam("limit") { it.toInt() }
-    val offset = !optionalQueryParam("offset") { it.toInt() }
-    val sort = !optionalQueryParam("sort") { jsonMapper.readValue<List<Order<S>>>(it) }
+    val limit = !optionalQueryParam("limit", int)
+    val offset = !optionalQueryParam("offset", int)
+    val sort = !optionalQueryParam("sort", json<List<Order<S>>>())
     val search = !optionalQueryParam("search")
 
     ValidationResult.allOf(
@@ -128,7 +130,7 @@ inline fun <reified S> ApplicationCall.pagination(): App<RequestError, Paginatio
 }
 
 fun ApplicationCall.checkCaptcha(): App<ToApiError, Unit> = KIO.comprehension {
-    val captchaId = !queryParam("challenge") { UUID.fromString(it) }
-    val captchaInput = !queryParam("input") { it.toInt() }
+    val captchaId = !queryParam("challenge", uuid)
+    val captchaInput = !queryParam("input", int)
     CaptchaService.trySolution(captchaId, captchaInput)
 }

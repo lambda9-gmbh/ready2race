@@ -3,14 +3,12 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetInitRequest
-import de.lambda9.ready2race.backend.app.appuser.entity.PasswordResetRequest
 import de.lambda9.ready2race.backend.calls.requests.*
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.user() {
     route("/user") {
@@ -25,7 +23,7 @@ fun Route.user() {
         route("/{userId}") {
             get {
                 call.respondComprehension {
-                    val id = !pathParam("userId") { UUID.fromString(it) }
+                    val id = !pathParam("userId", uuid)
                     val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.USER)
                     if (scope == Privilege.Scope.OWN && user.id != id) {
                         KIO.fail(AuthError.PrivilegeMissing)

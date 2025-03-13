@@ -5,9 +5,9 @@ import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetit
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
 import de.lambda9.ready2race.backend.calls.requests.*
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.competition() {
     route("/competition") {
@@ -15,7 +15,7 @@ fun Route.competition() {
         post {
             call.respondComprehension {
                 val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                val eventId = !pathParam("eventId") { UUID.fromString(it) }
+                val eventId = !pathParam("eventId", uuid)
 
                 val body = !receiveKIO(CompetitionRequest.example)
                 CompetitionService.addCompetition(body, user.id!!, eventId)
@@ -25,9 +25,9 @@ fun Route.competition() {
         get {
             call.respondComprehension {
                 !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                val eventId = !pathParam("eventId") { UUID.fromString(it) }
+                val eventId = !pathParam("eventId", uuid)
                 val params = !pagination<CompetitionWithPropertiesSort>()
-                val eventDayId = !optionalQueryParam("eventDayId") { UUID.fromString(it) }
+                val eventDayId = !optionalQueryParam("eventDayId", uuid)
 
                 CompetitionService.pageWithPropertiesByEvent(eventId, params, eventDayId)
             }
@@ -38,7 +38,7 @@ fun Route.competition() {
             get {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
+                    val competitionId = !pathParam("competitionId", uuid)
                     CompetitionService.getCompetitionWithProperties(competitionId)
                 }
             }
@@ -46,7 +46,7 @@ fun Route.competition() {
             put {
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
+                    val competitionId = !pathParam("competitionId", uuid)
 
                     val body = !receiveKIO(CompetitionRequest.example)
                     CompetitionService.updateCompetition(body, user.id!!, competitionId)
@@ -56,7 +56,7 @@ fun Route.competition() {
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                    val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
+                    val competitionId = !pathParam("competitionId", uuid)
                     CompetitionService.deleteCompetition(competitionId)
                 }
             }
@@ -64,7 +64,7 @@ fun Route.competition() {
             put("/days"){
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
+                    val competitionId = !pathParam("competitionId", uuid)
 
                     val body = !receiveKIO(AssignDaysToCompetitionRequest.example)
                     CompetitionService.updateEventDayHasCompetition(body, user.id!!, competitionId)

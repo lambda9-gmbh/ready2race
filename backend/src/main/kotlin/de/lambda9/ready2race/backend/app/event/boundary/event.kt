@@ -6,13 +6,13 @@ import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.event() {
     route("/event") {
@@ -43,7 +43,7 @@ fun Route.event() {
             get {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val id = !pathParam("eventId") { UUID.fromString(it) }
+                    val id = !pathParam("eventId", uuid)
                     EventService.getEvent(id)
                 }
             }
@@ -51,7 +51,7 @@ fun Route.event() {
             put {
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val id = !pathParam("eventId") { UUID.fromString(it) }
+                    val id = !pathParam("eventId", uuid)
 
                     val body = !receiveKIO(EventRequest.example)
                     EventService.updateEvent(body, user.id!!, id)
@@ -61,7 +61,7 @@ fun Route.event() {
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                    val id = !pathParam("eventId") { UUID.fromString(it) }
+                    val id = !pathParam("eventId", uuid)
                     EventService.deleteEvent(id)
                 }
             }
