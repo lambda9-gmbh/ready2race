@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.calls.responses
 
-import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.calls.pagination.Pagination
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.tailwind.core.KIO
 import java.util.*
 
 sealed interface ApiResponse {
@@ -46,6 +46,6 @@ sealed interface ApiResponse {
     ): ApiResponse
 
     companion object {
-        val noData get() = App.ok(NoData)
+        val noData get() = KIO.ok(NoData)
     }
 }

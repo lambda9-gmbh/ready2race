@@ -3,8 +3,6 @@ package de.lambda9.ready2race.backend.database
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
 import de.lambda9.ready2race.backend.calls.pagination.toOrderBy
-import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.*
@@ -69,14 +67,18 @@ fun <R : Record, T : TableImpl<R>, A> T.insertReturning(
         .value1()!!
 }
 
+private fun <R : UpdatableRecord<R>> R.updateChanges(
+    f: R.() -> Unit,
+): R = apply {
+    f()
+    update()
+}
+
 fun <R : UpdatableRecord<R>> TableImpl<R>.update(
     record: R,
     f: R.() -> Unit,
 ): JIO<R> = Jooq.query {
-    record.apply {
-        f()
-        update()
-    }
+    record.updateChanges(f)
 }
 
 fun <R : UpdatableRecord<R>, T : TableImpl<R>> T.update(
@@ -85,11 +87,10 @@ fun <R : UpdatableRecord<R>, T : TableImpl<R>> T.update(
 ): JIO<R?> = Jooq.query {
     selectFrom(this@update)
         .where(condition())
-        .fetchOne()
-        ?.let {
-            this@update.update(it, f)
+        .fetchOne {
+            it.updateChanges(f)
         }
-}.andThen { it ?: KIO.ok(null) } // TODO: new convenience fn from lib
+}
 
 fun <R : Record, T : TableImpl<R>> T.exists(
     condition: T.() -> Condition
