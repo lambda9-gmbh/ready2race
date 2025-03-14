@@ -6,7 +6,6 @@ import de.lambda9.ready2race.backend.Config
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.module
-import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.fold
@@ -19,34 +18,21 @@ import org.testcontainers.containers.PostgreSQLContainer
 import java.io.PrintWriter
 import java.net.ServerSocket
 import java.util.*
+import kotlin.test.assertEquals
 import kotlin.test.fail
 
-class TestComprehensionScope(
-    private val builder: ApplicationTestBuilder,
-    private val env: JEnv,
-) : KIO.ComprehensionScope<JEnv, Any>, ClientProvider by builder {
-
-    override fun <A> KIO<JEnv, Any, A>.not(): A = unsafeRunSync(env).fold(
-        onSuccess = { it },
-        onError = { fail("Expected successful computation failed with: $it") },
-        onDefect = { fail("Expected successful computation threw: $it") }
-    )
-
-}
-
-fun testComprehension(block: KIO.ComprehensionScope<Any?, Any>.() -> Unit) {
-    val scope = object : KIO.ComprehensionScope<Any?, Any> {
-        override fun <A> IO<Any, A>.not(): A = unsafeRunSync().fold(
-            onSuccess = { it },
-            onError = { fail("Expected successful IO computation failed with: $it") },
-            onDefect = { fail("Expected successful IO computation threw: $it") }
-        )
-    }
-    block(scope)
-}
-
-fun testApplicationKIO(block: suspend TestComprehensionScope.() -> Unit) =
+fun testApplicationKIO(block: suspend TestComprehensionScope<JEnv>.() -> Unit) =
     ApplicationTestRunner.run(block)
+
+interface TestComprehensionScope<R> : KIO.ComprehensionScope<R, Any?>, ClientProvider {
+
+    fun <A> assertKIOSucceeds(expected: A? = null, kio: () -> KIO<R, Any?, A>)
+
+    fun <E> assertKIOFails(expected: E? = null, kio: () -> KIO<R, E, Any?>)
+
+    fun assertKIODies(expected: Throwable? = null, kio: () -> KIO<JEnv, Any?, Any?>)
+
+}
 
 private object ApplicationTestRunner {
 
@@ -95,7 +81,7 @@ private object ApplicationTestRunner {
         Flyway(flyway).migrate()
     }
 
-    fun run(block: suspend TestComprehensionScope.() -> Unit) = testApplication {
+    fun run(block: suspend TestComprehensionScope<JEnv>.() -> Unit) = testApplication {
 
         val dsl = DSL.using(dataSource, SQLDialect.POSTGRES)
         val configuration = dsl.configuration()
@@ -115,8 +101,52 @@ private object ApplicationTestRunner {
                 application {
                     module(env)
                 }
+                val scope = object : TestComprehensionScope<JEnv>, ClientProvider by this {
+                    override operator fun <A> KIO<JEnv, Any?, A>.not(): A = unsafeRunSync(env).fold(
+                        onSuccess = { it },
+                        onError = {
+                            fail("Expected computation success failed with: $it")
+                        },
+                        onDefect = {
+                            fail("Expected computation success threw: $it")
+                        }
+                    )
 
-                val scope = TestComprehensionScope(this, env)
+                    override fun <A> assertKIOSucceeds(expected: A?, kio: () -> KIO<JEnv, Any?, A>) {
+                        val actual = !kio()
+                        if (expected != null) {
+                            assertEquals(expected, actual)
+                        }
+                    }
+
+                    override fun <E> assertKIOFails(expected: E?, kio: () -> KIO<JEnv, E, Any?>) = kio().unsafeRunSync(env).fold(
+                        onSuccess = {
+                            fail("Expected computation failure succeeded with: $it")
+                        },
+                        onError = { actual ->
+                            if (expected != null) {
+                                assertEquals(expected, actual)
+                            }
+                        },
+                        onDefect = {
+                            fail("Expected computation failure threw: $it")
+                        }
+                    )
+
+                    override fun assertKIODies(expected: Throwable?, kio: () -> KIO<JEnv, Any?, Any?>) = kio().unsafeRunSync(env).fold(
+                        onSuccess = {
+                            fail("Expected computation defect succeeded with: $it")
+                        },
+                        onError = {
+                            fail("Expected computation defect failed with: $it")
+                        },
+                        onDefect = { actual ->
+                            if (expected != null) {
+                                assertEquals(expected, actual)
+                            }
+                        }
+                    )
+                }
                 block(scope)
             } catch (t: Throwable) {
                 throw t
