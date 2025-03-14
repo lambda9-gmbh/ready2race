@@ -94,7 +94,13 @@ private object ApplicationTestRunner {
         val configuration = DefaultConfiguration()
             .set(SQLDialect.POSTGRES)
             .set(connection)
-            .set(JooqQueryPrinter { config.database.logQueries })
+            .let {
+                if (config.database.logQueries) {
+                    it.set(JooqQueryPrinter())
+                } else {
+                    it
+                }
+            }
 
         if (connection == null) {
             fail("DB connection provider could not be acquired")
