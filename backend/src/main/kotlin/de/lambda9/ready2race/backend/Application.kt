@@ -21,7 +21,8 @@ import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.plugins.*
-import de.lambda9.ready2race.backend.schedule.JobQueueState
+import de.lambda9.ready2race.backend.schedule.DynamicIntervalJobState
+import de.lambda9.ready2race.backend.schedule.FixedIntervalJobState
 import de.lambda9.ready2race.backend.schedule.Scheduler
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
@@ -226,51 +227,52 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
         supervisorScope {
             logger.info { "Scheduling jobs ..." }
 
-            scheduleDynamic(10.seconds) {
+            scheduleDynamic("Send next email", 10.seconds) {
                 EmailService.sendNext()
-                    .map { JobQueueState.PROCESSED }
+                    .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {
-                            EmailError.NoEmailsToSend -> JobQueueState.EMPTY
+                            EmailError.SmtpConfigMissing -> DynamicIntervalJobState.Fatal("Smtp config missing")
+                            EmailError.NoEmailsToSend -> DynamicIntervalJobState.Empty
                             is EmailError.SendingFailed -> {
                                 logger.warn(error.cause) { "Error sending email ${error.emailId}" }
-                                JobQueueState.PROCESSED
+                                DynamicIntervalJobState.Processed
                             }
                         }
                     }
             }
 
-            /*scheduleFixed(1.hours) {
+            /*scheduleFixed("Delete sent emails", 1.hours) {
                 EmailService.deleteSent().map {
                     logger.info { "${"sent email".count(it)} deleted" }
                 }
             }*/
 
-            scheduleFixed(5.minutes) {
+            scheduleFixed("Delete expired session tokens", 5.minutes) {
                 AuthService.deleteExpiredTokens().map {
                     logger.info { "${"expired session".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(1.hours) {
+            scheduleFixed("Delete expired user registrations", 1.hours) {
                 AppUserService.deleteExpiredRegistrations().map {
                     logger.info { "${"expired registration".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(1.hours) {
+            scheduleFixed("Delete expired user invitations", 1.hours) {
                 AppUserService.deleteExpiredInvitations().map {
                     logger.info { "${"expired invitations".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(1.hours) {
+            scheduleFixed("Delete expired password resets", 1.hours) {
                 AppUserService.deleteExpiredPasswordResets().map {
                     logger.info { "${"expired password resets".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(5.minutes){
+            scheduleFixed("Delete expired captchas", 5.minutes){
                 CaptchaService.deleteExpired().map{
                     logger.info { "${"expired captchas".count(it)} deleted" }
                 }

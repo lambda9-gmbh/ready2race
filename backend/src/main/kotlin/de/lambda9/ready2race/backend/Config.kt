@@ -9,7 +9,7 @@ data class Config(
     val mode: Mode,
     val http: Http,
     val database: Database,
-    val smtp: Smtp,
+    val smtp: Smtp?,
     val security: Security,
     val admin: Admin,
 ) {

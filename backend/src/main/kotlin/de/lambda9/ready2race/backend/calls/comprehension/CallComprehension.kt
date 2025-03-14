@@ -10,7 +10,7 @@ import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import io.ktor.server.application.*
 
 private class CallComprehensionScopeException(
-    val reason: Cause<Any>,
+    val reason: Cause<ToApiError>,
 ) : Exception()
 
 class CallComprehensionScope(val call: ApplicationCall) : KIO.ComprehensionScope<JEnv, ToApiError>,
@@ -19,7 +19,7 @@ class CallComprehensionScope(val call: ApplicationCall) : KIO.ComprehensionScope
         unsafeRunSync(call.kioEnv).fold(
             onSuccess = { it },
             onError = {
-                throw CallComprehensionScopeException(it as Cause<Any>)
+                throw CallComprehensionScopeException(it)
             }
         )
 }
@@ -29,6 +29,5 @@ suspend fun ApplicationCall.comprehension(
 ) = try {
     block(CallComprehensionScope(this))
 } catch (ex: CallComprehensionScopeException) {
-    @Suppress("UNCHECKED_CAST")
-    KIO.halt(ex.reason as Cause<ToApiError>)
+    KIO.halt(ex.reason)
 }

@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EmailReco
 import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -117,7 +118,7 @@ object EmailService {
 
     fun sendNext(): App<EmailError, Unit> = KIO.comprehension {
 
-        val smtp = (!accessConfig()).smtp
+        val smtp = !accessConfig().map { it.smtp }.onNullFail { EmailError.SmtpConfigMissing }
 
         val email = !EmailRepo.getAndLockNext(retryAfterError).orDie().onNullFail { EmailError.NoEmailsToSend }
         val attachments = !EmailAttachmentRepo.getByEmail(email.id).orDie().map { records ->

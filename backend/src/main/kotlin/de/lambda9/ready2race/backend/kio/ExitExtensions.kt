@@ -11,10 +11,3 @@ fun <A, B> Exit<Nothing, A>.fold(
     onDefect = onDefect,
     onSuccess = onSuccess
 )
-
-fun <A> Exit<Nothing, A>.onDefect(
-    f: (Throwable) -> Unit
-): Unit = fold(
-    onDefect = { f(it) },
-    onSuccess = {}
-)
