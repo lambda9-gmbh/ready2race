@@ -45,6 +45,7 @@ data class Config(
         val url: String,
         val user: String,
         val password: String,
+        val logQueries: Boolean,
     )
 
     data class Smtp(
@@ -95,6 +96,7 @@ data class Config(
                 url = get("DATABASE_URL"),
                 user = get("DATABASE_USER"),
                 password = get("DATABASE_PASSWORD"),
+                logQueries = get("DATABASE_LOG_QUERIES")?.toBooleanStrict() ?: false
             ),
             smtp = Smtp(
                 host = get("SMTP_HOST"),

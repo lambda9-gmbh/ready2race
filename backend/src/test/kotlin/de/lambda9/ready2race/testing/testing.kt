@@ -10,10 +10,14 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.fold
 import de.lambda9.tailwind.jooq.Jooq
+import de.lambda9.tailwind.jooq.JooqQueryPrinter
 import io.ktor.server.testing.*
 import org.flywaydb.core.Flyway
+import org.jooq.ConnectionProvider
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
+import org.jooq.impl.DataSourceConnectionProvider
+import org.jooq.impl.DefaultConfiguration
 import org.testcontainers.containers.PostgreSQLContainer
 import java.io.PrintWriter
 import java.net.ServerSocket
@@ -38,7 +42,7 @@ private object ApplicationTestRunner {
 
     private val postgres = PostgreSQLContainer("postgres:17")
     private val config: Config
-    private val dataSource: HikariDataSource
+    private val connectionProvider: ConnectionProvider
 
     init {
         postgres.start()
@@ -55,6 +59,7 @@ private object ApplicationTestRunner {
                 url = postgres.jdbcUrl,
                 user = postgres.username,
                 password = postgres.password,
+                logQueries = true,
             ),
             smtp = null,
             security = Config.Security(
@@ -69,7 +74,7 @@ private object ApplicationTestRunner {
         val hikariProps = Properties().apply {
             put("dataSource.logWriter", PrintWriter(System.out))
         }
-        dataSource = HikariDataSource(HikariConfig(hikariProps).apply {
+        val datasource = HikariDataSource(HikariConfig(hikariProps).apply {
             jdbcUrl = postgres.jdbcUrl
             driverClassName = "org.postgresql.Driver"
             username = postgres.username
@@ -77,16 +82,19 @@ private object ApplicationTestRunner {
             schema = "ready2race"
         })
 
-        val flyway = Flyway.configure().dataSource(dataSource).defaultSchema("ready2race")
-        Flyway(flyway).migrate()
+        connectionProvider = DataSourceConnectionProvider(datasource)
+
+        val flywayConfig = Flyway.configure().dataSource(datasource).defaultSchema("ready2race")
+        Flyway(flywayConfig).migrate()
     }
 
     fun run(block: suspend TestComprehensionScope<JEnv>.() -> Unit) = testApplication {
 
-        val dsl = DSL.using(dataSource, SQLDialect.POSTGRES)
-        val configuration = dsl.configuration()
-
-        val connection = configuration.connectionProvider().acquire()
+        val connection = connectionProvider.acquire()
+        val configuration = DefaultConfiguration()
+            .set(SQLDialect.POSTGRES)
+            .set(connection)
+            .set(JooqQueryPrinter { config.database.logQueries })
 
         if (connection == null) {
             fail("DB connection provider could not be acquired")
@@ -94,8 +102,8 @@ private object ApplicationTestRunner {
             try {
                 connection.autoCommit = false
                 val env = Jooq(
-                    dsl = DSL.using(connection),
-                    env = Env(config)
+                    dsl = DSL.using(configuration),
+                    env = Env(config),
                 )
 
                 application {
@@ -153,10 +161,8 @@ private object ApplicationTestRunner {
             } finally {
                 connection.rollback()
                 connection.autoCommit = true
+                connectionProvider.release(connection)
             }
-
         }
-
     }
-
 }
