@@ -105,8 +105,8 @@ fun <R : Record, T : TableImpl<R>> T.delete(
         .execute()
 }
 
-fun <R : Record, T : TableImpl<R>> T.findFirstBy(
+fun <R : Record, T : TableImpl<R>> T.findOneBy(
     condition: T.() -> Condition
 ): JIO<R?> = Jooq.query {
-    fetchOne(this@findFirstBy, condition())
+    fetchOne(this@findOneBy, condition())
 }

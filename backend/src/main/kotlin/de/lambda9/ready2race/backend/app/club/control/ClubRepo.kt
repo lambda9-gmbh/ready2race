@@ -1,11 +1,10 @@
 package de.lambda9.ready2race.backend.app.club.control
 
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -17,15 +16,7 @@ object ClubRepo {
 
     fun create(
         record: ClubRecord,
-    ): JIO<UUID> = Jooq.query {
-        with(CLUB) {
-            insertInto(this)
-                .set(record)
-                .returningResult(ID)
-                .fetchOne()!!
-                .value1()!!
-        }
-    }
+    ): JIO<UUID> = CLUB.insertReturning(record) { ID }
 
     fun count(
         search: String?
@@ -58,26 +49,10 @@ object ClubRepo {
     fun update(
         id: UUID,
         f: ClubRecord.() -> Unit
-    ): JIO<ClubRecord?> = Jooq.query {
-        with(CLUB) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
-        }
-    }
+    ): JIO<ClubRecord?> = CLUB.update(f) { ID.eq(id) }
 
     fun delete(
         id: UUID
-    ): JIO<Int> = Jooq.query {
-        with(CLUB) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .execute()
-        }
-    }
+    ): JIO<Int> = CLUB.delete { ID.eq(id) }
 
 }

@@ -48,6 +48,7 @@ export const EventRegistrationParticipantForm = (props: {
                 setIsEditable(false)
                 setExistingParticipantValues(formContext.getValues(`participants.${props.index}`))
             } else {
+                setIsEditable(true)
                 setHasChanged(true)
             }
         } else {

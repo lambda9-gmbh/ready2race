@@ -10,6 +10,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.ok
+import de.lambda9.tailwind.core.extensions.kio.collectBy
 import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -28,7 +30,7 @@ object EventRegistrationService {
         val upsertableRegistration = !EventRegistrationRepo.getEventRegistrationForUpdate(eventId, clubId).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
 
-        KIO.ok(EventRegistrationTemplateDto(info, upsertableRegistration)).map { ApiResponse.Dto(it) }
+        ok(EventRegistrationTemplateDto(info, upsertableRegistration)).map { ApiResponse.Dto(it) }
     }
 
     fun upsertRegistrationForEvent(
@@ -73,7 +75,7 @@ object EventRegistrationService {
             handleSingleCompetitionRegistration(pDto, userId, clubId, template, persistedRegistrationId, now)
         }.map { it.toMap(mutableMapOf()) }
 
-        !registrationDto.competitionRegistrations.forEachM { competitionRegistrationDto ->
+        !registrationDto.competitionRegistrations.collectBy { competitionRegistrationDto ->
             handleTeamCompetitionRegistrations(
                 template,
                 competitionRegistrationDto,
@@ -85,7 +87,7 @@ object EventRegistrationService {
             )
         }
 
-        KIO.ok(ApiResponse.Created(persistedRegistrationId))
+        ok(ApiResponse.Created(persistedRegistrationId))
 
     }
 
@@ -111,18 +113,18 @@ object EventRegistrationService {
                     gender = pDto.gender
                     year = pDto.year
                     external = pDto.external
-                    externalClubName = pDto.externalClubName
+                    externalClubName = pDto.externalClubName?.trim()?.takeIf { it.isNotBlank() }
                 }.orDie()
             }
 
             pDto.id
         }
 
-        pDto.competitionsSingle?.forEach { competitionRegistrationDto ->
+        pDto.competitionsSingle?.collectBy { competitionRegistrationDto ->
 
             val competition =
                 template?.competitionsSingle?.first { it.id == competitionRegistrationDto.competitionId }
-                    ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
+                    ?: return@collectBy KIO.fail(EventRegistrationError.InvalidRegistration)
 
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
@@ -146,22 +148,19 @@ object EventRegistrationService {
                 )
             ).orDie()
 
-            competitionRegistrationDto.optionalFees?.forEach { optionalFee ->
+            competitionRegistrationDto.optionalFees?.collectBy {
+                handleOptionalFee(
+                    competition,
+                    competitionRegistrationId,
+                    it
+                )
+            }?.not()
 
-                if (competition.fees.find { it.id == optionalFee }?.required != false) {
-                    return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
-                }
+            ok()
 
-                !CompetitionRegistrationOptionalFeeRepo.create(
-                    CompetitionRegistrationOptionalFeeRecord(
-                        competitionRegistrationId,
-                        optionalFee
-                    )
-                ).orDie()
-            }
-        }
+        }?.not()
 
-        KIO.ok(pDto.id to persistedId)
+        ok(pDto.id to persistedId)
     }
 
     private fun handleTeamCompetitionRegistrations(
@@ -177,7 +176,7 @@ object EventRegistrationService {
         val competition = template?.competitionsTeam?.first { it.id == competitionRegistrationDto.competitionId }
             ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
 
-        competitionRegistrationDto.teams?.forEach { teamDto ->
+        competitionRegistrationDto.teams?.collectBy { teamDto ->
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
                     UUID.randomUUID(),
@@ -194,10 +193,12 @@ object EventRegistrationService {
 
             teamDto.namedParticipants?.forEach { namedParticipantDto ->
 
+                // TODO validate consistency
+
                 namedParticipantDto.participantIds.forEach { participantId ->
 
-                    val persistedId = participantIdMap.get(participantId)
-                        ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
+                    val persistedId = participantIdMap[participantId]
+                        ?: return@collectBy KIO.fail(EventRegistrationError.InvalidRegistration)
 
                     !CompetitionRegistrationNamedParticipantRepo.create(
                         CompetitionRegistrationNamedParticipantRecord(
@@ -210,23 +211,30 @@ object EventRegistrationService {
 
             }
 
-            teamDto.optionalFees?.forEach { optionalFee ->
+            teamDto.optionalFees?.collectBy { handleOptionalFee(competition, competitionRegistrationId, it) }?.not()
 
-                if (competition.fees.find { it.id == optionalFee }?.required != false) {
-                    return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
-                }
+            ok()
 
-                !CompetitionRegistrationOptionalFeeRepo.create(
-                    CompetitionRegistrationOptionalFeeRecord(
-                        competitionRegistrationId,
-                        optionalFee
-                    )
-                ).orDie()
-            }
+        }?.not()
 
-        }
-
-        KIO.ok(Unit)
+        ok(Unit)
     }
 
+    private fun handleOptionalFee(
+        competition: EventRegistrationCompetitionDto,
+        competitionRegistrationId: UUID,
+        optionalFee: UUID
+    ) = KIO.comprehension {
+
+        if (competition.fees.find { it.id == optionalFee }?.required != false) {
+            KIO.fail(EventRegistrationError.InvalidRegistration)
+        }
+
+        CompetitionRegistrationOptionalFeeRepo.create(
+            CompetitionRegistrationOptionalFeeRecord(
+                competitionRegistrationId,
+                optionalFee
+            )
+        ).orDie()
+    }
 }

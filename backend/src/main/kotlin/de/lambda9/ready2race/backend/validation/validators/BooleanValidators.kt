@@ -13,12 +13,6 @@ object BooleanValidators : Validators<Boolean?>() {
         }
 
     val isFalseOrNull
-        get() = Validator<Boolean?> { value ->
-            if (value != null && value) {
-                ValidationResult.Invalid.Message { "is not false or null" }
-            } else {
-                ValidationResult.Valid
-            }
-        }
+        get() = simple("is not false or null") { it }
 
 }

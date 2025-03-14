@@ -3,9 +3,7 @@ package de.lambda9.ready2race.backend.app.participant.control
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Participant
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
@@ -21,7 +19,21 @@ object ParticipantRepo {
 
     fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
 
-    fun existsByIdAndClub(id: UUID, clubId: UUID) = PARTICIPANT.exists { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
+    fun update(
+        id: UUID,
+        clubId: UUID?,
+        f: ParticipantRecord.() -> Unit
+    ) = PARTICIPANT.update(f) { ID.eq(id).and(clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition()) }
+
+    fun delete(
+        id: UUID,
+        clubId: UUID?,
+    ) = PARTICIPANT.delete {
+        ID.eq(id).and(clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition())
+    }
+
+    fun existsByIdAndClub(id: UUID, clubId: UUID) =
+        PARTICIPANT.exists { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
 
     fun count(
         search: String?,
@@ -64,37 +76,5 @@ object ParticipantRepo {
         }
     }
 
-    fun update(
-        id: UUID,
-        clubId: UUID?,
-        f: ParticipantRecord.() -> Unit
-    ): JIO<ParticipantRecord?> = Jooq.query {
-        with(PARTICIPANT) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .and(
-                    clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition()
-                )
-                .fetchOne()
-                ?.apply {
-                    f()
-                    update()
-                }
-        }
-    }
-
-    fun delete(
-        id: UUID,
-        clubId: UUID?,
-    ): JIO<Int> = Jooq.query {
-        with(PARTICIPANT) {
-            deleteFrom(this)
-                .where(ID.eq(id))
-                .and(
-                    clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition()
-                )
-                .execute()
-        }
-    }
 
 }
