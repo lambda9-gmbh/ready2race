@@ -69,7 +69,6 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
 
         if(error){
             feedback.error(t('event.document.download.error'))
-            console.error(error)
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
             anchor.download = entity.name

@@ -1,7 +1,5 @@
 package de.lambda9.ready2race.backend.app.auth.entity
 
-// TODO: check all endpoints for correct usage
-
 sealed class Privilege(
     val action: Action,
     val resource: Resource,
@@ -12,7 +10,7 @@ sealed class Privilege(
         CREATE,
         READ,
         UPDATE,
-        DELETE
+        DELETE,
     }
 
     enum class Resource {
@@ -22,7 +20,7 @@ sealed class Privilege(
 
     enum class Scope(val level: Int) {
         OWN(1),
-        GLOBAL(2);
+        GLOBAL(2),
     }
 
     data object CreateUserGlobal: Privilege(Action.CREATE, Resource.USER, Scope.GLOBAL)

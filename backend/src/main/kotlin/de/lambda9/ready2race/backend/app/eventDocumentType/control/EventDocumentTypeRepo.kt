@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventDocumentType
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentTypeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_TYPE
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*

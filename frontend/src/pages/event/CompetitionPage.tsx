@@ -26,7 +26,6 @@ const CompetitionPage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(t('common.load.error.single', {entity: t('event.competition.competition')}))
-                    console.error(error)
                 }
             },
             deps: [eventId, competitionId],
@@ -41,7 +40,6 @@ const CompetitionPage = () => {
                     feedback.error(
                         t('common.load.error.multiple.short', {entity: t('event.eventDay.eventDays')}),
                     )
-                    console.error(error)
                 }
             },
             deps: [eventId, competitionId, reloadDataTrigger],
@@ -61,7 +59,6 @@ const CompetitionPage = () => {
                     feedback.error(
                         t('common.load.error.multiple.short', {entity: t('event.eventDay.eventDays')}),
                     )
-                    console.error(error)
                 }
             },
             deps: [eventId, reloadDataTrigger],

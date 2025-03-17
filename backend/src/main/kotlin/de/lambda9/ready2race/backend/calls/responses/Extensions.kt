@@ -1,8 +1,11 @@
-package de.lambda9.ready2race.backend.responses
+package de.lambda9.ready2race.backend.calls.responses
 
 import de.lambda9.ready2race.backend.Config
 import de.lambda9.ready2race.backend.app.JEnv
+import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
+import de.lambda9.ready2race.backend.calls.comprehension.comprehension
 import de.lambda9.ready2race.backend.plugins.kioEnv
+import de.lambda9.tailwind.core.Cause
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.fold
@@ -59,10 +62,17 @@ suspend fun ApplicationCall.respondDefect(
     )
 }
 
+suspend fun ApplicationCall.respondCause(
+    cause: Cause<ToApiError>,
+) = cause.fold(
+    onExpected = { respondError(it) },
+    onPanic = { respondDefect(it) },
+)
+
 suspend fun ApplicationCall.respondKIO(
-    f: ApplicationCall.() -> KIO<JEnv, ToApiError, ApiResponse>,
+    app: KIO<JEnv, ToApiError, ApiResponse>,
 ) {
-    val exit = f().transact().unsafeRunSync(kioEnv)
+    val exit = app.transact().unsafeRunSync(kioEnv)
     exit.fold(
         onError = { respondError(it) },
         onDefect = { respondDefect(it) },
@@ -109,4 +119,11 @@ suspend fun ApplicationCall.respondKIO(
             }
         }
     )
+}
+
+suspend fun ApplicationCall.respondComprehension(
+    block: suspend CallComprehensionScope.() -> KIO<JEnv, ToApiError, ApiResponse>
+) {
+    val app = comprehension(block)
+    respondKIO(app)
 }

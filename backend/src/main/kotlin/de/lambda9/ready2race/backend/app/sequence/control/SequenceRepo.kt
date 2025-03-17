@@ -28,7 +28,7 @@ object SequenceRepo {
                 .where(CONSUMER.eq(consumer.name))
                 .forUpdate()
                 .fetchOne()?.let {
-                    val value = it.value!!
+                    val value = it.value
                     it.value = value + 1
                     it.update()
                     value

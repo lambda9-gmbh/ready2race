@@ -3,8 +3,9 @@ package de.lambda9.ready2race.backend.app.eventDocument.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentRequest
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
-import de.lambda9.ready2race.backend.requests.*
-import de.lambda9.ready2race.backend.responses.respondKIO
+import de.lambda9.ready2race.backend.calls.requests.*
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
+import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -17,7 +18,8 @@ fun Route.eventDocument() {
 
         post {
             val multiPartData = call.receiveMultipart() // todo: default limit 50MB, need custom value?
-            // todo: extract for reuse
+            // todo: extract for reuse, pack into kio
+
             // todo: why?
             /*
             * multiPartData.forEachPart { }
@@ -56,61 +58,51 @@ fun Route.eventDocument() {
                 }
             }
 
-            call.respondKIO {
-                KIO.comprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal)
-                    val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                    val type = !KIO.effect {
-                        documentType?.let { UUID.fromString(it) }
-                    }.mapError { RequestError.ParameterUnparsable("documentType") } // todo: better Error type
-                    EventDocumentService.saveDocuments(eventId, uploads, type, user.id!!)
-                }
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val type = !KIO.effect {
+                    documentType?.let { UUID.fromString(it) }
+                }.mapError { RequestError.Other(Exception("Expected UUID or null as 'documentType'")) } // todo: @improve: specific Error type
+                EventDocumentService.saveDocuments(eventId, uploads, type, user.id!!)
             }
 
         }
 
         get {
-            call.respondKIO {
-                KIO.comprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
-                    val params = !pagination<EventDocumentViewSort>()
-                    EventDocumentService.page(params)
-                }
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                val params = !pagination<EventDocumentViewSort>()
+                EventDocumentService.page(params)
             }
         }
 
         route("/{eventDocumentId}") {
 
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.ReadEventGlobal)
-                        val id = !pathParam("eventDocumentId") { UUID.fromString(it) }
-                        EventDocumentService.downloadDocument(id)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("eventDocumentId", uuid)
+                    EventDocumentService.downloadDocument(id)
                 }
             }
 
             put {
-                val payload = call.receiveV(EventDocumentRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val user = !authenticate(Privilege.UpdateEventGlobal)
-                        val id = !pathParam("eventDocumentId") { UUID.fromString(it) }
+                val payload = call.receiveKIO(EventDocumentRequest.example)
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("eventDocumentId", uuid)
 
-                        val body = !payload
-                        EventDocumentService.updateDocument(id, body, user.id!!)
-                    }
+                    val body = !payload
+                    EventDocumentService.updateDocument(id, body, user.id!!)
                 }
             }
 
             delete {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.UpdateEventGlobal)
-                        val id = !pathParam("eventDocumentId") { UUID.fromString(it) }
-                        EventDocumentService.deleteDocument(id)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("eventDocumentId", uuid)
+                    EventDocumentService.deleteDocument(id)
                 }
             }
 

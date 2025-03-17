@@ -9,7 +9,7 @@ import de.lambda9.ready2race.backend.app.competitionProperties.control.toDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
 import java.util.*
@@ -30,11 +30,11 @@ fun CompetitionRequest.toRecord(userId: UUID, eventId: UUID): App<Nothing, Compe
     )
 
 fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehension {
-    val feeDtos = !fees!!.toList().forEachM {
+    val feeDtos = !fees!!.toList().traverse {
         it!!.toDto()
     }.orDie()
 
-    val namedParticipantDtos = !namedParticipants!!.toList().forEachM {
+    val namedParticipantDtos = !namedParticipants!!.toList().traverse {
         it!!.toDto()
     }.orDie()
 

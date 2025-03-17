@@ -28,9 +28,9 @@ sealed interface EmailContentTemplate {
 
             is Individual ->
                 EmailContent(
-                    subject = replacePlaceholders(template.subject!!),
-                    body = replacePlaceholders(template.body!!).let {
-                        if (template.bodyIsHtml!!) {
+                    subject = replacePlaceholders(template.subject),
+                    body = replacePlaceholders(template.body).let {
+                        if (template.bodyIsHtml) {
                             EmailBody.Html(it)
                         } else {
                             EmailBody.Text(it)

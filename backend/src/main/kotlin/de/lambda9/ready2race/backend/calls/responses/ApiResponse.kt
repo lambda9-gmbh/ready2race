@@ -1,9 +1,8 @@
-package de.lambda9.ready2race.backend.responses
+package de.lambda9.ready2race.backend.calls.responses
 
-import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.pagination.Pagination
-import de.lambda9.ready2race.backend.pagination.ResponsePage
-import de.lambda9.ready2race.backend.pagination.Sortable
+import de.lambda9.ready2race.backend.calls.pagination.Pagination
+import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.tailwind.core.KIO
 import java.util.*
 
 sealed interface ApiResponse {
@@ -15,9 +14,9 @@ sealed interface ApiResponse {
     ): ApiResponse
 
     data class Page<T: Any, S: Sortable>(
-        override val data: List<T>,
-        override val pagination: Pagination<S>,
-    ): ApiResponse, ResponsePage<T, S>
+        val data: List<T>,
+        val pagination: Pagination<S>,
+    ): ApiResponse
 
     data class File(
         val name: String,
@@ -47,6 +46,6 @@ sealed interface ApiResponse {
     ): ApiResponse
 
     companion object {
-        val noData get() = App.ok(NoData)
+        val noData get() = KIO.ok(NoData)
     }
 }

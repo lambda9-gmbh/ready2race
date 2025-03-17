@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.responses
+package de.lambda9.ready2race.backend.calls.responses
 
 enum class ErrorCode {
     CAPTCHA_WRONG,

@@ -1,15 +1,18 @@
-package de.lambda9.ready2race.backend.requests
+package de.lambda9.ready2race.backend.calls.requests
 
-import de.lambda9.ready2race.backend.responses.ApiError
-import de.lambda9.ready2race.backend.responses.ToApiError
+import de.lambda9.ready2race.backend.calls.responses.ApiError
+import de.lambda9.ready2race.backend.calls.responses.ToApiError
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import io.ktor.http.*
+import kotlin.reflect.KClass
 
 sealed interface RequestError : ToApiError {
 
+    data class PathParameterMissing(val key: String) : RequestError
     data class RequiredQueryParameterMissing(val key: String) : RequestError
-    data class ParameterUnparsable(val key: String) : RequestError
+    data class ParameterUnparsable<A : Any>(val key: String, val input: String, val kClass: KClass<A>) : RequestError
+    data class BodyMissing(val example: Validatable) : RequestError
     data class BodyUnparsable(val example: Validatable) : RequestError
     data class BodyValidationFailed(val reason: ValidationResult.Invalid) : RequestError
     data class InvalidPagination(val result: ValidationResult.Invalid) : RequestError
@@ -18,11 +21,23 @@ sealed interface RequestError : ToApiError {
     data class Other(val cause: Throwable) : RequestError
 
     override fun respond(): ApiError = when (this) {
+        is PathParameterMissing ->
+            ApiError(
+                status = HttpStatusCode.InternalServerError,
+                message = "Could not correctly resolve given path parameter '$key'. Please contact support.",
+            )
+        is BodyMissing ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Required request body is missing",
+                details = mapOf("exampleBody" to example)
+            )
+
         is BodyUnparsable ->
             ApiError(
                 status = HttpStatusCode.BadRequest,
                 message = "Request body is not parsable, probably missing required fields.",
-                details = mapOf("validExample" to example)
+                details = mapOf("exampleBody" to example)
             )
 
         is BodyValidationFailed ->
@@ -39,10 +54,14 @@ sealed interface RequestError : ToApiError {
                 details = mapOf("errors" to result)
             )
 
-        is ParameterUnparsable ->
+        is ParameterUnparsable<*> ->
             ApiError(
                 status = HttpStatusCode.BadRequest,
-                message = "Parameter $key could not be parsed"
+                message = "Parameter $key could not be parsed",
+                details = mapOf(
+                    "input" to input,
+                    "expectedType"  to kClass.toString()
+                ),
             )
 
         is RequiredQueryParameterMissing ->

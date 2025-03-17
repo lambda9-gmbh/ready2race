@@ -13,7 +13,7 @@
     </Appenders>
     <Loggers>
         <!-- SQL execution logging is logged to the LoggerListener logger at DEBUG level -->
-        <Logger name="de.lambda9.ready2race.backend.database.JooqQueryPrinter" level="debug" />
+        <Logger name="de.lambda9.tailwind.jooq.JooqQueryPrinter" level="debug" />
         <Logger name="de.lambda9.ready2race.backend.plugins.KIOKt" level="debug" />
 
         <!-- All other messages that come from third-party code, libraries etc. -->

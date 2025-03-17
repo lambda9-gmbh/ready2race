@@ -5,89 +5,70 @@ import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetit
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
-import de.lambda9.ready2race.backend.requests.*
-import de.lambda9.ready2race.backend.responses.respondKIO
-import de.lambda9.tailwind.core.KIO
+import de.lambda9.ready2race.backend.calls.requests.*
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
+import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.competition() {
     route("/competition") {
 
         post {
-            val payload = call.receiveV(CompetitionRequest.example)
-            call.respondKIO {
-                KIO.comprehension {
-                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
-                    val eventId = !pathParam("eventId") { UUID.fromString(it) }
+            call.respondComprehension {
+                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val eventId = !pathParam("eventId", uuid)
 
-                    val body = !payload
-                    CompetitionService.addCompetition(body, user.id!!, eventId)
-                }
+                val body = !receiveKIO(CompetitionRequest.example)
+                CompetitionService.addCompetition(body, user.id!!, eventId)
             }
         }
 
         get {
-            call.respondKIO {
-                KIO.comprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                    val params = !pagination<CompetitionWithPropertiesSort>()
-                    val eventDayId = !optionalQueryParam("eventDayId") { UUID.fromString(it) }
+            call.respondComprehension {
+                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val eventId = !pathParam("eventId", uuid)
+                val params = !pagination<CompetitionWithPropertiesSort>()
+                val eventDayId = !optionalQueryParam("eventDayId", uuid)
 
-                    CompetitionService.pageWithPropertiesByEvent(eventId, params, eventDayId)
-                }
+                CompetitionService.pageWithPropertiesByEvent(eventId, params, eventDayId)
             }
         }
 
         route("/{competitionId}") {
 
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                        val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
-                        CompetitionService.getCompetitionWithProperties(competitionId)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    CompetitionService.getCompetitionWithProperties(competitionId)
                 }
             }
 
             put {
-                val payload = call.receiveV(CompetitionRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                        val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
 
-                        val body = !payload
-                        CompetitionService.updateCompetition(body, user.id!!, competitionId)
-                    }
+                    val body = !receiveKIO(CompetitionRequest.example)
+                    CompetitionService.updateCompetition(body, user.id!!, competitionId)
                 }
             }
 
             delete {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                        val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
-                        CompetitionService.deleteCompetition(competitionId)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    CompetitionService.deleteCompetition(competitionId)
                 }
             }
 
-            route("/days"){
+            put("/days"){
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
 
-                put {
-                    val payload = call.receiveV(AssignDaysToCompetitionRequest.example)
-                    call.respondKIO {
-                        KIO.comprehension {
-                            val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                            val competitionId = !pathParam("competitionId") { UUID.fromString(it) }
-
-                            val body = !payload
-                            CompetitionService.updateEventDayHasCompetition(body, user.id!!, competitionId)
-                        }
-                    }
+                    val body = !receiveKIO(AssignDaysToCompetitionRequest.example)
+                    CompetitionService.updateEventDayHasCompetition(body, user.id!!, competitionId)
                 }
             }
 

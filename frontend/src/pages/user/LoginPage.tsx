@@ -9,8 +9,8 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
 import {Link} from '@tanstack/react-router'
-import {userLogin} from "@api/sdk.gen.ts";
-import {LoginRequest} from "@api/types.gen.ts";
+import {userLogin} from '@api/sdk.gen.ts'
+import {LoginRequest} from '@api/types.gen.ts'
 
 type Form = LoginRequest
 
@@ -33,7 +33,6 @@ const LoginPage = () => {
         if (data !== undefined) {
             login(data)
         } else if (error) {
-            console.error(error)
             if (error.status.value === 429) {
                 feedback.error(t('user.login.error.tooManyRequests'))
             } else if (error.status.value === 500) {
@@ -47,24 +46,32 @@ const LoginPage = () => {
     return (
         <SimpleFormLayout maxWidth={400}>
             <Box sx={{mb: 4}}>
-                <Typography variant="h1" textAlign='center'>{t('user.login.login')}</Typography>
+                <Typography variant="h1" textAlign="center">
+                    {t('user.login.login')}
+                </Typography>
             </Box>
             <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                 <Stack spacing={4}>
                     <FormInputText name="email" label={t('user.email.email')} required />
                     <Box sx={{display: 'flex', flexDirection: 'column'}}>
-                        <FormInputPassword name="password" label={t('user.login.password')} required />
+                        <FormInputPassword
+                            name="password"
+                            label={t('user.password.password')}
+                            required
+                        />
                         <Box sx={{display: 'flex', justifyContent: 'end', mt: 2}}>
-                            <Link to='/resetPassword'>
+                            <Link to="/resetPassword">
                                 <Typography>{t('user.login.forgotPassword')}</Typography>
                             </Link>
                         </Box>
                     </Box>
                     <SubmitButton label={t('user.login.submit')} submitting={submitting} />
                     <Divider />
-                    <Stack direction='row' spacing='5px' justifyContent='center'>
-                        <Typography sx={{fontWeight: 'light'}}>{t('user.login.signUp.message')}</Typography>
-                        <Link to='/registration'>
+                    <Stack direction="row" spacing="5px" justifyContent="center">
+                        <Typography sx={{fontWeight: 'light'}}>
+                            {t('user.login.signUp.message')}
+                        </Typography>
+                        <Link to="/registration">
                             <Typography>{t('user.login.signUp.link')}</Typography>
                         </Link>
                     </Stack>

@@ -6,37 +6,31 @@ import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
-import de.lambda9.ready2race.backend.requests.authenticate
-import de.lambda9.ready2race.backend.requests.pagination
-import de.lambda9.ready2race.backend.requests.pathParam
-import de.lambda9.ready2race.backend.requests.receiveV
-import de.lambda9.ready2race.backend.responses.respondKIO
-import de.lambda9.tailwind.core.KIO
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
+import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.pagination
+import de.lambda9.ready2race.backend.calls.requests.pathParam
+import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.event() {
     route("/event") {
 
         post {
-            val payload = call.receiveV(EventRequest.example)
-            call.respondKIO {
-                KIO.comprehension {
-                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+            call.respondComprehension {
+                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
 
-                    val body = !payload
-                    EventService.addEvent(body, user.id!!)
-                }
+                val body = !receiveKIO(EventRequest.example)
+                EventService.addEvent(body, user.id!!)
             }
         }
 
         get {
-            call.respondKIO {
-                KIO.comprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val params = !pagination<EventSort>()
-                    EventService.page(params)
-                }
+            call.respondComprehension {
+                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val params = !pagination<EventSort>()
+                EventService.page(params)
             }
         }
 
@@ -47,35 +41,28 @@ fun Route.event() {
             eventDocument()
 
             get {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                        val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.getEvent(id)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val id = !pathParam("eventId", uuid)
+                    EventService.getEvent(id)
                 }
             }
 
             put {
-                val payload = call.receiveV(EventRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                        val id = !pathParam("eventId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val id = !pathParam("eventId", uuid)
 
-                        val body = !payload
-                        EventService.updateEvent(body, user.id!!, id)
-                    }
+                    val body = !receiveKIO(EventRequest.example)
+                    EventService.updateEvent(body, user.id!!, id)
                 }
             }
 
             delete {
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                        val id = !pathParam("eventId") { UUID.fromString(it) }
-                        EventService.deleteEvent(id)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    val id = !pathParam("eventId", uuid)
+                    EventService.deleteEvent(id)
                 }
             }
         }

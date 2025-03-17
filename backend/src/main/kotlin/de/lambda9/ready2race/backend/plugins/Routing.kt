@@ -11,10 +11,12 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumen
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import io.ktor.server.application.*
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
+        swaggerUI(path = "openapi")
         route("/api") {
             auth()
             user()

@@ -6,8 +6,8 @@ import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
-import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.allOf
-import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
 import java.util.*
 
 data class CompetitionPropertiesRequestDto(

@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.app.competitionProperties.entity.Competitio
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
-import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.notNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 import java.util.*
 
 data class CompetitionRequest (
