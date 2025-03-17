@@ -24,6 +24,7 @@ description:
       - Veranstaltungsanmeldungen
 legal:
   license: MIT
+  mainCopyrightOwner: lambda9 GmbH
 maintenance:
   type: contract
   contractors:
