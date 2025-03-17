@@ -211,7 +211,12 @@ const EventRegistrationForm = ({
             }}>
             <FormContainer formContext={formContext} onSuccess={onSubmit}>
                 <Stack>
-                    <Stack direction={'row'} justifyContent={'end'} alignItems={'center'}>
+                    <Stack
+                        direction={'row'}
+                        justifyContent={'space-between'}
+                        alignItems={'center'}
+                        p={2}>
+                        <Typography variant={'h2'}>{info?.name}</Typography>
                         <EventRegistrationFeeDisplay registrationInfo={info} />
                     </Stack>
                     <Stepper activeStep={activeStep}>

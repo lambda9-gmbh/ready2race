@@ -4,17 +4,17 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
-import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
-import de.lambda9.tailwind.core.extensions.kio.collectBy
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.*
 
@@ -71,11 +71,11 @@ object EventRegistrationService {
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
-        val participantIdMap = !registrationDto.participants.forEachM { pDto ->
+        val participantIdMap = !registrationDto.participants.traverse { pDto ->
             handleSingleCompetitionRegistration(pDto, userId, clubId, template, persistedRegistrationId, now)
         }.map { it.toMap(mutableMapOf()) }
 
-        !registrationDto.competitionRegistrations.collectBy { competitionRegistrationDto ->
+        !registrationDto.competitionRegistrations.traverse { competitionRegistrationDto ->
             handleTeamCompetitionRegistrations(
                 template,
                 competitionRegistrationDto,
@@ -120,11 +120,11 @@ object EventRegistrationService {
             pDto.id
         }
 
-        pDto.competitionsSingle?.collectBy { competitionRegistrationDto ->
+        pDto.competitionsSingle?.traverse { competitionRegistrationDto ->
 
             val competition =
                 template?.competitionsSingle?.first { it.id == competitionRegistrationDto.competitionId }
-                    ?: return@collectBy KIO.fail(EventRegistrationError.InvalidRegistration)
+                    ?: return@traverse KIO.fail(EventRegistrationError.InvalidRegistration)
 
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
@@ -148,7 +148,7 @@ object EventRegistrationService {
                 )
             ).orDie()
 
-            competitionRegistrationDto.optionalFees?.collectBy {
+            competitionRegistrationDto.optionalFees?.traverse {
                 handleOptionalFee(
                     competition,
                     competitionRegistrationId,
@@ -156,7 +156,7 @@ object EventRegistrationService {
                 )
             }?.not()
 
-            ok()
+            unit
 
         }?.not()
 
@@ -176,7 +176,7 @@ object EventRegistrationService {
         val competition = template?.competitionsTeam?.first { it.id == competitionRegistrationDto.competitionId }
             ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
 
-        competitionRegistrationDto.teams?.collectBy { teamDto ->
+        competitionRegistrationDto.teams?.traverse { teamDto ->
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
                     UUID.randomUUID(),
@@ -198,7 +198,7 @@ object EventRegistrationService {
                 namedParticipantDto.participantIds.forEach { participantId ->
 
                     val persistedId = participantIdMap[participantId]
-                        ?: return@collectBy KIO.fail(EventRegistrationError.InvalidRegistration)
+                        ?: return@traverse KIO.fail(EventRegistrationError.InvalidRegistration)
 
                     !CompetitionRegistrationNamedParticipantRepo.create(
                         CompetitionRegistrationNamedParticipantRecord(
@@ -211,9 +211,9 @@ object EventRegistrationService {
 
             }
 
-            teamDto.optionalFees?.collectBy { handleOptionalFee(competition, competitionRegistrationId, it) }?.not()
+            teamDto.optionalFees?.traverse { handleOptionalFee(competition, competitionRegistrationId, it) }?.not()
 
-            ok()
+            unit
 
         }?.not()
 

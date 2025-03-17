@@ -9,14 +9,14 @@ import de.lambda9.ready2race.backend.app.club.entity.ClubDto
 import de.lambda9.ready2race.backend.app.club.entity.ClubError
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.collectBy
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.*
 
@@ -40,7 +40,7 @@ object ClubService {
         val total = !ClubRepo.count(params.search).orDie()
         val page = !ClubRepo.page(params).orDie()
 
-        page.collectBy { convert(it) }.map {
+        page.traverse { convert(it) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

@@ -105,6 +105,7 @@
     "events": "Veranstaltungen",
     "name": "Name",
     "description": "Beschreibung",
+    "registerNow": "Jetzt anmelden",
     "invoice": {
       "prefix": "Rechnungspräfix"
     },

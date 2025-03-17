@@ -9,13 +9,13 @@ import de.lambda9.ready2race.backend.app.participant.control.participantDto
 import de.lambda9.ready2race.backend.app.participant.control.toRecord
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.*
 
@@ -40,7 +40,7 @@ object ParticipantService {
         val total = !ParticipantRepo.count(params.search, clubId).orDie()
         val page = !ParticipantRepo.page(params, clubId).orDie()
 
-        page.forEachM { it.participantDto() }.map {
+        page.traverse { it.participantDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

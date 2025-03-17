@@ -8,7 +8,7 @@ import de.lambda9.ready2race.backend.validation.validators.BooleanValidators.isF
 import de.lambda9.ready2race.backend.validation.validators.BooleanValidators.isTrue
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.isBlank
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
-import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.notNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 
 data class ParticipantUpsertDto(
     val firstname: String,
