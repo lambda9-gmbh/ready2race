@@ -3,60 +3,49 @@ package de.lambda9.ready2race.backend.app.fee.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.fee.entity.FeeRequest
 import de.lambda9.ready2race.backend.app.fee.entity.FeeSort
-import de.lambda9.ready2race.backend.requests.authenticate
-import de.lambda9.ready2race.backend.requests.pagination
-import de.lambda9.ready2race.backend.requests.pathParam
-import de.lambda9.ready2race.backend.requests.receiveV
-import de.lambda9.ready2race.backend.responses.respondKIO
-import de.lambda9.tailwind.core.KIO
+import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
+import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.pagination
+import de.lambda9.ready2race.backend.calls.requests.pathParam
+import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.fee() {
     route("/fee") {
         post {
-            val payload = call.receiveV(FeeRequest.example)
-            call.respondKIO {
-                KIO.comprehension {
-                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+            call.respondComprehension {
+                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
 
-                    val body = !payload
-                    FeeService.addFee(body, user.id!!)
-                }
+                val body = !receiveKIO(FeeRequest.example)
+                FeeService.addFee(body, user.id!!)
             }
         }
 
         get {
-            call.respondKIO {
-                KIO.comprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                    val params = !pagination<FeeSort>()
-                    FeeService.page(params)
-                }
+            call.respondComprehension {
+                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val params = !pagination<FeeSort>()
+                FeeService.page(params)
             }
         }
 
         route("/{feeId}"){
             put{
-                val payload = call.receiveV(FeeRequest.example)
-                call.respondKIO {
-                    KIO.comprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                        val feeId = !pathParam("feeId") { UUID.fromString(it) }
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val feeId = !pathParam("feeId", uuid)
 
-                        val body = !payload
-                        FeeService.updateFee(feeId, body, user.id!!)
-                    }
+                    val body = !receiveKIO(FeeRequest.example)
+                    FeeService.updateFee(feeId, body, user.id!!)
                 }
             }
 
             delete{
-                call.respondKIO {
-                    KIO.comprehension {
-                        !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
-                        val feeId = !pathParam("feeId") { UUID.fromString(it) }
-                        FeeService.deleteFee(feeId)
-                    }
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    val feeId = !pathParam("feeId", uuid)
+                    FeeService.deleteFee(feeId)
                 }
             }
         }

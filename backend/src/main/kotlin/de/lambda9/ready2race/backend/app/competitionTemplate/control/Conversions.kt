@@ -8,16 +8,16 @@ import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionT
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateViewRecord
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.util.*
 
 fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> = KIO.comprehension {
-    val feeDtos = !fees!!.toList().forEachM {
+    val feeDtos = !fees!!.toList().traverse {
         it!!.toDto()
     }.orDie()
 
-    val namedParticipantDtos = !namedParticipants!!.toList().forEachM {
+    val namedParticipantDtos = !namedParticipants!!.toList().traverse {
         it!!.toDto()
     }.orDie()
 

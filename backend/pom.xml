@@ -39,7 +39,7 @@
         <kotlinx.coroutines.debug.version>1.10.1</kotlinx.coroutines.debug.version>
         <kotlin.dotenv.version>6.5.1</kotlin.dotenv.version>
         <kotlin.logging.version>7.0.4</kotlin.logging.version>
-        <tailwind.version>0.1.0</tailwind.version>
+        <tailwind.version>0.2.0</tailwind.version>
         <testcontainers.version>1.20.6</testcontainers.version>
         <simple.mail.version>8.12.4</simple.mail.version>
         <password4j.version>1.8.2</password4j.version>
@@ -73,11 +73,6 @@
         <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-server-swagger-jvm</artifactId>
-            <version>${ktor.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-forwarded-header-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>
         <dependency>

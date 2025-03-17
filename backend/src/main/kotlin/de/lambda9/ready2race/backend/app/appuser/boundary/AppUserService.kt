@@ -13,15 +13,15 @@ import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onTrueFail
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.util.*
 import kotlin.time.Duration.Companion.days
 
@@ -46,7 +46,7 @@ object AppUserService {
         val total = !AppUserRepo.countWithRoles(params.search).orDie()
         val page = !AppUserRepo.pageWithRoles(params).orDie()
 
-        page.forEachM { it.appUserDto() }.map {
+        page.traverse { it.appUserDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
@@ -60,7 +60,7 @@ object AppUserService {
         val total = !AppUserInvitationRepo.countWithRoles(params.search).orDie()
         val page = !AppUserInvitationRepo.pageWithRoles(params).orDie()
 
-        page.forEachM { it.toDto() }.map {
+        page.traverse { it.toDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
@@ -74,7 +74,7 @@ object AppUserService {
         val total = !AppUserRegistrationRepo.count(params.search).orDie()
         val page = !AppUserRegistrationRepo.page(params).orDie()
 
-        page.forEachM { it.toDto() }.map {
+        page.traverse { it.toDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

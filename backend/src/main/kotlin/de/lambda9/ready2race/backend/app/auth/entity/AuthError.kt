@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.auth.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.responses.ApiError
+import de.lambda9.ready2race.backend.calls.responses.ApiError
 import io.ktor.http.*
 
 enum class AuthError : ServiceError {

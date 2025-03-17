@@ -13,10 +13,12 @@ import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticip
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import io.ktor.server.application.*
+import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
+        swaggerUI(path = "openapi")
         route("/api") {
             auth()
             user()

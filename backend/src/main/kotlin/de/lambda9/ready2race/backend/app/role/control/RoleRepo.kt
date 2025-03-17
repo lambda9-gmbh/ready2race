@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecor
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_WITH_PRIVILEGES
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL

@@ -20,16 +20,16 @@ import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
-import de.lambda9.ready2race.backend.kio.recoverDefault
+import de.lambda9.ready2race.backend.database.initializeDatabase
 import de.lambda9.ready2race.backend.plugins.*
-import de.lambda9.ready2race.backend.schedule.JobQueueState
+import de.lambda9.ready2race.backend.schedule.DynamicIntervalJobState
+import de.lambda9.ready2race.backend.schedule.FixedIntervalJobState
 import de.lambda9.ready2race.backend.schedule.Scheduler
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrThrow
-import de.lambda9.tailwind.core.extensions.kio.catchError
-import de.lambda9.tailwind.core.extensions.kio.recover
+import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import de.lambda9.tailwind.jooq.transact
 import io.github.cdimascio.dotenv.dotenv
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -58,7 +58,7 @@ fun main(args: Array<String>): Unit = runBlocking {
             .schemas("ready2race")
     ).migrate()
 
-    initializeApplication(env)
+    initializeDatabase(env)
     scheduleJobs(env)
 
     embeddedServer(Netty, port = config.http.port, host = config.http.host, module = { module(env) })
@@ -75,204 +75,57 @@ fun Application.module(env: JEnv) {
     configureRouting()
 }
 
-private fun initializeApplication(env: JEnv) {
-
-    // instantiate now, so template files get read and checked
-    EmailService
-
-    KIO.comprehension {
-
-        // Add missing privileges
-
-        val privilegeRecords = !PrivilegeRepo.all()
-        val records = Privilege.entries
-            .filter { p ->
-                privilegeRecords.none {
-                    it.action == p.action.name
-                        && it.resource == p.resource.name
-                        && it.scope == p.scope.name
-                }
-            }.map {
-                PrivilegeRecord(
-                    id = UUID.randomUUID(),
-                    action = it.action.name,
-                    resource = it.resource.name,
-                    scope = it.scope.name,
-                )
-            }
-        !PrivilegeRepo.create(records)
-        val allPrivileges = !PrivilegeRepo.all()
-
-        // Add admin
-
-        val adminUserExisting = !AppUserRepo.exists(SYSTEM_USER)
-        val adminRoleExisting = !RoleRepo.exists(ADMIN_ROLE)
-
-        val admin = env.env.config.admin
-
-        val hashedPw = !PasswordUtilities.hash(admin.password)
-
-        val now = LocalDateTime.now()
-
-        if (!adminUserExisting) {
-
-            !AppUserRepo.create(
-                AppUserRecord(
-                    id = SYSTEM_USER,
-                    email = admin.email,
-                    firstname = "System",
-                    lastname = "User",
-                    password = hashedPw,
-                    language = EmailLanguage.DE.name,
-                    createdAt = now,
-                    createdBy = SYSTEM_USER,
-                    updatedAt = now,
-                    updatedBy = SYSTEM_USER,
-                )
-            )
-        } else {
-
-            !AppUserRepo.update(SYSTEM_USER) {
-                email = admin.email
-                password = hashedPw
-                updatedAt = now
-                updatedBy = SYSTEM_USER
-            }
-        }
-
-        if (!adminRoleExisting) {
-            !RoleRepo.create(
-                RoleRecord(
-                    id = ADMIN_ROLE,
-                    name = "Admin",
-                    description = "Global admin role",
-                    static = true,
-                    createdAt = now,
-                    createdBy = SYSTEM_USER,
-                    updatedAt = now,
-                    updatedBy = SYSTEM_USER,
-                )
-            )
-        }
-
-        if (!adminUserExisting || !adminRoleExisting) {
-            !AppUserHasRoleRepo.create(
-                AppUserHasRoleRecord(
-                    appUser = SYSTEM_USER,
-                    role = ADMIN_ROLE,
-                )
-            )
-        }
-
-        val currentAdminPrivileges = !RoleHasPrivilegeRepo.getPrivilegesByRole(ADMIN_ROLE)
-        !RoleHasPrivilegeRepo.create(
-            allPrivileges.filter {
-                currentAdminPrivileges.none { id -> id == it.id }
-            }.map {
-                RoleHasPrivilegeRecord(
-                    role = ADMIN_ROLE,
-                    privilege = it.id,
-                )
-            }
-        )
-
-        // Add default user role & privileges
-
-        val userPrivileges = listOf(
-            Privilege.ReadUserOwn,
-        )
-
-        val userRoleExisting = !RoleRepo.exists(USER_ROLE)
-
-        if (!userRoleExisting) {
-            !RoleRepo.create(
-                RoleRecord(
-                    id = USER_ROLE,
-                    name = "User",
-                    description = "Global user role",
-                    static = true,
-                    createdAt = now,
-                    createdBy = SYSTEM_USER,
-                    updatedAt = now,
-                    updatedBy = SYSTEM_USER,
-                )
-            )
-        }
-
-        val currentUserPrivileges = !RoleHasPrivilegeRepo.getPrivilegesByRole(USER_ROLE)
-
-        !RoleHasPrivilegeRepo.create(
-            allPrivileges.filter {
-                currentUserPrivileges.none { id ->
-                    id == it.id
-                } && userPrivileges.any { p ->
-                    p.action.name == it.action && p.resource.name == it.resource && p.scope.name == it.scope
-                }
-            }.map {
-                RoleHasPrivilegeRecord(
-                    role = USER_ROLE,
-                    privilege = it.id
-                )
-            }
-        )
-
-        App.unit
-    }
-        .transact()
-        .unsafeRunSync(env)
-        .getOrThrow()
-}
-
 private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
     launch(Dispatchers.IO) {
         supervisorScope {
             logger.info { "Scheduling jobs ..." }
 
-            scheduleDynamic(10.seconds) {
+            scheduleDynamic("Send next email", 10.seconds) {
                 EmailService.sendNext()
-                    .map { JobQueueState.PROCESSED }
+                    .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {
-                            EmailError.NoEmailsToSend -> JobQueueState.EMPTY
+                            EmailError.SmtpConfigMissing -> DynamicIntervalJobState.Fatal("Smtp config missing")
+                            EmailError.NoEmailsToSend -> DynamicIntervalJobState.Empty
                             is EmailError.SendingFailed -> {
                                 logger.warn(error.cause) { "Error sending email ${error.emailId}" }
-                                JobQueueState.PROCESSED
+                                DynamicIntervalJobState.Processed
                             }
                         }
                     }
             }
 
-            /*scheduleFixed(1.hours) {
+            /*scheduleFixed("Delete sent emails", 1.hours) {
                 EmailService.deleteSent().map {
                     logger.info { "${"sent email".count(it)} deleted" }
                 }
             }*/
 
-            scheduleFixed(5.minutes) {
+            scheduleFixed("Delete expired session tokens", 5.minutes) {
                 AuthService.deleteExpiredTokens().map {
                     logger.info { "${"expired session".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(1.hours) {
+            scheduleFixed("Delete expired user registrations", 1.hours) {
                 AppUserService.deleteExpiredRegistrations().map {
                     logger.info { "${"expired registration".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(1.hours) {
+            scheduleFixed("Delete expired user invitations", 1.hours) {
                 AppUserService.deleteExpiredInvitations().map {
                     logger.info { "${"expired invitations".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(1.hours) {
+            scheduleFixed("Delete expired password resets", 1.hours) {
                 AppUserService.deleteExpiredPasswordResets().map {
                     logger.info { "${"expired password resets".count(it)} deleted" }
                 }
             }
 
-            scheduleFixed(5.minutes){
+            scheduleFixed("Delete expired captchas", 5.minutes){
                 CaptchaService.deleteExpired().map{
                     logger.info { "${"expired captchas".count(it)} deleted" }
                 }

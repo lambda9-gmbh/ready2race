@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.captcha.control.CaptchaRepo
 import de.lambda9.ready2race.backend.app.captcha.entity.CaptchaChallengeDto
 import de.lambda9.ready2race.backend.app.captcha.entity.CaptchaError
 import de.lambda9.ready2race.backend.database.generated.tables.records.CaptchaRecord
-import de.lambda9.ready2race.backend.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.toBase64
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit

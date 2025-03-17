@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.CompetitionTempla
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*

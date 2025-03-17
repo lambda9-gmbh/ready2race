@@ -9,7 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*

@@ -16,12 +16,12 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentT
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
@@ -35,7 +35,7 @@ object EventDocumentService {
         val total = !EventDocumentRepo.count(params.search).orDie()
         val page = !EventDocumentRepo.page(params).orDie()
 
-        page.forEachM { it.toDto() }.map {
+        page.traverse { it.toDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

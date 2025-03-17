@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.BigDecimalValidators
-import de.lambda9.ready2race.backend.validation.validators.Validators.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import java.math.BigDecimal
 import java.util.*
 

@@ -10,13 +10,13 @@ import de.lambda9.ready2race.backend.app.auth.entity.LoginDto
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.auth.control.toSession
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.kio.recoverDefault
-import de.lambda9.ready2race.backend.responses.ApiResponse
-import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import kotlin.time.Duration.Companion.minutes
 
 object AuthService {
