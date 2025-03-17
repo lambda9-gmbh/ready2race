@@ -5,4 +5,12 @@
     text-decoration: none;
     color: unset;
   }
+
+  .form-label-horizontal {
+    .MuiFormControl-root {
+      flex-direction: row;
+      align-items: center;
+    }
+  }
+
 }

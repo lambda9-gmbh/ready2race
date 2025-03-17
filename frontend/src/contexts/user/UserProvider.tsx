@@ -75,6 +75,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         userValue = {
             loggedIn: true,
             id: userData.id,
+            clubId: userData.clubId,
             login,
             logout,
             checkPrivilege,

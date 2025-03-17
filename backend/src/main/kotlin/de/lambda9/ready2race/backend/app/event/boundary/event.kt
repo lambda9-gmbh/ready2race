@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -38,6 +39,7 @@ fun Route.event() {
 
             eventDay()
             competition()
+            eventRegistration()
             eventDocument()
 
             get {

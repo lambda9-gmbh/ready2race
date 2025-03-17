@@ -12,6 +12,7 @@ drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists app_user_name;
+drop view if exists fee_for_competition;
 
 create view app_user_name as
 select au.id,
@@ -62,9 +63,11 @@ select cphnp.competition_properties,
        cphnp.count_mixed,
        np.id,
        np.name,
-       np.description
+       np.description,
+       cp.competition as competition_id
 from competition_properties_has_named_participant cphnp
-         left join named_participant np on cphnp.named_participant = np.id;
+         join named_participant np on cphnp.named_participant = np.id
+         join competition_properties cp on cphnp.competition_properties = cp.id;
 
 create view fee_for_competition_properties as
 select cphf.competition_properties,
@@ -76,6 +79,17 @@ select cphf.competition_properties,
 from competition_properties_has_fee cphf
          left join fee f on cphf.fee = f.id;
 
+create view fee_for_competition as
+select f.id,
+       f.name,
+       f.description,
+       cphf.amount,
+       cphf.required,
+       cp.competition as competition_id
+from competition_properties_has_fee cphf
+         join fee f on cphf.fee = f.id
+         join competition_properties cp on cphf.competition_properties = cp.id;
+
 
 create view competition_view as
 select c.id,
@@ -85,6 +99,7 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
+       nps.total_count                        as total_count,
        cc.id                                  as category_id,
        cc.name                                as category_name,
        cc.description                         as category_description,
@@ -94,6 +109,12 @@ from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
          left join (select npfcp.competition_properties,
+                           (
+                               coalesce(sum(npfcp.count_males), 0) +
+                               coalesce(sum(npfcp.count_females), 0) +
+                               coalesce(sum(npfcp.count_non_binary), 0) +
+                               coalesce(sum(npfcp.count_mixed), 0)
+                               )                                                    as total_count,
                            array_agg(npfcp)
                            filter (where npfcp.competition_properties is not null ) as named_participants
                     from named_participant_for_competition_properties npfcp
@@ -169,9 +190,9 @@ select ed.id,
        edt as document_type,
        ed.name,
        ed.created_at,
-       cb       as created_by,
+       cb  as created_by,
        ed.updated_at,
-       ub       as updated_by
+       ub  as updated_by
 from event_document ed
          left join event_document_type edt on ed.event_document_type = edt.id
          left join app_user_name cb on ed.created_by = cb.id

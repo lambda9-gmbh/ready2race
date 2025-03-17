@@ -49,6 +49,8 @@
     "ok": "Ok",
     "save": "Speichern",
     "search": "Suchen",
+    "back": "Zurück",
+    "next": "Weiter",
     "and": "und"
   },
   "decimal": {
@@ -65,11 +67,18 @@
       "success": "{{entity}} gelöscht",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
     },
+    "description": "Beschreibung",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Letzte Änderung",
     "edit": {
       "action": "{{entity}} bearbeiten",
       "success": "{{entity}} aktualisiert",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
-    }
+    },
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "gender": "Geschlecht",
+    "phone": "Telefon"
   },
   "navigation": {
     "titles": {
@@ -78,7 +87,17 @@
       "competitionConfig": "Wettkampf Einstellungen",
       "roles": "Rollen",
       "users": "Benutzer",
-      "config": "Konfigurationen"
+      "config": "Konfigurationen",
+      "clubs": "Vereine"
+    }
+  },
+  "club": {
+    "club": "Verein",
+    "participant": {
+      "title": "Teilnehmer",
+      "year": "Geburtsjahr",
+      "external": "Extern",
+      "externalClub": "Externer Verein"
     }
   },
   "event": {
@@ -86,6 +105,7 @@
     "events": "Veranstaltungen",
     "name": "Name",
     "description": "Beschreibung",
+    "registerNow": "Jetzt anmelden",
     "invoice": {
       "prefix": "Rechnungspräfix"
     },
@@ -191,6 +211,27 @@
       },
       "error": {
         "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
+      }
+    },
+    "registration": {
+      "addParticipant": "Teilnehmer hinzufügen",
+      "singleCompetition": "Einzelwettkampf",
+      "teamCompetition": "Teamwettkampf",
+      "males": "Männer",
+      "females": "Frauen",
+      "nonBinary": "Nichtbinäre Personen",
+      "mixed": "Beliebig",
+      "summary": "Zusammenfassung",
+      "schedule": "Programm",
+      "message": "Nachricht",
+      "optionalFee": "Optional",
+      "totalFees": "Meldegebühr",
+      "acceptDocuments" : "Ich akzeptiere Folgendes:",
+      "infoDocuments" : "Weitere Informationen",
+      "finish": "Anmeldung abschicken",
+      "success": {
+        "title": "Erfolgreich angemeldet!",
+        "subtitle": "Du bekommst eine Bestätigung per Mail."
       }
     }
   },

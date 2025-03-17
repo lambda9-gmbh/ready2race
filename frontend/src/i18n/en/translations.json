@@ -49,6 +49,8 @@
     "ok": "Ok",
     "save": "Save",
     "search": "Search",
+    "back": "Back",
+    "next": "Next",
     "and": "and"
   },
   "decimal": {
@@ -65,11 +67,18 @@
       "success": "{{entity}} deleted",
       "error": "An error has occurred when deleting {{entity}}"
     },
+    "description": "Description",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
       "error": "An error has occurred when updating {{entity}}"
-    }
+    },
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "gender": "Gender",
+    "phone": "Phone"
   },
   "navigation": {
     "titles": {
@@ -78,7 +87,17 @@
       "competitionConfig": "Competition Settings",
       "roles": "Roles",
       "users": "Users",
-      "config": "Configurations"
+      "config": "Configurations",
+      "clubs": "Clubs"
+    }
+  },
+  "club": {
+    "club": "Club",
+    "participant": {
+      "title": "Participant",
+      "year": "Year of birth",
+      "external": "External",
+      "externalClub": "External club"
     }
   },
   "event": {
@@ -86,6 +105,7 @@
     "events": "Events",
     "name": "Name",
     "description": "Description",
+    "registerNow": "Register now",
     "invoice": {
       "prefix": "Invoice prefix"
     },
@@ -191,6 +211,27 @@
       },
       "error": {
         "emptyList": "Please add one or more documents"
+      }
+    },
+    "registration": {
+      "addParticipant": "Add Participant",
+      "singleCompetition": "Single Competition",
+      "teamCompetition": "Team Competition",
+      "males": "Men",
+      "females": "Women",
+      "nonBinary": "Non-binary",
+      "mixed": "Any",
+      "summary": "Summary",
+      "schedule": "Schedule",
+      "message": "Message",
+      "optionalFee": "Optional",
+      "totalFees": "Registration Fee",
+      "acceptDocuments" : "I accept the following:",
+      "infoDocuments" : "Additional info",
+      "finish": "Submit registration",
+      "success": {
+        "title": "Registration successful!",
+        "subtitle": "You will receive a confirmation by e-mail."
       }
     }
   },

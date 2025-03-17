@@ -10,12 +10,7 @@ import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
-import {
-    readEventGlobal,
-    readUserGlobal,
-    updateEventGlobal,
-    updateUserGlobal,
-} from './authorization/privileges.ts'
+import {readEventGlobal, readUserGlobal, updateEventGlobal, updateUserGlobal} from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
@@ -28,6 +23,9 @@ import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
 import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
+import ClubsPage from './pages/club/ClubsPage.tsx'
+import ClubPage from './pages/club/ClubPage.tsx'
+import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage from './pages/ConfigurationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
@@ -229,6 +227,20 @@ export const eventIndexRoute = createRoute({
     },
 })
 
+export const eventRegisterRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: '/register',
+})
+
+export const eventRegisterIndexRoute = createRoute({
+    getParentRoute: () => eventRegisterRoute,
+    path: '/',
+    component: () => <EventRegistrationCreatePage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
+})
+
 export const eventDayRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'eventDay/$eventDayId',
@@ -271,6 +283,34 @@ export const competitionConfigIndexRoute = createRoute({
     },
 })
 
+export const clubRoute = createRoute({
+    getParentRoute: () => clubsRoute,
+    path: '$clubId',
+})
+
+export const clubIndexRoute = createRoute({
+    getParentRoute: () => clubRoute,
+    path: '/',
+    component: () => <ClubPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readEventGlobal)
+    },
+})
+
+export const clubsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'club',
+})
+
+export const clubsIndexRoute = createRoute({
+    getParentRoute: () => clubsRoute,
+    path: '/',
+    component: () => <ClubsPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location)
+    },
+})
+
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
@@ -282,13 +322,24 @@ const routeTree = rootRoute.addChildren([
             eventIndexRoute,
             eventDayRoute.addChildren([eventDayIndexRoute]),
             competitionRoute.addChildren([competitionIndexRoute]),
+            eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),
     ]),
     competitionConfigRoute.addChildren([competitionConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
-    registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
-    resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
+    registrationRoute.addChildren([
+        registrationIndexRoute,
+        registrationTokenRoute,
+    ]),
+    resetPasswordRoute.addChildren([
+        resetPasswordIndexRoute,
+        resetPasswordTokenRoute,
+    ]),
+    clubsRoute.addChildren([
+        clubsIndexRoute,
+        clubRoute.addChildren([clubIndexRoute]),
+    ]),
 ])
 
 export const router = createRouter({
