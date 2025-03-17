@@ -33,46 +33,47 @@ fun Route.club() {
                 ClubService.page(params) { it.clubDto() }
             }
         }
-    }
 
-    route("/search") {
-        get {
-            call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
-                val params = !pagination<ClubSort>()
-                ClubService.page(params) { it.clubSearchDto() }
-            }
-        }
-    }
 
-    route("/{clubId}") {
-
-        get {
-            call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
-                val id = !pathParam("clubId", uuid)
-                ClubService.getClub(id)
+        route("/search") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                    val params = !pagination<ClubSort>()
+                    ClubService.page(params) { it.clubSearchDto() }
+                }
             }
         }
 
-        put {
-            call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
-                val id = !pathParam("clubId", uuid)
-                val payload = !receiveKIO(ClubUpsertDto.example)
-                ClubService.updateClub(payload, user.id!!, id)
+        route("/{clubId}") {
+
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                    val id = !pathParam("clubId", uuid)
+                    ClubService.getClub(id)
+                }
             }
-        }
 
-        delete {
-            call.respondComprehension {
-                !authenticate(Privilege.Action.DELETE, Privilege.Resource.CLUB)
-                val id = !pathParam("clubId", uuid)
-                ClubService.deleteClub(id)
+            put {
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
+                    val id = !pathParam("clubId", uuid)
+                    val payload = !receiveKIO(ClubUpsertDto.example)
+                    ClubService.updateClub(payload, user.id!!, id)
+                }
             }
+
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.CLUB)
+                    val id = !pathParam("clubId", uuid)
+                    ClubService.deleteClub(id)
+                }
+            }
+
+            participant()
+
         }
-
-        participant()
-
     }
 }
