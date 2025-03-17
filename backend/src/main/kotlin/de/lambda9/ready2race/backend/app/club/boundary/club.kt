@@ -1,12 +1,11 @@
 package de.lambda9.ready2race.backend.app.club.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.club.control.clubDto
+import de.lambda9.ready2race.backend.app.club.control.clubSearchDto
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantUpsertDto
-import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
 import de.lambda9.ready2race.backend.requests.authenticate
 import de.lambda9.ready2race.backend.requests.pagination
 import de.lambda9.ready2race.backend.requests.pathParam
@@ -36,7 +35,19 @@ fun Route.club() {
                 KIO.comprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
                     val params = !pagination<ClubSort>()
-                    ClubService.page(params)
+                    ClubService.page(params) { it.clubDto() }
+                }
+            }
+        }
+
+        route("/search") {
+            get {
+                call.respondKIO {
+                    KIO.comprehension {
+                        !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                        val params = !pagination<ClubSort>()
+                        ClubService.page(params) { it.clubSearchDto() }
+                    }
                 }
             }
         }

@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.club.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.entity.ClubDto
+import de.lambda9.ready2race.backend.app.club.entity.ClubSearchDto
 import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.tailwind.core.KIO
@@ -28,5 +29,12 @@ fun ClubRecord.clubDto(): App<Nothing, ClubDto> = KIO.ok(
         name = name,
         createdAt = createdAt,
         updatedAt = updatedAt
+    )
+)
+
+fun ClubRecord.clubSearchDto(): App<Nothing, ClubSearchDto> = KIO.ok(
+    ClubSearchDto(
+        id = id,
+        name = name
     )
 )

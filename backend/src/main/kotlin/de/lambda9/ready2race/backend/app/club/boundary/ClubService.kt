@@ -9,11 +9,12 @@ import de.lambda9.ready2race.backend.app.club.entity.ClubDto
 import de.lambda9.ready2race.backend.app.club.entity.ClubError
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.responses.ApiResponse
 import de.lambda9.ready2race.backend.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.forEachM
+import de.lambda9.tailwind.core.extensions.kio.collectBy
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
@@ -32,13 +33,14 @@ object ClubService {
         KIO.ok(ApiResponse.Created(clubId))
     }
 
-    fun page(
+    fun <T: Any> page(
         params: PaginationParameters<ClubSort>,
-    ): App<Nothing, ApiResponse.Page<ClubDto, ClubSort>> = KIO.comprehension {
+        convert: (ClubRecord) -> App<Nothing,T>
+    ): App<Nothing, ApiResponse.Page<T, ClubSort>> = KIO.comprehension {
         val total = !ClubRepo.count(params.search).orDie()
         val page = !ClubRepo.page(params).orDie()
 
-        page.forEachM { it.clubDto() }.map {
+        page.collectBy { convert(it) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

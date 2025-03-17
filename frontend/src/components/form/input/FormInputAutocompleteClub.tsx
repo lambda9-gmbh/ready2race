@@ -18,11 +18,11 @@ export const FormInputAutocompleteClub = (props: {
     const [options, setOptions] = useState<string[]>([])
     const [searchResults, setSearchResults] = useState<ClubSearchDto[]>([])
     const [loading, setLoading] = useState<boolean>(false)
-    const [inputValue] = useState('')
+    const [inputValue, setInputValue] = useState('')
 
     const formContext = useFormContext()
 
-    const value = useWatch({control: formContext.control, name: props.name})
+    const value = useWatch({control: formContext.control, name: props.name, defaultValue: ''})
 
     const search = useMemo(
         () =>
@@ -33,7 +33,7 @@ export const FormInputAutocompleteClub = (props: {
                         limit: 10,
                         search: search,
                         offset: 0,
-                        sort: JSON.stringify({field: 'name', direction: 'asc'}),
+                        sort: JSON.stringify([{field: 'NAME', direction: 'ASC'}]),
                     },
                 })
                     .then(res => setSearchResults(res.data?.data ?? []))
@@ -44,7 +44,7 @@ export const FormInputAutocompleteClub = (props: {
 
     useEffect(() => {
         setOptions(() => {
-            if (value !== undefined) {
+            if (value != undefined) {
                 return [value, ...searchResults.map(r => r.name)]
             }
             return [...searchResults.map(r => r.name)]
@@ -55,18 +55,27 @@ export const FormInputAutocompleteClub = (props: {
         search(inputValue)
     }, [inputValue, search])
 
+    const onChange = (value: string) => {
+        if (props.onChange) {
+            props.onChange()
+        }
+        setInputValue(value)
+    }
+
     return (
         <FormInputAutocomplete
             name={props.name}
             label={props.label}
             options={options}
             loading={loading}
-            onChange={props.onChange}
             required={props.required}
             rules={{
                 ...(props.required && {required: t('common.form.required')}),
             }}
             textFieldProps={{
+                onChange: e => {
+                    onChange(e.target.value)
+                },
                 InputProps: {
                     endAdornment: <Search sx={{color: '#ccc'}} />,
                 },
