@@ -13,6 +13,6 @@ object BooleanValidators : Validators<Boolean?>() {
         }
 
     val isFalseOrNull
-        get() = simple("is not false or null") { it }
+        get() = simple("is not false or null") { !it }
 
 }

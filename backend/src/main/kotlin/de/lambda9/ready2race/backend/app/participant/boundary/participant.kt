@@ -46,12 +46,12 @@ fun Route.participant() {
             }
 
             put {
-                val payload = call.receiveKIO(ParticipantUpsertDto.example)
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.PARTICIPANT)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
-                    ParticipantService.updateParticipant(!payload, user.id!!, clubId, id)
+                    val payload = !receiveKIO(ParticipantUpsertDto.example)
+                    ParticipantService.updateParticipant(payload, user.id!!, clubId, id)
                 }
             }
 
