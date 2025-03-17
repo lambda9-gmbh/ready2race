@@ -13,6 +13,7 @@ import de.lambda9.ready2race.testing.kio.testComprehension
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
 import de.lambda9.tailwind.jooq.JooqQueryPrinter
+import io.ktor.serialization.*
 import io.ktor.server.testing.*
 import org.flywaydb.core.Flyway
 import org.jooq.ConnectionProvider
@@ -27,9 +28,19 @@ import java.sql.Connection
 import java.util.*
 import kotlin.test.fail
 
+/**
+ * Use this function to unit test against the database, e.g. testing services and repos.
+ */
 fun testComprehension(block: TestComprehensionScope<JEnv>.() -> Unit) =
     TestRunner.runComprehension(block)
 
+/**
+ * Use this function to test end to end behaviour, when you also need access to the database.
+ * This test function is pretty slow and should only be used for integration tests, because it has to reset the database.
+ *
+ * For unit testing just against the database without end to end behaviour, use [testComprehension].
+ * For integration testing without needed access to the database inside the test to verify effects, use [testApplication].
+ */
 fun testApplicationComprehension(block: suspend TestApplicationComprehensionScope<JEnv>.() -> Unit) =
     TestRunner.runApplication(block)
 
@@ -40,17 +51,19 @@ private object TestRunner {
     private val postgres = PostgreSQLContainer("postgres:17")
     private val config: Config
     private val connectionProvider: ConnectionProvider
+    private val flyway: Flyway
+
+    private var initial: Boolean
+    private var dirty: Boolean
 
     init {
         postgres.start()
-
-        val port = ServerSocket(0).use { it.localPort }
 
         config = Config(
             mode = Config.Mode.TEST,
             http = Config.Http(
                 host = "localhost",
-                port = port,
+                port = -1,
             ),
             database = Config.Database(
                 url = postgres.jdbcUrl,
@@ -81,83 +94,91 @@ private object TestRunner {
 
         connectionProvider = DataSourceConnectionProvider(datasource)
 
-        val flywayConfig = Flyway.configure().dataSource(datasource).defaultSchema("ready2race")
-        Flyway(flywayConfig).migrate()
+        val flywayConfig = Flyway.configure()
+            .dataSource(datasource)
+            .defaultSchema("ready2race")
+            .cleanDisabled(false)
 
-        val env = Jooq(
-            dsl = DSL.using(datasource, SQLDialect.POSTGRES),
-            env = Env(config)
-        )
-        initializeDatabase(env)
+        flyway = Flyway(flywayConfig)
+
+        initial = true
+        dirty = true
     }
 
     fun runComprehension(block: TestComprehensionScope<JEnv>.() -> Unit) {
 
-        val connection = getConnection()
-        val env = getEnv(connection)
+        cleanDatabase()
 
-        try {
-
-            KIO.testComprehension(env, block)
-
-        } catch (t: Throwable) {
-            throw t
-        } finally {
-            closeConnection(connection)
-        }
-    }
-
-    fun runApplication(block: suspend TestApplicationComprehensionScope<JEnv>.() -> Unit) = testApplication {
-
-        val connection = getConnection()
-        val env = getEnv(connection)
-
-        try {
-
-            application {
-                module(env)
-            }
-
-            val scope = object : TestApplicationComprehensionScope<JEnv>,
-                TestComprehensionScope<JEnv> by DefaultTestComprehensionScope(env),
-                ClientProvider by this {}
-            block(scope)
-
-        } catch (t: Throwable) {
-            throw t
-        } finally {
-            closeConnection(connection)
-        }
-    }
-
-    private fun getConnection(): Connection {
         val connection = connectionProvider.acquire()
 
         if (connection == null) {
             fail("DB connection could not be acquired")
         } else {
+
             connection.autoCommit = false
-            return connection
+            val env = getEnv(connection)
+
+            try {
+
+                KIO.testComprehension(env, block)
+
+            } catch (t: Throwable) {
+                throw t
+            } finally {
+                connection.rollback()
+                connection.autoCommit = true
+                connectionProvider.release(connection)
+            }
         }
     }
 
-    private fun closeConnection(connection: Connection) {
-        connection.rollback()
-        connection.autoCommit = true
-        connectionProvider.release(connection)
+    fun runApplication(block: suspend TestApplicationComprehensionScope<JEnv>.() -> Unit) = testApplication {
+
+        cleanDatabase()
+        dirty = true
+
+        val env = getEnv()
+
+        application {
+            module(env)
+        }
+
+        val scope = object : TestApplicationComprehensionScope<JEnv>,
+            TestComprehensionScope<JEnv> by DefaultTestComprehensionScope(env),
+            ClientProvider by this {}
+        block(scope)
+
     }
 
-    private fun getEnv(connection: Connection): JEnv {
-        val configuration = DefaultConfiguration()
-            .set(SQLDialect.POSTGRES)
-            .set(connection)
-            .let {
-                if (config.database.logQueries) {
-                    it.set(JooqQueryPrinter())
-                } else {
-                    it
-                }
+    private fun cleanDatabase() {
+        if (dirty) {
+            val env = Jooq(
+                dsl = DSL.using(connectionProvider, SQLDialect.POSTGRES),
+                env = Env(config)
+            )
+            if (initial) {
+                initial = false
+            } else {
+                flyway.clean()
             }
+            flyway.migrate()
+            initializeDatabase(env)
+            dirty = false
+        }
+    }
+
+    private fun getEnv(connection: Connection? = null): JEnv {
+        val configuration = DefaultConfiguration().apply {
+            set(SQLDialect.POSTGRES)
+            if (connection != null) {
+                set(connection)
+            } else {
+                set(connectionProvider)
+            }
+            if (config.database.logQueries) {
+                set(JooqQueryPrinter())
+            }
+        }
         return Jooq(
             dsl = DSL.using(configuration),
             env = Env(config),
