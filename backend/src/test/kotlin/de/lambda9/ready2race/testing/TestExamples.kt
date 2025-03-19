@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.control.EmailRepo
 import de.lambda9.ready2race.backend.app.email.entity.EmailBody
 import de.lambda9.ready2race.backend.app.email.entity.EmailContent
+import de.lambda9.tailwind.core.KIO
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlin.test.*

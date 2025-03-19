@@ -169,9 +169,9 @@ select ed.id,
        edt as document_type,
        ed.name,
        ed.created_at,
-       cb       as created_by,
+       cb  as created_by,
        ed.updated_at,
-       ub       as updated_by
+       ub  as updated_by
 from event_document ed
          left join event_document_type edt on ed.event_document_type = edt.id
          left join app_user_name cb on ed.created_by = cb.id
