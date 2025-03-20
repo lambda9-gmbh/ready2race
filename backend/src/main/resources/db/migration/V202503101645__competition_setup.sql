@@ -50,12 +50,9 @@ create table competition_setup_match
     competition_setup_round uuid    not null references competition_setup_round on delete cascade,
     competition_setup_group uuid references competition_setup_group on delete cascade,
     duplicatable            boolean not null,
-    weighting               integer,
+    weighting               integer not null,
     teams                   integer,
     name                    text,
-    constraint chk_either_weighting_or_in_group check (
-        (competition_setup_group is null and weighting is not null) or
-        (competition_setup_group is not null and weighting is null) ),
     constraint chk_not_duplicatable_and_in_group check (
         not (duplicatable is true and competition_setup_group is not null)
         )

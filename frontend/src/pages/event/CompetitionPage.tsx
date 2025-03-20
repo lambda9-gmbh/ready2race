@@ -1,4 +1,4 @@
-import {Box, Divider, Grid2, Stack, Typography} from '@mui/material'
+import {Box, Button, Divider, Grid2, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventRoute, competitionRoute} from '@routes'
@@ -10,6 +10,7 @@ import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
 import {getEventDays, getCompetition} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
+import {Link} from '@tanstack/react-router'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -25,7 +26,9 @@ const CompetitionPage = () => {
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.single', {entity: t('event.competition.competition')}))
+                    feedback.error(
+                        t('common.load.error.single', {entity: t('event.competition.competition')}),
+                    )
                 }
             },
             deps: [eventId, competitionId],
@@ -33,12 +36,15 @@ const CompetitionPage = () => {
     )
 
     const {data: assignedEventDaysData, pending: assignedEventDaysPending} = useFetch(
-        signal => getEventDays({signal, path: {eventId: eventId}, query: {competitionId: competitionId}}),
+        signal =>
+            getEventDays({signal, path: {eventId: eventId}, query: {competitionId: competitionId}}),
         {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple.short', {entity: t('event.eventDay.eventDays')}),
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.eventDay.eventDays'),
+                        }),
                     )
                 }
             },
@@ -57,7 +63,9 @@ const CompetitionPage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
-                        t('common.load.error.multiple.short', {entity: t('event.eventDay.eventDays')}),
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.eventDay.eventDays'),
+                        }),
                     )
                 }
             },
@@ -78,7 +86,9 @@ const CompetitionPage = () => {
                     <Stack spacing={2}>
                         <EntityDetailsEntry
                             content={
-                                competitionData.properties.identifier + ' | ' + competitionData.properties.name
+                                competitionData.properties.identifier +
+                                ' | ' +
+                                competitionData.properties.name
                             }
                             variant="h1"
                         />
@@ -90,7 +100,9 @@ const CompetitionPage = () => {
                                     content={competitionData.properties.competitionCategory.name}
                                 />
                                 <EntityDetailsEntry
-                                    content={competitionData.properties.competitionCategory.description}
+                                    content={
+                                        competitionData.properties.competitionCategory.description
+                                    }
                                 />
                             </Box>
                         )}
@@ -99,7 +111,9 @@ const CompetitionPage = () => {
 
                         {competitionData.properties.namedParticipants.map((np, index) => (
                             <>
-                                <Box key={`box${index}`}> {/*todo: should have np.id instead of index to prevent updating errors*/}
+                                <Box key={`box${index}`}>
+                                    {' '}
+                                    {/*todo: should have np.id instead of index to prevent updating errors*/}
                                     <Typography variant="subtitle1">{np.name}</Typography>
                                     <Typography>{np.description}</Typography>
                                     <CompetitionCountEntry
@@ -124,18 +138,19 @@ const CompetitionPage = () => {
                         <Divider />
                         {competitionData.properties.fees.map((f, index) => (
                             <>
-                                <Box key={`box${index}`}> {/*todo: should have np.id instead of index to prevent updating errors*/}
+                                <Box key={`box${index}`}>
+                                    {' '}
+                                    {/*todo: should have np.id instead of index to prevent updating errors*/}
                                     <Typography variant="subtitle1">{f.name}</Typography>
                                     <Typography>{f.description}</Typography>
                                     <Typography>
                                         {f.required
                                             ? t('event.competition.fee.required.required')
-                                            : t('event.competition.fee.required.notRequired')
-                                        }
+                                            : t('event.competition.fee.required.notRequired')}
                                     </Typography>
                                     <CompetitionCountEntry
                                         label={t('event.competition.fee.amount')}
-                                        content={f.amount + "€"}
+                                        content={f.amount + '€'}
                                     />
                                 </Box>
                             </>
@@ -144,19 +159,31 @@ const CompetitionPage = () => {
                 )) ||
                     (competitionPending && <Throbber />)}
             </Box>
-            <Box sx={{flex: 1, maxWidth: 400}}>
-                {(eventDaysData && assignedEventDaysData && (
-                    <CompetitionAndDayAssignment
-                        entityPathId={competitionId}
-                        options={selection}
-                        assignedEntities={assignedEventDays}
-                        assignEntityLabel={t('event.eventDay.eventDay')}
-                        competitionsToDay={false}
-                        onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
-                    />
-                )) ||
-                    ((eventDaysPending || assignedEventDaysPending) && <Throbber />)}
-            </Box>
+            <Stack spacing={2} sx={{flex: 1, maxWidth: 400}}>
+                <Box>
+                    {(eventDaysData && assignedEventDaysData && (
+                        <CompetitionAndDayAssignment
+                            entityPathId={competitionId}
+                            options={selection}
+                            assignedEntities={assignedEventDays}
+                            assignEntityLabel={t('event.eventDay.eventDay')}
+                            competitionsToDay={false}
+                            onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
+                        />
+                    )) ||
+                        ((eventDaysPending || assignedEventDaysPending) && <Throbber />)}
+                </Box>
+                <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                    <Link
+                        to="/event/$eventId/competition/$competitionId/competitionSetup"
+                        params={{
+                            eventId: eventId,
+                            competitionId: competitionId,
+                        }}>
+                        <Button variant="contained">[todo] Setup</Button>
+                    </Link>
+                </Box>
+            </Stack>
         </Grid2>
     )
 }

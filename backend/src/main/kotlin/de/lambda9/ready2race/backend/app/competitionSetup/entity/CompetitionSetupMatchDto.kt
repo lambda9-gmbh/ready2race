@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 
 data class CompetitionSetupMatchDto(
     val duplicatable: Boolean,
-    val weighting: Int?,
+    val weighting: Int,
     val teams: Int?,
     val name: String?,
     val outcomes: List<Int>?,

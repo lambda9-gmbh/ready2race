@@ -106,7 +106,8 @@ object CompetitionSetupService {
         !CompetitionSetupRoundRepo.create(records.rounds).orDie()
         if (records.groups.isNotEmpty()) {
             !CompetitionSetupGroupRepo.create(records.groups).orDie()
-        } else if (records.statisticEvaluations.isNotEmpty()) {
+        }
+        if (records.statisticEvaluations.isNotEmpty()) {
             !CompetitionSetupGroupStatisticEvaluationRepo.create(records.statisticEvaluations).orDie()
         }
         !CompetitionSetupMatchRepo.create(records.matches).orDie()
@@ -141,12 +142,24 @@ object CompetitionSetupService {
 
 
         // Map and filter the Records into the Dto
+        val rounds: MutableList<CompetitionSetupRoundRecord> = mutableListOf()
+        fun addRoundToSortedList(r: CompetitionSetupRoundRecord?) {
+            if (r != null) {
+                rounds.add(r)
 
-        val roundDtos = roundRecords.map { round ->
+                addRoundToSortedList(roundRecords.firstOrNull { it.nextRound == r.id })
+            }
+        }
+        addRoundToSortedList(roundRecords.firstOrNull { it.nextRound == null })
+
+
+        val roundDtos = roundRecords.reversed().map { round ->
             // If there are Groups in this round (every match has a group reference): round.matches = null
             // In that case the Matches are assigned to the respective group
 
             val matchesInRound = matchRecords.filter { match -> match.competitionSetupRound == round.id }
+
+            // todo: matches should have a position inside the round so the user can modify the order - same for matches in group
 
             val roundHasGroups = matchesInRound.getOrNull(0)?.competitionSetupGroup != null
 

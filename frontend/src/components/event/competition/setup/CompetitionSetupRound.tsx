@@ -1,116 +1,75 @@
-import {Control, useFieldArray} from 'react-hook-form-mui'
-import {Box, Button, Stack} from '@mui/material'
-import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import {CompetitionSetupForm} from "@components/event/competition/setup/CompetitionSetup.tsx";
+import {useFieldArray, UseFormReturn} from 'react-hook-form-mui'
+import {Box, Button, Stack, Typography} from '@mui/material'
+import {CompetitionSetupForm} from '@components/event/competition/setup/CompetitionSetup.tsx'
+import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
 
 type Props = {
     roundIndex: number
     roundId: string
-    control: Control<CompetitionSetupForm>
+    formContext: UseFormReturn<CompetitionSetupForm>
     removeRound: (index: number) => void
+    teamCountFollowingRound: number
 }
-const CompetitionSetupRound = ({roundIndex, roundId, control, removeRound}: Props) => {
+const CompetitionSetupRound = ({roundIndex, roundId, formContext, removeRound, teamCountFollowingRound}: Props) => {
     const {
         fields: matchFields,
         append: appendMatch,
         remove: removeMatch,
     } = useFieldArray({
-        control: control,
+        control: formContext.control,
         name: ('rounds[' + roundIndex + '].matches') as `rounds.${number}.matches`,
         keyName: 'fieldId',
     })
 
+
     return (
-        <Stack
-            direction="row"
-            spacing={2}
-            justifyContent="space-between"
-            key={`round-${roundId}`}
-            sx={{border: 1, borderColor: 'blue', p: 2, alignItems: 'center'}}>
-            <Stack direction="row" spacing={2} alignItems={'center'}>
-                {matchFields.map((matchField, matchIndex) => (
-                    <Stack
-                        direction="column"
-                        spacing={1}
-                        key={`match-${roundId}-${matchField.fieldId}`}>
-                        <Stack
-                            sx={{
-                                border: 1,
-                                borderColor: 'grey',
-                                width: 1,
-                                p: 2,
-                                boxSizing: 'border-box',
-                            }}>
-                            <FormInputText
-                                name={'rounds[' + roundIndex + '].matches[' + matchIndex + '].name'}
-                                label={'Match name'}
-                            />
-                            <FormInputNumber
-                                name={`rounds.${roundIndex}.matches.${matchIndex}.teams`}
-                                label={'Teams'}
-                            />
-                            <FormInputNumber
-                                name={
-                                    'rounds[' +
-                                    roundIndex +
-                                    '].matches[' +
-                                    matchIndex +
-                                    '].weighting'
-                                }
-                                label={'Match weighting'}
-                                required
-                            />
-                        </Stack>
-                        <Stack spacing={2} sx={{border: 1, borderColor: 'lightgrey', p: 1}}>
-                            {matchField.outcomes.map((outcome, outcomeIndex) => (
-                                <FormInputNumber
-                                    key={`outcome-${roundId}-${matchField.fieldId}-${outcome}`}
-                                    name={
-                                        'rounds[' +
-                                        roundIndex +
-                                        '].matches[' +
-                                        matchIndex +
-                                        '].outcomes[' +
-                                        outcomeIndex +
-                                        ']'
-                                    }
-                                    label={'Outcome weighting'}
-                                    required
-                                />
-                            ))}
-                        </Stack>
+        <>
+            <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                <Typography>Max Teams: {teamCountFollowingRound}</Typography>
+            </Box>
+            <Stack
+                direction="row"
+                spacing={2}
+                justifyContent="space-between"
+                key={`round-${roundId}`}
+                sx={{alignItems: 'center'}}>
+                <Stack
+                    direction="row"
+                    spacing={2}
+                    alignItems={'center'}
+                    sx={{border: 1, borderColor: 'blue', p: 2}}>
+                    {matchFields.map((matchField, matchIndex) => (
+                        <CompetitionSetupMatch
+                            formContext={formContext}
+                            round={{index: roundIndex, id: roundId}}
+                            match={{index: matchIndex, id: matchField.fieldId}}
+                            removeMatch={() => removeMatch(matchIndex)}
+                        />
+                    ))}
+                    <Box>
                         <Button
                             variant="outlined"
                             onClick={() => {
-                                removeMatch(matchIndex)
-                            }}>
-                            Remove Match
+                                appendMatch({
+                                    duplicatable: false,
+                                    weighting: matchFields.length + 1,
+                                    teams: 2,
+                                    name: '',
+                                    outcomes: [{outcome: 1}, {outcome: matchFields.length + 1}],
+                                })
+                            }}
+                            sx={{width: 1}}>
+                            Add Match
                         </Button>
-                    </Stack>
-                ))}
+                    </Box>
+                </Stack>
                 <Box>
-                    <Button
-                        variant="outlined"
-                        onClick={() => {
-                            appendMatch({
-                                weighting: matchFields.length + 1,
-                                teams: 2,
-                                name: '',
-                                outcomes: [1, matchFields.length + 1],
-                            })
-                        }}
-                        sx={{width: 1}}>
-                        Add Match
+                    <Button variant="outlined" onClick={() => removeRound(roundIndex)}>
+                        Remove Round
                     </Button>
                 </Box>
             </Stack>
-            <Box>
-                <Button variant="outlined" onClick={() => removeRound(roundIndex)}>
-                    Remove Round
-                </Button>
-            </Box>
-        </Stack>
+        </>
     )
 }
 

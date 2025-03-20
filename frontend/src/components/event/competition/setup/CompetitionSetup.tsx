@@ -1,14 +1,40 @@
 import {Box, Button, Stack} from '@mui/material'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
-import {CompetitionSetupDto} from '@api/types.gen.ts'
+import {
+    CompetitionSetupDto,
+    CompetitionSetupGroupStatisticEvaluationDto,
+    CompetitionSetupMatchDto,
+} from '@api/types.gen.ts'
 import {useState} from 'react'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import {getCompetitionSetup, updateCompetitionSetup} from '@api/sdk.gen.ts'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 
-export type CompetitionSetupForm = CompetitionSetupDto
+export type CompetitionSetupForm = {
+    rounds: Array<{
+        name: string
+        required: boolean
+        matches?: Array<FormSetupMatch>
+        groups?: Array<{
+            duplicatable: boolean
+            weighting: number
+            teams?: number
+            name?: string
+            matches: Array<FormSetupMatch>
+            outcomes: Array<{outcome: number}>
+        }>
+        statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
+    }>
+}
+type FormSetupMatch = {
+    duplicatable: boolean
+    weighting: number
+    teams?: number
+    name?: string
+    outcomes?: Array<{outcome: number}>
+}
 
 const CompetitionSetup = () => {
     const feedback = useFeedback()
@@ -38,7 +64,7 @@ const CompetitionSetup = () => {
         {
             onResponse: ({data}) => {
                 if (data) {
-                    formContext.reset(data)
+                    formContext.reset(mapDtoToForm(data))
                 } else {
                     feedback.error('[todo] error!')
                 }
@@ -51,7 +77,7 @@ const CompetitionSetup = () => {
         setSubmitting(true)
         const {error} = await updateCompetitionSetup({
             path: {eventId: eventId, competitionId: competitionId},
-            body: formData,
+            body: mapFormToDto(formData),
         })
         setSubmitting(false)
 
@@ -59,14 +85,39 @@ const CompetitionSetup = () => {
             feedback.error('[todo] Error!')
         } else {
             feedback.success('[todo] Saved!')
+            setReloadDataTrigger(!reloadDataTrigger)
         }
-        setReloadDataTrigger(!reloadDataTrigger)
+    }
+
+    const formWatch = formContext.watch('rounds')
+
+    function getTeamCountForRound(roundIndex: number) {
+        if (
+            formWatch[roundIndex].matches !== undefined &&
+            formWatch[roundIndex].matches.length > 0
+        ) {
+            return (
+                formWatch[roundIndex].matches
+                    .map(v => v.teams)
+                    .reduce((acc, val) => {
+                        if (val === undefined) {
+                            return acc
+                        } else if (acc === undefined) {
+                            return val
+                        } else {
+                            return +acc + +val
+                        }
+                    }) ?? 0
+            )
+        } else {
+            return 0
+        }
     }
 
     return (
         <FormContainer formContext={formContext} onSuccess={handleSubmit}>
             <Box>
-                <Stack direction="row" spacing={2} sx={{justifyContent: 'end', mb:4}}>
+                <Stack direction="row" spacing={2} sx={{justifyContent: 'end', mb: 4}}>
                     <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
                         Click to reset
                     </Button>
@@ -80,8 +131,9 @@ const CompetitionSetup = () => {
                         <CompetitionSetupRound
                             roundIndex={roundIndex}
                             roundId={roundField.fieldId}
-                            control={formContext.control}
+                            formContext={formContext}
                             removeRound={removeRound}
+                            teamCountFollowingRound={getTeamCountForRound(roundIndex)}
                         />
                     ))}
                     <Box>
@@ -106,17 +158,27 @@ const CompetitionSetup = () => {
 
 export default CompetitionSetup
 
-const dummyData: CompetitionSetupDto = {
+const dummyData: CompetitionSetupForm = {
     rounds: [
         {
             name: 'Vorrunde',
             required: true,
             matches: [
                 {
+                    duplicatable: false,
                     weighting: 1,
                     teams: undefined,
                     name: undefined,
-                    outcomes: [1, 2, 3, 4, 5, 6, 7, 8],
+                    outcomes: [
+                        {outcome: 1},
+                        {outcome: 2},
+                        {outcome: 3},
+                        {outcome: 4},
+                        {outcome: 5},
+                        {outcome: 6},
+                        {outcome: 7},
+                        {outcome: 8},
+                    ],
                 },
             ],
         },
@@ -125,28 +187,32 @@ const dummyData: CompetitionSetupDto = {
             required: false,
             matches: [
                 {
+                    duplicatable: false,
                     weighting: 1,
                     teams: 2,
                     name: 'VF1',
-                    outcomes: [1, 8],
+                    outcomes: [{outcome: 1}, {outcome: 8}],
                 },
                 {
+                    duplicatable: false,
                     weighting: 4,
                     teams: 2,
                     name: 'VF2',
-                    outcomes: [4, 5],
+                    outcomes: [{outcome: 4}, {outcome: 5}],
                 },
                 {
+                    duplicatable: false,
                     weighting: 3,
                     teams: 2,
                     name: 'VF3',
-                    outcomes: [3, 6],
+                    outcomes: [{outcome: 3}, {outcome: 6}],
                 },
                 {
+                    duplicatable: false,
                     weighting: 2,
                     teams: 2,
                     name: 'VF4',
-                    outcomes: [2, 7],
+                    outcomes: [{outcome: 2}, {outcome: 7}],
                 },
             ],
         },
@@ -155,16 +221,18 @@ const dummyData: CompetitionSetupDto = {
             required: false,
             matches: [
                 {
+                    duplicatable: false,
                     weighting: 1,
                     teams: 2,
                     name: 'HF1',
-                    outcomes: [1, 4],
+                    outcomes: [{outcome: 1}, {outcome: 4}],
                 },
                 {
+                    duplicatable: false,
                     weighting: 2,
                     teams: 2,
                     name: 'HF2',
-                    outcomes: [2, 3],
+                    outcomes: [{outcome: 2}, {outcome: 3}],
                 },
             ],
         },
@@ -173,12 +241,71 @@ const dummyData: CompetitionSetupDto = {
             required: true,
             matches: [
                 {
+                    duplicatable: false,
                     weighting: 1,
                     teams: 2,
                     name: 'F',
-                    outcomes: [1, 2],
+                    outcomes: [{outcome: 1}, {outcome: 2}],
                 },
             ],
         },
     ],
+}
+
+function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
+    return {
+        rounds: form.rounds.map(round => ({
+            name: round.name,
+            required: round.required,
+            matches: round.matches?.map(match => mapFormMatchToDtoMatch(match)),
+            groups: round.groups?.map(group => ({
+                duplicatable: group.duplicatable,
+                weighting: group.weighting,
+                teams: group.teams,
+                name: group.name,
+                matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
+                outcomes: group.outcomes.map(outcome => outcome.outcome),
+            })),
+            statisticEvaluations: round.statisticEvaluations,
+        })),
+    }
+}
+
+function mapFormMatchToDtoMatch(formMatch: FormSetupMatch): CompetitionSetupMatchDto {
+    return {
+        duplicatable: formMatch.duplicatable,
+        weighting: formMatch.weighting,
+        teams: formMatch.teams,
+        name: formMatch.name,
+        outcomes: formMatch.outcomes?.map(outcome => outcome.outcome),
+    }
+}
+
+function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
+    return {
+        rounds: dto.rounds.map(round => ({
+            name: round.name,
+            required: round.required,
+            matches: round.matches?.map(match => mapDtoMatchToFormMatch(match)),
+            groups: round.groups?.map(group => ({
+                duplicatable: group.duplicatable,
+                weighting: group.weighting,
+                teams: group.teams,
+                name: group.name,
+                matches: group.matches.map(match => mapDtoMatchToFormMatch(match)),
+                outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
+            })),
+            statisticEvaluations: round.statisticEvaluations,
+        })),
+    }
+}
+
+function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto): FormSetupMatch {
+    return {
+        duplicatable: matchDto.duplicatable,
+        weighting: matchDto.weighting,
+        teams: matchDto.teams,
+        name: matchDto.name,
+        outcomes: matchDto.outcomes?.map(outcome => ({outcome: outcome})),
+    }
 }

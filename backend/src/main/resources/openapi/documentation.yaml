@@ -2596,12 +2596,14 @@ components:
 
     # competitionSetup
 
-    CompetitionSetupMatch:
+    CompetitionSetupMatchDto:
       type: object
       required:
+        - duplicatable
         - weighting
-        - outcomes
       properties:
+        duplicatable:
+          type: boolean
         weighting:
           type: integer
         teams:
@@ -2613,12 +2615,60 @@ components:
           items:
             type: integer
 
-    CompetitionSetupRound:
+    CompetitionSetupGroupDto:
+      type: object
+      required:
+        - duplicatable
+        - weighting
+        - matches
+        - outcomes
+      properties:
+        duplicatable:
+          type: boolean
+        weighting:
+          type: integer
+        teams:
+          type: integer
+        name:
+          type: string
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupMatchDto'
+        outcomes:
+          type: array
+          items:
+            type: integer
+
+    CompetitionSetupGroupStatisticEvaluationDto:
+      type: object
+      required:
+        - name
+        - priority
+        - rankByBiggest
+        - ignoreBiggestValues
+        - ignoreSmallestValues
+        - asAverage
+      properties:
+        name:
+          type: string
+        priority:
+          type: integer
+        rankByBiggest:
+          type: boolean
+        ignoreBiggestValues:
+          type: integer
+        ignoreSmallestValues:
+          type: integer
+        asAverage:
+          type: boolean
+
+
+    CompetitionSetupRoundDto:
       type: object
       required:
         - name
         - required
-        - matches
       properties:
         name:
           type: string
@@ -2627,7 +2677,15 @@ components:
         matches:
           type: array
           items:
-            $ref: '#/components/schemas/CompetitionSetupMatch'
+            $ref: '#/components/schemas/CompetitionSetupMatchDto'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupGroupDto'
+        statisticEvaluations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
 
     CompetitionSetupDto:
       type: object
@@ -2637,7 +2695,7 @@ components:
         rounds:
           type: array
           items:
-            $ref: '#/components/schemas/CompetitionSetupRound'
+            $ref: '#/components/schemas/CompetitionSetupRoundDto'
 
 
     # competitionTemplate

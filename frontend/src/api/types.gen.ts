@@ -127,20 +127,41 @@ export type CompetitionRequest = {
 }
 
 export type CompetitionSetupDto = {
-    rounds: Array<CompetitionSetupRound>
+    rounds: Array<CompetitionSetupRoundDto>
 }
 
-export type CompetitionSetupMatch = {
+export type CompetitionSetupGroupDto = {
+    duplicatable: boolean
     weighting: number
     teams?: number
     name?: string
+    matches: Array<CompetitionSetupMatchDto>
     outcomes: Array<number>
 }
 
-export type CompetitionSetupRound = {
+export type CompetitionSetupGroupStatisticEvaluationDto = {
+    name: string
+    priority: number
+    rankByBiggest: boolean
+    ignoreBiggestValues: number
+    ignoreSmallestValues: number
+    asAverage: boolean
+}
+
+export type CompetitionSetupMatchDto = {
+    duplicatable: boolean
+    weighting: number
+    teams?: number
+    name?: string
+    outcomes?: Array<number>
+}
+
+export type CompetitionSetupRoundDto = {
     name: string
     required: boolean
-    matches: Array<CompetitionSetupMatch>
+    matches?: Array<CompetitionSetupMatchDto>
+    groups?: Array<CompetitionSetupGroupDto>
+    statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
 }
 
 export type CompetitionTemplateDto = {
