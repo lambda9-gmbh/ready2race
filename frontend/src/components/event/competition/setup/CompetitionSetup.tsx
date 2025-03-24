@@ -20,7 +20,7 @@ export type CompetitionSetupForm = {
         groups?: Array<{
             duplicatable: boolean
             weighting: number
-            teams?: number
+            teams?: string
             name?: string
             matches: Array<FormSetupMatch>
             outcomes: Array<{outcome: number}>
@@ -31,7 +31,7 @@ export type CompetitionSetupForm = {
 type FormSetupMatch = {
     duplicatable: boolean
     weighting: number
-    teams?: number
+    teams?: string // Has to be string because the is no transform function for the TextField
     name?: string
     outcomes?: Array<{outcome: number}>
 }
@@ -55,7 +55,6 @@ const CompetitionSetup = () => {
     } = useFieldArray({
         control: formContext.control,
         name: 'rounds',
-        keyName: 'fieldId',
     })
 
     useFetch(
@@ -91,14 +90,22 @@ const CompetitionSetup = () => {
 
     const formWatch = formContext.watch('rounds')
 
-    function getTeamCountForRound(roundIndex: number) {
+    function getTeamCountForRound(roundIndex: number, ignoreMatchIndex?: number) {
         if (
-            formWatch[roundIndex].matches !== undefined &&
-            formWatch[roundIndex].matches.length > 0
+            formWatch[roundIndex]?.matches !== undefined &&
+            formWatch[roundIndex]?.matches.length > 0
         ) {
+            // If ignoreMatchIndex is provided, the team value of that match will not be added
+            const matches =
+                ignoreMatchIndex === undefined
+                    ? formWatch[roundIndex].matches
+                    : formWatch[roundIndex].matches.filter((_, index) => index !== ignoreMatchIndex)
+            if(matches.length < 1){
+                return 0
+            }
             return (
-                formWatch[roundIndex].matches
-                    .map(v => v.teams)
+                matches
+                    .map(v => (v.teams !== undefined ? Number(v.teams) : undefined))
                     .reduce((acc, val) => {
                         if (val === undefined) {
                             return acc
@@ -129,11 +136,17 @@ const CompetitionSetup = () => {
                 <Stack spacing={4} alignItems="center">
                     {roundFields.map((roundField, roundIndex) => (
                         <CompetitionSetupRound
-                            roundIndex={roundIndex}
-                            roundId={roundField.fieldId}
+                            key={roundField.id}
+                            round={{index: roundIndex, id: roundField.id}}
                             formContext={formContext}
                             removeRound={removeRound}
-                            teamCountFollowingRound={getTeamCountForRound(roundIndex)}
+                            teamCounts={{
+                                thisRound: getTeamCountForRound(roundIndex),
+                                nextRound: getTeamCountForRound(roundIndex + 1),
+                            }}
+                            getRoundTeamCountWithoutMatch={(ignoredMatchIndex: number) =>
+                                getTeamCountForRound(roundIndex, ignoredMatchIndex)
+                            }
                         />
                     ))}
                     <Box>
@@ -189,28 +202,28 @@ const dummyData: CompetitionSetupForm = {
                 {
                     duplicatable: false,
                     weighting: 1,
-                    teams: 2,
+                    teams: '2',
                     name: 'VF1',
                     outcomes: [{outcome: 1}, {outcome: 8}],
                 },
                 {
                     duplicatable: false,
                     weighting: 4,
-                    teams: 2,
+                    teams: '2',
                     name: 'VF2',
                     outcomes: [{outcome: 4}, {outcome: 5}],
                 },
                 {
                     duplicatable: false,
                     weighting: 3,
-                    teams: 2,
+                    teams: '2',
                     name: 'VF3',
                     outcomes: [{outcome: 3}, {outcome: 6}],
                 },
                 {
                     duplicatable: false,
                     weighting: 2,
-                    teams: 2,
+                    teams: '2',
                     name: 'VF4',
                     outcomes: [{outcome: 2}, {outcome: 7}],
                 },
@@ -223,14 +236,14 @@ const dummyData: CompetitionSetupForm = {
                 {
                     duplicatable: false,
                     weighting: 1,
-                    teams: 2,
+                    teams: '2',
                     name: 'HF1',
                     outcomes: [{outcome: 1}, {outcome: 4}],
                 },
                 {
                     duplicatable: false,
                     weighting: 2,
-                    teams: 2,
+                    teams: '2',
                     name: 'HF2',
                     outcomes: [{outcome: 2}, {outcome: 3}],
                 },
@@ -243,7 +256,7 @@ const dummyData: CompetitionSetupForm = {
                 {
                     duplicatable: false,
                     weighting: 1,
-                    teams: 2,
+                    teams: '2',
                     name: 'F',
                     outcomes: [{outcome: 1}, {outcome: 2}],
                 },
@@ -261,7 +274,7 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
             groups: round.groups?.map(group => ({
                 duplicatable: group.duplicatable,
                 weighting: group.weighting,
-                teams: group.teams,
+                teams: Number(group.teams),
                 name: group.name,
                 matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
                 outcomes: group.outcomes.map(outcome => outcome.outcome),
@@ -275,7 +288,7 @@ function mapFormMatchToDtoMatch(formMatch: FormSetupMatch): CompetitionSetupMatc
     return {
         duplicatable: formMatch.duplicatable,
         weighting: formMatch.weighting,
-        teams: formMatch.teams,
+        teams: Number(formMatch.teams),
         name: formMatch.name,
         outcomes: formMatch.outcomes?.map(outcome => outcome.outcome),
     }
@@ -290,7 +303,7 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
             groups: round.groups?.map(group => ({
                 duplicatable: group.duplicatable,
                 weighting: group.weighting,
-                teams: group.teams,
+                teams: group.teams?.toString() ?? '',
                 name: group.name,
                 matches: group.matches.map(match => mapDtoMatchToFormMatch(match)),
                 outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
@@ -304,7 +317,7 @@ function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto): FormSetupMa
     return {
         duplicatable: matchDto.duplicatable,
         weighting: matchDto.weighting,
-        teams: matchDto.teams,
+        teams: matchDto.teams?.toString() ?? '',
         name: matchDto.name,
         outcomes: matchDto.outcomes?.map(outcome => ({outcome: outcome})),
     }

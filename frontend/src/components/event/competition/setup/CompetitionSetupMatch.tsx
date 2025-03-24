@@ -10,59 +10,66 @@ type Props = {
     round: {index: number; id: string}
     match: {index: number; id: string}
     removeMatch: (index: number) => void
+    findLowestMissingOutcome: (yetUnregisteredOutcomes: number[]) => number
+    teamCounts: {thisRoundWithoutThis: number; nextRound: number}
 }
 const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => {
+    const outcomesFormPath = ('rounds[' +
+        round.index +
+        '].matches[' +
+        match.index +
+        '].outcomes') as `rounds.${number}.matches.${number}.outcomes`
+
     const {fields: outcomeFields} = useFieldArray({
         control: formContext.control,
-        name: ('rounds[' +
-            round.index +
-            '].matches[' +
-            match.index +
-            '].outcomes') as `rounds.${number}.matches.${number}.outcomes`,
-        keyName: 'fieldId',
+        name: outcomesFormPath,
     })
 
-    const watchOutcomeFields = formContext.watch(
-        ('rounds[' +
-            round.index +
-            '].matches[' +
-            match.index +
-            '].outcomes') as `rounds.${number}.matches.${number}.outcomes`,
-    )
+    const watchOutcomeFields = formContext.watch(outcomesFormPath)
 
-    const controlledFields = outcomeFields.map((field, index) => ({
+    const controlledOutcomeFields = outcomeFields.map((field, index) => ({
         ...field,
         ...watchOutcomeFields?.[index],
     }))
 
-    const onTeamsChanged = (value: number | undefined) => {
+    const onTeamsChanged = (value: number) => {
         function setVal(v: {outcome: number}[]) {
-            formContext.setValue(
-                ('rounds[' +
-                    round.index +
-                    '].matches[' +
-                    match.index +
-                    '].outcomes') as `rounds.${number}.matches.${number}.outcomes`,
-                v,
-            )
+            formContext.setValue(outcomesFormPath, v)
         }
 
-        console.log('Changed', value, controlledFields)
-        if (value === undefined || value < 1 || controlledFields === undefined) {
-            setVal([]) // todo: depends on following round when it is undefined/left empty
-        } else if (value < controlledFields.length) {
-            setVal(controlledFields?.slice(0, value) ?? [])
-        } else if (value > controlledFields.length) {
+        if (value < 1) {
+            const teamsPath = ('rounds[' +
+                round.index +
+                '].matches[' +
+                match.index +
+                '].teams') as `rounds.${number}.matches.${number}.teams`
+            const teamsThisMatch = Number(formContext.getValues(teamsPath))
+
             const l: {outcome: number}[] = []
-            for (let i = 0; i < value - controlledFields.length; i++) {
-                l.push({outcome: 9})
+            for (
+                let i = 0;
+                i <
+                props.teamCounts.nextRound - props.teamCounts.thisRoundWithoutThis + teamsThisMatch;
+                i++
+            ) {
+                l.push({outcome: props.findLowestMissingOutcome(l.map(v => v.outcome))})
             }
-            setVal([...controlledFields, ...l])
+            setVal(l)
+        } else if (controlledOutcomeFields === undefined) {
+            setVal([])
+        } else if (value < controlledOutcomeFields.length) {
+            setVal(controlledOutcomeFields?.slice(0, value) ?? [])
+        } else if (value > controlledOutcomeFields.length) {
+            const l: {outcome: number}[] = []
+            for (let i = 0; i < value - controlledOutcomeFields.length; i++) {
+                l.push({outcome: props.findLowestMissingOutcome(l.map(v => v.outcome))})
+            }
+            setVal([...controlledOutcomeFields, ...l])
         }
     }
 
     return (
-        <Stack direction="column" spacing={1} key={`match-${round.id}-${match.id}`}>
+        <Stack direction="column" spacing={1}>
             <Controller
                 name={`rounds.${round.index}.matches.${match.index}.teams`}
                 control={formContext.control}
@@ -102,6 +109,9 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
                                 label={'Match weighting'}
                                 required
                                 integer={true}
+                                transform={{
+                                    output: value => Number(value.target.value),
+                                }}
                             />
                             <SwitchElement
                                 name={
@@ -121,9 +131,9 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
                             />
                         </Stack>
                         <Stack spacing={2} sx={{border: 1, borderColor: 'lightgrey', p: 1}}>
-                            {controlledFields.map((outcome, outcomeIndex) => (
+                            {controlledOutcomeFields.map((outcome, outcomeIndex) => (
                                 <FormInputNumber
-                                    key={`outcome-${round.id}-${match.id}-${outcomeIndex}-${outcome}`}
+                                    key={`${match.id}-${outcomeIndex}-${outcome}`}
                                     name={
                                         'rounds[' +
                                         round.index +
@@ -135,6 +145,9 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
                                     }
                                     label={'Outcome weighting'}
                                     required
+                                    transform={{
+                                        output: value => Number(value),
+                                    }}
                                 />
                             ))}
                         </Stack>
