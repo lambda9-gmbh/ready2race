@@ -11,11 +11,12 @@ create table competition_setup
 
 create table competition_setup_round
 (
-    id                uuid primary key,
-    competition_setup uuid    not null references competition_setup on delete cascade,
-    next_round        uuid references competition_setup_round,
-    name              text    not null,
-    required          boolean not null
+    id                  uuid primary key,
+    competition_setup   uuid    not null references competition_setup on delete cascade,
+    next_round          uuid references competition_setup_round,
+    name                text    not null,
+    required            boolean not null,
+    use_default_seeding boolean not null
 );
 
 create index on competition_setup_round (competition_setup);
@@ -37,7 +38,7 @@ create table competition_setup_group_statistic_evaluation
     rank_by_biggest         boolean not null,
     ignore_biggest_values   integer not null,
     ignore_smallest_values  integer not null,
-    as_average               boolean not null,
+    as_average              boolean not null,
     primary key (competition_setup_round, name)
 );
 

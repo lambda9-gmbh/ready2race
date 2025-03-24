@@ -10,8 +10,14 @@ type Props = {
     round: {index: number; id: string}
     match: {index: number; id: string}
     removeMatch: (index: number) => void
-    findLowestMissingOutcome: (yetUnregisteredOutcomes: number[]) => number
+    findLowestMissingOutcome: (
+        yetUnregisteredOutcomes: number[],
+        ignoreMatchIndex: number,
+    ) => number
     teamCounts: {thisRoundWithoutThis: number; nextRound: number}
+    onTeamsChanged: () => void
+    useDefaultSeeding: boolean
+    setOutcomeValuesForMatch: (matchIndex: number, outcomes: number[]) => void
 }
 const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => {
     const outcomesFormPath = ('rounds[' +
@@ -32,39 +38,22 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
         ...watchOutcomeFields?.[index],
     }))
 
-    const onTeamsChanged = (value: number) => {
-        function setVal(v: {outcome: number}[]) {
-            formContext.setValue(outcomesFormPath, v)
-        }
+    const onTeamsChanged = (teamsValue: number) => {
+        if (!props.useDefaultSeeding) {
+            const l: number[] = []
+            // if teamsValue is 0 (undefined) the necessaryTeamsValue is calculated from the needed teams for next round
+            const necessaryTeams =
+                teamsValue > 0
+                    ? teamsValue
+                    : props.teamCounts.nextRound - props.teamCounts.thisRoundWithoutThis
 
-        if (value < 1) {
-            const teamsPath = ('rounds[' +
-                round.index +
-                '].matches[' +
-                match.index +
-                '].teams') as `rounds.${number}.matches.${number}.teams`
-            const teamsThisMatch = Number(formContext.getValues(teamsPath))
+            for (let i = 0; i < necessaryTeams; i++) {
+                l.push(props.findLowestMissingOutcome(l, match.index))
+            }
 
-            const l: {outcome: number}[] = []
-            for (
-                let i = 0;
-                i <
-                props.teamCounts.nextRound - props.teamCounts.thisRoundWithoutThis + teamsThisMatch;
-                i++
-            ) {
-                l.push({outcome: props.findLowestMissingOutcome(l.map(v => v.outcome))})
-            }
-            setVal(l)
-        } else if (controlledOutcomeFields === undefined) {
-            setVal([])
-        } else if (value < controlledOutcomeFields.length) {
-            setVal(controlledOutcomeFields?.slice(0, value) ?? [])
-        } else if (value > controlledOutcomeFields.length) {
-            const l: {outcome: number}[] = []
-            for (let i = 0; i < value - controlledOutcomeFields.length; i++) {
-                l.push({outcome: props.findLowestMissingOutcome(l.map(v => v.outcome))})
-            }
-            setVal([...controlledOutcomeFields, ...l])
+            props.setOutcomeValuesForMatch(match.index, l)
+        } else {
+            props.onTeamsChanged()
         }
     }
 
@@ -146,7 +135,7 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
                                     label={'Outcome weighting'}
                                     required
                                     transform={{
-                                        output: value => Number(value),
+                                        output: value => Number(value.target.value),
                                     }}
                                 />
                             ))}

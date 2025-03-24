@@ -26,6 +26,7 @@ export type CompetitionSetupForm = {
             outcomes: Array<{outcome: number}>
         }>
         statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
+        useDefaultSeeding: boolean
     }>
 }
 type FormSetupMatch = {
@@ -100,7 +101,7 @@ const CompetitionSetup = () => {
                 ignoreMatchIndex === undefined
                     ? formWatch[roundIndex].matches
                     : formWatch[roundIndex].matches.filter((_, index) => index !== ignoreMatchIndex)
-            if(matches.length < 1){
+            if (matches.length < 1) {
                 return 0
             }
             return (
@@ -157,6 +158,7 @@ const CompetitionSetup = () => {
                                     name: '',
                                     required: false,
                                     matches: [],
+                                    useDefaultSeeding: true,
                                 })
                             }}
                             sx={{width: 1}}>
@@ -194,6 +196,7 @@ const dummyData: CompetitionSetupForm = {
                     ],
                 },
             ],
+            useDefaultSeeding: true,
         },
         {
             name: 'Viertelfinale',
@@ -228,6 +231,7 @@ const dummyData: CompetitionSetupForm = {
                     outcomes: [{outcome: 2}, {outcome: 7}],
                 },
             ],
+            useDefaultSeeding: true,
         },
         {
             name: 'Halbfinale',
@@ -248,6 +252,7 @@ const dummyData: CompetitionSetupForm = {
                     outcomes: [{outcome: 2}, {outcome: 3}],
                 },
             ],
+            useDefaultSeeding: true,
         },
         {
             name: 'Finale',
@@ -261,6 +266,7 @@ const dummyData: CompetitionSetupForm = {
                     outcomes: [{outcome: 1}, {outcome: 2}],
                 },
             ],
+            useDefaultSeeding: true,
         },
     ],
 }
@@ -274,12 +280,13 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
             groups: round.groups?.map(group => ({
                 duplicatable: group.duplicatable,
                 weighting: group.weighting,
-                teams: Number(group.teams),
+                teams: group.teams ? Number(group.teams) : undefined,
                 name: group.name,
                 matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
                 outcomes: group.outcomes.map(outcome => outcome.outcome),
             })),
             statisticEvaluations: round.statisticEvaluations,
+            useDefaultSeeding: round.useDefaultSeeding,
         })),
     }
 }
@@ -288,7 +295,7 @@ function mapFormMatchToDtoMatch(formMatch: FormSetupMatch): CompetitionSetupMatc
     return {
         duplicatable: formMatch.duplicatable,
         weighting: formMatch.weighting,
-        teams: Number(formMatch.teams),
+        teams: formMatch.teams ? Number(formMatch.teams) : undefined,
         name: formMatch.name,
         outcomes: formMatch.outcomes?.map(outcome => outcome.outcome),
     }
@@ -309,6 +316,7 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
                 outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
             })),
             statisticEvaluations: round.statisticEvaluations,
+            useDefaultSeeding: round.useDefaultSeeding,
         })),
     }
 }

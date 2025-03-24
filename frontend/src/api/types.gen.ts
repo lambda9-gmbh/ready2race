@@ -162,6 +162,7 @@ export type CompetitionSetupRoundDto = {
     matches?: Array<CompetitionSetupMatchDto>
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
+    useDefaultSeeding: boolean
 }
 
 export type CompetitionTemplateDto = {

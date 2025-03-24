@@ -2669,6 +2669,7 @@ components:
       required:
         - name
         - required
+        - useDefaultSeeding
       properties:
         name:
           type: string
@@ -2686,6 +2687,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
+        useDefaultSeeding:
+          type: boolean
 
     CompetitionSetupDto:
       type: object

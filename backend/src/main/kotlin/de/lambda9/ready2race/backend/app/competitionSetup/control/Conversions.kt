@@ -16,6 +16,7 @@ fun CompetitionSetupRoundDto.toRecord(competitionSetupId: UUID, nextRoundId: UUI
     nextRound = nextRoundId,
     name = name,
     required = required,
+    useDefaultSeeding = useDefaultSeeding
 )
 
 fun CompetitionSetupRoundRecord.toDto(
@@ -27,7 +28,8 @@ fun CompetitionSetupRoundRecord.toDto(
     required = required,
     matches = matches,
     groups = groups,
-    statisticEvaluations = statisticEvaluations
+    statisticEvaluations = statisticEvaluations,
+    useDefaultSeeding = useDefaultSeeding
 )
 
 fun CompetitionSetupGroupDto.toRecord() = CompetitionSetupGroupRecord(
