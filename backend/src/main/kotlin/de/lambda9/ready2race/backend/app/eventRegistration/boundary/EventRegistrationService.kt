@@ -1,20 +1,16 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
+import com.github.timrs2998.pdfbuilder.document
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.onNullFail
-import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.core.extensions.kio.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -236,5 +232,56 @@ object EventRegistrationService {
                 optionalFee
             )
         ).orDie()
+    }
+
+    fun downloadResult(
+        eventId: UUID,
+        remake: Boolean,
+        userId: UUID,
+    ): App<EventRegistrationError, ApiResponse.File> = KIO.comprehension {
+
+        val existing = if (remake) {
+            KIO.ok(null)
+        } else {
+            EventRegistrationResultDocumentRepo.getDownload(eventId).orDie()
+                .mapNotNull { it.name!! to it.data!! }
+        }
+
+        existing.onNull { generateResultDocument(eventId, userId) }
+            .map { (name, data) ->
+                ApiResponse.File(
+                    name = name,
+                    bytes = data,
+                )
+            }
+    }
+
+    private fun generateResultDocument(
+        eventId: UUID,
+        userId: UUID,
+    ): App<EventRegistrationError, Pair<String, ByteArray>> = KIO.comprehension {
+
+        val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
+
+        val pdDocument = document {
+            
+        }
+
+        val filename = "result.pdf"
+        val bytes = ByteArray(0)
+
+        val documentRecord = EventRegistrationResultDocumentRecord(
+            event = eventId,
+            name = filename,
+            createdAt = LocalDateTime.now(),
+        )
+        val id = !EventRegistrationResultDocumentRepo.create(documentRecord).orDie()
+        val dataRecord = EventRegistrationResultDocumentDataRecord(
+            resultDocument = id,
+            data = bytes,
+        )
+        !EventRegistrationResultDocumentDataRepo.create(dataRecord).orDie()
+
+        KIO.ok(filename to bytes)
     }
 }

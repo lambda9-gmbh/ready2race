@@ -16,6 +16,7 @@ fun interface ParamParser<A : Any> {
 
         val int get() = ParamParser { it.toInt() }
         val uuid get() = ParamParser { UUID.fromString(it) }
+        val boolean get() = ParamParser { it.toBooleanStrict() }
 
         inline fun <reified T : Any> json() = ParamParser { jsonMapper.readValue<T>(it) }
     }

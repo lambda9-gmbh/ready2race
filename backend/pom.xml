@@ -43,6 +43,7 @@
         <testcontainers.version>1.20.6</testcontainers.version>
         <simple.mail.version>8.12.4</simple.mail.version>
         <password4j.version>1.8.2</password4j.version>
+        <pdfbox.version>3.0.4</pdfbox.version>
     </properties>
     <dependencies>
         <dependency>
@@ -230,6 +231,13 @@
             <artifactId>password4j</artifactId>
             <version>${password4j.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
+        </dependency>
+
     </dependencies>
     <build>
         <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
@@ -397,20 +405,9 @@
 
     <repositories>
         <repository>
-            <id>lambda9_repository</id>
-            <url>https://repository.lambda9.de/repository/maven-public/</url>
-        </repository>
-
-        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>lambda9_repository</id>
-            <url>https://repository.lambda9.de/repository/maven-public/</url>
-        </pluginRepository>
-    </pluginRepositories>
 
 </project>
