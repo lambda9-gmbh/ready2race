@@ -9,7 +9,7 @@ import {
     GridSortModel,
     GridValidRowModel,
 } from '@mui/x-data-grid'
-import {useState} from 'react'
+import {ReactNode, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
@@ -17,16 +17,23 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
 import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {Alert, Box, Button, TextField, Typography} from '@mui/material'
+import {Alert, Box, Button, ButtonGroup, Stack, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {ApiError, Pagination, Resource} from '@api/types.gen.ts'
+import {ApiError, Pagination, Privilege, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
     GetError extends ApiError,
     DeleteError extends ApiError,
 > = BaseEntityTableProps<Entity> & ExtendedEntityTableProps<Entity, GetError, DeleteError>
+
+type CustomTableAction = {
+    icon?: ReactNode
+    label: string
+    onClick: () => void
+    privilege?: Privilege
+}
 
 type ExtendedEntityTableProps<
     Entity extends GridValidRowModel,
@@ -41,7 +48,8 @@ type ExtendedEntityTableProps<
         signal: AbortSignal,
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, GetError, false>
-    customActions?: (entity: Entity) => EntityTableAction[]
+    customTableActions?: CustomTableAction[]
+    customEntityActions?: (entity: Entity) => EntityTableAction[]
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
@@ -149,7 +157,8 @@ const EntityTableInternal = <
     initialSort,
     columns,
     dataRequest,
-    customActions = () => [],
+    customTableActions = [],
+    customEntityActions = () => [],
     linkColumn,
     gridProps,
     withSearch = true,
@@ -195,7 +204,7 @@ const EntityTableInternal = <
             field: 'actions',
             type: 'actions' as 'actions',
             getActions: (params: GridRowParams<Entity>) => [
-                ...customActions(params.row)
+                ...customEntityActions(params.row)
                     .map(action => {
                         const {privilege} = action.props
                         delete action.props.privilege
@@ -279,14 +288,25 @@ const EntityTableInternal = <
                                 }}
                             />
                         )}
-                        {crud.create && options.entityCreate && (
-                            <Button
-                                variant={'outlined'}
-                                startIcon={<Add />}
-                                onClick={() => openDialog()}>
-                                {t('entity.add.action', {entity: entityName})}
-                            </Button>
-                        )}
+                        <Stack direction={'row'} spacing={1}>
+                            {customTableActions.map((a, i) => (
+                                <Button
+                                    key={`custom-action-${i}`}
+                                    variant={'outlined'}
+                                    startIcon={a.icon}
+                                    onClick={a.onClick}>
+                                    {a.label}
+                                </Button>
+                            ))}
+                            {crud.create && options.entityCreate && (
+                                <Button
+                                    variant={'outlined'}
+                                    startIcon={<Add />}
+                                    onClick={() => openDialog()}>
+                                    {t('entity.add.action', {entity: entityName})}
+                                </Button>
+                            )}
+                        </Stack>
                     </Box>
                     <Box sx={{display: 'flex', flexDirection: 'column'}}>
                         <DataGrid

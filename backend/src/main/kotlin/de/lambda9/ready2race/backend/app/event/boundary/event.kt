@@ -5,8 +5,10 @@ import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
-import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
+import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
+import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
@@ -41,6 +43,8 @@ fun Route.event() {
             competition()
             eventRegistration()
             eventDocument()
+            participantRequirementForEvent()
+            participantForEvent()
 
             get {
                 call.respondComprehension {

@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumen
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
+import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import io.ktor.server.application.*
 import io.ktor.server.plugins.swagger.*
@@ -28,6 +29,7 @@ fun Application.configureRouting() {
             participant()
             namedParticipant()
             fee()
+            participantRequirement()
             competitionCategory()
             competitionTemplate()
             captcha()

@@ -223,6 +223,29 @@ import type {
     DeleteDocumentTypeData,
     DeleteDocumentTypeError,
     DeleteDocumentTypeResponse,
+    GetParticipantRequirementsForEventData,
+    GetParticipantRequirementsForEventError,
+    GetParticipantRequirementsForEventResponse,
+    CheckParticipantRequirementsForEventData,
+    CheckParticipantRequirementsForEventError,
+    CheckParticipantRequirementsForEventResponse,
+    GetActiveParticipantRequirementsForEventData,
+    GetActiveParticipantRequirementsForEventError,
+    GetActiveParticipantRequirementsForEventResponse,
+    GetParticipantsForEventData,
+    GetParticipantsForEventError,
+    GetParticipantsForEventResponse,
+    UpdateParticipantRequirementData,
+    UpdateParticipantRequirementError,
+    UpdateParticipantRequirementResponse,
+    DeleteParticipantRequirementData,
+    DeleteParticipantRequirementError,
+    DeleteParticipantRequirementResponse,
+    AddParticipantRequirementData,
+    AddParticipantRequirementError,
+    AddParticipantRequirementResponse,
+    GetParticipantRequirementsError,
+    GetParticipantRequirementsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1065,5 +1088,114 @@ export const deleteDocumentType = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/eventDocumentType/{eventDocumentTypeId}',
+    })
+}
+
+export const getParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantRequirementsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantRequirementsForEventResponse,
+        GetParticipantRequirementsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement',
+    })
+}
+
+export const checkParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckParticipantRequirementsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CheckParticipantRequirementsForEventResponse,
+        CheckParticipantRequirementsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/participantRequirement',
+    })
+}
+
+export const getActiveParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetActiveParticipantRequirementsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetActiveParticipantRequirementsForEventResponse,
+        GetActiveParticipantRequirementsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/active',
+    })
+}
+
+export const getParticipantsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantsForEventResponse,
+        GetParticipantsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant',
+    })
+}
+
+export const updateParticipantRequirement = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateParticipantRequirementData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateParticipantRequirementResponse,
+        UpdateParticipantRequirementError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/participantRequirement/{participantRequirementId}',
+    })
+}
+
+export const deleteParticipantRequirement = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteParticipantRequirementData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteParticipantRequirementResponse,
+        DeleteParticipantRequirementError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/participantRequirement/{participantRequirementId}',
+    })
+}
+
+export const addParticipantRequirement = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddParticipantRequirementData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddParticipantRequirementResponse,
+        AddParticipantRequirementError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/participantRequirement',
+    })
+}
+
+export const getParticipantRequirements = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantRequirementsResponse,
+        GetParticipantRequirementsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/participantRequirement',
     })
 }

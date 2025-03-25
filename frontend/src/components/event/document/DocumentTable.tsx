@@ -8,8 +8,8 @@ import {eventIndexRoute} from '@routes'
 import {Download} from '@mui/icons-material'
 import {useRef} from 'react'
 import {Link} from '@mui/material'
-import {useFeedback} from "@utils/hooks.ts";
-import {useTranslation} from "react-i18next";
+import {useFeedback} from '@utils/hooks.ts'
+import {useTranslation} from 'react-i18next'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -67,7 +67,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
         })
         const anchor = downloadRef.current
 
-        if(error){
+        if (error) {
             feedback.error(t('event.document.download.error'))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
@@ -78,7 +78,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
         }
     }
 
-    const customActions = (entity: EventDocumentDto): EntityTableAction[] => [
+    const customEntityActions = (entity: EventDocumentDto): EntityTableAction[] => [
         <GridActionsCellItem
             icon={<Download />}
             label={t('event.document.download.download')}
@@ -99,7 +99,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
-                customActions={customActions}
+                customEntityActions={customEntityActions}
             />
         </>
     )
