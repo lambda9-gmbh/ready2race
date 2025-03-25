@@ -75,8 +75,8 @@ object CompetitionSetupService {
             }
 
             if (!round.matches.isNullOrEmpty()) {
-                round.matches.forEach { match ->
-                    val matchRecord = match.toRecord(roundRecord.id, null)
+                round.matches.forEachIndexed { index, match ->
+                    val matchRecord = match.toRecord(index, roundRecord.id, null)
                     records.matches.add(matchRecord)
 
                     if (match.outcomes != null) {
@@ -84,12 +84,12 @@ object CompetitionSetupService {
                     }
                 }
             } else if (!round.groups.isNullOrEmpty()) {
-                round.groups.forEach { group ->
-                    val groupRecord = group.toRecord()
+                round.groups.forEachIndexed { index, group ->
+                    val groupRecord = group.toRecord(index)
                     records.groups.add(groupRecord)
 
                     group.matches.forEach { match ->
-                        val matchRecord = match.toRecord(roundRecord.id, groupRecord.id)
+                        val matchRecord = match.toRecord(index, roundRecord.id, groupRecord.id)
                         records.matches.add(matchRecord)
                     }
 

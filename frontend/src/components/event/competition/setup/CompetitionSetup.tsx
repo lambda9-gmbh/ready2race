@@ -20,7 +20,7 @@ export type CompetitionSetupForm = {
         groups?: Array<{
             duplicatable: boolean
             weighting: number
-            teams?: string
+            teams: string
             name?: string
             matches: Array<FormSetupMatch>
             outcomes: Array<{outcome: number}>
@@ -32,9 +32,10 @@ export type CompetitionSetupForm = {
 type FormSetupMatch = {
     duplicatable: boolean
     weighting: number
-    teams?: string // Has to be string because the is no transform function for the TextField
+    teams: string // String to have to option of leaving the field empty ('') without actually having the value be undefined
     name?: string
     outcomes?: Array<{outcome: number}>
+    position: number // Will be translated to the array order in the dto
 }
 
 const CompetitionSetup = () => {
@@ -182,7 +183,7 @@ const dummyData: CompetitionSetupForm = {
                 {
                     duplicatable: false,
                     weighting: 1,
-                    teams: undefined,
+                    teams: '',
                     name: undefined,
                     outcomes: [
                         {outcome: 1},
@@ -194,6 +195,7 @@ const dummyData: CompetitionSetupForm = {
                         {outcome: 7},
                         {outcome: 8},
                     ],
+                    position: 0,
                 },
             ],
             useDefaultSeeding: true,
@@ -208,6 +210,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'VF1',
                     outcomes: [{outcome: 1}, {outcome: 8}],
+                    position: 0,
                 },
                 {
                     duplicatable: false,
@@ -215,6 +218,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'VF2',
                     outcomes: [{outcome: 4}, {outcome: 5}],
+                    position: 1,
                 },
                 {
                     duplicatable: false,
@@ -222,6 +226,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'VF3',
                     outcomes: [{outcome: 3}, {outcome: 6}],
+                    position: 2,
                 },
                 {
                     duplicatable: false,
@@ -229,6 +234,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'VF4',
                     outcomes: [{outcome: 2}, {outcome: 7}],
+                    position: 3,
                 },
             ],
             useDefaultSeeding: true,
@@ -243,6 +249,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'HF1',
                     outcomes: [{outcome: 1}, {outcome: 4}],
+                    position: 0,
                 },
                 {
                     duplicatable: false,
@@ -250,6 +257,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'HF2',
                     outcomes: [{outcome: 2}, {outcome: 3}],
+                    position: 1,
                 },
             ],
             useDefaultSeeding: true,
@@ -264,6 +272,7 @@ const dummyData: CompetitionSetupForm = {
                     teams: '2',
                     name: 'F',
                     outcomes: [{outcome: 1}, {outcome: 2}],
+                    position: 0,
                 },
             ],
             useDefaultSeeding: true,
@@ -276,11 +285,13 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
         rounds: form.rounds.map(round => ({
             name: round.name,
             required: round.required,
-            matches: round.matches?.map(match => mapFormMatchToDtoMatch(match)),
+            matches: round.matches
+                ?.sort(v => v.position)
+                .map(match => mapFormMatchToDtoMatch(match)),
             groups: round.groups?.map(group => ({
                 duplicatable: group.duplicatable,
                 weighting: group.weighting,
-                teams: group.teams ? Number(group.teams) : undefined,
+                teams: group.teams !== '' ? Number(group.teams) : undefined,
                 name: group.name,
                 matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
                 outcomes: group.outcomes.map(outcome => outcome.outcome),
@@ -295,7 +306,7 @@ function mapFormMatchToDtoMatch(formMatch: FormSetupMatch): CompetitionSetupMatc
     return {
         duplicatable: formMatch.duplicatable,
         weighting: formMatch.weighting,
-        teams: formMatch.teams ? Number(formMatch.teams) : undefined,
+        teams: formMatch.teams !== '' ? Number(formMatch.teams) : undefined,
         name: formMatch.name,
         outcomes: formMatch.outcomes?.map(outcome => outcome.outcome),
     }
@@ -306,13 +317,13 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
         rounds: dto.rounds.map(round => ({
             name: round.name,
             required: round.required,
-            matches: round.matches?.map(match => mapDtoMatchToFormMatch(match)),
+            matches: round.matches?.map((match, index) => mapDtoMatchToFormMatch(match, index)),
             groups: round.groups?.map(group => ({
                 duplicatable: group.duplicatable,
                 weighting: group.weighting,
                 teams: group.teams?.toString() ?? '',
                 name: group.name,
-                matches: group.matches.map(match => mapDtoMatchToFormMatch(match)),
+                matches: group.matches.map((match, index) => mapDtoMatchToFormMatch(match, index)),
                 outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
             })),
             statisticEvaluations: round.statisticEvaluations,
@@ -321,12 +332,13 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
     }
 }
 
-function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto): FormSetupMatch {
+function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto, order: number): FormSetupMatch {
     return {
         duplicatable: matchDto.duplicatable,
         weighting: matchDto.weighting,
         teams: matchDto.teams?.toString() ?? '',
         name: matchDto.name,
         outcomes: matchDto.outcomes?.map(outcome => ({outcome: outcome})),
+        position: order,
     }
 }

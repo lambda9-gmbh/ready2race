@@ -27,7 +27,8 @@ create table competition_setup_group
     duplicatable boolean not null,
     weighting    integer not null,
     teams        integer,
-    name         text
+    name         text,
+    position     integer not null
 );
 
 create table competition_setup_group_statistic_evaluation
@@ -54,6 +55,7 @@ create table competition_setup_match
     weighting               integer not null,
     teams                   integer,
     name                    text,
+    position                integer not null,
     constraint chk_not_duplicatable_and_in_group check (
         not (duplicatable is true and competition_setup_group is not null)
         )

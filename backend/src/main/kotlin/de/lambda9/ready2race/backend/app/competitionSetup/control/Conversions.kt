@@ -32,12 +32,13 @@ fun CompetitionSetupRoundRecord.toDto(
     useDefaultSeeding = useDefaultSeeding
 )
 
-fun CompetitionSetupGroupDto.toRecord() = CompetitionSetupGroupRecord(
+fun CompetitionSetupGroupDto.toRecord(index: Int) = CompetitionSetupGroupRecord(
     id = UUID.randomUUID(),
     duplicatable = duplicatable,
     weighting = weighting,
     teams = teams,
     name = name,
+    position = index
 )
 
 fun CompetitionSetupGroupRecord.toDto(matches: List<CompetitionSetupMatchDto>, outcomes: List<Int>) =
@@ -69,7 +70,7 @@ fun CompetitionSetupGroupStatisticEvaluationRecord.toDto() = CompetitionSetupGro
     asAverage = asAverage,
 )
 
-fun CompetitionSetupMatchDto.toRecord(competitionSetupRoundId: UUID, competitionSetupGroupId: UUID?) =
+fun CompetitionSetupMatchDto.toRecord(index: Int, competitionSetupRoundId: UUID, competitionSetupGroupId: UUID?) =
     CompetitionSetupMatchRecord(
         id = UUID.randomUUID(),
         competitionSetupRound = competitionSetupRoundId,
@@ -78,6 +79,7 @@ fun CompetitionSetupMatchDto.toRecord(competitionSetupRoundId: UUID, competition
         weighting = weighting,
         teams = teams,
         name = name,
+        position = index
     )
 
 fun CompetitionSetupMatchRecord.toDto(outcomes: List<Int>?) = CompetitionSetupMatchDto(
