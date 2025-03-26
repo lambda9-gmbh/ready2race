@@ -12,17 +12,19 @@ const FormInputLabel = (props: PropsWithChildren<Props>) => {
 
     return (
         <label>
-            <Stack direction="row" spacing={1} sx={{mb: props.horizontal ? undefined : 1}}>
-                <Typography sx={{fontSize: '1.1rem'}}>{props.label}</Typography>
-                {!props.required && (
-                    <Typography
-                        className={'input-label-optional-text'}
-                        alignSelf="center"
-                        color="textSecondary">
-                        {` – ${t('common.form.optional')}`}
-                    </Typography>
-                )}
-            </Stack>
+            {props.label !== undefined && (
+                <Stack direction="row" spacing={1} sx={{mb: props.horizontal ? undefined : 1}}>
+                    <Typography sx={{fontSize: '1.1rem'}}>{props.label}</Typography>
+                    {!props.required && (
+                        <Typography
+                            className={'input-label-optional-text'}
+                            alignSelf="center"
+                            color="textSecondary">
+                            {` – ${t('common.form.optional')}`}
+                        </Typography>
+                    )}
+                </Stack>
+            )}
             {props.children}
         </label>
     )
