@@ -11,6 +11,7 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import {getCompetitionSetup, updateCompetitionSetup} from '@api/sdk.gen.ts'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {competitionSetupDummyData} from '@components/event/competition/setup/common.ts'
 
 export type CompetitionSetupForm = {
     rounds: Array<{
@@ -52,7 +53,7 @@ const CompetitionSetup = () => {
 
     const {
         fields: roundFields,
-        append: appendRound,
+        insert: insertRound,
         remove: removeRound,
     } = useFieldArray({
         control: formContext.control,
@@ -130,42 +131,46 @@ const CompetitionSetup = () => {
                     <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
                         Click to reset
                     </Button>
-                    <Button variant="outlined" onClick={() => formContext.reset(dummyData)}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => formContext.reset(competitionSetupDummyData)}>
                         Click for dummy data
                     </Button>
                     <SubmitButton label={'[todo] Save'} submitting={submitting} />
                 </Stack>
                 <Stack spacing={4} alignItems="center">
                     {roundFields.map((roundField, roundIndex) => (
-                        <CompetitionSetupRound
-                            key={roundField.id}
-                            round={{index: roundIndex, id: roundField.id}}
-                            formContext={formContext}
-                            removeRound={removeRound}
-                            teamCounts={{
-                                thisRound: getTeamCountForRound(roundIndex),
-                                nextRound: getTeamCountForRound(roundIndex + 1),
-                            }}
-                            getRoundTeamCountWithoutMatch={(ignoredMatchIndex: number) =>
-                                getTeamCountForRound(roundIndex, ignoredMatchIndex)
-                            }
-                        />
+                        <>
+                            <CompetitionSetupRound
+                                key={roundField.id}
+                                round={{index: roundIndex, id: roundField.id}}
+                                formContext={formContext}
+                                removeRound={removeRound}
+                                teamCounts={{
+                                    thisRound: getTeamCountForRound(roundIndex),
+                                    nextRound: getTeamCountForRound(roundIndex + 1),
+                                }}
+                                getRoundTeamCountWithoutMatch={(ignoredMatchIndex: number) =>
+                                    getTeamCountForRound(roundIndex, ignoredMatchIndex)
+                                }
+                            />
+                            <Box>
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => {
+                                        insertRound(roundIndex + 1, {
+                                            name: '',
+                                            required: false,
+                                            matches: [],
+                                            useDefaultSeeding: true,
+                                        })
+                                    }}
+                                    sx={{width: 1}}>
+                                    Add Round
+                                </Button>
+                            </Box>
+                        </>
                     ))}
-                    <Box>
-                        <Button
-                            variant="outlined"
-                            onClick={() => {
-                                appendRound({
-                                    name: '',
-                                    required: false,
-                                    matches: [],
-                                    useDefaultSeeding: true,
-                                })
-                            }}
-                            sx={{width: 1}}>
-                            Add Round
-                        </Button>
-                    </Box>
                 </Stack>
             </Box>
         </FormContainer>
@@ -173,112 +178,6 @@ const CompetitionSetup = () => {
 }
 
 export default CompetitionSetup
-
-const dummyData: CompetitionSetupForm = {
-    rounds: [
-        {
-            name: 'Vorrunde',
-            required: true,
-            matches: [
-                {
-                    duplicatable: false,
-                    weighting: 1,
-                    teams: '',
-                    name: undefined,
-                    outcomes: [
-                        {outcome: 1},
-                        {outcome: 2},
-                        {outcome: 3},
-                        {outcome: 4},
-                        {outcome: 5},
-                        {outcome: 6},
-                        {outcome: 7},
-                        {outcome: 8},
-                    ],
-                    position: 0,
-                },
-            ],
-            useDefaultSeeding: true,
-        },
-        {
-            name: 'Viertelfinale',
-            required: false,
-            matches: [
-                {
-                    duplicatable: false,
-                    weighting: 1,
-                    teams: '2',
-                    name: 'VF1',
-                    outcomes: [{outcome: 1}, {outcome: 8}],
-                    position: 0,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 4,
-                    teams: '2',
-                    name: 'VF2',
-                    outcomes: [{outcome: 4}, {outcome: 5}],
-                    position: 1,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 3,
-                    teams: '2',
-                    name: 'VF3',
-                    outcomes: [{outcome: 3}, {outcome: 6}],
-                    position: 2,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 2,
-                    teams: '2',
-                    name: 'VF4',
-                    outcomes: [{outcome: 2}, {outcome: 7}],
-                    position: 3,
-                },
-            ],
-            useDefaultSeeding: true,
-        },
-        {
-            name: 'Halbfinale',
-            required: false,
-            matches: [
-                {
-                    duplicatable: false,
-                    weighting: 1,
-                    teams: '2',
-                    name: 'HF1',
-                    outcomes: [{outcome: 1}, {outcome: 4}],
-                    position: 0,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 2,
-                    teams: '2',
-                    name: 'HF2',
-                    outcomes: [{outcome: 2}, {outcome: 3}],
-                    position: 1,
-                },
-            ],
-            useDefaultSeeding: true,
-        },
-        {
-            name: 'Finale',
-            required: true,
-            matches: [
-                {
-                    duplicatable: false,
-                    weighting: 1,
-                    teams: '2',
-                    name: 'F',
-                    outcomes: [{outcome: 1}, {outcome: 2}],
-                    position: 0,
-                },
-            ],
-            useDefaultSeeding: true,
-        },
-    ],
-}
 
 function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
     return {

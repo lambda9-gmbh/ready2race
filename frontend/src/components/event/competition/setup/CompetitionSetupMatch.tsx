@@ -16,13 +16,9 @@ type Props = {
         ignoreMatchIndex: number,
     ) => number
     teamCounts: {thisRoundWithoutThis: number; nextRound: number}
-    updateRoundOutcomes: (
-        roundIndex: number,
-        repeatForPreviousRound: boolean,
-        nextRoundTeams: number,
-    ) => void
+    updateRoundOutcomes: (repeatForPreviousRound: boolean, nextRoundTeams: number) => void
     useDefaultSeeding: boolean
-    setOutcomeValuesForMatch: (roundIndex: number, matchIndex: number, outcomes: number[]) => void
+    setOutcomeValuesForMatch: (matchIndex: number, outcomes: number[]) => void
     updatePreviousRoundOutcomes: (thisRoundTeams: number) => void
     roundHasDuplicatable: boolean
     moveMatch: (from: number, to: number) => void
@@ -58,12 +54,12 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
                 outcomes.push(props.findLowestMissingOutcome(outcomes, match.index))
             }
 
-            props.setOutcomeValuesForMatch(round.index, match.index, outcomes)
+            props.setOutcomeValuesForMatch(match.index, outcomes)
             props.updatePreviousRoundOutcomes(
                 outcomes.length + props.teamCounts.thisRoundWithoutThis,
             )
         } else {
-            props.updateRoundOutcomes(round.index, true, props.teamCounts.nextRound)
+            props.updateRoundOutcomes(true, props.teamCounts.nextRound)
         }
     }
 
