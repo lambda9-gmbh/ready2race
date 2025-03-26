@@ -140,9 +140,8 @@ const CompetitionSetup = () => {
                 </Stack>
                 <Stack spacing={4} alignItems="center">
                     {roundFields.map((roundField, roundIndex) => (
-                        <>
+                        <Stack spacing={2} key={roundField.id} sx={{alignItems: 'center'}}>
                             <CompetitionSetupRound
-                                key={roundField.id}
                                 round={{index: roundIndex, id: roundField.id}}
                                 formContext={formContext}
                                 removeRound={removeRound}
@@ -154,7 +153,7 @@ const CompetitionSetup = () => {
                                     getTeamCountForRound(roundIndex, ignoredMatchIndex)
                                 }
                             />
-                            <Box>
+                            <Box sx={{maxWidth: 200, }}>
                                 <Button
                                     variant="outlined"
                                     onClick={() => {
@@ -169,7 +168,7 @@ const CompetitionSetup = () => {
                                     Add Round
                                 </Button>
                             </Box>
-                        </>
+                        </Stack>
                     ))}
                 </Stack>
             </Box>

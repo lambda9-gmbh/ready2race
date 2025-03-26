@@ -7,7 +7,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
     getWeightings,
-    setOutcomeValuesForMatch,
+    setOutcomeValuesForMatch, sortBackToOriginalOrder,
     updateOutcomes,
     updatePreviousRoundOutcomes,
 } from '@components/event/competition/setup/common.ts'
@@ -76,6 +76,51 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     const roundHasDuplicatable = watchMatchFields?.find(v => v.duplicatable === true) !== undefined
 
+
+    // Todo: Clean this up and merge with function in common
+    const watchPrevRoundMatches =
+        round.index > 0
+            ? formContext.watch(`rounds[${round.index - 1}].matches` as `rounds.${number}.matches`)
+            : undefined
+
+    const prevRoundOutcomes = watchPrevRoundMatches
+        ?.map(v => (v.outcomes ? v.outcomes?.map(outcome => outcome.outcome).flat() : []))
+        .flat()
+        .sort((a, b) => a - b)
+        .slice(0, teamCounts.thisRound)
+
+    const highest = 20 // TODO
+
+    const matchups: number[][] = []
+    for (let i = 0; i < (watchMatchFields?.length ?? 0); i++) {
+        matchups.push([])
+    }
+    if (prevRoundOutcomes !== undefined && watchMatchFields !== undefined) {
+        let participantsTaken = 0
+        for (let i = 0; i < highest; i++) {
+            const addToList = (matchIndex: number) => {
+                if (Number(watchMatchFields[matchIndex].teams) > matchups[matchIndex].length) {
+                    matchups[matchIndex].push(prevRoundOutcomes[participantsTaken])
+                    participantsTaken += 1
+                }
+            }
+
+            if (i % 2 === 0) {
+                for (let j = 0; j < watchMatchFields.length; j++) {
+                    addToList(j)
+                }
+            } else {
+                for (let j = watchMatchFields.length - 1; j > -1; j--) {
+                    addToList(j)
+                }
+            }
+        }
+    }
+
+    const matchesSortedByWeighting = getWeightings(watchMatchFields?.length ?? 0)
+
+    const matchupsInOriginalOrder = watchMatchFields ? sortBackToOriginalOrder(watchMatchFields, matchesSortedByWeighting, matchups).map(v => v.result) : []
+
     return (
         <Controller
             name={'rounds[' + round.index + '].useDefaultSeeding'}
@@ -117,7 +162,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         spacing={2}
                         justifyContent="space-between"
                         sx={{alignItems: 'center'}}>
-                        <Stack direction="row" spacing={2} alignItems={'center'}>
+                        <Stack direction="row" spacing={2}>
                             {matchFields.map((matchField, matchIndex) => (
                                 <CompetitionSetupMatch
                                     key={matchField.id}
@@ -149,9 +194,10 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     moveMatch={moveMatch}
                                     maxMatchIndex={matchFields.length - 1}
                                     weighting={weightings[matchIndex]}
+                                    participants={matchupsInOriginalOrder[matchIndex]}
                                 />
                             ))}
-                            <Box>
+                            <Box sx={{alignSelf: 'center'}}>
                                 <Button
                                     variant="outlined"
                                     onClick={() => {

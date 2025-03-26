@@ -2,8 +2,7 @@ import {CompetitionSetupForm} from '@components/event/competition/setup/Competit
 import {UseFormReturn} from 'react-hook-form-mui'
 
 export const getWeightings = (matchCount: number) => {
-
-    if(matchCount === 1) return [1]
+    if (matchCount === 1) return [1]
 
     const rounds = Math.ceil(Math.log(matchCount) / Math.log(2))
 
@@ -31,7 +30,7 @@ export const getWeightings = (matchCount: number) => {
         matches = roundMatches
     }
 
-    return matches.flat()
+    return matches.flat().filter(v => v !== -1)
 }
 
 export const setOutcomeValuesForMatch = (
@@ -62,31 +61,19 @@ export const updateOutcomes = (
     repeatForPreviousRound: boolean,
     nextRoundTeams: number,
 ) => {
-
     const matches = formContext.getValues(
         `rounds[${roundIndex}].matches` as `rounds.${number}.matches`,
     )
 
     // The matches are ordered by their weighting
-    const matchesSortedByWeighting = getWeightings(matches?.length ?? 0).filter(v => v !== -1)
-    console.log("foo1", matchesSortedByWeighting)
-    const matchesInCorrectWeightingPos = matchesSortedByWeighting.map(v =>
-        matches?.find((_, matchIndex) => matchIndex === v - 1),
-    )
-    console.log("foo2", matchesInCorrectWeightingPos)
-    // This list contains the original indexes of "matches" but is ordered by weighting
-    const originalIndexesInWeightingPosOrder = matchesSortedByWeighting
-        .map(v => matches?.findIndex((_, matchIndex) => matchIndex === v - 1))
-        .filter(v => v !== undefined)
+    const matchesSortedByWeighting = getWeightings(matches?.length ?? 0)
+    const matchesInCorrectWeightingPos = matchesSortedByWeighting.map(v => matches?.[v - 1])
 
-    console.log("foo3", originalIndexesInWeightingPosOrder)
+
     const matchListHasUndefined =
         matchesInCorrectWeightingPos.filter(v => v === undefined).length > 0
 
-    console.log("foo4", matchListHasUndefined)
     const sortedMatches = matchesInCorrectWeightingPos.filter(v => v !== undefined)
-
-    console.log("foo5", sortedMatches)
 
     if (!matchListHasUndefined) {
         const highestDefinedTeamCount =
@@ -144,6 +131,7 @@ export const updateOutcomes = (
 
                 const teamCountUndefined = Number(sortedMatches[j].teams) === 0
 
+                // If the match does not yet have the desired amount of outcomes and there are still outcomes to be handed out - based on next round
                 if (
                     (Number(sortedMatches[j].teams) > newOutcomes[j].outcomes.length ||
                         teamCountUndefined) &&
@@ -165,24 +153,40 @@ export const updateOutcomes = (
             }
         }
 
-        const outcomesRevertedToNormalOrder = originalIndexesInWeightingPosOrder
-            .map(v => newOutcomes.find((_, matchIndex) => matchIndex === v))
-            .filter(v => v !== undefined)
+
+        const outcomesRevertedToNormalOrder = matches ? sortBackToOriginalOrder(matches, matchesSortedByWeighting, newOutcomes) : []
 
         outcomesRevertedToNormalOrder?.forEach((val, matchIndex) => {
-            setOutcomeValuesForMatch(formContext, roundIndex, matchIndex, val.outcomes)
+            setOutcomeValuesForMatch(formContext, roundIndex, matchIndex, val.result.outcomes)
         })
 
         // To prevent infinit loop because of the recursive call
         if (repeatForPreviousRound) {
             const newTeamsCount = outcomesRevertedToNormalOrder
                 .flat()
-                .map(v => v.outcomes)
+                .map(v => v.result.outcomes)
                 .flat().length
             updatePreviousRoundOutcomes(formContext, roundIndex - 1, newTeamsCount)
-            console.log("updating", roundIndex)
         }
     }
+}
+
+export const sortBackToOriginalOrder = <T>(
+    original: any[],
+    sortedByWeighting: number[],
+    newArray: T[],
+) => {
+    // This list contains the original indexes of "matches" but is ordered by weighting
+    const originalIndexes = sortedByWeighting.map(v =>
+        original.findIndex((_, index) => index === v - 1),
+    )
+
+    const orderToOutcomes: {
+        order: number
+        result: T
+    }[] = originalIndexes.map((v, i) => ({order: v, result: newArray[i]}))
+
+    return orderToOutcomes.sort((a, b) => a.order - b.order).map(v => ({result: v.result}))
 }
 
 export const updatePreviousRoundOutcomes = (
