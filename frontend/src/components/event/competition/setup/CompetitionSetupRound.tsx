@@ -1,4 +1,10 @@
-import {CheckboxElement, Controller, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
+import {
+    CheckboxElement,
+    Controller,
+    FieldArrayWithId,
+    useFieldArray,
+    UseFormReturn,
+} from 'react-hook-form-mui'
 import {Box, Button, Checkbox, FormControlLabel, Stack, Typography} from '@mui/material'
 import {CompetitionSetupForm} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
@@ -6,8 +12,9 @@ import {useEffect} from 'react'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
+    getHighestTeamsCount,
     getWeightings,
-    setOutcomeValuesForMatch, sortBackToOriginalOrder,
+    setOutcomeValuesForMatch,
     updateOutcomes,
     updatePreviousRoundOutcomes,
 } from '@components/event/competition/setup/common.ts'
@@ -37,8 +44,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     })
 
     const watchMatchFields = formContext.watch(`rounds.${round.index}.matches`)
-
-    const weightings = getWeightings(watchMatchFields?.length ?? 0).filter(v => v !== -1)
 
     // When appending or removing a match, the outcomes are updated (if default seeding is active)
     useEffect(() => {
@@ -76,8 +81,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     const roundHasDuplicatable = watchMatchFields?.find(v => v.duplicatable === true) !== undefined
 
-
-    // Todo: Clean this up and merge with function in common
     const watchPrevRoundMatches =
         round.index > 0
             ? formContext.watch(`rounds[${round.index - 1}].matches` as `rounds.${number}.matches`)
@@ -89,7 +92,12 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         .sort((a, b) => a - b)
         .slice(0, teamCounts.thisRound)
 
-    const highest = 20 // TODO
+    const highest = watchMatchFields
+        ? getHighestTeamsCount(
+              watchMatchFields.map(v => v.teams),
+              teamCounts.nextRound,
+          )
+        : 0
 
     const matchups: number[][] = []
     for (let i = 0; i < (watchMatchFields?.length ?? 0); i++) {
@@ -117,9 +125,22 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         }
     }
 
-    const matchesSortedByWeighting = getWeightings(watchMatchFields?.length ?? 0)
+    type MatchInfo = {
+        originalIndex: number
+        matchField: FieldArrayWithId<CompetitionSetupForm, `rounds.${number}.matches`, 'id'>
+        participants: number[]
+    }
 
-    const matchupsInOriginalOrder = watchMatchFields ? sortBackToOriginalOrder(watchMatchFields, matchesSortedByWeighting, matchups).map(v => v.result) : []
+    const matchInfos: MatchInfo[] = watchMatchFields
+        ? watchMatchFields.map((_, index) => ({
+              originalIndex: index,
+              matchField: matchFields[index],
+              participants: matchups[index],
+          }))
+        : []
+
+    // This is just for the display - in the fieldArray, the weightings are in order (1,2,3...)
+    const matchInfosSortedByWeighting = getWeightings(matchInfos.length).map(v => matchInfos[v - 1])
 
     return (
         <Controller
@@ -163,17 +184,21 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         justifyContent="space-between"
                         sx={{alignItems: 'center'}}>
                         <Stack direction="row" spacing={2}>
-                            {matchFields.map((matchField, matchIndex) => (
+                            {matchInfosSortedByWeighting.map((matchInfo, _) => (
                                 <CompetitionSetupMatch
-                                    key={matchField.id}
+                                    key={matchInfo.matchField.id}
                                     formContext={formContext}
                                     round={round}
-                                    match={{index: matchIndex, id: matchField.id}}
-                                    removeMatch={() => removeMatch(matchIndex)}
+                                    match={{
+                                        index: matchInfo.originalIndex,
+                                        id: matchInfo.matchField.id,
+                                    }}
+                                    removeMatch={() => removeMatch(matchInfo.originalIndex)}
                                     findLowestMissingOutcome={findLowestMissingOutcome}
                                     teamCounts={{
-                                        thisRoundWithoutThis:
-                                            props.getRoundTeamCountWithoutMatch(matchIndex),
+                                        thisRoundWithoutThis: props.getRoundTeamCountWithoutMatch(
+                                            matchInfo.originalIndex,
+                                        ),
                                         nextRound: teamCounts.nextRound,
                                     }}
                                     updateRoundOutcomes={(...props) =>
@@ -193,8 +218,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     roundHasDuplicatable={roundHasDuplicatable}
                                     moveMatch={moveMatch}
                                     maxMatchIndex={matchFields.length - 1}
-                                    weighting={weightings[matchIndex]}
-                                    participants={matchupsInOriginalOrder[matchIndex]}
+                                    participants={matchInfo.participants}
                                 />
                             ))}
                             <Box sx={{alignSelf: 'center'}}>

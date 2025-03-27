@@ -65,54 +65,11 @@ export const updateOutcomes = (
         `rounds[${roundIndex}].matches` as `rounds.${number}.matches`,
     )
 
-    // The matches are ordered by their weighting
-    const matchesSortedByWeighting = getWeightings(matches?.length ?? 0)
-    const matchesInCorrectWeightingPos = matchesSortedByWeighting.map(v => matches?.[v - 1])
-
-
-    const matchListHasUndefined =
-        matchesInCorrectWeightingPos.filter(v => v === undefined).length > 0
-
-    const sortedMatches = matchesInCorrectWeightingPos.filter(v => v !== undefined)
-
-    if (!matchListHasUndefined) {
-        const highestDefinedTeamCount =
-            sortedMatches.length > 0
-                ? Number(
-                      sortedMatches
-                          .map(v => v.teams)
-                          .reduce((acc, val) => {
-                              if (val === undefined) {
-                                  return acc
-                              } else if (acc === undefined) {
-                                  return val
-                              } else {
-                                  return Number(val) > Number(acc) ? val : acc
-                              }
-                          }),
-                  )
-                : 0
-
-        const definedTeamsMatches = sortedMatches.filter(v => v.teams !== '')
-        const definedTeamsCount =
-            definedTeamsMatches !== undefined && definedTeamsMatches.length > 0
-                ? definedTeamsMatches?.map(v => Number(v.teams)).reduce((acc, val) => +acc + +val)
-                : 0
-
-        const teamsForUndefinedTeamsMatches = nextRoundTeams - (definedTeamsCount ?? 0)
-
-        const undefinedTeamsMatchesCount = sortedMatches.filter(v => v.teams === '').length
-        const teamsForEachUndefinedTeamsMatch =
-            undefinedTeamsMatchesCount !== undefined && undefinedTeamsMatchesCount !== 0
-                ? Math.ceil(teamsForUndefinedTeamsMatches / undefinedTeamsMatchesCount)
-                : 0
-
-        // The highest "Teams" value a match in this round has. Matches with undefined teams are also taken into account, based on the following round
-        // This value defines, how often the for loop goes through each match to distribute the outcomes
-        const highestTeamsValue =
-            highestDefinedTeamCount > teamsForEachUndefinedTeamsMatch
-                ? highestDefinedTeamCount
-                : teamsForEachUndefinedTeamsMatch
+    if (matches) {
+        const highestTeamsValue = getHighestTeamsCount(
+            matches.map(v => v.teams),
+            nextRoundTeams,
+        )
 
         const getLowest = (taken: number[]) => {
             const set = new Set(taken)
@@ -123,17 +80,18 @@ export const updateOutcomes = (
             return i
         }
 
-        const newOutcomes: {outcomes: number[]}[] = sortedMatches.map(() => ({outcomes: []})) ?? []
+        const newOutcomes: {outcomes: number[]}[] = matches.map(() => ({outcomes: []})) ?? []
         const takenOutcomes: number[] = []
         for (let i = 0; i < highestTeamsValue; i++) {
             const addOutcomeToMatch = (j: number) => {
                 const lowest = getLowest(takenOutcomes)
 
-                const teamCountUndefined = Number(sortedMatches[j].teams) === 0
+                const teamCountUndefined = Number(matches[j].teams) === 0
+                const undefinedTeamsMatchesCount = matches.filter(v => v.teams === '').length
 
                 // If the match does not yet have the desired amount of outcomes and there are still outcomes to be handed out - based on next round
                 if (
-                    (Number(sortedMatches[j].teams) > newOutcomes[j].outcomes.length ||
+                    (Number(matches[j].teams) > newOutcomes[j].outcomes.length ||
                         teamCountUndefined) &&
                     (undefinedTeamsMatchesCount === 0 || takenOutcomes.length < nextRoundTeams)
                 ) {
@@ -153,40 +111,57 @@ export const updateOutcomes = (
             }
         }
 
-
-        const outcomesRevertedToNormalOrder = matches ? sortBackToOriginalOrder(matches, matchesSortedByWeighting, newOutcomes) : []
-
-        outcomesRevertedToNormalOrder?.forEach((val, matchIndex) => {
-            setOutcomeValuesForMatch(formContext, roundIndex, matchIndex, val.result.outcomes)
+        newOutcomes?.forEach((val, matchIndex) => {
+            setOutcomeValuesForMatch(formContext, roundIndex, matchIndex, val.outcomes)
         })
 
         // To prevent infinit loop because of the recursive call
         if (repeatForPreviousRound) {
-            const newTeamsCount = outcomesRevertedToNormalOrder
+            const newTeamsCount = newOutcomes
                 .flat()
-                .map(v => v.result.outcomes)
+                .map(v => v.outcomes)
                 .flat().length
             updatePreviousRoundOutcomes(formContext, roundIndex - 1, newTeamsCount)
         }
     }
 }
 
-export const sortBackToOriginalOrder = <T>(
-    original: any[],
-    sortedByWeighting: number[],
-    newArray: T[],
-) => {
-    // This list contains the original indexes of "matches" but is ordered by weighting
-    const originalIndexes = sortedByWeighting.map(v =>
-        original.findIndex((_, index) => index === v - 1),
-    )
+export const getHighestTeamsCount = (teams: string[], nextRoundTeams: number) => {
+    const highestDefinedTeamCount =
+        teams.length > 0
+            ? Number(
+                  teams.reduce((acc, val) => {
+                      if (val === undefined) {
+                          return acc
+                      } else if (acc === undefined) {
+                          return val
+                      } else {
+                          return Number(val) > Number(acc) ? val : acc
+                      }
+                  }),
+              )
+            : 0
 
-    const orderToOutcomes: {
-        order: number
-        result: T
-    }[] = originalIndexes.map((v, i) => ({order: v, result: newArray[i]}))
+    const definedTeamsMatches = teams.filter(v => v !== '')
 
-    return orderToOutcomes.sort((a, b) => a.order - b.order).map(v => ({result: v.result}))
+    const definedTeamsCount =
+        definedTeamsMatches.length > 0
+            ? definedTeamsMatches?.map(v => Number(v)).reduce((acc, val) => +acc + +val)
+            : 0
+
+    const teamsForUndefinedTeamsMatches = nextRoundTeams - (definedTeamsCount ?? 0)
+
+    const undefinedTeamsMatchesCount = teams.filter(v => v === '').length
+    const teamsForEachUndefinedTeamsMatch =
+        undefinedTeamsMatchesCount !== 0
+            ? Math.ceil(teamsForUndefinedTeamsMatches / undefinedTeamsMatchesCount)
+            : 0
+
+    // The highest "Teams" value a match in this round has. Matches with undefined teams are also taken into account, based on the following round
+    // This value defines, how often the for loop goes through each match to distribute the outcomes
+    return highestDefinedTeamCount > teamsForEachUndefinedTeamsMatch
+        ? highestDefinedTeamCount
+        : teamsForEachUndefinedTeamsMatch
 }
 
 export const updatePreviousRoundOutcomes = (

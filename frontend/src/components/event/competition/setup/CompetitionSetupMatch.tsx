@@ -8,7 +8,7 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 type Props = {
     formContext: UseFormReturn<CompetitionSetupForm>
     round: {index: number; id: string}
-    match: {index: number; id: string}
+    match: {index: number; id: string} // The index is the ORIGINAL index that refers to the fieldArray - It may differ from the displayed order
     removeMatch: (index: number) => void
     findLowestMissingOutcome: (
         yetUnregisteredOutcomes: number[],
@@ -22,7 +22,6 @@ type Props = {
     roundHasDuplicatable: boolean
     moveMatch: (from: number, to: number) => void
     maxMatchIndex: number
-    weighting: number
     participants: number[]
 }
 const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => {
@@ -89,7 +88,7 @@ const CompetitionSetupMatch = ({formContext, round, match, ...props}: Props) => 
                     p: 2,
                     boxSizing: 'border-box',
                 }}>
-                <Typography sx={{textAlign: 'center'}}>Weighting: {props.weighting}</Typography>
+                <Typography sx={{textAlign: 'center'}}>Weighting: {match.index + 1}</Typography>
                 <Typography sx={{textAlign: 'center'}}>{matchupString}</Typography>
                 <Divider />
                 <FormInputText
