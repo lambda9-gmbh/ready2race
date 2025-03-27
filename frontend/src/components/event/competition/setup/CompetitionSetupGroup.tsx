@@ -4,9 +4,28 @@ import {
     onTeamsChanged,
 } from '@components/event/competition/setup/common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {useFieldArray} from 'react-hook-form-mui'
+import CompetitionSetupOutcomes from '@components/event/competition/setup/CompetitionSetupOutcomes.tsx'
 
 type Props = CompetitionSetupMatchOrGroupProps & {}
 const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
+    const outcomesFormPath =
+        `rounds[${roundIndex}].groups[${fieldInfo.index}].outcomes` as `rounds.${number}.groups.${number}.outcomes`
+
+    const {fields: outcomeFields} = useFieldArray({
+        control: formContext.control,
+        name: outcomesFormPath,
+    })
+
+    const watchOutcomes = formContext.watch(outcomesFormPath)
+
+    const controlledOutcomeFields = outcomeFields.map((field, index) => ({
+        ...field,
+        ...watchOutcomes?.[index],
+    }))
+
+    // Todo: Group-Matches - Otherwise the Groups won't load from the Backend since the groups are only attached to the matches
+
     return (
         <Stack
             spacing={2}
@@ -29,6 +48,12 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                         props.teamCounts,
                     )
                 }
+            />
+            <CompetitionSetupOutcomes
+                fieldInfo={fieldInfo}
+                roundIndex={roundIndex}
+                controlledOutcomeFields={controlledOutcomeFields}
+                useDefaultSeeding={props.useDefaultSeeding}
             />
         </Stack>
     )

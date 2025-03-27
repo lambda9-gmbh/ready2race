@@ -1,5 +1,5 @@
 import {CheckboxElement, useFieldArray} from 'react-hook-form-mui'
-import {Divider, Grid2, Stack, Typography} from '@mui/material'
+import {Divider, Stack, Typography} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
@@ -7,6 +7,7 @@ import {
     CompetitionSetupMatchOrGroupProps,
     onTeamsChanged,
 } from '@components/event/competition/setup/common.ts'
+import CompetitionSetupOutcomes from "@components/event/competition/setup/CompetitionSetupOutcomes.tsx";
 
 type Props = CompetitionSetupMatchOrGroupProps
 const CompetitionSetupMatch = ({
@@ -82,37 +83,12 @@ const CompetitionSetupMatch = ({
             />
             <Divider />
             <Typography variant="subtitle1">Resulting Seeds</Typography>
-            {props.useDefaultSeeding ? (
-                <Grid2 container sx={{width: 1, justifyContent: 'space-between'}}>
-                    {controlledOutcomeFields.map((outcome, outcomeIndex) => (
-                        <Grid2 key={outcome.id} size={6} sx={{maxWidth: 100}}>
-                            <Typography>
-                                #{outcomeIndex + 1}: {outcome.outcome}
-                            </Typography>
-                        </Grid2>
-                    ))}
-                </Grid2>
-            ) : (
-                <Stack spacing={2} sx={{border: 1, borderColor: 'lightgrey', p: 1}}>
-                    {controlledOutcomeFields.map((outcome, outcomeIndex) => (
-                        <Stack
-                            key={outcome.id}
-                            direction="row"
-                            spacing={1}
-                            sx={{alignItems: 'center'}}>
-                            <Typography>#{outcomeIndex + 1}</Typography>
-                            <FormInputNumber
-                                key={`${fieldInfo.id}-${outcomeIndex}-${outcome}`}
-                                name={`rounds[${roundIndex}].matches[${fieldInfo.index}].outcomes[${outcomeIndex}].outcome`}
-                                required
-                                transform={{
-                                    output: value => Number(value.target.value),
-                                }}
-                            />
-                        </Stack>
-                    ))}
-                </Stack>
-            )}
+            <CompetitionSetupOutcomes
+                fieldInfo={fieldInfo}
+                roundIndex={roundIndex}
+                controlledOutcomeFields={controlledOutcomeFields}
+                useDefaultSeeding={props.useDefaultSeeding}
+            />
         </Stack>
     )
 }
