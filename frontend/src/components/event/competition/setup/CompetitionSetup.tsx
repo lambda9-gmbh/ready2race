@@ -17,8 +17,8 @@ export type CompetitionSetupForm = {
     rounds: Array<{
         name: string
         required: boolean
-        matches?: Array<FormSetupMatch>
-        groups?: Array<{
+        matches: Array<FormSetupMatch>
+        groups: Array<{
             duplicatable: boolean
             weighting: number
             teams: string
@@ -28,6 +28,7 @@ export type CompetitionSetupForm = {
         }>
         statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
         useDefaultSeeding: boolean
+        isGroupRound: boolean
     }>
 }
 type FormSetupMatch = {
@@ -93,35 +94,79 @@ const CompetitionSetup = () => {
 
     const formWatch = formContext.watch('rounds')
 
-    function getTeamCountForRound(roundIndex: number, ignoreMatchIndex?: number) {
-        if (
-            formWatch[roundIndex]?.matches !== undefined &&
-            formWatch[roundIndex]?.matches.length > 0
-        ) {
-            // If ignoreMatchIndex is provided, the team value of that match will not be added
-            const matches =
-                ignoreMatchIndex === undefined
-                    ? formWatch[roundIndex].matches
-                    : formWatch[roundIndex].matches.filter((_, index) => index !== ignoreMatchIndex)
-            if (matches.length < 1) {
-                return 0
-            }
-            return (
-                matches
-                    .map(v => (v.teams !== undefined ? Number(v.teams) : undefined))
-                    .reduce((acc, val) => {
-                        if (val === undefined) {
-                            return acc
-                        } else if (acc === undefined) {
-                            return val
-                        } else {
-                            return +acc + +val
-                        }
-                    }) ?? 0
-            )
-        } else {
+    // Returns the Team Count for the specified round (not always THIS round)
+    // IgnoredIndex can be provided to keep one match or group out of the calculation
+    // Returns 0 when the Team Count is unknown (Undefined team field(s)) or an error occurred
+    function getTeamCountForRound(
+        roundIndex: number,
+        isGroupRound: boolean,
+        ignoredIndex?: number,
+    ) {
+        if (formWatch[roundIndex] === undefined || roundIndex > formWatch.length - 1) {
             return 0
         }
+        const arrayLength = isGroupRound
+            ? formWatch[roundIndex].groups.length
+            : formWatch[roundIndex].matches.length
+
+        if (arrayLength < 1) {
+            return 0
+        }
+
+        // If ignoredIndex is provided, the team value of that match/group will not be added
+        const teams = isGroupRound
+            ? (ignoredIndex === undefined
+                  ? formWatch[roundIndex].groups
+                  : formWatch[roundIndex].groups.filter((_, index) => index !== ignoredIndex)
+              ).map(g => g.teams)
+            : (ignoredIndex === undefined
+                  ? formWatch[roundIndex].matches
+                  : formWatch[roundIndex].matches.filter((_, index) => index !== ignoredIndex)
+              ).map(m => m.teams)
+
+        if (teams.length < 1) {
+            return 0
+        }
+
+        if (teams.find(v => v === '') !== undefined) {
+            return 0
+        }
+
+        return (
+            teams
+                .map(v => Number(v))
+                .reduce((acc, val) => {
+                    if (val === undefined) {
+                        return acc
+                    } else if (acc === undefined) {
+                        return val
+                    } else {
+                        return +acc + +val
+                    }
+                }) ?? 0
+        )
+    }
+
+    const AddRoundButton = ({addIndex}: {addIndex: number}) => {
+        return (
+            <Box sx={{maxWidth: 200}}>
+                <Button
+                    variant="outlined"
+                    onClick={() => {
+                        insertRound(addIndex, {
+                            name: '',
+                            required: false,
+                            matches: [],
+                            groups: [],
+                            useDefaultSeeding: true,
+                            isGroupRound: false,
+                        })
+                    }}
+                    sx={{width: 1}}>
+                    Add Round
+                </Button>
+            </Box>
+        )
     }
 
     return (
@@ -139,6 +184,7 @@ const CompetitionSetup = () => {
                     <SubmitButton label={'[todo] Save'} submitting={submitting} />
                 </Stack>
                 <Stack spacing={4} alignItems="center">
+                    <AddRoundButton addIndex={0} />
                     {roundFields.map((roundField, roundIndex) => (
                         <Stack spacing={2} key={roundField.id} sx={{alignItems: 'center'}}>
                             <CompetitionSetupRound
@@ -146,28 +192,20 @@ const CompetitionSetup = () => {
                                 formContext={formContext}
                                 removeRound={removeRound}
                                 teamCounts={{
-                                    thisRound: getTeamCountForRound(roundIndex),
-                                    nextRound: getTeamCountForRound(roundIndex + 1),
+                                    thisRound: getTeamCountForRound(
+                                        roundIndex,
+                                        formWatch[roundIndex]?.isGroupRound ?? false,
+                                    ),
+                                    nextRound: getTeamCountForRound(
+                                        roundIndex + 1,
+                                        formWatch[roundIndex + 1]?.isGroupRound ?? false,
+                                    ),
                                 }}
-                                getRoundTeamCountWithoutMatch={(ignoredMatchIndex: number) =>
-                                    getTeamCountForRound(roundIndex, ignoredMatchIndex)
+                                getRoundTeamCountWithoutThis={(ignoredIndex, isGroupRound) =>
+                                    getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
                                 }
                             />
-                            <Box sx={{maxWidth: 200, }}>
-                                <Button
-                                    variant="outlined"
-                                    onClick={() => {
-                                        insertRound(roundIndex + 1, {
-                                            name: '',
-                                            required: false,
-                                            matches: [],
-                                            useDefaultSeeding: true,
-                                        })
-                                    }}
-                                    sx={{width: 1}}>
-                                    Add Round
-                                </Button>
-                            </Box>
+                            <AddRoundButton addIndex={roundIndex + 1} />
                         </Stack>
                     ))}
                 </Stack>
@@ -183,17 +221,19 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
         rounds: form.rounds.map(round => ({
             name: round.name,
             required: round.required,
-            matches: round.matches
-                ?.sort(v => v.position)
-                .map(match => mapFormMatchToDtoMatch(match)),
-            groups: round.groups?.map(group => ({
-                duplicatable: group.duplicatable,
-                weighting: group.weighting,
-                teams: group.teams !== '' ? Number(group.teams) : undefined,
-                name: group.name,
-                matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
-                outcomes: group.outcomes.map(outcome => outcome.outcome),
-            })),
+            matches: !round.isGroupRound
+                ? round.matches?.sort(v => v.position).map(match => mapFormMatchToDtoMatch(match))
+                : undefined,
+            groups: round.isGroupRound
+                ? round.groups?.map(group => ({
+                      duplicatable: group.duplicatable,
+                      weighting: group.weighting,
+                      teams: group.teams !== '' ? Number(group.teams) : undefined,
+                      name: group.name,
+                      matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
+                      outcomes: group.outcomes.map(outcome => outcome.outcome),
+                  }))
+                : undefined,
             statisticEvaluations: round.statisticEvaluations,
             useDefaultSeeding: round.useDefaultSeeding,
         })),
@@ -215,17 +255,22 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
         rounds: dto.rounds.map(round => ({
             name: round.name,
             required: round.required,
-            matches: round.matches?.map((match, index) => mapDtoMatchToFormMatch(match, index)),
-            groups: round.groups?.map(group => ({
-                duplicatable: group.duplicatable,
-                weighting: group.weighting,
-                teams: group.teams?.toString() ?? '',
-                name: group.name,
-                matches: group.matches.map((match, index) => mapDtoMatchToFormMatch(match, index)),
-                outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
-            })),
+            matches:
+                round.matches?.map((match, index) => mapDtoMatchToFormMatch(match, index)) ?? [],
+            groups:
+                round.groups?.map(group => ({
+                    duplicatable: group.duplicatable,
+                    weighting: group.weighting,
+                    teams: group.teams?.toString() ?? '',
+                    name: group.name,
+                    matches: group.matches.map((match, index) =>
+                        mapDtoMatchToFormMatch(match, index),
+                    ),
+                    outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
+                })) ?? [],
             statisticEvaluations: round.statisticEvaluations,
             useDefaultSeeding: round.useDefaultSeeding,
+            isGroupRound: round.groups !== undefined,
         })),
     }
 }
