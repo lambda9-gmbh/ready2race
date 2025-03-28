@@ -76,6 +76,15 @@ export const setOutcomeValuesForMatchOrGroup = (
     })
 }
 
+export const getLowest = (taken: number[], startIndex: number) => {
+    const set = new Set(taken)
+    let i = startIndex
+    while (set.has(i)) {
+        i++
+    }
+    return i
+}
+
 // Updates the outcome fields by default seeding - Depends on the "Teams" values of this round
 export const updateOutcomes = (
     formContext: UseFormReturn<CompetitionSetupForm>,
@@ -103,21 +112,12 @@ export const updateOutcomes = (
             nextRoundTeams,
         )
 
-        const getLowest = (taken: number[]) => {
-            const set = new Set(taken)
-            let i = 1
-            while (set.has(i)) {
-                i++
-            }
-            return i
-        }
-
         const newOutcomes: {outcomes: number[]}[] =
             groupsOrMatches.map(() => ({outcomes: []})) ?? []
         const takenOutcomes: number[] = []
         for (let i = 0; i < highestTeamsValue; i++) {
             const addOutcome = (j: number) => {
-                const lowest = getLowest(takenOutcomes)
+                const lowest = getLowest(takenOutcomes, 1)
 
                 const teamCountUndefined = Number(groupsOrMatches[j].teams) === 0
                 const undefinedTeamsCount = groupsOrMatches.filter(v => v.teams === '').length
@@ -143,8 +143,6 @@ export const updateOutcomes = (
                 }
             }
         }
-
-        console.log("Update Outcomes",roundIndex, newOutcomes)
 
         newOutcomes?.forEach((val, index) => {
             setOutcomeValuesForMatchOrGroup(
@@ -324,6 +322,7 @@ export const competitionSetupDummyData: CompetitionSetupForm = {
                         },
                     ],
                     outcomes: [{outcome: 1}, {outcome: 4}, {outcome: 5}, {outcome: 8}],
+                    matchTeams: 2,
                 },
                 {
                     duplicatable: false,
@@ -375,6 +374,7 @@ export const competitionSetupDummyData: CompetitionSetupForm = {
                         },
                     ],
                     outcomes: [{outcome: 2}, {outcome: 3}, {outcome: 6}, {outcome: 7}],
+                    matchTeams: 2,
                 },
             ],
             useDefaultSeeding: true,

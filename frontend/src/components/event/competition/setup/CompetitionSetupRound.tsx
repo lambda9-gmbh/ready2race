@@ -8,6 +8,7 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
     CompetitionSetupMatchOrGroupProps,
     getHighestTeamsCount,
+    getLowest,
     getMatchupsString,
     getWeightings,
     setOutcomeValuesForMatchOrGroup,
@@ -59,6 +60,16 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     })
 
     const watchGroups = formContext.watch(`rounds.${round.index}.groups`)
+
+    const getLowestGroupMatchPosition = (takenPositions?: number[]) => {
+        return getLowest(
+            [
+                ...watchGroups.map(g => g.matches.map(m => m.position)).flat(),
+                ...(takenPositions ?? []),
+            ],
+            1,
+        )
+    }
 
     // When appending or removing a match/group, the outcomes are updated (if default seeding is active)
     useEffect(() => {
@@ -180,7 +191,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         participants: !watchIsGroupRound ? matchups[index] : [],
     }))
 
-    // This is just for the display - in the fieldArray, the weightings are in order (1,2,3...)
+    // This is just for the display. in the fieldArray the weightings are in order (1,2,3...)
     const matchInfosSortedByWeighting = getWeightings(matchInfos.length).map(v => matchInfos[v - 1])
 
     const groupInfos: MatchOrGroupInfo[] = watchGroups.map((_, index) => ({
@@ -189,8 +200,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         participants: watchIsGroupRound ? matchups[index] : [],
     }))
 
-    // This is just for the display - in the fieldArray, the weightings are in order (1,2,3...)
-
+    // This is just for the display. in the fieldArray the weightings are in order (1,2,3...)
     const groupInfosSortedByWeighting = getWeightings(groupInfos.length).map(v => groupInfos[v - 1])
 
     const getGroupOrMatchProps = (
@@ -348,9 +358,12 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                             key={groupInfo.fieldId}
                                             direction="column"
                                             spacing={1}
-                                            sx={{maxWidth: 600}}>
+                                            sx={{maxWidth: 450}}>
                                             <CompetitionSetupGroup
                                                 {...getGroupOrMatchProps(true, groupInfo)}
+                                                getLowestGroupMatchPosition={
+                                                    getLowestGroupMatchPosition
+                                                }
                                             />
                                             <Button
                                                 variant="outlined"
@@ -372,6 +385,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                     name: '',
                                                     matches: [],
                                                     outcomes: appendPreparedOutcomes,
+                                                    matchTeams: 2,
                                                 })
                                             }}
                                             sx={{width: 1}}>

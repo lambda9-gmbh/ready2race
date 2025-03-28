@@ -21,10 +21,11 @@ export type CompetitionSetupForm = {
         groups: Array<{
             duplicatable: boolean
             weighting: number
-            teams: string
+            teams: string // Todo: Change this back to number (string is no longer necessary)
             name?: string
             matches: Array<FormSetupMatch>
             outcomes: Array<{outcome: number}>
+            matchTeams: number
         }>
         statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
         useDefaultSeeding: boolean
@@ -34,7 +35,7 @@ export type CompetitionSetupForm = {
 type FormSetupMatch = {
     duplicatable: boolean
     weighting: number
-    teams: string // String to have to option of leaving the field empty ('') without actually having the value be undefined
+    teams: string // Todo: Change this back to number (string is no longer necessary) and make it nullable because of matchTeams is groups
     name?: string
     outcomes?: Array<{outcome: number}>
     position: number // Will be translated to the array order in the dto
@@ -230,7 +231,9 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
                       weighting: group.weighting,
                       teams: group.teams !== '' ? Number(group.teams) : undefined,
                       name: group.name,
-                      matches: group.matches.map(match => mapFormMatchToDtoMatch(match)),
+                      matches: group.matches.map(match =>
+                          mapFormMatchToDtoMatch(match, group.matchTeams),
+                      ),
                       outcomes: group.outcomes.map(outcome => outcome.outcome),
                   }))
                 : undefined,
@@ -240,11 +243,19 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
     }
 }
 
-function mapFormMatchToDtoMatch(formMatch: FormSetupMatch): CompetitionSetupMatchDto {
+function mapFormMatchToDtoMatch(
+    formMatch: FormSetupMatch,
+    setTeamsValue?: number,
+): CompetitionSetupMatchDto {
     return {
         duplicatable: formMatch.duplicatable,
         weighting: formMatch.weighting,
-        teams: formMatch.teams !== '' ? Number(formMatch.teams) : undefined,
+        teams:
+            setTeamsValue === undefined // Groups provide a set value for the teams since all matches in one group need to have the same amount of participants
+                ? formMatch.teams !== ''
+                    ? Number(formMatch.teams)
+                    : undefined
+                : setTeamsValue,
         name: formMatch.name,
         outcomes: formMatch.outcomes?.map(outcome => outcome.outcome),
     }
@@ -267,6 +278,7 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
                         mapDtoMatchToFormMatch(match, index),
                     ),
                     outcomes: group.outcomes.map(outcome => ({outcome: outcome})),
+                    matchTeams: group.matches[0]?.teams ?? 0,
                 })) ?? [],
             statisticEvaluations: round.statisticEvaluations,
             useDefaultSeeding: round.useDefaultSeeding,
