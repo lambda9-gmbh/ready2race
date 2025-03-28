@@ -7,11 +7,11 @@ import {
 import {useFieldArray, useForm, useFormContext} from 'react-hook-form-mui'
 import {useCallback, useMemo, useState} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
-import {Box, IconButton, Stack, Typography} from '@mui/material'
+import {Alert, Box, IconButton, Stack, Typography} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {AutocompleteOption, BaseEntityDialogProps} from '@utils/types.ts'
 import {eventRoute} from '@routes'
-import {Delete} from '@mui/icons-material'
+import {Delete, Info} from '@mui/icons-material'
 import SelectFileButton from '@components/SelectFileButton.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -78,13 +78,13 @@ const FileSelection = () => {
                     Array.from(files).forEach(file => append({file}))
                 }}
                 accept={'.csv'}>
-                {t('event.participantRequirement.document.add')}
+                {t('common.form.selectFile')}
             </SelectFileButton>
         </Box>
     )
 }
 
-const ParticipantRequirementCheckForEventDialog = (
+const ParticipantRequirementCheckForEventUploadFileDialog = (
     props: BaseEntityDialogProps<ParticipantRequirementCheckForEventConfigDto>,
 ) => {
     const {t} = useTranslation()
@@ -116,7 +116,7 @@ const ParticipantRequirementCheckForEventDialog = (
                 if (error) {
                     feedback.error(
                         t('common.load.error.multiple.short', {
-                            entity: t('event.participantRequirement'),
+                            entity: t('participantRequirement.participantRequirement'),
                         }),
                     )
                 }
@@ -134,11 +134,11 @@ const ParticipantRequirementCheckForEventDialog = (
     )
 
     const defaultValues: ParticipantRequirementCheckForEventForm = {
-        requirementId: '',
+        requirementId: requirements[0]?.id ?? '',
         separator: ';',
         charset: 'UTF-8',
-        firstnameColName: '',
-        lastnameColName: '',
+        firstnameColName: t('entity.firstname'),
+        lastnameColName: t('entity.lastname'),
         files: [],
     }
 
@@ -146,10 +146,15 @@ const ParticipantRequirementCheckForEventDialog = (
 
     const onOpen = useCallback(() => {
         formContext.reset(defaultValues)
-    }, [])
+    }, [requirements])
 
     return (
-        <EntityDialog {...props} formContext={formContext} onOpen={onOpen} addAction={addAction}>
+        <EntityDialog
+            {...props}
+            formContext={formContext}
+            onOpen={onOpen}
+            addAction={addAction}
+            title={t('event.participantRequirement.checkUpload')}>
             <Stack spacing={4}>
                 <FormInputAutocomplete
                     loading={requirementsPending}
@@ -157,7 +162,7 @@ const ParticipantRequirementCheckForEventDialog = (
                     name={'requirementId'}
                     options={requirements}
                     matchId={true}
-                    label={t('event.participantRequirement.requirement')}
+                    label={t('participantRequirement.participantRequirement')}
                 />
                 <FormInputLabel label={t('event.participantRequirement.file')} required={true}>
                     <FileSelection />
@@ -166,7 +171,6 @@ const ParticipantRequirementCheckForEventDialog = (
                 <FormInputText
                     name="separator"
                     label={t('event.participantRequirement.separator')}
-                    maxLength={1}
                 />
                 <FormInputText
                     name="firstnameColName"
@@ -190,6 +194,9 @@ const ParticipantRequirementCheckForEventDialog = (
                     name="requirementColName"
                     label={t('event.participantRequirement.requirementColName')}
                 />
+                <Alert icon={<Info />} severity={'info'}>
+                    {t('event.participantRequirement.info')}
+                </Alert>
                 <FormInputText
                     name="requirementIsValidValue"
                     label={t('event.participantRequirement.requirementIsValidValue')}
@@ -199,4 +206,4 @@ const ParticipantRequirementCheckForEventDialog = (
     )
 }
 
-export default ParticipantRequirementCheckForEventDialog
+export default ParticipantRequirementCheckForEventUploadFileDialog

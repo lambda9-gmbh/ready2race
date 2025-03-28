@@ -14,7 +14,9 @@ const ConfigurationPage = () => {
     )
 
     const participantRequirementAdministrationProps =
-        useEntityAdministration<ParticipantRequirementDto>(t('event.document.type.documentType'))
+        useEntityAdministration<ParticipantRequirementDto>(
+            t('participantRequirement.participantRequirement'),
+        )
 
     return (
         <Stack spacing={4}>
@@ -25,7 +27,7 @@ const ConfigurationPage = () => {
             <DocumentTypeDialog {...documentTypeAdministrationProps.dialog} />
             <ParticipantRequirementTable
                 {...participantRequirementAdministrationProps.table}
-                title={t('event.participantRequirements')}
+                title={t('participantRequirement.participantRequirements')}
             />
             <ParticipantRequirementDialog {...participantRequirementAdministrationProps.dialog} />
         </Stack>

@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventConfigDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventSort
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementUpsertDto
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
@@ -81,6 +82,17 @@ fun Route.participantRequirementForEvent() {
                     val params = !pagination<ParticipantRequirementForEventSort>()
                     val eventId = !pathParam("eventId", uuid)
                     ParticipantRequirementService.getActiveForEvent(params, eventId)
+                }
+            }
+        }
+
+        route("/approve") {
+            post {
+                call.respondComprehension {
+                    val (user) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val eventId = !pathParam("eventId", uuid)
+                    val body = !receiveKIO(ParticipantRequirementCheckForEventUpsertDto.example)
+                    ParticipantRequirementService.approveRequirementForEvent(eventId, body, user.id!!)
                 }
             }
         }

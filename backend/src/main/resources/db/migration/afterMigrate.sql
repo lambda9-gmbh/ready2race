@@ -229,14 +229,14 @@ create view participant_for_event as
 select er.event                                                              as event_id,
        c.id                                                                  as club_id,
        c.name                                                                as club_name,
-       p.id                                                                  as participant_id,
+       p.id                                                                  as id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
        p.external,
        p.external_club_name,
-       coalesce(array_agg(distinct pr.name) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
+       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration
@@ -244,5 +244,5 @@ from event_registration er
          join participant p on crnp.participant = p.id
          left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
          left join participant_requirement pr on phrfe.participant_requirement = pr.id
-group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name, pr.name
-order by c.name, p.firstname, p.lastname, pr.name;
+group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name
+order by c.name, p.firstname, p.lastname;

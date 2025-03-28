@@ -52,7 +52,7 @@ object ParticipantForEventRepo {
                             selectFrom(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT)
                                 .where(
                                     PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.EVENT.eq(this.EVENT_ID)
-                                        .and(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT.eq(this.PARTICIPANT_ID))
+                                        .and(PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT.eq(this.ID))
                                         .and(
                                             PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.PARTICIPANT_REQUIREMENT.eq(
                                                 participantRequirementId
@@ -65,6 +65,5 @@ object ParticipantForEventRepo {
         }
 
     }
-
 
 }

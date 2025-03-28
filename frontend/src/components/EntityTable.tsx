@@ -17,23 +17,16 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
 import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {Alert, Box, Button, ButtonGroup, Stack, TextField, Typography} from '@mui/material'
+import {Alert, Box, Button, Stack, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {ApiError, Pagination, Privilege, Resource} from '@api/types.gen.ts'
+import {ApiError, Pagination, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
     GetError extends ApiError,
     DeleteError extends ApiError,
 > = BaseEntityTableProps<Entity> & ExtendedEntityTableProps<Entity, GetError, DeleteError>
-
-type CustomTableAction = {
-    icon?: ReactNode
-    label: string
-    onClick: () => void
-    privilege?: Privilege
-}
 
 type ExtendedEntityTableProps<
     Entity extends GridValidRowModel,
@@ -48,7 +41,7 @@ type ExtendedEntityTableProps<
         signal: AbortSignal,
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, GetError, false>
-    customTableActions?: CustomTableAction[]
+    customTableActions?: ReactNode
     customEntityActions?: (entity: Entity) => EntityTableAction[]
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
@@ -157,7 +150,7 @@ const EntityTableInternal = <
     initialSort,
     columns,
     dataRequest,
-    customTableActions = [],
+    customTableActions,
     customEntityActions = () => [],
     linkColumn,
     gridProps,
@@ -175,7 +168,7 @@ const EntityTableInternal = <
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
 
-    const handleDeleteErrorGeneric = (error: DeleteError) => {
+    const handleDeleteErrorGeneric = (_: DeleteError) => {
         feedback.error(t('entity.delete.error', {entity: entityName}))
     }
 
@@ -289,15 +282,7 @@ const EntityTableInternal = <
                             />
                         )}
                         <Stack direction={'row'} spacing={1}>
-                            {customTableActions.map((a, i) => (
-                                <Button
-                                    key={`custom-action-${i}`}
-                                    variant={'outlined'}
-                                    startIcon={a.icon}
-                                    onClick={a.onClick}>
-                                    {a.label}
-                                </Button>
-                            ))}
+                            {customTableActions}
                             {crud.create && options.entityCreate && (
                                 <Button
                                     variant={'outlined'}

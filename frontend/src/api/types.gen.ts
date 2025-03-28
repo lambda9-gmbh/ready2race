@@ -503,16 +503,16 @@ export type ParticipantDto = {
 }
 
 export type ParticipantForEventDto = {
+    id: string
     clubId: string
     clubName: string
-    participantId: string
     firstname: string
     lastname: string
     year?: number | null
     gender: Gender
     external?: boolean | null
     externalClubName?: string | null
-    participantRequirementsChecked?: Array<string>
+    participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -525,6 +525,11 @@ export type ParticipantRequirementCheckForEventConfigDto = {
     clubColName?: string
     requirementColName?: string
     requirementIsValidValue?: string
+}
+
+export type ParticipantRequirementCheckForEventUpsertDto = {
+    requirementId: string
+    approvedParticipants: Array<string>
 }
 
 export type ParticipantRequirementDto = {
@@ -540,6 +545,11 @@ export type ParticipantRequirementForEventDto = {
     description?: string
     optional: boolean
     active: boolean
+}
+
+export type ParticipantRequirementReducedDto = {
+    id: string
+    name: string
 }
 
 export type ParticipantRequirementUpsertDto = {
@@ -1661,6 +1671,20 @@ export type CheckParticipantRequirementsForEventData = {
 export type CheckParticipantRequirementsForEventResponse = void
 
 export type CheckParticipantRequirementsForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type ApproveParticipantRequirementsForEventData = {
+    body: ParticipantRequirementCheckForEventUpsertDto
+    path: {
+        eventId: string
+    }
+}
+
+export type ApproveParticipantRequirementsForEventResponse = void
+
+export type ApproveParticipantRequirementsForEventError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError

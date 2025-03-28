@@ -1943,6 +1943,37 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/approve:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: approveParticipantRequirementsForEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequirementCheckForEventUpsertDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/active:
     parameters:
       - name: eventId
@@ -3246,6 +3277,18 @@ components:
         optional:
           type: boolean
 
+    ParticipantRequirementReducedDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
     ParticipantRequirementForEventDto:
       type: object
       required:
@@ -3304,6 +3347,21 @@ components:
           type: string
         requirementIsValidValue:
           type: string
+
+    ParticipantRequirementCheckForEventUpsertDto:
+      type: object
+      required:
+        - requirementId
+        - approvedParticipants
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        approvedParticipants:
+          type: array
+          items:
+            type: string
+            format: uuid
 
     # captcha
 
@@ -3485,21 +3543,21 @@ components:
     ParticipantForEventDto:
       type: object
       required:
+        - id
         - clubId
         - clubName
-        - participantId
         - firstname
         - lastname
         - gender
       properties:
+        id:
+          type: string
+          format: uuid
         clubId:
           type: string
           format: uuid
         clubName:
           type: string
-        participantId:
-          type: string
-          format: uuid
         firstname:
           type: string
         lastname:
@@ -3518,7 +3576,7 @@ components:
         participantRequirementsChecked:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/ParticipantRequirementReducedDto'
 
     # participant
 

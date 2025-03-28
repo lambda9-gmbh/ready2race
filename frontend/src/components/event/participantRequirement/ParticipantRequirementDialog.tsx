@@ -55,19 +55,9 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText
-                    name="name"
-                    label={t('event.competition.participantRequirement.name')}
-                    required
-                />
-                <FormInputText
-                    name="description"
-                    label={t('event.competition.participantRequirement.description')}
-                />
-                <FormInputCheckbox
-                    name="optional"
-                    label={t('event.competition.participantRequirement.optional')}
-                />
+                <FormInputText name="name" label={t('event.name')} required />
+                <FormInputText name="description" label={t('entity.description')} />
+                <FormInputCheckbox name="optional" label={t('entity.optional')} />
             </Stack>
         </EntityDialog>
     )

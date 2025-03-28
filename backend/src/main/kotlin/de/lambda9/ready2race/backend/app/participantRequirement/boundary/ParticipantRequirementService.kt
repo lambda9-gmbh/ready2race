@@ -76,6 +76,41 @@ object ParticipantRequirementService {
             }
         }
 
+    fun approveRequirementForEvent(
+        eventId: UUID,
+        dto: ParticipantRequirementCheckForEventUpsertDto,
+        userId: UUID
+    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, dto.requirementId).orDie()) {
+            return@comprehension KIO.fail(ParticipantRequirementError.NotFound)
+        }
+
+        !ParticipantHasRequirementForEventRepo.deleteWhereParticipantNotInList(
+            eventId,
+            dto.requirementId,
+            dto.approvedParticipants
+        ).orDie()
+
+        val alreadyApproved =
+            !ParticipantHasRequirementForEventRepo.getApprovedParticipantIds(eventId, dto.requirementId)
+                .map { it.toSet() }.orDie()
+
+        !dto.approvedParticipants.filterNot { it in alreadyApproved }.traverse {
+            ParticipantHasRequirementForEventRepo.create(
+                ParticipantHasRequirementForEventRecord(
+                    event = eventId,
+                    participant = it,
+                    participantRequirement = dto.requirementId,
+                    createdBy = userId,
+                    createdAt = LocalDateTime.now(),
+                )
+            )
+        }.orDie()
+
+        noData
+    }
+
     fun checkRequirementForEvent(
         eventId: UUID,
         csvList: MutableList<Pair<String, ByteArray>>,
@@ -105,7 +140,7 @@ object ParticipantRequirementService {
                 ParticipantHasRequirementForEventRepo.create(
                     ParticipantHasRequirementForEventRecord(
                         event = eventId,
-                        participant = candidate.participantId!!,
+                        participant = candidate.id!!,
                         participantRequirement = config.requirementId,
                         createdBy = userId,
                         createdAt = LocalDateTime.now(),

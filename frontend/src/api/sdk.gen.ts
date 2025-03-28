@@ -229,6 +229,9 @@ import type {
     CheckParticipantRequirementsForEventData,
     CheckParticipantRequirementsForEventError,
     CheckParticipantRequirementsForEventResponse,
+    ApproveParticipantRequirementsForEventData,
+    ApproveParticipantRequirementsForEventError,
+    ApproveParticipantRequirementsForEventResponse,
     GetActiveParticipantRequirementsForEventData,
     GetActiveParticipantRequirementsForEventError,
     GetActiveParticipantRequirementsForEventResponse,
@@ -1119,6 +1122,19 @@ export const checkParticipantRequirementsForEvent = <ThrowOnError extends boolea
             ...options?.headers,
         },
         url: '/event/{eventId}/participantRequirement',
+    })
+}
+
+export const approveParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ApproveParticipantRequirementsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ApproveParticipantRequirementsForEventResponse,
+        ApproveParticipantRequirementsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/approve',
     })
 }
 

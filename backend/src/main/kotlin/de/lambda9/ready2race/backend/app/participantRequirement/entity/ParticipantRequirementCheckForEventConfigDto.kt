@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.participantRequirement.entity
 
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
-import java.nio.charset.Charset
 import java.util.*
 
 data class ParticipantRequirementCheckForEventConfigDto(

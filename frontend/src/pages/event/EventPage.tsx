@@ -13,7 +13,6 @@ import {
     EventDayDto,
     EventDocumentDto,
     ParticipantForEventDto,
-    ParticipantRequirementCheckForEventConfigDto,
     ParticipantRequirementForEventDto,
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
@@ -24,13 +23,12 @@ import {useState} from 'react'
 import TabPanel from '@components/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
-import ParticipantRequirementCheckForEventDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventDialog.tsx'
 
 const EventPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const [activeTab, setActiveTab] = useState(1)
+    const [activeTab, setActiveTab] = useState(0)
 
     const {eventId} = eventRoute.useParams()
 
@@ -54,19 +52,14 @@ const EventPage = () => {
     )
     const participantRequirementAdministrationProps =
         useEntityAdministration<ParticipantRequirementForEventDto>(
-            t('event.participantRequirement'),
+            t('participantRequirement.participantRequirements'),
             {entityCreate: false, entityUpdate: false},
         )
+
     const participantForEventProps = useEntityAdministration<ParticipantForEventDto>(
         t('club.participant.title'),
         {entityCreate: false, entityUpdate: false},
     )
-
-    const participantRequirementCheckForEventProps =
-        useEntityAdministration<ParticipantRequirementCheckForEventConfigDto>(
-            t('club.participant.title'),
-            {entityCreate: false, entityUpdate: false},
-        )
 
     const a11yProps = (index: number) => {
         return {
@@ -118,23 +111,15 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={1} activeTab={activeTab}>
-                            <ParticipantRequirementCheckForEventDialog
-                                {...participantRequirementCheckForEventProps.dialog}
-                            />
                             <ParticipantForEventTable
                                 {...participantForEventProps.table}
-                                openRequirementsCheck={() =>
-                                    participantRequirementCheckForEventProps.table.openDialog(
-                                        undefined,
-                                    )
-                                }
                                 title={t('club.participant.title')}
                             />
                         </TabPanel>
                         <TabPanel index={2} activeTab={activeTab}>
                             <ParticipantRequirementForEventTable
                                 {...participantRequirementAdministrationProps.table}
-                                title={t('event.participantRequirements')}
+                                title={t('participantRequirement.participantRequirements')}
                             />
                         </TabPanel>
                     </Stack>

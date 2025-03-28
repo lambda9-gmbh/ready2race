@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.entity.ParticipantDto
 import de.lambda9.ready2race.backend.app.club.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.club.entity.ParticipantUpsertDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
@@ -46,17 +47,23 @@ fun ParticipantRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.ok(
     )
 )
 
-fun ParticipantForEventRecord.toDto(): App<Nothing, ParticipantForEventDto> = KIO.ok(
-    ParticipantForEventDto(
-        clubId = clubId!!,
-        clubName = clubName!!,
-        participantId = participantId!!,
-        firstname = firstname!!,
-        lastname = lastname!!,
-        year = year,
-        gender = gender!!,
-        external = external,
-        externalClubName = externalClubName,
-        participantRequirementsChecked = participantRequirementsChecked
+fun ParticipantForEventRecord.toDto(): App<Nothing, ParticipantForEventDto> =
+    KIO.ok(
+        ParticipantForEventDto(
+            id = id!!,
+            clubId = clubId!!,
+            clubName = clubName!!,
+            firstname = firstname!!,
+            lastname = lastname!!,
+            year = year,
+            gender = gender!!,
+            external = external,
+            externalClubName = externalClubName,
+            participantRequirementsChecked = participantRequirementsChecked?.map {
+                ParticipantRequirementReducedDto(
+                    it?.id!!,
+                    it.name
+                )
+            }
+        )
     )
-)

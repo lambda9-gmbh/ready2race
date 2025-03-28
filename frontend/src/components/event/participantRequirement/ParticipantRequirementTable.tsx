@@ -6,6 +6,7 @@ import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityTable from '@components/EntityTable.tsx'
 import {useFeedback} from '@utils/hooks.ts'
+import {Check} from '@mui/icons-material'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -32,21 +33,22 @@ const ParticipantRequirementTable = (props: BaseEntityTableProps<ParticipantRequ
     const columns: GridColDef<ParticipantRequirementDto>[] = [
         {
             field: 'name',
-            headerName: t('event.participantRequirement.name'),
+            headerName: t('entity.name'),
             minWidth: 150,
             flex: 1,
         },
         {
             field: 'description',
-            headerName: t('event.participantRequirement.description'),
+            headerName: t('entity.description'),
             flex: 2,
             sortable: false,
         },
         {
             field: 'optional',
-            headerName: t('event.participantRequirement.optional'),
+            headerName: t('entity.optional'),
             flex: 1,
             sortable: false,
+            renderCell: ({value}) => (value ? <Check /> : <></>),
         },
     ]
 
@@ -67,7 +69,7 @@ const ParticipantRequirementTable = (props: BaseEntityTableProps<ParticipantRequ
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
-            entityName={t('event.participantRequirement.participantRequirement')}
+            entityName={t('participantRequirement.participantRequirement')}
             deleteRequest={deleteRequest}
             onDeleteError={onDeleteError}
         />

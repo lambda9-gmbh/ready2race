@@ -1,11 +1,24 @@
 import {useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {eventIndexRoute} from '@routes'
-import {getParticipantsForEvent, ParticipantForEventDto} from '../../api'
+import {
+    getActiveParticipantRequirementsForEvent,
+    getParticipantsForEvent,
+    ParticipantForEventDto,
+    ParticipantRequirementCheckForEventConfigDto,
+    ParticipantRequirementReducedDto,
+} from '../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
 import {VerifiedUser} from '@mui/icons-material'
+import SplitButton, {SplitButtonOption} from '@components/SplitButton.tsx'
+import {Fragment, useMemo} from 'react'
+import {useEntityAdministration, useFetch} from '@utils/hooks.ts'
+import ParticipantRequirementApproveManuallyForEventDialog, {
+    ParticipantRequirementApproveManuallyForEventForm,
+} from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
+import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -14,9 +27,7 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
-const ParticipantForEventTable = (
-    props: BaseEntityTableProps<ParticipantForEventDto> & {openRequirementsCheck: () => void},
-) => {
+const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEventDto>) => {
     const {t} = useTranslation()
 
     const {eventId} = eventIndexRoute.useParams()
@@ -63,31 +74,85 @@ const ParticipantForEventTable = (
         },
         {
             field: 'participantRequirementsChecked',
-            headerName: t('event.participantRequirement.checked'),
+            headerName: t('event.participantRequirement.approved'),
             minWidth: 150,
             flex: 1,
+            sortable: false,
+            valueFormatter: (v: ParticipantRequirementReducedDto[]) =>
+                v.map(r => r.name).join(', '),
         },
     ]
 
-    return (
-        <EntityTable
-            {...props}
-            customTableActions={[
-                {
-                    icon: <VerifiedUser />,
-                    label: t('event.participantRequirement.check'),
-                    onClick: props.openRequirementsCheck,
+    const {data: requirementsData} = useFetch(signal =>
+        getActiveParticipantRequirementsForEvent({
+            signal,
+            path: {eventId},
+            query: {sort: JSON.stringify([{field: 'NAME', direction: 'ASC'}])},
+        }),
+    )
+
+    const participantRequirementCheckForEventConfigProps =
+        useEntityAdministration<ParticipantRequirementCheckForEventConfigDto>(
+            t('participantRequirement.participantRequirement'),
+            {entityCreate: false, entityUpdate: false},
+        )
+
+    const participantRequirementApproveManuallyForEventProps =
+        useEntityAdministration<ParticipantRequirementApproveManuallyForEventForm>(
+            t('participantRequirement.participantRequirement'),
+            {entityUpdate: true},
+        )
+
+    const splitOptions: SplitButtonOption[] = useMemo(
+        () =>
+            requirementsData?.data.map(r => ({
+                label: t('event.participantRequirement.checkManually', {name: r.name}),
+                onClick: () => {
+                    participantRequirementApproveManuallyForEventProps.table.openDialog({
+                        requirementId: r.id,
+                        requirementName: r.name,
+                        approvedParticipants: [],
+                    })
                 },
-            ]}
-            gridProps={{getRowId: row => row.participantId}}
-            parentResource={'EVENT'}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            entityName={t('club.participant.title')}
-        />
+            })) ?? [],
+        [requirementsData?.data],
+    )
+
+    return (
+        <Fragment>
+            <ParticipantRequirementApproveManuallyForEventDialog
+                {...participantRequirementApproveManuallyForEventProps.dialog}
+                reloadData={props.reloadData}
+            />
+            <ParticipantRequirementCheckForEventUploadFileDialog
+                {...participantRequirementCheckForEventConfigProps.dialog}
+                reloadData={props.reloadData}
+            />
+            <EntityTable
+                {...props}
+                customTableActions={
+                    <SplitButton
+                        main={{
+                            icon: <VerifiedUser />,
+                            label: t('event.participantRequirement.checkUpload'),
+                            onClick: () =>
+                                participantRequirementCheckForEventConfigProps.table.openDialog(
+                                    undefined,
+                                ),
+                        }}
+                        options={splitOptions}
+                    />
+                }
+                gridProps={{getRowId: row => row.id}}
+                parentResource={'EVENT'}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                entityName={t('club.participant.title')}
+            />
+        </Fragment>
     )
 }
 
