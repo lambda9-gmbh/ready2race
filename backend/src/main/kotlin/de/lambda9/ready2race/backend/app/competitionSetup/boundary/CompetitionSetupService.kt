@@ -51,7 +51,7 @@ object CompetitionSetupService {
             val groups: MutableList<CompetitionSetupGroupRecord> = mutableListOf(),
             val statisticEvaluations: MutableList<CompetitionSetupGroupStatisticEvaluationRecord> = mutableListOf(),
             val matches: MutableList<CompetitionSetupMatchRecord> = mutableListOf(),
-            val outcomes: MutableList<CompetitionSetupOutcomeRecord> = mutableListOf()
+            val participants: MutableList<CompetitionSetupParticipantRecord> = mutableListOf()
         )
 
         val records = Batches()
@@ -61,16 +61,16 @@ object CompetitionSetupService {
             val roundRecord = round.toRecord(competitionPropertiesId, next?.id)
             records.rounds.add(roundRecord)
 
-            fun addOutcomes(outcomes: List<Int>, matchId: UUID?, groupId: UUID?) {
-                outcomes.mapIndexed { index, weighting ->
-                    val outcomeRecord = CompetitionSetupOutcomeRecord(
+            fun addParticipants(participants: List<Int>, matchId: UUID?, groupId: UUID?) {
+                participants.mapIndexed { index, seed ->
+                    val participantRecord = CompetitionSetupParticipantRecord(
                         id = UUID.randomUUID(),
                         competitionSetupMatch = matchId,
                         competitionSetupGroup = groupId,
-                        weighting = weighting,
+                        seed = seed,
                         ranking = index + 1
                     )
-                    records.outcomes.add(outcomeRecord)
+                    records.participants.add(participantRecord)
                 }
             }
 
@@ -79,9 +79,7 @@ object CompetitionSetupService {
                     val matchRecord = match.toRecord(index, roundRecord.id, null)
                     records.matches.add(matchRecord)
 
-                    if (match.outcomes != null) {
-                        addOutcomes(match.outcomes, matchRecord.id, null)
-                    }
+                    addParticipants(match.participants, matchRecord.id, null)
                 }
             } else if (!round.groups.isNullOrEmpty()) {
                 round.groups.forEachIndexed { index, group ->
@@ -93,7 +91,7 @@ object CompetitionSetupService {
                         records.matches.add(matchRecord)
                     }
 
-                    addOutcomes(group.outcomes, null, groupRecord.id)
+                    addParticipants(group.participants, null, groupRecord.id)
                 }
             }
 
@@ -111,7 +109,7 @@ object CompetitionSetupService {
             !CompetitionSetupGroupStatisticEvaluationRepo.create(records.statisticEvaluations).orDie()
         }
         !CompetitionSetupMatchRepo.create(records.matches).orDie()
-        !CompetitionSetupOutcomeRepo.create(records.outcomes).orDie()
+        !CompetitionSetupParticipantRepo.create(records.participants).orDie()
 
         noData
     }
@@ -137,8 +135,8 @@ object CompetitionSetupService {
             .get(roundRecords.map { it.id })
             .orDie()
 
-        val outcomeRecords =
-            !CompetitionSetupOutcomeRepo.get(matchRecords.map { it.id } + groupRecords.map { it.id }).orDie()
+        val participantRecords =
+            !CompetitionSetupParticipantRepo.get(matchRecords.map { it.id } + groupRecords.map { it.id }).orDie()
 
 
         // Map and filter the Records into the Dto
@@ -159,16 +157,14 @@ object CompetitionSetupService {
 
             val matchesInRound = matchRecords.filter { match -> match.competitionSetupRound == round.id }
 
-            // todo: matches should have a position inside the round so the user can modify the order - same for matches in group
-
             val roundHasGroups = matchesInRound.getOrNull(0)?.competitionSetupGroup != null
 
             round.toDto(
                 matches = if (!roundHasGroups) {
                     matchesInRound.map { match ->
-                        match.toDto(outcomeRecords.filter { outcome -> outcome.competitionSetupMatch == match.id }
+                        match.toDto(participantRecords.filter { participant -> participant.competitionSetupMatch == match.id }
                             .sortedBy { it.ranking }
-                            .map { it.weighting })
+                            .map { it.seed })
                     }
                 } else {
                     null
@@ -180,11 +176,15 @@ object CompetitionSetupService {
                     }.map { group ->
                         group.toDto(
                             matches = matchesInRound.filter { it.competitionSetupGroup == group.id }
-                                .map { it.toDto(outcomes = null) },
+                                .map { match ->
+                                    match.toDto(participantRecords.filter { participant -> participant.competitionSetupMatch == match.id }
+                                        .sortedBy { it.ranking }
+                                        .map { it.seed })
+                                },
 
-                            outcomes = outcomeRecords.filter { outcome -> outcome.competitionSetupGroup == group.id }
+                            participants = participantRecords.filter { participant -> participant.competitionSetupGroup == group.id }
                                 .sortedBy { it.ranking }
-                                .map { it.weighting }
+                                .map { it.seed }
                         )
                     }
                 } else {

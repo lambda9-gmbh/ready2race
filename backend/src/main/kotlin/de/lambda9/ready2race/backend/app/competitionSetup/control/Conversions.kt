@@ -41,14 +41,14 @@ fun CompetitionSetupGroupDto.toRecord(index: Int) = CompetitionSetupGroupRecord(
     position = index
 )
 
-fun CompetitionSetupGroupRecord.toDto(matches: List<CompetitionSetupMatchDto>, outcomes: List<Int>) =
+fun CompetitionSetupGroupRecord.toDto(matches: List<CompetitionSetupMatchDto>, participants: List<Int>) =
     CompetitionSetupGroupDto(
         duplicatable = duplicatable,
         weighting = weighting,
         teams = teams,
         name = name,
         matches = matches,
-        outcomes = outcomes
+        participants = participants
     )
 
 fun CompetitionSetupGroupStatisticEvaluationDto.toRecord(round: UUID) = CompetitionSetupGroupStatisticEvaluationRecord(
@@ -82,10 +82,10 @@ fun CompetitionSetupMatchDto.toRecord(index: Int, competitionSetupRoundId: UUID,
         position = index
     )
 
-fun CompetitionSetupMatchRecord.toDto(outcomes: List<Int>?) = CompetitionSetupMatchDto(
+fun CompetitionSetupMatchRecord.toDto(participants: List<Int>) = CompetitionSetupMatchDto(
     duplicatable = duplicatable,
     weighting = weighting,
     teams = teams,
     name = name,
-    outcomes = outcomes,
+    participants = participants,
 )

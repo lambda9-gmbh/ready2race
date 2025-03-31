@@ -52,7 +52,7 @@ create table competition_setup_match
     competition_setup_round uuid    not null references competition_setup_round on delete cascade,
     competition_setup_group uuid references competition_setup_group on delete cascade,
     duplicatable            boolean not null,
-    weighting               integer not null,
+    weighting               integer,
     teams                   integer,
     name                    text,
     position                integer not null,
@@ -64,17 +64,17 @@ create table competition_setup_match
 create index on competition_setup_match (competition_setup_round);
 create index on competition_setup_match (competition_setup_group);
 
-create table competition_setup_outcome
+create table competition_setup_participant
 (
     id                      uuid primary key,
     competition_setup_match uuid references competition_setup_match on delete cascade,
     competition_setup_group uuid references competition_setup_group on delete cascade,
-    weighting               integer not null,
+    seed                    integer not null,
     ranking                 integer not null,
     constraint chk_either_competition_setup_match_or_competition_setup_group check (
         (competition_setup_match is null and competition_setup_group is not null) or
         (competition_setup_match is not null and competition_setup_group is null) )
 );
 
-create index on competition_setup_outcome (competition_setup_match);
-create index on competition_setup_outcome (competition_setup_group);
+create index on competition_setup_participant (competition_setup_match);
+create index on competition_setup_participant (competition_setup_group);

@@ -7,30 +7,24 @@ import {
     CompetitionSetupMatchOrGroupProps,
     onTeamsChanged,
 } from '@components/event/competition/setup/common.ts'
-import CompetitionSetupOutcomes from "@components/event/competition/setup/CompetitionSetupOutcomes.tsx";
+import CompetitionSetupParticipants from '@components/event/competition/setup/CompetitionSetupParticipants.tsx'
 
 type Props = CompetitionSetupMatchOrGroupProps
-const CompetitionSetupMatch = ({
-    formContext,
-    roundIndex,
-    fieldInfo,
-    ...props
-}: Props) => {
-    const outcomesFormPath =
-        `rounds[${roundIndex}].matches[${fieldInfo.index}].outcomes` as `rounds.${number}.matches.${number}.outcomes`
+const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
+    const participantsFormPath =
+        `rounds[${roundIndex}].matches[${fieldInfo.index}].participants` as `rounds.${number}.matches.${number}.participants`
 
-    const {fields: outcomeFields} = useFieldArray({
+    const {fields: participantFields} = useFieldArray({
         control: formContext.control,
-        name: outcomesFormPath,
+        name: participantsFormPath,
     })
 
-    const watchOutcomes = formContext.watch(outcomesFormPath)
+    const watchParticipants = formContext.watch(participantsFormPath)
 
-    const controlledOutcomeFields = outcomeFields.map((field, index) => ({
+    const controlledParticipantFields = participantFields.map((field, index) => ({
         ...field,
-        ...watchOutcomes?.[index],
+        ...watchParticipants?.[index],
     }))
-
 
     // Only one duplicatable in a round is allowed
     const watchDuplicatable = formContext.watch(
@@ -48,7 +42,17 @@ const CompetitionSetupMatch = ({
                 boxSizing: 'border-box',
             }}>
             <Typography sx={{textAlign: 'center'}}>Weighting: {fieldInfo.index + 1}</Typography>
-            <Typography sx={{textAlign: 'center'}}>{props.participantsString}</Typography>
+            {watchParticipants.length > 0 && (
+                <>
+                    <Typography variant="subtitle1">Participants</Typography>
+                    <CompetitionSetupParticipants
+                        fieldInfo={fieldInfo}
+                        roundIndex={roundIndex}
+                        controlledParticipantFields={controlledParticipantFields}
+                        useDefaultSeeding={props.useDefaultSeeding}
+                    />
+                </>
+            )}
             <Divider />
             <FormInputText
                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].name`}
@@ -82,13 +86,10 @@ const CompetitionSetupMatch = ({
                 label={<FormInputLabel label={'Duplicatable'} required={false} horizontal />}
             />
             <Divider />
-            <Typography variant="subtitle1">Resulting Seeds</Typography>
-            <CompetitionSetupOutcomes
-                fieldInfo={fieldInfo}
-                roundIndex={roundIndex}
-                controlledOutcomeFields={controlledOutcomeFields}
-                useDefaultSeeding={props.useDefaultSeeding}
-            />
+
+            <Typography sx={{textAlign: 'center'}}>
+                Outcomes: {props.outcomes.join(', ')}
+            </Typography>
         </Stack>
     )
 }

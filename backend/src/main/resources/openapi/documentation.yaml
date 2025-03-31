@@ -2600,7 +2600,7 @@ components:
       type: object
       required:
         - duplicatable
-        - weighting
+        - participants
       properties:
         duplicatable:
           type: boolean
@@ -2610,7 +2610,7 @@ components:
           type: integer
         name:
           type: string
-        outcomes:
+        participants:
           type: array
           items:
             type: integer
@@ -2621,7 +2621,7 @@ components:
         - duplicatable
         - weighting
         - matches
-        - outcomes
+        - participants
       properties:
         duplicatable:
           type: boolean
@@ -2635,7 +2635,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionSetupMatchDto'
-        outcomes:
+        participants:
           type: array
           items:
             type: integer

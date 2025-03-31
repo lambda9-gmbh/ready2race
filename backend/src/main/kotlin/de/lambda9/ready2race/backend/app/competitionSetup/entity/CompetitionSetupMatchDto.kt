@@ -5,12 +5,12 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 
 data class CompetitionSetupMatchDto(
     val duplicatable: Boolean,
-    val weighting: Int,
+    val weighting: Int?,
     val teams: Int?,
     val name: String?,
-    val outcomes: List<Int>?,
+    val participants: List<Int>,
 ) : Validatable {
-    override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate
+    override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate (e.g. match needs a weighting when in a round and has to be null when in a group)
 
     companion object {
         val example
@@ -19,7 +19,7 @@ data class CompetitionSetupMatchDto(
                 weighting = 1,
                 teams = 2,
                 name = "Match name",
-                outcomes = listOf(1, 8),
+                participants = listOf(1, 8),
             )
     }
 }

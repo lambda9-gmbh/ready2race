@@ -9,7 +9,7 @@ data class CompetitionSetupGroupDto(
     val teams: Int?,
     val name: String?,
     val matches: List<CompetitionSetupMatchDto>,
-    val outcomes: List<Int>,
+    val participants: List<Int>,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate
 
@@ -21,7 +21,7 @@ data class CompetitionSetupGroupDto(
                 teams = 4,
                 name = "Group name",
                 matches = listOf(CompetitionSetupMatchDto.example),
-                outcomes = listOf(1, 8, 9, 16)
+                participants = listOf(1, 8, 9, 16)
             )
     }
 }

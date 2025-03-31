@@ -5,7 +5,7 @@ import {
 } from '@components/event/competition/setup/common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {useFieldArray} from 'react-hook-form-mui'
-import CompetitionSetupOutcomes from '@components/event/competition/setup/CompetitionSetupOutcomes.tsx'
+import CompetitionSetupParticipants from '@components/event/competition/setup/CompetitionSetupParticipants.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {Delete} from '@mui/icons-material'
 import {useState} from 'react'
@@ -84,6 +84,8 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
         }
     }
 
+    // todo: save participants in match.participants and not the weighting
+
     const getMatchupString = (weighting: number, addWeightingToCount: boolean): string => {
         const matchup =
             weighting > 0 ? possibleMatchups[(weighting - 1) % possibleMatchups.length] : []
@@ -98,7 +100,7 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
         iterationCount: number,
     ) => {
         return (matchup.length ?? 0) > 0
-            ? matchup.map(v => `#${v}`).join(' vs ') +
+            ? matchup.map(v => `#${v}`).join(' vs ') + // todo: combine with getMatchupString() from common
                   (iterationCount > 1 ? ` (${iteration}/${iterationCount})` : '')
             : ''
     }
@@ -239,7 +241,7 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                     sx={{flex: 1}}
                 />
             </Box>
-            <CompetitionSetupOutcomes
+            <CompetitionSetupParticipants
                 fieldInfo={fieldInfo}
                 roundIndex={roundIndex}
                 controlledOutcomeFields={controlledOutcomeFields}
