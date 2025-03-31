@@ -7,7 +7,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {useFieldArray} from 'react-hook-form-mui'
 import CompetitionSetupOutcomes from '@components/event/competition/setup/CompetitionSetupOutcomes.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {Delete, KeyboardArrowDown, KeyboardArrowUp} from '@mui/icons-material'
+import {Delete} from '@mui/icons-material'
 import {useState} from 'react'
 import {AutocompleteOption} from '@utils/types.ts'
 
@@ -37,7 +37,6 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
         fields: groupMatchFields,
         append: appendGroupMatch,
         remove: removeGroupMatch,
-        move: moveGroupMatch,
     } = useFieldArray({
         control: formContext.control,
         name: groupMatchesFormPath,
@@ -72,45 +71,62 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
         recursiveFoo([i], Number(watchMatchTeams))
     }
 
-    const getMatchupString = (matchIndex: number): string => {
-        const weighting = watchGroupMatches[matchIndex]?.weighting ?? 0
-
-        const matchup = possibleMatchups[weighting - 1] ? [...possibleMatchups[weighting - 1]] : []
-
-        return transformMatchupToString(matchup)
+    const getRepeatingMatchupIteration = (
+        weighting: number,
+        addWeightingToCount: boolean,
+    ): {iteration: number; iterationCount: number} => {
+        const sameMatchups = watchGroupMatches.filter(
+            v => v.weighting % possibleMatchups.length === weighting % possibleMatchups.length,
+        )
+        return {
+            iteration: sameMatchups.filter(v => v.weighting < weighting).length + 1,
+            iterationCount: sameMatchups.length + (addWeightingToCount ? 1 : 0),
+        }
     }
-    const transformMatchupToString = (matchup: number[]) => {
+
+    const getMatchupString = (weighting: number, addWeightingToCount: boolean): string => {
+        const matchup =
+            weighting > 0 ? possibleMatchups[(weighting - 1) % possibleMatchups.length] : []
+
+        const iteration = getRepeatingMatchupIteration(weighting, addWeightingToCount)
+
+        return transformMatchupToString(matchup, iteration.iteration, iteration.iterationCount)
+    }
+    const transformMatchupToString = (
+        matchup: number[],
+        iteration: number,
+        iterationCount: number,
+    ) => {
         return (matchup.length ?? 0) > 0
-            ? matchup
-                  .map(v => v.toString())
-                  .reduce(
-                      (acc, val, currentIndex) =>
-                          acc + (currentIndex !== 0 ? ' vs ' : '') + `#${val}`,
-                  )
+            ? matchup.map(v => `#${v}`).join(' vs ') +
+                  (iterationCount > 1 ? ` (${iteration}/${iterationCount})` : '')
             : ''
     }
 
-    const [missingMatchupSelect, setMissingMatchupSelect] = useState<AutocompleteOption | null>(
-        null,
-    )
+    const [matchupSelect, setMatchupSelect] = useState<AutocompleteOption | null>(null)
 
-    // Todo: Handle repeating matchups
-    const weightings = watchGroupMatches.map(m => m.weighting)
-    const missingMatchups: AutocompleteOption[] = possibleMatchups
-        .map((m, index) => ({
-            matchup: m,
-            weighting: index + 1,
+    const weightingsInGroup = watchGroupMatches.map(m => m.weighting)
+
+    // The matchups repeat after all matchups are listed - e.g. 6 possible matchups, Matchup 1 has weighting 1,7,13...
+    // This way one matchup can be repeated multiple times
+    const takeLowestWeightingForMatchup = (weighting: number) => {
+        if (weightingsInGroup.find(v => v === weighting) === undefined) {
+            return weighting
+        } else {
+            return takeLowestWeightingForMatchup(weighting + possibleMatchups.length)
+        }
+    }
+
+    const autocompleteMatchups: AutocompleteOption[] = possibleMatchups
+        .map((_, index) => ({
+            weighting: takeLowestWeightingForMatchup(index + 1),
         }))
-        .filter(matchup => weightings.find(v => v === matchup.weighting) === undefined)
         .map(matchup => ({
             id: matchup.weighting.toString(),
-            label: transformMatchupToString(matchup.matchup),
+            label: getMatchupString(matchup.weighting, true),
         }))
 
     const addAllMissingMatchupsKey = 'all'
-
-    // todo Other start value - if there are repeating matchups in the weightings -> set true
-    const [allowRepeatingMatchups, setAllowRepeatingMatchups] = useState(false)
 
     return (
         <Stack
@@ -146,99 +162,83 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
             />
             <Stack spacing={2}>
                 {groupMatchFields.map((matchField, matchIndex) => (
-                    <Stack key={matchField.id} direction="row">
-                        <Stack direction="column" sx={{justifyContent: 'center'}}>
-                            {matchIndex > 0 && (
-                                <IconButton
-                                    onClick={() => moveGroupMatch(matchIndex, matchIndex - 1)}>
-                                    <KeyboardArrowUp />
-                                </IconButton>
-                            )}
-                            {matchIndex < groupMatchFields.length - 1 && (
-                                <IconButton
-                                    onClick={() => moveGroupMatch(matchIndex, matchIndex + 1)}>
-                                    <KeyboardArrowDown />
-                                </IconButton>
-                            )}
-                        </Stack>
+                    <Stack
+                        key={matchField.id}
+                        spacing={2}
+                        sx={{border: 1, borderColor: 'grey', p: 1, boxSizing: 'border-box'}}>
                         <Stack
+                            direction="row"
                             spacing={2}
-                            sx={{border: 1, borderColor: 'grey', p: 1, boxSizing: 'border-box'}}>
-                            <Stack
-                                direction="row"
-                                spacing={2}
-                                sx={{justifyContent: 'space-between', alignItems: 'center'}}>
-                                <Typography>{getMatchupString(matchIndex)}</Typography>
-                                <IconButton onClick={() => removeGroupMatch(matchIndex)}>
-                                    <Delete />
-                                </IconButton>
-                            </Stack>
-                            <FormInputText
-                                name={`rounds[${roundIndex}].groups[${fieldInfo.index}].matches[${matchIndex}].name`}
-                                label={'Match name'}
-                            />
-                            <FormInputNumber
-                                name={`rounds[${roundIndex}].groups[${fieldInfo.index}].matches[${matchIndex}].position`}
-                                label={'Execution order'}
-                                required
-                                integer={true}
-                                transform={{
-                                    output: value => Number(value.target.value),
-                                }}
-                            />
+                            sx={{justifyContent: 'space-between', alignItems: 'center'}}>
+                            <Typography>{getMatchupString(matchField.weighting, false)}</Typography>
+                            <IconButton onClick={() => removeGroupMatch(matchIndex)}>
+                                <Delete />
+                            </IconButton>
                         </Stack>
+                        <FormInputText
+                            name={`rounds[${roundIndex}].groups[${fieldInfo.index}].matches[${matchIndex}].name`}
+                            label={'Match name'}
+                        />
+                        <FormInputNumber
+                            name={`rounds[${roundIndex}].groups[${fieldInfo.index}].matches[${matchIndex}].position`}
+                            label={'Execution order'}
+                            required
+                            integer={true}
+                            transform={{
+                                output: value => Number(value.target.value),
+                            }}
+                        />
                     </Stack>
                 ))}
             </Stack>
-            {watchGroupMatches.length < possibleMatchups.length && (
-                <Box sx={{alignSelf: 'center', width: 1, display: 'flex', flexDirection: 'column'}}>
-                    <Autocomplete
-                        options={[{id: addAllMissingMatchupsKey, label: 'All'}, ...missingMatchups]}
-                        renderInput={params => <TextField {...params} placeholder={'Add Match'} />}
-                        value={missingMatchupSelect}
-                        onChange={(_e, newValue: AutocompleteOption) => {
-                            setMissingMatchupSelect(newValue)
-                            if (newValue) {
-                                const appendableGroupMatch = (
-                                    weighting: number,
-                                    position: number,
-                                ) => {
-                                    return {
-                                        duplicatable: false,
-                                        weighting: weighting,
-                                        teams: '',
-                                        name: '',
-                                        outcomes: undefined,
-                                        position: position,
-                                    }
+            <Box sx={{alignSelf: 'center', width: 1, display: 'flex', flexDirection: 'column'}}>
+                {/* Todo: Only Select, not Autocomplete */}
+                <Autocomplete
+                    options={[
+                        {id: addAllMissingMatchupsKey, label: 'All'},
+                        ...autocompleteMatchups,
+                    ]}
+                    renderInput={params => <TextField {...params} placeholder={'Add Match'} />}
+                    value={matchupSelect}
+                    onChange={(_e, newValue: AutocompleteOption) => {
+                        setMatchupSelect(newValue)
+                        if (newValue) {
+                            const appendableGroupMatch = (weighting: number, position: number) => {
+                                return {
+                                    duplicatable: false,
+                                    weighting: weighting,
+                                    teams: '',
+                                    name: '',
+                                    outcomes: undefined,
+                                    position: position,
                                 }
-                                if (newValue.id === addAllMissingMatchupsKey) {
-                                    const takenPositions: number[] = []
-                                    for (let i = 0; i < missingMatchups.length; i++) {
-                                        takenPositions.push(
-                                            props.getLowestGroupMatchPosition(takenPositions),
-                                        )
-                                    }
-                                    appendGroupMatch(
-                                        missingMatchups.map((m, i) =>
-                                            appendableGroupMatch(Number(m?.id), takenPositions[i]),
-                                        ),
-                                    )
-                                } else {
-                                    appendGroupMatch(
-                                        appendableGroupMatch(
-                                            Number(newValue.id),
-                                            props.getLowestGroupMatchPosition(),
-                                        ),
-                                    )
-                                }
-                                setMissingMatchupSelect(null)
                             }
-                        }}
-                        sx={{flex: 1}}
-                    />
-                </Box>
-            )}
+                            if (newValue.id === addAllMissingMatchupsKey) {
+                                const takenPositions: number[] = []
+                                for (let i = 0; i < autocompleteMatchups.length; i++) {
+                                    takenPositions.push(
+                                        props.getLowestGroupMatchPosition(takenPositions),
+                                    )
+                                }
+                                appendGroupMatch(
+                                    autocompleteMatchups.map((m, i) =>
+                                        appendableGroupMatch(Number(m?.id), takenPositions[i]),
+                                    ),
+                                )
+                            } else {
+                                appendGroupMatch(
+                                    appendableGroupMatch(
+                                        Number(newValue.id),
+                                        props.getLowestGroupMatchPosition(),
+                                    ),
+                                )
+                            }
+                            setMatchupSelect(null)
+                        }
+                    }}
+                    sx={{flex: 1}}
+                />
+            </Box>
             <CompetitionSetupOutcomes
                 fieldInfo={fieldInfo}
                 roundIndex={roundIndex}
