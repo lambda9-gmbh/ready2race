@@ -1,11 +1,12 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists document_template_assignment;
 drop view if exists event_registration_result_view;
 drop view if exists event_competition_registration;
 drop view if exists competition_club_registration;
 drop view if exists registered_competition_team;
 drop view if exists registered_competition_team_participant;
-drop view if exists event_registration_result_document_download;
+drop view if exists event_registration_report_download;
 drop view if exists event_document_download;
 drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
@@ -211,12 +212,12 @@ select ed.id,
 from event_document ed
          join event_document_data edd on ed.id = edd.event_document;
 
-create view event_registration_result_document_download as
+create view event_registration_report_download as
 select errd.event,
        errd.name,
        errdd.data
-from event_registration_result_document errd
-         join event_registration_result_document_data errdd on errd.event = errdd.result_document;
+from event_registration_report errd
+         join event_registration_report_data errdd on errd.event = errdd.result_document;
 
 create view registered_competition_team_participant as
 select crnp.competition_registration as team_id,
@@ -269,3 +270,25 @@ select e.id,
 from event e
          left join event_competition_registration ecr on e.id = ecr.event
 group by e.id;
+
+create view document_template_assignment as
+select dt.page_margin_top,
+       dt.page_margin_left,
+       dt.page_margin_right,
+       dt.page_margin_bottom,
+       dtd.data,
+       usage.document_type,
+       usage.event
+from document_template dt
+         join document_template_data dtd on dt.id = dtd.template
+         join (select edtu.document_type,
+                      edtu.template,
+                      edtu.event
+               from event_document_template_usage edtu
+               union all
+               select dtu.document_type,
+                      dtu.template,
+                      null
+               from document_template_usage dtu
+               ) usage on dt.id = usage.template
+;

@@ -1,7 +1,9 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
-import com.github.timrs2998.pdfbuilder.document
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
+import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
@@ -243,7 +245,7 @@ object EventRegistrationService {
         val existing = if (remake) {
             KIO.ok(null)
         } else {
-            EventRegistrationResultDocumentRepo.getDownload(eventId).orDie()
+            EventRegistrationReportRepo.getDownload(eventId).orDie()
                 .mapNotNull { it.name!! to it.data!! }
         }
 
@@ -263,24 +265,25 @@ object EventRegistrationService {
 
         val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
 
-        val pdDocument = document {
-            
-        }
+        val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.REGISTRATION_REPORT, eventId).orDie()
+            .andThenNotNull { it.toPdfTemplate() }
+
+
 
         val filename = "result.pdf"
         val bytes = ByteArray(0)
 
-        val documentRecord = EventRegistrationResultDocumentRecord(
+        val documentRecord = EventRegistrationReportRecord(
             event = eventId,
             name = filename,
             createdAt = LocalDateTime.now(),
         )
-        val id = !EventRegistrationResultDocumentRepo.create(documentRecord).orDie()
-        val dataRecord = EventRegistrationResultDocumentDataRecord(
+        val id = !EventRegistrationReportRepo.create(documentRecord).orDie()
+        val dataRecord = EventRegistrationReportDataRecord(
             resultDocument = id,
             data = bytes,
         )
-        !EventRegistrationResultDocumentDataRepo.create(dataRecord).orDie()
+        !EventRegistrationReportDataRepo.create(dataRecord).orDie()
 
         KIO.ok(filename to bytes)
     }
