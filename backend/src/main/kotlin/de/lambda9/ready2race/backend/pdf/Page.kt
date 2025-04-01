@@ -1,25 +1,18 @@
 package de.lambda9.ready2race.backend.pdf
 
-import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 
 data class Page(
-    val template: PageTemplate?,
+    val format: PDRectangle,
+    val pageMargin: PageMargin,
     val elements: List<Element>,
 ) {
 
-    private val pageMargin = template?.pageMargin ?: PageMargin.default
-    private val pageTemplate = template?.let {
-        Loader.loadPDF(it.bytes).use { doc ->
-            doc.getPage(0)
-        }
-    } ?: PDPage(PDRectangle.A4)
-
     private fun newContext(document: PDDocument): RenderContext {
-        val page = pageTemplate
+        val page = PDPage(format)
         val content = PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true)
 
         return RenderContext(

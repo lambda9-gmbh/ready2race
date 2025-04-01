@@ -1,7 +1,10 @@
 package de.lambda9.ready2race.backend.pdf
 
+import org.apache.pdfbox.pdmodel.common.PDRectangle
+
 class DocumentBuilder(
-    private val pageTemplate: PageTemplate?
+    private val format: PDRectangle,
+    private val pageMargin: PageMargin,
 ) {
 
     internal val pages: MutableList<Page> = mutableListOf()
@@ -10,7 +13,7 @@ class DocumentBuilder(
         builder: PageBuilder.() -> Unit = {}
     ) {
         val elements = PageBuilder().apply(builder).elements
-        pages.add(Page(pageTemplate, elements))
+        pages.add(Page(format, pageMargin, elements))
     }
 
 }
