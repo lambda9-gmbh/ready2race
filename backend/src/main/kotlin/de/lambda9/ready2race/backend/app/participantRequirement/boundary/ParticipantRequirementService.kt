@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantHasRequirementForEventRecord
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
@@ -42,6 +43,41 @@ object ParticipantRequirementService {
                 pagination = params.toPagination(total)
             )
         }
+    }
+
+    fun activateRequirementForEvent(
+        requirementId: UUID,
+        eventId: UUID,
+        userId: UUID,
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, requirementId).orDie()) {
+            !EventHasParticipantRequirementRepo.create(
+                EventHasParticipantRequirementRecord(
+                    event = eventId,
+                    participantRequirement = requirementId,
+                    createdAt = LocalDateTime.now(),
+                    createdBy = userId
+                )
+            ).orDie()
+        }
+
+        noData
+
+    }
+
+    fun removeRequirementForEvent(
+        requirementId: UUID,
+        eventId: UUID
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+
+        if (!EventHasParticipantRequirementRepo.exists(eventId, requirementId).orDie()) {
+            !EventHasParticipantRequirementRepo.delete(eventId, requirementId).orDie()
+            !ParticipantHasRequirementForEventRepo.deleteWhereParticipantNotInList(eventId, requirementId, emptyList()).orDie()
+        }
+
+        noData
+
     }
 
     fun pageForEvent(
@@ -159,7 +195,7 @@ object ParticipantRequirementService {
     ): App<ParticipantRequirementError, List<ValidRequirementParticipant>> = KIO.comprehension {
         val validEntries = csvList.flatMap { (_, csv) ->
 
-            var header: Map<String, Int> = emptyMap();
+            var header: Map<String, Int> = emptyMap()
 
             val charset = if (config.charset != null) {
                 if (Charset.isSupported(config.charset)) {
@@ -195,11 +231,8 @@ object ParticipantRequirementService {
                         } else {
                             val valid =
                                 config.requirementColName == null || config.requirementIsValidValue == null || arr.getOrNull(
-                                    header.getOrDefault(config.requirementColName.lowercase(), -1)
-                                ).let {
-                                    // If no 'requirementColName' or no 'requirementIsValidValue' is set, we assume that everyone from the provided list is valid
-                                    it.equals(config.requirementIsValidValue, ignoreCase = true)
-                                }
+                                header.getOrDefault(config.requirementColName.lowercase(), -1)
+                            ).equals(config.requirementIsValidValue, ignoreCase = true)
 
                             if (valid) {
                                 ValidRequirementParticipant(

@@ -1705,6 +1705,34 @@ export type GetActiveParticipantRequirementsForEventError =
     | ApiError
     | UnprocessableEntityError
 
+export type ActivateParticipantRequirementForEventData = {
+    path: {
+        eventId: string
+        participantRequirementId: string
+    }
+}
+
+export type ActivateParticipantRequirementForEventResponse = void
+
+export type ActivateParticipantRequirementForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type RemoveParticipantRequirementForEventData = {
+    path: {
+        eventId: string
+        participantRequirementId: string
+    }
+}
+
+export type RemoveParticipantRequirementForEventResponse = void
+
+export type RemoveParticipantRequirementForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
 export type GetParticipantsForEventData = {
     path: {
         eventId: string

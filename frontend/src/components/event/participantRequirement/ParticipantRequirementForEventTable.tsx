@@ -1,12 +1,18 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {getParticipantRequirementsForEvent} from '@api/sdk.gen.ts'
+import {
+    activateParticipantRequirementForEvent,
+    getParticipantRequirementsForEvent,
+    removeParticipantRequirementForEvent,
+} from '@api/sdk.gen.ts'
 import {ParticipantRequirementForEventDto} from '@api/types.gen.ts'
-import {BaseEntityTableProps} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityTableAction} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityTable from '@components/EntityTable.tsx'
 import {eventIndexRoute} from '@routes'
 import {Cancel, Check, CheckCircle} from '@mui/icons-material'
+import {useFeedback} from '@utils/hooks.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -19,8 +25,9 @@ const ParticipantRequirementForEventTable = (
     props: BaseEntityTableProps<ParticipantRequirementForEventDto>,
 ) => {
     const {t} = useTranslation()
-
+    const feedback = useFeedback()
     const {eventId} = eventIndexRoute.useParams()
+    const {confirmAction} = useConfirmation()
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getParticipantRequirementsForEvent({
@@ -58,9 +65,61 @@ const ParticipantRequirementForEventTable = (
         },
     ]
 
+    const handleActivationChange = (entity: ParticipantRequirementForEventDto) => {
+        if (entity.active) {
+            confirmAction(
+                () =>
+                    removeParticipantRequirementForEvent({
+                        path: {eventId: eventId, participantRequirementId: entity.id},
+                    }).then(({error}) => {
+                        if (error) {
+                            feedback.error(t('common.error.unexpected'))
+                        } else {
+                            props.reloadData()
+                        }
+                    }),
+                {
+                    content: t('participantRequirement.confirmRemove', {requirement: entity.name}),
+                    okText: t('common.remove'),
+                },
+            )
+        } else {
+            activateParticipantRequirementForEvent({
+                path: {eventId: eventId, participantRequirementId: entity.id},
+            }).then(({error}) => {
+                if (error) {
+                    feedback.error(t('common.error.unexpected'))
+                } else {
+                    props.reloadData()
+                }
+            })
+        }
+    }
+
+    const customEntityActions = (
+        entity: ParticipantRequirementForEventDto,
+    ): EntityTableAction[] => [
+        entity.active ? (
+            <GridActionsCellItem
+                icon={<Cancel />}
+                label={t('participantRequirement.remove')}
+                onClick={() => handleActivationChange(entity)}
+                showInMenu
+            />
+        ) : (
+            <GridActionsCellItem
+                icon={<CheckCircle />}
+                label={t('participantRequirement.activate')}
+                onClick={() => handleActivationChange(entity)}
+                showInMenu
+            />
+        ),
+    ]
+
     return (
         <EntityTable
             {...props}
+            customEntityActions={customEntityActions}
             parentResource={'EVENT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}

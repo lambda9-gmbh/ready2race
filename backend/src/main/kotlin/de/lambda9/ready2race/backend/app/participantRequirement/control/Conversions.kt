@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.participantRequirement.control
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventDto
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementUpsertDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord

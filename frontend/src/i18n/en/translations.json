@@ -53,7 +53,8 @@
     "search": "Search",
     "back": "Back",
     "next": "Next",
-    "and": "and"
+    "and": "and",
+    "remove" : "Remove"
   },
   "decimal": {
     "point": "."
@@ -259,7 +260,10 @@
   "participantRequirement": {
     "participantRequirement": "Participant requirement",
     "participantRequirements": "Participant requirements",
-    "active" : "Active"
+    "active" : "Active",
+    "activate" : "Activate for event",
+    "remove" : "Remove from event",
+    "confirmRemove" : "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
   },
   "user": {
     "user": "User",

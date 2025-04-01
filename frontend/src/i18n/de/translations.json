@@ -53,7 +53,8 @@
     "search": "Suchen",
     "back": "Zurück",
     "next": "Weiter",
-    "and": "und"
+    "and": "und",
+    "remove" : "Entfernen"
   },
   "decimal": {
     "point": ","
@@ -259,7 +260,10 @@
   "participantRequirement": {
     "participantRequirement": "Teilnahmebedingung",
     "participantRequirements": "Teilnahmebedingungen",
-    "active" : "Aktiv"
+    "active" : "Aktiv",
+    "activate" : "Für Veranstaltung aktivieren",
+    "remove" : "Von Veranstaltung entfernen",
+    "confirmRemove" : "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
   },
   "user": {
     "user": "Benutzer",

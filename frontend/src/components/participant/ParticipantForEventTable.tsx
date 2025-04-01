@@ -6,12 +6,11 @@ import {
     getParticipantsForEvent,
     ParticipantForEventDto,
     ParticipantRequirementCheckForEventConfigDto,
-    ParticipantRequirementReducedDto,
 } from '../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
-import {VerifiedUser} from '@mui/icons-material'
+import {Cancel, CheckCircle, Info, VerifiedUser} from '@mui/icons-material'
 import SplitButton, {SplitButtonOption} from '@components/SplitButton.tsx'
 import {Fragment, useMemo} from 'react'
 import {useEntityAdministration, useFetch} from '@utils/hooks.ts'
@@ -19,6 +18,8 @@ import ParticipantRequirementApproveManuallyForEventDialog, {
     ParticipantRequirementApproveManuallyForEventForm,
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
 import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
+import {Stack, Typography} from '@mui/material'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -40,55 +41,86 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
         })
     }
 
-    const columns: GridColDef<ParticipantForEventDto>[] = [
-        {
-            field: 'clubName',
-            headerName: t('club.club'),
-            flex: 1,
-        },
-        {
-            field: 'firstname',
-            headerName: t('entity.firstname'),
-            minWidth: 150,
-            flex: 1,
-        },
-        {
-            field: 'lastname',
-            headerName: t('entity.lastname'),
-            minWidth: 150,
-            flex: 1,
-        },
-        {
-            field: 'gender',
-            headerName: t('entity.gender'),
-        },
-        {
-            field: 'year',
-            headerName: t('club.participant.year'),
-        },
-        {
-            field: 'externalClubName',
-            headerName: t('club.participant.externalClub'),
-            minWidth: 150,
-            flex: 1,
-        },
-        {
-            field: 'participantRequirementsChecked',
-            headerName: t('event.participantRequirement.approved'),
-            minWidth: 150,
-            flex: 1,
-            sortable: false,
-            valueFormatter: (v: ParticipantRequirementReducedDto[]) =>
-                v.map(r => r.name).join(', '),
-        },
-    ]
-
     const {data: requirementsData} = useFetch(signal =>
         getActiveParticipantRequirementsForEvent({
             signal,
             path: {eventId},
             query: {sort: JSON.stringify([{field: 'NAME', direction: 'ASC'}])},
         }),
+    )
+
+    const columns: GridColDef<ParticipantForEventDto>[] = useMemo(
+        () => [
+            {
+                field: 'clubName',
+                headerName: t('club.club'),
+                flex: 1,
+            },
+            {
+                field: 'firstname',
+                headerName: t('entity.firstname'),
+                minWidth: 150,
+                flex: 1,
+            },
+            {
+                field: 'lastname',
+                headerName: t('entity.lastname'),
+                minWidth: 150,
+                flex: 1,
+            },
+            {
+                field: 'gender',
+                headerName: t('entity.gender'),
+            },
+            {
+                field: 'year',
+                headerName: t('club.participant.year'),
+            },
+            {
+                field: 'externalClubName',
+                headerName: t('club.participant.externalClub'),
+                minWidth: 150,
+                flex: 1,
+            },
+            {
+                field: 'participantRequirementsChecked',
+                headerName: t('event.participantRequirement.approved'),
+                minWidth: 150,
+                sortable: false,
+                renderCell: ({row}) =>
+                    (requirementsData?.data.length ?? 0) > 0 ? (
+                        <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                            <Typography>
+                                {row.participantRequirementsChecked?.length}/
+                                {requirementsData?.data.length ?? 0}{' '}
+                            </Typography>
+                            <HtmlTooltip
+                                placement={'right'}
+                                title={
+                                    <Stack spacing={1} p={1}>
+                                        {requirementsData?.data.map(r => (
+                                            <Stack direction={'row'} spacing={1}>
+                                                {row.participantRequirementsChecked?.some(
+                                                    c => c.id === r.id,
+                                                ) ? (
+                                                    <CheckCircle color={'success'} />
+                                                ) : (
+                                                    <Cancel color={'error'} />
+                                                )}
+                                                <Typography>{r.name}</Typography>
+                                            </Stack>
+                                        ))}
+                                    </Stack>
+                                }>
+                                <Info color={'info'} fontSize={'small'} />
+                            </HtmlTooltip>
+                        </Stack>
+                    ) : (
+                        ' - '
+                    ),
+            },
+        ],
+        [requirementsData?.data.length],
     )
 
     const participantRequirementCheckForEventConfigProps =

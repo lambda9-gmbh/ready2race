@@ -235,6 +235,12 @@ import type {
     GetActiveParticipantRequirementsForEventData,
     GetActiveParticipantRequirementsForEventError,
     GetActiveParticipantRequirementsForEventResponse,
+    ActivateParticipantRequirementForEventData,
+    ActivateParticipantRequirementForEventError,
+    ActivateParticipantRequirementForEventResponse,
+    RemoveParticipantRequirementForEventData,
+    RemoveParticipantRequirementForEventError,
+    RemoveParticipantRequirementForEventResponse,
     GetParticipantsForEventData,
     GetParticipantsForEventError,
     GetParticipantsForEventResponse,
@@ -1148,6 +1154,32 @@ export const getActiveParticipantRequirementsForEvent = <ThrowOnError extends bo
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/active',
+    })
+}
+
+export const activateParticipantRequirementForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ActivateParticipantRequirementForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        ActivateParticipantRequirementForEventResponse,
+        ActivateParticipantRequirementForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/{participantRequirementId}',
+    })
+}
+
+export const removeParticipantRequirementForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveParticipantRequirementForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveParticipantRequirementForEventResponse,
+        RemoveParticipantRequirementForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/{participantRequirementId}',
     })
 }
 

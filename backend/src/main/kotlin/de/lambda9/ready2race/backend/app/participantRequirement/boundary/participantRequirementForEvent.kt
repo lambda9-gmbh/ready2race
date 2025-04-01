@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventConfigDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventSort
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementUpsertDto
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
@@ -99,16 +98,14 @@ fun Route.participantRequirementForEvent() {
 
         route("/{participantRequirementId}") {
 
-
-            put {
+            get {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val (user) = !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
-
-                    val body = !receiveKIO(ParticipantRequirementUpsertDto.example)
-                    ParticipantRequirementService.updateParticipantRequirement(
+                    val eventId = !pathParam("eventId", uuid)
+                    ParticipantRequirementService.activateRequirementForEvent(
                         participantRequirementId,
-                        body,
+                        eventId,
                         user.id!!
                     )
                 }
@@ -118,7 +115,8 @@ fun Route.participantRequirementForEvent() {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
-                    ParticipantRequirementService.deleteParticipantRequirement(participantRequirementId)
+                    val eventId = !pathParam("eventId", uuid)
+                    ParticipantRequirementService.removeRequirementForEvent(participantRequirementId, eventId)
                 }
             }
         }
