@@ -7,6 +7,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
     CompetitionSetupMatchOrGroupProps,
+    fillSeedingList,
     getHighestTeamsCount,
     getLowest,
     getWeightings,
@@ -111,35 +112,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     const roundHasDuplicatableMatch = watchMatches.find(v => v.duplicatable === true) !== undefined
     const roundHasDuplicatableGroup = watchGroups.find(v => v.duplicatable === true) !== undefined
 
-    /*
-    // Display the Teams that are participating in this match
-    // Purely visual to show where the outcome-seeds from last round are playing in this round
-
-    const watchPrevRoundIsGroupRound =
-            round.index > 0
-                ? formContext.watch(
-                      `rounds[${round.index - 1}].isGroupRound` as `rounds.${number}.isGroupRound`,
-                  )
-                : undefined
-
-        const watchPrevRoundMatches =
-            round.index > 0
-                ? formContext.watch(`rounds[${round.index - 1}].matches` as `rounds.${number}.matches`)
-                : undefined
-
-        const watchPrevRoundGroups =
-            round.index > 0
-                ? formContext.watch(`rounds[${round.index - 1}].groups` as `rounds.${number}.groups`)
-                : undefined
-
-        const prevRoundOutcomes = (
-            watchPrevRoundIsGroupRound ? watchPrevRoundGroups : watchPrevRoundMatches
-        )
-            ?.map(v => (v.outcomes ? v.outcomes?.map(outcome => outcome.outcome).flat() : []))
-            .flat()
-            .sort((a, b) => a - b)
-            .slice(0, teamCounts.thisRound)*/
-
+    const groupsOrMatchesLength = watchIsGroupRound ? watchGroups.length : watchMatches.length
     const highestTeamCount = (watchIsGroupRound ? watchGroups : watchMatches)
         ? getHighestTeamsCount(
               (watchIsGroupRound ? watchGroups : watchMatches).map(v => v.teams),
@@ -147,34 +120,16 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
           )
         : 0
 
-    const results: number[][] = [] // todo put this together with "updateParticipants()"
-    const groupsOrMatchesLength = watchIsGroupRound ? watchGroups.length : watchMatches.length
-    for (let i = 0; i < (groupsOrMatchesLength ?? 0); i++) {
-        results.push([])
-    }
-    let participantsTaken = 1
-    for (let i = 0; i < highestTeamCount; i++) {
-        const addToList = (index: number) => {
-            if (
-                Number(watchIsGroupRound ? watchGroups[index].teams : watchMatches[index].teams) >
-                    results[index].length ||
-                (watchIsGroupRound ? watchGroups[index].teams : watchMatches[index].teams) === ''
-            ) {
-                results[index].push(participantsTaken)
-                participantsTaken += 1
-            }
-        }
-
-        if (i % 2 === 0) {
-            for (let j = 0; j < groupsOrMatchesLength; j++) {
-                addToList(j)
-            }
-        } else {
-            for (let j = groupsOrMatchesLength - 1; j > -1; j--) {
-                addToList(j)
-            }
-        }
-    }
+    // Display the seeds that Teams are given, based on their place in their match
+    // Purely visual to show where the participants in the next round are coming from
+    const results = fillSeedingList(
+        groupsOrMatchesLength,
+        highestTeamCount,
+        watchIsGroupRound
+            ? watchGroups.map(g => Number(g.teams))
+            : watchMatches.map(m => Number(m.teams)),
+        teamCounts.nextRound,
+    )
 
     type MatchOrGroupInfo = {
         originalIndex: number
@@ -220,11 +175,11 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                 nextRound: teamCounts.nextRound,
             },
             useDefaultSeeding: watchUseDefaultSeeding,
-            outcomeFunctions: {
-                findLowestMissingParticipant: yetUnregisteredOutcomes =>
+            participantFunctions: {
+                findLowestMissingParticipant: yetUnregisteredParticipants =>
                     findLowestMissingParticipant(
                         isGroups,
-                        yetUnregisteredOutcomes,
+                        yetUnregisteredParticipants,
                         info.originalIndex,
                     ),
                 updateRoundParticipants: (repeatForPreviousRound, nextRoundTeams) =>
@@ -234,13 +189,13 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         repeatForPreviousRound,
                         nextRoundTeams,
                     ),
-                setParticipantValuesForThis: outcomes =>
+                setParticipantValuesForThis: participants =>
                     setParticipantValuesForMatchOrGroup(
                         formContext,
                         round.index,
                         isGroups,
                         info.originalIndex,
-                        outcomes,
+                        participants,
                     ),
                 updatePreviousRoundParticipants: thisRoundTeams =>
                     updatePreviousRoundParticipants(formContext, round.index - 1, thisRoundTeams),
@@ -292,10 +247,10 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                             </Button>
                         </Box>
                     </Stack>
-                    <CheckboxElement
+                    {/*<CheckboxElement
                         name={`rounds[${round.index}].isGroupRound`}
                         label={<FormInputLabel label={'Group Phase'} required={true} horizontal />}
-                    />
+                    />*/}
                     <FormInputText name={`rounds[${round.index}].name`} label={'Round name'} />
                     <CheckboxElement
                         name={`rounds[${round.index}].required`}
@@ -349,7 +304,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                     teams: `${defaultMatchTeamSize}`,
                                                     name: '',
                                                     participants: appendPreparedParticipants,
-                                                    position: matchFields.length,
+                                                    position: matchFields.length + 1,
                                                 })
                                             }}
                                             sx={{width: 1}}>

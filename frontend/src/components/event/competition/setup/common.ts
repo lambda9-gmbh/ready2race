@@ -9,7 +9,7 @@ export type CompetitionSetupMatchOrGroupProps = {
     outcomes: number[]
     teamCounts: {thisRoundWithoutThis: number; nextRound: number}
     useDefaultSeeding: boolean
-    outcomeFunctions: ParticipantFunctions
+    participantFunctions: ParticipantFunctions
 }
 
 export type ParticipantFunctions = {
@@ -93,11 +93,9 @@ export const fillSeedingList = (
 ) => {
     const seedings: number[][] = []
 
-    for (let i = 0; i < (groupOrMatchCount ?? 0); i++) {
+    for (let i = 0; i < groupOrMatchCount; i++) {
         seedings.push([])
     }
-
-    const undefinedTeamsCount = teams.filter(v => v === 0).length
 
     let seedingsTaken = 0
 
@@ -105,8 +103,7 @@ export const fillSeedingList = (
         const addToList = (index: number) => {
             if (
                 teams[index] > seedings[index].length ||
-                undefinedTeamsCount === 0 ||
-                seedingsTaken < nextRoundTeams
+                (teams[index] === 0 && seedingsTaken < nextRoundTeams)
             ) {
                 seedingsTaken += 1
                 seedings[index].push(seedingsTaken)
@@ -165,41 +162,6 @@ export const updateParticipants = (
                       nextRoundTeams,
                   ).map(v => ({participants: v}))
                 : (groupsOrMatches.map(() => ({participants: []})) ?? [])
-
-        // In Round 1 (index=0) there are no participants since no seeds are coming from the previous round
-       /* if (roundIndex !== 0) {
-            const undefinedTeamsCount = groupsOrMatches.filter(v => v.teams === '').length
-
-            const takenParticipants: number[] = []
-            for (let i = 0; i < highestTeamsValue; i++) {
-                const addParticipant = (j: number) => {
-                    const lowest = getLowest(takenParticipants, 1)
-
-                    const teamCountUndefined = Number(groupsOrMatches[j].teams) === 0
-
-                    // If the match or group does not yet have the desired amount of participants and there are still participants to be handed out - based on next round
-                    if (
-                        (Number(groupsOrMatches[j].teams) >
-                            newParticipants[j].participants.length ||
-                            teamCountUndefined) &&
-                        (undefinedTeamsCount === 0 || takenParticipants.length < nextRoundTeams)
-                    ) {
-                        newParticipants[j].participants.push(lowest)
-                        takenParticipants.push(lowest)
-                    }
-                }
-                // This creates the default seeding (A(W1) -> B(W2) -> C(W3) -> B -> A -> B...)
-                if (i % 2 === 0) {
-                    for (let j = 0; j < newParticipants.length; j++) {
-                        addParticipant(j)
-                    }
-                } else {
-                    for (let j = newParticipants.length - 1; j > -1; j--) {
-                        addParticipant(j)
-                    }
-                }
-            }
-        }*/
 
         newParticipants?.forEach((val, index) => {
             setParticipantValuesForMatchOrGroup(
@@ -314,232 +276,3 @@ export const onTeamsChanged = (
         participantFunctions.updateRoundParticipants(true, teamCounts.nextRound)
     }
 }
-
-export const competitionSetupDummyData: CompetitionSetupForm = {
-    rounds: [],
-}
-/*{
-    name: 'Gruppenphase',
-    required: true,
-    matches: [],
-    groups: [
-        {
-            duplicatable: false,
-            weighting: 1,
-            teams: '4',
-            name: 'Gruppe A',
-            matches: [
-                {
-                    duplicatable: false,
-                    weighting: 1,
-                    teams: '2',
-                    name: 'GA-M1',
-                    position: 1,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 2,
-                    teams: '2',
-                    name: 'GA-M2',
-                    position: 2,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 3,
-                    teams: '2',
-                    name: 'GA-M3',
-                    position: 5,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 4,
-                    teams: '2',
-                    name: 'GA-M4',
-                    position: 6,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 5,
-                    teams: '2',
-                    name: 'GA-M5',
-                    position: 9,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 6,
-                    teams: '2',
-                    name: 'GA-M6',
-                    position: 10,
-                },
-            ],
-            outcomes: [{outcome: 1}, {outcome: 4}, {outcome: 5}, {outcome: 8}],
-            matchTeams: 2,
-        },
-        {
-            duplicatable: false,
-            weighting: 1,
-            teams: '4',
-            name: 'Gruppe B',
-            matches: [
-                {
-                    duplicatable: false,
-                    weighting: 1,
-                    teams: '2',
-                    name: 'GB-M1',
-                    position: 3,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 2,
-                    teams: '2',
-                    name: 'GB-M2',
-                    position: 4,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 3,
-                    teams: '2',
-                    name: 'GB-M3',
-                    position: 7,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 4,
-                    teams: '2',
-                    name: 'GB-M4',
-                    position: 8,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 5,
-                    teams: '2',
-                    name: 'GB-M5',
-                    position: 11,
-                },
-                {
-                    duplicatable: false,
-                    weighting: 6,
-                    teams: '2',
-                    name: 'GB-M6',
-                    position: 12,
-                },
-            ],
-            outcomes: [{outcome: 2}, {outcome: 3}, {outcome: 6}, {outcome: 7}],
-            matchTeams: 2,
-        },
-    ],
-    useDefaultSeeding: true,
-    isGroupRound: true,
-},
-{
-    name: 'Vorrunde',
-    required: true,
-    matches: [
-        {
-            duplicatable: false,
-            weighting: 1,
-            teams: '',
-            name: undefined,
-            outcomes: [
-                {outcome: 1},
-                {outcome: 2},
-                {outcome: 3},
-                {outcome: 4},
-                {outcome: 5},
-                {outcome: 6},
-                {outcome: 7},
-                {outcome: 8},
-            ],
-            position: 1,
-        },
-    ],
-    groups: [],
-    useDefaultSeeding: true,
-    isGroupRound: false,
-},
-{
-    name: 'Viertelfinale',
-    required: false,
-    matches: [
-        {
-            duplicatable: false,
-            weighting: 1,
-            teams: '2',
-            name: 'VF1',
-            outcomes: [{outcome: 1}, {outcome: 8}],
-            position: 1,
-        },
-        {
-            duplicatable: false,
-            weighting: 4,
-            teams: '2',
-            name: 'VF2',
-            outcomes: [{outcome: 4}, {outcome: 5}],
-            position: 2,
-        },
-        {
-            duplicatable: false,
-            weighting: 3,
-            teams: '2',
-            name: 'VF3',
-            outcomes: [{outcome: 3}, {outcome: 6}],
-            position: 3,
-        },
-        {
-            duplicatable: false,
-            weighting: 2,
-            teams: '2',
-            name: 'VF4',
-            outcomes: [{outcome: 2}, {outcome: 7}],
-            position: 4,
-        },
-    ],
-    groups: [],
-    useDefaultSeeding: true,
-    isGroupRound: false,
-},
-{
-    name: 'Halbfinale',
-    required: false,
-    matches: [
-        {
-            duplicatable: false,
-            weighting: 1,
-            teams: '2',
-            name: 'HF1',
-            outcomes: [{outcome: 1}, {outcome: 4}],
-            position: 1,
-        },
-        {
-            duplicatable: false,
-            weighting: 2,
-            teams: '2',
-            name: 'HF2',
-            outcomes: [{outcome: 2}, {outcome: 3}],
-            position: 2,
-        },
-    ],
-    groups: [],
-    useDefaultSeeding: true,
-    isGroupRound: false,
-},
-{
-    name: 'Finale',
-    required: true,
-    matches: [
-        {
-            duplicatable: false,
-            weighting: 1,
-            teams: '2',
-            name: 'F',
-            outcomes: [{outcome: 1}, {outcome: 2}],
-            position: 1,
-        },
-    ],
-    groups: [],
-    useDefaultSeeding: true,
-    isGroupRound: false,
-},
-],
-}
-*/

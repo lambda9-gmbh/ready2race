@@ -21,6 +21,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
 
     const watchParticipants = formContext.watch(participantsFormPath)
 
+
     const controlledParticipantFields = participantFields.map((field, index) => ({
         ...field,
         ...watchParticipants?.[index],
@@ -65,11 +66,12 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                     onTeamsChanged(
                         Number(v.target.value),
                         props.useDefaultSeeding,
-                        props.outcomeFunctions,
+                        props.participantFunctions,
                         props.teamCounts,
                     )
                 }
             />
+            {/* todo execution Order + 1 */}
             <FormInputNumber
                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].position`}
                 label={'Execution order'}

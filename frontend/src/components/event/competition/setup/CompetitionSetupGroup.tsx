@@ -148,7 +148,7 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                     onTeamsChanged(
                         Number(v.target.value),
                         props.useDefaultSeeding,
-                        props.outcomeFunctions,
+                        props.participantFunctions,
                         props.teamCounts,
                     )
                 }
