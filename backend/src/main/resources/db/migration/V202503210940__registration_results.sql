@@ -4,10 +4,10 @@ create table document_template
 (
     id uuid primary key,
     name text not null,
-    page_margin_top double precision,
-    page_margin_left double precision,
-    page_margin_right double precision,
-    page_margin_bottom double precision
+    page_padding_top double precision,
+    page_padding_left double precision,
+    page_padding_right double precision,
+    page_padding_bottom double precision
 );
 
 create table document_template_data

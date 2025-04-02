@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -32,15 +33,57 @@ class PdfTest {
 
         val pageTemplate = PageTemplate(
             bytes = bytes,
-            pageMargin = PageMargin.default
+            pagepadding = Padding.defaultPagePadding
         )
 
         val doc = document(pageTemplate) {
             page {
-                text("Hello world")
-            }
-            page {
-                text("Hello world again")
+                text {
+                    "Text before table gg"
+                }
+                text {
+                    "New Line"
+                }
+                table {
+                    column(100F)
+                    column(100F)
+                    column(100F)
+
+                    row(color = Color.CYAN) {
+                        cell {
+                            text { "Hello Wogrld!" }
+                            text { "Test" }
+                        }
+                        cell {
+                            text { "Helglo World!" }
+                        }
+                        cell {
+                            text { "Hello World!" }
+                        }
+                    }
+                    row(color = Color.YELLOW) {
+                        cell {
+                            text { "gHello World!" }
+                        }
+                        cell {
+                            text { "Hello World!" }
+                        }
+                        cell {
+                            text { "gHello World!" }
+                            text { "Test 2"}
+                            text(newLine = false) { "Test 3 etwas länbger" }
+                        }
+                    }
+                }
+                text {
+                    "Text after table gg"
+                }
+                text {
+                    "Please new Line"
+                }
+                text {
+                    "lol"
+                }
             }
         }
 

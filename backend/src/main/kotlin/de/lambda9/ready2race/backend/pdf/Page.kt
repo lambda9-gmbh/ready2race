@@ -7,7 +7,7 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 
 data class Page(
     val format: PDRectangle,
-    val pageMargin: PageMargin,
+    val padding: Padding,
     val elements: List<Element>,
 ) {
 
@@ -19,7 +19,7 @@ data class Page(
             page = page,
             content = content,
             startPosition = Position(x = 0F, y = 0F),
-            margin = pageMargin,
+            parentsPadding = padding,
         )
     }
 

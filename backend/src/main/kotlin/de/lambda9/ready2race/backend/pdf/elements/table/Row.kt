@@ -3,22 +3,22 @@ package de.lambda9.ready2race.backend.pdf.elements.table
 import de.lambda9.ready2race.backend.pdf.*
 import kotlin.math.max
 
-data class Table(
-    override val children: List<Row>,
+data class Row(
+    override val children: List<Cell>,
     override val padding: Padding,
-) : ElementWithChildren<Row> {
+) : ElementWithChildren<Cell> {
 
     override fun render(
         context: RenderContext,
         requestNewPage: (currentContext: RenderContext) -> RenderContext
     ): RenderContext {
 
-        val size = endPosition(Position(0f, 0f))
+        val height = endPosition(Position(0f, 0f)).y
 
         val top = context.parentsPadding.top + context.startPosition.y
         val left = context.parentsPadding.left
         val right = context.parentsPadding.right
-        val bottom = context.page.mediaBox.height - top - size.y
+        val bottom = context.parentsPadding.bottom
 
         val contentTop = top + padding.top
         val contentLeft = left + padding.left
@@ -37,15 +37,16 @@ data class Table(
             ),
         )
 
-        val lastContext = children.fold(ctx) { c, row ->
-            c.startPosition.x = 0F
-            row.render(c) {
+        val lastContext = children.fold(ctx) { c, cell ->
+            c.startPosition.y = 0F
+
+            cell.render(c) {
                 // TODO @Incomplete
                 c
             }
         }
 
-        context.startPosition.y += lastContext.startPosition.y + padding.y
+        context.startPosition.y += height + padding.y
 
         return context
     }
@@ -57,7 +58,7 @@ data class Table(
         val lastPosition = children.fold(position) { p, child ->
             xMax = max(xMax, p.x)
             yMax = max(yMax, p.y)
-            p.x = position.x
+            p.y = position.y
             child.endPosition(p)
         }
 
@@ -69,4 +70,5 @@ data class Table(
             y = yMax,
         )
     }
+
 }

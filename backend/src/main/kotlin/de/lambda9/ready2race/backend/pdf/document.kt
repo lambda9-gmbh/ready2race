@@ -14,7 +14,7 @@ fun document(
     val templateDoc = Loader.loadPDF(pageTemplate.bytes)
     val templatePage = templateDoc.getPage(0)
     val format = templatePage.mediaBox
-    val doc = document(format, pageTemplate.pageMargin, builder)
+    val doc = document(format, pageTemplate.pagepadding, builder)
 
     val pages = doc.pages
 
@@ -34,11 +34,11 @@ fun document(
 
 fun document(
     format: PDRectangle = PDRectangle.A4,
-    pageMargin: PageMargin = PageMargin.default,
+    pagepadding: Padding = Padding.defaultPagePadding,
     builder: DocumentBuilder.() -> Unit,
 ): PDDocument {
 
-    val pages = DocumentBuilder(format, pageMargin).apply(builder).pages
+    val pages = DocumentBuilder(format, pagepadding).apply(builder).pages
 
     return Document(
         pages = pages,

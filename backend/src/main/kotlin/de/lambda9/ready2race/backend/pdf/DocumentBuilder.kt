@@ -4,16 +4,16 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 
 class DocumentBuilder(
     private val format: PDRectangle,
-    private val pageMargin: PageMargin,
+    private val pagepadding: Padding,
 ) {
 
     internal val pages: MutableList<Page> = mutableListOf()
 
     fun page(
-        builder: PageBuilder.() -> Unit = {}
+        builder: BlockBuilder.() -> Unit = {}
     ) {
-        val elements = PageBuilder().apply(builder).elements
-        pages.add(Page(format, pageMargin, elements))
+        val elements = BlockBuilder().apply(builder).children
+        pages.add(Page(format, pagepadding, elements))
     }
 
 }

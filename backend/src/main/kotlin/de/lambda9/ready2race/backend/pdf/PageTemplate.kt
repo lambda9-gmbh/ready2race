@@ -2,5 +2,5 @@ package de.lambda9.ready2race.backend.pdf
 
 data class PageTemplate(
     val bytes: ByteArray,
-    val pageMargin: PageMargin,
+    val pagepadding: Padding,
 )

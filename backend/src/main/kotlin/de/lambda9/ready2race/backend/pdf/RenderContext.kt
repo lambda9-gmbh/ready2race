@@ -7,5 +7,5 @@ data class RenderContext(
     val page: PDPage,
     val content: PDPageContentStream,
     var startPosition: Position,
-    val margin: PageMargin,
+    val parentsPadding: Padding,
 )

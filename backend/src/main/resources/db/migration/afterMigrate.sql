@@ -272,10 +272,10 @@ from event e
 group by e.id;
 
 create view document_template_assignment as
-select dt.page_margin_top,
-       dt.page_margin_left,
-       dt.page_margin_right,
-       dt.page_margin_bottom,
+select dt.page_padding_top,
+       dt.page_padding_left,
+       dt.page_padding_right,
+       dt.page_padding_bottom,
        dtd.data,
        usage.document_type,
        usage.event
