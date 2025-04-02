@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.app.club.entity
+package de.lambda9.ready2race.backend.app.participant.entity
 
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import java.time.LocalDateTime

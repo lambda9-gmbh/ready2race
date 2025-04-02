@@ -231,6 +231,7 @@ export type EventDto = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+    published?: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -328,6 +329,7 @@ export type EventRequest = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+    published: boolean
 }
 
 export type FeeDto = {
@@ -596,6 +598,7 @@ export type RegisterRequest = {
     password: string
     firstname: string
     lastname: string
+    clubname: string
     language: EmailLanguage
     callbackUrl: string
 }

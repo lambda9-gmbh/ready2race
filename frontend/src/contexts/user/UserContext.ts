@@ -14,6 +14,7 @@ export type AuthenticatedUser = {
 export type AnonymousUser = {
     loggedIn: false
     login: (data: LoginDto) => void
+    checkPrivilege: (privilege: Privilege) => false
 }
 
 export type User = AuthenticatedUser | AnonymousUser

@@ -2747,6 +2747,7 @@ components:
         - password
         - firstname
         - lastname
+        - clubname
         - language
         - callbackUrl
       properties:
@@ -2757,6 +2758,8 @@ components:
         firstname:
           type: string
         lastname:
+          type: string
+        clubname:
           type: string
         language:
           $ref: '#/components/schemas/EmailLanguage'
@@ -2935,11 +2938,14 @@ components:
           format: date-time
         invoicePrefix:
           type: string
+        published:
+          type: boolean
 
     EventRequest:
       type: object
       required:
         - name
+        - published
       properties:
         name:
           type: string
@@ -2955,6 +2961,8 @@ components:
           format: date-time
         invoicePrefix:
           type: string
+        published:
+          type: boolean
 
 
 

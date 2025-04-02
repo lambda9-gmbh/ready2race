@@ -2,9 +2,9 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantDto
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantForEventDto
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantUpsertDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participant.control.*
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventSort

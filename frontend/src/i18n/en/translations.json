@@ -93,7 +93,8 @@
       "roles": "Roles",
       "users": "Users",
       "config": "Configurations",
-      "clubs": "Clubs"
+      "clubs": "Clubs",
+      "myClubs": "My Club"
     }
   },
   "club": {
@@ -119,6 +120,7 @@
       "from": "Registration period start",
       "to": "Registration period end"
     },
+    "published": "Published",
     "eventDay": {
       "eventDay": "Day",
       "eventDays": "Days",
@@ -255,6 +257,11 @@
         "title": "Registration successful!",
         "subtitle": "You will receive a confirmation by e-mail."
       }
+    },
+    "tabs": {
+      "general" : "General",
+      "participants" : "Participants",
+      "settings": "Settings"
     }
   },
   "participantRequirement": {

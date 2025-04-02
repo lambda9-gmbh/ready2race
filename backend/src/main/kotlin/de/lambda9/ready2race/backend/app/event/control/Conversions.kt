@@ -19,6 +19,7 @@ fun EventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 registrationAvailableFrom = registrationAvailableFrom,
                 registrationAvailableTo = registrationAvailableTo,
                 invoicePrefix = invoicePrefix,
+                published = published,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -36,5 +37,6 @@ fun EventRecord.eventDto(): App<Nothing, EventDto> = KIO.ok(
         registrationAvailableFrom = registrationAvailableFrom,
         registrationAvailableTo = registrationAvailableTo,
         invoicePrefix = invoicePrefix,
+        published = published
     )
 )

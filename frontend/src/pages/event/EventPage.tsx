@@ -19,14 +19,17 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'
-import {useState} from 'react'
+import {useMemo, useState} from 'react'
 import TabPanel from '@components/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {readEventGlobal} from '@authorization/privileges.ts'
 
 const EventPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const user = useUser()
 
     const [activeTab, setActiveTab] = useState(0)
 
@@ -68,6 +71,16 @@ const EventPage = () => {
         }
     }
 
+    const canRegister = useMemo(
+        () =>
+            data?.registrationAvailableFrom != null &&
+            new Date(data?.registrationAvailableFrom) < new Date() &&
+            (data?.registrationAvailableTo == null ||
+                new Date(data?.registrationAvailableTo) > new Date()),
+
+        [data],
+    )
+
     return (
         <Box>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -78,7 +91,10 @@ const EventPage = () => {
                             justifyContent={'space-between'}
                             alignItems={'center'}>
                             <Typography variant="h1">{data.name}</Typography>
-                            <Link to={'/event/$eventId/register'} params={{eventId}}>
+                            <Link
+                                to={'/event/$eventId/register'}
+                                params={{eventId}}
+                                hidden={!canRegister}>
                                 <Button endIcon={<Forward />} variant={'contained'}>
                                     {t('event.registerNow')}
                                 </Button>
@@ -86,9 +102,11 @@ const EventPage = () => {
                         </Stack>
                         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
                             <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-                                <Tab label="Allgemein" {...a11yProps(0)} />
-                                <Tab label="Teilnehmer" {...a11yProps(1)} />
-                                <Tab label="Einstellungen" {...a11yProps(2)} />
+                                <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
+                                <Tab label={t('event.tabs.participants')} {...a11yProps(1)} />
+                                {user.checkPrivilege(readEventGlobal) && (
+                                    <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
+                                )}
                             </Tabs>
                         </Box>
                         <TabPanel index={0} activeTab={activeTab}>
@@ -103,11 +121,6 @@ const EventPage = () => {
                                     title={t('event.eventDay.eventDays')}
                                 />
                                 <EventDayDialog {...eventDayAdministrationProps.dialog} />
-                                <DocumentTable
-                                    {...documentAdministrationProps.table}
-                                    title={t('event.document.documents')}
-                                />
-                                <DocumentDialog {...documentAdministrationProps.dialog} />
                             </Stack>
                         </TabPanel>
                         <TabPanel index={1} activeTab={activeTab}>
@@ -117,6 +130,11 @@ const EventPage = () => {
                             />
                         </TabPanel>
                         <TabPanel index={2} activeTab={activeTab}>
+                            <DocumentTable
+                                {...documentAdministrationProps.table}
+                                title={t('event.document.documents')}
+                            />
+                            <DocumentDialog {...documentAdministrationProps.dialog} />
                             <ParticipantRequirementForEventTable
                                 {...participantRequirementAdministrationProps.table}
                                 title={t('participantRequirement.participantRequirements')}

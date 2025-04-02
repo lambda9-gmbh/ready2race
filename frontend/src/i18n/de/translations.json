@@ -93,7 +93,8 @@
       "roles": "Rollen",
       "users": "Benutzer",
       "config": "Konfigurationen",
-      "clubs": "Vereine"
+      "clubs": "Vereine",
+      "myClub": "Mein Verein"
     }
   },
   "club": {
@@ -119,6 +120,7 @@
       "from": "Anmeldezeitraum von",
       "to": "Anmeldezeitraum bis"
     },
+    "published": "Veröffentlicht",
     "eventDay": {
       "eventDay": "Tag",
       "eventDays": "Tage",
@@ -255,6 +257,11 @@
         "title": "Erfolgreich angemeldet!",
         "subtitle": "Du bekommst eine Bestätigung per Mail."
       }
+    },
+    "tabs": {
+      "general" : "Allgemein",
+      "participants" : "Teilnehmer",
+      "settings": "Einstellungen"
     }
   },
   "participantRequirement": {

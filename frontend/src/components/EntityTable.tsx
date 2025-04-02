@@ -20,13 +20,17 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Alert, Box, Button, Stack, TextField, Typography} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {ApiError, Pagination, Resource} from '@api/types.gen.ts'
+import {ApiError, Pagination, Privilege, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
     GetError extends ApiError,
     DeleteError extends ApiError,
 > = BaseEntityTableProps<Entity> & ExtendedEntityTableProps<Entity, GetError, DeleteError>
+
+export type ExtendedGridColDef<R extends GridValidRowModel = any, V = any, F = V> = {
+    requiredPrivilege?: Privilege
+} & GridColDef<R, V, F>
 
 type ExtendedEntityTableProps<
     Entity extends GridValidRowModel,
@@ -36,7 +40,7 @@ type ExtendedEntityTableProps<
     initialPagination: GridPaginationModel
     pageSizeOptions: (number | {value: number; label: string})[]
     initialSort: GridSortModel
-    columns: GridColDef<Entity>[]
+    columns: ExtendedGridColDef<Entity>[]
     dataRequest: (
         signal: AbortSignal,
         paginationParameters: PaginationParameters,
@@ -101,23 +105,23 @@ const EntityTable = <
     if (user.loggedIn) {
         if (resource) {
             crud = {
-                create: user.checkPrivilege({action: 'CREATE', resource, scope: 'GLOBAL'}),
-                read: user.checkPrivilege({action: 'READ', resource, scope: 'GLOBAL'}),
-                update: user.checkPrivilege({action: 'UPDATE', resource, scope: 'GLOBAL'}),
-                delete: user.checkPrivilege({action: 'DELETE', resource, scope: 'GLOBAL'}),
+                create: user.checkPrivilege({action: 'CREATE', resource, scope: 'OWN'}),
+                read: user.checkPrivilege({action: 'READ', resource, scope: 'OWN'}),
+                update: user.checkPrivilege({action: 'UPDATE', resource, scope: 'OWN'}),
+                delete: user.checkPrivilege({action: 'DELETE', resource, scope: 'OWN'}),
             }
         } else {
             const rest = user.checkPrivilege({
                 action: 'UPDATE',
                 resource: parentResource,
-                scope: 'GLOBAL',
+                scope: 'OWN',
             })
             crud = {
                 create: rest,
                 read: user.checkPrivilege({
                     action: 'READ',
                     resource: parentResource,
-                    scope: 'GLOBAL',
+                    scope: 'OWN',
                 }),
                 update: rest,
                 delete: rest,
@@ -192,7 +196,10 @@ const EntityTableInternal = <
                   },
               ]
             : []),
-        ...columns,
+        ...columns.filter(
+            c =>
+                !c.requiredPrivilege || (user.loggedIn && user.checkPrivilege(c.requiredPrivilege)),
+        ),
         {
             field: 'actions',
             type: 'actions' as 'actions',

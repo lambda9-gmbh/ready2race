@@ -20,6 +20,8 @@ import ParticipantRequirementApproveManuallyForEventDialog, {
 import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Stack, Typography} from '@mui/material'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateEventGlobal} from '@authorization/privileges.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -30,6 +32,7 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEventDto>) => {
     const {t} = useTranslation()
+    const user = useUser()
 
     const {eventId} = eventIndexRoute.useParams()
 
@@ -163,17 +166,19 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
             <EntityTable
                 {...props}
                 customTableActions={
-                    <SplitButton
-                        main={{
-                            icon: <VerifiedUser />,
-                            label: t('event.participantRequirement.checkUpload'),
-                            onClick: () =>
-                                participantRequirementCheckForEventConfigProps.table.openDialog(
-                                    undefined,
-                                ),
-                        }}
-                        options={splitOptions}
-                    />
+                    user.checkPrivilege(updateEventGlobal) && (
+                        <SplitButton
+                            main={{
+                                icon: <VerifiedUser />,
+                                label: t('event.participantRequirement.checkUpload'),
+                                onClick: () =>
+                                    participantRequirementCheckForEventConfigProps.table.openDialog(
+                                        undefined,
+                                    ),
+                            }}
+                            options={splitOptions}
+                        />
+                    )
                 }
                 gridProps={{getRowId: row => row.id}}
                 parentResource={'EVENT'}

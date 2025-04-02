@@ -8,6 +8,7 @@ create table app_user_registration
     password   text      not null,
     firstname  text      not null,
     lastname   text      not null,
+    clubname   text,
     language   char(2)   not null,
     expires_at timestamp not null,
     created_at timestamp not null

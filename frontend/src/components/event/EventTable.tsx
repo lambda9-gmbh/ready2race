@@ -1,10 +1,12 @@
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
-import EntityTable from '@components/EntityTable.tsx'
+import EntityTable, {ExtendedGridColDef} from '@components/EntityTable.tsx'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {deleteEvent, getEvents} from "@api/sdk.gen.ts";
-import {EventDto} from "@api/types.gen.ts";
+import {deleteEvent, getEvents} from '@api/sdk.gen.ts'
+import {EventDto} from '@api/types.gen.ts'
+import {Check} from '@mui/icons-material'
+import {readEventGlobal} from '@authorization/privileges.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -27,7 +29,7 @@ const deleteRequest = (dto: EventDto) => {
 const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     const {t} = useTranslation()
 
-    const columns: GridColDef<EventDto>[] = [
+    const columns: ExtendedGridColDef<EventDto>[] = [
         {
             field: 'name',
             headerName: t('event.name'),
@@ -39,6 +41,13 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
             headerName: t('event.description'),
             flex: 2,
             sortable: false,
+        },
+        {
+            field: 'published',
+            headerName: t('event.published'),
+            sortable: false,
+            requiredPrivilege: readEventGlobal,
+            renderCell: ({value}) => (value ? <Check /> : <></>),
         },
     ]
 
