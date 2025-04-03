@@ -2614,6 +2614,8 @@ components:
           type: array
           items:
             type: integer
+        startTimeOffset:
+          type: integer
 
     CompetitionSetupGroupDto:
       type: object

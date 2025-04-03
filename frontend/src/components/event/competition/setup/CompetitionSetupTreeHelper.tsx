@@ -61,7 +61,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
         }
         const rounds: TreeHelperRound[] = []
 
-        const foo = Math.pow(2, roundCount) - teams
+        const teamsMatchesDiff = Math.pow(2, roundCount) - teams
 
         for (let r = 0; r < roundCount; r++) {
             const matchesTeams: number[] = []
@@ -72,7 +72,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
             for (let m = 0; m < matchCount; m++) {
                 // If this is the first round and the participants are not fitting into default "two to the power of X(Round count)"
                 // then some matches will have only a teams of 1 (Starting with Match Weighting 1 going upwards)
-                const teams = r === roundCount - 1 && m <= foo - 1 ? 2 - 1 : 2
+                const teams = r === roundCount - 1 && m <= teamsMatchesDiff - 1 ? 2 - 1 : 2
 
                 matchesTeams.push(teams)
             }

@@ -9,6 +9,7 @@ data class CompetitionSetupMatchDto(
     val teams: Int?,
     val name: String?,
     val participants: List<Int>,
+    val startTimeOffset: Long?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate (e.g. match needs a weighting when in a round and has to be null when in a group)
 
@@ -20,6 +21,7 @@ data class CompetitionSetupMatchDto(
                 teams = 2,
                 name = "Match name",
                 participants = listOf(1, 8),
+                startTimeOffset = 60000
             )
     }
 }

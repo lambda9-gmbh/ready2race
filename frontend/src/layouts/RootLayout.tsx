@@ -87,7 +87,9 @@ const RootLayout = () => {
                         <Box
                             sx={{
                                 padding: 4,
-                                width: 1,
+                                boxSizing: 'border-box',
+                                flex: 1,
+                                minWidth: 0,
                             }}>
                             <Outlet />
                         </Box>

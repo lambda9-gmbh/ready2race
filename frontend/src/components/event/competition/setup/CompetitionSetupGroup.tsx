@@ -55,7 +55,7 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
 
     // Calculates the Matchups for each match based on their position
     const possibleMatchups: number[][] = []
-    const recursiveFoo = (indexes: number[], maxLoopDepth: number) => {
+    const recursiveMatchupCalculation = (indexes: number[], maxLoopDepth: number) => {
         if (indexes.length === maxLoopDepth) {
             const matchup = indexes.map(v => v + 1)
             possibleMatchups.push(matchup)
@@ -63,12 +63,12 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
 
         for (let j = indexes[indexes.length - 1] + 1; j < teamsNumber; j++) {
             if (indexes.length < maxLoopDepth) {
-                recursiveFoo([...indexes, j], maxLoopDepth)
+                recursiveMatchupCalculation([...indexes, j], maxLoopDepth)
             }
         }
     }
     for (let i = 0; i < teamsNumber; i++) {
-        recursiveFoo([i], Number(watchMatchTeams))
+        recursiveMatchupCalculation([i], Number(watchMatchTeams))
     }
 
     const getRepeatingMatchupIteration = (
@@ -146,6 +146,7 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                 label={'Teams'}
                 onChange={v =>
                     onTeamsChanged(
+                        roundIndex,
                         Number(v.target.value),
                         props.useDefaultSeeding,
                         props.participantFunctions,

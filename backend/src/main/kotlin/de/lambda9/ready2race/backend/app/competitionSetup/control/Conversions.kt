@@ -79,7 +79,8 @@ fun CompetitionSetupMatchDto.toRecord(index: Int, competitionSetupRoundId: UUID,
         weighting = weighting,
         teams = teams,
         name = name,
-        position = index
+        position = index,
+        startTimeOffset = startTimeOffset,
     )
 
 fun CompetitionSetupMatchRecord.toDto(participants: List<Int>) = CompetitionSetupMatchDto(
@@ -88,4 +89,5 @@ fun CompetitionSetupMatchRecord.toDto(participants: List<Int>) = CompetitionSetu
     teams = teams,
     name = name,
     participants = participants,
+    startTimeOffset = startTimeOffset
 )

@@ -10,6 +10,7 @@ export type CompetitionSetupMatchOrGroupProps = {
     teamCounts: {thisRoundWithoutThis: number; nextRound: number}
     useDefaultSeeding: boolean
     participantFunctions: ParticipantFunctions
+    useStartTimeOffsets: boolean
 }
 
 export type ParticipantFunctions = {
@@ -250,6 +251,7 @@ export const getMatchupsString = (participants: number[]) => {
 }
 
 export const onTeamsChanged = (
+    roundIndex: number,
     teamsValue: number,
     useDefaultSeeding: boolean,
     participantFunctions: ParticipantFunctions,
@@ -260,12 +262,16 @@ export const onTeamsChanged = (
 ) => {
     if (!useDefaultSeeding) {
         const participants: number[] = []
-        // if teamsValue is 0 (undefined) the necessaryTeamsValue is calculated from the needed teams for next round
-        const necessaryTeams =
-            teamsValue > 0 ? teamsValue : teamCounts.nextRound - teamCounts.thisRoundWithoutThis
 
-        for (let i = 0; i < necessaryTeams; i++) {
-            participants.push(participantFunctions.findLowestMissingParticipant(participants))
+        // The first round has no participants
+        if (roundIndex !== 0) {
+            // if teamsValue is 0 (undefined) the necessaryTeamsValue is calculated from the needed teams for next round
+            const necessaryTeams =
+                teamsValue > 0 ? teamsValue : teamCounts.nextRound - teamCounts.thisRoundWithoutThis
+
+            for (let i = 0; i < necessaryTeams; i++) {
+                participants.push(participantFunctions.findLowestMissingParticipant(participants))
+            }
         }
 
         participantFunctions.setParticipantValuesForThis(participants)

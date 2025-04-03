@@ -8,6 +8,7 @@ import {
     onTeamsChanged,
 } from '@components/event/competition/setup/common.ts'
 import CompetitionSetupParticipants from '@components/event/competition/setup/CompetitionSetupParticipants.tsx'
+import {FormInputSeconds} from '@components/form/input/FormInputSeconds.tsx'
 
 type Props = CompetitionSetupMatchOrGroupProps
 const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
@@ -20,7 +21,6 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
     })
 
     const watchParticipants = formContext.watch(participantsFormPath)
-
 
     const controlledParticipantFields = participantFields.map((field, index) => ({
         ...field,
@@ -42,7 +42,6 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 p: 2,
                 boxSizing: 'border-box',
             }}>
-            <Typography sx={{textAlign: 'center'}}>Weighting: {fieldInfo.index + 1}</Typography>
             {watchParticipants.length > 0 && (
                 <>
                     <Typography variant="subtitle1">Participants</Typography>
@@ -52,26 +51,13 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         controlledParticipantFields={controlledParticipantFields}
                         useDefaultSeeding={props.useDefaultSeeding}
                     />
+                    <Divider />
                 </>
             )}
-            <Divider />
             <FormInputText
                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].name`}
                 label={'Match name'}
             />
-            <FormInputText
-                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`}
-                label={'Teams'}
-                onChange={v =>
-                    onTeamsChanged(
-                        Number(v.target.value),
-                        props.useDefaultSeeding,
-                        props.participantFunctions,
-                        props.teamCounts,
-                    )
-                }
-            />
-            {/* todo execution Order + 1 */}
             <FormInputNumber
                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].position`}
                 label={'Execution order'}
@@ -81,11 +67,34 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                     output: value => Number(value.target.value),
                 }}
             />
+            {props.useStartTimeOffsets && (
+                <FormInputSeconds
+                    name={`rounds[${roundIndex}].matches[${fieldInfo.index}].startTimeOffset`}
+                    label={'Start time offset'}
+                    transform={{
+                        output: value =>
+                            value.target.value !== '' ? Number(value.target.value) : undefined,
+                    }}
+                />
+            )}
+            <FormInputText
+                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`}
+                label={'Teams'}
+                onChange={v =>
+                    onTeamsChanged(
+                        roundIndex,
+                        Number(v.target.value),
+                        props.useDefaultSeeding,
+                        props.participantFunctions,
+                        props.teamCounts,
+                    )
+                }
+            />
             <CheckboxElement
                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].duplicatable`}
                 disabled={duplicatableCheckDisabled}
                 required={false}
-                label={<FormInputLabel label={'Duplicatable'} required={false} horizontal />}
+                label={<FormInputLabel label={'Duplicatable'} required={true} horizontal />}
             />
             <Divider />
 

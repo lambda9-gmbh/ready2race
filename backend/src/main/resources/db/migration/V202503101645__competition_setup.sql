@@ -56,6 +56,7 @@ create table competition_setup_match
     teams                   integer,
     name                    text,
     position                integer not null,
+    start_time_offset       bigint,
     constraint chk_not_duplicatable_and_in_group check (
         not (duplicatable is true and competition_setup_group is not null)
         )

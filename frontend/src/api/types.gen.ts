@@ -154,6 +154,7 @@ export type CompetitionSetupMatchDto = {
     teams?: number
     name?: string
     participants: Array<number>
+    startTimeOffset?: number
 }
 
 export type CompetitionSetupRoundDto = {

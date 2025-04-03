@@ -34,6 +34,7 @@
           "range": "Please enter a number between {{min}} and {{max}}."
         }
       },
+      "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field."
     },
