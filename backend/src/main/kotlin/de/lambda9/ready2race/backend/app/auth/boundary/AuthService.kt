@@ -17,11 +17,11 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.hours
 
 object AuthService {
 
-    private val tokenLifetime = 30.minutes
+    private val tokenLifetime = 6.hours
 
     fun login(
         request: LoginRequest,
