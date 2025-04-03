@@ -13,7 +13,14 @@ data class Table(
         requestNewPage: (currentContext: RenderContext) -> RenderContext
     ): RenderContext {
 
-        val size = endPosition(Position(0f, 0f))
+        val size = endPosition(
+            SizeContext(
+                context.page.mediaBox.width,
+                Position(
+                    0f, 0f
+                )
+            )
+        )
 
         val top = context.parentsPadding.top + context.startPosition.y
         val left = context.parentsPadding.left
@@ -50,19 +57,24 @@ data class Table(
         return context
     }
 
-    override fun endPosition(position: Position): Position {
+    override fun endPosition(context: SizeContext): Position {
         var xMax = 0F
         var yMax = 0F
 
-        val lastPosition = children.fold(position) { p, child ->
-            xMax = max(xMax, p.x)
-            yMax = max(yMax, p.y)
-            p.x = position.x
-            child.endPosition(p)
-        }
+        val innerContext = SizeContext(
+            parentContentWidth = context.parentContentWidth - padding.x,
+            startPosition = Position(0F, 0F),
+        )
 
-        xMax = max(xMax, lastPosition.x)
-        yMax = max(yMax, lastPosition.y)
+        children.fold(innerContext) { c, child ->
+            c.startPosition.x = 0f
+            val pos = child.endPosition(c)
+            xMax = max(xMax, pos.x)
+            yMax = max(yMax, pos.y)
+            c.startPosition.x += pos.x
+            c.startPosition.y += pos.y
+            c
+        }
 
         return Position(
             x = xMax,

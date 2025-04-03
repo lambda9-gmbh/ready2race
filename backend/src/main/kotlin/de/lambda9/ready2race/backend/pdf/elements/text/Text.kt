@@ -23,6 +23,82 @@ data class Text(
     private val width = font.getStringWidth(content) / 1000 * fontSize
     private val height = lineHeight * fontSize * font.fontDescriptor.capHeight / 1000
 
+    private val yOffset = fontSize / 2.5f
+
+    private var lines: List<String>? = null
+
+    private fun computeLines(context: SizeContext): List<String> {
+
+        if (lines != null) {
+            return lines!!
+        }
+
+        val tmpLines: MutableList<String> = mutableListOf()
+
+        val xMax = context.parentContentWidth
+
+        var x = if (newLine) { 0f } else { context.startPosition.x }
+
+        if (x + width <= xMax) {
+            tmpLines.add(content)
+        } else {
+            val words = content.split("""\s""".toRegex()).toMutableList()
+            while (words.isNotEmpty()) {
+                val w = xMax - x
+                val firstWordLength = fontSize * font.getStringWidth(words.first()) / 1000
+                if (firstWordLength > w) {
+                    if (x > 0f) {
+                        tmpLines.add("")
+                    } else {
+                        val word = words.first()
+                        var left = 0
+                        var right = word.length
+                        var lastFittingCandidate = word
+                        var done = false
+                        while (!done) {
+                            val mid = left + (right - left) / 2
+                            if (right <= mid || left >= mid) {
+                                done = true
+                            }
+                            val candidate = word.take(mid)
+                            val candidateWidth = font.getStringWidth(candidate) / 1000 * fontSize
+                            if (candidateWidth > w) {
+                                right = mid
+                            } else {
+                                lastFittingCandidate = candidate
+                                left = mid
+                            }
+                        }
+                        tmpLines.add(lastFittingCandidate)
+                        val remaining = word.removePrefix(lastFittingCandidate)
+                        words[0] = remaining
+                    }
+                } else {
+                    var subLine: String? = null
+                    do {
+                        val lineCandidate =
+                            listOfNotNull(subLine, words.first()).joinToString(" ")
+                        val adding =
+                            font.getStringWidth(lineCandidate) / 1000 * fontSize <= w
+                        if (adding) {
+                            words.removeFirst()
+                            subLine = lineCandidate
+                        }
+                    } while(adding && words.isNotEmpty())
+                    if (subLine != null) {
+                        tmpLines.add(subLine)
+                    }
+                }
+                x = 0f
+            }
+        }
+
+        println()
+
+        lines = tmpLines
+        return tmpLines
+    }
+
     override fun render(
         context: RenderContext,
         requestNewPage: (currentContext: RenderContext) -> RenderContext
@@ -31,44 +107,78 @@ data class Text(
         var currentContext = context
         var c = currentContext.content
 
-        val xStart = context.startPosition.x + getX0(context)
-        val yStart = getY0(context) - context.startPosition.y
+        val xMin = getXMin(context)
+        val xStart = context.startPosition.x + xMin
+        val yStart = getYMin(context) - context.startPosition.y
 
-        println("content: $content, xStart: $xStart")
-        println("yStart: $yStart")
-
-        c.beginText()
         c.setFont(font, fontSize)
 
-        var (x, y) = if (newLine) {
-            getX0(context) to yStart - height
-        } else {
-            xStart to yStart + fontSize / 4
+        val l = computeLines(SizeContext(startPosition = context.startPosition, parentContentWidth = getXMax(context) - getXMin(context)))
+
+        if (l.isEmpty()) {
+            return context
         }
 
-        c.newLineAtOffset(x, y)
-        c.showText(content)
-        c.endText()
+        var (x, y) = if (newLine) {
+            xMin to yStart - height
+        } else {
+            xStart to yStart
+        }
 
-        x += width
+        l.forEachIndexed { i, line ->
+            println("line = $line")
+            if (i > 0) {
+                x = xMin
+                y -= height
+            }
+            println("x = $x, y = $y")
+            c.beginText()
+            c.newLineAtOffset(x, y + yOffset)
+            c.showText(line)
+            c.endText()
+        }
+
+        x = if (l.size == 1 && !newLine) {
+            font.getStringWidth(l.first()) / 1000 * fontSize + xStart
+        } else {
+            font.getStringWidth(l.last()) / 1000 * fontSize + xMin
+        }
+
+        println(x)
 
         context.startPosition.x += x - xStart
-        context.startPosition.y += yStart - y + fontSize / 4
+        context.startPosition.y += yStart - y
 
         return context
     }
 
-    override fun endPosition(position: Position): Position =
-        if (newLine) {
+    override fun endPosition(context: SizeContext): Position {
+        val l = computeLines(context)
+        val linesCount = l.size
+
+        return if (linesCount < 1) {
             Position(
-                x = width,
-                y = position.y + height + fontSize / 4,
+                x = context.startPosition.x,
+                y = if (newLine) context.startPosition.y + height else context.startPosition.y,
+            )
+        } else if (newLine) {
+            val maxWidth = l.maxOf { line -> font.getStringWidth(line) / 1000 * fontSize }
+            Position(
+                x = maxWidth,
+                y = context.startPosition.y + height * linesCount,
             )
         } else {
+            val maxWidth = l.mapIndexed { i, line ->
+                if (i == 0) {
+                    font.getStringWidth(line) / 1000 * fontSize + context.startPosition.x
+                } else {
+                    font.getStringWidth(line) / 1000 * fontSize
+                }
+            }.max()
             Position(
-                x = position.x + width,
-                y = position.y,
+                x = maxWidth,
+                y = context.startPosition.y + height * (linesCount - 1),
             )
         }
-
+    }
 }

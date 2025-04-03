@@ -12,8 +12,8 @@ class BlockBuilder {
 
     fun text(
         fontStyle: FontStyle = FontStyle.NORMAL,
-        fontSize: Float = 12F,
-        lineHeight: Float = 1.5F,
+        fontSize: Float = 10F,
+        lineHeight: Float = 1.8F,
         newLine: Boolean = true,
         content: () -> String,
     ) {

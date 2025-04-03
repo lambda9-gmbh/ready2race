@@ -13,7 +13,14 @@ data class Row(
         requestNewPage: (currentContext: RenderContext) -> RenderContext
     ): RenderContext {
 
-        val height = endPosition(Position(0f, 0f)).y
+        val height = endPosition(
+            SizeContext(
+                context.page.mediaBox.width,
+                Position(
+                    0f, 0f
+                )
+            )
+        ).y
 
         val top = context.parentsPadding.top + context.startPosition.y
         val left = context.parentsPadding.left
@@ -37,9 +44,7 @@ data class Row(
             ),
         )
 
-        val lastContext = children.fold(ctx) { c, cell ->
-            c.startPosition.y = 0F
-
+        children.fold(ctx) { c, cell ->
             cell.render(c) {
                 // TODO @Incomplete
                 c
@@ -51,23 +56,28 @@ data class Row(
         return context
     }
 
-    override fun endPosition(position: Position): Position {
+    override fun endPosition(context: SizeContext): Position {
         var xMax = 0F
         var yMax = 0F
 
-        val lastPosition = children.fold(position) { p, child ->
-            xMax = max(xMax, p.x)
-            yMax = max(yMax, p.y)
-            p.y = position.y
-            child.endPosition(p)
+        val innerContext = SizeContext(
+            parentContentWidth = context.parentContentWidth - padding.x,
+            startPosition = Position(0f, 0f),
+        )
+
+        children.fold(innerContext) { c, child ->
+            c.startPosition.y = 0f
+            val pos = child.endPosition(c)
+            xMax = max(xMax, pos.x)
+            yMax = max(yMax, pos.y)
+            c.startPosition.x += pos.x
+            c.startPosition.y += pos.y
+            c
         }
 
-        xMax = max(xMax, lastPosition.x)
-        yMax = max(yMax, lastPosition.y)
-
         return Position(
-            x = xMax,
-            y = yMax,
+            x = context.startPosition.x + xMax,
+            y = context.startPosition.y + yMax,
         )
     }
 

@@ -6,18 +6,23 @@ interface ElementWithChildren<T : Element> : Element {
 
     val children: List<T>
 
-    override fun endPosition(position: Position): Position {
+    override fun endPosition(context: SizeContext): Position {
         var xMax = 0F
         var yMax = 0F
 
-        val lastPosition = children.fold(position) { p, child ->
-            xMax = max(xMax, p.x)
-            yMax = max(yMax, p.y)
-            child.endPosition(p)
-        }
+        val innerContext = SizeContext(
+            parentContentWidth = context.parentContentWidth - padding.x,
+            startPosition = Position(0f, 0f),
+        )
 
-        xMax = max(xMax, lastPosition.x)
-        yMax = max(yMax, lastPosition.y)
+        children.fold(innerContext) { c, child ->
+            val pos = child.endPosition(c)
+            xMax = max(xMax, pos.x)
+            yMax = max(yMax, pos.y)
+            c.startPosition.x += pos.x
+            c.startPosition.y += pos.y
+            c
+        }
 
         return Position(
             x = xMax,

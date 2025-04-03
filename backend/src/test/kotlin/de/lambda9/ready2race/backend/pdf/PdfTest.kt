@@ -66,17 +66,17 @@ class PdfTest {
                             text { "gHello World!" }
                         }
                         cell {
-                            text { "Hello World!" }
+                            text { "Hello World! Hello World! Hello World! Hello World!" }
                         }
                         cell {
                             text { "gHello World!" }
                             text { "Test 2"}
-                            text(newLine = false) { "Test 3 etwas länbger" }
+                            text(newLine = false) { "Test3etwaslänb gerundnocchknaösdfasdfsfdg" }
                         }
                     }
                 }
                 text {
-                    "Text after table gg"
+                    "Text after table gg, more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more"
                 }
                 text {
                     "Please new Line"
