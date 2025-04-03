@@ -231,6 +231,7 @@ export type EventDto = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+    published?: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -328,6 +329,7 @@ export type EventRequest = {
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
     invoicePrefix?: string
+    published: boolean
 }
 
 export type FeeDto = {
@@ -502,6 +504,62 @@ export type ParticipantDto = {
     updatedAt: string
 }
 
+export type ParticipantForEventDto = {
+    id: string
+    clubId: string
+    clubName: string
+    firstname: string
+    lastname: string
+    year?: number | null
+    gender: Gender
+    external?: boolean | null
+    externalClubName?: string | null
+    participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
+}
+
+export type ParticipantRequirementCheckForEventConfigDto = {
+    requirementId: string
+    separator?: string
+    charset?: string
+    firstnameColName: string
+    lastnameColName: string
+    yearsColName?: string
+    clubColName?: string
+    requirementColName?: string
+    requirementIsValidValue?: string
+}
+
+export type ParticipantRequirementCheckForEventUpsertDto = {
+    requirementId: string
+    approvedParticipants: Array<string>
+}
+
+export type ParticipantRequirementDto = {
+    id: string
+    name: string
+    description?: string
+    optional: boolean
+}
+
+export type ParticipantRequirementForEventDto = {
+    id: string
+    name: string
+    description?: string
+    optional: boolean
+    active: boolean
+}
+
+export type ParticipantRequirementReducedDto = {
+    id: string
+    name: string
+}
+
+export type ParticipantRequirementUpsertDto = {
+    name: string
+    description?: string
+    optional?: boolean
+}
+
 export type ParticipantUpsertDto = {
     firstname: string
     lastname: string
@@ -540,6 +598,7 @@ export type RegisterRequest = {
     password: string
     firstname: string
     lastname: string
+    clubname: string
     language: EmailLanguage
     callbackUrl: string
 }
@@ -1585,3 +1644,164 @@ export type DeleteDocumentTypeData = {
 export type DeleteDocumentTypeResponse = void
 
 export type DeleteDocumentTypeError = BadRequestError | ApiError
+
+export type GetParticipantRequirementsForEventData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetParticipantRequirementsForEventResponse = {
+    data: Array<ParticipantRequirementForEventDto>
+    pagination: Pagination
+}
+
+export type GetParticipantRequirementsForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type CheckParticipantRequirementsForEventData = {
+    body: {
+        config?: ParticipantRequirementCheckForEventConfigDto
+        files?: Array<Blob | File>
+    }
+    path: {
+        eventId: string
+    }
+}
+
+export type CheckParticipantRequirementsForEventResponse = void
+
+export type CheckParticipantRequirementsForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type ApproveParticipantRequirementsForEventData = {
+    body: ParticipantRequirementCheckForEventUpsertDto
+    path: {
+        eventId: string
+    }
+}
+
+export type ApproveParticipantRequirementsForEventResponse = void
+
+export type ApproveParticipantRequirementsForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetActiveParticipantRequirementsForEventData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetActiveParticipantRequirementsForEventResponse = {
+    data: Array<ParticipantRequirementForEventDto>
+    pagination: Pagination
+}
+
+export type GetActiveParticipantRequirementsForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type ActivateParticipantRequirementForEventData = {
+    path: {
+        eventId: string
+        participantRequirementId: string
+    }
+}
+
+export type ActivateParticipantRequirementForEventResponse = void
+
+export type ActivateParticipantRequirementForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type RemoveParticipantRequirementForEventData = {
+    path: {
+        eventId: string
+        participantRequirementId: string
+    }
+}
+
+export type RemoveParticipantRequirementForEventResponse = void
+
+export type RemoveParticipantRequirementForEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetParticipantsForEventData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetParticipantsForEventResponse = {
+    data: Array<ParticipantForEventDto>
+    pagination: Pagination
+}
+
+export type GetParticipantsForEventError = ApiError
+
+export type UpdateParticipantRequirementData = {
+    body: ParticipantRequirementUpsertDto
+    path: {
+        participantRequirementId: string
+    }
+}
+
+export type UpdateParticipantRequirementResponse = void
+
+export type UpdateParticipantRequirementError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type DeleteParticipantRequirementData = {
+    path: {
+        participantRequirementId: string
+    }
+}
+
+export type DeleteParticipantRequirementResponse = void
+
+export type DeleteParticipantRequirementError = BadRequestError | ApiError
+
+export type AddParticipantRequirementData = {
+    body: ParticipantRequirementUpsertDto
+}
+
+export type AddParticipantRequirementResponse = string
+
+export type AddParticipantRequirementError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetParticipantRequirementsResponse = {
+    data: Array<ParticipantRequirementDto>
+    pagination: Pagination
+}
+
+export type GetParticipantRequirementsError = BadRequestError | ApiError | UnprocessableEntityError

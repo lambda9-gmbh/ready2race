@@ -1873,6 +1873,327 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getParticipantRequirementsForEvent
+      responses:
+        200:
+          description: ParticipantRequirementForEvent list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantRequirementForEventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: checkParticipantRequirementsForEvent
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+                  $ref: '#/components/schemas/ParticipantRequirementCheckForEventConfigDto'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/approve:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: approveParticipantRequirementsForEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequirementCheckForEventUpsertDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/active:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getActiveParticipantRequirementsForEvent
+      responses:
+        200:
+          description: ParticipantRequirementForEvent list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantRequirementForEventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/participantRequirement/{participantRequirementId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: participantRequirementId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: activateParticipantRequirementForEvent
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: removeParticipantRequirementForEvent
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getParticipantsForEvent
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Participant page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantForEventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /participantRequirement/{participantRequirementId}:
+    parameters:
+      - name: participantRequirementId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateParticipantRequirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequirementUpsertDto'
+      responses:
+        204:
+          description: ParticipantRequirement successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteParticipantRequirement
+      responses:
+        204:
+          description: ParticipantRequirement successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /participantRequirement:
+    post:
+      operationId: addParticipantRequirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantRequirementUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getParticipantRequirements
+      responses:
+        200:
+          description: ParticipantRequirement list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantRequirementDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 
 components:
@@ -2426,6 +2747,7 @@ components:
         - password
         - firstname
         - lastname
+        - clubname
         - language
         - callbackUrl
       properties:
@@ -2436,6 +2758,8 @@ components:
         firstname:
           type: string
         lastname:
+          type: string
+        clubname:
           type: string
         language:
           $ref: '#/components/schemas/EmailLanguage'
@@ -2614,11 +2938,14 @@ components:
           format: date-time
         invoicePrefix:
           type: string
+        published:
+          type: boolean
 
     EventRequest:
       type: object
       required:
         - name
+        - published
       properties:
         name:
           type: string
@@ -2634,6 +2961,8 @@ components:
           format: date-time
         invoicePrefix:
           type: string
+        published:
+          type: boolean
 
 
 
@@ -2982,6 +3311,111 @@ components:
         description:
           type: string
 
+    # participantRequirement
+
+    ParticipantRequirementDto:
+      type: object
+      required:
+        - id
+        - name
+        - optional
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        optional:
+          type: boolean
+
+    ParticipantRequirementReducedDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ParticipantRequirementForEventDto:
+      type: object
+      required:
+        - id
+        - name
+        - optional
+        - active
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        optional:
+          type: boolean
+        active:
+          type: boolean
+
+    ParticipantRequirementUpsertDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        optional:
+          type: boolean
+
+    ParticipantRequirementCheckForEventConfigDto:
+      type: object
+      required:
+        - requirementId
+        - firstnameColName
+        - lastnameColName
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        separator:
+          type: string
+        charset:
+          type: string
+        firstnameColName:
+          type: string
+        lastnameColName:
+          type: string
+        yearsColName:
+          type: string
+        clubColName:
+          type: string
+        requirementColName:
+          type: string
+        requirementIsValidValue:
+          type: string
+
+    ParticipantRequirementCheckForEventUpsertDto:
+      type: object
+      required:
+        - requirementId
+        - approvedParticipants
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        approvedParticipants:
+          type: array
+          items:
+            type: string
+            format: uuid
+
     # captcha
 
     CaptchaDto:
@@ -3158,6 +3592,44 @@ components:
         updatedAt:
           type: string
           format: date-time
+
+    ParticipantForEventDto:
+      type: object
+      required:
+        - id
+        - clubId
+        - clubName
+        - firstname
+        - lastname
+        - gender
+      properties:
+        id:
+          type: string
+          format: uuid
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true
+        participantRequirementsChecked:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantRequirementReducedDto'
 
     # participant
 

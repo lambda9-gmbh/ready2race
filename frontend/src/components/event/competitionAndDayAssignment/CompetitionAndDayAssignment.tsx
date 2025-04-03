@@ -15,7 +15,9 @@ import {eventRoute} from '@routes'
 import {useState} from 'react'
 import CompetitionAndDayAssignmentList from './CompetitionAndDayAssignmentList.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import {assignDaysToCompetition, assignCompetitionsToEventDay} from '@api/sdk.gen.ts'
+import {assignCompetitionsToEventDay, assignDaysToCompetition} from '@api/sdk.gen.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateEventGlobal} from '@authorization/privileges.ts'
 
 type AssignmentEntry = {
     entry: AutocompleteOption
@@ -35,6 +37,7 @@ type Props = {
 const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
 
@@ -116,9 +119,11 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                     ? t('event.eventDay.assignedCompetitions')
                     : t('event.competition.assignedDays')}
             </Typography>
-            <Button onClick={openDialog} variant="outlined" sx={{mt: 1, mb: 2}}>
-                {t('common.edit')}
-            </Button>
+            {user.checkPrivilege(updateEventGlobal) && (
+                <Button onClick={openDialog} variant="outlined" sx={{mt: 1, mb: 2}}>
+                    {t('common.edit')}
+                </Button>
+            )}
             <CompetitionAndDayAssignmentList
                 assignedEntities={entityFields.map(value => value.entry)}
                 competitionsToDay={competitionsToDay}

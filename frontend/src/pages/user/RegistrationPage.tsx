@@ -19,6 +19,7 @@ type Form = {
     email: string
     firstname: string
     lastname: string
+    clubname: string
     captcha: number
 } & PasswortFormPart
 
@@ -34,6 +35,7 @@ const RegistrationPage = () => {
         email: '',
         firstname: '',
         lastname: '',
+        clubname: '',
         password: '',
         confirmPassword: '',
         captcha: 0,
@@ -110,6 +112,12 @@ const RegistrationPage = () => {
                                 required
                                 sx={{flex: 1}}
                             />
+                            <FormInputText
+                                name={'clubname'}
+                                label={t('club.club')}
+                                required
+                                sx={{flex: 1}}
+                            />
                             <FormInputCaptcha captchaProps={captcha} />
                             <SubmitButton
                                 label={t('user.registration.register')}
@@ -149,6 +157,7 @@ function mapFormToRequest(formData: Form): RegisterRequest {
         password: formData.password,
         firstname: formData.firstname,
         lastname: formData.lastname,
+        clubname: formData.clubname,
         language: languageMapping[i18nLanguage()],
         callbackUrl: location.origin + location.pathname + '/',
     }

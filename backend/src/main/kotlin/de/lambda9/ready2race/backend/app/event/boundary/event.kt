@@ -5,8 +5,10 @@ import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
-import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
+import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
+import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
@@ -29,9 +31,9 @@ fun Route.event() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val (_, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                 val params = !pagination<EventSort>()
-                EventService.page(params)
+                EventService.page(params, scope)
             }
         }
 
@@ -41,12 +43,14 @@ fun Route.event() {
             competition()
             eventRegistration()
             eventDocument()
+            participantRequirementForEvent()
+            participantForEvent()
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val (_, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val id = !pathParam("eventId", uuid)
-                    EventService.getEvent(id)
+                    EventService.getEvent(id, scope)
                 }
             }
 

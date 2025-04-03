@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
 import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.jooq.transact
@@ -121,43 +122,22 @@ fun initializeDatabase(env: JEnv) {
         )
 
         // Add default user role & privileges
-
-        val userPrivileges = listOf(
-            Privilege.ReadUserOwn,
+        !persistRole(
+            now, allPrivileges, USER_ROLE, "User", "Global user role", listOf(
+                Privilege.ReadUserOwn,
+            )
         )
 
-        val userRoleExisting = !RoleRepo.exists(USER_ROLE)
-
-        if (!userRoleExisting) {
-            !RoleRepo.create(
-                RoleRecord(
-                    id = USER_ROLE,
-                    name = "User",
-                    description = "Global user role",
-                    static = true,
-                    createdAt = now,
-                    createdBy = SYSTEM_USER,
-                    updatedAt = now,
-                    updatedBy = SYSTEM_USER,
-                )
+        !persistRole(
+            now, allPrivileges, CLUB_REPRESENTATIVE_ROLE, "Club representative", "Club representative role", listOf(
+                Privilege.ReadClubOwn,
+                Privilege.UpdateClubOwn,
+                Privilege.ReadParticipantOwn,
+                Privilege.CreateParticipantOwn,
+                Privilege.UpdateParticipantOwn,
+                Privilege.DeleteParticipantOwn,
+                Privilege.ReadEventOwn,
             )
-        }
-
-        val currentUserPrivileges = !RoleHasPrivilegeRepo.getPrivilegesByRole(USER_ROLE)
-
-        !RoleHasPrivilegeRepo.create(
-            allPrivileges.filter {
-                currentUserPrivileges.none { id ->
-                    id == it.id
-                } && userPrivileges.any { p ->
-                    p.action.name == it.action && p.resource.name == it.resource && p.scope.name == it.scope
-                }
-            }.map {
-                RoleHasPrivilegeRecord(
-                    role = USER_ROLE,
-                    privilege = it.id
-                )
-            }
         )
 
         App.unit
@@ -165,4 +145,50 @@ fun initializeDatabase(env: JEnv) {
         .transact()
         .unsafeRunSync(env)
         .getOrThrow()
+}
+
+private fun persistRole(
+    now: LocalDateTime,
+    allPrivileges: List<PrivilegeRecord>,
+    roleId: UUID,
+    name: String,
+    description: String,
+    privileges: List<Privilege>
+) = KIO.comprehension {
+
+    val userRoleExisting = !RoleRepo.exists(roleId)
+
+    if (!userRoleExisting) {
+        !RoleRepo.create(
+            RoleRecord(
+                id = roleId,
+                name = name,
+                description = description,
+                static = true,
+                createdAt = now,
+                createdBy = SYSTEM_USER,
+                updatedAt = now,
+                updatedBy = SYSTEM_USER,
+            )
+        )
+    }
+
+    val currentPrivileges = !RoleHasPrivilegeRepo.getPrivilegesByRole(roleId)
+
+    !RoleHasPrivilegeRepo.create(
+        allPrivileges.filter {
+            currentPrivileges.none { id ->
+                id == it.id
+            } && privileges.any { p ->
+                p.action.name == it.action && p.resource.name == it.resource && p.scope.name == it.scope
+            }
+        }.map {
+            RoleHasPrivilegeRecord(
+                role = roleId,
+                privilege = it.id
+            )
+        }
+    )
+
+    unit
 }

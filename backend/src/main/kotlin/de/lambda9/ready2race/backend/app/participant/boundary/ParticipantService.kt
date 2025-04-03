@@ -2,12 +2,12 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantDto
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantUpsertDto
-import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
-import de.lambda9.ready2race.backend.app.participant.control.participantDto
-import de.lambda9.ready2race.backend.app.participant.control.toRecord
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
+import de.lambda9.ready2race.backend.app.participant.control.*
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventSort
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -41,6 +41,21 @@ object ParticipantService {
         val page = !ParticipantRepo.page(params, clubId).orDie()
 
         page.traverse { it.participantDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
+    fun pageForEvent(
+        params: PaginationParameters<ParticipantForEventSort>,
+        eventId: UUID,
+    ): App<Nothing, ApiResponse.Page<ParticipantForEventDto, ParticipantForEventSort>> = KIO.comprehension {
+        val total = !ParticipantForEventRepo.count(params.search, eventId).orDie()
+        val page = !ParticipantForEventRepo.page(params, eventId).orDie()
+
+        page.traverse { it.toDto() }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)

@@ -1,19 +1,19 @@
 package de.lambda9.ready2race.backend.app.email.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import de.lambda9.ready2race.backend.*
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.email.control.EmailAttachmentRepo
-import de.lambda9.ready2race.backend.app.email.control.EmailRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailIndividualTemplateRepo
+import de.lambda9.ready2race.backend.app.email.control.EmailRepo
 import de.lambda9.ready2race.backend.app.email.entity.*
+import de.lambda9.ready2race.backend.applyEither
+import de.lambda9.ready2race.backend.applyNotNull
+import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailAttachmentRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
 import de.lambda9.ready2race.backend.kio.accessConfig
-import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.github.oshai.kotlinlogging.KotlinLogging

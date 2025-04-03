@@ -1,7 +1,7 @@
 import {PropsWithChildren, useEffect, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
+import {Button, Dialog, DialogActions, DialogContent, DialogProps, DialogTitle} from '@mui/material'
 import {RequestResult} from '@hey-api/client-fetch'
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useFeedback} from '@utils/hooks.ts'
@@ -15,7 +15,9 @@ type EntityDialogProps<
     Form extends FieldValues,
     AddError extends ApiError,
     UpdateError extends ApiError,
-> = BaseEntityDialogProps<Entity> & ExtendedEntityDialogProps<Entity, Form, AddError, UpdateError>
+> = BaseEntityDialogProps<Entity> &
+    ExtendedEntityDialogProps<Entity, Form, AddError, UpdateError> &
+    Partial<DialogProps>
 
 type ExtendedEntityDialogProps<
     Entity extends GridValidRowModel,
@@ -29,6 +31,7 @@ type ExtendedEntityDialogProps<
     editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
     onAddError?: (error: AddError) => void
     onEditError?: (error: UpdateError) => void
+    title?: string
 }
 
 //todo: add semantic tabs
@@ -50,6 +53,8 @@ const EntityDialog = <
     onAddError,
     onEditError,
     children,
+    title,
+    ...props
 }: PropsWithChildren<EntityDialogProps<Entity, Form, AddError, UpdateError>>) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
@@ -60,7 +65,7 @@ const EntityDialog = <
         closeDialog()
     }
 
-    const handleErrorGeneric = (error: AddError | UpdateError) => {
+    const handleErrorGeneric = (_: AddError | UpdateError) => {
         if (entity) {
             feedback.error(t('entity.edit.error', {entity: entityName}))
         } else {
@@ -101,13 +106,22 @@ const EntityDialog = <
     }, [dialogIsOpen, onOpen])
 
     return (
-        <Dialog open={dialogIsOpen} fullWidth={true} maxWidth={'sm'} className="ready2race">
-            <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)}>
+        <Dialog
+            {...props}
+            open={dialogIsOpen}
+            scroll={'paper'}
+            fullWidth={true}
+            maxWidth={props.maxWidth ?? 'sm'}
+            className="ready2race">
+            <FormContainer
+                FormProps={{style: {display: 'contents'}}}
+                formContext={formContext}
+                onSuccess={data => onSubmit(data)}>
                 <DialogTitle>
-                    {t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
+                    {title ?? t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
                 </DialogTitle>
                 <DialogCloseButton onClose={handleClose} />
-                <DialogContent>{children}</DialogContent>
+                <DialogContent dividers={true}>{children}</DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose} disabled={submitting}>
                         {t('common.cancel')}
