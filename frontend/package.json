@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 5123",
     "build": "tsc -b && vite build",
+    "testbuild": "tsc -b && vite build --mode test",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate": "openapi-ts"
