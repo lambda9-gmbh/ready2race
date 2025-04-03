@@ -1,27 +1,8 @@
-import {
-    Divider,
-    Stack,
-    styled,
-    Tooltip,
-    tooltipClasses,
-    TooltipProps,
-    Typography,
-} from '@mui/material'
+import {Divider, Stack, Typography} from '@mui/material'
 import {EventRegistrationCompetitionDto} from '../../api'
 import {useTranslation} from 'react-i18next'
 import {Info} from '@mui/icons-material'
-
-const HtmlTooltip = styled(({className, ...props}: TooltipProps) => (
-    <Tooltip {...props} classes={{popper: className}} />
-))(({theme}) => ({
-    [`& .${tooltipClasses.tooltip}`]: {
-        backgroundColor: '#f5f5f9',
-        color: 'rgba(0, 0, 0, 0.87)',
-        maxWidth: 220,
-        fontSize: theme.typography.pxToRem(12),
-        border: '1px solid #dadde9',
-    },
-}))
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
 export const EventRegistrationPriceTooltip = (props: {
     competition: EventRegistrationCompetitionDto

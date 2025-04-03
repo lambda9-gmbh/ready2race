@@ -4,7 +4,7 @@ import EntityDialog from '../EntityDialog.tsx'
 import {Box, Stack} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import {useForm} from 'react-hook-form-mui'
-import {useCallback, useState} from 'react'
+import {ChangeEvent, useCallback, useState} from 'react'
 import {
     addClubParticipant,
     Gender,
@@ -55,7 +55,7 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
         gender: 'F',
     }
 
-    const handleExternalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleExternalChange = (e: ChangeEvent<HTMLInputElement>) => {
         setIsExternal(e.target.checked)
         if (!e.target.checked) {
             formContext.setValue('externalClubName', '')

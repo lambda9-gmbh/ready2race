@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.participant.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.club.entity.ParticipantUpsertDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.requests.authenticate

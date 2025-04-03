@@ -5,10 +5,11 @@ import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
-import {takeIfNotEmpty} from "@utils/ApiUtils.ts";
-import {useCallback} from "react";
-import {EventDto, EventRequest} from "@api/types.gen.ts";
-import {addEvent, updateEvent} from "@api/sdk.gen.ts";
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {useCallback} from 'react'
+import {EventDto, EventRequest} from '@api/types.gen.ts'
+import {addEvent, updateEvent} from '@api/sdk.gen.ts'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 
 type EventForm = {
     name: string
@@ -17,6 +18,7 @@ type EventForm = {
     registrationAvailableFrom: string
     registrationAvailableTo: string
     invoicePrefix: string
+    published: boolean
 }
 
 const addAction = (formData: EventForm) => {
@@ -42,6 +44,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         registrationAvailableFrom: '',
         registrationAvailableTo: '',
         invoicePrefix: '',
+        published: false,
     }
 
     const formContext = useForm<EventForm>()
@@ -49,7 +52,6 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
-
 
     return (
         <EntityDialog
@@ -62,6 +64,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <FormInputText name={'name'} label={t('event.name')} required />
                 <FormInputText name={'description'} label={t('event.description')} />
                 <FormInputText name={'location'} label={t('event.location')} />
+                <FormInputCheckbox name={'published'} label={t('event.published')} required />
                 <FormInputDateTime
                     name={'registrationAvailableFrom'}
                     label={t('event.registrationAvailable.from')}
@@ -83,7 +86,8 @@ function mapFormToRequest(formData: EventForm): EventRequest {
         location: takeIfNotEmpty(formData.location),
         registrationAvailableFrom: takeIfNotEmpty(formData.registrationAvailableFrom),
         registrationAvailableTo: takeIfNotEmpty(formData.registrationAvailableTo),
-        invoicePrefix: takeIfNotEmpty(formData.invoicePrefix)
+        invoicePrefix: takeIfNotEmpty(formData.invoicePrefix),
+        published: formData.published,
     }
 }
 
@@ -95,6 +99,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         registrationAvailableFrom: dto.registrationAvailableFrom ?? '',
         registrationAvailableTo: dto.registrationAvailableTo ?? '',
         invoicePrefix: dto.invoicePrefix ?? '',
+        published: dto.published ?? false,
     }
 }
 

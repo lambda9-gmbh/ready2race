@@ -51,13 +51,14 @@ fun RegisterRequest.toRecord(lifeTime: Duration): App<Nothing, AppUserRegistrati
             password = it,
             firstname = firstname,
             lastname = lastname,
+            clubname = clubname,
             language = language.name,
             expiresAt = lifeTime.afterNow(),
             createdAt = LocalDateTime.now()
         )
     }
 
-fun AppUserRegistrationRecord.toAppUser(): App<Nothing, AppUserRecord> =
+fun AppUserRegistrationRecord.toAppUser(clubId: UUID?): App<Nothing, AppUserRecord> =
     KIO.ok(
         LocalDateTime.now().let { now ->
             AppUserRecord(
@@ -67,6 +68,7 @@ fun AppUserRegistrationRecord.toAppUser(): App<Nothing, AppUserRecord> =
                 firstname = firstname,
                 lastname = lastname,
                 language = language,
+                club = clubId,
                 createdAt = now,
                 createdBy = SYSTEM_USER,
                 updatedAt = now,

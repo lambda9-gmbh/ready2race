@@ -17,6 +17,7 @@ fun AppUserWithPrivilegesRecord.loginDto(): App<Nothing, LoginDto> =
     privileges!!.toList().traverse { it!!.toPrivilegeDto() }.map {
         LoginDto(
             id = id!!,
+            clubId = club,
             privileges = it
         )
     }

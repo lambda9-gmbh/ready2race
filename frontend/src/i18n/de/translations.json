@@ -7,6 +7,7 @@
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "selected" : "Ausgewählt",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -35,7 +36,8 @@
         }
       },
       "optional": "Optional",
-      "required": "Bitte füllen Sie dieses Feld aus."
+      "required": "Bitte füllen Sie dieses Feld aus.",
+      "selectFile" : "Datei auswählen"
     },
     "load": {
       "error": {
@@ -51,7 +53,8 @@
     "search": "Suchen",
     "back": "Zurück",
     "next": "Weiter",
-    "and": "und"
+    "and": "und",
+    "remove" : "Entfernen"
   },
   "decimal": {
     "point": ","
@@ -75,6 +78,8 @@
       "success": "{{entity}} aktualisiert",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
     },
+    "optional": "Optional",
+    "name": "Name",
     "firstname": "Vorname",
     "lastname": "Nachname",
     "gender": "Geschlecht",
@@ -88,7 +93,8 @@
       "roles": "Rollen",
       "users": "Benutzer",
       "config": "Konfigurationen",
-      "clubs": "Vereine"
+      "clubs": "Vereine",
+      "myClub": "Mein Verein"
     }
   },
   "club": {
@@ -114,6 +120,7 @@
       "from": "Anmeldezeitraum von",
       "to": "Anmeldezeitraum bis"
     },
+    "published": "Veröffentlicht",
     "eventDay": {
       "eventDay": "Tag",
       "eventDays": "Tage",
@@ -182,6 +189,23 @@
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       }
     },
+    "participantRequirement": {
+      "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
+      "approved" : "Überprüfte Bedingungen",
+      "checkUpload": "Bedingungen abgleichen",
+      "checkManually": "\"{{name}}\" überprüfen",
+      "file" : "CSV-Datei",
+      "charset" : "Charset",
+      "separator": "Trennzeichen",
+      "firstnameColName":"Spalte mit Vornamen",
+      "lastnameColName": "Spalte mit Nachnamen",
+      "yearsColName":"Spalte mit Jahrgang",
+      "clubColName": "Spalte mit Vereinsnamen",
+      "requirementColName":"Spalte mit Teilnahmebedingung",
+      "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
+      "participantsOpen" : "Offen",
+      "participantsApproved" : "Überprüft"
+    },
     "assign": {
       "save": {
         "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
@@ -233,7 +257,20 @@
         "title": "Erfolgreich angemeldet!",
         "subtitle": "Du bekommst eine Bestätigung per Mail."
       }
+    },
+    "tabs": {
+      "general" : "Allgemein",
+      "participants" : "Teilnehmer",
+      "settings": "Einstellungen"
     }
+  },
+  "participantRequirement": {
+    "participantRequirement": "Teilnahmebedingung",
+    "participantRequirements": "Teilnahmebedingungen",
+    "active" : "Aktiv",
+    "activate" : "Für Veranstaltung aktivieren",
+    "remove" : "Von Veranstaltung entfernen",
+    "confirmRemove" : "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
   },
   "user": {
     "user": "Benutzer",

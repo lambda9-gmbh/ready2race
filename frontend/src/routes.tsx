@@ -10,7 +10,13 @@ import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
-import {readEventGlobal, readUserGlobal, updateEventGlobal, updateUserGlobal} from './authorization/privileges.ts'
+import {
+    readClubOwn,
+    readEventOwn,
+    readUserGlobal,
+    updateEventGlobal,
+    updateUserGlobal,
+} from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
@@ -209,7 +215,7 @@ export const eventsIndexRoute = createRoute({
     path: '/',
     component: () => <EventsPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readEventGlobal)
+        checkAuth(context, location, readEventOwn)
     },
 })
 
@@ -223,7 +229,7 @@ export const eventIndexRoute = createRoute({
     path: '/',
     component: () => <EventPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readEventGlobal)
+        checkAuth(context, location, readEventOwn)
     },
 })
 
@@ -293,7 +299,7 @@ export const clubIndexRoute = createRoute({
     path: '/',
     component: () => <ClubPage />,
     beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readEventGlobal)
+        checkAuth(context, location, readClubOwn)
     },
 })
 
@@ -328,18 +334,9 @@ const routeTree = rootRoute.addChildren([
     competitionConfigRoute.addChildren([competitionConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
-    registrationRoute.addChildren([
-        registrationIndexRoute,
-        registrationTokenRoute,
-    ]),
-    resetPasswordRoute.addChildren([
-        resetPasswordIndexRoute,
-        resetPasswordTokenRoute,
-    ]),
-    clubsRoute.addChildren([
-        clubsIndexRoute,
-        clubRoute.addChildren([clubIndexRoute]),
-    ]),
+    registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
+    resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
+    clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
 ])
 
 export const router = createRouter({

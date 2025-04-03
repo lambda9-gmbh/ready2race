@@ -59,6 +59,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         userValue = {
             loggedIn: false,
             login,
+            checkPrivilege: () => false
         } satisfies AnonymousUser
     } else {
         const checkPrivilege = (privilege: Privilege): boolean =>

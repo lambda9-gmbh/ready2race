@@ -20,6 +20,9 @@ drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists app_user_name;
 drop view if exists fee_for_competition;
+drop view if exists participant_requirement_for_event;
+drop view if exists participant_id_for_event;
+drop view if exists participant_for_event;
 
 create view app_user_name as
 select au.id,
@@ -211,6 +214,46 @@ select ed.id,
        edd.data
 from event_document ed
          join event_document_data edd on ed.id = edd.event_document;
+
+create view participant_requirement_for_event as
+select pr.*,
+       e.id                                                        as event,
+       (case when ehpr.event is not null then true else false end) as active
+from participant_requirement pr
+         cross join event e
+         left join event_has_participant_requirement ehpr on pr.id = ehpr.participant_requirement and e.id = ehpr.event;
+
+create view participant_id_for_event as
+select er.event                                                              as event_id,
+       p.id                                                                  as participant_id
+from event_registration er
+         join competition_registration cr on er.id = cr.event_registration
+         join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
+         join participant p on crnp.participant = p.id
+group by er.event, p.id;
+
+create view participant_for_event as
+select er.event                                                              as event_id,
+       c.id                                                                  as club_id,
+       c.name                                                                as club_name,
+       p.id                                                                  as id,
+       p.firstname,
+       p.lastname,
+       p.year,
+       p.gender,
+       p.external,
+       p.external_club_name,
+       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
+from event_registration er
+         join club c on er.club = c.id
+         join competition_registration cr on er.id = cr.event_registration
+         join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
+         join participant p on crnp.participant = p.id
+         left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
+         left join participant_requirement pr on phrfe.participant_requirement = pr.id
+group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name
+order by c.name, p.firstname, p.lastname;
+
 
 create view event_registration_report_download as
 select errd.event,
