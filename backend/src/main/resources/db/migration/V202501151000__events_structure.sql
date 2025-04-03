@@ -89,8 +89,8 @@ create table competition_properties
         (competition is null and competition_template is not null) or
         (competition is not null and competition_template is null) )
 );
-create unique index on competition_properties (competition);
-create unique index on competition_properties (competition_template);
+create index on competition_properties (competition);
+create index on competition_properties (competition_template);
 
 create table fee
 (
