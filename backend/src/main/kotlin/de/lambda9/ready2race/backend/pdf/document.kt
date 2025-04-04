@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.pdf
 import org.apache.pdfbox.Loader
 import org.apache.pdfbox.multipdf.LayerUtility
 import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 import java.awt.geom.AffineTransform
 
@@ -18,13 +19,19 @@ fun document(
 
     val pages = doc.pages
 
-    val layerUtil = LayerUtility(doc)
+    val resultDoc = PDDocument()
+    val layerUtil = LayerUtility(resultDoc)
     val templateForm = layerUtil.importPageAsForm(templateDoc, templatePage)
     val transform = AffineTransform()
 
     pages.forEachIndexed { i, page ->
-        layerUtil.wrapInSaveRestore(page)
-        layerUtil.appendFormAsLayer(page, templateForm, transform, "template-layer-$i")
+        val resultPage = PDPage(format)
+        resultDoc.addPage(resultPage)
+
+        val pageForm = layerUtil.importPageAsForm(doc, page)
+
+        layerUtil.appendFormAsLayer(resultPage, templateForm, transform, "template-layer-$i")
+        layerUtil.appendFormAsLayer(resultPage, pageForm, transform, "page-layer-$i")
     }
 
     templateDoc.close()

@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.pdf
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.pdmodel.PDPage
 import org.apache.pdfbox.pdmodel.PDPageContentStream
+import org.apache.pdfbox.pdmodel.common.PDRectangle
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
 import java.awt.Color
@@ -17,11 +18,18 @@ class PdfTest {
     fun makePdf() {
 
         val templateDoc = PDDocument()
-        val templatePage = PDPage()
+        val templatePage = PDPage(PDRectangle.A4)
         templateDoc.addPage(templatePage)
         val c = PDPageContentStream(templateDoc, templatePage)
+
+        c.addRect(0f, 0f, templatePage.mediaBox.width, templatePage.mediaBox.height)
+        c.setNonStrokingColor(Color.LIGHT_GRAY)
+        c.fill()
+        c.setNonStrokingColor(Color.BLACK)
+
         c.beginText()
         c.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA), 12F)
+        c.newLineAtOffset(10f, 10f)
         c.showText("Hello Template!")
         c.endText()
         c.close()
