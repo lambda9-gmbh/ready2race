@@ -1,18 +1,20 @@
 import EntityDialog from '@components/EntityDialog.tsx'
 import {BaseEntityDialogProps} from '@utils/types.ts'
-import {useForm} from 'react-hook-form-mui'
+import {MultiSelectElement, useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
 import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
-import {addRole, updateRole} from '@api/sdk.gen.ts'
+import {addRole, getPrivileges, updateRole} from '@api/sdk.gen.ts'
 import {RoleDto, RoleRequest} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
+import {useFetch} from "@utils/hooks.ts";
+import {scopeLevel} from "@utils/helpers.ts";
 
 type RoleForm = {
     name: string
     description: string
-    privileges: string[] // todo: implement me
+    privileges: string[]
 }
 
 const defaultValues: RoleForm = {
@@ -53,6 +55,10 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
 
+    const {data} = useFetch(
+        signal => getPrivileges({signal}),
+    )
+
     return (
         <EntityDialog
             {...props}
@@ -61,8 +67,42 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={t('role.name')} required />
-                <FormInputText name={'description'} label={t('role.description')} />
+                <FormInputText name={'name'} label={t('role.name')} required/>
+                <FormInputText name={'description'} label={t('role.description')}/>
+                <MultiSelectElement
+                    name={'privileges'}
+                    label={'Rechte'}
+                    options={
+                        data?.sort((a, b) => {
+                            if (a.resource > b.resource) {
+                                return 1
+                            } else if (a.resource < b.resource) {
+                                return -1
+                            } else {
+                                if (a.action > b.action) {
+                                    return 1
+                                } else if (a.action < b.action) {
+                                    return -1
+                                } else {
+                                    const scopeDiff = scopeLevel[a.scope] - scopeLevel[b.scope]
+                                    if (scopeDiff >= 0) {
+                                        return 1
+                                    } else {
+                                        return -1
+                                    }
+                                }
+                            }
+                        }).map(p => ({
+                            id: p.id,
+                            label: p.action + '.' + p.resource + '.' + p.scope
+                        })) ?? []
+                    }
+                    itemKey={'id'}
+                    itemValue={'id'}
+                    itemLabel={'label'}
+                    showCheckbox={true}
+                    showChips={true}
+                />
             </Stack>
         </EntityDialog>
     )

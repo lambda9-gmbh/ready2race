@@ -320,7 +320,14 @@
     },
     "invitation": {
       "invitation": "Einladung",
-      "pendingInvitations": "Ausstehende Einladungen"
+      "pendingInvitations": "Ausstehende Einladungen",
+      "accept": "Einladung annehmen",
+      "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
+      "submitPassword": "Einladung annehmen",
+      "userCreated": {
+        "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
+        "toLogin": "Zum Login"
+      }
     },
     "registration": {
       "register": "Registrieren",

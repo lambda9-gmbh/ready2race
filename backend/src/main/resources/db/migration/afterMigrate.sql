@@ -11,6 +11,7 @@ drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
+drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
 drop view if exists fee_for_competition;
 drop view if exists participant_requirement_for_event;
@@ -23,16 +24,24 @@ select au.id,
        au.lastname
 from app_user au;
 
-create view role_with_privileges as
+create view every_role_with_privileges as
 select r.id,
        r.name,
        r.description,
+       r.static,
        coalesce(array_agg(p) filter ( where p.id is not null ), '{}') as privileges
 from role r
          left join role_has_privilege rhp on r.id = rhp.role
          left join privilege p on rhp.privilege = p.id
-where r.static is false
 group by r.id;
+
+create view role_with_privileges as
+select r.id,
+       r.name,
+       r.description,
+       r.privileges
+from every_role_with_privileges r
+where r.static is false;
 
 create view app_user_with_roles as
 select au.id,
@@ -170,7 +179,7 @@ from app_user_invitation aui
          left join app_user_invitation_to_email auite on aui.id = auite.app_user_invitation
          left join email e on auite.email = e.id
          left join app_user_invitation_has_role auihr on aui.id = auihr.app_user_invitation
-         left join role_with_privileges rwp on auihr.role = rwp.id
+         left join every_role_with_privileges rwp on auihr.role = rwp.id
          left join app_user_name cb on aui.created_by = cb.id
 group by aui.id, e, cb;
 

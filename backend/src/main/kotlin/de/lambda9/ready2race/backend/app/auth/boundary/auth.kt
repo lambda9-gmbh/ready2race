@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
+import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.sessions.UserSession
@@ -35,6 +36,13 @@ fun Route.auth() {
                     sessions.clear<UserSession>()
                 }
             }
+        }
+    }
+
+    get("/privileges") {
+        call.respondComprehension {
+            !authenticate()
+            AuthService.getAllPrivileges()
         }
     }
 }

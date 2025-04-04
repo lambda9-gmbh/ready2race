@@ -9,7 +9,7 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
 import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
-import {NewPassword, PasswortFormPart} from '@components/form/NewPassword.tsx'
+import {NewPassword, PasswordFormPart} from '@components/form/NewPassword.tsx'
 import {CaptchaDto, RegisterRequest} from '@api/types.gen.ts'
 import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
@@ -21,7 +21,7 @@ type Form = {
     lastname: string
     clubname: string
     captcha: number
-} & PasswortFormPart
+} & PasswordFormPart
 
 const RegistrationPage = () => {
     const {t} = useTranslation()
