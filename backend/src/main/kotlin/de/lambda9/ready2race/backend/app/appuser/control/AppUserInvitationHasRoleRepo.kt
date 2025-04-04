@@ -6,5 +6,6 @@ import de.lambda9.ready2race.backend.database.insert
 
 object AppUserInvitationHasRoleRepo {
 
+    fun create(record: AppUserInvitationHasRoleRecord) = APP_USER_INVITATION_HAS_ROLE.insert(record)
     fun create(records: Collection<AppUserInvitationHasRoleRecord>) = APP_USER_INVITATION_HAS_ROLE.insert(records)
 }

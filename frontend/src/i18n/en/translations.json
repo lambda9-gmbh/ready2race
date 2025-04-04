@@ -320,7 +320,14 @@
     },
     "invitation": {
       "invitation": "Invitation",
-      "pendingInvitations": "Pending invitations"
+      "pendingInvitations": "Pending invitations",
+      "accept": "Accept invitation",
+      "hint": "Please enter a password for the user account that will be created.",
+      "submitPassword": "Accept invitation",
+      "userCreated": {
+        "text": "Your account has been successfully created and you can log in now.",
+        "toLogin": "Goto Login"
+      }
     },
     "registration": {
       "register": "Register",

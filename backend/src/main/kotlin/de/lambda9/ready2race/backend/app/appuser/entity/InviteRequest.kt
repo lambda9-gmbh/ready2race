@@ -16,6 +16,7 @@ data class InviteRequest(
     val lastname: String,
     val language: EmailLanguage,
     val roles: List<UUID>,
+    val admin: Boolean? = null,
     val callbackUrl: String,
 ): Validatable {
     override fun validate(): ValidationResult =
@@ -24,7 +25,7 @@ data class InviteRequest(
             this::firstname validate notBlank,
             this::lastname validate notBlank,
             this::callbackUrl validate notBlank,
-            this::roles validate noDuplicates
+            this::roles validate noDuplicates,
         )
 
     companion object {

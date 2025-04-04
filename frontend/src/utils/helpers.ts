@@ -44,3 +44,5 @@ export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
     })
     return map
 }
+
+export const adminId = '00000000-0000-0000-0000-000000000000'

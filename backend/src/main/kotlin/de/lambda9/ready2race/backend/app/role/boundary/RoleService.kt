@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.app.role.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.auth.control.PrivilegeRepo
+import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.role.control.toDto
 import de.lambda9.ready2race.backend.app.role.control.toRecord
@@ -11,6 +13,7 @@ import de.lambda9.ready2race.backend.app.role.entity.RoleWithPrivilegesSort
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.RoleHasPrivilegeRecord
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -59,6 +62,18 @@ object RoleService {
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()
+
+        // TODO @Incomplete: check privilege Ids for better error than 500!
+
+        val records = request.privileges.map {
+            RoleHasPrivilegeRecord(
+                role = id,
+                privilege = it
+            )
+        }
+
+        !RoleHasPrivilegeRepo.deleteByRole(id).orDie()
+        !RoleHasPrivilegeRepo.create(records).orDie()
 
         noData
     }

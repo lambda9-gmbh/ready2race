@@ -4,11 +4,11 @@ import {FieldValues, UseFormReturn} from 'react-hook-form-mui'
 import {Grid2} from '@mui/material'
 import FormInputPasswordConfirm from '@components/form/input/FormInputPasswordConfirm.tsx'
 
-export type PasswortFormPart = {
+export type PasswordFormPart = {
     password: string
     confirmPassword: string
 }
-type Form<F extends FieldValues> = PasswortFormPart & F
+type Form<F extends FieldValues> = PasswordFormPart & F
 
 type Props<F extends FieldValues> = {
     formContext: UseFormReturn<Form<F>>
