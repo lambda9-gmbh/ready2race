@@ -31,6 +31,10 @@ export type FormSetupRound = {
     }>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
+    places: Array<{
+        roundOutcome: number
+        place: number
+    }>
     isGroupRound: boolean
     useStartTimeOffsets: boolean
 }
@@ -166,6 +170,7 @@ const CompetitionSetup = () => {
                             matches: [],
                             groups: [],
                             useDefaultSeeding: true,
+                            places: [],
                             isGroupRound: false,
                             useStartTimeOffsets: false,
                         })
@@ -258,6 +263,7 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
                 : undefined,
             statisticEvaluations: round.statisticEvaluations,
             useDefaultSeeding: round.useDefaultSeeding,
+            places: round.places,
         })),
     }
 }
@@ -303,6 +309,7 @@ function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
                 })) ?? [],
             statisticEvaluations: round.statisticEvaluations,
             useDefaultSeeding: round.useDefaultSeeding,
+            places: round.places,
             isGroupRound: round.groups !== undefined,
             // If a match has an offset, useStartTimeOffsets is set to true
             useStartTimeOffsets:

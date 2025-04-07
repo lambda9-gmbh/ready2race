@@ -1,5 +1,20 @@
 import {CheckboxElement, Controller, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
-import {Alert, Box, Button, Checkbox, FormControlLabel, Stack, Typography} from '@mui/material'
+import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    Divider,
+    FormControlLabel,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography,
+} from '@mui/material'
 import {CompetitionSetupForm} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
 import {useEffect} from 'react'
@@ -14,6 +29,7 @@ import {
     updateParticipants,
     updatePreviousRoundParticipants,
 } from '@components/event/competition/setup/common.ts'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 //import CompetitionSetupGroup from '@components/event/competition/setup/CompetitionSetupGroup.tsx'
 
 type Props = {
@@ -128,7 +144,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     // Display the seeds that Teams are given, based on their place in their match
     // Purely visual to show where the participants in the next round are coming from
-    const results = fillSeedingList(
+    const roundOutcomes = fillSeedingList(
         groupsOrMatchesLength,
         highestTeamCount,
         watchIsGroupRound
@@ -145,14 +161,22 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     const matchInfos: MatchOrGroupInfo[] = watchMatches.map((_, index) => ({
         originalIndex: index,
         fieldId: matchFields[index]?.id ?? '',
-        outcomes: !watchIsGroupRound ? results[index] : [],
+        outcomes: !watchIsGroupRound ? roundOutcomes[index] : [],
     }))
 
     const groupInfos: MatchOrGroupInfo[] = watchGroups.map((_, index) => ({
         originalIndex: index,
         fieldId: groupFields[index]?.id ?? '',
-        outcomes: watchIsGroupRound ? results[index] : [],
+        outcomes: watchIsGroupRound ? roundOutcomes[index] : [],
     }))
+
+    // The outcomes that won't partake in the next round if there is one
+    const eliminatedRoundOutcomes = roundOutcomes
+        .flat()
+        .sort((a, b) => a - b)
+        .filter((outcome) => outcome > teamCounts.nextRound)
+
+    console.log("Round", round.index, "Outcomes", roundOutcomes.flat(), "E", eliminatedRoundOutcomes)
 
     const getGroupOrMatchProps = (
         isGroups: boolean,
@@ -408,6 +432,37 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     )}
                                 </Box>
                             </Stack>
+                            {eliminatedRoundOutcomes.length > 0 && (
+                                <>
+                                    <Divider />
+                                    <Stack sx={{alignSelf: 'center', maxWidth: 300}}>
+                                        <Typography variant={'h3'}>Final places</Typography>
+                                        <TableContainer>
+                                            <Table>
+                                                <TableHead>
+                                                    <TableCell>Outcome</TableCell>
+                                                    <TableCell>Place</TableCell>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {eliminatedRoundOutcomes.map(
+                                                        (outcome, outcomeIndex) => (
+                                                            <TableRow key={outcome}>
+                                                                <TableCell>{outcome}</TableCell>
+                                                                <TableCell>
+                                                                    <FormInputNumber
+                                                                        name={`rounds[${round.index}].places[${outcomeIndex}].place`}
+                                                                        required
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ),
+                                                    )}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </Stack>
+                                </>
+                            )}
                         </Stack>
                     )}
                 />
