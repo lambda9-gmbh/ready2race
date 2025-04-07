@@ -1,21 +1,24 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
-import {useForm} from 'react-hook-form-mui'
+import {MultiSelectElement, useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {AppUserInvitationDto, InviteRequest, InviteUserError} from '@api/types.gen.ts'
-import {inviteUser} from '@api/sdk.gen.ts'
-import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
+import {getRoles, inviteUser} from '@api/sdk.gen.ts'
+import {adminId, i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 import {useTranslation} from 'react-i18next'
-import {useFeedback} from '@utils/hooks.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {useUser} from "@contexts/user/UserContext.ts";
+import {FormInputCheckbox} from "@components/form/input/FormInputCheckbox.tsx";
 
 type InvitationForm = {
     email: string
     firstname: string
     lastname: string
-    roles: string[] // todo: implement me
+    roles: string[]
+    admin: boolean
 }
 
 const defaultValues: InvitationForm = {
@@ -23,15 +26,17 @@ const defaultValues: InvitationForm = {
     firstname: '',
     lastname: '',
     roles: [],
+    admin: false,
 }
 
 const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
     email: formData.email,
     firstname: formData.firstname,
     lastname: formData.lastname,
-    roles: formData.roles,
+    roles: formData.admin ? [] : formData.roles,
+    admin: formData.admin,
     language: languageMapping[i18nLanguage()],
-    callbackUrl: location.origin + location.pathname + '/',
+    callbackUrl: location.origin + '/invitation/',
 })
 
 const addAction = (formData: InvitationForm) =>
@@ -43,6 +48,12 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
     const {t} = useTranslation()
     const feedback = useFeedback()
     const formContext = useForm<InvitationForm>()
+
+    const user = useUser()
+
+    const {data} = useFetch(
+        signal => getRoles({signal})
+    )
 
     const onOpen = useCallback(() => {
         formContext.reset(defaultValues)
@@ -77,6 +88,34 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
                 <FormInputText name={'firstname'} label={t('user.firstname')} required />
                 <FormInputText name={'lastname'} label={t('user.lastname')} required />
                 <FormInputEmail name={'email'} label={t('user.email.email')} required />
+                { 'id' in user && user.id === adminId &&
+                    <FormInputCheckbox name={'admin'} label={'Admin?'} />
+                }
+                { !formContext.watch('admin') &&
+                    <MultiSelectElement
+                        name={'roles'}
+                        label={'Rollen'}
+                        options={
+                            data?.data.sort((a, b) => {
+                                if (a.name < b.name) {
+                                    return 1
+                                } else if (a.name > b.name) {
+                                    return -1
+                                } else {
+                                    return 0
+                                }
+                            }).map(r => ({
+                                id: r.id,
+                                label: r.name
+                            })) ?? []
+                        }
+                        itemKey={'id'}
+                        itemValue={'id'}
+                        itemLabel={'label'}
+                        showCheckbox={true}
+                        showChips={true}
+                    />
+                }
             </Stack>
         </EntityDialog>
     )

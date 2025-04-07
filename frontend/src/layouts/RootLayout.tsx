@@ -18,7 +18,7 @@ import UserWidget from '@components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
 import {
     readClubGlobal,
-    readClubOwn,
+    readClubOwn, readEventOwn,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
@@ -78,6 +78,7 @@ const RootLayout = () => {
                                 icon={<Event />}
                                 // TODO remove authenticatedOnly so everyone can see published events?
                                 authenticatedOnly
+                                privilege={readEventOwn}
                                 to={'/event'}
                             />
                             <SidebarItem

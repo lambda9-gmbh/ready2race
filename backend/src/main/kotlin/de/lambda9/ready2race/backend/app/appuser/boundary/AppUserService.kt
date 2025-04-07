@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
@@ -14,6 +15,7 @@ import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.ADMIN_ROLE
 import de.lambda9.ready2race.backend.database.CLUB_REPRESENTATIVE_ROLE
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.USER_ROLE
@@ -97,15 +99,28 @@ object AppUserService {
         val record = !request.toRecord(inviter.id!!, invitationLifeTime)
         val id = !AppUserInvitationRepo.create(record).orDie()
 
-        !RoleService.checkAssignable(request.roles)
-        !AppUserInvitationHasRoleRepo.create(
-            request.roles.map {
-                AppUserInvitationHasRoleRecord(
-                    appUserInvitation = id,
-                    role = it
-                )
+        if (request.admin == true) {
+            if (inviter.id == SYSTEM_USER) {
+                !AppUserInvitationHasRoleRepo.create(
+                    AppUserInvitationHasRoleRecord(
+                        appUserInvitation = id,
+                        role = ADMIN_ROLE,
+                    )
+                ).orDie()
+            } else {
+                return@comprehension KIO.fail(AuthError.SystemUserOnly)
             }
-        ).orDie()
+        } else {
+            !RoleService.checkAssignable(request.roles)
+            !AppUserInvitationHasRoleRepo.create(
+                request.roles.map {
+                    AppUserInvitationHasRoleRecord(
+                        appUserInvitation = id,
+                        role = it
+                    )
+                }
+            ).orDie()
+        }
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.USER_INVITATION,
@@ -146,7 +161,9 @@ object AppUserService {
 
         val roles = invitation.roles!!.map { it!!.id!! }
 
-        !RoleService.checkAssignable(roles)
+        if (invitation.createdBy?.id != SYSTEM_USER) {
+            !RoleService.checkAssignable(roles)
+        }
         !AppUserHasRoleRepo.create(
             roles.map {
                 AppUserHasRoleRecord(

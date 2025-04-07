@@ -24,7 +24,7 @@ fun Route.role() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadUserGlobal)
+                !authenticate()
                 val params = !pagination<RoleWithPrivilegesSort>()
                 RoleService.page(params)
             }

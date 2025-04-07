@@ -397,6 +397,7 @@ export type InviteRequest = {
     lastname: string
     language: EmailLanguage
     roles: Array<string>
+    admin: boolean
     callbackUrl: string
 }
 
@@ -659,6 +660,10 @@ export type CheckUserLoginError = ApiError
 export type UserLogoutResponse = void
 
 export type UserLogoutError = ApiError
+
+export type GetPrivilegesResponse = Array<PrivilegeDto>
+
+export type GetPrivilegesError = BadRequestError | ApiError
 
 export type GetUsersData = {
     query?: {

@@ -33,6 +33,7 @@ import ClubsPage from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage from './pages/ConfigurationPage.tsx'
+import AcceptInvitationPage from "./pages/user/AcceptInvitationPage.tsx";
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -55,7 +56,6 @@ const checkAuthWith = (
     }
     const scope = context.getPrivilegeScope(action, resource)
     if (!scope || !f(context, scope)) {
-        // Todo: Shouldn't it be && instead of ||?
         throw redirect({to: '/dashboard'})
     }
 }
@@ -80,14 +80,15 @@ export const loginRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'login',
     component: () => <LoginPage />,
-    beforeLoad: ({context}) => {
-        if (context.loggedIn) {
-            throw redirect({to: '/dashboard'})
-        }
-    },
     validateSearch: ({redirect}: {redirect?: string} & SearchSchemaInput): LoginSearch => ({
         redirect,
     }),
+})
+
+export const invitationTokenRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'invitation/$invitationToken',
+    component: () => <AcceptInvitationPage />
 })
 
 export const registrationRoute = createRoute({
@@ -99,22 +100,12 @@ export const registrationIndexRoute = createRoute({
     getParentRoute: () => registrationRoute,
     path: '/',
     component: () => <RegistrationPage />,
-    beforeLoad: ({context}) => {
-        if (context.loggedIn) {
-            throw redirect({to: '/dashboard'})
-        }
-    },
 })
 
 export const registrationTokenRoute = createRoute({
     getParentRoute: () => registrationRoute,
     path: '$registrationToken',
     component: () => <VerifyRegistrationPage />,
-    beforeLoad: ({context}) => {
-        if (context.loggedIn) {
-            throw redirect({to: '/dashboard'})
-        }
-    },
 })
 
 export const resetPasswordRoute = createRoute({
@@ -334,6 +325,7 @@ const routeTree = rootRoute.addChildren([
     competitionConfigRoute.addChildren([competitionConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
+    invitationTokenRoute,
     registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
     resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
     clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),

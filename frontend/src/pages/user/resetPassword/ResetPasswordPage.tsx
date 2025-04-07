@@ -4,13 +4,13 @@ import {useState} from 'react'
 import {useFeedback} from '@utils/hooks.ts'
 import {Box, Stack, Typography} from '@mui/material'
 import {FormContainer, useForm} from 'react-hook-form-mui'
-import {NewPassword, PasswortFormPart} from '@components/form/NewPassword.tsx'
+import {NewPassword, PasswordFormPart} from '@components/form/NewPassword.tsx'
 import {resetPassword} from '@api/sdk.gen.ts'
 import {resetPasswordTokenRoute} from '@routes'
 import RequestStatusResponse from '@components/user/RequestStatusResponse.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 
-type Form = PasswortFormPart
+type Form = PasswordFormPart
 
 const ResetPasswordPage = () => {
     const {t} = useTranslation()

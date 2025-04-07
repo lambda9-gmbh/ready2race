@@ -53,6 +53,25 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /privileges:
+    get:
+      operationId: getPrivileges
+      responses:
+        200:
+          description: All system privileges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrivilegeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        500:
+          $ref: '#/components/responses/500'
+
   /user:
     get:
       operationId: getUsers
@@ -2836,6 +2855,8 @@ components:
           items:
             type: string
             format: uuid
+        admin:
+          type: boolean
         callbackUrl:
           type: string
           format: url

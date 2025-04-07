@@ -14,6 +14,8 @@ import type {
     CheckUserLoginResponse,
     UserLogoutError,
     UserLogoutResponse,
+    GetPrivilegesError,
+    GetPrivilegesResponse,
     GetUsersData,
     GetUsersError,
     GetUsersResponse,
@@ -288,6 +290,17 @@ export const userLogout = <ThrowOnError extends boolean = false>(
         ...options,
         url: '/login',
     })
+}
+
+export const getPrivileges = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetPrivilegesResponse, GetPrivilegesError, ThrowOnError>(
+        {
+            ...options,
+            url: '/privileges',
+        },
+    )
 }
 
 export const getUsers = <ThrowOnError extends boolean = false>(
