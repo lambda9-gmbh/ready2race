@@ -79,3 +79,13 @@ create table competition_setup_participant
 
 create index on competition_setup_participant (competition_setup_match);
 create index on competition_setup_participant (competition_setup_group);
+
+create table competition_setup_place
+(
+    competition_setup_round uuid references competition_setup_round on delete cascade,
+    round_outcome           integer not null,
+    place                   integer not null,
+    primary key (competition_setup_round, round_outcome)
+);
+
+create index on competition_setup_place (competition_setup_round)

@@ -1,13 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionSetup.control
 
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupGroupDto
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupGroupStatisticEvaluationDto
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupMatchDto
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupRoundDto
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupGroupRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupGroupStatisticEvaluationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupMatchRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundRecord
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import java.util.*
 
 fun CompetitionSetupRoundDto.toRecord(competitionSetupId: UUID, nextRoundId: UUID?) = CompetitionSetupRoundRecord(
@@ -22,14 +16,16 @@ fun CompetitionSetupRoundDto.toRecord(competitionSetupId: UUID, nextRoundId: UUI
 fun CompetitionSetupRoundRecord.toDto(
     matches: List<CompetitionSetupMatchDto>?,
     groups: List<CompetitionSetupGroupDto>?,
-    statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?
+    statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?,
+    places: List<CompetitionSetupPlaceDto>
 ) = CompetitionSetupRoundDto(
     name = name,
     required = required,
     matches = matches,
     groups = groups,
     statisticEvaluations = statisticEvaluations,
-    useDefaultSeeding = useDefaultSeeding
+    useDefaultSeeding = useDefaultSeeding,
+    places = places
 )
 
 fun CompetitionSetupGroupDto.toRecord(index: Int) = CompetitionSetupGroupRecord(
@@ -90,4 +86,15 @@ fun CompetitionSetupMatchRecord.toDto(participants: List<Int>) = CompetitionSetu
     name = name,
     participants = participants,
     startTimeOffset = startTimeOffset
+)
+
+fun CompetitionSetupPlaceDto.toRecord(competitionSetupRoundId: UUID) = CompetitionSetupPlaceRecord(
+    competitionSetupRound = competitionSetupRoundId,
+    roundOutcome = roundOutcome,
+    place = place,
+)
+
+fun CompetitionSetupPlaceRecord.toDto() = CompetitionSetupPlaceDto(
+    roundOutcome = roundOutcome,
+    place = place,
 )

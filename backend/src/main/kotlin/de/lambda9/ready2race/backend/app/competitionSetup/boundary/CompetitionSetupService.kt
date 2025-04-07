@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionProperties.control.Competiti
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupDto
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlaceDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
@@ -43,7 +44,7 @@ object CompetitionSetupService {
             updatedBy = userId
         }.orDie().onNullFail { CompetitionSetupError.NotFound }
 
-
+        // Deletes all rounds for this competition - including matches, groups, places etc. by cascade
         !CompetitionSetupRoundRepo.delete(competitionPropertiesId).orDie()
 
         data class Batches(
@@ -51,7 +52,8 @@ object CompetitionSetupService {
             val groups: MutableList<CompetitionSetupGroupRecord> = mutableListOf(),
             val statisticEvaluations: MutableList<CompetitionSetupGroupStatisticEvaluationRecord> = mutableListOf(),
             val matches: MutableList<CompetitionSetupMatchRecord> = mutableListOf(),
-            val participants: MutableList<CompetitionSetupParticipantRecord> = mutableListOf()
+            val participants: MutableList<CompetitionSetupParticipantRecord> = mutableListOf(),
+            val places: MutableList<CompetitionSetupPlaceRecord> = mutableListOf(),
         )
 
         val records = Batches()
@@ -99,6 +101,11 @@ object CompetitionSetupService {
                 val statisticEvaluationRecord = statisticEvaluation.toRecord(roundRecord.id)
                 records.statisticEvaluations.add(statisticEvaluationRecord)
             }
+
+            round.places.forEach { place ->
+                val placeRecord = place.toRecord(roundRecord.id)
+                records.places.add(placeRecord)
+            }
         }
 
         !CompetitionSetupRoundRepo.create(records.rounds).orDie()
@@ -110,6 +117,7 @@ object CompetitionSetupService {
         }
         !CompetitionSetupMatchRepo.create(records.matches).orDie()
         !CompetitionSetupParticipantRepo.create(records.participants).orDie()
+        !CompetitionSetupPlaceRepo.create(records.places).orDie()
 
         noData
     }
@@ -137,6 +145,9 @@ object CompetitionSetupService {
 
         val participantRecords =
             !CompetitionSetupParticipantRepo.get(matchRecords.map { it.id } + groupRecords.map { it.id }).orDie()
+
+
+        val placeRecords = !CompetitionSetupPlaceRepo.get(roundRecords.map { it.id }).orDie()
 
 
         // Map and filter the Records into the Dto
@@ -198,6 +209,7 @@ object CompetitionSetupService {
                 } else {
                     null
                 },
+                places = placeRecords.filter { place -> place.competitionSetupRound == round.id }.map { it.toDto() }
             )
         }
 

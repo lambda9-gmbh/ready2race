@@ -2666,12 +2666,25 @@ components:
           type: boolean
 
 
+    CompetitionSetupPlaceDto:
+      type: object
+      required:
+        - roundOutcome
+        - place
+      properties:
+        roundOutcome:
+          type: integer
+        place:
+          type: integer
+
+
     CompetitionSetupRoundDto:
       type: object
       required:
         - name
         - required
         - useDefaultSeeding
+        - places
       properties:
         name:
           type: string
@@ -2691,6 +2704,10 @@ components:
             $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
         useDefaultSeeding:
           type: boolean
+        places:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupPlaceDto'
 
     CompetitionSetupDto:
       type: object

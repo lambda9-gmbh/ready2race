@@ -157,6 +157,11 @@ export type CompetitionSetupMatchDto = {
     startTimeOffset?: number
 }
 
+export type CompetitionSetupPlaceDto = {
+    roundOutcome: number
+    place: number
+}
+
 export type CompetitionSetupRoundDto = {
     name: string
     required: boolean
@@ -164,6 +169,7 @@ export type CompetitionSetupRoundDto = {
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
+    places: Array<CompetitionSetupPlaceDto>
 }
 
 export type CompetitionTemplateDto = {

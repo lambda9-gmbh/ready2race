@@ -9,7 +9,8 @@ data class CompetitionSetupRoundDto(
     val matches: List<CompetitionSetupMatchDto>?,
     val groups: List<CompetitionSetupGroupDto>?,
     val statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?,
-    val useDefaultSeeding: Boolean
+    val useDefaultSeeding: Boolean,
+    val places: List<CompetitionSetupPlaceDto>,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate
 
@@ -21,7 +22,8 @@ data class CompetitionSetupRoundDto(
                 matches = listOf(CompetitionSetupMatchDto.example), // todo: should provide 2 examples (one with matches, one with groups) or extra details/description
                 groups = listOf(CompetitionSetupGroupDto.example),
                 statisticEvaluations = listOf(CompetitionSetupGroupStatisticEvaluationDto.example),
-                useDefaultSeeding = true
+                useDefaultSeeding = true,
+                places = listOf(CompetitionSetupPlaceDto.example),
             )
     }
 }
