@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.pdf.elements.table
 
 import de.lambda9.ready2race.backend.pdf.*
+import org.apache.pdfbox.pdmodel.PDPage
 import kotlin.math.max
 
 data class Table(
@@ -13,19 +14,13 @@ data class Table(
         requestNewPage: (currentContext: RenderContext) -> RenderContext
     ): RenderContext {
 
-        val size = endPosition(
-            SizeContext(
-                context.page.mediaBox.width,
-                Position(
-                    0f, 0f
-                )
-            )
-        )
+        var yStart = context.startPosition.y
+        var parentsPadding = context.parentsPadding
 
         val top = context.parentsPadding.top + context.startPosition.y
         val left = context.parentsPadding.left
         val right = context.parentsPadding.right
-        val bottom = context.page.mediaBox.height - top - size.y
+        val bottom = context.parentsPadding.bottom
 
         val contentTop = top + padding.top
         val contentLeft = left + padding.left
@@ -47,14 +42,27 @@ data class Table(
         val lastContext = children.fold(ctx) { c, row ->
             c.startPosition.x = 0F
             row.render(c) {
-                // TODO @Incomplete
-                c
+                val newC = requestNewPage(c)
+                yStart = 0f
+                parentsPadding = newC.parentsPadding
+                RenderContext(
+                    page = newC.page,
+                    content = newC.content,
+                    startPosition = Position.zero,
+                    parentsPadding = newC.parentsPadding + padding,
+                )
             }
         }
 
-        context.startPosition.y += lastContext.startPosition.y + padding.y
-
-        return context
+        return RenderContext(
+            page = lastContext.page,
+            content = lastContext.content,
+            startPosition = Position(
+                x = 0f,
+                y = yStart + lastContext.startPosition.y + padding.y,
+            ),
+            parentsPadding = parentsPadding,
+        )
     }
 
     override fun endPosition(context: SizeContext): Position {
@@ -71,14 +79,15 @@ data class Table(
             val pos = child.endPosition(c)
             xMax = max(xMax, pos.x)
             yMax = max(yMax, pos.y)
-            c.startPosition.x += pos.x
-            c.startPosition.y += pos.y
+            println("table yMax: $yMax")
+            c.startPosition.x = pos.x
+            c.startPosition.y = pos.y
             c
         }
 
         return Position(
-            x = xMax,
-            y = yMax,
+            x = context.startPosition.x + xMax + padding.x,
+            y = context.startPosition.y + yMax + padding.y,
         )
     }
 }

@@ -36,7 +36,7 @@ fun document(
 
     templateDoc.close()
 
-    return doc
+    return resultDoc
 }
 
 fun document(

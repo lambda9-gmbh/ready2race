@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.pdf
 
+import de.lambda9.ready2race.backend.pdf.elements.block.Block
 import de.lambda9.ready2race.backend.pdf.elements.table.Table
 import de.lambda9.ready2race.backend.pdf.elements.table.TableBuilder
 import de.lambda9.ready2race.backend.pdf.elements.text.Text
@@ -38,6 +39,22 @@ class BlockBuilder {
         children.add(
             Table(
                 children = rows,
+                padding = padding,
+            )
+        )
+        inline = false
+    }
+
+    fun block(
+        keepTogether: Boolean = false,
+        padding: Padding = Padding(0F),
+        builder: BlockBuilder.() -> Unit = {},
+    ) {
+        val blockChildren = BlockBuilder().apply(builder).children
+        children.add(
+            Block(
+                keepTogether = keepTogether,
+                children = blockChildren,
                 padding = padding,
             )
         )

@@ -15,26 +15,32 @@ data class Row(
 
         val height = endPosition(
             SizeContext(
-                context.page.mediaBox.width,
+                context.page.mediaBox.width - context.parentsPadding.x - padding.x,
                 Position(
                     0f, 0f
                 )
             )
         ).y
 
-        val top = context.parentsPadding.top + context.startPosition.y
-        val left = context.parentsPadding.left
-        val right = context.parentsPadding.right
-        val bottom = context.parentsPadding.bottom
+        val ctx = if (height + context.startPosition.y + context.parentsPadding.y + padding.y > context.page.mediaBox.height) {
+            requestNewPage(context)
+        } else {
+            context
+        }
+
+        val top = ctx.parentsPadding.top + ctx.startPosition.y
+        val left = ctx.parentsPadding.left
+        val right = ctx.parentsPadding.right
+        val bottom = ctx.page.mediaBox.height - top - height
 
         val contentTop = top + padding.top
         val contentLeft = left + padding.left
         val contentRight = right + padding.right
         val contentBottom = bottom + padding.bottom
 
-        val ctx = RenderContext(
-            page = context.page,
-            content = context.content,
+        val innerContext = RenderContext(
+            page = ctx.page,
+            content = ctx.content,
             startPosition = Position(0F, 0F),
             parentsPadding = Padding(
                 top = contentTop,
@@ -44,16 +50,21 @@ data class Row(
             ),
         )
 
-        children.fold(ctx) { c, cell ->
+        val lastContext = children.fold(innerContext) { c, cell ->
             cell.render(c) {
-                // TODO @Incomplete
-                c
+                c //rows should not break
             }
         }
 
-        context.startPosition.y += height + padding.y
-
-        return context
+        return RenderContext(
+            page = lastContext.page,
+            content = lastContext.content,
+            startPosition = Position(
+                x = 0f,
+                y = ctx.startPosition.y + height + padding.y
+            ),
+            parentsPadding = ctx.parentsPadding,
+        )
     }
 
     override fun endPosition(context: SizeContext): Position {
@@ -70,14 +81,14 @@ data class Row(
             val pos = child.endPosition(c)
             xMax = max(xMax, pos.x)
             yMax = max(yMax, pos.y)
-            c.startPosition.x += pos.x
-            c.startPosition.y += pos.y
+            c.startPosition.x = pos.x
+            c.startPosition.y = pos.y
             c
         }
 
         return Position(
-            x = context.startPosition.x + xMax,
-            y = context.startPosition.y + yMax,
+            x = context.startPosition.x + xMax + padding.x,
+            y = context.startPosition.y + yMax + padding.y,
         )
     }
 

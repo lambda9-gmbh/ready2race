@@ -16,17 +16,19 @@ interface ElementWithChildren<T : Element> : Element {
         )
 
         children.fold(innerContext) { c, child ->
+            c.startPosition.x = 0f
             val pos = child.endPosition(c)
             xMax = max(xMax, pos.x)
             yMax = max(yMax, pos.y)
-            c.startPosition.x += pos.x
-            c.startPosition.y += pos.y
+            println("block yMax = $yMax")
+            c.startPosition.x = pos.x
+            c.startPosition.y = pos.y
             c
         }
 
         return Position(
-            x = xMax,
-            y = yMax,
+            x = context.startPosition.x + xMax + padding.x,
+            y = context.startPosition.y + yMax + padding.y,
         )
     }
 

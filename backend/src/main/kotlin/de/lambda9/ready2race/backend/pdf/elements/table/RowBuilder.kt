@@ -12,7 +12,7 @@ class RowBuilder(
     internal val cells: MutableList<Cell> = mutableListOf()
 
     fun cell(
-        padding: Padding = Padding(2F, 0F),
+        padding: Padding = Padding(0F),
         color: Color? = null,
         builder: BlockBuilder.() -> Unit
     ) {

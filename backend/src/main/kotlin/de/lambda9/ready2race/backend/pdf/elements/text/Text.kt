@@ -93,8 +93,6 @@ data class Text(
             }
         }
 
-        println()
-
         lines = tmpLines
         return tmpLines
     }
@@ -107,31 +105,52 @@ data class Text(
         var currentContext = context
         var c = currentContext.content
 
-        val xMin = getXMin(context)
-        val xStart = context.startPosition.x + xMin
-        val yStart = getYMin(context) - context.startPosition.y
+        println("yStartPosition: ${currentContext.startPosition.y}, padTop: ${currentContext.parentsPadding.top}, padBottom: ${currentContext.parentsPadding.bottom}")
+
+        var xStart = currentContext.startPosition.x + getXMin(currentContext)
+        var yStart = getYMin(currentContext) - currentContext.startPosition.y
+
+        println("yStart: $yStart")
 
         c.setFont(font, fontSize)
 
-        val l = computeLines(SizeContext(startPosition = context.startPosition, parentContentWidth = getXMax(context) - getXMin(context)))
+        val l = computeLines(SizeContext(startPosition = currentContext.startPosition, parentContentWidth = getXMax(currentContext) - getXMin(currentContext)))
 
         if (l.isEmpty()) {
-            return context
+            return currentContext
         }
 
         var (x, y) = if (newLine) {
-            xMin to yStart - height
+            getXMin(currentContext) to yStart - height
         } else {
             xStart to yStart
         }
 
         l.forEachIndexed { i, line ->
-            println("line = $line")
+
+            println("x=$x, y=$y, line=$line")
+
             if (i > 0) {
-                x = xMin
+                x = getXMin(currentContext)
                 y -= height
             }
-            println("x = $x, y = $y")
+
+            println("x=$x, y=$y, parentPadBot = ${currentContext.parentsPadding.bottom}")
+            println("yOffset = $yOffset")
+
+            if (y < currentContext.parentsPadding.bottom - yOffset) {
+                currentContext = requestNewPage(currentContext)
+                xStart = getXMin(currentContext)
+                x = xStart
+                yStart = getYMin(currentContext)
+                y = yStart - height
+                c = currentContext.content
+                c.setFont(font, fontSize)
+            }
+
+            println("x=$x, y=$y")
+            println()
+
             c.beginText()
             c.newLineAtOffset(x, y + yOffset)
             c.showText(line)
@@ -141,15 +160,13 @@ data class Text(
         x = if (l.size == 1 && !newLine) {
             font.getStringWidth(l.first()) / 1000 * fontSize + xStart
         } else {
-            font.getStringWidth(l.last()) / 1000 * fontSize + xMin
+            font.getStringWidth(l.last()) / 1000 * fontSize + getXMin(currentContext)
         }
 
-        println(x)
+        currentContext.startPosition.x += x - xStart
+        currentContext.startPosition.y += yStart - y
 
-        context.startPosition.x += x - xStart
-        context.startPosition.y += yStart - y
-
-        return context
+        return currentContext
     }
 
     override fun endPosition(context: SizeContext): Position {

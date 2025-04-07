@@ -57,7 +57,7 @@ data class Cell(
 
         val lastCtx = children.fold(ctx) { c, element ->
             element.render(c) {
-                // TODO @Incomplete
+                // cells should not break
                 c
             }
         }
@@ -89,8 +89,8 @@ data class Cell(
         }
 
         return Position(
-            x = xMax,
-            y = yMax,
+            x = context.startPosition.x + xMax + padding.x,
+            y = context.startPosition.y + yMax + padding.y,
         )
     }
 
