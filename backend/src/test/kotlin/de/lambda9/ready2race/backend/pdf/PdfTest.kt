@@ -109,7 +109,7 @@ class PdfTest {
                     }
                 }
 
-                block(keepTogether = true, padding = Padding(0f, 0f)) {
+                block(keepTogether = false, padding = Padding(0f, 0f)) {
 
                     text {
                         "Text after table gg, more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more and more"

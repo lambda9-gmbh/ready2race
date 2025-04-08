@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.pdf.elements.text
 import de.lambda9.ready2race.backend.pdf.*
 import org.apache.pdfbox.pdmodel.font.PDType1Font
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts
+import kotlin.streams.toList
 
 data class Text(
     val newLine: Boolean,
@@ -12,6 +13,19 @@ data class Text(
     val fontStyle: FontStyle,
     override val padding: Padding,
 ) : Element {
+
+    companion object {
+
+        private fun String.sanitizeNonPrintable() = codePoints()
+            .toList()
+            .filter {
+                !Character.isISOControl(it) &&
+                    Character.UnicodeBlock.of(it) != null &&
+                    it !in 0x200E..0x206F
+            }
+            .joinToString("") { Character.toString(it) }
+
+    }
 
     private val font = when (fontStyle) {
         FontStyle.NORMAL -> PDType1Font(Standard14Fonts.FontName.HELVETICA)
@@ -153,7 +167,7 @@ data class Text(
 
             c.beginText()
             c.newLineAtOffset(x, y + yOffset)
-            c.showText(line)
+            c.showText(line.sanitizeNonPrintable())
             c.endText()
         }
 
