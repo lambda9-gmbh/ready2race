@@ -99,6 +99,7 @@
   },
   "club": {
     "club": "Verein",
+    "clubs": "Vereine",
     "participant": {
       "title": "Teilnehmer",
       "year": "Geburtsjahr",
@@ -136,6 +137,7 @@
       "name": "Name",
       "description": "Beschreibung",
       "shortName": "Kurzname",
+      "registrationCount" : "Meldungen",
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien",
@@ -238,6 +240,8 @@
       }
     },
     "registration": {
+      "registration" : "Anmeldung",
+      "registrations" : "Anmeldungen",
       "addParticipant": "Teilnehmer hinzufügen",
       "singleCompetition": "Einzelwettkampf",
       "teamCompetition": "Teamwettkampf",

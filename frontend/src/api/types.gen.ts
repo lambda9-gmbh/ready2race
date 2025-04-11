@@ -115,6 +115,7 @@ export type CompetitionDto = {
     event: string
     properties: CompetitionPropertiesDto
     template?: string
+    registrationCount?: number
 }
 
 export type CompetitionPropertiesDto = {
@@ -137,6 +138,17 @@ export type CompetitionPropertiesRequestDto = {
     fees: Array<FeeForCompetitionRequestDto>
 }
 
+export type CompetitionRegistrationFeeDto = {
+    feeId: string
+    feeName: string
+}
+
+export type CompetitionRegistrationNamedParticipantDto = {
+    namedParticipantId: string
+    namedParticipantName: string
+    participants: Array<ParticipantForEventDto>
+}
+
 export type CompetitionRegistrationNamedParticipantUpsertDto = {
     namedParticipantId: string
     participantIds: Array<string>
@@ -145,6 +157,17 @@ export type CompetitionRegistrationNamedParticipantUpsertDto = {
 export type CompetitionRegistrationSingleUpsertDto = {
     competitionId: string
     optionalFees?: Array<string>
+}
+
+export type CompetitionRegistrationTeamDto = {
+    id: string
+    name: string
+    clubId: string
+    clubName: string
+    optionalFees: Array<CompetitionRegistrationFeeDto>
+    namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
+    updatedAt: string
+    createdAt: string
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -397,7 +420,7 @@ export type InviteRequest = {
     lastname: string
     language: EmailLanguage
     roles: Array<string>
-    admin: boolean
+    admin?: boolean
     callbackUrl: string
 }
 
@@ -1145,6 +1168,38 @@ export type AssignDaysToCompetitionResponse = void
 
 export type AssignDaysToCompetitionError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type GetCompetitionRegistrationsData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetCompetitionRegistrationsResponse = {
+    data: Array<CompetitionRegistrationTeamDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionRegistrationsError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type AddDocumentsData = {
     body: {
         documentType?: string
@@ -1434,6 +1489,16 @@ export type DeleteClubData = {
 export type DeleteClubResponse = void
 
 export type DeleteClubError = ApiError
+
+export type GetClubUsersData = {
+    path: {
+        clubId: string
+    }
+}
+
+export type GetClubUsersResponse = Array<AppUserDto>
+
+export type GetClubUsersError = ApiError
 
 export type GetClubParticipantsData = {
     path: {

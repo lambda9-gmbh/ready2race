@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
@@ -9,7 +10,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*
@@ -41,6 +41,16 @@ object AppUserRepo {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
+        }
+    }
+
+    fun getAllByClubIdWithRoles(
+        clubId: UUID
+    ): JIO<List<AppUserWithRolesRecord>> = Jooq.query {
+        with(APP_USER_WITH_ROLES) {
+            selectFrom(this)
+                .where(CLUB.eq(clubId))
+                .fetch()
         }
     }
 

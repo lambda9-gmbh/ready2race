@@ -99,6 +99,7 @@
   },
   "club": {
     "club": "Club",
+    "clubs": "Clubs",
     "participant": {
       "title": "Participant",
       "year": "Year of birth",
@@ -135,6 +136,7 @@
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
+      "registrationCount" : "Registrations",
       "shortName": "Short name",
       "category": {
         "category": "Category",
@@ -238,6 +240,8 @@
       }
     },
     "registration": {
+      "registration" : "Registration",
+      "registrations" : "Registrations",
       "addParticipant": "Add Participant",
       "singleCompetition": "Single Competition",
       "teamCompetition": "Team Competition",

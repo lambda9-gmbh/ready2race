@@ -277,7 +277,7 @@ const EntityTableInternal = <
             {!error ? (
                 <>
                     <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>
-                        {withSearch && (
+                        {withSearch ? (
                             <TextField
                                 size={'small'}
                                 variant={'outlined'}
@@ -287,6 +287,8 @@ const EntityTableInternal = <
                                     setSearchInput(e.target.value)
                                 }}
                             />
+                        ) : (
+                            <Box />
                         )}
                         <Stack direction={'row'} spacing={1}>
                             {customTableActions}
