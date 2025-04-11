@@ -17,10 +17,10 @@ fun Route.participant() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
                 val clubId = !pathParam("clubId", uuid)
                 val params = !pagination<ParticipantSort>()
-                ParticipantService.page(params, clubId)
+                ParticipantService.page(params, clubId, user, scope)
             }
         }
 
@@ -38,29 +38,29 @@ fun Route.participant() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
-                    ParticipantService.getParticipant(id, clubId)
+                    ParticipantService.getParticipant(id, clubId, user, scope)
                 }
             }
 
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.PARTICIPANT)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
                     val payload = !receiveKIO(ParticipantUpsertDto.example)
-                    ParticipantService.updateParticipant(payload, user.id!!, clubId, id)
+                    ParticipantService.updateParticipant(payload, user.id!!, clubId, id, user, scope)
                 }
             }
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) =!authenticate(Privilege.Action.DELETE, Privilege.Resource.PARTICIPANT)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
-                    ParticipantService.deleteParticipant(id, clubId)
+                    ParticipantService.deleteParticipant(id, clubId, user, scope)
                 }
             }
         }
