@@ -397,7 +397,7 @@ export type InviteRequest = {
     lastname: string
     language: EmailLanguage
     roles: Array<string>
-    admin: boolean
+    admin?: boolean
     callbackUrl: string
 }
 
@@ -1551,11 +1551,27 @@ export type GetEventRegistrationTemplateError = ApiError
 
 export type AddEventRegistrationData = {
     body: EventRegistrationUpsertDto
+    path: {
+        eventId: string
+    }
 }
 
 export type AddEventRegistrationResponse = string
 
 export type AddEventRegistrationError = BadRequestError | ApiError
+
+export type GetRegistrationResultData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        remake?: boolean
+    }
+}
+
+export type GetRegistrationResultResponse = Blob | File
+
+export type GetRegistrationResultError = BadRequestError | ApiError
 
 export type AddFeeData = {
     body: FeeRequest

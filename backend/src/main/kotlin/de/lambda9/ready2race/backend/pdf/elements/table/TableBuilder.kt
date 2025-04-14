@@ -3,7 +3,7 @@ package de.lambda9.ready2race.backend.pdf.elements.table
 import de.lambda9.ready2race.backend.pdf.Padding
 import java.awt.Color
 
-class TableBuilder {
+class TableBuilder(private val withBorder: Boolean) {
 
     private val columns: MutableList<Column> = mutableListOf()
     internal val rows: MutableList<Row> = mutableListOf()
@@ -23,7 +23,7 @@ class TableBuilder {
         color: Color? = null,
         builder: RowBuilder.() -> Unit
     ) {
-        val cells = RowBuilder(columns, color).apply(builder).cells
+        val cells = RowBuilder(columns, color, withBorder).apply(builder).cells
         rows.add(
             Row(
                 children = cells,

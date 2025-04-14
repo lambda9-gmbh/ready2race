@@ -1,5 +1,7 @@
 package de.lambda9.ready2race.backend.pdf
 
+import org.apache.pdfbox.pdmodel.common.PDRectangle
+
 data class Padding(
     val top: Float,
     val left: Float,
@@ -26,7 +28,10 @@ data class Padding(
 
         val defaultPagePadding
             get() = Padding(
-                30F, 40F, 40F, 50F,
+                25 * POINTS_PER_MM,
+                25 * POINTS_PER_MM,
+                20 * POINTS_PER_MM,
+                25 * POINTS_PER_MM,
             )
     }
 }

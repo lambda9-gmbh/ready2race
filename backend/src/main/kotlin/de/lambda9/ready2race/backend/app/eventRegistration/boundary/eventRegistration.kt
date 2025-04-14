@@ -34,10 +34,10 @@ fun Route.eventRegistration() {
 
     get("/registrationResult") {
         call.respondComprehension {
-            val user = !authenticate(Privilege.ReadEventRegistrationGlobal)
+            !authenticate(Privilege.ReadEventRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
             val remake = !optionalQueryParam("remake", boolean).onNullDefault { false }
-            EventRegistrationService.downloadResult(eventId, remake, user.id!!)
+            EventRegistrationService.downloadResult(eventId, remake)
         }
     }
 }

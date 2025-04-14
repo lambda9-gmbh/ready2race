@@ -33,9 +33,10 @@ class BlockBuilder {
 
     fun table(
         padding: Padding = Padding(0F),
+        withBorder: Boolean = false,
         builder: TableBuilder.() -> Unit = {}
     ) {
-        val rows = TableBuilder().apply(builder).rows
+        val rows = TableBuilder(withBorder).apply(builder).rows
         children.add(
             Table(
                 children = rows,

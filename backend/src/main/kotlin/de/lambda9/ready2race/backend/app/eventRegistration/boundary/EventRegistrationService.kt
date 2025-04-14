@@ -9,11 +9,17 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.pdf.FontStyle
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
+import java.awt.Color
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 object EventRegistrationService {
@@ -239,17 +245,17 @@ object EventRegistrationService {
     fun downloadResult(
         eventId: UUID,
         remake: Boolean,
-        userId: UUID,
     ): App<EventRegistrationError, ApiResponse.File> = KIO.comprehension {
 
         val existing = if (remake) {
-            KIO.ok(null)
+            EventRegistrationReportRepo.delete(eventId).orDie()
+                .map { null }
         } else {
             EventRegistrationReportRepo.getDownload(eventId).orDie()
                 .mapNotNull { it.name!! to it.data!! }
         }
 
-        existing.onNull { generateResultDocument(eventId, userId) }
+        existing.onNull { generateResultDocument(eventId) }
             .map { (name, data) ->
                 ApiResponse.File(
                     name = name,
@@ -260,18 +266,144 @@ object EventRegistrationService {
 
     private fun generateResultDocument(
         eventId: UUID,
-        userId: UUID,
     ): App<EventRegistrationError, Pair<String, ByteArray>> = KIO.comprehension {
 
+        println("generating result")
+
         val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
+            .onNullFail { EventRegistrationError.EventNotFound }
 
         val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.REGISTRATION_REPORT, eventId).orDie()
             .andThenNotNull { it.toPdfTemplate() }
 
+        val doc = document(pdfTemplate) {
+            // TODO: Instead don't allow this action
+            if (result.competitions!!.isEmpty()) {
+                page {
+                    text { "keine Wettkämpfe in dieser Veranstaltung" }
+                }
+            }
+            result.competitions!!.forEach { competition ->
+                competition!!
+                page {
+                    block(
+                        padding = Padding(0f, 0f, 0f, 20f)
+                    ) {
+                        text(
+                            fontStyle = FontStyle.BOLD,
+                            fontSize = 12f,
+                        ) {
+                            "Wettkampf / "
+                        }
+                        text(
+                            fontSize = 11f,
+                            newLine = false,
+                        ) {
+                            "Competition"
+                        }
 
+                        table(
+                            padding = Padding(5f, 20f, 0f, 0f)
+                        ) {
+                            column(0.1f)
+                            column(0.25f)
+                            column(0.65f)
 
-        val filename = "result.pdf"
-        val bytes = ByteArray(0)
+                            row {
+                                cell {
+                                    text(
+                                        fontSize = 12f,
+                                    ) { competition.identifier!! }
+                                }
+                                cell {
+                                    competition.shortName?.let {
+                                        text(
+                                            fontSize = 12f,
+                                        ) { it }
+                                    }
+                                }
+                                cell {
+                                    text(
+                                        fontSize = 12f,
+                                    ) { competition.name!! }
+                                }
+                            }
+                        }
+                    }
+
+                    if (competition.clubRegistrations!!.isEmpty()) {
+                        text(
+                            fontStyle = FontStyle.BOLD,
+                            fontSize = 11f,
+                        ) { "Wettkampf entfällt / " }
+                        text(
+                            newLine = false,
+                        ) { "Competition cancelled" }
+                    } else {
+                        competition.clubRegistrations!!.forEach { club ->
+                            club!!.teams!!.forEach { team ->
+
+                                block {
+                                    text(
+                                        fontStyle = FontStyle.BOLD,
+                                    ) { club.name!! }
+                                    team!!.teamName?.let {
+                                        text(
+                                            newLine = false,
+                                        ) { " $it" }
+                                    }
+                                    table(
+                                        padding = Padding(5f, 0f, 0f, 0f),
+                                        withBorder = true,
+                                    ) {
+                                        column(0.15f)
+                                        column(0.2f)
+                                        column(0.2f)
+                                        column(0.1f)
+                                        column(0.35f)
+
+                                        team.participants!!.forEachIndexed { idx, member ->
+                                            row(
+                                                color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                            ) {
+                                                cell {
+                                                    text { member!!.role!! }
+                                                }
+                                                cell {
+                                                    text { member!!.firstname!! }
+                                                }
+                                                cell {
+                                                    text { member!!.lastname!! }
+                                                }
+                                                cell {
+                                                    text { member!!.year!!.toString() }
+                                                }
+                                                cell {
+                                                    text { member!!.externalClubName ?: club.name!! }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val out = ByteArrayOutputStream()
+        doc.save(out)
+        doc.close()
+
+        val filename = "registration_result_${result.eventName!!.replace(" ", "-")}_${
+            LocalDateTime.now().format(
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME
+            )
+        }.pdf"
+
+        val bytes = out.toByteArray()
+        out.close()
 
         val documentRecord = EventRegistrationReportRecord(
             event = eventId,

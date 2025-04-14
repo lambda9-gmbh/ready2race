@@ -37,7 +37,7 @@ data class Text(
     private val width = font.getStringWidth(content) / 1000 * fontSize
     private val height = lineHeight * fontSize * font.fontDescriptor.capHeight / 1000
 
-    private val yOffset = fontSize / 2.5f
+    private val yOffset = fontSize / 4f
 
     private var lines: List<String>? = null
 

@@ -233,8 +233,8 @@ from participant_requirement pr
          left join event_has_participant_requirement ehpr on pr.id = ehpr.participant_requirement and e.id = ehpr.event;
 
 create view participant_id_for_event as
-select er.event                                                              as event_id,
-       p.id                                                                  as participant_id
+select er.event as event_id,
+       p.id     as participant_id
 from event_registration er
          join competition_registration cr on er.id = cr.event_registration
          join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
@@ -242,10 +242,10 @@ from event_registration er
 group by er.event, p.id;
 
 create view participant_for_event as
-select er.event                                                              as event_id,
-       c.id                                                                  as club_id,
-       c.name                                                                as club_name,
-       p.id                                                                  as id,
+select er.event                                                                  as event_id,
+       c.id                                                                      as club_id,
+       c.name                                                                    as club_name,
+       p.id                                                                      as id,
        p.firstname,
        p.lastname,
        p.year,
@@ -312,12 +312,13 @@ select c.id,
        coalesce(array_agg(ccr) filter ( where ccr.competition is not null ), '{}') as club_registrations
 from competition c
          join competition_properties cp on c.id = cp.competition
-         join competition_category cc on cp.competition_category = cc.id
+         left join competition_category cc on cp.competition_category = cc.id
          left join competition_club_registration ccr on c.id = ccr.competition
 group by c.id, cp.id, cc.id;
 
 create view event_registration_result_view as
 select e.id,
+       e.name                                                             as event_name,
        coalesce(array_agg(ecr) filter ( where ecr.id is not null ), '{}') as competitions
 from event e
          left join event_competition_registration ecr on e.id = ecr.event
@@ -341,6 +342,5 @@ from document_template dt
                select dtu.document_type,
                       dtu.template,
                       null
-               from document_template_usage dtu
-               ) usage on dt.id = usage.template
+               from document_template_usage dtu) usage on dt.id = usage.template
 ;

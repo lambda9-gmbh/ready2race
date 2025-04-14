@@ -15,6 +15,102 @@ import kotlin.test.Test
 class PdfTest {
 
     @Test
+    fun exampleRegRes() {
+
+        Files.createDirectories(Paths.get("testOutputs"))
+
+        val doc = document {
+            page {
+                block(
+                    padding = Padding(0f, 0f, 0f, 20f)
+                ) {
+                    text(
+                        fontStyle = FontStyle.BOLD,
+                        fontSize = 12f,
+                    ) {
+                        "Wettkampf / "
+                    }
+                    text(
+                        fontSize = 11f,
+                        newLine = false,
+                    ) {
+                        "Competition"
+                    }
+                    table(
+                        padding = Padding(5f, 20f, 0f, 0f)
+                    ) {
+                        column(0.1f)
+                        column(0.25f)
+                        column(0.65f)
+
+                        row {
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { "1" }
+                            }
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { "CF 1x" }
+                            }
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { "Frauen Einer" }
+                            }
+                        }
+                    }
+                }
+
+                repeat(20) {
+                    block(
+                        padding = Padding(0f, 0f, 0f, 20f),
+                        keepTogether = true,
+                    ) {
+                        text(
+                            fontStyle = FontStyle.BOLD
+                        ) {
+                            "Ruderklub Flensburg"
+                        }
+                        table(
+                            padding = Padding(5f, 0f, 0f, 0f),
+                            withBorder = true,
+                        ) {
+                            column(0.25f)
+                            column(0.25f)
+                            column(0.1f)
+                            column(0.4f)
+
+                            repeat(3) { idx ->
+                                row(
+                                    color = if (idx % 2 == 1) Color(220, 220, 220) else null,
+                                ) {
+                                    cell {
+                                        text { "Mario" }
+                                    }
+                                    cell {
+                                        text { "Köhler" }
+                                    }
+                                    cell {
+                                        text { "1990" }
+                                    }
+                                    cell {
+                                        text { "Ruderklub Flensburg" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        doc.save("testOutputs/examplePdf.pdf")
+        doc.close()
+    }
+
+    @Test
     fun makePdf() {
 
         Files.createDirectories(Paths.get("testOutputs"))
@@ -48,12 +144,6 @@ class PdfTest {
 
         val doc = document(pageTemplate) {
             page {
-                text {
-                    "Text before table gg"
-                }
-                text {
-                    "New Line"
-                }
 
                 repeat(3) { i ->
                     table(padding = Padding(0f, 2f)) {

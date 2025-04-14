@@ -1,4 +1,4 @@
-import {Box, Button, Stack, Tab, Tabs, Typography} from '@mui/material'
+import {Box, Button, Link as MuiLink, Stack, Tab, Tabs, Typography} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
@@ -7,7 +7,7 @@ import CompetitionDialog from '@components/event/competition/CompetitionDialog.t
 import Throbber from '@components/Throbber.tsx'
 import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
 import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
-import {getEvent} from '@api/sdk.gen.ts'
+import {getEvent, getRegistrationResult} from '@api/sdk.gen.ts'
 import {
     CompetitionDto,
     EventDayDto,
@@ -19,7 +19,7 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import TabPanel from '@components/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
@@ -32,6 +32,8 @@ const EventPage = () => {
     const user = useUser()
 
     const [activeTab, setActiveTab] = useState(0)
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const {eventId} = eventRoute.useParams()
 
@@ -81,8 +83,29 @@ const EventPage = () => {
         [data],
     )
 
+    const handleReportDownload = async () => {
+        const {data, error} = await getRegistrationResult({
+            path: { eventId },
+            query: {
+                remake: true
+            }
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('event.document.download.error'))
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(data)
+            anchor.download = 'registration-result.pdf' // TODO: read from content-disposition header
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     return (
         <Box>
+            <MuiLink ref={downloadRef} display={'none'}></MuiLink>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
                 {data ? (
                     <Stack spacing={4}>
@@ -107,6 +130,10 @@ const EventPage = () => {
                                 {user.checkPrivilege(readEventGlobal) && (
                                     <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
                                 )}
+                                {user.checkPrivilege(readEventGlobal) && (
+                                    <Tab label={'[todo] Actions'} {...a11yProps(3)} />
+                                )}
+
                             </Tabs>
                         </Box>
                         <TabPanel index={0} activeTab={activeTab}>
@@ -139,6 +166,11 @@ const EventPage = () => {
                                 {...participantRequirementAdministrationProps.table}
                                 title={t('participantRequirement.participantRequirements')}
                             />
+                        </TabPanel>
+                        <TabPanel index={3} activeTab={activeTab}>
+                            <Button variant={'contained'} onClick={handleReportDownload}>
+                                [todo] Download registrations report
+                            </Button>
                         </TabPanel>
                     </Stack>
                 ) : (

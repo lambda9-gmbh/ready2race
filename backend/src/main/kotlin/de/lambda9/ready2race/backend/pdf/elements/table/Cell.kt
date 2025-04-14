@@ -7,6 +7,7 @@ import kotlin.math.max
 data class Cell(
     val width: Float,
     val color: Color?,
+    val withBorder: Boolean,
     override val children: List<Element>,
     override val padding: Padding,
 ) : ElementWithChildren<Element> {
@@ -16,15 +17,18 @@ data class Cell(
         requestNewPage: (currentContext: RenderContext) -> RenderContext
     ): RenderContext {
 
+        val rowWidth = context.page.mediaBox.width - context.parentsPadding.x
+        val cellWidth = rowWidth * width
+
         val top = context.parentsPadding.top
         val left = context.parentsPadding.left + context.startPosition.x
-        val right = context.page.mediaBox.width - left - width
+        val right = context.page.mediaBox.width - left - cellWidth
         val bottom = context.parentsPadding.bottom
 
         val x = left
         val h = context.page.mediaBox.height - context.parentsPadding.y
         val y = context.page.mediaBox.height - top - h
-        val w = width + padding.x
+        val w = cellWidth + padding.x
 
         val c = context.content
         if (color != null) {
@@ -33,10 +37,12 @@ data class Cell(
             c.fill()
             c.setNonStrokingColor(Color.BLACK)
         }
-        c.addRect(x, y, w, h)
-        c.setStrokingColor(Color.BLACK)
-        c.setLineWidth(1F)
-        c.stroke()
+        if (withBorder) {
+            c.addRect(x, y, w, h)
+            c.setStrokingColor(Color.BLACK)
+            c.setLineWidth(1F)
+            c.stroke()
+        }
 
         val contentTop = top + padding.top
         val contentLeft = left + padding.left
@@ -64,7 +70,7 @@ data class Cell(
 
         val height = lastCtx.startPosition.y + padding.y
 
-        context.startPosition.x += width + padding.x
+        context.startPosition.x += cellWidth + padding.x
         context.startPosition.y += height
 
         return context
@@ -74,8 +80,10 @@ data class Cell(
         var xMax = 0F
         var yMax = 0F
 
+        val cellWidth = context.parentContentWidth * width
+
         val innerContext = SizeContext(
-            parentContentWidth = width - padding.x,
+            parentContentWidth = cellWidth - padding.x,
             startPosition = Position(0f, 0f),
         )
 

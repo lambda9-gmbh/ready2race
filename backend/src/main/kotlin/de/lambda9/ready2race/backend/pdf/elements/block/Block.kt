@@ -33,10 +33,10 @@ data class Block(
         var yStart = ctx.startPosition.y
         var parentsPadding = ctx.parentsPadding
 
-        val c_ = ctx.content
+        /*val c_ = ctx.content
         c_.addRect(ctx.parentsPadding.left, ctx.page.mediaBox.height - ctx.parentsPadding.top - height - ctx.startPosition.y, ctx.page.mediaBox.width - ctx.parentsPadding.x, height)
         c_.setStrokingColor(Color.BLACK)
-        c_.stroke()
+        c_.stroke()*/
 
         val top = ctx.parentsPadding.top + ctx.startPosition.y
         val left = ctx.parentsPadding.left

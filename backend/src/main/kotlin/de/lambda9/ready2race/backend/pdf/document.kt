@@ -8,9 +8,13 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle
 import java.awt.geom.AffineTransform
 
 fun document(
-    pageTemplate: PageTemplate,
+    pageTemplate: PageTemplate?,
     builder: DocumentBuilder.() -> Unit,
 ): PDDocument {
+
+    if (pageTemplate == null) {
+        return document(builder = builder)
+    }
 
     val templateDoc = Loader.loadPDF(pageTemplate.bytes)
     val templatePage = templateDoc.getPage(0)

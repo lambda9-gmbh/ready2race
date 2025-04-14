@@ -7,12 +7,13 @@ import java.awt.Color
 class RowBuilder(
     private val columns: List<Column>,
     private val rowColor: Color?,
+    private val withBorder: Boolean,
 ) {
 
     internal val cells: MutableList<Cell> = mutableListOf()
 
     fun cell(
-        padding: Padding = Padding(0F),
+        padding: Padding = Padding(1f, 0f),
         color: Color? = null,
         builder: BlockBuilder.() -> Unit
     ) {
@@ -26,6 +27,7 @@ class RowBuilder(
             Cell(
                 width = columns[cells.size].width,
                 color = color ?: rowColor,
+                withBorder = withBorder,
                 padding = padding,
                 children = children,
             )

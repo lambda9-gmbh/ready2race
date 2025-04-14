@@ -1668,6 +1668,12 @@ paths:
           $ref: '#/components/responses/500'
 
   /event/{eventId}/register:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
     post:
       operationId: addEventRegistration
       requestBody:
@@ -1679,6 +1685,44 @@ paths:
       responses:
         201:
           $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/registrationResult:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getRegistrationResult
+      parameters:
+        - in: query
+          name: remake
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Report for event registrations successfully retrieved/generated
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
         400:
           $ref: '#/components/responses/400'
         401:

@@ -5,6 +5,7 @@ import org.apache.pdfbox.pdmodel.PDPage
 import kotlin.math.max
 
 data class Table(
+    val withBorder: Boolean = false,
     override val children: List<Row>,
     override val padding: Padding,
 ) : ElementWithChildren<Row> {

@@ -202,6 +202,9 @@ import type {
     AddEventRegistrationData,
     AddEventRegistrationError,
     AddEventRegistrationResponse,
+    GetRegistrationResultData,
+    GetRegistrationResultError,
+    GetRegistrationResultResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -1022,6 +1025,19 @@ export const addEventRegistration = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/register',
+    })
+}
+
+export const getRegistrationResult = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationResultData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationResultResponse,
+        GetRegistrationResultError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationResult',
     })
 }
 
