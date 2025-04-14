@@ -161,6 +161,18 @@
       "assignedDays": "Days of the competition",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      },
+      "setup": {
+        "round": {
+          "round": "Round",
+          "finals": {
+            "final": "Finals",
+            "semifinal": "Semi-final",
+            "quarterfinal": "Quarter-final",
+            "roundOf16": "Round of 16",
+            "roundOf32": "Round of 32"
+          }
+        }
       }
     },
     "assign": {

@@ -97,7 +97,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
 
             const newRound: TreeHelperRound = {
                 matches: matches,
-                name: 'X-Finale',
+                name: r === 0 ? t('event.competition.setup.round.finals.final') : r === 1 ? t('event.competition.setup.round.finals.semifinal') : r === 2 ? t('event.competition.setup.round.finals.quarterfinal') : r === 3 ? t('event.competition.setup.round.finals.roundOf16') : r === 4 ? t('event.competition.setup.round.finals.roundOf32') : t('event.competition.setup.round.round') + ` ${roundCount - r}`,
             }
             rounds.push(newRound)
         }
@@ -126,9 +126,18 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                     statisticEvaluations: undefined,
                     useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
                     isGroupRound: false,
+                    useStartTimeOffsets: false,
+                    places:
+                        matchForPlaceThree && roundIndex === roundCount - 1
+                            ? [
+                                  {roundOutcome: 1, place: 1},
+                                  {roundOutcome: 2, place: 3},
+                                  {roundOutcome: 3, place: 4},
+                                  {roundOutcome: 4, place: 2},
+                              ]
+                            : [],
                 })),
         }
-
 
         if (replaceAll) {
             resetSetupForm(tree)

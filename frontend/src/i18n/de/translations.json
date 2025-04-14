@@ -161,6 +161,18 @@
       "assignedDays": "Tage des Wettkampfs",
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+      },
+      "setup": {
+        "round": {
+          "round": "Runde",
+          "finals": {
+            "final": "Finalrunde",
+            "semifinal": "Halbfinale",
+            "quarterfinal": "Viertelfinale",
+            "roundOf16": "Achtelfinale",
+            "roundOf32": "Sechzehntelfinale"
+          }
+        }
       }
     },
     "assign": {

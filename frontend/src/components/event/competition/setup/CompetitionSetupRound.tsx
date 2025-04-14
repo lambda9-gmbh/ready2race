@@ -4,7 +4,6 @@ import {
     Box,
     Button,
     Checkbox,
-    Divider,
     FormControlLabel,
     Stack,
     Table,
@@ -14,6 +13,7 @@ import {
     TableHead,
     TableRow,
     Typography,
+    useTheme,
 } from '@mui/material'
 import {CompetitionSetupForm} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
@@ -45,6 +45,8 @@ type Props = {
 const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...props}: Props) => {
     const defaultMatchTeamSize = 2
     const defaultGroupTeamSize = 4
+
+    const theme = useTheme()
 
     const watchUseDefaultSeeding = formContext.watch(
         ('rounds[' + round.index + '].useDefaultSeeding') as `rounds.${number}.useDefaultSeeding`,
@@ -174,9 +176,16 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     const eliminatedRoundOutcomes = roundOutcomes
         .flat()
         .sort((a, b) => a - b)
-        .filter((outcome) => outcome > teamCounts.nextRound)
+        .filter(outcome => outcome > teamCounts.nextRound)
 
-    console.log("Round", round.index, "Outcomes", roundOutcomes.flat(), "E", eliminatedRoundOutcomes)
+    console.log(
+        'Round',
+        round.index,
+        'Outcomes',
+        roundOutcomes.flat(),
+        'E',
+        eliminatedRoundOutcomes,
+    )
 
     const getGroupOrMatchProps = (
         isGroups: boolean,
@@ -244,27 +253,15 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         },
                     }) => (
                         <Stack spacing={2} sx={{border: 1, borderColor: 'blue', p: 2}}>
-                            <Stack
-                                spacing={2}
-                                direction="row"
-                                sx={{
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                }}>
-                                <Typography>
-                                    Max Teams:{' '}
-                                    {teamCounts.thisRound === 0 ? 'Unknown' : teamCounts.thisRound}
-                                </Typography>
-                                <Box>
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => {
-                                            removeRound(round.index)
-                                        }}>
-                                        Remove Round
-                                    </Button>
-                                </Box>
-                            </Stack>
+                            <Box>
+                                <Button
+                                    variant="outlined"
+                                    onClick={() => {
+                                        removeRound(round.index)
+                                    }}>
+                                    Remove Round
+                                </Button>
+                            </Box>
                             {/*<CheckboxElement
                             name={`rounds[${round.index}].isGroupRound`}
                             label={<FormInputLabel label={'Group Phase'} required={true} horizontal />}
@@ -322,147 +319,161 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     />
                                 }
                             />
-                            <Box sx={{alignSelf: 'center'}}>
-                                {!watchIsGroupRound ? (
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => {
-                                            appendMatch({
-                                                duplicatable: false,
-                                                weighting: matchFields.length + 1,
-                                                teams: `${defaultMatchTeamSize}`,
-                                                name: '',
-                                                participants: watchUseDefaultSeeding
-                                                    ? []
-                                                    : appendPreparedParticipants,
-                                                position: matchFields.length + 1,
-                                            })
-                                        }}
-                                        sx={{width: 1}}>
-                                        Add Match
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => {
-                                            appendGroup({
-                                                duplicatable: false,
-                                                weighting: groupFields.length + 1,
-                                                teams: `${defaultGroupTeamSize}`,
-                                                name: '',
-                                                matches: [],
-                                                participants: appendPreparedParticipants,
-                                                matchTeams: 2,
-                                            })
-                                        }}
-                                        sx={{width: 1}}>
-                                        Add Group
-                                    </Button>
-                                )}
-                            </Box>
-                            {round.index === 0 &&
-                                watchMatches.filter(v => v.teams === '').length > 1 && (
-                                    <Alert severity="info">
-                                        Participants will be filled into the matches equally
-                                        starting from the first match
-                                    </Alert>
-                                )}
-                            <Stack
-                                direction="row"
-                                spacing={2}
-                                justifyContent="space-between"
-                                sx={{alignItems: 'center'}}>
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexWrap: 'wrap',
-                                        justifyContent: 'center',
-                                        flex: 1,
-                                        gap: 2,
-                                    }}>
-                                    {watchIsGroupRound === false ? (
-                                        <>
-                                            {matchInfos.map((matchInfo, _) => (
-                                                <Stack
-                                                    key={matchInfo.fieldId}
-                                                    direction="column"
-                                                    spacing={1}
-                                                    sx={{maxWidth: 245}}>
-                                                    <CompetitionSetupMatch
-                                                        {...getGroupOrMatchProps(
-                                                            false,
-                                                            matchInfo,
-                                                            useStartTimeOffsetsValue,
-                                                        )}
-                                                    />
-                                                    <Button
-                                                        variant="outlined"
-                                                        onClick={() => {
-                                                            removeMatch(matchInfo.originalIndex)
-                                                        }}>
-                                                        Remove Match
-                                                    </Button>
-                                                </Stack>
-                                            ))}
-                                        </>
-                                    ) : (
-                                        <>
-                                            {groupInfos.map((groupInfo, _) => (
-                                                <Stack
-                                                    key={groupInfo.fieldId}
-                                                    direction="column"
-                                                    spacing={1}
-                                                    sx={{maxWidth: 450}}>
-                                                    {/*<CompetitionSetupGroup
+
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    [theme.breakpoints.down('lg')]: {flexDirection: 'column'},
+                                }}>
+                                <Stack spacing={2} sx={{flex:1, alignSelf: 'start'}}>
+                                    <Box sx={{alignSelf: 'center'}}>
+                                        {!watchIsGroupRound ? (
+                                            <Button
+                                                variant="outlined"
+                                                onClick={() => {
+                                                    appendMatch({
+                                                        duplicatable: false,
+                                                        weighting: matchFields.length + 1,
+                                                        teams: `${defaultMatchTeamSize}`,
+                                                        name: '',
+                                                        participants: watchUseDefaultSeeding
+                                                            ? []
+                                                            : appendPreparedParticipants,
+                                                        position: matchFields.length + 1,
+                                                    })
+                                                }}
+                                                sx={{width: 1}}>
+                                                Add Match
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="outlined"
+                                                onClick={() => {
+                                                    appendGroup({
+                                                        duplicatable: false,
+                                                        weighting: groupFields.length + 1,
+                                                        teams: `${defaultGroupTeamSize}`,
+                                                        name: '',
+                                                        matches: [],
+                                                        participants: appendPreparedParticipants,
+                                                        matchTeams: 2,
+                                                    })
+                                                }}
+                                                sx={{width: 1}}>
+                                                Add Group
+                                            </Button>
+                                        )}
+                                    </Box>
+                                    {round.index === 0 &&
+                                        watchMatches.filter(v => v.teams === '').length > 1 && (
+                                            <Alert severity="info">
+                                                Participants will be filled into the matches equally
+                                                starting from the first match
+                                            </Alert>
+                                        )}
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            justifyContent: 'center',
+                                            flex: 1,
+                                            gap: 2,
+                                        }}>
+                                        {watchIsGroupRound === false ? (
+                                            <>
+                                                {matchInfos.map((matchInfo, _) => (
+                                                    <Stack
+                                                        key={matchInfo.fieldId}
+                                                        direction="column"
+                                                        spacing={1}
+                                                        sx={{maxWidth: 245}}>
+                                                        <CompetitionSetupMatch
+                                                            {...getGroupOrMatchProps(
+                                                                false,
+                                                                matchInfo,
+                                                                useStartTimeOffsetsValue,
+                                                            )}
+                                                        />
+                                                        <Button
+                                                            variant="outlined"
+                                                            onClick={() => {
+                                                                removeMatch(matchInfo.originalIndex)
+                                                            }}>
+                                                            Remove Match
+                                                        </Button>
+                                                    </Stack>
+                                                ))}
+                                            </>
+                                        ) : (
+                                            <>
+                                                {groupInfos.map((groupInfo, _) => (
+                                                    <Stack
+                                                        key={groupInfo.fieldId}
+                                                        direction="column"
+                                                        spacing={1}
+                                                        sx={{maxWidth: 450}}>
+                                                        {/*<CompetitionSetupGroup
                                                 {...getGroupOrMatchProps(true, groupInfo, useStartTimeOffsetsValue)}
                                                 getLowestGroupMatchPosition={
                                                     getLowestGroupMatchPosition
                                                 }
                                             />*/}
-                                                    <Button
-                                                        variant="outlined"
-                                                        onClick={() => {
-                                                            removeGroup(groupInfo.originalIndex)
-                                                        }}>
-                                                        Remove Group
-                                                    </Button>
-                                                </Stack>
-                                            ))}
-                                        </>
-                                    )}
-                                </Box>
-                            </Stack>
-                            {eliminatedRoundOutcomes.length > 0 && (
-                                <>
-                                    <Divider />
-                                    <Stack sx={{alignSelf: 'center', maxWidth: 300}}>
-                                        <Typography variant={'h3'}>Final places</Typography>
-                                        <TableContainer>
-                                            <Table>
-                                                <TableHead>
-                                                    <TableCell>Outcome</TableCell>
-                                                    <TableCell>Place</TableCell>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {eliminatedRoundOutcomes.map(
-                                                        (outcome, outcomeIndex) => (
-                                                            <TableRow key={outcome}>
-                                                                <TableCell>{outcome}</TableCell>
-                                                                <TableCell>
-                                                                    <FormInputNumber
-                                                                        name={`rounds[${round.index}].places[${outcomeIndex}].place`}
-                                                                        required
-                                                                    />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ),
-                                                    )}
-                                                </TableBody>
-                                            </Table>
-                                        </TableContainer>
-                                    </Stack>
-                                </>
-                            )}
+                                                        <Button
+                                                            variant="outlined"
+                                                            onClick={() => {
+                                                                removeGroup(groupInfo.originalIndex)
+                                                            }}>
+                                                            Remove Group
+                                                        </Button>
+                                                    </Stack>
+                                                ))}
+                                            </>
+                                        )}
+                                    </Box>
+                                </Stack>
+
+                                {eliminatedRoundOutcomes.length > 0 && (
+                                    <>
+                                        <Stack sx={{justifySelf: 'flex-end', maxWidth: 250, m: 2}}>
+                                            <Typography variant={'h3'}>
+                                                Final places ({eliminatedRoundOutcomes[0]} -{' '}
+                                                {
+                                                    eliminatedRoundOutcomes[
+                                                        eliminatedRoundOutcomes.length - 1
+                                                    ]
+                                                }
+                                                )
+                                            </Typography>
+                                            <TableContainer>
+                                                <Table>
+                                                    <TableHead>
+                                                        <TableCell>Outcome</TableCell>
+                                                        <TableCell>Place</TableCell>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {eliminatedRoundOutcomes.map(
+                                                            (outcome, outcomeIndex) => (
+                                                                <TableRow key={outcome}>
+                                                                    <TableCell>{outcome}</TableCell>
+                                                                    <TableCell>
+                                                                        <FormInputNumber
+                                                                            name={`rounds[${round.index}].places[${outcomeIndex}].place`}
+                                                                            required
+                                                                            placeholder={outcome.toString()}
+                                                                        />
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ),
+                                                        )}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        </Stack>
+                                    </>
+                                )}
+                            </Box>
                         </Stack>
                     )}
                 />
