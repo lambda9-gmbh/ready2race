@@ -24,6 +24,8 @@ import {
     CompetitionSetupMatchOrGroupProps,
     fillSeedingList,
     getHighestTeamsCount,
+    getNewPlaces,
+    getParticipantsFromMatchOrGroup,
     //getLowest,
     setParticipantValuesForMatchOrGroup,
     updateParticipants,
@@ -87,7 +89,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     // When appending or removing a match/group, the participants are updated (if default seeding is active)
     useEffect(() => {
         if (watchUseDefaultSeeding) {
-            updateParticipants(formContext, round.index, true, teamCounts.nextRound)
+            updateParticipants(formContext, round.index, true, teamCounts.nextRound, updatePlaces)
         }
     }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding])
 
@@ -155,7 +157,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     // The places which teams that won't partake in the next round get
     const watchPlaces = formContext.watch(`rounds.${round.index}.places`)
 
-    const {fields: placeFields} = useFieldArray({
+    const {fields: placeFields, replace: replacePlaces} = useFieldArray({
         control: formContext.control,
         name: `rounds.${round.index}.places`,
     })
@@ -165,28 +167,37 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         ...watchPlaces?.[index],
     }))
 
-    const onParticipantsChanged = (teamCountChanged: boolean) => {
-        const participants = watchMatches.map(m => m.participants.map(p => p.seed)).flat()
+    const updatePlaces = (updateThisRound: boolean, newTeamsCount?: number) => {
 
+        const thisRoundTeams = newTeamsCount ?? teamCounts.thisRound
+
+        // If the participants of this round changed, the places in this round are updated
+        if (updateThisRound) {
+            const nextRoundParticipants = watchIsGroupRound
+                ? getParticipantsFromMatchOrGroup(
+                      undefined,
+                      formContext.getValues(`rounds.${round.index + 1}.groups`),
+                  )
+                : getParticipantsFromMatchOrGroup(
+                      formContext.getValues(`rounds.${round.index + 1}.matches`),
+                  )
+
+            const newPlaces = getNewPlaces(
+                nextRoundParticipants,
+                thisRoundTeams,
+                teamCounts.nextRound,
+            )
+
+            replacePlaces(newPlaces)
+        }
+
+        // Update the places of the previous round
         if (round.index > 0) {
-            const newPlaces = []
+            const participants = getParticipantsFromMatchOrGroup(watchMatches)
 
-            for (let i = 0; i < teamCounts.prevRound; i++) {
-                if (![...newPlaces.map(np => np.roundOutcome), ...participants].includes(i + 1)) {
-                    const place = {roundOutcome: i + 1, place: teamCounts.thisRound + 1}
-                    newPlaces.push(place)
-                }
-            }
+            const newPlaces = getNewPlaces(participants, teamCounts.prevRound, thisRoundTeams)
 
-            const foo = new Array(teamCounts.prevRound)
-                .fill(null)
-                .map((_, i) => ({
-                    roundOutcome: i + 1,
-                    place: teamCounts.thisRound + 1,
-                }))
-                .filter(v => !participants.includes(v.roundOutcome))
-
-            formContext.setValue(`rounds.${round.index - 1}.places`, foo)
+            formContext.setValue(`rounds.${round.index - 1}.places`, newPlaces)
         }
     }
 
@@ -224,6 +235,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         round.index,
                         repeatForPreviousRound,
                         nextRoundTeams,
+                        updatePlaces
                     ),
                 setParticipantValuesForThis: participants =>
                     setParticipantValuesForMatchOrGroup(
@@ -234,10 +246,10 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         participants,
                     ),
                 updatePreviousRoundParticipants: thisRoundTeams =>
-                    updatePreviousRoundParticipants(formContext, round.index - 1, thisRoundTeams),
+                    updatePreviousRoundParticipants(formContext, round.index - 1, thisRoundTeams, updatePlaces),
+                updatePlaces: updatePlaces,
             },
             useStartTimeOffsets: useStartTimeOffsets,
-            onParticipantsChanged: onParticipantsChanged,
         }
     }
 

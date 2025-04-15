@@ -7,7 +7,7 @@ type Props = {
     roundIndex: number
     useDefaultSeeding: boolean
     controlledParticipantFields: {seed: number; id: string}[]
-    onParticipantChanged: (teamCountChanged: boolean) => void
+    updatePlaces: (updateThisRound: boolean, newTeamsCount?: number) => void
 }
 const CompetitionSetupParticipants = ({
     fieldInfo,
@@ -33,7 +33,7 @@ const CompetitionSetupParticipants = ({
                             <FormInputNumber
                                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.participants.${index}.seed`}
                                 required
-                                onChange={() => props.onParticipantChanged(false)}
+                                onChange={() => props.updatePlaces(false)}
                                 transform={{
                                     output: value => Number(value.target.value),
                                 }}

@@ -49,7 +49,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         roundIndex={roundIndex}
                         controlledParticipantFields={controlledParticipantFields}
                         useDefaultSeeding={props.useDefaultSeeding}
-                        onParticipantChanged={props.onParticipantsChanged}
+                        updatePlaces={props.participantFunctions.updatePlaces}
                     />
                     <Divider />
                 </>
@@ -80,7 +80,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             <FormInputText
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`}
                 label={'Teams'}
-                onChange={v =>
+                onChange={v => {
                     onTeamsChanged(
                         roundIndex,
                         Number(v.target.value),
@@ -88,7 +88,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         props.participantFunctions,
                         props.teamCounts,
                     )
-                }
+                }}
             />
             <CheckboxElement
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.duplicatable`}

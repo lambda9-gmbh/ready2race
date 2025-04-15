@@ -1,4 +1,8 @@
-import {CompetitionSetupForm} from '@components/event/competition/setup/CompetitionSetup.tsx'
+import {
+    CompetitionSetupForm,
+    FormSetupGroup,
+    FormSetupMatch,
+} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import {UseFormReturn} from 'react-hook-form-mui'
 
 export type CompetitionSetupMatchOrGroupProps = {
@@ -11,7 +15,6 @@ export type CompetitionSetupMatchOrGroupProps = {
     useDefaultSeeding: boolean
     participantFunctions: ParticipantFunctions
     useStartTimeOffsets: boolean
-    onParticipantsChanged: (teamCountChanged: boolean) => void
 }
 
 export type ParticipantFunctions = {
@@ -19,6 +22,7 @@ export type ParticipantFunctions = {
     updateRoundParticipants: (repeatForPreviousRound: boolean, nextRoundTeams: number) => void
     setParticipantValuesForThis: (participants: number[]) => void
     updatePreviousRoundParticipants: (thisRoundTeams: number) => void
+    updatePlaces: (updateThisRound: boolean, newTeamsCount?: number) => void
 }
 
 export const getWeightings = (matchCount: number) => {
@@ -123,6 +127,7 @@ export const updateParticipants = (
     roundIndex: number,
     repeatForPreviousRound: boolean,
     nextRoundTeams: number,
+    updatePlaces: (updateThisRound: boolean, newTeamsCount: number) => void,
 ) => {
     const isGroupRound = formContext.getValues(`rounds.${roundIndex}.isGroupRound`)
 
@@ -160,13 +165,30 @@ export const updateParticipants = (
             )
         })
 
+        // In the first round there are no participants so the teamsCount is calculated by the "teams" values instead of the new participants count
+        const teamsCount =
+            roundIndex === 0
+                ? matches
+                      .map(m => Number(m.teams))
+                      .reduce((acc, val) => {
+                          return acc + val
+                      }, 0)
+                : newParticipants.map(p => p.participants).flat().length
+
+        updatePlaces(true, teamsCount)
+
         // To prevent infinit loop because of the recursive call
         if (repeatForPreviousRound) {
             const newTeamsCount = newParticipants
                 .flat()
                 .map(v => v.participants)
                 .flat().length
-            updatePreviousRoundParticipants(formContext, roundIndex - 1, newTeamsCount)
+            updatePreviousRoundParticipants(
+                formContext,
+                roundIndex - 1,
+                newTeamsCount,
+                updatePlaces,
+            )
         }
     }
 }
@@ -212,6 +234,7 @@ export const updatePreviousRoundParticipants = (
     formContext: UseFormReturn<CompetitionSetupForm>,
     prevRoundIndex: number,
     thisRoundTeams: number,
+    updatePlaces: (updateThisRound: boolean, newTeamsCount: number) => void,
 ) => {
     if (prevRoundIndex >= 0) {
         const prevRoundIsGroupRound = formContext.getValues(`rounds.${prevRoundIndex}.isGroupRound`)
@@ -222,7 +245,7 @@ export const updatePreviousRoundParticipants = (
         if (prevRoundGroupsOrMatches) {
             // If the previous round has a match with undefined teams, the participants of that round are updated
             if (prevRoundGroupsOrMatches.filter(v => v.teams === '').length > 0) {
-                updateParticipants(formContext, prevRoundIndex, false, thisRoundTeams)
+                updateParticipants(formContext, prevRoundIndex, false, thisRoundTeams, updatePlaces)
             }
         }
     }
@@ -260,7 +283,34 @@ export const onTeamsChanged = (
         participantFunctions.updatePreviousRoundParticipants(
             participants.length + teamCounts.thisRoundWithoutThis,
         )
+        participantFunctions.updatePlaces(
+            true,
+            participants.length + teamCounts.thisRoundWithoutThis,
+        )
     } else {
         participantFunctions.updateRoundParticipants(true, teamCounts.nextRound)
     }
+}
+
+export const getParticipantsFromMatchOrGroup = (
+    matches?: FormSetupMatch[],
+    groups?: FormSetupGroup[],
+) => {
+    return (matches !== undefined ? matches : (groups ?? []))
+        .map(m => m.participants.map(p => p.seed))
+        .flat()
+}
+
+export const getNewPlaces = (
+    participants: number[],
+    thisRoundTeams: number,
+    nextRoundTeams: number,
+) => {
+    return new Array(thisRoundTeams)
+        .fill(null)
+        .map((_, i) => ({
+            roundOutcome: i + 1,
+            place: (nextRoundTeams !== 0 ? nextRoundTeams : i) + 1, // If there is no next round the places are set by the roundOutcome
+        }))
+        .filter(v => !participants.includes(v.roundOutcome))
 }

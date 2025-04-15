@@ -20,15 +20,7 @@ export type FormSetupRound = {
     name: string
     required: boolean
     matches: Array<FormSetupMatch>
-    groups: Array<{
-        duplicatable: boolean
-        weighting: number
-        teams: string // String so it's easier to work with '' as an empty field instead of undefined
-        name?: string
-        matches: Array<FormSetupMatch>
-        participants: Array<{seed: number}> // in round 1 the list will be empty
-        matchTeams: number
-    }>
+    groups: Array<FormSetupGroup>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
     places: Array<{
@@ -46,6 +38,16 @@ export type FormSetupMatch = {
     participants: Array<{seed: number}> // in round 1 the list will be empty
     position: number // Will be translated to the array order in the dto
     startTimeOffset?: number
+}
+export type FormSetupGroup = {
+    duplicatable: boolean
+    weighting: number
+    teams: string // String so it's easier to work with '' as an empty field instead of undefined
+    name?: string
+    matches: Array<FormSetupMatch>
+    participants: Array<{seed: number}> // in round 1 the list will be empty
+    matchTeams: number
+
 }
 
 const CompetitionSetup = () => {
