@@ -119,12 +119,8 @@ data class Text(
         var currentContext = context
         var c = currentContext.content
 
-        println("yStartPosition: ${currentContext.startPosition.y}, padTop: ${currentContext.parentsPadding.top}, padBottom: ${currentContext.parentsPadding.bottom}")
-
         var xStart = currentContext.startPosition.x + getXMin(currentContext)
         var yStart = getYMin(currentContext) - currentContext.startPosition.y
-
-        println("yStart: $yStart")
 
         c.setFont(font, fontSize)
 
@@ -142,15 +138,10 @@ data class Text(
 
         l.forEachIndexed { i, line ->
 
-            println("x=$x, y=$y, line=$line")
-
             if (i > 0) {
                 x = getXMin(currentContext)
                 y -= height
             }
-
-            println("x=$x, y=$y, parentPadBot = ${currentContext.parentsPadding.bottom}")
-            println("yOffset = $yOffset")
 
             if (y < currentContext.parentsPadding.bottom - yOffset) {
                 currentContext = requestNewPage(currentContext)
@@ -161,9 +152,6 @@ data class Text(
                 c = currentContext.content
                 c.setFont(font, fontSize)
             }
-
-            println("x=$x, y=$y")
-            println()
 
             c.beginText()
             c.newLineAtOffset(x, y + yOffset)

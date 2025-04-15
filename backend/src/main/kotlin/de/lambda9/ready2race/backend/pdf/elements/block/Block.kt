@@ -21,9 +21,6 @@ data class Block(
             )
         ).y
 
-        println("blockStart = ${context.parentsPadding.top}")
-        println("blockHeight = $height")
-
         val ctx = if (keepTogether && height + context.startPosition.y + context.parentsPadding.y + padding.y > context.page.mediaBox.height) {
             requestNewPage(context)
         } else {
@@ -73,9 +70,6 @@ data class Block(
                 )
             }
         }
-
-        println("block - yStart: $yStart")
-        println("blockend = ${yStart + lastContext.startPosition.y + padding.y}")
 
         return RenderContext(
             page = lastContext.page,

@@ -80,7 +80,6 @@ data class Table(
             val pos = child.endPosition(c)
             xMax = max(xMax, pos.x)
             yMax = max(yMax, pos.y)
-            println("table yMax: $yMax")
             c.startPosition.x = pos.x
             c.startPosition.y = pos.y
             c

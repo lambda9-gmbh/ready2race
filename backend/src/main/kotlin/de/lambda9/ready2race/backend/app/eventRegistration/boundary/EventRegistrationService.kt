@@ -268,8 +268,6 @@ object EventRegistrationService {
         eventId: UUID,
     ): App<EventRegistrationError, Pair<String, ByteArray>> = KIO.comprehension {
 
-        println("generating result")
-
         val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
 
@@ -283,7 +281,28 @@ object EventRegistrationService {
                     text { "keine Wettkämpfe in dieser Veranstaltung" }
                 }
             }
-            result.competitions!!.forEach { competition ->
+            result.competitions!!.sortedWith { a, b ->
+                val identA = a!!.identifier!!
+                val identB = b!!.identifier!!
+
+                val digitsA = identA.takeLastWhile { it.isDigit() }
+                val digitsB = identB.takeLastWhile { it.isDigit() }
+
+                val prefixA = identA.removeSuffix(digitsA)
+                val prefixB = identB.removeSuffix(digitsB)
+
+                val intA = digitsA.toIntOrNull() ?: 0
+                val intB = digitsB.toIntOrNull() ?: 0
+
+                // sort by lexicographical, except integer suffixes
+                when {
+                    prefixA < prefixB -> -1
+                    prefixA > prefixB -> 1
+                    intA < intB -> -1
+                    intA > intB -> 1
+                    else -> 0
+                }
+            }.forEach { competition ->
                 competition!!
                 page {
                     block(

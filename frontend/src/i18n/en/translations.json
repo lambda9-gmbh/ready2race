@@ -206,6 +206,12 @@
       "participantsOpen" : "Open",
       "participantsApproved" : "Approved"
     },
+    "action": {
+      "registrationsReport": {
+        "generate": "Generate registrations result",
+        "download": "Download registrations result"
+      }
+    },
     "assign": {
       "save": {
         "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
@@ -261,7 +267,8 @@
     "tabs": {
       "general" : "General",
       "participants" : "Participants",
-      "settings": "Settings"
+      "settings": "Settings",
+      "actions": "Actions"
     }
   },
   "participantRequirement": {

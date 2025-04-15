@@ -206,6 +206,12 @@
       "participantsOpen" : "Offen",
       "participantsApproved" : "Überprüft"
     },
+    "action": {
+      "registrationsReport": {
+        "generate": "Erzeuge Meldeergebnis",
+        "download": "Download Meldeergebnis"
+      }
+    },
     "assign": {
       "save": {
         "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
@@ -261,7 +267,8 @@
     "tabs": {
       "general" : "Allgemein",
       "participants" : "Teilnehmer",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "actions": "Aktionen"
     }
   },
   "participantRequirement": {

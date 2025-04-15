@@ -131,7 +131,7 @@ const EventPage = () => {
                                     <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
                                 )}
                                 {user.checkPrivilege(readEventGlobal) && (
-                                    <Tab label={'[todo] Actions'} {...a11yProps(3)} />
+                                    <Tab label={t('event.tabs.actions')} {...a11yProps(3)} />
                                 )}
 
                             </Tabs>
@@ -169,7 +169,7 @@ const EventPage = () => {
                         </TabPanel>
                         <TabPanel index={3} activeTab={activeTab}>
                             <Button variant={'contained'} onClick={handleReportDownload}>
-                                [todo] Download registrations report
+                                {t('event.action.registrationsReport.download')}
                             </Button>
                         </TabPanel>
                     </Stack>
