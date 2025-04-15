@@ -12,16 +12,14 @@ import {FormInputSeconds} from '@components/form/input/FormInputSeconds.tsx'
 
 type Props = CompetitionSetupMatchOrGroupProps
 const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
-    const participantsFormPath =
-        `rounds[${roundIndex}].matches[${fieldInfo.index}].participants` as `rounds.${number}.matches.${number}.participants`
-
     const {fields: participantFields} = useFieldArray({
         control: formContext.control,
-        name: participantsFormPath,
+        name: `rounds.${roundIndex}.matches.${fieldInfo.index}.participants`,
     })
 
-    const watchParticipants = formContext.watch(participantsFormPath)
-
+    const watchParticipants = formContext.watch(
+        `rounds.${roundIndex}.matches.${fieldInfo.index}.participants`,
+    )
 
     const controlledParticipantFields = participantFields.map((field, index) => ({
         ...field,
@@ -30,7 +28,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
 
     // Only one duplicatable in a round is allowed
     const watchDuplicatable = formContext.watch(
-        `rounds[${roundIndex}].matches[${fieldInfo.index}].duplicatable` as `rounds.${number}.matches.${number}.duplicatable`,
+        `rounds.${roundIndex}.matches.${fieldInfo.index}.duplicatable`,
     )
     const duplicatableCheckDisabled = props.roundHasDuplicatable && watchDuplicatable === false
 
@@ -53,15 +51,15 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         useDefaultSeeding={props.useDefaultSeeding}
                         onParticipantChanged={props.onParticipantsChanged}
                     />
-                    <Divider/>
+                    <Divider />
                 </>
             )}
             <FormInputText
-                name={`rounds[${roundIndex}].matches[${fieldInfo.index}].name`}
+                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.name`}
                 label={'Match name'}
             />
             <FormInputNumber
-                name={`rounds[${roundIndex}].matches[${fieldInfo.index}].position`}
+                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.position`}
                 label={'Execution order'}
                 required
                 integer={true}
@@ -71,7 +69,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             />
             {props.useStartTimeOffsets && (
                 <FormInputSeconds
-                    name={`rounds[${roundIndex}].matches[${fieldInfo.index}].startTimeOffset`}
+                    name={`rounds.${roundIndex}.matches.${fieldInfo.index}.startTimeOffset`}
                     label={'Start time offset'}
                     transform={{
                         output: value =>
@@ -93,12 +91,12 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 }
             />
             <CheckboxElement
-                name={`rounds[${roundIndex}].matches[${fieldInfo.index}].duplicatable`}
+                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.duplicatable`}
                 disabled={duplicatableCheckDisabled}
                 required={false}
-                label={<FormInputLabel label={'Duplicatable'} required={true} horizontal/>}
+                label={<FormInputLabel label={'Duplicatable'} required={true} horizontal />}
             />
-            <Divider/>
+            <Divider />
 
             <Typography sx={{textAlign: 'center'}}>
                 Outcomes: {props.outcomes.join(', ')}

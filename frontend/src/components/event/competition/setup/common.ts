@@ -61,20 +61,20 @@ export const setParticipantValuesForMatchOrGroup = (
     index: number,
     participants: number[],
 ) => {
-    const participantsFormPath = isGroupRound
-        ? (`rounds[${roundIndex}].groups[${index}].participants` as `rounds.${number}.groups.${number}.participants`)
-        : (`rounds[${roundIndex}].matches[${index}].participants` as `rounds.${number}.matches.${number}.participants`)
-
     formContext.setValue(
-        participantsFormPath,
+        isGroupRound
+            ? `rounds.${roundIndex}.groups.${index}.participants`
+            : `rounds.${roundIndex}.matches.${index}.participants`,
         participants.map(v => ({seed: v})),
     )
 
     participants.forEach((_, i) => {
-        const path = isGroupRound
-            ? (`rounds[${roundIndex}].groups[${index}].participants[${i}].seed` as `rounds.${number}.groups.${number}.participants.${number}.seed`)
-            : (`rounds[${roundIndex}].matches[${index}].participants[${i}].seed` as `rounds.${number}.matches.${number}.participants.${number}.seed`)
-        formContext.setValue(path, participants[i])
+        formContext.setValue(
+            isGroupRound
+                ? `rounds.${roundIndex}.groups.${index}.participants.${i}.seed`
+                : `rounds.${roundIndex}.matches.${index}.participants.${i}.seed`,
+            participants[i],
+        )
     })
 }
 
@@ -124,17 +124,11 @@ export const updateParticipants = (
     repeatForPreviousRound: boolean,
     nextRoundTeams: number,
 ) => {
-    const isGroupRound = formContext.getValues(
-        `rounds[${roundIndex}].isGroupRound` as `rounds.${number}.isGroupRound`,
-    )
+    const isGroupRound = formContext.getValues(`rounds.${roundIndex}.isGroupRound`)
 
-    const matches = formContext.getValues(
-        `rounds[${roundIndex}].matches` as `rounds.${number}.matches`,
-    )
+    const matches = formContext.getValues(`rounds.${roundIndex}.matches`)
 
-    const groups = formContext.getValues(
-        `rounds[${roundIndex}].groups` as `rounds.${number}.groups`,
-    )
+    const groups = formContext.getValues(`rounds.${roundIndex}.groups`)
 
     if ((isGroupRound && groups) || (!isGroupRound && matches)) {
         const groupsOrMatches = isGroupRound ? groups : matches
@@ -220,15 +214,11 @@ export const updatePreviousRoundParticipants = (
     thisRoundTeams: number,
 ) => {
     if (prevRoundIndex >= 0) {
-        const prevRoundIsGroupRound = formContext.getValues(
-            `rounds[${prevRoundIndex}].isGroupRound` as `rounds.${number}.isGroupRound`,
-        )
+        const prevRoundIsGroupRound = formContext.getValues(`rounds.${prevRoundIndex}.isGroupRound`)
 
         const prevRoundGroupsOrMatches = prevRoundIsGroupRound
-            ? formContext.getValues(`rounds[${prevRoundIndex}].groups` as `rounds.${number}.groups`)
-            : formContext.getValues(
-                  `rounds[${prevRoundIndex}].matches` as `rounds.${number}.matches`,
-              )
+            ? formContext.getValues(`rounds.${prevRoundIndex}.groups`)
+            : formContext.getValues(`rounds.${prevRoundIndex}.matches`)
         if (prevRoundGroupsOrMatches) {
             // If the previous round has a match with undefined teams, the participants of that round are updated
             if (prevRoundGroupsOrMatches.filter(v => v.teams === '').length > 0) {

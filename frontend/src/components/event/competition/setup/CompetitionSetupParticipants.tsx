@@ -31,7 +31,7 @@ const CompetitionSetupParticipants = ({
                             sx={{alignItems: 'center'}}>
                             <Typography>#</Typography>
                             <FormInputNumber
-                                name={`rounds[${roundIndex}].matches[${fieldInfo.index}].participants[${index}].seed`}
+                                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.participants.${index}.seed`}
                                 required
                                 onChange={() => props.onParticipantChanged(false)}
                                 transform={{

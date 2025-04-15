@@ -48,13 +48,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     const theme = useTheme()
 
-    const watchUseDefaultSeeding = formContext.watch(
-        `rounds[${round.index}].useDefaultSeeding` as `rounds.${number}.useDefaultSeeding`,
-    )
+    const watchUseDefaultSeeding = formContext.watch(`rounds.${round.index}.useDefaultSeeding`)
 
-    const watchIsGroupRound = formContext.watch(
-        `rounds[${round.index}].isGroupRound` as `rounds.${number}.isGroupRound`,
-    )
+    const watchIsGroupRound = formContext.watch(`rounds.${round.index}.isGroupRound`)
 
     const {
         fields: matchFields,
@@ -190,10 +186,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                 }))
                 .filter(v => !participants.includes(v.roundOutcome))
 
-            formContext.setValue(
-                `rounds.${round.index - 1}.places`,
-                foo,
-            )
+            formContext.setValue(`rounds.${round.index - 1}.places`, foo)
         }
     }
 
@@ -250,12 +243,12 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     return (
         <Controller
-            name={'rounds[' + round.index + '].useDefaultSeeding'}
+            name={`rounds.${round.index}.useDefaultSeeding`}
             render={({
                 field: {onChange: useDefSeedingOnChange, value: useDefSeedingValue = true},
             }) => (
                 <Controller
-                    name={`rounds[${round.index}].useStartTimeOffsets`}
+                    name={`rounds.${round.index}.useStartTimeOffsets`}
                     render={({
                         field: {
                             onChange: useStartTimeOffsetsOnChange,
@@ -278,7 +271,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         />*/}
                             <Box sx={{maxWidth: 230}}>
                                 <FormInputText
-                                    name={`rounds[${round.index}].name`}
+                                    name={`rounds.${round.index}.name`}
                                     label={'Round name'}
                                 />
                             </Box>
@@ -321,7 +314,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                             </Box>
 
                             <CheckboxElement
-                                name={`rounds[${round.index}].required`}
+                                name={`rounds.${round.index}.required`}
                                 label={
                                     <FormInputLabel
                                         label={'Round must be held'}
@@ -466,21 +459,21 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                     {controlledPlacesFields.map(
                                                         (place, placeIndex) => (
                                                             <TableRow key={place.id}>
-                                                               <TableCell>
-                                                                   {
-                                                                       controlledPlacesFields[
-                                                                           placeIndex
-                                                                       ].roundOutcome
-                                                                   }
-                                                               </TableCell>
-                                                               <TableCell>
-                                                                   <FormInputNumber
-                                                                       name={`rounds.${round.index}.places.${placeIndex}.place`}
-                                                                       placeholder={`${teamCounts.nextRound + 1}`}
-                                                                       required
-                                                                   />
-                                                               </TableCell>
-                                                           </TableRow>
+                                                                <TableCell>
+                                                                    {
+                                                                        controlledPlacesFields[
+                                                                            placeIndex
+                                                                        ].roundOutcome
+                                                                    }
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <FormInputNumber
+                                                                        name={`rounds.${round.index}.places.${placeIndex}.place`}
+                                                                        placeholder={`${teamCounts.nextRound + 1}`}
+                                                                        required
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
                                                         ),
                                                     )}
                                                 </TableBody>
