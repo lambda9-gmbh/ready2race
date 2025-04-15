@@ -211,6 +211,10 @@ const CompetitionSetup = () => {
                                 formContext={formContext}
                                 removeRound={removeRound}
                                 teamCounts={{
+                                    prevRound: getTeamCountForRound(
+                                        roundIndex - 1,
+                                        formWatch[roundIndex - 1]?.isGroupRound ?? false,
+                                    ),
                                     thisRound: getTeamCountForRound(
                                         roundIndex,
                                         formWatch[roundIndex]?.isGroupRound ?? false,
@@ -241,8 +245,8 @@ function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
             name: round.name,
             required: round.required,
             matches: !round.isGroupRound
-                ? round.matches
-                      ?.sort(v => v.position)
+                ? [...round.matches]
+                      .sort((a, b) => a.position - b.position)
                       .map(match => mapFormMatchToDtoMatch(match, round.useStartTimeOffsets))
                 : undefined,
             groups: round.isGroupRound

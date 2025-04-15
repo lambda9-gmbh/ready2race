@@ -7,16 +7,17 @@ type Props = {
     roundIndex: number
     useDefaultSeeding: boolean
     controlledParticipantFields: {seed: number; id: string}[]
+    onParticipantChanged: (teamCountChanged: boolean) => void
 }
 const CompetitionSetupParticipants = ({
     fieldInfo,
     roundIndex,
-    useDefaultSeeding,
     controlledParticipantFields,
+    ...props
 }: Props) => {
     return (
         <>
-            {useDefaultSeeding ? (
+            {props.useDefaultSeeding ? (
                 <Typography>
                     {getMatchupsString(controlledParticipantFields.map(v => v.seed))}
                 </Typography>
@@ -30,9 +31,9 @@ const CompetitionSetupParticipants = ({
                             sx={{alignItems: 'center'}}>
                             <Typography>#</Typography>
                             <FormInputNumber
-                                key={`${fieldInfo.id}-${index}-${participant.id}`}
                                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].participants[${index}].seed`}
                                 required
+                                onChange={() => props.onParticipantChanged(false)}
                                 transform={{
                                     output: value => Number(value.target.value),
                                 }}

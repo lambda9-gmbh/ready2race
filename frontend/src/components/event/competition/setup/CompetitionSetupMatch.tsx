@@ -22,6 +22,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
 
     const watchParticipants = formContext.watch(participantsFormPath)
 
+
     const controlledParticipantFields = participantFields.map((field, index) => ({
         ...field,
         ...watchParticipants?.[index],
@@ -50,8 +51,9 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         roundIndex={roundIndex}
                         controlledParticipantFields={controlledParticipantFields}
                         useDefaultSeeding={props.useDefaultSeeding}
+                        onParticipantChanged={props.onParticipantsChanged}
                     />
-                    <Divider />
+                    <Divider/>
                 </>
             )}
             <FormInputText
@@ -94,9 +96,9 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 name={`rounds[${roundIndex}].matches[${fieldInfo.index}].duplicatable`}
                 disabled={duplicatableCheckDisabled}
                 required={false}
-                label={<FormInputLabel label={'Duplicatable'} required={true} horizontal />}
+                label={<FormInputLabel label={'Duplicatable'} required={true} horizontal/>}
             />
-            <Divider />
+            <Divider/>
 
             <Typography sx={{textAlign: 'center'}}>
                 Outcomes: {props.outcomes.join(', ')}

@@ -95,12 +95,66 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 position: matchesInBracketOrder[index]?.position ?? 0,
             }))
 
+            // todo: other name if first round does not match the numbers (e.g. 20 teams in round of 32)
             const newRound: TreeHelperRound = {
                 matches: matches,
-                name: r === 0 ? t('event.competition.setup.round.finals.final') : r === 1 ? t('event.competition.setup.round.finals.semifinal') : r === 2 ? t('event.competition.setup.round.finals.quarterfinal') : r === 3 ? t('event.competition.setup.round.finals.roundOf16') : r === 4 ? t('event.competition.setup.round.finals.roundOf32') : t('event.competition.setup.round.round') + ` ${roundCount - r}`,
+                name:
+                    r === 0
+                        ? t('event.competition.setup.round.finals.final')
+                        : r === 1
+                          ? t('event.competition.setup.round.finals.semifinal')
+                          : r === 2
+                            ? t('event.competition.setup.round.finals.quarterfinal')
+                            : r === 3
+                              ? t('event.competition.setup.round.finals.roundOf16')
+                              : r === 4
+                                ? t('event.competition.setup.round.finals.roundOf32')
+                                : t('event.competition.setup.round.round') + ` ${roundCount - r}`,
             }
             rounds.push(newRound)
         }
+
+        const getPlacesForRound = (roundIndex: number) => {
+            const invertedIndex = roundCount - roundIndex
+
+            if (matchForPlaceThree && roundIndex !== 0) {
+                if (roundIndex === roundCount - 1) {
+                    // If there is a match for place 3 the places need to be modified so that the loser of the main final does not get place 4 (because of default seeding)
+                    return [
+                        {roundOutcome: 1, place: 1},
+                        {roundOutcome: 2, place: 3},
+                        {roundOutcome: 3, place: 4},
+                        {roundOutcome: 4, place: 2},
+                    ]
+                }
+
+                if (roundIndex === roundCount - 2) {
+                    // If this is the semi-final and there is a match for place three there are no places
+                    return []
+                }
+            }
+
+            const newPlaces = []
+
+            // The amount of places that need to be provided by this round
+            const placeCount =
+                roundCount !== 1
+                    ? roundIndex !== 0
+                        ? Math.pow(2, invertedIndex) - Math.pow(2, invertedIndex - 1)
+                        : teams - Math.pow(2, invertedIndex - 1)
+                    : teams
+
+            // This provides the same places for everyone leaving in this round (e.g. round of 16: 9-16 are all place 9)
+            for (let i = 0; i < placeCount; i++) {
+                newPlaces.push({
+                    roundOutcome: Math.pow(2, invertedIndex - 1) + 1 + i,
+                    place: Math.pow(2, invertedIndex - 1) + 1,
+                })
+            }
+
+            return newPlaces
+        }
+
 
         const tree: CompetitionSetupForm = {
             rounds: rounds
@@ -127,15 +181,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                     useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
                     isGroupRound: false,
                     useStartTimeOffsets: false,
-                    places:
-                        matchForPlaceThree && roundIndex === roundCount - 1
-                            ? [
-                                  {roundOutcome: 1, place: 1},
-                                  {roundOutcome: 2, place: 3},
-                                  {roundOutcome: 3, place: 4},
-                                  {roundOutcome: 4, place: 2},
-                              ]
-                            : [],
+                    places: getPlacesForRound(roundIndex),
                 })),
         }
 

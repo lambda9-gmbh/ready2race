@@ -11,6 +11,7 @@ export type CompetitionSetupMatchOrGroupProps = {
     useDefaultSeeding: boolean
     participantFunctions: ParticipantFunctions
     useStartTimeOffsets: boolean
+    onParticipantsChanged: (teamCountChanged: boolean) => void
 }
 
 export type ParticipantFunctions = {
@@ -75,15 +76,6 @@ export const setParticipantValuesForMatchOrGroup = (
             : (`rounds[${roundIndex}].matches[${index}].participants[${i}].seed` as `rounds.${number}.matches.${number}.participants.${number}.seed`)
         formContext.setValue(path, participants[i])
     })
-}
-
-export const getLowest = (taken: number[], startIndex: number) => {
-    const set = new Set(taken)
-    let i = startIndex
-    while (set.has(i)) {
-        i++
-    }
-    return i
 }
 
 export const fillSeedingList = (
