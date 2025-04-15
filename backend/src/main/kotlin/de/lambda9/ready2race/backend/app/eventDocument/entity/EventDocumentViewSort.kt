@@ -9,9 +9,9 @@ enum class EventDocumentViewSort : Sortable {
     DOCUMENT_TYPE,
     CREATED_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        NAME -> EVENT_DOCUMENT_VIEW.NAME
-        DOCUMENT_TYPE -> EVENT_DOCUMENT_VIEW.DOCUMENT_TYPE
-        CREATED_AT -> EVENT_DOCUMENT_VIEW.CREATED_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        NAME -> listOf(EVENT_DOCUMENT_VIEW.NAME)
+        DOCUMENT_TYPE -> listOf(EVENT_DOCUMENT_VIEW.DOCUMENT_TYPE)
+        CREATED_AT -> listOf(EVENT_DOCUMENT_VIEW.CREATED_AT)
     }
 }

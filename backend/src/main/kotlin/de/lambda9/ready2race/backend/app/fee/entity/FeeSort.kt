@@ -8,8 +8,8 @@ enum class FeeSort : Sortable {
     ID,
     NAME;
 
-    override fun toField(): Field<*> = when(this) {
-        ID -> FEE.ID
-        NAME -> FEE.NAME
+    override fun toFields(): List<Field<*>> = when(this) {
+        ID -> listOf(FEE.ID)
+        NAME -> listOf(FEE.NAME)
     }
 }

@@ -17,7 +17,7 @@ import java.util.*
 object CompetitionRepo {
 
     private fun CompetitionView.searchFields() =
-        listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
+        listOf(ID, EVENT, NAME, SHORT_NAME, DSL.concat(IDENTIFIER_PREFIX, IDENTIFIER_SUFFIX), CATEGORY_NAME)
 
     fun create(record: CompetitionRecord) = COMPETITION.insertReturning(record) { ID }
 

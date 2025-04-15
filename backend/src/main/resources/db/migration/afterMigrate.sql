@@ -114,16 +114,18 @@ create view competition_view as
 select c.id,
        c.event,
        c.template,
-       cp.identifier,
+       substring(cp.identifier for length(cp.identifier) -
+                                   length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
+       cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix,
        cp.name,
        cp.short_name,
        cp.description,
-       nps.total_count                        as total_count,
-       cc.id                                  as category_id,
-       cc.name                                as category_name,
-       cc.description                         as category_description,
-       coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees
+       nps.total_count                                                           as total_count,
+       cc.id                                                                     as category_id,
+       cc.name                                                                   as category_name,
+       cc.description                                                            as category_description,
+       coalesce(nps.named_participants, '{}')                                    as named_participants,
+       coalesce(fs.fees, '{}')                                                   as fees
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id

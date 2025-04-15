@@ -12,7 +12,7 @@ import org.jooq.impl.TableImpl
 fun Collection<Condition>.and() = DSL.and(*this.toTypedArray())
 fun Collection<Condition>.or() = DSL.or(*this.toTypedArray())
 
-fun String?.metaSearch(fields: List<TableField<*, *>>, splitRegex: Regex = Regex("\\s")): Condition =
+fun String?.metaSearch(fields: List<Field<*>>, splitRegex: Regex = Regex("\\s")): Condition =
     this
         ?.takeIf { it.isNotBlank() }
         ?.split(splitRegex)
@@ -23,7 +23,7 @@ fun String?.metaSearch(fields: List<TableField<*, *>>, splitRegex: Regex = Regex
 
 fun <R : Record, S : Sortable> SelectWhereStep<R>.page(
     paginationParameter: PaginationParameters<S>,
-    searchFields: List<TableField<*, *>> = emptyList(),
+    searchFields: List<Field<*>> = emptyList(),
     where: () -> Condition = { DSL.trueCondition() }
 ): SelectForUpdateStep<R> =
     this

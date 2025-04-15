@@ -7,7 +7,7 @@ import org.jooq.Field
 enum class RoleWithPrivilegesSort : Sortable {
     NAME;
 
-    override fun toField(): Field<*> = when (this) {
-        NAME -> ROLE_WITH_PRIVILEGES.NAME
+    override fun toFields(): List<Field<*>> = when (this) {
+        NAME -> listOf(ROLE_WITH_PRIVILEGES.NAME)
     }
 }

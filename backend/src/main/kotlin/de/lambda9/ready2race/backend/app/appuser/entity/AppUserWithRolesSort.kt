@@ -9,9 +9,9 @@ enum class AppUserWithRolesSort: Sortable {
     FIRSTNAME,
     LASTNAME;
 
-    override fun toField(): Field<*> =  when (this) {
-        ID -> APP_USER_WITH_ROLES.ID
-        FIRSTNAME -> APP_USER_WITH_ROLES.FIRSTNAME
-        LASTNAME -> APP_USER_WITH_ROLES.LASTNAME
+    override fun toFields(): List<Field<*>> =  when (this) {
+        ID -> listOf(APP_USER_WITH_ROLES.ID)
+        FIRSTNAME -> listOf(APP_USER_WITH_ROLES.FIRSTNAME)
+        LASTNAME -> listOf(APP_USER_WITH_ROLES.LASTNAME)
     }
 }

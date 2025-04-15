@@ -10,10 +10,10 @@ enum class ParticipantForEventSort : Sortable {
     EXTERNAL_CLUB_NAME,
     CLUB_NAME;
 
-    override fun toField(): Field<*> = when (this) {
-        FIRSTNAME -> PARTICIPANT_FOR_EVENT.FIRSTNAME
-        LASTNAME -> PARTICIPANT_FOR_EVENT.LASTNAME
-        EXTERNAL_CLUB_NAME -> PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME
-        CLUB_NAME -> PARTICIPANT_FOR_EVENT.CLUB_NAME
+    override fun toFields(): List<Field<*>> = when (this) {
+        FIRSTNAME -> listOf(PARTICIPANT_FOR_EVENT.FIRSTNAME)
+        LASTNAME -> listOf(PARTICIPANT_FOR_EVENT.LASTNAME)
+        EXTERNAL_CLUB_NAME -> listOf(PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME)
+        CLUB_NAME -> listOf(PARTICIPANT_FOR_EVENT.CLUB_NAME)
     }
 }

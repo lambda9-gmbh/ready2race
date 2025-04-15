@@ -161,7 +161,8 @@ object EventRegistrationRepo {
         alias: String
     ) = DSL.select(
         COMPETITION_VIEW.ID,
-        COMPETITION_VIEW.IDENTIFIER,
+        COMPETITION_VIEW.IDENTIFIER_PREFIX,
+        COMPETITION_VIEW.IDENTIFIER_SUFFIX,
         COMPETITION_VIEW.NAME,
         COMPETITION_VIEW.SHORT_NAME,
         COMPETITION_VIEW.DESCRIPTION,
@@ -179,7 +180,7 @@ object EventRegistrationRepo {
             it.map {
                 EventRegistrationCompetitionDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[COMPETITION_VIEW.IDENTIFIER]!!,
+                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + it[COMPETITION_VIEW.IDENTIFIER_SUFFIX]!!.toString(),
                     it[COMPETITION_VIEW.NAME]!!,
                     it[COMPETITION_VIEW.SHORT_NAME],
                     it[COMPETITION_VIEW.DESCRIPTION],
