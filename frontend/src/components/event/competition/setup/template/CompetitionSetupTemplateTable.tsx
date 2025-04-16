@@ -1,11 +1,11 @@
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {deleteCompetitionSetupTemplate, getCompetitionSetupTemplates} from '@api/sdk.gen.ts'
-import {CompetitionSetupTemplateOverviewDto} from '@api/types.gen.ts'
 import {BaseEntityTableProps} from "@utils/types.ts";
 import {useTranslation} from "react-i18next";
 import {useFeedback} from "@utils/hooks.ts";
 import EntityTable from "@components/EntityTable.tsx";
+import {CompetitionSetupTemplateDto} from "@api/types.gen.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -21,15 +21,12 @@ const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParame
     })
 }
 
-const deleteRequest = (dto: CompetitionSetupTemplateOverviewDto) => {
+const deleteRequest = (dto: CompetitionSetupTemplateDto) => {
     return deleteCompetitionSetupTemplate({path: {competitionSetupTemplateId: dto.id}})
 }
 
-const CompetitionSetupTemplateTable = (props: BaseEntityTableProps<CompetitionSetupTemplateOverviewDto>) => {
-    const {t} = useTranslation()
-    const feedback = useFeedback()
-
-    const columns: GridColDef<CompetitionSetupTemplateOverviewDto>[] = [
+const CompetitionSetupTemplateTable = (props: BaseEntityTableProps<CompetitionSetupTemplateDto>) => {
+    const columns: GridColDef<CompetitionSetupTemplateDto>[] = [
         {
             field: 'name',
             headerName: '[todo] Name',
