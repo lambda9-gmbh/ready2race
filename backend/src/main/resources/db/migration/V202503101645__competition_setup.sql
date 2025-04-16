@@ -9,14 +9,29 @@ create table competition_setup
     updated_by             uuid      references app_user on delete set null
 );
 
+create table competition_setup_template
+(
+    id          uuid primary key,
+    name        text      not null,
+    description text,
+    created_at  timestamp not null,
+    created_by  uuid      references app_user on delete set null,
+    updated_at  timestamp not null,
+    updated_by  uuid      references app_user on delete set null
+);
+
 create table competition_setup_round
 (
-    id                  uuid primary key,
-    competition_setup   uuid    not null references competition_setup on delete cascade,
-    next_round          uuid references competition_setup_round,
-    name                text    not null,
-    required            boolean not null,
-    use_default_seeding boolean not null
+    id                         uuid primary key,
+    competition_setup          uuid references competition_setup on delete cascade,
+    competition_setup_template uuid references competition_setup_template on delete cascade,
+    next_round                 uuid references competition_setup_round,
+    name                       text    not null,
+    required                   boolean not null,
+    use_default_seeding        boolean not null,
+    constraint chk_either_competition_setup_or_competition_setup_template check (
+        (competition_setup is null and competition_setup_template is not null) or
+        (competition_setup is not null and competition_setup_template is null) )
 );
 
 create index on competition_setup_round (competition_setup);
@@ -88,4 +103,4 @@ create table competition_setup_place
     primary key (competition_setup_round, round_outcome)
 );
 
-create index on competition_setup_place (competition_setup_round)
+create index on competition_setup_place (competition_setup_round);

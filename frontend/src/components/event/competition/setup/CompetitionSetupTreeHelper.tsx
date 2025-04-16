@@ -6,11 +6,7 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
-import {
-    CompetitionSetupForm,
-    FormSetupRound,
-} from '@components/event/competition/setup/CompetitionSetup.tsx'
-import {getWeightings} from '@components/event/competition/setup/common.ts'
+import {CompetitionSetupForm, FormSetupRound, getWeightings} from '@components/event/competition/setup/common.ts'
 
 type Form = {
     teams: number

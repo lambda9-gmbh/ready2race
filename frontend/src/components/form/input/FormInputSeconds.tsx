@@ -1,7 +1,7 @@
-import {BaseFormInputProps} from "@components/form/input/FormInputText.tsx";
-import {useTranslation} from "react-i18next";
-import {InputAdornment} from "@mui/material";
-import FormInputNumber from "@components/form/input/FormInputNumber.tsx";
+import {BaseFormInputProps} from '@components/form/input/FormInputText.tsx'
+import {useTranslation} from 'react-i18next'
+import {InputAdornment} from '@mui/material'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 
 type FormInputSecondsProps = Omit<BaseFormInputProps, 'type'>
 export const FormInputSeconds = (props: FormInputSecondsProps) => {
@@ -15,10 +15,20 @@ export const FormInputSeconds = (props: FormInputSecondsProps) => {
                 ...props.slotProps,
                 input: props.slotProps?.input
                     ? {
-                          endAdornment: <InputAdornment position={'end'}>{t('common.form.seconds')}</InputAdornment>,
+                          endAdornment: (
+                              <InputAdornment position={'end'}>
+                                  {t('common.form.seconds')}
+                              </InputAdornment>
+                          ),
                           ...props.slotProps.input,
                       }
-                    : {endAdornment: <InputAdornment position={'end'}>{t('common.form.seconds')}</InputAdornment>},
+                    : {
+                          endAdornment: (
+                              <InputAdornment position={'end'}>
+                                  {t('common.form.seconds')}
+                              </InputAdornment>
+                          ),
+                      },
             }}
         />
     )

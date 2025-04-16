@@ -6,10 +6,12 @@ import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupDto
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlaceDto
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupRoundDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.time.LocalDateTime
@@ -31,21 +33,16 @@ object CompetitionSetupService {
         }).orDie()
     }
 
-    fun updateCompetitionSetup(
-        request: CompetitionSetupDto,
-        userId: UUID,
-        key: UUID,
-    ): App<CompetitionSetupError, ApiResponse.NoData> = KIO.comprehension {
-        val competitionPropertiesId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(key).orDie()
-            .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
-
-        !CompetitionSetupRepo.update(competitionPropertiesId) {
-            updatedAt = LocalDateTime.now()
-            updatedBy = userId
-        }.orDie().onNullFail { CompetitionSetupError.NotFound }
+    fun updateCompetitionSetupRounds(
+        requestRounds: List<CompetitionSetupRoundDto>,
+        competitionPropertiesId: UUID?,
+        competitionSetupTemplateId: UUID?
+    ): App<Nothing, Unit> = KIO.comprehension {
 
         // Deletes all rounds for this competition - including matches, groups, places etc. by cascade
-        !CompetitionSetupRoundRepo.delete(competitionPropertiesId).orDie()
+        !CompetitionSetupRoundRepo.delete(
+            competitionPropertiesId ?: competitionSetupTemplateId!! // There has to be one of the two
+        ).orDie()
 
         data class Batches(
             val rounds: MutableList<CompetitionSetupRoundRecord> = mutableListOf(),
@@ -58,9 +55,9 @@ object CompetitionSetupService {
 
         val records = Batches()
 
-        request.rounds.reversed().forEach { round ->
+        requestRounds.reversed().forEach { round ->
             val next = records.rounds.lastOrNull()
-            val roundRecord = round.toRecord(competitionPropertiesId, next?.id)
+            val roundRecord = round.toRecord(competitionPropertiesId, competitionSetupTemplateId, next?.id)
             records.rounds.add(roundRecord)
 
             fun addParticipants(participants: List<Int>, matchId: UUID?, groupId: UUID?) {
@@ -119,19 +116,32 @@ object CompetitionSetupService {
         !CompetitionSetupParticipantRepo.create(records.participants).orDie()
         !CompetitionSetupPlaceRepo.create(records.places).orDie()
 
-        noData
+        unit
     }
 
-    fun getCompetitionSetup(
+    fun updateCompetitionSetup(
+        request: CompetitionSetupDto,
+        userId: UUID,
         key: UUID,
-    ): App<CompetitionSetupError, ApiResponse.Dto<CompetitionSetupDto>> = KIO.comprehension {
+    ): App<CompetitionSetupError, ApiResponse.NoData> = KIO.comprehension {
         val competitionPropertiesId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(key).orDie()
             .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
 
+        !CompetitionSetupRepo.update(competitionPropertiesId) {
+            updatedAt = LocalDateTime.now()
+            updatedBy = userId
+        }.orDie().onNullFail { CompetitionSetupError.NotFound }
 
-        // Get ALL Records for this Setup
+        !updateCompetitionSetupRounds(request.rounds, competitionPropertiesId, null)
 
-        val roundRecords = !CompetitionSetupRoundRepo.get(competitionPropertiesId).orDie()
+        noData
+    }
+
+    fun getCompetitionSetupRoundsWithContent(
+        key: UUID,
+    ): App<Nothing, List<CompetitionSetupRoundDto>> = KIO.comprehension {
+        // There has to be one of the two keys
+        val roundRecords = !CompetitionSetupRoundRepo.get(key).orDie()
 
         val matchRecords = !CompetitionSetupMatchRepo.get(roundRecords.map { it.id }).orDie()
 
@@ -213,6 +223,16 @@ object CompetitionSetupService {
             )
         }
 
+        KIO.ok(roundDtos)
+    }
+
+    fun getCompetitionSetup(
+        key: UUID,
+    ): App<CompetitionSetupError, ApiResponse.Dto<CompetitionSetupDto>> = KIO.comprehension {
+        val competitionPropertiesId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(key).orDie()
+            .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
+
+        val roundDtos = !getCompetitionSetupRoundsWithContent(competitionPropertiesId)
 
         KIO.ok(
             ApiResponse.Dto(CompetitionSetupDto(roundDtos))

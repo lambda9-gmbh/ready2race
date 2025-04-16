@@ -190,6 +190,21 @@ import type {
     DeleteDocumentTypeData,
     DeleteDocumentTypeError,
     DeleteDocumentTypeResponse,
+    AddCompetitionSetupTemplateData,
+    AddCompetitionSetupTemplateError,
+    AddCompetitionSetupTemplateResponse,
+    GetCompetitionSetupTemplatesData,
+    GetCompetitionSetupTemplatesError,
+    GetCompetitionSetupTemplatesResponse,
+    GetCompetitionSetupTemplateData,
+    GetCompetitionSetupTemplateError,
+    GetCompetitionSetupTemplateResponse,
+    UpdateCompetitionSetupTemplateData,
+    UpdateCompetitionSetupTemplateError,
+    UpdateCompetitionSetupTemplateResponse,
+    DeleteCompetitionSetupTemplateData,
+    DeleteCompetitionSetupTemplateError,
+    DeleteCompetitionSetupTemplateResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -913,5 +928,70 @@ export const deleteDocumentType = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/eventDocumentType/{eventDocumentTypeId}',
+    })
+}
+
+export const addCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddCompetitionSetupTemplateResponse,
+        AddCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate',
+    })
+}
+
+export const getCompetitionSetupTemplates = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetCompetitionSetupTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupTemplatesResponse,
+        GetCompetitionSetupTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate',
+    })
+}
+
+export const getCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupTemplateResponse,
+        GetCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const updateCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionSetupTemplateResponse,
+        UpdateCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const deleteCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCompetitionSetupTemplateResponse,
+        DeleteCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
     })
 }

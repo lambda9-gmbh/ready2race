@@ -1,9 +1,53 @@
-import {
-    CompetitionSetupForm,
-    FormSetupGroup,
-    FormSetupMatch,
-} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import {UseFormReturn} from 'react-hook-form-mui'
+import {
+    CompetitionSetupDto,
+    CompetitionSetupGroupStatisticEvaluationDto,
+    CompetitionSetupMatchDto,
+    CompetitionSetupRoundDto,
+    CompetitionSetupTemplateDto,
+    CompetitionSetupTemplateRequest,
+} from '@api/types.gen.ts'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+
+// Form Types
+
+export type CompetitionSetupForm = {
+    name?: string
+    description?: string
+    rounds: Array<FormSetupRound>
+}
+export type FormSetupRound = {
+    name: string
+    required: boolean
+    matches: Array<FormSetupMatch>
+    groups: Array<FormSetupGroup>
+    statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
+    useDefaultSeeding: boolean
+    places: Array<{
+        roundOutcome: number
+        place: number
+    }>
+    isGroupRound: boolean
+    useStartTimeOffsets: boolean
+}
+export type FormSetupMatch = {
+    duplicatable: boolean
+    weighting: number | null // in round: number; in group: null
+    teams: string // String so it's easier to work with '' as an empty field instead of undefined
+    name?: string
+    participants: Array<{seed: number}> // in round 1 the list will be empty
+    position: number // Will be translated to the array order in the dto
+    startTimeOffset?: number
+}
+export type FormSetupGroup = {
+    duplicatable: boolean
+    weighting: number
+    teams: string // String so it's easier to work with '' as an empty field instead of undefined
+    name?: string
+    matches: Array<FormSetupMatch>
+    participants: Array<{seed: number}> // in round 1 the list will be empty
+    matchTeams: number
+}
 
 export type CompetitionSetupMatchOrGroupProps = {
     formContext: UseFormReturn<CompetitionSetupForm>
@@ -23,6 +67,130 @@ export type ParticipantFunctions = {
     setParticipantValuesForThis: (participants: number[]) => void
     updatePreviousRoundParticipants: (thisRoundTeams: number) => void
     updatePlaces: (updateThisRound: boolean, newTeamsCount?: number) => void
+}
+
+// Form map functions
+
+export function mapFormToCompetitionSetupDto(formData: CompetitionSetupForm): CompetitionSetupDto {
+    return {
+        rounds: mapFormRoundsToDtoRounds(formData),
+    }
+}
+
+export function mapFormToCompetitionSetupTemplateRequest(
+    formData: CompetitionSetupForm,
+): CompetitionSetupTemplateRequest {
+    return {
+        name: formData.name ?? '',
+        description: takeIfNotEmpty(formData.description),
+        rounds: mapFormRoundsToDtoRounds(formData),
+    }
+}
+
+export function mapFormRoundsToDtoRounds(
+    formData: CompetitionSetupForm,
+): Array<CompetitionSetupRoundDto> {
+    return formData.rounds.map(round => ({
+        name: round.name,
+        required: round.required,
+        matches: !round.isGroupRound
+            ? [...round.matches]
+                  .sort((a, b) => a.position - b.position)
+                  .map(match => mapFormMatchToDtoMatch(match, round.useStartTimeOffsets))
+            : undefined,
+        groups: round.isGroupRound
+            ? round.groups?.map(group => ({
+                  duplicatable: group.duplicatable,
+                  weighting: group.weighting,
+                  teams: group.teams !== '' ? Number(group.teams) : undefined,
+                  name: group.name,
+                  matches: group.matches.map(match =>
+                      mapFormMatchToDtoMatch(match, round.useStartTimeOffsets, group.matchTeams),
+                  ),
+                  participants: group.participants.map(participant => participant.seed),
+              }))
+            : undefined,
+        statisticEvaluations: round.statisticEvaluations,
+        useDefaultSeeding: round.useDefaultSeeding,
+        places: round.places,
+    }))
+}
+
+function mapFormMatchToDtoMatch(
+    formMatch: FormSetupMatch,
+    useStartTimeOffsets: boolean,
+    setTeamsValue?: number,
+): CompetitionSetupMatchDto {
+    return {
+        duplicatable: formMatch.duplicatable,
+        weighting: formMatch.weighting ?? undefined,
+        teams:
+            setTeamsValue === undefined // Groups provide a set value for the teams since all matches in one group need to have the same amount of participants
+                ? formMatch.teams !== ''
+                    ? Number(formMatch.teams)
+                    : undefined
+                : setTeamsValue,
+        name: formMatch.name,
+        participants: formMatch.participants.map(p => p.seed),
+        startTimeOffset: useStartTimeOffsets ? formMatch.startTimeOffset : undefined,
+    }
+}
+
+export function mapCompetitionSetupDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
+    return {
+        rounds: mapDtoRoundsToFormRounds(dto.rounds),
+    }
+}
+
+export function mapCompetitionSetupTemplateDtoToForm(
+    dto: CompetitionSetupTemplateDto,
+): CompetitionSetupForm {
+    return {
+        name: dto.name,
+        description: dto.description ?? '',
+        rounds: mapDtoRoundsToFormRounds(dto.rounds),
+    }
+}
+
+function mapDtoRoundsToFormRounds(dtoRounds: Array<CompetitionSetupRoundDto>) {
+    return dtoRounds.map(round => ({
+        name: round.name,
+        required: round.required,
+        matches: round.matches?.map((match, index) => mapDtoMatchToFormMatch(match, index)) ?? [],
+        groups:
+            round.groups?.map(group => ({
+                duplicatable: group.duplicatable,
+                weighting: group.weighting,
+                teams: group.teams?.toString() ?? '',
+                name: group.name,
+                matches: group.matches.map((match, index) => mapDtoMatchToFormMatch(match, index)),
+                participants: group.participants.map(participant => ({seed: participant})),
+                matchTeams: group.matches[0]?.teams ?? 0,
+            })) ?? [],
+        statisticEvaluations: round.statisticEvaluations,
+        useDefaultSeeding: round.useDefaultSeeding,
+        places: round.places,
+        isGroupRound: round.groups !== undefined,
+        // If a match has an offset, useStartTimeOffsets is set to true
+        useStartTimeOffsets:
+            (round.matches?.filter(m => m.startTimeOffset !== undefined).length ?? 0) > 0 ||
+            (round.groups
+                ?.map(g => g.matches)
+                .flat()
+                .filter(m => m.startTimeOffset !== undefined).length ?? 0) > 0,
+    }))
+}
+
+function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto, order: number): FormSetupMatch {
+    return {
+        duplicatable: matchDto.duplicatable,
+        weighting: matchDto.weighting ?? null,
+        teams: matchDto.teams?.toString() ?? '',
+        name: matchDto.name,
+        participants: matchDto.participants?.map(participant => ({seed: participant})),
+        position: order,
+        startTimeOffset: matchDto.startTimeOffset,
+    }
 }
 
 export const getWeightings = (matchCount: number) => {

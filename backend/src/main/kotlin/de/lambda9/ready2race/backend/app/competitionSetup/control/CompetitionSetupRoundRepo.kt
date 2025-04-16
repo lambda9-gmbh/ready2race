@@ -11,12 +11,14 @@ import java.util.UUID
 object CompetitionSetupRoundRepo {
     fun create(records: Collection<CompetitionSetupRoundRecord>) = COMPETITION_SETUP_ROUND.insert(records)
 
-    fun delete(competitionSetupId: UUID) = COMPETITION_SETUP_ROUND.delete { COMPETITION_SETUP.eq(competitionSetupId) }
+    fun delete(key: UUID) = COMPETITION_SETUP_ROUND.delete {
+        COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key))
+    }
 
-    fun get(competitionSetupId: UUID): JIO<List<CompetitionSetupRoundRecord>> = Jooq.query {
+    fun get(key: UUID): JIO<List<CompetitionSetupRoundRecord>> = Jooq.query {
         with(COMPETITION_SETUP_ROUND) {
             selectFrom(this)
-                .where(COMPETITION_SETUP.eq(competitionSetupId))
+                .where(COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key)))
                 .fetch()
         }
     }

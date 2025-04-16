@@ -4,9 +4,10 @@ import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import java.util.*
 
-fun CompetitionSetupRoundDto.toRecord(competitionSetupId: UUID, nextRoundId: UUID?) = CompetitionSetupRoundRecord(
+fun CompetitionSetupRoundDto.toRecord(competitionPropertiesId: UUID?, competitionSetupTemplateId: UUID?, nextRoundId: UUID?) = CompetitionSetupRoundRecord(
     id = UUID.randomUUID(),
-    competitionSetup = competitionSetupId,
+    competitionSetup = competitionPropertiesId,
+    competitionSetupTemplate = competitionSetupTemplateId,
     nextRound = nextRoundId,
     name = name,
     required = required,

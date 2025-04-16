@@ -15,12 +15,12 @@ import {
     Typography,
     useTheme,
 } from '@mui/material'
-import {CompetitionSetupForm} from '@components/event/competition/setup/CompetitionSetup.tsx'
 import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
 import {useEffect} from 'react'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
+    CompetitionSetupForm,
     CompetitionSetupMatchOrGroupProps,
     fillSeedingList,
     getHighestTeamsCount,
@@ -65,14 +65,14 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     const watchMatches = formContext.watch(`rounds.${round.index}.matches`)
 
-    const {
-        fields: groupFields,
-        append: appendGroup,
-        remove: removeGroup,
-    } = useFieldArray({
-        control: formContext.control,
-        name: `rounds.${round.index}.groups`,
-    })
+    /*    const {
+            fields: groupFields,
+            append: appendGroup,
+            remove: removeGroup,
+        } = useFieldArray({
+            control: formContext.control,
+            name: `rounds.${round.index}.groups`,
+        })*/
 
     const watchGroups = formContext.watch(`rounds.${round.index}.groups`)
 
@@ -168,7 +168,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     }))
 
     const updatePlaces = (updateThisRound: boolean, newTeamsCount?: number) => {
-
         const thisRoundTeams = newTeamsCount ?? teamCounts.thisRound
 
         // If the participants of this round changed, the places in this round are updated
@@ -235,7 +234,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         round.index,
                         repeatForPreviousRound,
                         nextRoundTeams,
-                        updatePlaces
+                        updatePlaces,
                     ),
                 setParticipantValuesForThis: participants =>
                     setParticipantValuesForMatchOrGroup(
@@ -246,7 +245,12 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                         participants,
                     ),
                 updatePreviousRoundParticipants: thisRoundTeams =>
-                    updatePreviousRoundParticipants(formContext, round.index - 1, thisRoundTeams, updatePlaces),
+                    updatePreviousRoundParticipants(
+                        formContext,
+                        round.index - 1,
+                        thisRoundTeams,
+                        updatePlaces,
+                    ),
                 updatePlaces: updatePlaces,
             },
             useStartTimeOffsets: useStartTimeOffsets,
@@ -364,7 +368,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                 Add Match
                                             </Button>
                                         ) : (
-                                            <Button
+                                            <></>
+                                            /*<Button
                                                 variant="outlined"
                                                 onClick={() => {
                                                     appendGroup({
@@ -379,7 +384,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                 }}
                                                 sx={{width: 1}}>
                                                 Add Group
-                                            </Button>
+                                            </Button>*/
                                         )}
                                     </Box>
                                     {round.index === 0 &&
@@ -430,18 +435,19 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                             </>
                                         ) : (
                                             <>
+                                                {/*
                                                 {groupFields.map((group, groupIndex) => (
                                                     <Stack
                                                         key={group.id}
                                                         direction="column"
                                                         spacing={1}
                                                         sx={{maxWidth: 450}}>
-                                                        {/*<CompetitionSetupGroup
-                                                {...getGroupOrMatchProps(true, groupInfo, useStartTimeOffsetsValue)}
-                                                getLowestGroupMatchPosition={
-                                                    getLowestGroupMatchPosition
-                                                }
-                                            />*/}
+                                                        <CompetitionSetupGroup
+                                                            {...getGroupOrMatchProps(true, groupInfo, useStartTimeOffsetsValue)}
+                                                            getLowestGroupMatchPosition={
+                                                                getLowestGroupMatchPosition
+                                                            }
+                                                        />
                                                         <Button
                                                             variant="outlined"
                                                             onClick={() => {
@@ -450,7 +456,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                             Remove Group
                                                         </Button>
                                                     </Stack>
-                                                ))}
+                                                ))}*/}
                                             </>
                                         )}
                                     </Box>

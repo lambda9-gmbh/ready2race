@@ -172,6 +172,19 @@ export type CompetitionSetupRoundDto = {
     places: Array<CompetitionSetupPlaceDto>
 }
 
+export type CompetitionSetupTemplateDto = {
+    id: string
+    name: string
+    description?: string
+    rounds: Array<CompetitionSetupRoundDto>
+}
+
+export type CompetitionSetupTemplateRequest = {
+    name: string
+    description?: string
+    rounds: Array<CompetitionSetupRoundDto>
+}
+
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
@@ -1313,3 +1326,76 @@ export type DeleteDocumentTypeData = {
 export type DeleteDocumentTypeResponse = void
 
 export type DeleteDocumentTypeError = BadRequestError | ApiError
+
+export type AddCompetitionSetupTemplateData = {
+    body: CompetitionSetupTemplateRequest
+}
+
+export type AddCompetitionSetupTemplateResponse = string
+
+export type AddCompetitionSetupTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionSetupTemplatesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetCompetitionSetupTemplatesResponse = {
+    data: Array<CompetitionSetupTemplateDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionSetupTemplatesError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetCompetitionSetupTemplateData = {
+    path: {
+        competitionSetupTemplateId: string
+    }
+}
+
+export type GetCompetitionSetupTemplateResponse = CompetitionSetupTemplateDto
+
+export type GetCompetitionSetupTemplateError = BadRequestError | ApiError
+
+export type UpdateCompetitionSetupTemplateData = {
+    body: CompetitionSetupTemplateRequest
+    path: {
+        competitionSetupTemplateId: string
+    }
+}
+
+export type UpdateCompetitionSetupTemplateResponse = void
+
+export type UpdateCompetitionSetupTemplateError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type DeleteCompetitionSetupTemplateData = {
+    path: {
+        competitionSetupTemplateId: string
+    }
+}
+
+export type DeleteCompetitionSetupTemplateResponse = void
+
+export type DeleteCompetitionSetupTemplateError = BadRequestError | ApiError

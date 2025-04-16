@@ -25,7 +25,7 @@ import java.util.*
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class CompetitionSetupServiceTest {
+class CompetitionSetupTemplateServiceTest {
 
     @Test
     fun testCreateCompetitionSetup() = testComprehension {

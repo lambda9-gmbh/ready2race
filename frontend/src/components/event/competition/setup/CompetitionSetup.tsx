@@ -1,67 +1,20 @@
 import {Box, Button, Stack} from '@mui/material'
-import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
+import {useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
-import {
-    CompetitionSetupDto,
-    CompetitionSetupGroupStatisticEvaluationDto,
-    CompetitionSetupMatchDto,
-} from '@api/types.gen.ts'
-import {useRef, useState} from 'react'
-import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {competitionRoute, eventRoute} from '@routes'
-import {getCompetitionSetup, updateCompetitionSetup} from '@api/sdk.gen.ts'
+import {RefObject, useRef} from 'react'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import CompetitionSetupTreeHelper from '@components/event/competition/setup/CompetitionSetupTreeHelper.tsx'
+import {CompetitionSetupForm} from '@components/event/competition/setup/common.ts'
+import CompetitionSetupContainersWrapper from '@components/event/competition/setup/CompetitionSetupContainersWrapper.tsx'
 
-export type CompetitionSetupForm = {
-    rounds: Array<FormSetupRound>
+type Props = {
+    formContext: UseFormReturn<CompetitionSetupForm>
+    handleFormSubmission: boolean
+    handleSubmit?: (formData: CompetitionSetupForm) => Promise<void> // if needsContainersWrapper === true
+    submitting?: boolean // if needsContainersWrapper === true
+    treeHelperPortalContainer?: RefObject<HTMLDivElement> // needsContainersWrapper === false
 }
-export type FormSetupRound = {
-    name: string
-    required: boolean
-    matches: Array<FormSetupMatch>
-    groups: Array<FormSetupGroup>
-    statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
-    useDefaultSeeding: boolean
-    places: Array<{
-        roundOutcome: number
-        place: number
-    }>
-    isGroupRound: boolean
-    useStartTimeOffsets: boolean
-}
-export type FormSetupMatch = {
-    duplicatable: boolean
-    weighting: number | null // in round: number; in group: null
-    teams: string // String so it's easier to work with '' as an empty field instead of undefined
-    name?: string
-    participants: Array<{seed: number}> // in round 1 the list will be empty
-    position: number // Will be translated to the array order in the dto
-    startTimeOffset?: number
-}
-export type FormSetupGroup = {
-    duplicatable: boolean
-    weighting: number
-    teams: string // String so it's easier to work with '' as an empty field instead of undefined
-    name?: string
-    matches: Array<FormSetupMatch>
-    participants: Array<{seed: number}> // in round 1 the list will be empty
-    matchTeams: number
-
-}
-
-const CompetitionSetup = () => {
-    const feedback = useFeedback()
-
-    const [submitting, setSubmitting] = useState(false)
-
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
-
-    const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
-
-    const formContext = useForm<CompetitionSetupForm>()
-
+const CompetitionSetup = ({formContext, ...props}: Props) => {
     const {
         fields: roundFields,
         insert: insertRound,
@@ -70,37 +23,6 @@ const CompetitionSetup = () => {
         control: formContext.control,
         name: 'rounds',
     })
-
-    useFetch(
-        signal =>
-            getCompetitionSetup({signal, path: {eventId: eventId, competitionId: competitionId}}),
-        {
-            onResponse: ({data}) => {
-                if (data) {
-                    formContext.reset(mapDtoToForm(data))
-                } else {
-                    feedback.error('[todo] error!')
-                }
-            },
-            deps: [eventId, competitionId, reloadDataTrigger],
-        },
-    )
-
-    const handleSubmit = async (formData: CompetitionSetupForm) => {
-        setSubmitting(true)
-        const {error} = await updateCompetitionSetup({
-            path: {eventId: eventId, competitionId: competitionId},
-            body: mapFormToDto(formData),
-        })
-        setSubmitting(false)
-
-        if (error) {
-            feedback.error('[todo] Error!')
-        } else {
-            feedback.success('[todo] Saved!')
-            setReloadDataTrigger(!reloadDataTrigger)
-        }
-    }
 
     const formWatch = formContext.watch('rounds')
 
@@ -158,7 +80,7 @@ const CompetitionSetup = () => {
     }
 
     // This allows the Tournament Tree Generator Form to exist outside the CompetitionSetup Form while being rendered inside
-    const treeHelperPortalContainer = useRef<HTMLDivElement>(null)
+    const ownTreeHelperPortalContainer = useRef<HTMLDivElement>(null)
 
     const AddRoundButton = ({addIndex}: {addIndex: number}) => {
         return (
@@ -185,157 +107,60 @@ const CompetitionSetup = () => {
     }
 
     return (
-        <>
-            <div ref={treeHelperPortalContainer} />
-            <FormContainer
-                formContext={formContext}
-                onSuccess={handleSubmit}
-                FormProps={{style: {width: '100%'}}}>
-                <Stack direction="row" spacing={2} sx={{justifyContent: 'end', mb: 4}}>
-                    <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
-                        Click to reset
-                    </Button>
-                    <CompetitionSetupTreeHelper
-                        resetSetupForm={(formData: CompetitionSetupForm) => {
-                            formContext.reset(formData)
-                        }}
-                        currentFormData={formWatch}
-                        portalContainer={treeHelperPortalContainer}
-                    />
-                    <SubmitButton label={'[todo] Save'} submitting={submitting} />
-                </Stack>
-                <Stack spacing={4}>
-                    <AddRoundButton addIndex={0} />
-                    {roundFields.map((roundField, roundIndex) => (
-                        <Stack spacing={2} key={roundField.id}>
-                            <CompetitionSetupRound
-                                round={{index: roundIndex, id: roundField.id}}
-                                formContext={formContext}
-                                removeRound={removeRound}
-                                teamCounts={{
-                                    prevRound: getTeamCountForRound(
-                                        roundIndex - 1,
-                                        formWatch[roundIndex - 1]?.isGroupRound ?? false,
-                                    ),
-                                    thisRound: getTeamCountForRound(
-                                        roundIndex,
-                                        formWatch[roundIndex]?.isGroupRound ?? false,
-                                    ),
-                                    nextRound: getTeamCountForRound(
-                                        roundIndex + 1,
-                                        formWatch[roundIndex + 1]?.isGroupRound ?? false,
-                                    ),
-                                }}
-                                getRoundTeamCountWithoutThis={(ignoredIndex, isGroupRound) =>
-                                    getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
-                                }
-                            />
-                            <AddRoundButton addIndex={roundIndex + 1} />
-                        </Stack>
-                    ))}
-                </Stack>
-            </FormContainer>
-        </>
+        <CompetitionSetupContainersWrapper
+            formContext={formContext}
+            handleFormSubmission={props.handleFormSubmission}
+            handleSubmit={props.handleSubmit}
+            treeHelperPortalContainer={ownTreeHelperPortalContainer}>
+            <Stack direction="row" spacing={2} sx={{justifyContent: 'end', mb: 4}}>
+                <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
+                    Click to reset
+                </Button>
+                <CompetitionSetupTreeHelper
+                    resetSetupForm={(formData: CompetitionSetupForm) => {
+                        formContext.reset(formData)
+                    }}
+                    currentFormData={formWatch}
+                    portalContainer={
+                        props.treeHelperPortalContainer ?? ownTreeHelperPortalContainer
+                    }
+                />
+                {props.handleFormSubmission && (
+                    <SubmitButton label={'[todo] Save'} submitting={props.submitting ?? false} />
+                )}
+            </Stack>
+            <Stack spacing={4}>
+                <AddRoundButton addIndex={0} />
+                {roundFields.map((roundField, roundIndex) => (
+                    <Stack spacing={2} key={roundField.id}>
+                        <CompetitionSetupRound
+                            round={{index: roundIndex, id: roundField.id}}
+                            formContext={formContext}
+                            removeRound={removeRound}
+                            teamCounts={{
+                                prevRound: getTeamCountForRound(
+                                    roundIndex - 1,
+                                    formWatch[roundIndex - 1]?.isGroupRound ?? false,
+                                ),
+                                thisRound: getTeamCountForRound(
+                                    roundIndex,
+                                    formWatch[roundIndex]?.isGroupRound ?? false,
+                                ),
+                                nextRound: getTeamCountForRound(
+                                    roundIndex + 1,
+                                    formWatch[roundIndex + 1]?.isGroupRound ?? false,
+                                ),
+                            }}
+                            getRoundTeamCountWithoutThis={(ignoredIndex, isGroupRound) =>
+                                getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
+                            }
+                        />
+                        <AddRoundButton addIndex={roundIndex + 1} />
+                    </Stack>
+                ))}
+            </Stack>
+        </CompetitionSetupContainersWrapper>
     )
 }
 
 export default CompetitionSetup
-
-function mapFormToDto(form: CompetitionSetupForm): CompetitionSetupDto {
-    return {
-        rounds: form.rounds.map(round => ({
-            name: round.name,
-            required: round.required,
-            matches: !round.isGroupRound
-                ? [...round.matches]
-                      .sort((a, b) => a.position - b.position)
-                      .map(match => mapFormMatchToDtoMatch(match, round.useStartTimeOffsets))
-                : undefined,
-            groups: round.isGroupRound
-                ? round.groups?.map(group => ({
-                      duplicatable: group.duplicatable,
-                      weighting: group.weighting,
-                      teams: group.teams !== '' ? Number(group.teams) : undefined,
-                      name: group.name,
-                      matches: group.matches.map(match =>
-                          mapFormMatchToDtoMatch(
-                              match,
-                              round.useStartTimeOffsets,
-                              group.matchTeams,
-                          ),
-                      ),
-                      participants: group.participants.map(participant => participant.seed),
-                  }))
-                : undefined,
-            statisticEvaluations: round.statisticEvaluations,
-            useDefaultSeeding: round.useDefaultSeeding,
-            places: round.places,
-        })),
-    }
-}
-
-function mapFormMatchToDtoMatch(
-    formMatch: FormSetupMatch,
-    useStartTimeOffsets: boolean,
-    setTeamsValue?: number,
-): CompetitionSetupMatchDto {
-    return {
-        duplicatable: formMatch.duplicatable,
-        weighting: formMatch.weighting ?? undefined,
-        teams:
-            setTeamsValue === undefined // Groups provide a set value for the teams since all matches in one group need to have the same amount of participants
-                ? formMatch.teams !== ''
-                    ? Number(formMatch.teams)
-                    : undefined
-                : setTeamsValue,
-        name: formMatch.name,
-        participants: formMatch.participants.map(p => p.seed),
-        startTimeOffset: useStartTimeOffsets ? formMatch.startTimeOffset : undefined,
-    }
-}
-
-function mapDtoToForm(dto: CompetitionSetupDto): CompetitionSetupForm {
-    return {
-        rounds: dto.rounds.map(round => ({
-            name: round.name,
-            required: round.required,
-            matches:
-                round.matches?.map((match, index) => mapDtoMatchToFormMatch(match, index)) ?? [],
-            groups:
-                round.groups?.map(group => ({
-                    duplicatable: group.duplicatable,
-                    weighting: group.weighting,
-                    teams: group.teams?.toString() ?? '',
-                    name: group.name,
-                    matches: group.matches.map((match, index) =>
-                        mapDtoMatchToFormMatch(match, index),
-                    ),
-                    participants: group.participants.map(participant => ({seed: participant})),
-                    matchTeams: group.matches[0]?.teams ?? 0,
-                })) ?? [],
-            statisticEvaluations: round.statisticEvaluations,
-            useDefaultSeeding: round.useDefaultSeeding,
-            places: round.places,
-            isGroupRound: round.groups !== undefined,
-            // If a match has an offset, useStartTimeOffsets is set to true
-            useStartTimeOffsets:
-                (round.matches?.filter(m => m.startTimeOffset !== undefined).length ?? 0) > 0 ||
-                (round.groups
-                    ?.map(g => g.matches)
-                    .flat()
-                    .filter(m => m.startTimeOffset !== undefined).length ?? 0) > 0,
-        })),
-    }
-}
-
-function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto, order: number): FormSetupMatch {
-    return {
-        duplicatable: matchDto.duplicatable,
-        weighting: matchDto.weighting ?? null,
-        teams: matchDto.teams?.toString() ?? '',
-        name: matchDto.name,
-        participants: matchDto.participants?.map(participant => ({seed: participant})),
-        position: order,
-        startTimeOffset: matchDto.startTimeOffset,
-    }
-}

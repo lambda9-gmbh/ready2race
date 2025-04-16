@@ -14,7 +14,10 @@ import {
     CompetitionCategoryDto,
     CompetitionTemplateDto,
     FeeDto,
+    CompetitionSetupTemplateDto,
 } from '@api/types.gen.ts'
+import CompetitionSetupTemplateTable from '@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx'
+import CompetitionSetupTemplateDialog from '@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx'
 
 const CompetitionConfigPage = () => {
     const {t} = useTranslation()
@@ -30,8 +33,12 @@ const CompetitionConfigPage = () => {
     )
     const feeAdministrationProps = useEntityAdministration<FeeDto>(t('event.competition.fee.fee'))
 
+    const competitionSetupTemplateProps = useEntityAdministration<CompetitionSetupTemplateDto>(
+        '[todo] Competition Setup Template',
+    )
+
     return (
-        <Box sx={{display: 'flex', flexDirection: 'column'}}>
+        <Stack spacing={4}>
             <Box sx={{mt: 4}}>
                 <CompetitionTemplateTable
                     {...competitionTemplateAdministrationProps.table}
@@ -39,7 +46,7 @@ const CompetitionConfigPage = () => {
                 />
                 <CompetitionTemplateDialog {...competitionTemplateAdministrationProps.dialog} />
             </Box>
-            <Stack spacing={10} direction="row" justifyContent="space-between" sx={{mt: 4}}>
+            <Stack spacing={10} direction="row" justifyContent="space-between">
                 <Box sx={{flex: 1}}>
                     <CompetitionCategoryTable
                         {...competitionCategoryAdministrationProps.table}
@@ -63,7 +70,14 @@ const CompetitionConfigPage = () => {
                     <FeeDialog {...feeAdministrationProps.dialog} />
                 </Box>
             </Stack>
-        </Box>
+            <Box>
+                <CompetitionSetupTemplateTable
+                    {...competitionSetupTemplateProps.table}
+                    title={'[todo] Competition Setup Templates'}
+                />
+                <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
+            </Box>
+        </Stack>
     )
 }
 
