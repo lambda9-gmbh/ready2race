@@ -25,7 +25,7 @@ import {
     fillSeedingList,
     getHighestTeamsCount,
     getNewPlaces,
-    getParticipantsFromMatchOrGroup,
+    getParticipantsFromMatchOrGroup, getTeamsCountInMatches,
     //getLowest,
     setParticipantValuesForMatchOrGroup,
     updateParticipants,
@@ -90,6 +90,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     useEffect(() => {
         if (watchUseDefaultSeeding) {
             updateParticipants(formContext, round.index, true, teamCounts.nextRound, updatePlaces)
+        } else{
+            updatePlaces(true, getTeamsCountInMatches(watchMatches))
         }
     }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding])
 

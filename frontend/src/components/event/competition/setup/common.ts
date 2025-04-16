@@ -336,11 +336,7 @@ export const updateParticipants = (
         // In the first round there are no participants so the teamsCount is calculated by the "teams" values instead of the new participants count
         const teamsCount =
             roundIndex === 0
-                ? matches
-                      .map(m => Number(m.teams))
-                      .reduce((acc, val) => {
-                          return acc + val
-                      }, 0)
+                ? getTeamsCountInMatches(matches)
                 : newParticipants.map(p => p.participants).flat().length
 
         updatePlaces(true, teamsCount)
@@ -481,4 +477,14 @@ export const getNewPlaces = (
             place: (nextRoundTeams !== 0 ? nextRoundTeams : i) + 1, // If there is no next round the places are set by the roundOutcome
         }))
         .filter(v => !participants.includes(v.roundOutcome))
+}
+
+export const getTeamsCountInMatches = (
+    matches: FormSetupMatch[],
+) => {
+    return matches
+        .map(m => Number(m.teams))
+        .reduce((acc, val) => {
+            return acc + val
+        }, 0)
 }

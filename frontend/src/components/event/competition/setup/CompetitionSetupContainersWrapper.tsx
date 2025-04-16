@@ -8,6 +8,8 @@ type Props = {
     treeHelperPortalContainer?: RefObject<HTMLDivElement>
     handleSubmit?: (formData: CompetitionSetupForm) => Promise<void>
 }
+// This component is necessary to handle both EntityDialog (has its own FormContainer) and Custom FormContainer
+// CompetitionSetup has its own Container, CompetitionSetupTemplate uses EntityDialog
 const CompetitionSetupContainersWrapper = ({children, ...props}: PropsWithChildren<Props>) => {
     return (
         <>
