@@ -29,6 +29,7 @@ type ExtendedEntityDialogProps<
     editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
     onAddError?: (error: AddError) => void
     onEditError?: (error: UpdateError) => void
+    wide?: boolean
 }
 
 //todo: add semantic tabs
@@ -49,6 +50,7 @@ const EntityDialog = <
     editAction,
     onAddError,
     onEditError,
+    wide,
     children,
 }: PropsWithChildren<EntityDialogProps<Entity, Form, AddError, UpdateError>>) => {
     const {t} = useTranslation()
@@ -101,7 +103,7 @@ const EntityDialog = <
     }, [dialogIsOpen, onOpen])
 
     return (
-        <Dialog open={dialogIsOpen} fullWidth={true} maxWidth={'sm'} className="ready2race">
+        <Dialog open={dialogIsOpen} fullWidth={true} maxWidth={wide ? 'xl' : 'sm'} className="ready2race">
             <FormContainer formContext={formContext} onSuccess={data => onSubmit(data)}>
                 <DialogTitle>
                     {t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
