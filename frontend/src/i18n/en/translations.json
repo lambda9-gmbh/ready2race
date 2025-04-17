@@ -163,15 +163,79 @@
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
       "setup": {
+        "setup": "Competition Setup",
+        "save": {
+          "save": "Save",
+          "error": "An error has occurred when saving the competition setup",
+          "success": "Competition setup successfully saved"
+        },
+        "reset": "Reset setup",
         "round": {
           "round": "Round",
+          "name": "Name",
+          "useDefaultSeeding": "Use default seeding for matchups",
+          "required": "Round must be held",
           "finals": {
-            "final": "Finals",
-            "semifinal": "Semi-final",
-            "quarterfinal": "Quarter-final",
-            "roundOf16": "Round of 16",
-            "roundOf32": "Round of 32"
+            "long": {
+              "final": {
+                "round": "Finals",
+                "final": "Final",
+                "matchForThirdPlace": "Match for 3rd place"
+              },
+              "semifinal": "Semi-final",
+              "quarterfinal": "Quarter-final",
+              "roundOf16": "Round of 16",
+              "roundOf32": "Round of 32"
+            },
+            "short": {
+              "semifinal": "SF",
+              "quarterfinal": "QF",
+              "roundOf16": "R16",
+              "roundOf32": "R32"
+            }
+          },
+          "remove": "Remove round"
+        },
+        "match": {
+          "match": "Match",
+          "participants": "Matchup",
+          "name": "Name",
+          "executionOrder": "Order of execution",
+          "teams": "Number of teams",
+          "duplicatable": "Duplicating",
+          "outcome": {
+            "outcome": "Seeding",
+            "outcomes": "Seedings"
+          },
+          "remove": "Remove match",
+          "info": {
+            "roundOneFillMatches": "The matches are filled evenly with randomly selected teams."
           }
+        },
+        "place": {
+          "place": "Place",
+          "places": "Overall placings"
+        },
+        "tournamentTree": {
+          "generate": "Generate",
+          "generateTree": "Generate tournament tree",
+          "participatingTeams": "Participating Teams",
+          "includeMatchForThirdPlace": "Include match for 3rd place",
+          "overwriteSetup": "Overwrite current setup",
+          "info": {
+            "noOverwrite": "The generated rounds will be added to the end of your current setup."
+          }
+        },
+        "template": {
+          "template": "Competition Setup Template",
+          "templates": "Competition Setup Templates",
+          "name": "Name",
+          "description": "Description",
+          "select": "Select template"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Offset start time",
+          "enable": "Enable start time offsets"
         }
       }
     },

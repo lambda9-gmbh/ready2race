@@ -99,7 +99,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
             if (error) {
                 feedback.error(
                     t('common.load.error.multiple.short', {
-                        entity: '[todo] Competition Setup Templates',
+                        entity: t('event.competition.setup.template.templates'),
                     }),
                 )
             }
@@ -136,7 +136,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     [theme.breakpoints.down('md')]: {flexDirection: 'column', alignItems: 'start'},
                 }}>
                 <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
-                    Reset setup
+                    {t('event.competition.setup.reset')}
                 </Button>
                 <Box>
                     <Button
@@ -150,7 +150,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                         aria-haspopup={'true'}
                         aria-expanded={templateMenuOpen ? 'true' : undefined}
                         onClick={handleTemplateMenuClick}>
-                        Select Template
+                        {t('event.competition.setup.template.select')}
                     </Button>
                     <Menu
                         id="competition-setup-template-selection-menu"
@@ -184,7 +184,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     }
                 />
                 {props.handleFormSubmission && (
-                    <SubmitButton label={'[todo] Save'} submitting={props.submitting ?? false} />
+                    <SubmitButton label={t('event.competition.setup.save.save')} submitting={props.submitting ?? false} />
                 )}
             </Stack>
             <Stack spacing={4}>

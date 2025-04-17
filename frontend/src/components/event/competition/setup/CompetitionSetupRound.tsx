@@ -28,12 +28,12 @@ import {
     getNewPlaces,
     getParticipantsFromMatchOrGroup,
     getTeamsCountInMatches,
-    //getLowest,
     setParticipantValuesForMatchOrGroup,
     updateParticipants,
     updatePreviousRoundParticipants,
 } from '@components/event/competition/setup/common.ts'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import {useTranslation} from 'react-i18next'
 
 type Props = {
     round: {index: number; id: string}
@@ -51,6 +51,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     const defaultGroupTeamSize = 4
 
     const theme = useTheme()
+    const {t} = useTranslation()
 
     const watchUseDefaultSeeding = formContext.watch(`rounds.${round.index}.useDefaultSeeding`)
 
@@ -282,7 +283,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     onClick={() => {
                                         removeRound(round.index)
                                     }}>
-                                    Remove Round
+                                    {t('event.competition.setup.round.remove')}
                                 </Button>
                             </Box>
                             {/*<CheckboxElement
@@ -292,7 +293,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                             <Box sx={{maxWidth: 230}}>
                                 <FormInputText
                                     name={`rounds.${round.index}.name`}
-                                    label={'Round name'}
+                                    label={t('event.competition.setup.round.name')}
                                 />
                             </Box>
 
@@ -306,7 +307,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     }
                                     label={
                                         <FormInputLabel
-                                            label={'Use default seeding'}
+                                            label={t(
+                                                'event.competition.setup.round.useDefaultSeeding',
+                                            )}
                                             required={true}
                                             horizontal
                                         />
@@ -325,7 +328,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     }
                                     label={
                                         <FormInputLabel
-                                            label={'Enable start time offsets'}
+                                            label={t(
+                                                'event.competition.setup.startTimeOffset.enable',
+                                            )}
                                             required={true}
                                             horizontal
                                         />
@@ -336,7 +341,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                 name={`rounds.${round.index}.required`}
                                 label={
                                     <FormInputLabel
-                                        label={'Round must be held'}
+                                        label={t('event.competition.setup.round.required')}
                                         required={true}
                                         horizontal
                                     />
@@ -368,7 +373,11 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                     })
                                                 }}
                                                 sx={{width: 1}}>
-                                                Add Match
+                                                {t('entity.add.action', {
+                                                    entity: t(
+                                                        'event.competition.setup.match.match',
+                                                    ),
+                                                })}
                                             </Button>
                                         ) : (
                                             <></>
@@ -393,8 +402,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     {round.index === 0 &&
                                         watchMatches.filter(v => v.teams === '').length > 1 && (
                                             <Alert severity="info">
-                                                Participants will be filled into the matches equally
-                                                starting from the first match
+                                                {t(
+                                                    'event.competition.setup.match.info.roundOneFillMatches',
+                                                )}
                                             </Alert>
                                         )}
                                     <Box
@@ -431,7 +441,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                             onClick={() => {
                                                                 removeMatch(matchIndex)
                                                             }}>
-                                                            Remove Match
+                                                            {t(
+                                                                'event.competition.setup.match.remove',
+                                                            )}
                                                         </Button>
                                                     </Stack>
                                                 ))}
@@ -468,14 +480,22 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                 {controlledPlacesFields.length > 0 && (
                                     <Stack sx={{justifySelf: 'flex-end', maxWidth: 250, m: 2}}>
                                         <Typography variant={'h3'}>
-                                            {`Final places (${controlledPlacesFields[0].roundOutcome} - ${controlledPlacesFields[controlledPlacesFields.length - 1].roundOutcome})`}
+                                            {`${t('event.competition.setup.place.places')} (${controlledPlacesFields[0].roundOutcome} - ${controlledPlacesFields[controlledPlacesFields.length - 1].roundOutcome})`}
                                         </Typography>
                                         <TableContainer>
                                             <Table>
                                                 <TableHead>
                                                     <TableRow>
-                                                        <TableCell>Outcome</TableCell>
-                                                        <TableCell>Place</TableCell>
+                                                        <TableCell>
+                                                            {t(
+                                                                'event.competition.setup.match.outcome.outcome',
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {t(
+                                                                'event.competition.setup.place.place',
+                                                            )}
+                                                        </TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>

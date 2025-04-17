@@ -9,9 +9,11 @@ import {
 } from '@components/event/competition/setup/common.ts'
 import CompetitionSetupParticipants from '@components/event/competition/setup/CompetitionSetupParticipants.tsx'
 import {FormInputSeconds} from '@components/form/input/FormInputSeconds.tsx'
+import {useTranslation} from 'react-i18next'
 
 type Props = CompetitionSetupMatchOrGroupProps
 const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
+    const {t} = useTranslation()
     const {fields: participantFields} = useFieldArray({
         control: formContext.control,
         name: `rounds.${roundIndex}.matches.${fieldInfo.index}.participants`,
@@ -43,7 +45,9 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             }}>
             {watchParticipants.length > 0 && (
                 <>
-                    <Typography variant="subtitle1">Participants</Typography>
+                    <Typography sx={{fontSize: '1.1rem'}}>
+                        {t('event.competition.setup.match.participants')}:
+                    </Typography>
                     <CompetitionSetupParticipants
                         fieldInfo={fieldInfo}
                         roundIndex={roundIndex}
@@ -56,11 +60,11 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             )}
             <FormInputText
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.name`}
-                label={'Match name'}
+                label={t('event.competition.setup.match.name')}
             />
             <FormInputNumber
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.position`}
-                label={'Execution order'}
+                label={t('event.competition.setup.match.executionOrder')}
                 required
                 integer={true}
                 transform={{
@@ -70,7 +74,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             {props.useStartTimeOffsets && (
                 <FormInputSeconds
                     name={`rounds.${roundIndex}.matches.${fieldInfo.index}.startTimeOffset`}
-                    label={'Start time offset'}
+                    label={t('event.competition.setup.startTimeOffset.startTimeOffset')}
                     transform={{
                         output: value =>
                             value.target.value !== '' ? Number(value.target.value) : undefined,
@@ -79,7 +83,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             )}
             <FormInputText
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`}
-                label={'Teams'}
+                label={t('event.competition.setup.match.teams')}
                 onChange={v => {
                     onTeamsChanged(
                         roundIndex,
@@ -94,13 +98,19 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.duplicatable`}
                 disabled={duplicatableCheckDisabled}
                 required={false}
-                label={<FormInputLabel label={'Duplicatable'} required={true} horizontal />}
+                label={
+                    <FormInputLabel
+                        label={t('event.competition.setup.match.duplicatable')}
+                        required={true}
+                        horizontal
+                    />
+                }
             />
             <Divider />
-
-            <Typography sx={{textAlign: 'center'}}>
-                Outcomes: {props.outcomes.join(', ')}
+            <Typography sx={{fontSize: '1.1rem'}}>
+                {t('event.competition.setup.match.outcome.outcomes')}:
             </Typography>
+            <Typography>{props.outcomes.join(' - ')}</Typography>
         </Stack>
     )
 }

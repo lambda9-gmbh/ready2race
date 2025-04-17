@@ -34,7 +34,7 @@ const CompetitionConfigPage = () => {
     const feeAdministrationProps = useEntityAdministration<FeeDto>(t('event.competition.fee.fee'))
 
     const competitionSetupTemplateProps = useEntityAdministration<CompetitionSetupTemplateDto>(
-        '[todo] Competition Setup Template',
+        t('event.competition.setup.template.template'),
     )
 
     return (
@@ -73,7 +73,7 @@ const CompetitionConfigPage = () => {
             <Box>
                 <CompetitionSetupTemplateTable
                     {...competitionSetupTemplateProps.table}
-                    title={'[todo] Competition Setup Templates'}
+                    title={t('event.competition.setup.template.templates')}
                 />
                 <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
             </Box>

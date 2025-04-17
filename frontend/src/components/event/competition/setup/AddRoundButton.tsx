@@ -1,11 +1,14 @@
-import {Box, Button} from "@mui/material";
-import {FormSetupRound} from "@components/event/competition/setup/common.ts";
+import {Box, Button} from '@mui/material'
+import {FormSetupRound} from '@components/event/competition/setup/common.ts'
+import {useTranslation} from 'react-i18next'
 
 type Props = {
-    index: number;
+    index: number
     insertRound: (index: number, values: FormSetupRound) => void
 }
 const AddRoundButton = ({index, insertRound}: Props) => {
+    const {t} = useTranslation()
+
     return (
         <Box sx={{maxWidth: 200}}>
             <Button
@@ -23,7 +26,7 @@ const AddRoundButton = ({index, insertRound}: Props) => {
                     })
                 }}
                 sx={{width: 1}}>
-                Add Round
+                {t('entity.add.action', {entity: t('event.competition.setup.round.round')})}
             </Button>
         </Box>
     )

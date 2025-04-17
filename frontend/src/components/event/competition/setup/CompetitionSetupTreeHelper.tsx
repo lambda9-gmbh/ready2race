@@ -1,12 +1,16 @@
 import {FormEvent, PropsWithChildren, RefObject, useEffect, useState} from 'react'
-import {Box, Button, Dialog, DialogActions} from '@mui/material'
+import {Alert, Box, Button, Dialog, DialogActions, Stack} from '@mui/material'
 import {CheckboxElement, FormContainer, useForm} from 'react-hook-form-mui'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
-import {CompetitionSetupForm, FormSetupRound, getWeightings} from '@components/event/competition/setup/common.ts'
+import {
+    CompetitionSetupForm,
+    FormSetupRound,
+    getWeightings,
+} from '@components/event/competition/setup/common.ts'
 
 type Form = {
     teams: number
@@ -73,16 +77,52 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 matchesTeams.push(teams)
             }
 
+            const getRoundName = (short: boolean, matchForPlaceThree?: boolean) => {
+                let result = t('event.competition.setup.round.round') + ` ${roundCount - r}`
+
+                if (r === roundCount - 1 && teamsMatchesDiff > 0) {
+                    return result
+                }
+
+                if (r === 0 && teamsMatchesDiff === 0) {
+                    result = t(
+                        `event.competition.setup.round.finals.long.final.${!short ? 'round' : matchForPlaceThree ? 'matchForThirdPlace' : 'final'}`,
+                    )
+                } else if (r === 1) {
+                    result = t(
+                        `event.competition.setup.round.finals.${short ? 'short' : 'long'}.semifinal`,
+                    )
+                } else if (r === 2) {
+                    result = t(
+                        `event.competition.setup.round.finals.${short ? 'short' : 'long'}.quarterfinal`,
+                    )
+                } else if (r === 3) {
+                    result = t(
+                        `event.competition.setup.round.finals.${short ? 'short' : 'long'}.roundOf16`,
+                    )
+                } else if (r === 4) {
+                    result = t(
+                        `event.competition.setup.round.finals.${short ? 'short' : 'long'}.roundOf32`,
+                    )
+                }
+                return result
+            }
+
             // Sort the matches so that the name and execution order match the displayed matches but the teams are assigned
             // based on the match weighting (which is represented by the matches list index) e.g. 1,2,3,4,5,6,7,8 -> 1,8,5,4,3,6,7,2
             const matchesInBracketOrder: {
                 name: string
                 position: number
             }[] = getWeightings(matchesTeams.length).map(w => {
-                return {
-                    name: `R${r}-${w}`,
-                    position: w,
-                }
+                return r === 0
+                    ? {
+                          name: `${getRoundName(true, w === 2)}`,
+                          position: w,
+                      }
+                    : {
+                          name: `${getRoundName(true)}-${w}`,
+                          position: w,
+                      }
             })
 
             const matches: TreeHelperMatch[] = matchesTeams.map((v, index) => ({
@@ -91,21 +131,9 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 position: matchesInBracketOrder[index]?.position ?? 0,
             }))
 
-            // todo: other name if first round does not match the numbers (e.g. 20 teams in round of 32)
             const newRound: TreeHelperRound = {
                 matches: matches,
-                name:
-                    r === 0
-                        ? t('event.competition.setup.round.finals.final')
-                        : r === 1
-                          ? t('event.competition.setup.round.finals.semifinal')
-                          : r === 2
-                            ? t('event.competition.setup.round.finals.quarterfinal')
-                            : r === 3
-                              ? t('event.competition.setup.round.finals.roundOf16')
-                              : r === 4
-                                ? t('event.competition.setup.round.finals.roundOf32')
-                                : t('event.competition.setup.round.round') + ` ${roundCount - r}`,
+                name: getRoundName(false),
             }
             rounds.push(newRound)
         }
@@ -150,7 +178,6 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
 
             return newPlaces
         }
-
 
         const tree: CompetitionSetupForm = {
             rounds: rounds
@@ -202,10 +229,12 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
         return domReady ? createPortal(props.children, portalContainer.current!) : null
     }
 
+    const watchReplaceAll = formContext.watch('replaceAll')
+
     return (
         <>
             <Button variant="outlined" onClick={openTournamentTreeDialog}>
-                Generate tournament tree
+                {t('event.competition.setup.tournamentTree.generateTree')}
             </Button>
             <FormPortal>
                 <Dialog
@@ -218,35 +247,60 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                         <FormContainer
                             formContext={formContext}
                             handleSubmit={event => onSubmitWithoutPropagation(event)}>
-                            <FormInputNumber name="teams" label="Participanting teams" />
-                            <CheckboxElement
-                                name={`matchForPlaceThree`}
-                                label={
-                                    <FormInputLabel
-                                        label={'Include a 3rd place match'}
-                                        required={true}
-                                        horizontal
+                            <Stack spacing={2}>
+                                <FormInputNumber
+                                    name="teams"
+                                    label={t(
+                                        'event.competition.setup.tournamentTree.participatingTeams',
+                                    )}
+                                />
+                                <Box>
+                                    <CheckboxElement
+                                        name={`matchForPlaceThree`}
+                                        label={
+                                            <FormInputLabel
+                                                label={t(
+                                                    'event.competition.setup.tournamentTree.includeMatchForThirdPlace',
+                                                )}
+                                                required={true}
+                                                horizontal
+                                            />
+                                        }
                                     />
-                                }
-                            />
-                            <CheckboxElement
-                                name={`replaceAll`}
-                                label={
-                                    <FormInputLabel
-                                        label={'Overwrite current setup'}
-                                        required={true}
-                                        horizontal
+                                    <CheckboxElement
+                                        name={`replaceAll`}
+                                        label={
+                                            <FormInputLabel
+                                                label={t(
+                                                    'event.competition.setup.tournamentTree.overwriteSetup',
+                                                )}
+                                                required={true}
+                                                horizontal
+                                            />
+                                        }
                                     />
-                                }
-                            />
-                            <Box sx={{mt: 2}}>
-                                <DialogActions>
-                                    <Button onClick={closeTournamentTreeDialog}>
-                                        {t('common.cancel')}
-                                    </Button>
-                                    <SubmitButton label={'Generate'} submitting={false} />
-                                </DialogActions>
-                            </Box>
+                                    {!watchReplaceAll && (
+                                        <Alert severity="info">
+                                            {t(
+                                                'event.competition.setup.tournamentTree.info.noOverwrite',
+                                            )}
+                                        </Alert>
+                                    )}
+                                </Box>
+                                <Box>
+                                    <DialogActions>
+                                        <Button onClick={closeTournamentTreeDialog}>
+                                            {t('common.cancel')}
+                                        </Button>
+                                        <SubmitButton
+                                            label={t(
+                                                'event.competition.setup.tournamentTree.generate',
+                                            )}
+                                            submitting={false}
+                                        />
+                                    </DialogActions>
+                                </Box>
+                            </Stack>
                         </FormContainer>
                     </Box>
                 </Dialog>

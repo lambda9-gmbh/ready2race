@@ -9,8 +9,10 @@ import {
     mapFormToCompetitionSetupDto,
 } from '@components/event/competition/setup/common.ts'
 import CompetitionSetup from '@components/event/competition/setup/CompetitionSetup.tsx'
+import {useTranslation} from 'react-i18next'
 
 const CompetitionSetupPage = () => {
+    const {t} = useTranslation()
     const feedback = useFeedback()
 
     const [submitting, setSubmitting] = useState(false)
@@ -30,7 +32,11 @@ const CompetitionSetupPage = () => {
                 if (data) {
                     formContext.reset(mapCompetitionSetupDtoToForm(data))
                 } else {
-                    feedback.error('[todo] error!')
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.setup.setup'),
+                        }),
+                    )
                 }
             },
             deps: [eventId, competitionId, reloadDataTrigger],
@@ -46,9 +52,9 @@ const CompetitionSetupPage = () => {
         setSubmitting(false)
 
         if (error) {
-            feedback.error('[todo] Error!')
+            feedback.error(t('event.competition.setup.save.error'))
         } else {
-            feedback.success('[todo] Saved!')
+            feedback.success(t('event.competition.setup.save.success'))
             setReloadDataTrigger(!reloadDataTrigger)
         }
     }

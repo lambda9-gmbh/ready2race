@@ -33,7 +33,7 @@ export type FormSetupRound = {
 export type FormSetupMatch = {
     duplicatable: boolean
     weighting: number | null // in round: number; in group: null
-    teams: string // String so it's easier to work with '' as an empty field instead of undefined
+    teams: string // String because it's easier to work with '' as an empty field instead of undefined
     name?: string
     participants: Array<{seed: number}> // in round 1 the list will be empty
     position: number // Will be translated to the array order in the dto
@@ -192,6 +192,8 @@ function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto, order: numbe
         startTimeOffset: matchDto.startTimeOffset,
     }
 }
+
+// Helper Functions
 
 export const getWeightings = (matchCount: number) => {
     if (matchCount < 1) return []

@@ -7,15 +7,17 @@ import {useForm} from 'react-hook-form-mui'
 import {
     CompetitionSetupForm,
     mapCompetitionSetupTemplateDtoToForm,
-    mapFormToCompetitionSetupTemplateRequest
+    mapFormToCompetitionSetupTemplateRequest,
 } from '@components/event/competition/setup/common.ts'
 import {addCompetitionSetupTemplate, updateCompetitionSetupTemplate} from '@api/sdk.gen.ts'
 import {useCallback, useRef} from 'react'
 import CompetitionSetup from '@components/event/competition/setup/CompetitionSetup.tsx'
+import {useTranslation} from 'react-i18next'
 
 const CompetitionSetupTemplateDialog = (
     props: BaseEntityDialogProps<CompetitionSetupTemplateDto>,
 ) => {
+    const {t} = useTranslation()
 
     const addAction = (formData: CompetitionSetupForm) => {
         return addCompetitionSetupTemplate({
@@ -23,10 +25,7 @@ const CompetitionSetupTemplateDialog = (
         })
     }
 
-    const editAction = (
-        formData: CompetitionSetupForm,
-        entity: CompetitionSetupTemplateDto,
-    ) => {
+    const editAction = (formData: CompetitionSetupForm, entity: CompetitionSetupTemplateDto) => {
         return updateCompetitionSetupTemplate({
             path: {competitionSetupTemplateId: entity.id},
             body: mapFormToCompetitionSetupTemplateRequest(formData),
@@ -61,8 +60,15 @@ const CompetitionSetupTemplateDialog = (
                 editAction={editAction}
                 wide>
                 <Stack spacing={4}>
-                    <FormInputText name="name" label={'[todo] Name'} required />
-                    <FormInputText name="description" label={'[todo] Description'} />
+                    <FormInputText
+                        name="name"
+                        label={t('event.competition.setup.template.name')}
+                        required
+                    />
+                    <FormInputText
+                        name="description"
+                        label={t('event.competition.setup.template.description')}
+                    />
                     <CompetitionSetup
                         formContext={formContext}
                         handleFormSubmission={false}
