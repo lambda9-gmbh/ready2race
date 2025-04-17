@@ -1,11 +1,19 @@
-import {Box, Button, Stack} from '@mui/material'
+import {Box, Button, Menu, MenuItem, Stack, useTheme} from '@mui/material'
 import {useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
-import {RefObject, useRef} from 'react'
+import {RefObject, useRef, useState, MouseEvent} from 'react'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import CompetitionSetupTreeHelper from '@components/event/competition/setup/CompetitionSetupTreeHelper.tsx'
-import {CompetitionSetupForm} from '@components/event/competition/setup/common.ts'
+import {
+    CompetitionSetupForm,
+    mapCompetitionSetupTemplateDtoToForm,
+} from '@components/event/competition/setup/common.ts'
 import CompetitionSetupContainersWrapper from '@components/event/competition/setup/CompetitionSetupContainersWrapper.tsx'
+import AddRoundButton from './AddRoundButton'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {getCompetitionSetupTemplates} from '@api/sdk.gen.ts'
+import {useTranslation} from 'react-i18next'
+import {CompetitionSetupTemplateDto} from '@api/types.gen.ts'
 
 type Props = {
     formContext: UseFormReturn<CompetitionSetupForm>
@@ -15,6 +23,10 @@ type Props = {
     treeHelperPortalContainer?: RefObject<HTMLDivElement> // needsContainersWrapper === false
 }
 const CompetitionSetup = ({formContext, ...props}: Props) => {
+    const {t} = useTranslation()
+    const feedback = useFeedback()
+    const theme = useTheme()
+
     const {
         fields: roundFields,
         insert: insertRound,
@@ -82,28 +94,31 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     // This allows the Tournament Tree Generator Form to exist outside the CompetitionSetup Form while being rendered inside
     const ownTreeHelperPortalContainer = useRef<HTMLDivElement>(null)
 
-    const AddRoundButton = ({addIndex}: {addIndex: number}) => {
-        return (
-            <Box sx={{maxWidth: 200}}>
-                <Button
-                    variant="outlined"
-                    onClick={() => {
-                        insertRound(addIndex, {
-                            name: '',
-                            required: false,
-                            matches: [],
-                            groups: [],
-                            useDefaultSeeding: true,
-                            places: [],
-                            isGroupRound: false,
-                            useStartTimeOffsets: false,
-                        })
-                    }}
-                    sx={{width: 1}}>
-                    Add Round
-                </Button>
-            </Box>
-        )
+    const {data: templatesData} = useFetch(signal => getCompetitionSetupTemplates({signal}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: '[todo] Competition Setup Templates',
+                    }),
+                )
+            }
+        },
+    })
+
+    const handleSelectTemplate = async (template: CompetitionSetupTemplateDto) => {
+        formContext.reset({
+            rounds: mapCompetitionSetupTemplateDtoToForm(template).rounds,
+        })
+    }
+
+    const [templateMenuAnchorEl, setTemplateMenuAnchorEl] = useState<HTMLElement | null>(null)
+    const templateMenuOpen = Boolean(templateMenuAnchorEl)
+    const handleTemplateMenuClick = (event: MouseEvent<HTMLButtonElement>) => {
+        setTemplateMenuAnchorEl(event.currentTarget)
+    }
+    const handleTemplateMenuClose = () => {
+        setTemplateMenuAnchorEl(null)
     }
 
     return (
@@ -112,10 +127,53 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
             handleFormSubmission={props.handleFormSubmission}
             handleSubmit={props.handleSubmit}
             treeHelperPortalContainer={ownTreeHelperPortalContainer}>
-            <Stack direction="row" spacing={2} sx={{justifyContent: 'end', mb: 4}}>
+            <Stack
+                direction="row"
+                sx={{
+                    justifyContent: 'end',
+                    mb: 2,
+                    gap: 1,
+                    [theme.breakpoints.down('md')]: {flexDirection: 'column', alignItems: 'start'},
+                }}>
                 <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
-                    Click to reset
+                    Reset setup
                 </Button>
+                <Box>
+                    <Button
+                        id="competition-setup-template-selection-button"
+                        variant="outlined"
+                        aria-controls={
+                            templateMenuOpen
+                                ? 'id="competition-setup-template-selection-menu"'
+                                : undefined
+                        }
+                        aria-haspopup={'true'}
+                        aria-expanded={templateMenuOpen ? 'true' : undefined}
+                        onClick={handleTemplateMenuClick}>
+                        Select Template
+                    </Button>
+                    <Menu
+                        id="competition-setup-template-selection-menu"
+                        anchorEl={templateMenuAnchorEl}
+                        open={templateMenuOpen}
+                        onClose={handleTemplateMenuClose}
+                        disableScrollLock={true}
+                        MenuListProps={{
+                            'aria-labelledby': 'competition-setup-template-selection-button',
+                        }}>
+                        {templatesData?.data?.map((template, templateIndex) => (
+                            <MenuItem
+                                key={templateIndex + template.id}
+                                onClick={() => {
+                                    handleSelectTemplate(template).then(_ => {})
+                                    handleTemplateMenuClose()
+                                }}
+                                value={template.id}>
+                                {template.name}
+                            </MenuItem>
+                        ))}
+                    </Menu>
+                </Box>
                 <CompetitionSetupTreeHelper
                     resetSetupForm={(formData: CompetitionSetupForm) => {
                         formContext.reset(formData)
@@ -130,9 +188,9 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                 )}
             </Stack>
             <Stack spacing={4}>
-                <AddRoundButton addIndex={0} />
+                <AddRoundButton index={0} insertRound={insertRound} />
                 {roundFields.map((roundField, roundIndex) => (
-                    <Stack spacing={2} key={roundField.id}>
+                    <Stack spacing={4} key={roundField.id}>
                         <CompetitionSetupRound
                             round={{index: roundIndex, id: roundField.id}}
                             formContext={formContext}
@@ -155,7 +213,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                                 getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
                             }
                         />
-                        <AddRoundButton addIndex={roundIndex + 1} />
+                        <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />
                     </Stack>
                 ))}
             </Stack>

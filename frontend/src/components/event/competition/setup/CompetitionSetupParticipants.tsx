@@ -33,10 +33,7 @@ const CompetitionSetupParticipants = ({
                             <FormInputNumber
                                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.participants.${index}.seed`}
                                 required
-                                onChange={() => {
-                                    props.updatePlaces(false)
-                                console.log("Update P Places")
-                            }}
+                                onChange={() => props.updatePlaces(false)}
                                 transform={{
                                     output: value => Number(value.target.value),
                                 }}

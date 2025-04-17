@@ -4,6 +4,7 @@ import {
     Box,
     Button,
     Checkbox,
+    Divider,
     FormControlLabel,
     Stack,
     Table,
@@ -25,7 +26,8 @@ import {
     fillSeedingList,
     getHighestTeamsCount,
     getNewPlaces,
-    getParticipantsFromMatchOrGroup, getTeamsCountInMatches,
+    getParticipantsFromMatchOrGroup,
+    getTeamsCountInMatches,
     //getLowest,
     setParticipantValuesForMatchOrGroup,
     updateParticipants,
@@ -90,7 +92,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     useEffect(() => {
         if (watchUseDefaultSeeding) {
             updateParticipants(formContext, round.index, true, teamCounts.nextRound, updatePlaces)
-        } else{
+        } else {
             updatePlaces(true, getTeamsCountInMatches(watchMatches))
         }
     }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding])
@@ -330,7 +332,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     }
                                 />
                             </Box>
-
                             <CheckboxElement
                                 name={`rounds.${round.index}.required`}
                                 label={
@@ -341,7 +342,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     />
                                 }
                             />
-
+                            <Divider />
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -350,7 +351,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     [theme.breakpoints.down('lg')]: {flexDirection: 'column'},
                                 }}>
                                 <Stack spacing={2} sx={{flex: 1, alignSelf: 'start'}}>
-                                    <Box sx={{alignSelf: 'center'}}>
+                                    <Box sx={{alignSelf: 'start'}}>
                                         {!watchIsGroupRound ? (
                                             <Button
                                                 variant="outlined"
@@ -400,7 +401,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                         sx={{
                                             display: 'flex',
                                             flexWrap: 'wrap',
-                                            justifyContent: 'center',
+                                            justifyContent: 'start',
                                             flex: 1,
                                             gap: 2,
                                         }}>
@@ -472,8 +473,10 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                         <TableContainer>
                                             <Table>
                                                 <TableHead>
-                                                    <TableCell>Outcome</TableCell>
-                                                    <TableCell>Place</TableCell>
+                                                    <TableRow>
+                                                        <TableCell>Outcome</TableCell>
+                                                        <TableCell>Place</TableCell>
+                                                    </TableRow>
                                                 </TableHead>
                                                 <TableBody>
                                                     {controlledPlacesFields.map(
