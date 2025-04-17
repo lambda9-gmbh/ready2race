@@ -79,7 +79,8 @@ select cphnp.competition_properties,
        cp.competition as competition_id
 from competition_properties_has_named_participant cphnp
          join named_participant np on cphnp.named_participant = np.id
-         join competition_properties cp on cphnp.competition_properties = cp.id;
+         join competition_properties cp on cphnp.competition_properties = cp.id
+order by np.name, np.id;
 
 create view fee_for_competition_properties as
 select cphf.competition_properties,

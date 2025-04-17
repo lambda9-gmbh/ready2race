@@ -8,11 +8,8 @@ import de.lambda9.ready2race.backend.app.club.control.clubSearchDto
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
@@ -43,7 +40,8 @@ fun Route.club() {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
                     val params = !pagination<ClubSort>()
-                    ClubService.page(params) { it.clubSearchDto() }
+                    val eventId = !optionalQueryParam("eventId", uuid)
+                    ClubService.page(params, eventId) { it.clubSearchDto() }
                 }
             }
         }

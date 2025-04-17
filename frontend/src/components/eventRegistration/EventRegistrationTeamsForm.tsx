@@ -1,23 +1,13 @@
 import {
-    AutocompleteElement,
     CheckboxButtonGroup,
     FieldArrayWithId,
     useFieldArray,
     useFormContext,
     useWatch,
 } from 'react-hook-form-mui'
-import {
-    AutocompleteChangeDetails,
-    AutocompleteChangeReason,
-    Button,
-    Divider,
-    IconButton,
-    Paper,
-    Stack,
-    Typography,
-} from '@mui/material'
+import {Button, Divider, IconButton, Paper, Stack, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
-import {Group, GroupAdd} from '@mui/icons-material'
+import {GroupAdd} from '@mui/icons-material'
 import {v4 as uuid} from 'uuid'
 import {
     EventRegistrationCompetitionDto,
@@ -26,82 +16,9 @@ import {
 } from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
-import {SyntheticEvent, useCallback, useEffect, useMemo, useState} from 'react'
-import {grey} from '@mui/material/colors'
-
-const TeamParticipantAutocomplete = (props: {
-    name: string
-    label: string
-    count: number
-    required: boolean
-    options: EventRegistrationParticipantUpsertDto[]
-    transform?:
-        | {
-              input?: ((value: any) => EventRegistrationParticipantUpsertDto[]) | undefined
-              output?:
-                  | ((
-                        event: SyntheticEvent,
-                        value: EventRegistrationParticipantUpsertDto[],
-                        reason: AutocompleteChangeReason,
-                        details?:
-                            | AutocompleteChangeDetails<EventRegistrationParticipantUpsertDto>
-                            | undefined,
-                    ) => any)
-                  | undefined
-          }
-        | undefined
-}) => {
-    const [limitReached, setLimitReached] = useState(false)
-
-    const value = useWatch({name: props.name})
-
-    useEffect(() => {
-        setLimitReached(
-            value ? (props.transform?.input?.(value) ?? value ?? []).length >= props.count : false,
-        )
-    }, [value])
-
-    const getOptionDisabled = useCallback(
-        (option: EventRegistrationParticipantUpsertDto) => {
-            return (
-                limitReached && !(props.transform?.input?.(value) ?? value ?? []).includes(option)
-            )
-        },
-        [limitReached, value, props.transform],
-    )
-
-    return (
-        <AutocompleteElement
-            name={props.name}
-            transform={props.transform}
-            matchId
-            required={props.required}
-            multiple
-            rules={{
-                validate: _ => limitReached, // TODO validate selected genders?
-            }}
-            autocompleteProps={{
-                size: 'small',
-                limitTags: 5,
-                getOptionDisabled: getOptionDisabled,
-                slotProps: {
-                    popper: {
-                        sx: {
-                            '& .MuiAutocomplete-groupLabel': {
-                                overflow: 'hidden',
-                                whiteSpace: 'nowrap',
-                                textOverflow: 'ellipsis',
-                            },
-                        },
-                    },
-                },
-                groupBy: option => option.externalClubName || '',
-                getOptionLabel: option => `${option.firstname} ${option.lastname}`,
-            }}
-            options={props.options}
-        />
-    )
-}
+import {useMemo} from 'react'
+import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
+import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
 
 const TeamInput = (props: {
     competition: EventRegistrationCompetitionDto
@@ -124,55 +41,12 @@ const TeamInput = (props: {
                     {props.competition.namedParticipant?.map(
                         (namedParticipant, namedParticipantIndex) => (
                             <Stack rowGap={1} flexWrap={'wrap'} key={namedParticipant.id}>
-                                <Stack direction={'row'} alignItems={'center'} spacing={2}>
-                                    <Typography>{namedParticipant.name}</Typography>
-                                    <Stack direction={'row'} spacing={1}>
-                                        <Group sx={{color: grey['500']}} />
-                                        <Typography color={grey['500']}>
-                                            {namedParticipant.countMales +
-                                                namedParticipant.countFemales +
-                                                namedParticipant.countMixed +
-                                                namedParticipant.countNonBinary}
-                                        </Typography>
-                                    </Stack>
-                                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
-                                        <Typography color={grey['500']}>(</Typography>
-                                        {namedParticipant.countFemales > 0 && (
-                                            <Typography color={grey['500']}>
-                                                {' '}
-                                                {namedParticipant.countFemales}x{' '}
-                                                {t('event.registration.females')}
-                                            </Typography>
-                                        )}
-                                        {namedParticipant.countMales > 0 && (
-                                            <Typography color={grey['500']}>
-                                                {' '}
-                                                {namedParticipant.countMales}x{' '}
-                                                {t('event.registration.males')}
-                                            </Typography>
-                                        )}
-                                        {namedParticipant.countNonBinary > 0 && (
-                                            <Typography color={grey['500']}>
-                                                {' '}
-                                                {namedParticipant.countNonBinary}x{' '}
-                                                {t('event.registration.nonBinary')}
-                                            </Typography>
-                                        )}
-                                        {namedParticipant.countMixed > 0 && (
-                                            <Typography color={grey['500']}>
-                                                {' '}
-                                                {namedParticipant.countMixed}x{' '}
-                                                {t('event.registration.mixed')}
-                                            </Typography>
-                                        )}
-                                        <Typography color={grey['500']}>)</Typography>
-                                    </Stack>
-                                </Stack>
+                                <TeamNamedParticipantLabel namedParticipant={namedParticipant} />
                                 <TeamParticipantAutocomplete
                                     name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.namedParticipants.${namedParticipantIndex}`}
                                     key={`${namedParticipant.id}`}
                                     label={t('club.participant.title')}
-                                    required={namedParticipant.required ?? false}
+                                    required={true}
                                     options={props.participants}
                                     transform={{
                                         input: value =>

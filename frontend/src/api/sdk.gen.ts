@@ -112,6 +112,15 @@ import type {
     GetCompetitionRegistrationsData,
     GetCompetitionRegistrationsError,
     GetCompetitionRegistrationsResponse,
+    AddCompetitionRegistrationData,
+    AddCompetitionRegistrationError,
+    AddCompetitionRegistrationResponse,
+    UpdateCompetitionRegistrationData,
+    UpdateCompetitionRegistrationError,
+    UpdateCompetitionRegistrationResponse,
+    DeleteCompetitionRegistrationData,
+    DeleteCompetitionRegistrationError,
+    DeleteCompetitionRegistrationResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -656,6 +665,45 @@ export const getCompetitionRegistrations = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionRegistration',
+    })
+}
+
+export const addCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddCompetitionRegistrationResponse,
+        AddCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration',
+    })
+}
+
+export const updateCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionRegistrationResponse,
+        UpdateCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}',
+    })
+}
+
+export const deleteCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCompetitionRegistrationResponse,
+        DeleteCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}',
     })
 }
 

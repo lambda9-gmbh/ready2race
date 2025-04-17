@@ -12,7 +12,8 @@ import {getCompetition, getEventDays} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
 import TabPanel from '@components/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
-import CompetitionRegistrationTable from './CompetitionRegistrationTable.tsx'
+import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
+import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -119,6 +120,11 @@ const CompetitionPage = () => {
                             </Tabs>
                         </Box>
                         <TabPanel index={0} activeTab={activeTab}>
+                            <CompetitionRegistrationDialog
+                                {...competitionRegistrationTeamsProps.dialog}
+                                competition={competitionData}
+                                eventId={eventId}
+                            />
                             <CompetitionRegistrationTable
                                 {...competitionRegistrationTeamsProps.table}
                             />
@@ -153,57 +159,47 @@ const CompetitionPage = () => {
 
                                     {competitionData.properties.namedParticipants.map(
                                         (np, index) => (
-                                            <>
-                                                <Box key={`box${index}`}>
-                                                    <Typography variant="subtitle1">
-                                                        {np.name}
-                                                    </Typography>
-                                                    <Typography>{np.description}</Typography>
-                                                    <CompetitionCountEntry
-                                                        label={t('event.competition.count.males')}
-                                                        content={np.countMales}
-                                                    />
-                                                    <CompetitionCountEntry
-                                                        label={t('event.competition.count.females')}
-                                                        content={np.countFemales}
-                                                    />
-                                                    <CompetitionCountEntry
-                                                        label={t(
-                                                            'event.competition.count.nonBinary',
-                                                        )}
-                                                        content={np.countNonBinary}
-                                                    />
-                                                    <CompetitionCountEntry
-                                                        label={t('event.competition.count.mixed')}
-                                                        content={np.countMixed}
-                                                    />
-                                                </Box>
-                                            </>
+                                            <Box key={`box${index}`}>
+                                                <Typography variant="subtitle1">
+                                                    {np.name}
+                                                </Typography>
+                                                <Typography>{np.description}</Typography>
+                                                <CompetitionCountEntry
+                                                    label={t('event.competition.count.males')}
+                                                    content={np.countMales}
+                                                />
+                                                <CompetitionCountEntry
+                                                    label={t('event.competition.count.females')}
+                                                    content={np.countFemales}
+                                                />
+                                                <CompetitionCountEntry
+                                                    label={t('event.competition.count.nonBinary')}
+                                                    content={np.countNonBinary}
+                                                />
+                                                <CompetitionCountEntry
+                                                    label={t('event.competition.count.mixed')}
+                                                    content={np.countMixed}
+                                                />
+                                            </Box>
                                         ),
                                     )}
                                     <Divider />
                                     {competitionData.properties.fees.map((f, index) => (
-                                        <>
-                                            <Box key={`box${index}`}>
-                                                <Typography variant="subtitle1">
-                                                    {f.name}
-                                                </Typography>
-                                                <Typography>{f.description}</Typography>
-                                                <Typography>
-                                                    {f.required
-                                                        ? t(
-                                                              'event.competition.fee.required.required',
-                                                          )
-                                                        : t(
-                                                              'event.competition.fee.required.notRequired',
-                                                          )}
-                                                </Typography>
-                                                <CompetitionCountEntry
-                                                    label={t('event.competition.fee.amount')}
-                                                    content={f.amount + '€'}
-                                                />
-                                            </Box>
-                                        </>
+                                        <Box key={`box${index}`}>
+                                            <Typography variant="subtitle1">{f.name}</Typography>
+                                            <Typography>{f.description}</Typography>
+                                            <Typography>
+                                                {f.required
+                                                    ? t('event.competition.fee.required.required')
+                                                    : t(
+                                                          'event.competition.fee.required.notRequired',
+                                                      )}
+                                            </Typography>
+                                            <CompetitionCountEntry
+                                                label={t('event.competition.fee.amount')}
+                                                content={f.amount + '€'}
+                                            />
+                                        </Box>
                                     ))}
                                 </Stack>
                                 <Box sx={{flex: 1, maxWidth: 400}}>

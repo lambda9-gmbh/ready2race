@@ -172,7 +172,7 @@ export type CompetitionRegistrationTeamDto = {
 
 export type CompetitionRegistrationTeamUpsertDto = {
     id: string
-    participants?: Array<string>
+    clubId?: string
     optionalFees?: Array<string>
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
 }
@@ -485,6 +485,8 @@ export type Pagination = {
 export type Parameterchallenge = string
 
 export type ParametercompetitionId = string
+
+export type ParametercompetitionRegistrationId = string
 
 export type ParametereventDayId = string
 
@@ -1200,6 +1202,46 @@ export type GetCompetitionRegistrationsResponse = {
 
 export type GetCompetitionRegistrationsError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type AddCompetitionRegistrationData = {
+    body: CompetitionRegistrationTeamUpsertDto
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type AddCompetitionRegistrationResponse = string
+
+export type AddCompetitionRegistrationError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateCompetitionRegistrationData = {
+    body: CompetitionRegistrationTeamUpsertDto
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type UpdateCompetitionRegistrationResponse = void
+
+export type UpdateCompetitionRegistrationError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type DeleteCompetitionRegistrationData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type DeleteCompetitionRegistrationResponse = void
+
+export type DeleteCompetitionRegistrationError = BadRequestError | ApiError
+
 export type AddDocumentsData = {
     body: {
         documentType?: string
@@ -1578,6 +1620,10 @@ export type DeleteClubParticipantError = ApiError
 
 export type GetClubNamesData = {
     query?: {
+        /**
+         * Filter for clubs, which registered for this event
+         */
+        eventId?: string
         /**
          * Page size for pagination
          */

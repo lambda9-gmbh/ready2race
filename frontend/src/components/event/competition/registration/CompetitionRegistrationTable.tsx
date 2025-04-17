@@ -1,7 +1,12 @@
 import {useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
-import {CompetitionRegistrationTeamDto, getCompetitionRegistrations} from '../../api'
+import {
+    CompetitionRegistrationTeamDto,
+    deleteCompetitionRegistration,
+    EventDto,
+    getCompetitionRegistrations,
+} from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo} from 'react'
@@ -31,6 +36,15 @@ const CompetitionRegistrationTable = (
         })
     }
 
+    const deleteRequest = (dto: EventDto) =>
+        deleteCompetitionRegistration({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionRegistrationId: dto.id,
+            },
+        })
+
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
             {
@@ -48,25 +62,35 @@ const CompetitionRegistrationTable = (
                 headerName: t('club.participant.title'),
                 flex: 1,
                 renderCell: ({row}) => (
-                    <Grid2 container spacing={1}>
+                    <Grid2 container spacing={1} key={`participants-${row.id}`}>
                         {row.namedParticipants.map(np => (
-                            <>
+                            <Fragment key={np.namedParticipantId}>
                                 {row.namedParticipants.length > 1 && (
-                                    <Grid2 direction={'row'} spacing={2} size={2}>
+                                    <Grid2
+                                        container
+                                        direction={'row'}
+                                        spacing={2}
+                                        size={2}
+                                        key={`name-${np.namedParticipantId}`}>
                                         <Typography variant={'subtitle2'}>
                                             {np.namedParticipantName}:
                                         </Typography>
                                     </Grid2>
                                 )}
-                                <Grid2 spacing={1} size={10}>
+                                <Grid2
+                                    container
+                                    direction={'column'}
+                                    spacing={0.5}
+                                    size={10}
+                                    key={`participants-${np.namedParticipantId}`}>
                                     {np.participants.map(p => (
-                                        <Typography variant={'body2'}>
+                                        <Typography variant={'body2'} key={p.id}>
                                             {p.firstname} {p.lastname}{' '}
                                             {p.externalClubName && `(${p.externalClubName})`}
                                         </Typography>
                                     ))}
                                 </Grid2>
-                            </>
+                            </Fragment>
                         ))}
                     </Grid2>
                 ),
@@ -97,16 +121,15 @@ const CompetitionRegistrationTable = (
         <Fragment>
             <EntityTable
                 {...props}
-                options={{entityCreate: false, entityUpdate: false}}
                 withSearch={false}
-                gridProps={{getRowId: row => row.id}}
                 parentResource={'EVENT'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}
                 initialSort={initialSort}
                 columns={columns}
                 dataRequest={dataRequest}
-                entityName={t('club.participant.title')}
+                deleteRequest={deleteRequest}
+                entityName={t('event.registration.registration')}
             />
         </Fragment>
     )

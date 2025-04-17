@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.findOneBy
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -23,6 +24,15 @@ import java.util.*
 object CompetitionRegistrationRepo {
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
+
+    fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
+        COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }
+
+    fun delete(
+        competitionId: UUID,
+        scope: Privilege.Scope,
+        user: AppUserWithPrivilegesRecord,
+    ) = COMPETITION_REGISTRATION.delete { ID.eq(competitionId).and(filterScope(scope, user.club)) }
 
     fun deleteByEventRegistration(eventRegistrationId: UUID) =
         COMPETITION_REGISTRATION.delete { COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId) }
@@ -111,7 +121,7 @@ object CompetitionRegistrationRepo {
         .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
         .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
         .groupBy(NAMED_PARTICIPANT.NAME, NAMED_PARTICIPANT.ID)
-        .orderBy(NAMED_PARTICIPANT.NAME)
+        .orderBy(NAMED_PARTICIPANT.NAME, NAMED_PARTICIPANT.ID)
         .asMultiset("namedParticipants")
         .convertFrom {
             it!!.map {

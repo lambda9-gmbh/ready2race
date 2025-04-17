@@ -1,17 +1,19 @@
 package de.lambda9.ready2race.backend.app.competition.control
 
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionView
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_VIEW
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
+import java.time.LocalDateTime
 import java.util.*
 
 object CompetitionRepo {
@@ -26,6 +28,23 @@ object CompetitionRepo {
     fun update(id: UUID, f: CompetitionRecord.() -> Unit) = COMPETITION.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = COMPETITION.delete { ID.eq(id) }
+
+    fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {
+        fetchExists(
+            COMPETITION
+                .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
+                .where(
+                    COMPETITION.ID.eq(id)
+                        .and(EVENT.REGISTRATION_AVAILABLE_FROM.le(at))
+                        .and(
+                            DSL.or(
+                                EVENT.REGISTRATION_AVAILABLE_TO.isNull,
+                                EVENT.REGISTRATION_AVAILABLE_TO.ge(at)
+                            )
+                        )
+                )
+        )
+    }
 
     fun countWithPropertiesByEvent(
         eventId: UUID,

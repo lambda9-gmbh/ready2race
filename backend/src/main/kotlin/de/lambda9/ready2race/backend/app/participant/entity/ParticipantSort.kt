@@ -8,6 +8,7 @@ enum class ParticipantSort : Sortable {
     ID,
     FIRSTNAME,
     LASTNAME,
+    EXTERNAL,
     EXTERNAL_CLUB_NAME,
     CREATED_AT;
 
@@ -15,6 +16,7 @@ enum class ParticipantSort : Sortable {
         ID -> PARTICIPANT.ID
         FIRSTNAME -> PARTICIPANT.FIRSTNAME
         LASTNAME -> PARTICIPANT.LASTNAME
+        EXTERNAL -> PARTICIPANT.EXTERNAL
         EXTERNAL_CLUB_NAME -> PARTICIPANT.EXTERNAL_CLUB_NAME
         CREATED_AT -> PARTICIPANT.CREATED_AT
     }

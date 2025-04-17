@@ -885,6 +885,9 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionRegistration:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
     get:
       operationId: getCompetitionRegistrations
       parameters:
@@ -892,8 +895,6 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
-        - $ref: '#/components/parameters/eventId'
-        - $ref: '#/components/parameters/competitionId'
       responses:
         200:
           description: CompetitionRegistration page successfully retrieved
@@ -922,6 +923,72 @@ paths:
           $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    put:
+      operationId: updateCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
+      responses:
+        204:
+          description: Competition registration successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionRegistration
+      responses:
+        204:
+          description: CompetitionRegistration successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
@@ -1680,6 +1747,12 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query 
+          name: eventId
+          description: Filter for clubs, which registered for this event
+          required: false
+          schema:
+           type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -2356,6 +2429,14 @@ components:
 
     competitionId:
       name: competitionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    competitionRegistrationId:
+      name: competitionRegistrationId
       in: path
       required: true
       schema:
@@ -4038,11 +4119,9 @@ components:
         id:
           type: string
           format: uuid
-        participants:
-          type: array
-          items:
-            type: string
-            format: uuid
+        clubId:
+          type: string
+          format: uuid
         optionalFees:
           type: array
           items:

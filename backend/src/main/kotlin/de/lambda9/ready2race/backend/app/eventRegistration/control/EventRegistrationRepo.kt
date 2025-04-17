@@ -338,6 +338,7 @@ object EventRegistrationRepo {
             it!!.map {
                 CompetitionRegistrationTeamUpsertDto(
                     it[COMPETITION_REGISTRATION.ID]!!,
+                    null,
                     it[fees],
                     it[namedParticipants]
                 )
