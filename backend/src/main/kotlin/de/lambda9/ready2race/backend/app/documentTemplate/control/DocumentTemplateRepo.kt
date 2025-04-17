@@ -1,15 +1,23 @@
 package de.lambda9.ready2race.backend.app.documentTemplate.control
 
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.database.*
+import de.lambda9.ready2race.backend.database.generated.tables.DocumentTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_ASSIGNMENT
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.selectOne
+import de.lambda9.tailwind.jooq.JIO
+import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import java.util.UUID
 
 object DocumentTemplateRepo {
+
+    private fun DocumentTemplate.searchFields() = listOf(NAME)
+
+    fun exists(id: UUID) = DOCUMENT_TEMPLATE.exists { ID.eq(id) }
 
     fun create(record: DocumentTemplateRecord) = DOCUMENT_TEMPLATE.insertReturning(record) { ID }
 
@@ -26,6 +34,24 @@ object DocumentTemplateRepo {
                 )
             )
         )
+    }
+
+    fun count(
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(DOCUMENT_TEMPLATE) {
+            fetchCount(this, search.metaSearch(searchFields()))
+        }
+    }
+
+    fun page(
+        params: PaginationParameters<DocumentTemplateSort>,
+    ): JIO<List<DocumentTemplateRecord>> = Jooq.query {
+        with(DOCUMENT_TEMPLATE) {
+            selectFrom(this)
+                .page(params, searchFields())
+                .fetch()
+        }
     }
 
 }

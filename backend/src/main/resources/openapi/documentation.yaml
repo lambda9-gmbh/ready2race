@@ -2258,6 +2258,103 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /documentTemplate:
+    get:
+      operationId: getDocumentTemplates
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Document templates page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentTemplateDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                request:
+                  $ref: '#/components/schemas/DocumentTemplateRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /documentTemplateType/{documentType}/assignTemplate:
+    parameters:
+      - in: path
+        name: documentType
+        required: true
+        schema:
+          $ref: '#/components/schemas/DocumentType'
+    put:
+      operationId: assignDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignDocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully assigned template to document type
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -4032,3 +4129,61 @@ components:
             format: uuid
       required:
         - competitionId
+
+    DocumentType:
+      type: string
+      enum:
+        - 'INVOICE'
+        - 'REGISTRATION_REPORT'
+
+    DocumentTemplateDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        pagePaddingTop:
+          type: number
+          format: double
+        pagePaddingLeft:
+          type: number
+          format: double
+        pagePaddingRight:
+          type: number
+          format: double
+        pagePaddingBottom:
+          type: number
+          format: double
+
+    DocumentTemplateRequest:
+      type: object
+      properties:
+        pagePaddingTop:
+          type: number
+          format: double
+        pagePaddingLeft:
+          type: number
+          format: double
+        pagePaddingRight:
+          type: number
+          format: double
+        pagePaddingBottom:
+          type: number
+          format: double
+
+    AssignDocumentTemplateRequest:
+      type: object
+      required:
+        - template
+      properties:
+        template:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid

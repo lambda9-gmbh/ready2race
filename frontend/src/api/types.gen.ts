@@ -61,6 +61,11 @@ export type AssignDaysToCompetitionRequest = {
     days: Array<string>
 }
 
+export type AssignDocumentTemplateRequest = {
+    template: string
+    event?: string
+}
+
 export type AssignedEmailDto = {
     recipient: string
     sentAt?: string
@@ -172,6 +177,24 @@ export type CompetitionTemplateDto = {
 export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
 }
+
+export type DocumentTemplateDto = {
+    id: string
+    name: string
+    pagePaddingTop?: number
+    pagePaddingLeft?: number
+    pagePaddingRight?: number
+    pagePaddingBottom?: number
+}
+
+export type DocumentTemplateRequest = {
+    pagePaddingTop?: number
+    pagePaddingLeft?: number
+    pagePaddingRight?: number
+    pagePaddingBottom?: number
+}
+
+export type DocumentType = 'INVOICE' | 'REGISTRATION_REPORT'
 
 export type Duplicate = {
     value: unknown
@@ -1826,3 +1849,53 @@ export type GetParticipantRequirementsResponse = {
 }
 
 export type GetParticipantRequirementsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentTemplatesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetDocumentTemplatesResponse = {
+    data: Array<DocumentTemplateDto>
+    pagination: Pagination
+}
+
+export type GetDocumentTemplatesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddDocumentTemplateData = {
+    body: {
+        request?: DocumentTemplateRequest
+        files?: Array<Blob | File>
+    }
+}
+
+export type AddDocumentTemplateResponse = void
+
+export type AddDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignDocumentTemplateData = {
+    body: AssignDocumentTemplateRequest
+    path: {
+        documentType: DocumentType
+    }
+}
+
+export type AssignDocumentTemplateResponse = void
+
+export type AssignDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
