@@ -111,6 +111,26 @@ class PdfTest {
     }
 
     @Test
+    fun makeTemplate() {
+
+        Files.createDirectories(Paths.get("testOutputs"))
+
+        val templateDoc = PDDocument()
+        val templatePage = PDPage(PDRectangle.A4)
+        templateDoc.addPage(templatePage)
+        val c = PDPageContentStream(templateDoc, templatePage)
+
+        c.addRect(5f, 5f, templatePage.mediaBox.width - 10f, 20 * POINTS_PER_MM)
+        c.setNonStrokingColor(Color.BLUE)
+        c.fill()
+
+        c.close()
+
+        templateDoc.save("testOutputs/templatePdf.pdf")
+        templateDoc.close()
+    }
+
+    @Test
     fun makePdf() {
 
         Files.createDirectories(Paths.get("testOutputs"))

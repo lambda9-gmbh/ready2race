@@ -8,6 +8,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.DocumentTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_ASSIGNMENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_USAGE
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_TEMPLATE_USAGE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL

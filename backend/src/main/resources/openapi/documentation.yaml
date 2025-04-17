@@ -2301,6 +2301,9 @@ paths:
           multipart/form-data:
             schema:
               type: object
+              required:
+                - request
+                - files
               properties:
                 request:
                   $ref: '#/components/schemas/DocumentTemplateRequest'
@@ -2320,6 +2323,29 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /documentTemplateType:
+    get:
+      operationId: getDocumentTemplateTypes
+      responses:
+        200:
+          description: Document types successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentTypeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -4178,8 +4204,6 @@ components:
 
     AssignDocumentTemplateRequest:
       type: object
-      required:
-        - template
       properties:
         template:
           type: string
@@ -4187,3 +4211,20 @@ components:
         event:
           type: string
           format: uuid
+
+    AssignedTemplateId:
+      type: object
+      properties:
+        value:
+          type: string
+          format: uuid
+
+    DocumentTypeDto:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        assignedTemplate:
+          $ref: '#/components/schemas/AssignedTemplateId'

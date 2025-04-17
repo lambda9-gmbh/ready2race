@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 import java.util.UUID
 
 data class AssignDocumentTemplateRequest(
-    val template: UUID,
+    val template: UUID?,
     val event: UUID?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid

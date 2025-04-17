@@ -17,8 +17,37 @@ import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import java.util.*
 
 object DocumentTemplateService {
+
+    fun getTypes(
+        eventId: UUID? = null,
+    ): App<Nothing, ApiResponse.Dto<List<DocumentTypeDto>>> = KIO.comprehension {
+
+        if (eventId == null) {
+            DocumentTemplateUsageRepo.all().orDie().map { all ->
+                all.associate { rec ->
+                    rec.documentType to AssignedTemplateId(rec.template)
+                }
+            }
+        } else {
+            EventDocumentTemplateUsageRepo.getByEvent(eventId).orDie().map { byEvent ->
+                byEvent.associate { rec ->
+                    rec.documentType to AssignedTemplateId(rec.template)
+                }
+            }
+        }.map { assignments ->
+            ApiResponse.Dto(
+                DocumentType.entries.map { type ->
+                    DocumentTypeDto(
+                        type = type,
+                        assignedTemplate = assignments[type.name]
+                    )
+                }
+            )
+        }
+    }
 
     fun addTemplate(
         upload: FileUpload,
@@ -28,12 +57,12 @@ object DocumentTemplateService {
         val record = !request.toRecord(upload.fileName)
 
         val id = !DocumentTemplateRepo.create(record).orDie()
-        DocumentTemplateDataRepo.create(
+        !DocumentTemplateDataRepo.create(
             DocumentTemplateDataRecord(
                 template = id,
                 data = upload.bytes,
             )
-        )
+        ).orDie()
 
         noData
     }
@@ -43,22 +72,36 @@ object DocumentTemplateService {
         request: AssignDocumentTemplateRequest,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        !DocumentTemplateRepo.exists(request.template).orDie().onFalseFail { DocumentTemplateError.NotFound }
+        if (request.template != null) {
+            !DocumentTemplateRepo.exists(request.template).orDie().onFalseFail { DocumentTemplateError.NotFound }
 
-        if (request.event == null) {
-            !DocumentTemplateUsageRepo.upsert(
-                DocumentTemplateUsageRecord(
-                    documentType = docType.name,
-                    template = request.template,
-                )
-            ).orDie()
+            if (request.event == null) {
+                !DocumentTemplateUsageRepo.upsert(
+                    DocumentTemplateUsageRecord(
+                        documentType = docType.name,
+                        template = request.template,
+                    )
+                ).orDie()
+            } else {
+                !EventRepo.exists(request.event).orDie().onFalseFail { EventError.NotFound }
+
+                !EventDocumentTemplateUsageRepo.upsert(
+                    EventDocumentTemplateUsageRecord(
+                        documentType = docType.name,
+                        template = request.template,
+                        event = request.event,
+                    )
+                ).orDie()
+            }
+        } else if (request.event == null) {
+            !DocumentTemplateUsageRepo.delete(docType).orDie()
         } else {
             !EventRepo.exists(request.event).orDie().onFalseFail { EventError.NotFound }
 
             !EventDocumentTemplateUsageRepo.upsert(
                 EventDocumentTemplateUsageRecord(
                     documentType = docType.name,
-                    template = request.template,
+                    template = null,
                     event = request.event,
                 )
             ).orDie()

@@ -56,6 +56,32 @@
     "and": "and",
     "remove" : "Remove"
   },
+  "document": {
+    "template": {
+      "template": "Document template",
+      "templates": "Document templates",
+      "type": {
+        "INVOICE": "Invoice",
+        "REGISTRATION_REPORT": "Event registration result"
+      },
+      "none": "No template",
+      "name": "Filename",
+      "file": {
+        "choose": "Choose template",
+        "change": "Change template"
+      },
+      "pagePadding": {
+        "top": "Page margin top",
+        "left": "Page margin left",
+        "right": "Page margin right",
+        "bottom": "Page margin bottom"
+      },
+      "assignments": {
+        "global": "Globally assigned templates",
+        "event": "Event assigned templates"
+      }
+    }
+  },
   "decimal": {
     "point": "."
   },

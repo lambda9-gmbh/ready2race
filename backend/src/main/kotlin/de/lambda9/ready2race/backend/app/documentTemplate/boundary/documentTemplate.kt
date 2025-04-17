@@ -15,16 +15,7 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 
-fun Routing.documentTemplate() {
-
-    put("/documentTemplateType/{documentType}/assignTemplate") {
-        call.respondComprehension {
-            !authenticate(Privilege.UpdateEventGlobal)
-            val docType = !pathParam("documentType") { DocumentType.valueOf(it) }
-            val body = !receiveKIO(AssignDocumentTemplateRequest.example)
-            DocumentTemplateService.assignTemplate(docType, body)
-        }
-    }
+fun Route.documentTemplate() {
 
     route("/documentTemplate") {
         get {
@@ -80,6 +71,23 @@ fun Routing.documentTemplate() {
                 }
                 val req = !KIO.failOnNull(templateRequest) { RequestError.BodyMissing(DocumentTemplateRequest.example) }
                 DocumentTemplateService.addTemplate(uploads.first(), req)
+            }
+        }
+    }
+
+    route("/documentTemplateType") {
+        get {
+            call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
+                DocumentTemplateService.getTypes()
+            }
+        }
+        put("/{documentType}/assignTemplate") {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+                val docType = !pathParam("documentType") { DocumentType.valueOf(it) }
+                val body = !receiveKIO(AssignDocumentTemplateRequest.example)
+                DocumentTemplateService.assignTemplate(docType, body)
             }
         }
     }

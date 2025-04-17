@@ -266,6 +266,8 @@ import type {
     AddDocumentTemplateData,
     AddDocumentTemplateError,
     AddDocumentTemplateResponse,
+    GetDocumentTemplateTypesError,
+    GetDocumentTemplateTypesResponse,
     AssignDocumentTemplateData,
     AssignDocumentTemplateError,
     AssignDocumentTemplateResponse,
@@ -1314,6 +1316,19 @@ export const addDocumentTemplate = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/documentTemplate',
+    })
+}
+
+export const getDocumentTemplateTypes = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetDocumentTemplateTypesResponse,
+        GetDocumentTemplateTypesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplateType',
     })
 }
 

@@ -62,7 +62,7 @@ export type AssignDaysToCompetitionRequest = {
 }
 
 export type AssignDocumentTemplateRequest = {
-    template: string
+    template?: string
     event?: string
 }
 
@@ -71,6 +71,10 @@ export type AssignedEmailDto = {
     sentAt?: string
     lastErrorAt?: string
     lastError?: string
+}
+
+export type AssignedTemplateId = {
+    value?: string
 }
 
 export type BadRequestError = ApiError & {
@@ -195,6 +199,11 @@ export type DocumentTemplateRequest = {
 }
 
 export type DocumentType = 'INVOICE' | 'REGISTRATION_REPORT'
+
+export type DocumentTypeDto = {
+    type: DocumentType
+    assignedTemplate?: AssignedTemplateId
+}
 
 export type Duplicate = {
     value: unknown
@@ -1880,14 +1889,18 @@ export type GetDocumentTemplatesError = BadRequestError | ApiError | Unprocessab
 
 export type AddDocumentTemplateData = {
     body: {
-        request?: DocumentTemplateRequest
-        files?: Array<Blob | File>
+        request: DocumentTemplateRequest
+        files: Array<Blob | File>
     }
 }
 
 export type AddDocumentTemplateResponse = void
 
 export type AddDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentTemplateTypesResponse = Array<DocumentTypeDto>
+
+export type GetDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AssignDocumentTemplateData = {
     body: AssignDocumentTemplateRequest

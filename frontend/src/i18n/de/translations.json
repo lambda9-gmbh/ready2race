@@ -56,6 +56,32 @@
     "and": "und",
     "remove" : "Entfernen"
   },
+  "document": {
+    "template": {
+      "template": "Dokumentvorlage",
+      "templates": "Dokumentvorlagen",
+      "type": {
+        "INVOICE": "Rechnung",
+        "REGISTRATION_REPORT": "Meldeergebnis"
+      },
+      "none": "Keine Vorlage",
+      "name": "Name",
+      "file": {
+        "choose": "Vorlage auswählen",
+        "change": "Vorlage ändern"
+      },
+      "pagePadding": {
+        "top": "Rand oben",
+        "left": "Rand links",
+        "right": "Rand rechts",
+        "bottom": "Rand unten"
+      },
+      "assignments": {
+        "global": "Global zugewiesene Vorlagen",
+        "event": "Für Veranstaltung zugewiesene Vorlagen"
+      }
+    }
+  },
   "decimal": {
     "point": ","
   },
