@@ -106,8 +106,12 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
         },
     })
 
+    const watchTemplateFields = formContext.watch(['name', 'description'])
+    
     const handleSelectTemplate = async (template: CompetitionSetupTemplateDto) => {
         formContext.reset({
+            name: watchTemplateFields[0],
+            description: watchTemplateFields[1],
             rounds: mapCompetitionSetupTemplateDtoToForm(template).rounds,
         })
     }
