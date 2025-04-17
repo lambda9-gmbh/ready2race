@@ -65,6 +65,7 @@ const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
             field: 'registrationCount',
             headerName: t('event.competition.registrationCount'),
             type: 'number',
+            sortable: false,
             renderCell: ({formattedValue}) => <Chip label={formattedValue} />,
         },
     ]

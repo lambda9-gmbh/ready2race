@@ -21,6 +21,8 @@ import {
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {createRegistrationGlobal} from '@authorization/privileges.ts'
 
 type CompetitionRegistrationForm = {
     id?: string
@@ -36,6 +38,7 @@ const CompetitionRegistrationDialog = (
     },
 ) => {
     const {t} = useTranslation()
+    const user = useUser()
     const feedback = useFeedback()
 
     const formContext = useForm<CompetitionRegistrationForm>()
@@ -122,6 +125,7 @@ const CompetitionRegistrationDialog = (
     const defaultValues: CompetitionRegistrationForm = {
         namedParticipants: [],
         optionalFees: [],
+        clubId: user.loggedIn ? user.clubId : undefined,
     }
 
     const optionalFees = useMemo(
@@ -142,7 +146,7 @@ const CompetitionRegistrationDialog = (
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={2}>
-                {props.entity?.id == null && (
+                {props.entity?.id == null && user.checkPrivilege(createRegistrationGlobal) && (
                     <FormInputAutocomplete
                         label={t('club.club')}
                         autocompleteProps={{getOptionLabel: (o: ClubSearchDto) => o.name}}

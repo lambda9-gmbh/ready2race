@@ -16,7 +16,7 @@ fun Route.competitionRegistration() {
     route("/competitionRegistration") {
         get {
             call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
                 val competitionId = !pathParam("competitionId", uuid)
                 val params = !pagination<CompetitionRegistrationSort>()
 
@@ -26,7 +26,7 @@ fun Route.competitionRegistration() {
 
         post {
             call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
                 val competitionId = !pathParam("competitionId", uuid)
                 val eventId = !pathParam("eventId", uuid)
                 val body = !receiveKIO(CompetitionRegistrationTeamUpsertDto.example)
@@ -39,7 +39,7 @@ fun Route.competitionRegistration() {
 
             put {
                 call.respondComprehension {
-                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
                     val competitionId = !pathParam("competitionId", uuid)
                     val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
                     val body = !receiveKIO(CompetitionRegistrationTeamUpsertDto.example)
@@ -51,7 +51,7 @@ fun Route.competitionRegistration() {
             delete {
                 call.respondComprehension {
 
-                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
                     val competitionId = !pathParam("competitionId", uuid)
                     val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
 

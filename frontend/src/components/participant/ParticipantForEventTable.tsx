@@ -102,7 +102,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                 title={
                                     <Stack spacing={1} p={1}>
                                         {requirementsData?.data.map(r => (
-                                            <Stack direction={'row'} spacing={1}>
+                                            <Stack direction={'row'} spacing={1} key={r.id}>
                                                 {row.participantRequirementsChecked?.some(
                                                     c => c.id === r.id,
                                                 ) ? (

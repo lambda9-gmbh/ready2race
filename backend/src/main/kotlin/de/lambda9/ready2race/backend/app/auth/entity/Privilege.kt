@@ -17,7 +17,8 @@ sealed class Privilege(
         USER,
         EVENT,
         CLUB,
-        PARTICIPANT
+        PARTICIPANT,
+        REGISTRATION
     }
 
     enum class Scope(val level: Int) {
@@ -53,6 +54,15 @@ sealed class Privilege(
     data object UpdateParticipantOwn: Privilege(Action.UPDATE, Resource.PARTICIPANT, Scope.OWN)
     data object DeleteParticipantGlobal: Privilege(Action.DELETE, Resource.PARTICIPANT, Scope.GLOBAL)
     data object DeleteParticipantOwn: Privilege(Action.DELETE, Resource.PARTICIPANT, Scope.OWN)
+
+    data object CreateRegistrationGlobal: Privilege(Action.CREATE, Resource.REGISTRATION, Scope.GLOBAL)
+    data object CreateRegistrationOwn: Privilege(Action.CREATE, Resource.REGISTRATION, Scope.OWN)
+    data object ReadRegistrationGlobal: Privilege(Action.READ, Resource.REGISTRATION, Scope.GLOBAL)
+    data object ReadRegistrationOwn: Privilege(Action.READ, Resource.REGISTRATION, Scope.OWN)
+    data object UpdateRegistrationGlobal: Privilege(Action.UPDATE, Resource.REGISTRATION, Scope.GLOBAL)
+    data object UpdateRegistrationOwn: Privilege(Action.UPDATE, Resource.REGISTRATION, Scope.OWN)
+    data object DeleteRegistrationGlobal: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.GLOBAL)
+    data object DeleteRegistrationOwn: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.OWN)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

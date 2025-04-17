@@ -629,7 +629,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT' | 'REGISTRATION'
 
 export type RoleDto = {
     id: string

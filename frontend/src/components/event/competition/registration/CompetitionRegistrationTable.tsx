@@ -122,7 +122,7 @@ const CompetitionRegistrationTable = (
             <EntityTable
                 {...props}
                 withSearch={false}
-                parentResource={'EVENT'}
+                parentResource={'REGISTRATION'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}
                 initialSort={initialSort}
