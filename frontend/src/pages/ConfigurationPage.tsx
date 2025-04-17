@@ -1,8 +1,11 @@
 import DocumentTypeTable from '@components/event/document/type/DocumentTypeTable.tsx'
 import DocumentTypeDialog from '@components/event/document/type/DocumentTypeDialog.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
-import {EventDocumentTypeDto} from '@api/types.gen.ts'
+import {EventDocumentTypeDto, ParticipantRequirementDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
+import ParticipantRequirementTable from '@components/event/participantRequirement/ParticipantRequirementTable.tsx'
+import ParticipantRequirementDialog from '@components/event/participantRequirement/ParticipantRequirementDialog.tsx'
+import {Stack} from '@mui/material'
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -10,11 +13,24 @@ const ConfigurationPage = () => {
         t('event.document.type.documentType'),
     )
 
+    const participantRequirementAdministrationProps =
+        useEntityAdministration<ParticipantRequirementDto>(
+            t('participantRequirement.participantRequirement'),
+        )
+
     return (
-        <>
-            <DocumentTypeTable {...documentTypeAdministrationProps.table} title={t('event.document.type.documentTypes')} />
+        <Stack spacing={4}>
+            <DocumentTypeTable
+                {...documentTypeAdministrationProps.table}
+                title={t('event.document.type.documentTypes')}
+            />
             <DocumentTypeDialog {...documentTypeAdministrationProps.dialog} />
-        </>
+            <ParticipantRequirementTable
+                {...participantRequirementAdministrationProps.table}
+                title={t('participantRequirement.participantRequirements')}
+            />
+            <ParticipantRequirementDialog {...participantRequirementAdministrationProps.dialog} />
+        </Stack>
     )
 }
 

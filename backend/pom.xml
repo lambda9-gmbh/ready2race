@@ -3,9 +3,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.lambda9.ready2race</groupId>
-    <artifactId>backend</artifactId>
+    <artifactId>ready2race-api</artifactId>
     <version>0.0.1</version>
-    <name>Ready2Race Backend</name>
+    <name>Ready2Race API</name>
     <description>REST-API Backend for Ready2Race</description>
 
     <properties>

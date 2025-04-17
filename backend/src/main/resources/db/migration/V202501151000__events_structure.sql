@@ -6,6 +6,7 @@ create table event
     name                        text      not null,
     description                 text,
     location                    text,
+    published                   boolean   not null default false,
     registration_available_from timestamp,
     registration_available_to   timestamp,
     invoice_prefix              text,
@@ -80,11 +81,11 @@ create table competition_properties
     id                   uuid primary key,
     competition          uuid references competition on delete cascade,
     competition_template uuid references competition_template on delete cascade,
-    identifier           text    not null,
-    name                 text    not null,
+    identifier           text not null,
+    name                 text not null,
     short_name           text,
     description          text,
-    competition_category uuid    references competition_category on delete set null,
+    competition_category uuid references competition_category on delete set null,
     constraint chk_either_competition_or_competition_template check (
         (competition is null and competition_template is not null) or
         (competition is not null and competition_template is null) )

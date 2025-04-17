@@ -9,7 +9,7 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
 import {Link} from '@tanstack/react-router'
 import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
-import {NewPassword, PasswortFormPart} from '@components/form/NewPassword.tsx'
+import {NewPassword, PasswordFormPart} from '@components/form/NewPassword.tsx'
 import {CaptchaDto, RegisterRequest} from '@api/types.gen.ts'
 import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
@@ -19,8 +19,9 @@ type Form = {
     email: string
     firstname: string
     lastname: string
+    clubname: string
     captcha: number
-} & PasswortFormPart
+} & PasswordFormPart
 
 const RegistrationPage = () => {
     const {t} = useTranslation()
@@ -34,6 +35,7 @@ const RegistrationPage = () => {
         email: '',
         firstname: '',
         lastname: '',
+        clubname: '',
         password: '',
         confirmPassword: '',
         captcha: 0,
@@ -110,6 +112,12 @@ const RegistrationPage = () => {
                                 required
                                 sx={{flex: 1}}
                             />
+                            <FormInputText
+                                name={'clubname'}
+                                label={t('club.club')}
+                                required
+                                sx={{flex: 1}}
+                            />
                             <FormInputCaptcha captchaProps={captcha} />
                             <SubmitButton
                                 label={t('user.registration.register')}
@@ -149,6 +157,7 @@ function mapFormToRequest(formData: Form): RegisterRequest {
         password: formData.password,
         firstname: formData.firstname,
         lastname: formData.lastname,
+        clubname: formData.clubname,
         language: languageMapping[i18nLanguage()],
         callbackUrl: location.origin + location.pathname + '/',
     }

@@ -5,23 +5,29 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
+import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
-import de.lambda9.ready2race.backend.database.USER_ROLE
-import de.lambda9.ready2race.backend.database.generated.tables.records.*
-import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.ADMIN_ROLE
+import de.lambda9.ready2race.backend.database.CLUB_REPRESENTATIVE_ROLE
+import de.lambda9.ready2race.backend.database.SYSTEM_USER
+import de.lambda9.ready2race.backend.database.USER_ROLE
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.time.Duration.Companion.days
 
@@ -93,15 +99,28 @@ object AppUserService {
         val record = !request.toRecord(inviter.id!!, invitationLifeTime)
         val id = !AppUserInvitationRepo.create(record).orDie()
 
-        !RoleService.checkAssignable(request.roles)
-        !AppUserInvitationHasRoleRepo.create(
-            request.roles.map {
-                AppUserInvitationHasRoleRecord(
-                    appUserInvitation = id,
-                    role = it
-                )
+        if (request.admin == true) {
+            if (inviter.id == SYSTEM_USER) {
+                !AppUserInvitationHasRoleRepo.create(
+                    AppUserInvitationHasRoleRecord(
+                        appUserInvitation = id,
+                        role = ADMIN_ROLE,
+                    )
+                ).orDie()
+            } else {
+                return@comprehension KIO.fail(AuthError.SystemUserOnly)
             }
-        ).orDie()
+        } else {
+            !RoleService.checkAssignable(request.roles)
+            !AppUserInvitationHasRoleRepo.create(
+                request.roles.map {
+                    AppUserInvitationHasRoleRecord(
+                        appUserInvitation = id,
+                        role = it
+                    )
+                }
+            ).orDie()
+        }
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.USER_INVITATION,
@@ -142,7 +161,9 @@ object AppUserService {
 
         val roles = invitation.roles!!.map { it!!.id!! }
 
-        !RoleService.checkAssignable(roles)
+        if (invitation.createdBy?.id != SYSTEM_USER) {
+            !RoleService.checkAssignable(roles)
+        }
         !AppUserHasRoleRepo.create(
             roles.map {
                 AppUserHasRoleRecord(
@@ -201,7 +222,22 @@ object AppUserService {
         val registration = !AppUserRegistrationRepo.consume(request.token).orDie()
             .onNullFail { AppUserError.RegistrationNotFound }
 
-        val record = !registration.toAppUser()
+        val clubId = if (registration.clubname != null) {
+            !ClubRepo.create(
+                ClubRecord(
+                    UUID.randomUUID(),
+                    registration.clubname!!,
+                    LocalDateTime.now(),
+                    SYSTEM_USER,
+                    LocalDateTime.now(),
+                    SYSTEM_USER
+                )
+            ).orDie()
+        } else {
+            null
+        }
+
+        val record = !registration.toAppUser(clubId)
         val userId = !createUser(record)
 
         KIO.ok(
@@ -271,6 +307,15 @@ object AppUserService {
                 role = USER_ROLE,
             )
         ).orDie()
+
+        if (record.club != null) {
+            !AppUserHasRoleRepo.create(
+                AppUserHasRoleRecord(
+                    appUser = userId,
+                    role = CLUB_REPRESENTATIVE_ROLE,
+                )
+            ).orDie()
+        }
 
         KIO.ok(userId)
     }

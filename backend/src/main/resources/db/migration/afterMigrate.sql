@@ -11,7 +11,12 @@ drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
 drop view if exists role_with_privileges;
+drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
+drop view if exists fee_for_competition;
+drop view if exists participant_requirement_for_event;
+drop view if exists participant_id_for_event;
+drop view if exists participant_for_event;
 
 create view app_user_name as
 select au.id,
@@ -19,16 +24,24 @@ select au.id,
        au.lastname
 from app_user au;
 
-create view role_with_privileges as
+create view every_role_with_privileges as
 select r.id,
        r.name,
        r.description,
+       r.static,
        coalesce(array_agg(p) filter ( where p.id is not null ), '{}') as privileges
 from role r
          left join role_has_privilege rhp on r.id = rhp.role
          left join privilege p on rhp.privilege = p.id
-where r.static is false
 group by r.id;
+
+create view role_with_privileges as
+select r.id,
+       r.name,
+       r.description,
+       r.privileges
+from every_role_with_privileges r
+where r.static is false;
 
 create view app_user_with_roles as
 select au.id,
@@ -62,9 +75,11 @@ select cphnp.competition_properties,
        cphnp.count_mixed,
        np.id,
        np.name,
-       np.description
+       np.description,
+       cp.competition as competition_id
 from competition_properties_has_named_participant cphnp
-         left join named_participant np on cphnp.named_participant = np.id;
+         join named_participant np on cphnp.named_participant = np.id
+         join competition_properties cp on cphnp.competition_properties = cp.id;
 
 create view fee_for_competition_properties as
 select cphf.competition_properties,
@@ -76,6 +91,17 @@ select cphf.competition_properties,
 from competition_properties_has_fee cphf
          left join fee f on cphf.fee = f.id;
 
+create view fee_for_competition as
+select f.id,
+       f.name,
+       f.description,
+       cphf.amount,
+       cphf.required,
+       cp.competition as competition_id
+from competition_properties_has_fee cphf
+         join fee f on cphf.fee = f.id
+         join competition_properties cp on cphf.competition_properties = cp.id;
+
 
 create view competition_view as
 select c.id,
@@ -85,6 +111,7 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
+       nps.total_count                        as total_count,
        cc.id                                  as category_id,
        cc.name                                as category_name,
        cc.description                         as category_description,
@@ -94,6 +121,12 @@ from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
          left join (select npfcp.competition_properties,
+                           (
+                               coalesce(sum(npfcp.count_males), 0) +
+                               coalesce(sum(npfcp.count_females), 0) +
+                               coalesce(sum(npfcp.count_non_binary), 0) +
+                               coalesce(sum(npfcp.count_mixed), 0)
+                               )                                                    as total_count,
                            array_agg(npfcp)
                            filter (where npfcp.competition_properties is not null ) as named_participants
                     from named_participant_for_competition_properties npfcp
@@ -146,7 +179,7 @@ from app_user_invitation aui
          left join app_user_invitation_to_email auite on aui.id = auite.app_user_invitation
          left join email e on auite.email = e.id
          left join app_user_invitation_has_role auihr on aui.id = auihr.app_user_invitation
-         left join role_with_privileges rwp on auihr.role = rwp.id
+         left join every_role_with_privileges rwp on auihr.role = rwp.id
          left join app_user_name cb on aui.created_by = cb.id
 group by aui.id, e, cb;
 
@@ -183,3 +216,42 @@ select ed.id,
        edd.data
 from event_document ed
          join event_document_data edd on ed.id = edd.event_document;
+
+create view participant_requirement_for_event as
+select pr.*,
+       e.id                                                        as event,
+       (case when ehpr.event is not null then true else false end) as active
+from participant_requirement pr
+         cross join event e
+         left join event_has_participant_requirement ehpr on pr.id = ehpr.participant_requirement and e.id = ehpr.event;
+
+create view participant_id_for_event as
+select er.event                                                              as event_id,
+       p.id                                                                  as participant_id
+from event_registration er
+         join competition_registration cr on er.id = cr.event_registration
+         join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
+         join participant p on crnp.participant = p.id
+group by er.event, p.id;
+
+create view participant_for_event as
+select er.event                                                              as event_id,
+       c.id                                                                  as club_id,
+       c.name                                                                as club_name,
+       p.id                                                                  as id,
+       p.firstname,
+       p.lastname,
+       p.year,
+       p.gender,
+       p.external,
+       p.external_club_name,
+       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
+from event_registration er
+         join club c on er.club = c.id
+         join competition_registration cr on er.id = cr.event_registration
+         join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
+         join participant p on crnp.participant = p.id
+         left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
+         left join participant_requirement pr on phrfe.participant_requirement = pr.id
+group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name
+order by c.name, p.firstname, p.lastname;

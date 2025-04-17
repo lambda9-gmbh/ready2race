@@ -1,5 +1,5 @@
 import {Outlet} from '@tanstack/react-router'
-import {AppBar, Box, Container, IconButton, Paper, Toolbar} from '@mui/material'
+import {AppBar, Box, Container, Divider, IconButton, Paper, Toolbar} from '@mui/material'
 import {useState} from 'react'
 import {
     Dashboard,
@@ -10,16 +10,24 @@ import {
     People,
     Settings,
     Work,
+    Workspaces,
 } from '@mui/icons-material'
 import Sidebar from '@components/sidebar/Sidebar.tsx'
 import SidebarItem from '@components/sidebar/SidebarItem.tsx'
 import UserWidget from '@components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
-import {readUserGlobal, updateEventGlobal} from '@authorization/privileges.ts'
+import {
+    readClubGlobal,
+    readClubOwn, readEventOwn,
+    readUserGlobal,
+    updateEventGlobal,
+} from '@authorization/privileges.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const RootLayout = () => {
     const {t} = useTranslation()
     const [drawerExpanded, setDrawerExpanded] = useState(false)
+    const user = useUser()
 
     return (
         <Container maxWidth={'xl'}>
@@ -48,6 +56,39 @@ const RootLayout = () => {
                                 authenticatedOnly
                                 to={'/dashboard'}
                             />
+                            {user.loggedIn && user.clubId && (
+                                <SidebarItem
+                                    text={t('navigation.titles.myClubs')}
+                                    icon={<Workspaces />}
+                                    authenticatedOnly
+                                    privilege={readClubOwn}
+                                    to={'/club/$clubId'}
+                                    params={{clubId: user.clubId}}
+                                />
+                            )}
+                            <SidebarItem
+                                text={t('navigation.titles.clubs')}
+                                icon={<Workspaces />}
+                                authenticatedOnly
+                                privilege={readClubGlobal}
+                                to={'/club'}
+                            />
+                            <SidebarItem
+                                text={t('navigation.titles.events')}
+                                icon={<Event />}
+                                // TODO remove authenticatedOnly so everyone can see published events?
+                                authenticatedOnly
+                                privilege={readEventOwn}
+                                to={'/event'}
+                            />
+                            <SidebarItem
+                                text={t('navigation.titles.competitionConfig')}
+                                icon={<EditCalendar />} //todo: better icon
+                                authenticatedOnly
+                                privilege={updateEventGlobal}
+                                to={'/competitionConfig'}
+                            />
+                            <Divider />
                             <SidebarItem
                                 text={t('navigation.titles.users')}
                                 icon={<People />}
@@ -61,20 +102,6 @@ const RootLayout = () => {
                                 authenticatedOnly
                                 privilege={readUserGlobal}
                                 to={'/role'}
-                            />
-                            <SidebarItem
-                                text={t('navigation.titles.events')}
-                                icon={<Event />}
-                                authenticatedOnly
-                                privilege={updateEventGlobal}
-                                to={'/event'}
-                            />
-                            <SidebarItem
-                                text={t('navigation.titles.competitionConfig')}
-                                icon={<EditCalendar />} //todo: better icon
-                                authenticatedOnly
-                                privilege={updateEventGlobal}
-                                to={'/competitionConfig'}
                             />
                             <SidebarItem
                                 text={t('navigation.titles.config')}

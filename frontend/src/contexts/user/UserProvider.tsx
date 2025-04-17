@@ -10,7 +10,9 @@ type UserData = LoginDto
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [userData, setUserData] = useState<UserData>()
+    const [ready, setReady] = useState(false)
     const prevLoggedIn = useRef(false)
+    const autoLogin = useRef(false)
     const loggedIn = Boolean(userData)
 
     const navigate = router.navigate
@@ -28,25 +30,37 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }, [client])
 
     useEffect(() => {
-        if (prevLoggedIn.current !== loggedIn) {
+        if (!autoLogin.current && prevLoggedIn.current !== loggedIn) {
             prevLoggedIn.current = loggedIn
-            const redirect = router.state.resolvedLocation.search.redirect
-            navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+            if (ready) {
+                const redirect = router.state.resolvedLocation.search.redirect
+                navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+            } else {
+                setReady(true)
+            }
         }
+        autoLogin.current = false
     }, [userData])
 
     //TODO: error-handling
     useFetch(signal => checkUserLogin({signal}), {
         onResponse: ({data, response}) => {
             if (response.status === 200 && data !== undefined) {
+                autoLogin.current = true
                 login(data)
+            } else {
+                setReady(true)
             }
         },
     })
 
-    const login = (data: LoginDto) => setUserData({...data})
+    const login = (data: LoginDto) => {
+        autoLogin.current = false
+        setUserData({...data})
+    }
 
     const logout = async () => {
+        autoLogin.current = false
         const {error} = await userLogout()
         if (error === undefined) {
             setUserData(undefined)
@@ -59,6 +73,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         userValue = {
             loggedIn: false,
             login,
+            checkPrivilege: () => false
         } satisfies AnonymousUser
     } else {
         const checkPrivilege = (privilege: Privilege): boolean =>
@@ -70,11 +85,20 @@ const UserProvider = ({children}: PropsWithChildren) => {
             )
 
         const getPrivilegeScope = (action: Action, resource: Resource): Scope | undefined =>
-            userData.privileges.find(p => p.action === action && p.resource === resource)?.scope
+            userData.privileges
+                .filter(p => p.action === action && p.resource === resource)
+                .reduce<Scope | undefined>((scope, privilege) => {
+                    if (scope === undefined) {
+                        return privilege.scope
+                    } else {
+                        return scopeLevel[scope] >= scopeLevel[privilege.scope] ? scope : privilege.scope
+                    }
+                }, undefined)
 
         userValue = {
             loggedIn: true,
             id: userData.id,
+            clubId: userData.clubId,
             login,
             logout,
             checkPrivilege,
@@ -82,7 +106,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         } satisfies AuthenticatedUser
     }
 
-    return <UserContext.Provider value={userValue}>{children}</UserContext.Provider>
+    return <UserContext.Provider value={userValue}>{ready && children}</UserContext.Provider>
 }
 
 export default UserProvider

@@ -58,7 +58,7 @@ const CompetitionSetupTemplateDialog = (
                 onOpen={onOpen}
                 addAction={addAction}
                 editAction={editAction}
-                wide>
+                maxWidth={'xl'}>
                 <Stack spacing={4}>
                     <FormInputText
                         name="name"

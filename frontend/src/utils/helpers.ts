@@ -1,6 +1,6 @@
 import {EmailLanguage, Scope} from '@api/types.gen.ts'
-import {fallbackLng, isLanguage, Language} from "@i18n/config.ts";
-import i18next from "i18next";
+import {fallbackLng, isLanguage, Language} from '@i18n/config.ts'
+import i18next from 'i18next'
 
 export const getRootElement = () => document.getElementById('ready2race-root')!
 
@@ -28,4 +28,21 @@ export const languageMapping: Record<Language, EmailLanguage> = {
     en: 'EN',
 }
 
-export const i18nLanguage = (): Language => isLanguage(i18next.language) ? i18next.language : fallbackLng
+export const i18nLanguage = (): Language =>
+    isLanguage(i18next.language) ? i18next.language : fallbackLng
+
+export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
+    const map = new Map()
+    list.forEach(item => {
+        const key = keyGetter(item)
+        const collection = map.get(key)
+        if (!collection) {
+            map.set(key, [item])
+        } else {
+            collection.push(item)
+        }
+    })
+    return map
+}
+
+export const adminId = '00000000-0000-0000-0000-000000000000'

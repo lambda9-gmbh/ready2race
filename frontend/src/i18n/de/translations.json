@@ -7,6 +7,7 @@
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "selected" : "Ausgewählt",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -36,7 +37,8 @@
       },
       "seconds": "Sekunden",
       "optional": "Optional",
-      "required": "Bitte füllen Sie dieses Feld aus."
+      "required": "Bitte füllen Sie dieses Feld aus.",
+      "selectFile" : "Datei auswählen"
     },
     "load": {
       "error": {
@@ -50,7 +52,10 @@
     "ok": "Ok",
     "save": "Speichern",
     "search": "Suchen",
-    "and": "und"
+    "back": "Zurück",
+    "next": "Weiter",
+    "and": "und",
+    "remove" : "Entfernen"
   },
   "decimal": {
     "point": ","
@@ -66,11 +71,20 @@
       "success": "{{entity}} gelöscht",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
     },
+    "description": "Beschreibung",
+    "createdAt": "Erstellt am",
+    "updatedAt": "Letzte Änderung",
     "edit": {
       "action": "{{entity}} bearbeiten",
       "success": "{{entity}} aktualisiert",
       "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
-    }
+    },
+    "optional": "Optional",
+    "name": "Name",
+    "firstname": "Vorname",
+    "lastname": "Nachname",
+    "gender": "Geschlecht",
+    "phone": "Telefon"
   },
   "navigation": {
     "titles": {
@@ -79,7 +93,18 @@
       "competitionConfig": "Wettkampf Einstellungen",
       "roles": "Rollen",
       "users": "Benutzer",
-      "config": "Konfigurationen"
+      "config": "Konfigurationen",
+      "clubs": "Vereine",
+      "myClub": "Mein Verein"
+    }
+  },
+  "club": {
+    "club": "Verein",
+    "participant": {
+      "title": "Teilnehmer",
+      "year": "Geburtsjahr",
+      "external": "Extern",
+      "externalClub": "Externer Verein"
     }
   },
   "event": {
@@ -87,6 +112,7 @@
     "events": "Veranstaltungen",
     "name": "Name",
     "description": "Beschreibung",
+    "registerNow": "Jetzt anmelden",
     "invoice": {
       "prefix": "Rechnungspräfix"
     },
@@ -95,6 +121,7 @@
       "from": "Anmeldezeitraum von",
       "to": "Anmeldezeitraum bis"
     },
+    "published": "Veröffentlicht",
     "eventDay": {
       "eventDay": "Tag",
       "eventDays": "Tage",
@@ -239,6 +266,23 @@
         }
       }
     },
+    "participantRequirement": {
+      "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
+      "approved" : "Überprüfte Bedingungen",
+      "checkUpload": "Bedingungen abgleichen",
+      "checkManually": "\"{{name}}\" überprüfen",
+      "file" : "CSV-Datei",
+      "charset" : "Charset",
+      "separator": "Trennzeichen",
+      "firstnameColName":"Spalte mit Vornamen",
+      "lastnameColName": "Spalte mit Nachnamen",
+      "yearsColName":"Spalte mit Jahrgang",
+      "clubColName": "Spalte mit Vereinsnamen",
+      "requirementColName":"Spalte mit Teilnahmebedingung",
+      "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
+      "participantsOpen" : "Offen",
+      "participantsApproved" : "Überprüft"
+    },
     "assign": {
       "save": {
         "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
@@ -269,7 +313,41 @@
       "error": {
         "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
       }
+    },
+    "registration": {
+      "addParticipant": "Teilnehmer hinzufügen",
+      "singleCompetition": "Einzelwettkampf",
+      "teamCompetition": "Teamwettkampf",
+      "males": "Männer",
+      "females": "Frauen",
+      "nonBinary": "Nichtbinäre Personen",
+      "mixed": "Beliebig",
+      "summary": "Zusammenfassung",
+      "schedule": "Programm",
+      "message": "Nachricht",
+      "optionalFee": "Optional",
+      "totalFees": "Meldegebühr",
+      "acceptDocuments" : "Ich akzeptiere Folgendes:",
+      "infoDocuments" : "Weitere Informationen",
+      "finish": "Anmeldung abschicken",
+      "success": {
+        "title": "Erfolgreich angemeldet!",
+        "subtitle": "Du bekommst eine Bestätigung per Mail."
+      }
+    },
+    "tabs": {
+      "general" : "Allgemein",
+      "participants" : "Teilnehmer",
+      "settings": "Einstellungen"
     }
+  },
+  "participantRequirement": {
+    "participantRequirement": "Teilnahmebedingung",
+    "participantRequirements": "Teilnahmebedingungen",
+    "active" : "Aktiv",
+    "activate" : "Für Veranstaltung aktivieren",
+    "remove" : "Von Veranstaltung entfernen",
+    "confirmRemove" : "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
   },
   "user": {
     "user": "Benutzer",
@@ -319,7 +397,14 @@
     },
     "invitation": {
       "invitation": "Einladung",
-      "pendingInvitations": "Ausstehende Einladungen"
+      "pendingInvitations": "Ausstehende Einladungen",
+      "accept": "Einladung annehmen",
+      "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
+      "submitPassword": "Einladung annehmen",
+      "userCreated": {
+        "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
+        "toLogin": "Zum Login"
+      }
     },
     "registration": {
       "register": "Registrieren",

@@ -7,6 +7,7 @@
     },
     "delete": "Delete",
     "edit": "Edit",
+    "selected": "Selected",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
@@ -36,7 +37,8 @@
       },
       "seconds": "Seconds",
       "optional": "Optional",
-      "required": "Please fill in this field."
+      "required": "Please fill in this field.",
+      "selectFile" : "Select file"
     },
     "load": {
       "error": {
@@ -50,7 +52,10 @@
     "ok": "Ok",
     "save": "Save",
     "search": "Search",
-    "and": "and"
+    "back": "Back",
+    "next": "Next",
+    "and": "and",
+    "remove" : "Remove"
   },
   "decimal": {
     "point": "."
@@ -66,11 +71,20 @@
       "success": "{{entity}} deleted",
       "error": "An error has occurred when deleting {{entity}}"
     },
+    "description": "Description",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
     "edit": {
       "action": "Edit {{entity}}",
       "success": "{{entity}} updated",
       "error": "An error has occurred when updating {{entity}}"
-    }
+    },
+    "optional": "Optional",
+    "name": "Name",
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "gender": "Gender",
+    "phone": "Phone"
   },
   "navigation": {
     "titles": {
@@ -79,7 +93,18 @@
       "competitionConfig": "Competition Settings",
       "roles": "Roles",
       "users": "Users",
-      "config": "Configurations"
+      "config": "Configurations",
+      "clubs": "Clubs",
+      "myClubs": "My Club"
+    }
+  },
+  "club": {
+    "club": "Club",
+    "participant": {
+      "title": "Participant",
+      "year": "Year of birth",
+      "external": "External",
+      "externalClub": "External club"
     }
   },
   "event": {
@@ -87,6 +112,7 @@
     "events": "Events",
     "name": "Name",
     "description": "Description",
+    "registerNow": "Register now",
     "invoice": {
       "prefix": "Invoice prefix"
     },
@@ -95,6 +121,7 @@
       "from": "Registration period start",
       "to": "Registration period end"
     },
+    "published": "Published",
     "eventDay": {
       "eventDay": "Day",
       "eventDays": "Days",
@@ -239,6 +266,23 @@
         }
       }
     },
+    "participantRequirement": {
+      "info": "If no column to check for the requirement is provided, all matching participants from the file will be approved.",
+      "approved" : "Approved requirements",
+      "checkUpload": "Check requirements",
+      "checkManually": "Manually check '{{name}}'",
+      "file": "CSV-File",
+      "charset" : "Charset",
+      "separator": "Separator",
+      "firstnameColName":"Column to check for firstname",
+      "lastnameColName": "Column to check for lastname",
+      "yearsColName":"Column to check year of birth",
+      "clubColName": "Column to check for name of club",
+      "requirementColName":"Column to check for requirement",
+      "requirementIsValidValue": "Accepted value in requirement column",
+      "participantsOpen" : "Open",
+      "participantsApproved" : "Approved"
+    },
     "assign": {
       "save": {
         "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
@@ -260,7 +304,7 @@
         }
       },
       "add": {
-        "add": "Dokument hinzufügen"
+        "add": "Add document"
       },
       "download": {
         "download": "Download",
@@ -269,7 +313,41 @@
       "error": {
         "emptyList": "Please add one or more documents"
       }
+    },
+    "registration": {
+      "addParticipant": "Add Participant",
+      "singleCompetition": "Single Competition",
+      "teamCompetition": "Team Competition",
+      "males": "Men",
+      "females": "Women",
+      "nonBinary": "Non-binary",
+      "mixed": "Any",
+      "summary": "Summary",
+      "schedule": "Schedule",
+      "message": "Message",
+      "optionalFee": "Optional",
+      "totalFees": "Registration Fee",
+      "acceptDocuments" : "I accept the following:",
+      "infoDocuments" : "Additional info",
+      "finish": "Submit registration",
+      "success": {
+        "title": "Registration successful!",
+        "subtitle": "You will receive a confirmation by e-mail."
+      }
+    },
+    "tabs": {
+      "general" : "General",
+      "participants" : "Participants",
+      "settings": "Settings"
     }
+  },
+  "participantRequirement": {
+    "participantRequirement": "Participant requirement",
+    "participantRequirements": "Participant requirements",
+    "active" : "Active",
+    "activate" : "Activate for event",
+    "remove" : "Remove from event",
+    "confirmRemove" : "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
   },
   "user": {
     "user": "User",
@@ -319,7 +397,14 @@
     },
     "invitation": {
       "invitation": "Invitation",
-      "pendingInvitations": "Pending invitations"
+      "pendingInvitations": "Pending invitations",
+      "accept": "Accept invitation",
+      "hint": "Please enter a password for the user account that will be created.",
+      "submitPassword": "Accept invitation",
+      "userCreated": {
+        "text": "Your account has been successfully created and you can log in now.",
+        "toLogin": "Goto Login"
+      }
     },
     "registration": {
       "register": "Register",
