@@ -58,17 +58,20 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 field: 'clubName',
                 headerName: t('club.club'),
                 flex: 1,
+                minWidth: 100,
             },
             {
                 field: 'firstname',
                 headerName: t('entity.firstname'),
-                minWidth: 150,
+                maxWidth: 180,
+                minWidth: 100,
                 flex: 1,
             },
             {
                 field: 'lastname',
                 headerName: t('entity.lastname'),
-                minWidth: 150,
+                maxWidth: 180,
+                minWidth: 100,
                 flex: 1,
             },
             {
@@ -88,7 +91,9 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
             {
                 field: 'participantRequirementsChecked',
                 headerName: t('event.participantRequirement.approved'),
-                minWidth: 150,
+                maxWidth: 180,
+                minWidth: 100,
+                flex:1,
                 sortable: false,
                 renderCell: ({row}) =>
                     (requirementsData?.data.length ?? 0) > 0 ? (

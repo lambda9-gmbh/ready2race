@@ -151,19 +151,19 @@
         "mixed": "Anzahl Beliebige"
       },
       "namedParticipant": {
-        "namedParticipant": "Spezifizierter Teilnehmer",
-        "namedParticipants": "Spezifizierte Teilnehmer",
+        "namedParticipant": "Teilnehmertyp",
+        "namedParticipants": "Teilnehmertypen",
         "name": "Name",
         "description": "Beschreibung",
         "role": "Rolle",
-        "add": "Spezifischen Teilnehmer hinzufügen",
+        "add": "Teilnehmertyp hinzufügen",
         "error": {
-          "emptyList": "Bitte fügen Sie mindestens einen spezifischen Teilnehmer hinzu",
+          "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
           "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
           "duplicates": {
             "one": "Die Rolle {{label}} wird mehrfach verwendet.",
             "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
-            "message": "Bitte wählen Sie für jeden spezifischen Teilnehmer eine einzigartige Rolle aus."
+            "message": "Bitte wählen Sie für jeden Teilnehmertyp eine einzigartige Rolle aus."
           }
         }
       },
@@ -181,8 +181,8 @@
         }
       },
       "template": {
-        "template": "Vorlage",
-        "templates": "Vorlagen",
+        "template": "Wettkampf Vorlage",
+        "templates": "Wettkampf Vorlagen",
         "name": "Name",
         "description": "Beschreibung"
       },

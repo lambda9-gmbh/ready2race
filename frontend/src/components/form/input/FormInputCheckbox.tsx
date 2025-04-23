@@ -12,7 +12,7 @@ export const FormInputCheckbox = (props: BaseFormInputProps) => {
     return (
         <FormInputLabel
             label={props.label}
-            required={props.required === true || props.rules?.required !== undefined}
+            required={false}
             horizontal={props.horizontal}
             reverse={props.reverse}>
             <CheckboxElement
