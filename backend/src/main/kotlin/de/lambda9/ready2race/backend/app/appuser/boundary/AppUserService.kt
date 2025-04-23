@@ -46,6 +46,18 @@ object AppUserService {
         }
     }
 
+    fun getAllByClubId(
+        clubId: UUID,
+    ): App<AppUserError, ApiResponse.ListDto<AppUserDto>> = KIO.comprehension {
+        val list = !AppUserRepo.getAllByClubIdWithRoles(clubId).orDie()
+
+        list.traverse { it.appUserDto() }.map {
+            ApiResponse.ListDto(
+                data = it
+            )
+        }
+    }
+
     fun page(
         params: PaginationParameters<AppUserWithRolesSort>,
     ): App<Nothing, ApiResponse.Page<AppUserDto, AppUserWithRolesSort>> = KIO.comprehension {

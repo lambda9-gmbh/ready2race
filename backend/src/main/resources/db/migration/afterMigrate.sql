@@ -6,6 +6,7 @@ drop view if exists app_user_registration_view;
 drop view if exists app_user_invitation_with_roles;
 drop view if exists competition_template_view;
 drop view if exists competition_view;
+drop view if exists competition_for_club_view;
 drop view if exists fee_for_competition_properties;
 drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
@@ -40,14 +41,14 @@ select r.id,
        r.name,
        r.description,
        r.privileges
-from every_role_with_privileges r
-where r.static is false;
+from every_role_with_privileges r;
 
 create view app_user_with_roles as
 select au.id,
        au.firstname,
        au.lastname,
        au.email,
+       au.club,
        coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
@@ -79,7 +80,8 @@ select cphnp.competition_properties,
        cp.competition as competition_id
 from competition_properties_has_named_participant cphnp
          join named_participant np on cphnp.named_participant = np.id
-         join competition_properties cp on cphnp.competition_properties = cp.id;
+         join competition_properties cp on cphnp.competition_properties = cp.id
+order by np.name, np.id;
 
 create view fee_for_competition_properties as
 select cphf.competition_properties,
@@ -102,7 +104,6 @@ from competition_properties_has_fee cphf
          join fee f on cphf.fee = f.id
          join competition_properties cp on cphf.competition_properties = cp.id;
 
-
 create view competition_view as
 select c.id,
        c.event,
@@ -116,7 +117,8 @@ select c.id,
        cc.name                                as category_name,
        cc.description                         as category_description,
        coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees
+       coalesce(fs.fees, '{}')                as fees,
+       count(distinct cr.id)                           as registrations_count
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -135,8 +137,50 @@ from competition c
                            array_agg(ffcp)
                            filter (where ffcp.competition_properties is not null ) as fees
                     from fee_for_competition_properties ffcp
-                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
+         left join competition_registration cr on c.id = cr.competition
+group by c.id, c.event, c.template, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+         cc.description, nps.total_count, nps.named_participants, fs.fees
+;
 
+create view competition_for_club_view as
+select c.id,
+       c.event,
+       c.template,
+       cp.identifier,
+       cp.name,
+       cp.short_name,
+       cp.description,
+       nps.total_count                        as total_count,
+       cc.id                                  as category_id,
+       cc.name                                as category_name,
+       cc.description                         as category_description,
+       coalesce(nps.named_participants, '{}') as named_participants,
+       coalesce(fs.fees, '{}')                as fees,
+       count(distinct cr.id)                           as registrations_count,
+       cr.club                                as club
+from competition c
+         left join competition_properties cp on c.id = cp.competition
+         left join competition_category cc on cp.competition_category = cc.id
+         left join (select npfcp.competition_properties,
+                           (
+                               coalesce(sum(npfcp.count_males), 0) +
+                               coalesce(sum(npfcp.count_females), 0) +
+                               coalesce(sum(npfcp.count_non_binary), 0) +
+                               coalesce(sum(npfcp.count_mixed), 0)
+                               )                                                    as total_count,
+                           array_agg(npfcp)
+                           filter (where npfcp.competition_properties is not null ) as named_participants
+                    from named_participant_for_competition_properties npfcp
+                    group by npfcp.competition_properties) nps on cp.id = nps.competition_properties
+         left join (select ffcp.competition_properties,
+                           array_agg(ffcp)
+                           filter (where ffcp.competition_properties is not null ) as fees
+                    from fee_for_competition_properties ffcp
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
+         left join competition_registration cr on c.id = cr.competition
+group by c.id, c.event, c.template, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+         cc.description, nps.total_count, nps.named_participants, fs.fees, cr.club;
 
 create view competition_template_view as
 select ct.id,
@@ -226,8 +270,8 @@ from participant_requirement pr
          left join event_has_participant_requirement ehpr on pr.id = ehpr.participant_requirement and e.id = ehpr.event;
 
 create view participant_id_for_event as
-select er.event                                                              as event_id,
-       p.id                                                                  as participant_id
+select er.event as event_id,
+       p.id     as participant_id
 from event_registration er
          join competition_registration cr on er.id = cr.event_registration
          join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
@@ -235,10 +279,10 @@ from event_registration er
 group by er.event, p.id;
 
 create view participant_for_event as
-select er.event                                                              as event_id,
-       c.id                                                                  as club_id,
-       c.name                                                                as club_name,
-       p.id                                                                  as id,
+select er.event                                                                  as event_id,
+       c.id                                                                      as club_id,
+       c.name                                                                    as club_name,
+       p.id                                                                      as id,
        p.firstname,
        p.lastname,
        p.year,

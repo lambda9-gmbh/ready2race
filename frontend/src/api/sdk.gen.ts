@@ -109,6 +109,18 @@ import type {
     AssignDaysToCompetitionData,
     AssignDaysToCompetitionError,
     AssignDaysToCompetitionResponse,
+    GetCompetitionRegistrationsData,
+    GetCompetitionRegistrationsError,
+    GetCompetitionRegistrationsResponse,
+    AddCompetitionRegistrationData,
+    AddCompetitionRegistrationError,
+    AddCompetitionRegistrationResponse,
+    UpdateCompetitionRegistrationData,
+    UpdateCompetitionRegistrationError,
+    UpdateCompetitionRegistrationResponse,
+    DeleteCompetitionRegistrationData,
+    DeleteCompetitionRegistrationError,
+    DeleteCompetitionRegistrationResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -178,6 +190,9 @@ import type {
     DeleteClubData,
     DeleteClubError,
     DeleteClubResponse,
+    GetClubUsersData,
+    GetClubUsersError,
+    GetClubUsersResponse,
     GetClubParticipantsData,
     GetClubParticipantsError,
     GetClubParticipantsResponse,
@@ -640,6 +655,58 @@ export const assignDaysToCompetition = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getCompetitionRegistrations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionRegistrationsResponse,
+        GetCompetitionRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration',
+    })
+}
+
+export const addCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddCompetitionRegistrationResponse,
+        AddCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration',
+    })
+}
+
+export const updateCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionRegistrationResponse,
+        UpdateCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}',
+    })
+}
+
+export const deleteCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCompetitionRegistrationResponse,
+        DeleteCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}',
+    })
+}
+
 export const addDocuments = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddDocumentsData, ThrowOnError>,
 ) => {
@@ -922,6 +989,15 @@ export const deleteClub = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<DeleteClubResponse, DeleteClubError, ThrowOnError>({
         ...options,
         url: '/club/{clubId}',
+    })
+}
+
+export const getClubUsers = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubUsersData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetClubUsersResponse, GetClubUsersError, ThrowOnError>({
+        ...options,
+        url: '/club/{clubId}/user',
     })
 }
 

@@ -2,9 +2,7 @@ package de.lambda9.ready2race.backend.app.competition.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.event.boundary.EventService
-import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
-import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.control.toDto
 import de.lambda9.ready2race.backend.app.competition.control.toRecord
@@ -14,14 +12,18 @@ import de.lambda9.ready2race.backend.app.competitionProperties.control.*
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.applyCompetitionProperties
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.toUpdateFunction
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
+import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.*
 
@@ -70,23 +72,27 @@ object CompetitionService {
         KIO.ok(ApiResponse.Created(competitionId))
     }
 
-    fun pageWithPropertiesByEvent(
+    fun <S: CompetitionSortable> pageWithPropertiesByEvent(
         eventId: UUID,
-        params: PaginationParameters<CompetitionWithPropertiesSort>,
-        eventDayId: UUID?
-    ): App<ServiceError, ApiResponse.Page<CompetitionDto, CompetitionWithPropertiesSort>> = KIO.comprehension {
+        params: PaginationParameters<S>,
+        eventDayId: UUID?,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.Page<CompetitionDto, S>> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
 
-        val total =
-            if (eventDayId == null) !CompetitionRepo.countWithPropertiesByEvent(eventId, params.search).orDie()
-            else !CompetitionRepo.countWithPropertiesByEventAndEventDay(eventId, eventDayId, params.search).orDie()
+        val total = !CompetitionRepo.countWithPropertiesByEventAndEventDay(eventId, eventDayId, params.search).orDie()
 
-        val page =
-            if (eventDayId == null) !CompetitionRepo.pageWithPropertiesByEvent(eventId, params).orDie()
-            else !CompetitionRepo.pageWithPropertiesByEventAndEventDay(eventId, eventDayId, params).orDie()
+        val page = if (scope == Privilege.Scope.GLOBAL) {
+            !CompetitionRepo.pageWithPropertiesByEventAndEventDay(eventId, eventDayId, params, scope)
+                .map { it -> it.traverse { it.toDto() } }.orDie()
+        } else {
+            !CompetitionRepo.pageWithPropertiesByEventAndEventDayForClub(eventId, eventDayId, params, user)
+                .map { it.traverse { it.toDto() } }.orDie()
+        }
 
-        page.traverse { it.toDto() }.map {
+        page.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
@@ -95,11 +101,28 @@ object CompetitionService {
     }
 
     fun getCompetitionWithProperties(
-        competitionId: UUID
+        competitionId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
     ): App<CompetitionError, ApiResponse> = KIO.comprehension {
-        val competition = !CompetitionRepo.getWithProperties(competitionId).orDie()
-            .onNullFail { CompetitionError.CompetitionNotFound }
-        competition.toDto().map { ApiResponse.Dto(it) }
+
+        val competition = if (scope == Privilege.Scope.GLOBAL) {
+            !CompetitionRepo.getWithProperties(competitionId, scope)
+                .orDie()
+                .onNullFail { CompetitionError.CompetitionNotFound }
+                .map { it.toDto() }
+        } else {
+            !CompetitionRepo.getWithPropertiesForClub(competitionId, user)
+                .orDie()
+                .onNullFail { CompetitionError.CompetitionNotFound }
+                .map { it.toDto() }
+
+        }
+
+        competition.map {
+            ApiResponse.Dto(it)
+        }
+
     }
 
     fun updateCompetition(

@@ -4,8 +4,9 @@ import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import EntityTable from '@components/EntityTable.tsx'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {eventIndexRoute} from '@routes'
-import {CompetitionDto} from "@api/types.gen.ts";
-import {deleteCompetition, getCompetitions} from "@api/sdk.gen.ts";
+import {CompetitionDto} from '@api/types.gen.ts'
+import {deleteCompetition, getCompetitions} from '@api/sdk.gen.ts'
+import {Chip} from '@mui/material'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -59,6 +60,13 @@ const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
             minWidth: 150,
             flex: 0,
             valueGetter: (_, row) => row.properties.competitionCategory?.name ?? '',
+        },
+        {
+            field: 'registrationCount',
+            headerName: t('event.competition.registrationCount'),
+            type: 'number',
+            sortable: false,
+            renderCell: ({formattedValue}) => <Chip label={formattedValue} />,
         },
     ]
 

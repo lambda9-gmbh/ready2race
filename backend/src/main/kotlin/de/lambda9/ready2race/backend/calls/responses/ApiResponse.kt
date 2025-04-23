@@ -13,6 +13,10 @@ sealed interface ApiResponse {
         val dto: T
     ): ApiResponse
 
+    data class ListDto<T: Any>(
+        val data: List<T>,
+    ): ApiResponse
+
     data class Page<T: Any, S: Sortable>(
         val data: List<T>,
         val pagination: Pagination<S>,

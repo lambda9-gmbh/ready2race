@@ -884,6 +884,113 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionRegistrations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: CompetitionRegistration page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionRegistrationTeamDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    put:
+      operationId: updateCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
+      responses:
+        204:
+          description: Competition registration successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionRegistration
+      responses:
+        204:
+          description: CompetitionRegistration successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - name: eventId
@@ -1484,6 +1591,30 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /club/{clubId}/user:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getClubUsers
+      responses:
+        200:
+          description: User list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppUserDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
   /club/{clubId}/participant:
     parameters:
       - in: path
@@ -1616,6 +1747,12 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query 
+          name: eventId
+          description: Filter for clubs, which registered for this event
+          required: false
+          schema:
+           type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -2298,6 +2435,14 @@ components:
         type: string
         format: uuid
 
+    competitionRegistrationId:
+      name: competitionRegistrationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
 
 
   responses:
@@ -2396,6 +2541,7 @@ components:
         - EVENT
         - CLUB
         - PARTICIPANT
+        - REGISTRATION
 
     Scope:
       type: string
@@ -3203,6 +3349,8 @@ components:
         template:
           type: string
           format: uuid
+        registrationCount:
+          type: number
 
 
     CompetitionRequest:
@@ -3226,7 +3374,71 @@ components:
             type: string
             format: uuid
 
+    CompetitionRegistrationTeamDto:
+      type: object
+      required:
+        - id
+        - name
+        - clubName
+        - clubId
+        - optionalFees
+        - namedParticipants
+        - updatedAt
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        optionalFees:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationFeeDto'
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantDto'
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
 
+    CompetitionRegistrationFeeDto:
+      type: object
+      required:
+        - feeId
+        - feeName
+      properties:
+        feeId:
+          type: string
+          format: uuid
+        feeName:
+          type: string
+
+    CompetitionRegistrationNamedParticipantDto:
+      type: object
+      required:
+        - namedParticipantId
+        - namedParticipantName
+        - participants
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantForEventDto'
 
     # competitionTemplate
 
@@ -3908,11 +4120,9 @@ components:
         id:
           type: string
           format: uuid
-        participants:
-          type: array
-          items:
-            type: string
-            format: uuid
+        clubId:
+          type: string
+          format: uuid
         optionalFees:
           type: array
           items:

@@ -33,7 +33,8 @@ object EventDocumentService {
         params: PaginationParameters<EventDocumentViewSort>,
     ): App<Nothing, ApiResponse.Page<EventDocumentDto, EventDocumentViewSort>> = KIO.comprehension {
         val total = !EventDocumentRepo.count(params.search).orDie()
-        val page = !EventDocumentRepo.page(params).orDie()
+        val page = !EventDocumentRepo.
+        page(params).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(

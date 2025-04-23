@@ -7,5 +7,6 @@ data class CompetitionDto(
     val id: UUID,
     val event: UUID,
     val properties: CompetitionPropertiesDto,
-    val template: UUID?
+    val template: UUID?,
+    val registrationCount: Long,
 )

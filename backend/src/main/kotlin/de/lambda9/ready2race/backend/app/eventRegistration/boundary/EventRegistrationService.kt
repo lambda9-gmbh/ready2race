@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
@@ -191,7 +194,7 @@ object EventRegistrationService {
                 )
             ).orDie()
 
-            teamDto.namedParticipants?.forEach { namedParticipantDto ->
+            teamDto.namedParticipants.forEach { namedParticipantDto ->
 
                 // TODO validate consistency
 

@@ -73,12 +73,13 @@ const EventPage = () => {
 
     const canRegister = useMemo(
         () =>
+            user.loggedIn &&
+            user.clubId != null &&
             data?.registrationAvailableFrom != null &&
             new Date(data?.registrationAvailableFrom) < new Date() &&
             (data?.registrationAvailableTo == null ||
                 new Date(data?.registrationAvailableTo) > new Date()),
-
-        [data],
+        [data, user],
     )
 
     return (
@@ -130,15 +131,17 @@ const EventPage = () => {
                             />
                         </TabPanel>
                         <TabPanel index={2} activeTab={activeTab}>
-                            <DocumentTable
-                                {...documentAdministrationProps.table}
-                                title={t('event.document.documents')}
-                            />
-                            <DocumentDialog {...documentAdministrationProps.dialog} />
-                            <ParticipantRequirementForEventTable
-                                {...participantRequirementAdministrationProps.table}
-                                title={t('participantRequirement.participantRequirements')}
-                            />
+                            <Stack spacing={2}>
+                                <DocumentTable
+                                    {...documentAdministrationProps.table}
+                                    title={t('event.document.documents')}
+                                />
+                                <DocumentDialog {...documentAdministrationProps.dialog} />
+                                <ParticipantRequirementForEventTable
+                                    {...participantRequirementAdministrationProps.table}
+                                    title={t('participantRequirement.participantRequirements')}
+                                />
+                            </Stack>
                         </TabPanel>
                     </Stack>
                 ) : (
