@@ -32,7 +32,7 @@ export type FormSetupRound = {
 }
 export type FormSetupMatch = {
     duplicatable: boolean
-    weighting: number | null // in round: number; in group: null
+    weighting: number
     teams: string // String because it's easier to work with '' as an empty field instead of undefined
     name?: string
     participants: Array<{seed: number}> // in round 1 the list will be empty
@@ -184,7 +184,7 @@ function mapDtoRoundsToFormRounds(dtoRounds: Array<CompetitionSetupRoundDto>) {
 function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto, order: number): FormSetupMatch {
     return {
         duplicatable: matchDto.duplicatable,
-        weighting: matchDto.weighting ?? null,
+        weighting: matchDto.weighting,
         teams: matchDto.teams?.toString() ?? '',
         name: matchDto.name,
         participants: matchDto.participants?.map(participant => ({seed: participant})),

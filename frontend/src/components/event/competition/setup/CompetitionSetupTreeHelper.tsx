@@ -6,11 +6,7 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
-import {
-    CompetitionSetupForm,
-    FormSetupRound,
-    getWeightings,
-} from '@components/event/competition/setup/common.ts'
+import {FormSetupRound, getWeightings} from '@components/event/competition/setup/common.ts'
 
 type Form = {
     teams: number
@@ -20,7 +16,7 @@ type Form = {
 }
 
 type Props = {
-    resetSetupForm: (formData: CompetitionSetupForm) => void
+    resetSetupForm: (formDataRounds: Array<FormSetupRound>) => void
     currentFormData: FormSetupRound[]
     portalContainer: RefObject<HTMLDivElement>
 }
@@ -179,41 +175,40 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
             return newPlaces
         }
 
-        const tree: CompetitionSetupForm = {
-            rounds: rounds
-                .map((r, index) => ({round: r, index: index}))
-                .sort((a, b) => b.index - a.index)
-                .map(({round}, roundIndex) => ({
-                    name: round.name,
-                    required: roundIndex === roundCount - 1, // Only last round is required
-                    matches: round.matches.map((match, matchIndex) => ({
-                        duplicatable: false,
-                        weighting: matchIndex + 1,
-                        teams: match.teams.toString(),
-                        name: match.name,
-                        participants:
-                            matchForPlaceThree && roundIndex === roundCount - 1
-                                ? matchIndex === 0
-                                    ? [{seed: 1}, {seed: 2}]
-                                    : [{seed: 3}, {seed: 4}]
-                                : [],
-                        position: match.position,
-                    })),
-                    groups: [],
-                    statisticEvaluations: undefined,
-                    useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
-                    isGroupRound: false,
-                    useStartTimeOffsets: false,
-                    places: getPlacesForRound(roundIndex),
+        const tree = rounds
+            .map((r, index) => ({round: r, index: index}))
+            .sort((a, b) => b.index - a.index)
+            .map(({round}, roundIndex) => ({
+                name: round.name,
+                required: roundIndex === roundCount - 1, // Only last round is required
+                matches: round.matches.map((match, matchIndex) => ({
+                    duplicatable: false,
+                    weighting: matchIndex + 1,
+                    teams: match.teams.toString(),
+                    name: match.name,
+                    participants:
+                        matchForPlaceThree && roundIndex === roundCount - 1
+                            ? matchIndex === 0
+                                ? [{seed: 1}, {seed: 2}]
+                                : [{seed: 3}, {seed: 4}]
+                            : [],
+                    position: match.position,
                 })),
-        }
+                groups: [],
+                statisticEvaluations: undefined,
+                useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
+                isGroupRound: false,
+                useStartTimeOffsets: false,
+                places: getPlacesForRound(roundIndex),
+            }))
 
         if (replaceAll) {
+            console.log(tree)
             resetSetupForm(tree)
         } else {
-            const newData: FormSetupRound[] = [...currentFormData, ...tree.rounds]
+            const newData: FormSetupRound[] = [...currentFormData, ...tree]
 
-            resetSetupForm({rounds: newData})
+            resetSetupForm(newData)
         }
 
         closeTournamentTreeDialog()

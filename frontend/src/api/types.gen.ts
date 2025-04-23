@@ -188,7 +188,7 @@ export type CompetitionSetupGroupStatisticEvaluationDto = {
 
 export type CompetitionSetupMatchDto = {
     duplicatable: boolean
-    weighting?: number
+    weighting: number
     teams?: number
     name?: string
     participants: Array<number>

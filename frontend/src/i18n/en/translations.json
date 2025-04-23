@@ -232,7 +232,9 @@
           "duplicatable": "Duplicating",
           "outcome": {
             "outcome": "Seeding",
-            "outcomes": "Seedings"
+            "outcomes": "Seedings",
+            "tooltip": "Resulting seedings of this match",
+            "result": "Result"
           },
           "remove": "Remove match",
           "info": {
@@ -263,6 +265,9 @@
         "startTimeOffset": {
           "startTimeOffset": "Offset start time",
           "enable": "Enable start time offsets"
+        },
+        "validation": {
+          "noFollowingUnlimitedTeamsRounds": "No two rounds may directly follow each other, neither of which has a fixed number of participants. (A match is duplicating or has no set number of teams). Please adjust one of the two rounds accordingly."
         }
       }
     },

@@ -2,6 +2,12 @@ package de.lambda9.ready2race.backend.app.competitionSetup.entity
 
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 
 data class CompetitionSetupRoundDto(
     val name: String,
@@ -12,7 +18,44 @@ data class CompetitionSetupRoundDto(
     val useDefaultSeeding: Boolean,
     val places: List<CompetitionSetupPlaceDto>,
 ) : Validatable {
-    override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate
+    override fun validate(): ValidationResult = ValidationResult.allOf(
+        this::name validate notBlank,
+        this::matches validate allOf(
+            collection,
+            noDuplicates(
+                CompetitionSetupMatchDto::weighting
+            ),
+        ),
+        this::groups validate allOf(
+            collection,
+            noDuplicates(
+                CompetitionSetupGroupDto::weighting,
+            )
+        ),
+        this::statisticEvaluations validate allOf(
+            collection,
+            noDuplicates(
+                CompetitionSetupGroupStatisticEvaluationDto::name,
+            ),
+            noDuplicates(
+                CompetitionSetupGroupStatisticEvaluationDto::priority,
+            )
+        ),
+        ValidationResult.oneOf(
+            this::matches validate notNull,
+            ValidationResult.allOf(
+                this::groups validate notNull,
+                this::statisticEvaluations validate notNull,
+            )
+        ),
+        this::places validate collection,
+    )
+    /*todo validations:
+        - no duplicate "participants" in one round
+        - max 1 "duplicatable" in 1 round (match and group)
+        - A "duplicatable" match/group needs the highest weighting in the round
+        - only the "duplicatable" match/group can have undefined "teams" in a round
+    */
 
     companion object {
         val example

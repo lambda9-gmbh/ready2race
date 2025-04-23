@@ -67,7 +67,7 @@ create table competition_setup_match
     competition_setup_round uuid    not null references competition_setup_round on delete cascade,
     competition_setup_group uuid references competition_setup_group on delete cascade,
     duplicatable            boolean not null,
-    weighting               integer,
+    weighting               integer not null,
     teams                   integer,
     name                    text,
     position                integer not null,

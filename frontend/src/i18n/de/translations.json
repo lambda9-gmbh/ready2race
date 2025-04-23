@@ -231,8 +231,10 @@
           "teams": "Teamanzahl",
           "duplicatable": "Duplizierend",
           "outcome": {
-            "outcome": "Platzierung",
-            "outcomes": "Platzierungen"
+            "outcome": "Setzung",
+            "outcomes": "Setzungen",
+            "tooltip": "Resultierende Setzungen dieser Partie",
+            "result": "Ergebnis"
           },
           "remove": "Partie entfernen",
           "info": {
@@ -263,6 +265,9 @@
         "startTimeOffset": {
           "startTimeOffset": "Versetzte Startzeit",
           "enable": "Versetzte Startzeiten erlauben"
+        },
+        "validation": {
+          "noFollowingUnlimitedTeamsRounds": "Es dürfen keine zwei Runden direkt aufeinander folgen, welche beide keine festgelegte Teilnehmerzahl haben. (Eine Partie ist duplizierend oder hat keine Teamanzahl). Bitte passen Sie eine der beiden Runden entsprechend an."
         }
       }
     },

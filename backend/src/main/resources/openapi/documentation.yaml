@@ -3401,6 +3401,7 @@ components:
       type: object
       required:
         - duplicatable
+        - weighting
         - participants
       properties:
         duplicatable:

@@ -1,4 +1,4 @@
-import {Box, Button, Menu, MenuItem, Stack, useTheme} from '@mui/material'
+import {Box, Button, Menu, MenuItem, Stack, Typography, useTheme} from '@mui/material'
 import {useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
 import {RefObject, useRef, useState, MouseEvent} from 'react'
@@ -6,6 +6,7 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import CompetitionSetupTreeHelper from '@components/event/competition/setup/CompetitionSetupTreeHelper.tsx'
 import {
     CompetitionSetupForm,
+    FormSetupRound,
     mapCompetitionSetupTemplateDtoToForm,
 } from '@components/event/competition/setup/common.ts'
 import CompetitionSetupContainersWrapper from '@components/event/competition/setup/CompetitionSetupContainersWrapper.tsx'
@@ -27,6 +28,8 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     const feedback = useFeedback()
     const theme = useTheme()
 
+    const [roundsError, setRoundsError] = useState<string | null>(null)
+
     const {
         fields: roundFields,
         insert: insertRound,
@@ -34,9 +37,38 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     } = useFieldArray({
         control: formContext.control,
         name: 'rounds',
+        rules: {
+            validate: value => {
+                const roundHasUndefinedTeams = (round: FormSetupRound) => {
+                    return (
+                        round.matches.filter(match => match.teams === '' || match.duplicatable)
+                            .length > 0
+                    )
+                }
+
+                for (let i = 1; i < value.length; i++) {
+                    if (roundHasUndefinedTeams(value[i]) && roundHasUndefinedTeams(value[i - 1])) {
+                        setRoundsError(
+                            t('event.competition.setup.validation.noFollowingUnlimitedTeamsRounds'),
+                        )
+                        console.log('FEHLER')
+                        return 'noFollowingUnlimitedTeamsRounds'
+                    }
+                }
+
+                if (value.length > 0 && roundHasUndefinedTeams(value[0])) {
+                }
+
+                console.log('KEIN FEHLER')
+                setRoundsError(null)
+                return undefined
+            },
+        },
     })
 
     const formWatch = formContext.watch('rounds')
+
+    const [allowRoundUpdates, setAllowRoundUpdates] = useState(true)
 
     // Returns the Team Count for the specified round (not always THIS round)
     // IgnoredIndex can be provided to keep one match or group out of the calculation
@@ -107,13 +139,18 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     })
 
     const watchTemplateFields = formContext.watch(['name', 'description'])
-    
-    const handleSelectTemplate = async (template: CompetitionSetupTemplateDto) => {
+
+    const resetForm = (rounds: Array<FormSetupRound>) => {
         formContext.reset({
             name: watchTemplateFields[0],
             description: watchTemplateFields[1],
-            rounds: mapCompetitionSetupTemplateDtoToForm(template).rounds,
+            rounds: rounds,
         })
+        setAllowRoundUpdates(false)
+    }
+
+    const handleSelectTemplate = async (template: CompetitionSetupTemplateDto) => {
+        resetForm(mapCompetitionSetupTemplateDtoToForm(template).rounds)
     }
 
     const [templateMenuAnchorEl, setTemplateMenuAnchorEl] = useState<HTMLElement | null>(null)
@@ -139,7 +176,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     gap: 1,
                     [theme.breakpoints.down('md')]: {flexDirection: 'column', alignItems: 'start'},
                 }}>
-                <Button variant="outlined" onClick={() => formContext.reset({rounds: []})}>
+                <Button variant="outlined" onClick={() => resetForm([])}>
                     {t('event.competition.setup.reset')}
                 </Button>
                 <Box>
@@ -179,8 +216,8 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     </Menu>
                 </Box>
                 <CompetitionSetupTreeHelper
-                    resetSetupForm={(formData: CompetitionSetupForm) => {
-                        formContext.reset(formData)
+                    resetSetupForm={(formDataRounds: Array<FormSetupRound>) => {
+                        resetForm(formDataRounds)
                     }}
                     currentFormData={formWatch}
                     portalContainer={
@@ -188,11 +225,15 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     }
                 />
                 {props.handleFormSubmission && (
-                    <SubmitButton label={t('event.competition.setup.save.save')} submitting={props.submitting ?? false} />
+                    <SubmitButton
+                        label={t('event.competition.setup.save.save')}
+                        submitting={props.submitting ?? false}
+                    />
                 )}
             </Stack>
             <Stack spacing={4}>
                 <AddRoundButton index={0} insertRound={insertRound} />
+                {roundsError && <Typography color={'error'}>{roundsError}</Typography>}
                 {roundFields.map((roundField, roundIndex) => (
                     <Stack spacing={4} key={roundField.id}>
                         <CompetitionSetupRound
@@ -216,6 +257,10 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                             getRoundTeamCountWithoutThis={(ignoredIndex, isGroupRound) =>
                                 getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
                             }
+                            allowRoundUpdates={{
+                                value: allowRoundUpdates,
+                                set: setAllowRoundUpdates,
+                            }}
                         />
                         <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />
                     </Stack>

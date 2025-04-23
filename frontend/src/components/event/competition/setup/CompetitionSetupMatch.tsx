@@ -1,5 +1,15 @@
 import {CheckboxElement, useFieldArray} from 'react-hook-form-mui'
-import {Divider, Stack, Typography} from '@mui/material'
+import {
+    Divider,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography
+} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
@@ -10,6 +20,8 @@ import {
 import CompetitionSetupParticipants from '@components/event/competition/setup/CompetitionSetupParticipants.tsx'
 import {FormInputSeconds} from '@components/form/input/FormInputSeconds.tsx'
 import {useTranslation} from 'react-i18next'
+import {Info} from '@mui/icons-material'
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
 type Props = CompetitionSetupMatchOrGroupProps
 const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
@@ -110,7 +122,45 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             <Typography sx={{fontSize: '1.1rem'}}>
                 {t('event.competition.setup.match.outcome.outcomes')}:
             </Typography>
-            <Typography>{props.outcomes.join(' - ')}</Typography>
+            <Stack direction={'row'} spacing={2}>
+                <Typography>{props.outcomes.join(', ')}</Typography>
+                <HtmlTooltip
+                    title={
+                        <Stack p={1}>
+                            <Typography fontWeight={500}>
+                                {t('event.competition.setup.match.outcome.tooltip')}
+                            </Typography>
+                            <TableContainer>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>
+                                                {t(
+                                                    'event.competition.setup.match.outcome.result',
+                                                )} ({t('event.competition.setup.match.match')})
+                                            </TableCell>
+                                            <TableCell>
+                                                {t(
+                                                   'event.competition.setup.match.outcome.outcome',
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {props.outcomes.map((outcome, index) => (
+                                            <TableRow key={`${outcome}-${index}`}>
+                                                <TableCell>{index + 1}</TableCell>
+                                                <TableCell>{outcome}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Stack>
+                    }>
+                    <Info color={'info'} fontSize={'small'} />
+                </HtmlTooltip>
+            </Stack>
         </Stack>
     )
 }

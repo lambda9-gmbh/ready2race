@@ -2,6 +2,9 @@ package de.lambda9.ready2race.backend.app.competitionSetup.entity
 
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.IntValidators.min
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 
 data class CompetitionSetupGroupDto(
     val duplicatable: Boolean,
@@ -11,7 +14,15 @@ data class CompetitionSetupGroupDto(
     val matches: List<CompetitionSetupMatchDto>,
     val participants: List<Int>,
 ) : Validatable {
-    override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate
+    override fun validate(): ValidationResult = ValidationResult.allOf(
+        this::weighting validate min(1),
+        this::teams validate min(1),
+        this::name validate notBlank,
+    )
+
+    /* todo validations:
+        - "participants" values: min(1)
+    */
 
     companion object {
         val example

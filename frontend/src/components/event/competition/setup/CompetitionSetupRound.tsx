@@ -45,6 +45,10 @@ type Props = {
         nextRound: number
     }
     getRoundTeamCountWithoutThis: (ignoredIndex: number, isGroupRound: boolean) => number
+    allowRoundUpdates: {
+        value: boolean
+        set: (value: boolean) => void
+    }
 }
 const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...props}: Props) => {
     const defaultMatchTeamSize = 2
@@ -89,12 +93,19 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         )
     }*/
 
-    // When appending or removing a match/group, the participants are updated (if default seeding is active)
+    // When appending or removing a match/group, the participants are updated or places are updated
     useEffect(() => {
         if (watchUseDefaultSeeding) {
             updateParticipants(formContext, round.index, true, teamCounts.nextRound, updatePlaces)
+        }
+
+        if (props.allowRoundUpdates.value) {
+            if (!watchUseDefaultSeeding) {
+                // Changes made for the places are overwritten - Because of this "allowRoundUpdates" is necessary to prevent updating directly after resetting the form
+                updatePlaces(true, getTeamsCountInMatches(watchMatches))
+            }
         } else {
-            updatePlaces(true, getTeamsCountInMatches(watchMatches))
+            props.allowRoundUpdates.set(true)
         }
     }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding])
 
@@ -161,6 +172,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     // PLACES
     // The places which teams that won't partake in the next round get
     const watchPlaces = formContext.watch(`rounds.${round.index}.places`)
+
+    console.log('places', watchPlaces)
 
     const {fields: placeFields, replace: replacePlaces} = useFieldArray({
         control: formContext.control,
