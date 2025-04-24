@@ -28,7 +28,7 @@ fun Route.eventRegistration() {
                 val payload = receiveKIO(EventRegistrationUpsertDto.example)
                 val user = !authenticate()
                 val eventId = !pathParam("eventId") { UUID.fromString(it) }
-                EventRegistrationService.upsertRegistrationForEvent(eventId, !payload, user.club!!, user.id!!)
+                EventRegistrationService.upsertRegistrationForEvent(eventId, !payload, user)
             }
         }
     }

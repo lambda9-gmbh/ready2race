@@ -49,6 +49,18 @@
         "",
         "Please not that resetting the password is only possible within 24 hours!"
       ]
+    },
+    {
+      "key": "EVENT_REGISTRATION_CONFIRMATION",
+      "subject": "Ready2Race - Event registration confirmation for ##event##",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "Thank you very much for your registration for our event (##event##), which we hereby confirm receipt of.",
+        "You can still make changes to the registration using your access until the registration deadline.",
+        "",
+        "Attached to this email you will find all relevant documents again."
+      ]
     }
   ]
 }

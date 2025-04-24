@@ -49,6 +49,18 @@
         "",
         "Bitte beachte dabei, dass ein Zurücksetzen des Passworts nur 24 Stunden lang möglich ist!"
       ]
+    },
+    {
+      "key": "EVENT_REGISTRATION_CONFIRMATION",
+      "subject": "Ready2Race - Meldebestätigung für ##event##",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "vielen Dank fur eure Meldung zu unserer Veranstaltung (##event##), deren Eingang wir hiermit gern bestätigen.",
+        "Bis zum Meldeschluss kannst du noch über den erstellten Zugang Änderungen an der Meldung vornehmen.",
+        "",
+        "Im Anhang findest du nochmal alle relevanten Dokumente."
+      ]
     }
   ]
 }

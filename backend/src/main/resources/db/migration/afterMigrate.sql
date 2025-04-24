@@ -256,6 +256,7 @@ from event_document ed
 
 create view event_document_download as
 select ed.id,
+       ed.event,
        ed.name,
        edd.data
 from event_document ed

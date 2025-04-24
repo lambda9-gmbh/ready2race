@@ -1,17 +1,22 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.email.boundary.EmailService
+import de.lambda9.ready2race.backend.app.email.entity.EmailAttachment
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
@@ -39,8 +44,7 @@ object EventRegistrationService {
     fun upsertRegistrationForEvent(
         eventId: UUID,
         registrationDto: EventRegistrationUpsertDto,
-        clubId: UUID,
-        userId: UUID,
+        user: AppUserWithPrivilegesRecord,
     ): App<EventRegistrationError, ApiResponse.Created> = KIO.comprehension {
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
@@ -50,17 +54,17 @@ object EventRegistrationService {
         val now = LocalDateTime.now()
 
         val (persistedRegistrationId, isUpdate) =
-            !EventRegistrationRepo.findByEventAndClub(eventId, clubId).map { it?.let { it.id to true } }.orDie()
+            !EventRegistrationRepo.findByEventAndClub(eventId, user.club!!).map { it?.let { it.id to true } }.orDie()
                 ?: (!EventRegistrationRepo.create(
                     EventRegistrationRecord(
                         UUID.randomUUID(),
                         eventId,
-                        clubId,
+                        user.club!!,
                         registrationDto.message,
                         now,
-                        userId,
+                        user.id!!,
                         now,
-                        userId
+                        user.id!!
                     )
                 ).orDie() to false)
 
@@ -68,14 +72,14 @@ object EventRegistrationService {
             !EventRegistrationRepo.update(persistedRegistrationId) {
                 message = registrationDto.message
                 updatedAt = now
-                updatedBy = userId
+                updatedBy = user.id!!
             }.orDie()
 
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
         val participantIdMap = !registrationDto.participants.traverse { pDto ->
-            handleSingleCompetitionRegistration(pDto, userId, clubId, template, persistedRegistrationId, now)
+            handleSingleCompetitionRegistration(pDto, user.id!!, user.club!!, template, persistedRegistrationId, now)
         }.map { it.toMap(mutableMapOf()) }
 
         !registrationDto.competitionRegistrations.traverse { competitionRegistrationDto ->
@@ -83,12 +87,39 @@ object EventRegistrationService {
                 template,
                 competitionRegistrationDto,
                 persistedRegistrationId,
-                clubId,
+                user.club!!,
                 now,
-                userId,
+                user.id!!,
                 participantIdMap
             )
         }
+
+        val eventName = !EventRepo.getName(eventId).orDie()
+
+        val content = !EmailService.getTemplate(
+            EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION,
+            EmailLanguage.valueOf(user.language!!)
+        ).map { mailTemplate ->
+            mailTemplate.toContent(
+                EmailTemplatePlaceholder.RECIPIENT to user.firstname + " " + user.lastname,
+                EmailTemplatePlaceholder.EVENT to (eventName ?: "")
+            )
+        }
+
+        val attachments = !EventDocumentRepo.getDownloadsByEvent(eventId).orDie().map {
+            it.map { rec ->
+                EmailAttachment(
+                    name = rec.name!!,
+                    data = rec.data!!
+                )
+            }
+        }
+
+        !EmailService.enqueue(
+            recipient = user.email!!,
+            content = content,
+            attachments = attachments
+        )
 
         ok(ApiResponse.Created(persistedRegistrationId))
 

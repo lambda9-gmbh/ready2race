@@ -51,4 +51,14 @@ object EventDocumentRepo {
                 .fetchOne()
         }
     }
+
+    fun getDownloadsByEvent(
+        eventId: UUID,
+    ): JIO<List<EventDocumentDownloadRecord>> = Jooq.query {
+        with(EVENT_DOCUMENT_DOWNLOAD) {
+            selectFrom(this)
+                .where(EVENT.eq(eventId))
+                .fetch()
+        }
+    }
 }
