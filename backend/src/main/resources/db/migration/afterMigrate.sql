@@ -41,7 +41,8 @@ select r.id,
        r.name,
        r.description,
        r.privileges
-from every_role_with_privileges r;
+from every_role_with_privileges r
+where r.static is false;
 
 create view app_user_with_roles as
 select au.id,

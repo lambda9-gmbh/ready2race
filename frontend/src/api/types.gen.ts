@@ -662,6 +662,12 @@ export type UnprocessableEntityError = ApiError & {
           }
 }
 
+export type UpdateAppUserRequest = {
+    firstname: string
+    lastname: string
+    roles: Array<string>
+}
+
 export type VerifyRegistrationRequest = {
     token: string
 }
@@ -727,6 +733,17 @@ export type GetUserData = {
 export type GetUserResponse = AppUserDto
 
 export type GetUserError = BadRequestError | ApiError
+
+export type UpdateUserData = {
+    body: UpdateAppUserRequest
+    path: {
+        userId: string
+    }
+}
+
+export type UpdateUserResponse = void
+
+export type UpdateUserError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type RegisterUserData = {
     body: RegisterRequest

@@ -134,6 +134,29 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+    put:
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAppUserRequest'
+      responses:
+        204:
+          description: User successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /user/registration:
     post:
       operationId: registerUser
@@ -2873,6 +2896,23 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleDto'
+
+    UpdateAppUserRequest:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - roles
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            format: uuid
 
     AppUserRegistrationDto:
       type: object
