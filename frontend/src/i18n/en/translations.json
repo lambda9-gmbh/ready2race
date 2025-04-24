@@ -151,19 +151,19 @@
         "mixed": "Number of any"
       },
       "namedParticipant": {
-        "namedParticipant": "Named Participant",
-        "namedParticipants": "Named Participants",
+        "namedParticipant": "Participant Type",
+        "namedParticipants": "Participant Types",
         "name": "Name",
         "description": "Description",
         "role": "Role",
-        "add": "Add Named Participant",
+        "add": "Add Participant Type",
         "error": {
-          "emptyList": "Please add one or more named participants",
+          "emptyList": "Please add one or more participant types",
           "noCount": "Please enter at least one participant of any kind for this role",
           "duplicates": {
             "one": "The role {{label}} is used several times.",
             "multiple": "The roles {{labels}} are used several times.",
-            "message": "Please select a unique role for each named participant."
+            "message": "Please select a unique role for each participant type."
           }
         }
       },
@@ -181,8 +181,8 @@
         }
       },
       "template": {
-        "template": "Template",
-        "templates": "Templates",
+        "template": "Competition Template",
+        "templates": "Competition Templates",
         "name": "Name",
         "description": "Description"
       },

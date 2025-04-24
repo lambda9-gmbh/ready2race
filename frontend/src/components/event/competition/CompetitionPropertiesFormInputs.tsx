@@ -2,7 +2,6 @@ import {AutocompleteOption} from '@utils/types.ts'
 import {
     ErrorOption,
     FieldValues,
-    SwitchElement,
     useFieldArray,
     UseFormReturn,
 } from 'react-hook-form-mui'
@@ -18,6 +17,7 @@ import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
 import {useState} from 'react'
+import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -208,7 +208,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             />
             <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
-                {namedParticipantsError && <Typography color={'error'}>{namedParticipantsError}</Typography>}
+                {namedParticipantsError && (
+                    <Typography color={'error'}>{namedParticipantsError}</Typography>
+                )}
                 <Stack spacing={2}>
                     {namedParticipantFields.map((field, index) => (
                         <Stack
@@ -216,7 +218,14 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             spacing={2}
                             alignItems={'center'}
                             key={field.fieldId}>
-                            <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box', flex: 1}}>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    border: 1,
+                                    borderRadius: 5,
+                                    boxSizing: 'border-box',
+                                    flex: 1,
+                                }}>
                                 <Stack spacing={4}>
                                     <FormInputAutocomplete
                                         name={'namedParticipants[' + index + '].namedParticipant'}
@@ -326,7 +335,14 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             spacing={2}
                             alignItems={'center'}
                             key={field.fieldId}>
-                            <Box sx={{p: 2, border: 1, borderRadius: 5, boxSizing: 'border-box', flex: 1}}>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    border: 1,
+                                    borderRadius: 5,
+                                    boxSizing: 'border-box',
+                                    flex: 1,
+                                }}>
                                 <Stack spacing={4}>
                                     <FormInputAutocomplete
                                         name={'fees[' + index + '].fee'}
@@ -335,17 +351,11 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         loading={feesPending}
                                         required
                                     />
-                                    <SwitchElement
+                                    <FormInputSwitch
                                         name={'fees[' + index + '].required'}
-                                        labelPlacement='start'
-                                        sx={{alignSelf: 'start'}}
-                                        label={
-                                            <FormInputLabel
-                                                label={t('event.competition.fee.required.required')}
-                                                required={true}
-                                                horizontal
-                                            />
-                                        }
+                                        label={t('event.competition.fee.required.required')}
+                                        horizontal
+                                        reverse
                                     />
                                     <FormInputCurrency
                                         name={'fees[' + index + '].amount'}
