@@ -1,4 +1,4 @@
-import {Box, Divider, Stack, Tab, Tabs, Typography} from '@mui/material'
+import {Box, Divider, Stack, Tab, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -10,10 +10,11 @@ import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
 import {getCompetition, getEventDays} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
-import TabPanel from '@components/TabPanel.tsx'
+import TabPanel from '@components/tab/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
+import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -110,15 +111,10 @@ const CompetitionPage = () => {
                             }
                             variant="h1"
                         />
-                        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-                            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-                                <Tab
-                                    label={t('event.registration.registrations')}
-                                    {...a11yProps(0)}
-                                />
-                                <Tab label={t('event.tabs.settings')} {...a11yProps(1)} />
-                            </Tabs>
-                        </Box>
+                        <TabSelectionContainer activeTab={activeTab} setActiveTab={setActiveTab}>
+                            <Tab label={t('event.registration.registrations')} {...a11yProps(0)} />
+                            <Tab label={t('event.tabs.settings')} {...a11yProps(1)} />
+                        </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
                             <CompetitionRegistrationDialog
                                 {...competitionRegistrationTeamsProps.dialog}

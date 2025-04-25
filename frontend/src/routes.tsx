@@ -24,7 +24,6 @@ import EventsPage from './pages/event/EventsPage.tsx'
 import EventPage from './pages/event/EventPage.tsx'
 import CompetitionPage from './pages/event/CompetitionPage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
-import CompetitionConfigPage from './pages/event/CompetitionConfigPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
 import InitResetPasswordPage from './pages/user/resetPassword/InitResetPasswordPage.tsx'
@@ -33,7 +32,7 @@ import ClubsPage from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import ConfigurationPage from './pages/ConfigurationPage.tsx'
-import AcceptInvitationPage from "./pages/user/AcceptInvitationPage.tsx";
+import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -88,7 +87,7 @@ export const loginRoute = createRoute({
 export const invitationTokenRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'invitation/$invitationToken',
-    component: () => <AcceptInvitationPage />
+    component: () => <AcceptInvitationPage />,
 })
 
 export const registrationRoute = createRoute({
@@ -266,20 +265,6 @@ export const competitionIndexRoute = createRoute({
     },
 })
 
-export const competitionConfigRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: 'competitionConfig',
-})
-
-export const competitionConfigIndexRoute = createRoute({
-    getParentRoute: () => competitionConfigRoute,
-    path: '/',
-    component: () => <CompetitionConfigPage />,
-    beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
-    },
-})
-
 export const clubRoute = createRoute({
     getParentRoute: () => clubsRoute,
     path: '$clubId',
@@ -322,7 +307,6 @@ const routeTree = rootRoute.addChildren([
             eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),
     ]),
-    competitionConfigRoute.addChildren([competitionConfigIndexRoute]),
     usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
     rolesRoute.addChildren([rolesIndexRoute]),
     invitationTokenRoute,

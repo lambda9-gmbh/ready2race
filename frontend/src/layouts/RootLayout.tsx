@@ -3,7 +3,6 @@ import {AppBar, Box, Container, Divider, IconButton, Paper, Toolbar} from '@mui/
 import {useState} from 'react'
 import {
     Dashboard,
-    EditCalendar,
     Event,
     Menu,
     MenuOpen,
@@ -18,7 +17,8 @@ import UserWidget from '@components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
 import {
     readClubGlobal,
-    readClubOwn, readEventOwn,
+    readClubOwn,
+    readEventOwn,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
@@ -80,13 +80,6 @@ const RootLayout = () => {
                                 authenticatedOnly
                                 privilege={readEventOwn}
                                 to={'/event'}
-                            />
-                            <SidebarItem
-                                text={t('navigation.titles.competitionConfig')}
-                                icon={<EditCalendar />} //todo: better icon
-                                authenticatedOnly
-                                privilege={updateEventGlobal}
-                                to={'/competitionConfig'}
                             />
                             <Divider />
                             <SidebarItem

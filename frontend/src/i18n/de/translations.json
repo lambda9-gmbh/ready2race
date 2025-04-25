@@ -7,7 +7,7 @@
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
-    "selected" : "Ausgewählt",
+    "selected": "Ausgewählt",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -37,7 +37,7 @@
       },
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
-      "selectFile" : "Datei auswählen"
+      "selectFile": "Datei auswählen"
     },
     "load": {
       "error": {
@@ -54,7 +54,7 @@
     "back": "Zurück",
     "next": "Weiter",
     "and": "und",
-    "remove" : "Entfernen"
+    "remove": "Entfernen"
   },
   "decimal": {
     "point": ","
@@ -137,7 +137,7 @@
       "name": "Name",
       "description": "Beschreibung",
       "shortName": "Kurzname",
-      "registrationCount" : "Meldungen",
+      "registrationCount": "Meldungen",
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien",
@@ -193,20 +193,20 @@
     },
     "participantRequirement": {
       "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
-      "approved" : "Überprüfte Bedingungen",
+      "approved": "Überprüfte Bedingungen",
       "checkUpload": "Bedingungen abgleichen",
       "checkManually": "\"{{name}}\" überprüfen",
-      "file" : "CSV-Datei",
-      "charset" : "Charset",
+      "file": "CSV-Datei",
+      "charset": "Charset",
       "separator": "Trennzeichen",
-      "firstnameColName":"Spalte mit Vornamen",
+      "firstnameColName": "Spalte mit Vornamen",
       "lastnameColName": "Spalte mit Nachnamen",
-      "yearsColName":"Spalte mit Jahrgang",
+      "yearsColName": "Spalte mit Jahrgang",
       "clubColName": "Spalte mit Vereinsnamen",
-      "requirementColName":"Spalte mit Teilnahmebedingung",
+      "requirementColName": "Spalte mit Teilnahmebedingung",
       "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
-      "participantsOpen" : "Offen",
-      "participantsApproved" : "Überprüft"
+      "participantsOpen": "Offen",
+      "participantsApproved": "Überprüft"
     },
     "assign": {
       "save": {
@@ -240,8 +240,8 @@
       }
     },
     "registration": {
-      "registration" : "Anmeldung",
-      "registrations" : "Anmeldungen",
+      "registration": "Anmeldung",
+      "registrations": "Anmeldungen",
       "addParticipant": "Teilnehmer hinzufügen",
       "singleCompetition": "Einzelwettkampf",
       "teamCompetition": "Teamwettkampf",
@@ -254,8 +254,8 @@
       "message": "Nachricht",
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
-      "acceptDocuments" : "Ich akzeptiere Folgendes:",
-      "infoDocuments" : "Weitere Informationen",
+      "acceptDocuments": "Ich akzeptiere Folgendes:",
+      "infoDocuments": "Weitere Informationen",
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",
@@ -263,18 +263,18 @@
       }
     },
     "tabs": {
-      "general" : "Allgemein",
-      "participants" : "Teilnehmer",
+      "general": "Allgemein",
+      "participants": "Teilnehmer",
       "settings": "Einstellungen"
     }
   },
   "participantRequirement": {
     "participantRequirement": "Teilnahmebedingung",
     "participantRequirements": "Teilnahmebedingungen",
-    "active" : "Aktiv",
-    "activate" : "Für Veranstaltung aktivieren",
-    "remove" : "Von Veranstaltung entfernen",
-    "confirmRemove" : "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
+    "active": "Aktiv",
+    "activate": "Für Veranstaltung aktivieren",
+    "remove": "Von Veranstaltung entfernen",
+    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
   },
   "user": {
     "user": "Benutzer",
@@ -391,6 +391,14 @@
     "description": "Beschreibung",
     "error": {
       "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
+    }
+  },
+  "configuration": {
+    "configuration": "Konfigurationen",
+    "tabs": {
+      "competitionTemplates": "Vorlagen Wettkampf",
+      "eventElements": "Komponenten Veranstaltung",
+      "competitionElements": "Komponenten Wettkampf"
     }
   },
   "captcha": {

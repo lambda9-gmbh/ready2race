@@ -1,4 +1,4 @@
-import {Box, Button, Stack, Tab, Tabs, Typography} from '@mui/material'
+import {Box, Button, Stack, Tab, Typography} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
@@ -20,11 +20,12 @@ import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link} from '@tanstack/react-router'
 import {useMemo, useState} from 'react'
-import TabPanel from '@components/TabPanel.tsx'
+import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {readEventGlobal} from '@authorization/privileges.ts'
+import TabSelectionContainer from "@components/tab/TabSelectionContainer.tsx";
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -101,15 +102,13 @@ const EventPage = () => {
                                 </Button>
                             </Link>
                         </Stack>
-                        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-                            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-                                <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
-                                <Tab label={t('event.tabs.participants')} {...a11yProps(1)} />
-                                {user.checkPrivilege(readEventGlobal) && (
-                                    <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
-                                )}
-                            </Tabs>
-                        </Box>
+                        <TabSelectionContainer activeTab={activeTab} setActiveTab={setActiveTab}>
+                            <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
+                            <Tab label={t('event.tabs.participants')} {...a11yProps(1)} />
+                            {user.checkPrivilege(readEventGlobal) && (
+                                <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
+                            )}
+                        </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
                             <Stack spacing={2}>
                                 <CompetitionTable
