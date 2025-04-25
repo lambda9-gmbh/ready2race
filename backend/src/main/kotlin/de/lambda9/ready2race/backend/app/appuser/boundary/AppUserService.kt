@@ -47,6 +47,15 @@ object AppUserService {
         }
     }
 
+    fun getIncludingAllAdmins(
+        id: UUID,
+    ): App<AppUserError, ApiResponse.Dto<AppUserDto>> = KIO.comprehension {
+        val record = !AppUserRepo.getWithRolesIncludingAllAdmins(id).orDie().onNullFail { AppUserError.NotFound }
+        record.appUserDto().map {
+            ApiResponse.Dto(it)
+        }
+    }
+
     fun getAllByClubId(
         clubId: UUID,
     ): App<AppUserError, ApiResponse.ListDto<AppUserDto>> = KIO.comprehension {
@@ -73,6 +82,20 @@ object AppUserService {
         }
     }
 
+    fun pageIncludingAdmins(
+        params: PaginationParameters<EveryAppUserWithRolesSort>,
+    ): App<Nothing, ApiResponse.Page<AppUserDto, EveryAppUserWithRolesSort>> = KIO.comprehension {
+        val total = !AppUserRepo.countWithRolesIncludingAdmins(params.search).orDie()
+        val page = !AppUserRepo.pageWithRolesIncludingAdmins(params).orDie()
+
+        page.traverse { it.appUserDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
     fun update(
         request: UpdateAppUserRequest,
         scope: Privilege.Scope,
@@ -80,11 +103,14 @@ object AppUserService {
         targetUserId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
+        val targetIsAdmin = !AppUserHasRoleRepo.exists(targetUserId, ADMIN_ROLE).orDie()
+
         !KIO.failOn(
             scope == Privilege.Scope.OWN
-                && (requestingUserId != targetUserId
-                || request.roles.isNotEmpty())
+                && (requestingUserId != targetUserId || request.roles.isNotEmpty())
+                || targetIsAdmin && requestingUserId != targetUserId && requestingUserId != SYSTEM_USER
         ) { AuthError.PrivilegeMissing }
+
 
         !AppUserRepo.update(targetUserId) {
             firstname = request.firstname

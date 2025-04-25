@@ -17,6 +17,7 @@ drop view if exists fee_for_competition_properties;
 drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
 drop view if exists app_user_with_roles;
+drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
@@ -45,6 +46,7 @@ from role r
          left join privilege p on rhp.privilege = p.id
 group by r.id;
 
+-- refactor this and similar views to use where-clause in API instead
 create view role_with_privileges as
 select r.id,
        r.name,
@@ -53,7 +55,7 @@ select r.id,
 from every_role_with_privileges r
 where r.static is false;
 
-create view app_user_with_roles as
+create view every_app_user_with_roles as
 select au.id,
        au.firstname,
        au.lastname,
@@ -63,11 +65,22 @@ select au.id,
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
          left join role_with_privileges rwp on auhr.role = rwp.id
+group by au.id;
+
+-- refactor this and similar views to use where-clause in API instead
+create view app_user_with_roles as
+select au.id,
+       au.firstname,
+       au.lastname,
+       au.email,
+       au.club,
+       au.roles
+from every_app_user_with_roles au
 where not exists(select *
                  from app_user_has_role auhr2
                  where auhr2.role = '00000000-0000-0000-0000-000000000000'
                    and auhr2.app_user = au.id)
-group by au.id;
+;
 
 create view app_user_with_privileges as
 select au.*,
