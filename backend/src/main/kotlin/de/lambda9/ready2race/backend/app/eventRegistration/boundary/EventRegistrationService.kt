@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
@@ -96,13 +95,20 @@ object EventRegistrationService {
 
         val eventName = !EventRepo.getName(eventId).orDie()
 
+
+        // TODO: implement after merge
+        val summaryParticipants = ""
+        val summaryCompetitions = ""
+
         val content = !EmailService.getTemplate(
             EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION,
             EmailLanguage.valueOf(user.language!!)
         ).map { mailTemplate ->
             mailTemplate.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to user.firstname + " " + user.lastname,
-                EmailTemplatePlaceholder.EVENT to (eventName ?: "")
+                EmailTemplatePlaceholder.EVENT to (eventName ?: ""),
+                EmailTemplatePlaceholder.PARTICIPANTS to summaryParticipants,
+                EmailTemplatePlaceholder.COMPETITIONS to summaryCompetitions
             )
         }
 

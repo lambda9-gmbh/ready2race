@@ -5,4 +5,6 @@ enum class EmailTemplatePlaceholder(val key: String) {
     SENDER("##sender##"),
     LINK("##link##"),
     EVENT("##event##"),
+    PARTICIPANTS("##participants##"),
+    COMPETITIONS("##competitions##"),
 }
