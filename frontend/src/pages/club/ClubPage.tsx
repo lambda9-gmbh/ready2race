@@ -44,7 +44,7 @@ const ClubPage = () => {
                     <Typography variant="h2">{data.name}</Typography>
                     <Stack direction={'row'}>
                         {userData?.map(u => (
-                            <Card sx={{background: '#FFF'}}>
+                            <Card key={u.id} sx={{background: '#FFF'}}>
                                 <CardContent>
                                     <Stack direction={'row'} spacing={1}>
                                         <Typography variant={'h5'} sx={{color: 'text.secondary'}}>

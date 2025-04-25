@@ -9,7 +9,7 @@ import {
     GridSortModel,
     GridValidRowModel,
 } from '@mui/x-data-grid'
-import {ReactNode, useState} from 'react'
+import {ReactNode, useMemo, useRef, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
@@ -282,6 +282,16 @@ const EntityTableInternal = <
         },
     )
 
+    const rowCountRef = useRef(data?.pagination?.total ?? 0)
+
+    const rowCount = useMemo(() => {
+        const total = data?.pagination?.total
+        if (total !== undefined) {
+            rowCountRef.current = total
+        }
+        return rowCountRef.current
+    }, [data?.pagination?.total])
+
     return (
         <Box>
             {title && <Typography variant={'h2'}>{title}</Typography>}
@@ -331,7 +341,7 @@ const EntityTableInternal = <
                             onSortModelChange={setSortModel}
                             columns={cols}
                             rows={data?.data ?? []}
-                            rowCount={data?.pagination?.total ?? 0}
+                            rowCount={rowCount}
                             loading={pending || isDeletingRow}
                             density={'compact'}
                             getRowHeight={() => 'auto'}
