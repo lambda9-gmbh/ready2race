@@ -41,7 +41,7 @@ const ClubPage = () => {
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(data && (
                 <Stack spacing={2}>
-                    <Typography variant="h1">{data.name}</Typography>
+                    <Typography variant="h2">{data.name}</Typography>
                     <Stack direction={'row'}>
                         {userData?.map(u => (
                             <Card sx={{background: '#FFF'}}>
@@ -77,7 +77,7 @@ const ClubPage = () => {
                     <Box>
                         <ParticipantTable
                             {...participantProps.table}
-                            title={t('club.participant.title')}
+                            title={t('club.participants')}
                         />
                         <ParticipantDialog {...participantProps.dialog} />
                     </Box>

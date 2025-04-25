@@ -2,7 +2,9 @@ package de.lambda9.ready2race.backend.app.event.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
+import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
@@ -38,5 +40,21 @@ fun EventRecord.eventDto(): App<Nothing, EventDto> = KIO.ok(
         registrationAvailableTo = registrationAvailableTo,
         invoicePrefix = invoicePrefix,
         published = published
+    )
+)
+
+fun EventPublicViewRecord.eventPublicDto(): App<Nothing, EventPublicDto> = KIO.ok(
+    EventPublicDto(
+        id = id!!,
+        name = name!!,
+        description = description,
+        location = location,
+        registrationAvailableFrom = registrationAvailableFrom,
+        registrationAvailableTo = registrationAvailableTo,
+        createdAt = createdAt!!,
+        competitionCount = competitionCount!!,
+        eventFrom = eventFrom,
+        eventTo = eventTo
+
     )
 )

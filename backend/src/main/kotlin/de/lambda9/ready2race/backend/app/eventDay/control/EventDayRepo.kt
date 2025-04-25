@@ -1,12 +1,14 @@
 package de.lambda9.ready2race.backend.app.eventDay.control
 
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventDay
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -26,10 +28,18 @@ object EventDayRepo {
 
     fun countByEvent(
         eventId: UUID,
-        search: String?
+        search: String?,
+        scope: Privilege.Scope?
     ): JIO<Int> = Jooq.query {
         with(EVENT_DAY) {
-            fetchCount(this, DSL.and(EVENT_DAY.EVENT.eq(eventId), search.metaSearch(searchFields())))
+            fetchCount(
+                this,
+                DSL.and(
+                    EVENT_DAY.EVENT.eq(eventId),
+                    search.metaSearch(searchFields()),
+                    filterScope(scope, this)
+                )
+            )
         }
     }
 
@@ -55,12 +65,15 @@ object EventDayRepo {
 
     fun pageByEvent(
         eventId: UUID,
-        params: PaginationParameters<EventDaySort>
+        params: PaginationParameters<EventDaySort>,
+        scope: Privilege.Scope?
     ): JIO<List<EventDayRecord>> = Jooq.query {
         with(EVENT_DAY) {
             selectFrom(this)
                 .page(params, searchFields()) {
-                    EVENT.eq(eventId)
+                    EVENT.eq(eventId).and(
+                        filterScope(scope, this)
+                    )
                 }
                 .fetch()
         }
@@ -88,11 +101,16 @@ object EventDayRepo {
     }
 
     fun getEventDay(
-        eventDayId: UUID
+        eventDayId: UUID,
+        scope: Privilege.Scope?
     ): JIO<EventDayRecord?> = Jooq.query {
         with(EVENT_DAY) {
             selectFrom(this)
-                .where(ID.eq(eventDayId))
+                .where(
+                    ID.eq(eventDayId).and(
+                        filterScope(scope, this)
+                    )
+                )
                 .fetchOne()
         }
     }
@@ -108,4 +126,14 @@ object EventDayRepo {
         }
         eventDays.filter { !found.contains(it) }
     }
+
+    private fun filterScope(
+        scope: Privilege.Scope?,
+        eventDay: EventDay
+    ) = if (scope == Privilege.Scope.GLOBAL) DSL.trueCondition() else DSL.exists(
+        DSL.select(EVENT.ID)
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventDay.EVENT))
+            .and(EVENT.PUBLISHED.eq(true))
+    )
 }

@@ -72,7 +72,22 @@ fun ApplicationCall.authenticate(
             .map { Privilege.Scope.valueOf(it!!.scope) }
             .maxByOrNull { it.level }
             ?.let { user to it }
-    }.onNullFail { AuthError.PrivilegeMissing }
+    }
+        .onNullFail { AuthError.PrivilegeMissing }
+
+fun ApplicationCall.optionalAuthenticate(
+    action: Privilege.Action,
+    resource: Privilege.Resource,
+): App<AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>?> =
+    sessions.get<UserSession>()?.token?.let {token ->
+        AuthService.useSessionToken(token).map { user ->
+            user.privileges!!
+                .filter { it!!.action == action.name && it.resource == resource.name }
+                .map { Privilege.Scope.valueOf(it!!.scope) }
+                .maxByOrNull { it.level }
+                ?.let { user to it }
+        }
+    }?: KIO.ok(null)
 
 fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
 

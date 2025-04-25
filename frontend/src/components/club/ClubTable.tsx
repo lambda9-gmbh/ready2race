@@ -39,7 +39,7 @@ const ClubTable = (props: BaseEntityTableProps<ClubDto>) => {
             flex: 1,
             sortable: true,
             type: 'dateTime',
-            valueGetter: (_, c) => new Date(c.createdAt)
+            valueGetter: (_, c) => new Date(c.createdAt),
         },
     ]
 
@@ -58,8 +58,7 @@ const ClubTable = (props: BaseEntityTableProps<ClubDto>) => {
             })}
             entityName={t('club.club')}
             deleteRequest={deleteRequest}
-            onDelete={() => {
-            }}
+            onDelete={() => {}}
         />
     )
 }

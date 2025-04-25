@@ -81,7 +81,7 @@ fun Route.eventDocument() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
+                    !authenticate(Privilege.ReadEventOwn)
                     val id = !pathParam("eventDocumentId", uuid)
                     EventDocumentService.downloadDocument(id)
                 }

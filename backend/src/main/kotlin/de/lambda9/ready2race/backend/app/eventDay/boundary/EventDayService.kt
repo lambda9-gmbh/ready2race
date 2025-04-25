@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventDay.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
@@ -39,17 +40,18 @@ object EventDayService {
     fun pageByEvent(
         eventId: UUID,
         params: PaginationParameters<EventDaySort>,
-        competitionId: UUID?
+        competitionId: UUID?,
+        scope: Privilege.Scope?
     ): App<ServiceError, ApiResponse.Page<EventDayDto, EventDaySort>> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
 
         val total =
-            if (competitionId == null) !EventDayRepo.countByEvent(eventId, params.search).orDie()
+            if (competitionId == null) !EventDayRepo.countByEvent(eventId, params.search, scope).orDie()
             else !EventDayRepo.countByEventAndCompetition(eventId, competitionId, params.search).orDie()
 
         val page =
-            if (competitionId == null) !EventDayRepo.pageByEvent(eventId, params).orDie()
+            if (competitionId == null) !EventDayRepo.pageByEvent(eventId, params, scope).orDie()
             else !EventDayRepo.pageByEventAndCompetition(eventId, competitionId, params).orDie()
 
         page.traverse { it.eventDayDto() }.map {
@@ -61,9 +63,10 @@ object EventDayService {
     }
 
     fun getEventDay(
-        eventDayId: UUID
+        eventDayId: UUID,
+        scope: Privilege.Scope?
     ): App<EventDayError, ApiResponse> = KIO.comprehension {
-        val eventDay = !EventDayRepo.getEventDay(eventDayId).orDie().onNullFail { EventDayError.EventDayNotFound }
+        val eventDay = !EventDayRepo.getEventDay(eventDayId, scope).orDie().onNullFail { EventDayError.EventDayNotFound }
         eventDay.eventDayDto().map { ApiResponse.Dto(it) }
     }
 
