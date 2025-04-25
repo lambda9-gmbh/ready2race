@@ -28,7 +28,6 @@ const FormInputLabel = (props: PropsWithChildren<Props>) => {
                 <Typography sx={{fontSize: '1.1rem'}}>{props.label}</Typography>
                 {!props.required && (
                     <Typography
-                        className={'input-label-optional-text'}
                         alignSelf="center"
                         color="textSecondary">
                         {` – ${t('common.form.optional')}`}

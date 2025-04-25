@@ -17,7 +17,7 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
 import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {Alert, Box, Button, Stack, TextField, Typography} from '@mui/material'
+import {Alert, Box, Button, Stack, TextField, Typography, useTheme} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {ApiError, Pagination, Privilege, Resource} from '@api/types.gen.ts'
@@ -156,6 +156,7 @@ const EntityTableInternal = <
 >({
     entityName,
     title,
+    hints,
     lastRequested,
     reloadData,
     openDialog,
@@ -180,6 +181,7 @@ const EntityTableInternal = <
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
+    const theme = useTheme()
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
 
@@ -295,6 +297,12 @@ const EntityTableInternal = <
     return (
         <Box>
             {title && <Typography variant={'h2'}>{title}</Typography>}
+            {hints &&
+                hints.map((hint, index) => (
+                    <Box key={index} sx={{color: theme.palette.text.secondary}}>
+                        {hint}
+                    </Box>
+                ))}
             {!error ? (
                 <>
                     <Box display={'flex'} justifyContent={'space-between'} mb={1} pt={1}>

@@ -1,7 +1,7 @@
-import {Box, Divider, Stack, Tab, Tabs, Typography} from '@mui/material'
+import {Box, Divider, Stack, Tab, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {eventDayName} from '@components/event/common.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import Throbber from '@components/Throbber.tsx'
@@ -10,10 +10,12 @@ import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
 import {getCompetition, getEventDays} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
-import TabPanel from '@components/TabPanel.tsx'
+import TabPanel from '@components/tab/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
+import TabSelectionContainer from '@components/tab/TabSelectionContainer'
+import {useNavigate} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
 
 const CompetitionPage = () => {
@@ -24,7 +26,13 @@ const CompetitionPage = () => {
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
 
-    const [activeTab, setActiveTab] = useState(0)
+    const {tabIndex} = competitionIndexRoute.useSearch()
+    const activeTab = tabIndex ?? 0
+
+    const navigate = useNavigate()
+    const switchTab = (tabIndex: number) => {
+        navigate({from: competitionIndexRoute.fullPath, search: {tabIndex: tabIndex}}).then()
+    }
 
     const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
 
@@ -112,17 +120,12 @@ const CompetitionPage = () => {
                             }
                             variant="h1"
                         />
-                        <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
-                            <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-                                <Tab label={t('event.tabs.settings')} {...a11yProps(0)} />
-                                {user.loggedIn && (
-                                    <Tab
-                                        label={t('event.registration.registrations')}
-                                        {...a11yProps(1)}
-                                    />
-                                )}
-                            </Tabs>
-                        </Box>
+                        <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
+                            <Tab label={t('event.tabs.settings')} {...a11yProps(0)} />
+                            {user.loggedIn && (
+                                <Tab label={t('event.registration.registrations')} {...a11yProps(1)} />
+                            )}
+                        </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
                             <Stack direction={'row'} spacing={2}>
                                 <Stack flex={1} spacing={2}>

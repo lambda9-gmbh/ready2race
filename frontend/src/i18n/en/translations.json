@@ -144,7 +144,7 @@
       "date": "Date",
       "name": "Name",
       "description": "Description",
-      "assignedCompetitions": "Competitions for the day"
+      "assignedCompetitions": "Competitions on this day"
     },
     "competition": {
       "competition": "Competition",
@@ -154,11 +154,24 @@
       "description": "Description",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "tableHint": {
+        "competitionComponents": {
+          "part1": "Categories, participants types and fee types for the competitions can be defined ",
+          "part2Link": "here",
+          "part3": "."
+        },
+        "templates": {
+          "part1": "For reuse in different events, ",
+          "part2Link": "templates",
+          "part3": " can be defined."
+        }
+      },
       "category": {
         "category": "Category",
         "categories": "Categories",
         "name": "Name",
-        "description": "Description"
+        "description": "Description",
+        "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
       },
       "count": {
         "males": "Number of men",
@@ -173,6 +186,7 @@
         "description": "Description",
         "role": "Role",
         "add": "Add Participant Type",
+        "tableHint": "Roles that participants can have in a competition.",
         "error": {
           "emptyList": "Please add one or more participant types",
           "noCount": "Please enter at least one participant of any kind for this role",
@@ -191,6 +205,7 @@
         "amount": "Amount",
         "add": "Add Fee",
         "type": "Fee type",
+        "tableHint": "Defines possible fees for a competition.",
         "required": {
           "notRequired": "Fee is optional",
           "required": "Fee is mandatory"
@@ -200,9 +215,10 @@
         "template": "Competition Template",
         "templates": "Competition Templates",
         "name": "Name",
-        "description": "Description"
+        "description": "Description",
+        "tableHint": "Provide a quick way to create competitions for an event."
       },
-      "assignedDays": "Days of the competition",
+      "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       }
@@ -222,7 +238,12 @@
       "requirementColName": "Column to check for requirement",
       "requirementIsValidValue": "Accepted value in requirement column",
       "participantsOpen": "Open",
-      "participantsApproved": "Approved"
+      "participantsApproved": "Approved",
+      "tableHint": {
+        "part1": "Requirements can be created or edited ",
+        "part2Link": "here",
+        "part3": "."
+      }
     },
     "assign": {
       "save": {
@@ -234,13 +255,20 @@
       "document": "Document",
       "documents": "Documents",
       "name": "Name",
+      "tableHint": {
+        "description": "Will be provided upon event registration.",
+        "part1": "In order to group and configure documents, ",
+        "part2Link": "document types",
+        "part3": " must first be defined."
+      },
       "type": {
         "type": "Type",
         "documentType": "Document Type",
         "documentTypes": "Document Types",
         "name": "Name",
+        "tableHint": "Enable the categorization of different documents for an event.",
         "required": {
-          "forEvent": "Erforderlich für Event",
+          "forEvent": "Required for event",
           "confirmation": "Confirmation required"
         }
       },
@@ -291,7 +319,8 @@
     "active": "Active",
     "activate": "Activate for event",
     "remove": "Remove from event",
-    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
+    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
+    "tableHint": "Can be enabled for events."
   },
   "user": {
     "user": "User",
@@ -413,6 +442,14 @@
     "description": "Description",
     "error": {
       "cannotAssign": "Role(s) could not be assigned to the user"
+    }
+  },
+  "configuration": {
+    "configuration": "Configuration",
+    "tabs": {
+      "competitionTemplates": "Competition templates",
+      "eventElements": "Event elements",
+      "competitionElements": "Competition elements"
     }
   },
   "captcha": {

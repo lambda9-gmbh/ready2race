@@ -14,7 +14,6 @@ import {
 import {useState} from 'react'
 import {
     Dashboard,
-    EditCalendar,
     Event,
     Home,
     Login,
@@ -36,7 +35,7 @@ import {
     updateEventGlobal,
 } from '@authorization/privileges.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
-import LanguageWidget from "@components/appbar/LanguageWidget.tsx";
+import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 
 const RootLayout = () => {
     const {t} = useTranslation()
@@ -104,13 +103,6 @@ const RootLayout = () => {
                                 text={t('navigation.titles.events')}
                                 icon={<Event />}
                                 to={'/event'}
-                            />
-                            <SidebarItem
-                                text={t('navigation.titles.competitionConfig')}
-                                icon={<EditCalendar />} //todo: better icon
-                                authenticatedOnly
-                                privilege={updateEventGlobal}
-                                to={'/competitionConfig'}
                             />
                             <Divider />
                             <SidebarItem
