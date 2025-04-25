@@ -154,7 +154,7 @@ const RootLayout = () => {
                                             justifyContent={'center'}>
                                             <Link to={'/login'}>
                                                 <Button endIcon={<Login />}>
-                                                    <Typography>Anmelden</Typography>
+                                                    <Typography>{t('user.login.login')}</Typography>
                                                 </Button>
                                             </Link>
                                             <Stack
