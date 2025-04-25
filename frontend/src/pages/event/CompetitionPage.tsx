@@ -16,10 +16,12 @@ import CompetitionRegistrationTable from '@components/event/competition/registra
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate} from '@tanstack/react-router'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -119,20 +121,12 @@ const CompetitionPage = () => {
                             variant="h1"
                         />
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                            <Tab label={t('event.registration.registrations')} {...a11yProps(0)} />
-                            <Tab label={t('event.tabs.settings')} {...a11yProps(1)} />
+                            <Tab label={t('event.tabs.settings')} {...a11yProps(0)} />
+                            {user.loggedIn && (
+                                <Tab label={t('event.registration.registrations')} {...a11yProps(1)} />
+                            )}
                         </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
-                            <CompetitionRegistrationDialog
-                                {...competitionRegistrationTeamsProps.dialog}
-                                competition={competitionData}
-                                eventId={eventId}
-                            />
-                            <CompetitionRegistrationTable
-                                {...competitionRegistrationTeamsProps.table}
-                            />
-                        </TabPanel>
-                        <TabPanel index={1} activeTab={activeTab}>
                             <Stack direction={'row'} spacing={2}>
                                 <Stack flex={1} spacing={2}>
                                     <EntityDetailsEntry
@@ -224,6 +218,18 @@ const CompetitionPage = () => {
                                 </Box>
                             </Stack>
                         </TabPanel>
+                        {user.loggedIn && (
+                            <TabPanel index={1} activeTab={activeTab}>
+                                <CompetitionRegistrationDialog
+                                    {...competitionRegistrationTeamsProps.dialog}
+                                    competition={competitionData}
+                                    eventId={eventId}
+                                />
+                                <CompetitionRegistrationTable
+                                    {...competitionRegistrationTeamsProps.table}
+                                />
+                            </TabPanel>
+                        )}
                     </Stack>
                 )) ||
                     (competitionPending && <Throbber />)}

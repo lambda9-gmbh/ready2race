@@ -257,6 +257,19 @@ export type EventDto = {
     published?: boolean
 }
 
+export type EventPublicDto = {
+    id: string
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    createdAt: string
+    competitionCount: number
+    eventFrom?: string
+    eventTo?: string
+}
+
 export type EventRegistrationCompetitionDto = {
     id: string
     identifier: string
@@ -343,6 +356,19 @@ export type EventRegistrationUpsertDto = {
     participants: Array<EventRegistrationParticipantUpsertDto>
     competitionRegistrations: Array<CompetitionRegistrationUpsertDto>
     message?: string
+}
+
+export type EventRegistrationViewDto = {
+    id: string
+    createdAt: string
+    message?: string
+    updatedAt: string
+    eventId: string
+    eventName: string
+    clubId: string
+    clubName: string
+    competitionRegistrationCount: number
+    participantCount: number
 }
 
 export type EventRequest = {
@@ -662,6 +688,12 @@ export type UnprocessableEntityError = ApiError & {
           }
 }
 
+export type UpdateAppUserRequest = {
+    firstname: string
+    lastname: string
+    roles: Array<string>
+}
+
 export type VerifyRegistrationRequest = {
     token: string
 }
@@ -727,6 +759,17 @@ export type GetUserData = {
 export type GetUserResponse = AppUserDto
 
 export type GetUserError = BadRequestError | ApiError
+
+export type UpdateUserData = {
+    body: UpdateAppUserRequest
+    path: {
+        userId: string
+    }
+}
+
+export type UpdateUserResponse = void
+
+export type UpdateUserError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type RegisterUserData = {
     body: RegisterRequest
@@ -951,6 +994,62 @@ export type GetEventsResponse = {
 }
 
 export type GetEventsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetPublicEventsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetPublicEventsResponse = {
+    data: Array<EventPublicDto>
+    pagination: Pagination
+}
+
+export type GetPublicEventsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetEventRegistrationsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetEventRegistrationsResponse = {
+    data: Array<EventRegistrationViewDto>
+    pagination: Pagination
+}
+
+export type GetEventRegistrationsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventData = {
     path: {

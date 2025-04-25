@@ -47,9 +47,15 @@ const UserWidget = () => {
                             },
                         },
                     }}>
-                    <MenuItem onClick={handleClose}>
-                        <Link to={'/user/$userId'} params={{userId: user.id}}>
-                            <Stack direction="row" spacing={2}>
+                    <MenuItem onClick={handleClose} sx={{p: 0}}>
+                        <Link
+                            to={'/user/$userId'}
+                            params={{userId: user.id}}
+                            style={{width: '100%'}}>
+                            <Stack
+                                direction="row"
+                                spacing={2}
+                                sx={{width: 1, py: '6px', px: '16px', boxSizing: 'border-box'}}>
                                 <Person />
                                 <Typography>{t('user.settings.profile')}</Typography>
                             </Stack>

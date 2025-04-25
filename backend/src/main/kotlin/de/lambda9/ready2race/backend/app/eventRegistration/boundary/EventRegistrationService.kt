@@ -1,27 +1,52 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
-import de.lambda9.ready2race.backend.app.eventRegistration.control.*
+import de.lambda9.ready2race.backend.app.email.boundary.EmailService
+import de.lambda9.ready2race.backend.app.email.entity.EmailAttachment
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
+import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
+import de.lambda9.ready2race.backend.app.eventRegistration.control.toDto
+import de.lambda9.ready2race.backend.app.eventRegistration.control.toRecord
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
 import java.util.*
 
 object EventRegistrationService {
+
+    fun pageView(
+        params: PaginationParameters<EventRegistrationViewSort>,
+    ): App<Nothing, ApiResponse.Page<EventRegistrationViewDto, EventRegistrationViewSort>> = KIO.comprehension {
+        val total = !EventRegistrationRepo.countForView(params.search).orDie()
+        val page = !EventRegistrationRepo.pageForView(params).orDie()
+
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
 
     fun getEventRegistrationTemplate(
         eventId: UUID,
@@ -39,8 +64,7 @@ object EventRegistrationService {
     fun upsertRegistrationForEvent(
         eventId: UUID,
         registrationDto: EventRegistrationUpsertDto,
-        clubId: UUID,
-        userId: UUID,
+        user: AppUserWithPrivilegesRecord,
     ): App<EventRegistrationError, ApiResponse.Created> = KIO.comprehension {
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
@@ -50,17 +74,17 @@ object EventRegistrationService {
         val now = LocalDateTime.now()
 
         val (persistedRegistrationId, isUpdate) =
-            !EventRegistrationRepo.findByEventAndClub(eventId, clubId).map { it?.let { it.id to true } }.orDie()
+            !EventRegistrationRepo.findByEventAndClub(eventId, user.club!!).map { it?.let { it.id to true } }.orDie()
                 ?: (!EventRegistrationRepo.create(
                     EventRegistrationRecord(
                         UUID.randomUUID(),
                         eventId,
-                        clubId,
+                        user.club!!,
                         registrationDto.message,
                         now,
-                        userId,
+                        user.id!!,
                         now,
-                        userId
+                        user.id!!
                     )
                 ).orDie() to false)
 
@@ -68,14 +92,14 @@ object EventRegistrationService {
             !EventRegistrationRepo.update(persistedRegistrationId) {
                 message = registrationDto.message
                 updatedAt = now
-                updatedBy = userId
+                updatedBy = user.id!!
             }.orDie()
 
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
         val participantIdMap = !registrationDto.participants.traverse { pDto ->
-            handleSingleCompetitionRegistration(pDto, userId, clubId, template, persistedRegistrationId, now)
+            handleSingleCompetitionRegistration(pDto, user.id!!, user.club!!, template, persistedRegistrationId, now)
         }.map { it.toMap(mutableMapOf()) }
 
         !registrationDto.competitionRegistrations.traverse { competitionRegistrationDto ->
@@ -83,12 +107,95 @@ object EventRegistrationService {
                 template,
                 competitionRegistrationDto,
                 persistedRegistrationId,
-                clubId,
+                user.club!!,
                 now,
-                userId,
+                user.id!!,
                 participantIdMap
             )
         }
+
+        val eventName = !EventRepo.getName(eventId).orDie()
+        val clubName = !ClubRepo.getName(user.club!!).orDie()
+        val participants = !ParticipantForEventRepo.getByClub(user.club!!).orDie()
+
+        //TODO: @refactor: after merging registration result, move to Repo, extract sorting
+        val competitions = (!Jooq.query {
+            fetch(EVENT_COMPETITION_REGISTRATION)
+        }.orDie()).sortedWith { a, b ->
+            val identA = a!!.identifier!!
+            val identB = b!!.identifier!!
+
+            val digitsA = identA.takeLastWhile { it.isDigit() }
+            val digitsB = identB.takeLastWhile { it.isDigit() }
+
+            val prefixA = identA.removeSuffix(digitsA)
+            val prefixB = identB.removeSuffix(digitsB)
+
+            val intA = digitsA.toIntOrNull() ?: 0
+            val intB = digitsB.toIntOrNull() ?: 0
+
+            // sort by lexicographical, except integer suffixes
+            when {
+                prefixA < prefixB -> -1
+                prefixA > prefixB -> 1
+                intA < intB -> -1
+                intA > intB -> 1
+                else -> 0
+            }
+        }
+
+        val summaryParticipants = participants.joinToString("\n") { p ->
+            """
+                |    [${p.gender}] ${p.firstname} ${p.lastname}${p.year?.let { " ($it)" } ?: ""}${p.externalClubName?.let { " - $it" } ?: ""}
+            """.trimMargin()
+        }.trimMargin()
+
+        val summaryCompetitions = competitions.joinToString("\n") { c ->
+            val teams = c.clubRegistrations!!.flatMap { it!!.teams!!.map { it!! } }.filter { it.club == user.club }
+            """
+                |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
+                |        ${if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
+                    val ps = t.participants!!.map { it!! }.sortedBy { it.role }
+                    """
+                        |->${t.teamName?.let { " ($it)" } ?: ""}
+                        |            ${ps.joinToString("\n|            ") { p ->
+                            """
+                                |[${p.role}] ${p.firstname} ${p.lastname}
+                            """.trimMargin()
+                    }}
+                    """.trimMargin()
+            }}
+                |
+            """.trimMargin()
+        }
+
+        val content = !EmailService.getTemplate(
+            EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION,
+            EmailLanguage.valueOf(user.language!!)
+        ).map { mailTemplate ->
+            mailTemplate.toContent(
+                EmailTemplatePlaceholder.RECIPIENT to user.firstname + " " + user.lastname,
+                EmailTemplatePlaceholder.EVENT to (eventName ?: ""),
+                EmailTemplatePlaceholder.CLUB to (clubName ?: ""),
+                EmailTemplatePlaceholder.PARTICIPANTS to summaryParticipants,
+                EmailTemplatePlaceholder.COMPETITIONS to summaryCompetitions,
+            )
+        }
+
+        val attachments = !EventDocumentRepo.getDownloadsByEvent(eventId).orDie().map {
+            it.map { rec ->
+                EmailAttachment(
+                    name = rec.name!!,
+                    data = rec.data!!
+                )
+            }
+        }
+
+        !EmailService.enqueue(
+            recipient = user.email!!,
+            content = content,
+            attachments = attachments
+        )
 
         ok(ApiResponse.Created(persistedRegistrationId))
 

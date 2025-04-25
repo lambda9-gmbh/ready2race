@@ -24,7 +24,7 @@ import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {readEventGlobal, updateEventGlobal} from '@authorization/privileges.ts'
+import {readEventGlobal, readEventOwn, updateEventGlobal} from '@authorization/privileges.ts'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 
@@ -111,7 +111,10 @@ const EventPage = () => {
                         </Stack>
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
-                            <Tab label={t('event.tabs.participants')} {...a11yProps(1)} />
+                            {(user.checkPrivilege(readEventGlobal) ||
+                                    user.checkPrivilege(readEventOwn)) && (
+                                    <Tab label={t('event.participants')} {...a11yProps(1)} />
+                                )}
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
                             )}
@@ -171,7 +174,7 @@ const EventPage = () => {
                         <TabPanel index={1} activeTab={activeTab}>
                             <ParticipantForEventTable
                                 {...participantForEventProps.table}
-                                title={t('club.participant.title')}
+                                title={t('event.participants')}
                             />
                         </TabPanel>
                         <TabPanel index={2} activeTab={activeTab}>
