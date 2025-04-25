@@ -112,9 +112,9 @@ const EventPage = () => {
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
                             {(user.checkPrivilege(readEventGlobal) ||
-                                    user.checkPrivilege(readEventOwn)) && (
-                                    <Tab label={t('event.participants')} {...a11yProps(1)} />
-                                )}
+                                user.checkPrivilege(readEventOwn)) && (
+                                <Tab label={t('event.participants')} {...a11yProps(1)} />
+                            )}
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
                             )}
@@ -130,7 +130,7 @@ const EventPage = () => {
                                                   <>
                                                       {t(
                                                           'event.competition.tableHint.templates.part1',
-                                                      ) + ' '}
+                                                      )}
                                                       <InlineLink
                                                           to={'/config'}
                                                           search={{tabIndex: 0}}>
@@ -138,15 +138,14 @@ const EventPage = () => {
                                                               'event.competition.tableHint.templates.part2Link',
                                                           )}
                                                       </InlineLink>
-                                                      {' ' +
-                                                          t(
-                                                              'event.competition.tableHint.templates.part3',
-                                                          )}
+                                                      {t(
+                                                          'event.competition.tableHint.templates.part3',
+                                                      )}
                                                   </>,
                                                   <>
                                                       {t(
                                                           'event.competition.tableHint.competitionComponents.part1',
-                                                      ) + ' '}
+                                                      )}
                                                       <InlineLink
                                                           to={'/config'}
                                                           search={{tabIndex: 1}}>
@@ -154,10 +153,9 @@ const EventPage = () => {
                                                               'event.competition.tableHint.competitionComponents.part2Link',
                                                           )}
                                                       </InlineLink>
-                                                      {' ' +
-                                                          t(
-                                                              'event.competition.tableHint.competitionComponents.part3',
-                                                          )}
+                                                      {t(
+                                                          'event.competition.tableHint.competitionComponents.part3',
+                                                      )}
                                                   </>,
                                               ]
                                             : undefined
@@ -183,12 +181,13 @@ const EventPage = () => {
                                     {...documentAdministrationProps.table}
                                     title={t('event.document.documents')}
                                     hints={[
+                                        <>{t('event.document.tableHint.description')}</>,
                                         <>
-                                            {t('event.document.tableHint.part1') + ' '}
+                                            {t('event.document.tableHint.part1')}
                                             <InlineLink to={'/config'} search={{tabIndex: 2}}>
                                                 {t('event.document.tableHint.part2Link')}
                                             </InlineLink>
-                                            {' ' + t('event.document.tableHint.part3')}
+                                            {t('event.document.tableHint.part3')}
                                         </>,
                                     ]}
                                 />
@@ -198,15 +197,13 @@ const EventPage = () => {
                                     title={t('participantRequirement.participantRequirements')}
                                     hints={[
                                         <>
-                                            {t('event.participantRequirement.tableHint.part1') +
-                                                ' '}
+                                            {t('event.participantRequirement.tableHint.part1')}
                                             <InlineLink to={'/config'} search={{tabIndex: 2}}>
                                                 {t(
                                                     'event.participantRequirement.tableHint.part2Link',
                                                 )}
                                             </InlineLink>
-                                            {' ' +
-                                                t('event.participantRequirement.tableHint.part3')}
+                                            {t('event.participantRequirement.tableHint.part3')}
                                         </>,
                                     ]}
                                 />

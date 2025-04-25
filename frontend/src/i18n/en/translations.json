@@ -156,14 +156,14 @@
       "shortName": "Short name",
       "tableHint": {
         "competitionComponents": {
-          "part1": "Competition categories, participants types and fee types must first be defined",
+          "part1": "Categories, participants types and fee types for the competitions can be defined ",
           "part2Link": "here",
           "part3": "."
         },
         "templates": {
-          "part1": "To simplify creation,",
+          "part1": "For reuse in different events, ",
           "part2Link": "templates",
-          "part3": "can be defined."
+          "part3": " can be defined."
         }
       },
       "category": {
@@ -171,7 +171,7 @@
         "categories": "Categories",
         "name": "Name",
         "description": "Description",
-        "tableHint": "Enable the categorization of competitions for a better overview"
+        "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
       },
       "count": {
         "males": "Number of men",
@@ -186,7 +186,7 @@
         "description": "Description",
         "role": "Role",
         "add": "Add Participant Type",
-        "tableHint": "Types of gender-independent participant groups that are assigned to competitions",
+        "tableHint": "Roles that participants can have in a competition.",
         "error": {
           "emptyList": "Please add one or more participant types",
           "noCount": "Please enter at least one participant of any kind for this role",
@@ -205,7 +205,7 @@
         "amount": "Amount",
         "add": "Add Fee",
         "type": "Fee type",
-        "tableHint": "Group and configure various costs of a competition",
+        "tableHint": "Defines possible fees for a competition.",
         "required": {
           "notRequired": "Fee is optional",
           "required": "Fee is mandatory"
@@ -216,9 +216,9 @@
         "templates": "Competition Templates",
         "name": "Name",
         "description": "Description",
-        "tableHint": "Provide a quick way to create competitions for an event"
+        "tableHint": "Provide a quick way to create competitions for an event."
       },
-      "assignedDays": "Days of the competition",
+      "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       }
@@ -240,9 +240,9 @@
       "participantsOpen": "Open",
       "participantsApproved": "Approved",
       "tableHint": {
-        "part1": "Requirements can be created or edited",
+        "part1": "Requirements can be created or edited ",
         "part2Link": "here",
-        "part3": ""
+        "part3": "."
       }
     },
     "assign": {
@@ -256,16 +256,17 @@
       "documents": "Documents",
       "name": "Name",
       "tableHint": {
-        "part1": "In order to group and configure documents,",
+        "description": "Will be provided upon event registration.",
+        "part1": "In order to group and configure documents, ",
         "part2Link": "document types",
-        "part3": "must first be defined"
+        "part3": " must first be defined."
       },
       "type": {
         "type": "Type",
         "documentType": "Document Type",
         "documentTypes": "Document Types",
         "name": "Name",
-        "tableHint": "Enable the categorization of different documents for an event",
+        "tableHint": "Enable the categorization of different documents for an event.",
         "required": {
           "forEvent": "Required for event",
           "confirmation": "Confirmation required"
@@ -319,7 +320,7 @@
     "activate": "Activate for event",
     "remove": "Remove from event",
     "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
-    "tableHint": "Can be enabled for events"
+    "tableHint": "Can be enabled for events."
   },
   "user": {
     "user": "User",

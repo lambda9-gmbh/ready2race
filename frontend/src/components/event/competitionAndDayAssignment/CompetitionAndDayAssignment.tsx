@@ -133,7 +133,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                 onClose={closeDialog}
                 fullWidth={true}
                 maxWidth={'xs'}
-                className="ready2competition">
+                className="ready2race">
                 <Box sx={{mx: 4, my: 2}}>
                     <Autocomplete
                         value={autocompleteContent}

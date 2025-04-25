@@ -156,14 +156,14 @@
       "shortName": "Kurzname",
       "tableHint": {
         "competitionComponents": {
-          "part1": "Wettkampfkategorien, Teilnehmertypen und Gebührenarten müssen zunächst",
+          "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
           "part2Link": "hier",
-          "part3": "definiert werden."
+          "part3": " definiert werden."
         },
         "templates": {
-          "part1": "Zum vereinfachten Erstellen können",
+          "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
           "part2Link": "Vorlagen",
-          "part3": "definiert werden."
+          "part3": " definiert werden."
         }
       },
       "category": {
@@ -171,7 +171,7 @@
         "categories": "Kategorien",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen das kategorisieren von Wettkämpfen zur besseren Übersicht"
+        "tableHint": "Ermöglichen das Sortieren und Filtern von Wettkämpfen (noch nicht implementiert)."
       },
       "count": {
         "males": "Anzahl Männer",
@@ -186,7 +186,7 @@
         "description": "Beschreibung",
         "role": "Rolle",
         "add": "Teilnehmertyp hinzufügen",
-        "tableHint": "Typen von geschlechtsunabhängigen Teilnehmergruppen, welche Wettkämpfen zugeordnet werden",
+        "tableHint": "Rollen, die Teilnehmende in einem Wettkampf einnehmen können.",
         "error": {
           "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
           "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
@@ -205,7 +205,7 @@
         "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
-        "tableHint": "Gruppieren und konfigurieren verschiedene Kosten eines Wettkampfs",
+        "tableHint": "Definiert mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
@@ -216,9 +216,9 @@
         "templates": "Wettkampf Vorlagen",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung"
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung."
       },
-      "assignedDays": "Tage des Wettkampfs",
+      "assignedDays": "Wettkampftage",
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       }
@@ -240,9 +240,9 @@
       "participantsOpen": "Offen",
       "participantsApproved": "Überprüft",
       "tableHint": {
-        "part1": "Bedingungen können",
+        "part1": "Bedingungen können ",
         "part2Link": "hier",
-        "part3": "erstellt oder bearbeitet werden"
+        "part3": " erstellt oder bearbeitet werden."
       }
     },
     "assign": {
@@ -256,16 +256,17 @@
       "documents": "Dokumente",
       "name": "Name",
       "tableHint": {
-        "part1": "Zum Gruppieren und Konfigurieren, müssen zunächst",
+        "description": "Werden bei der Meldung zur Verfügung gestellt.",
+        "part1": "Zum Gruppieren und Konfigurieren können ",
         "part2Link": "Dokumenttypen",
-        "part3": "definiert werden"
+        "part3": " definiert werden."
       },
       "type": {
         "type": "Typ",
         "documentType": "Dokumenttyp",
         "documentTypes": "Dokumenttypen",
         "name": "Name",
-        "tableHint": "Ermöglichen das kategorisieren verschiedener Dokumente einer Veranstaltung",
+        "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
         "required": {
           "forEvent": "Erforderlich für Veranstaltung",
           "confirmation": "Bestätigung erforderlich"
@@ -319,7 +320,7 @@
     "activate": "Für Veranstaltung aktivieren",
     "remove": "Von Veranstaltung entfernen",
     "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
-    "tableHint": "Können bei Veranstaltungen aktiviert werden"
+    "tableHint": "Können bei Veranstaltungen aktiviert werden."
   },
   "user": {
     "user": "Benutzer",
