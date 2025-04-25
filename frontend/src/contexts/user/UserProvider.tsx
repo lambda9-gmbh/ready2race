@@ -5,10 +5,13 @@ import {useFetch} from '@utils/hooks.ts'
 import {scopeLevel} from '@utils/helpers.ts'
 import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
 import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
+import i18next from "i18next";
+import {fallbackLng, isLanguage, Language} from "@i18n/config.ts";
 
 type UserData = LoginDto
 
 const UserProvider = ({children}: PropsWithChildren) => {
+    const [language, setLanguage] = useState(isLanguage(i18next.language) ? i18next.language : fallbackLng)
     const [userData, setUserData] = useState<UserData>()
     const [ready, setReady] = useState(false)
     const prevLoggedIn = useRef(false)
@@ -67,10 +70,17 @@ const UserProvider = ({children}: PropsWithChildren) => {
         }
     }
 
+    const changeLanguage = async (language: Language) => {
+        await i18next.changeLanguage(language)
+        setLanguage(language)
+    }
+
     let userValue: User
 
     if (!userData) {
         userValue = {
+            language,
+            changeLanguage,
             loggedIn: false,
             login,
             checkPrivilege: () => false
@@ -96,6 +106,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 }, undefined)
 
         userValue = {
+            language,
+            changeLanguage,
             loggedIn: true,
             id: userData.id,
             clubId: userData.clubId,

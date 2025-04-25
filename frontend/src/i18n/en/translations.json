@@ -55,7 +55,10 @@
     "back": "Back",
     "next": "Next",
     "and": "and",
-    "remove": "Remove"
+    "remove": "Remove",
+    "language": {
+      "menu": "Select language"
+    }
   },
   "decimal": {
     "point": "."
