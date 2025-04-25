@@ -1,6 +1,6 @@
 import {Box, Button, CardActions, CardContent, Stack, Typography} from '@mui/material'
-import {useEntityAdministration, useFeedback, useFetch} from '../../utils/hooks.ts'
-import {clubRoute} from '../../routes.tsx'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
+import {clubRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import Throbber from '../../components/Throbber.tsx'
 import {getClub, getClubUsers, ParticipantDto} from '../../api'
