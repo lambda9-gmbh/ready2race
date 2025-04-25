@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.calls.comprehension.comprehension
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -34,7 +35,13 @@ fun Route.user() {
             }
 
             put {
+                call.respondComprehension {
+                    val id = !pathParam("userId", uuid)
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.USER)
+                    val body = !receiveKIO(UpdateAppUserRequest.example)
 
+                    AppUserService.update(body, scope, user.id!!, id)
+                }
             }
         }
 

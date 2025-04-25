@@ -24,7 +24,7 @@ import TabPanel from '@components/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {readEventGlobal} from '@authorization/privileges.ts'
+import {readEventGlobal, readEventOwn} from '@authorization/privileges.ts'
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -104,7 +104,10 @@ const EventPage = () => {
                         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
                             <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
                                 <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
-                                <Tab label={t('event.tabs.participants')} {...a11yProps(1)} />
+                                {(user.checkPrivilege(readEventGlobal) ||
+                                    user.checkPrivilege(readEventOwn)) && (
+                                    <Tab label={t('event.participants')} {...a11yProps(1)} />
+                                )}
                                 {user.checkPrivilege(readEventGlobal) && (
                                     <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
                                 )}
@@ -127,7 +130,7 @@ const EventPage = () => {
                         <TabPanel index={1} activeTab={activeTab}>
                             <ParticipantForEventTable
                                 {...participantForEventProps.table}
-                                title={t('club.participant.title')}
+                                title={t('event.participants')}
                             />
                         </TabPanel>
                         <TabPanel index={2} activeTab={activeTab}>

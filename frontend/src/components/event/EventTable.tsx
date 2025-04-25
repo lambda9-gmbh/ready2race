@@ -45,6 +45,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
         {
             field: 'published',
             headerName: t('event.published'),
+            minWidth: 110,
             sortable: false,
             requiredPrivilege: readEventGlobal,
             renderCell: ({value}) => (value ? <Check /> : <></>),
@@ -55,6 +56,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
         <EntityTable
             {...props}
             parentResource={'EVENT'}
+            publicRead={true}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

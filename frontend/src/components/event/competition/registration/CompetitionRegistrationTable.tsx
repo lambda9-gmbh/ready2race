@@ -109,7 +109,9 @@ const CompetitionRegistrationTable = (
             {
                 field: 'updatedAt',
                 headerName: t('entity.updatedAt'),
-                minWidth: 200,
+                minWidth: 100,
+                maxWidth: 200,
+                flex:1,
                 type: 'dateTime',
                 valueGetter: v => new Date(v),
             },

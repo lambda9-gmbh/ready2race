@@ -1,6 +1,6 @@
 import {Box, Button, CardActions, CardContent, Stack, Typography} from '@mui/material'
-import {useEntityAdministration, useFeedback, useFetch} from '../../utils/hooks.ts'
-import {clubRoute} from '../../routes.tsx'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
+import {clubRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import Throbber from '../../components/Throbber.tsx'
 import {getClub, getClubUsers, ParticipantDto} from '../../api'
@@ -41,10 +41,10 @@ const ClubPage = () => {
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(data && (
                 <Stack spacing={2}>
-                    <Typography variant="h1">{data.name}</Typography>
+                    <Typography variant="h2">{data.name}</Typography>
                     <Stack direction={'row'}>
                         {userData?.map(u => (
-                            <Card sx={{background: '#FFF'}}>
+                            <Card key={u.id} sx={{background: '#FFF'}}>
                                 <CardContent>
                                     <Stack direction={'row'} spacing={1}>
                                         <Typography variant={'h5'} sx={{color: 'text.secondary'}}>
@@ -77,7 +77,7 @@ const ClubPage = () => {
                     <Box>
                         <ParticipantTable
                             {...participantProps.table}
-                            title={t('club.participant.title')}
+                            title={t('club.participants')}
                         />
                         <ParticipantDialog {...participantProps.dialog} />
                     </Box>

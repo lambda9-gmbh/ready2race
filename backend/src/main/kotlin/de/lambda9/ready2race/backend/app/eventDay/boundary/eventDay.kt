@@ -24,12 +24,12 @@ fun Route.eventDay() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                 val eventId = !pathParam("eventId", uuid)
                 val params = !pagination<EventDaySort>()
                 val competitionId = !optionalQueryParam("competitionId", uuid)
 
-                EventDayService.pageByEvent(eventId, params, competitionId)
+                EventDayService.pageByEvent(eventId, params, competitionId, optionalUserAndScope?.second)
             }
         }
 
@@ -37,10 +37,10 @@ fun Route.eventDay() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val eventDayId = !pathParam("eventDayId", uuid)
 
-                    EventDayService.getEventDay(eventDayId)
+                    EventDayService.getEventDay(eventDayId, optionalUserAndScope?.second)
                 }
             }
 

@@ -22,6 +22,9 @@ import type {
     GetUserData,
     GetUserError,
     GetUserResponse,
+    UpdateUserData,
+    UpdateUserError,
+    UpdateUserResponse,
     RegisterUserData,
     RegisterUserError,
     RegisterUserResponse,
@@ -64,6 +67,12 @@ import type {
     GetEventsData,
     GetEventsError,
     GetEventsResponse,
+    GetPublicEventsData,
+    GetPublicEventsError,
+    GetPublicEventsResponse,
+    GetEventRegistrationsData,
+    GetEventRegistrationsError,
+    GetEventRegistrationsResponse,
     GetEventData,
     GetEventError,
     GetEventResponse,
@@ -336,6 +345,15 @@ export const getUser = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const updateUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateUserResponse, UpdateUserError, ThrowOnError>({
+        ...options,
+        url: '/user/{userId}',
+    })
+}
+
 export const registerUser = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<RegisterUserData, ThrowOnError>,
 ) => {
@@ -481,6 +499,32 @@ export const getEvents = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<GetEventsResponse, GetEventsError, ThrowOnError>({
         ...options,
         url: '/event',
+    })
+}
+
+export const getPublicEvents = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetPublicEventsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPublicEventsResponse,
+        GetPublicEventsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/public',
+    })
+}
+
+export const getEventRegistrations = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetEventRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventRegistrationsResponse,
+        GetEventRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/registration',
     })
 }
 
