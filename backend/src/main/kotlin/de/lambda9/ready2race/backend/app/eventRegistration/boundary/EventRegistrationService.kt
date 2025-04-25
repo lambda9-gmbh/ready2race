@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
@@ -13,15 +14,20 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_CLUB_REGISTRATION
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
+import de.lambda9.ready2race.backend.database.generated.tables.references.REGISTERED_COMPETITION_TEAM
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
 import java.util.*
 
@@ -94,11 +100,59 @@ object EventRegistrationService {
         }
 
         val eventName = !EventRepo.getName(eventId).orDie()
+        val clubName = !ClubRepo.getName(user.club!!).orDie()
+        val participants = !ParticipantForEventRepo.getByClub(user.club!!).orDie()
 
+        //TODO: @refactor: after merging registration result, move to Repo, extract sorting
+        val competitions = (!Jooq.query {
+            fetch(EVENT_COMPETITION_REGISTRATION)
+        }.orDie()).sortedWith { a, b ->
+            val identA = a!!.identifier!!
+            val identB = b!!.identifier!!
 
-        // TODO: implement after merge
-        val summaryParticipants = ""
-        val summaryCompetitions = ""
+            val digitsA = identA.takeLastWhile { it.isDigit() }
+            val digitsB = identB.takeLastWhile { it.isDigit() }
+
+            val prefixA = identA.removeSuffix(digitsA)
+            val prefixB = identB.removeSuffix(digitsB)
+
+            val intA = digitsA.toIntOrNull() ?: 0
+            val intB = digitsB.toIntOrNull() ?: 0
+
+            // sort by lexicographical, except integer suffixes
+            when {
+                prefixA < prefixB -> -1
+                prefixA > prefixB -> 1
+                intA < intB -> -1
+                intA > intB -> 1
+                else -> 0
+            }
+        }
+
+        val summaryParticipants = participants.joinToString("\n") { p ->
+            """
+                |    [${p.gender}] ${p.firstname} ${p.lastname}${p.year?.let { " ($it)" } ?: ""}${p.externalClubName?.let { " - $it" } ?: ""}
+            """.trimMargin()
+        }.trimMargin()
+
+        val summaryCompetitions = competitions.joinToString("\n") { c ->
+            val teams = c.clubRegistrations!!.flatMap { it!!.teams!!.map { it!! } }.filter { it.club == user.club }
+            """
+                |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
+                |        ${if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
+                    val ps = t.participants!!.map { it!! }.sortedBy { it.role }
+                    """
+                        |->${t.teamName?.let { " ($it)" } ?: ""}
+                        |            ${ps.joinToString("\n|            ") { p ->
+                            """
+                                |[${p.role}] ${p.firstname} ${p.lastname}
+                            """.trimMargin()
+                    }}
+                    """.trimMargin()
+            }}
+                |
+            """.trimMargin()
+        }
 
         val content = !EmailService.getTemplate(
             EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION,
@@ -107,8 +161,9 @@ object EventRegistrationService {
             mailTemplate.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to user.firstname + " " + user.lastname,
                 EmailTemplatePlaceholder.EVENT to (eventName ?: ""),
+                EmailTemplatePlaceholder.CLUB to (clubName ?: ""),
                 EmailTemplatePlaceholder.PARTICIPANTS to summaryParticipants,
-                EmailTemplatePlaceholder.COMPETITIONS to summaryCompetitions
+                EmailTemplatePlaceholder.COMPETITIONS to summaryCompetitions,
             )
         }
 

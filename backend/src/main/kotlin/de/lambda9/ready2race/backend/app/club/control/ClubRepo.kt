@@ -67,6 +67,20 @@ object ClubRepo {
         }
     }
 
+    fun getName(
+        id: UUID,
+    ): JIO<String?> = Jooq.query {
+        with(CLUB) {
+            select(
+                NAME
+            )
+                .from(this)
+                .where(ID.eq(id))
+                .fetchOne()
+                ?.value1()
+        }
+    }
+
     fun update(
         id: UUID,
         f: ClubRecord.() -> Unit

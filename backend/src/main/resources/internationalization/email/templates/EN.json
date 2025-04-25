@@ -59,7 +59,7 @@
         "Thank you very much for your registration for our event (##event##), which we hereby confirm receipt of.",
         "You can still make changes to the registration using your access until the registration deadline.",
         "",
-        "Your current registration summarized:",
+        "Your current registration for ##club## summarized:",
         "",
         "Registered participants:",
         "##participants##",

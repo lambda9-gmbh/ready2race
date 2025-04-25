@@ -59,7 +59,7 @@
         "vielen Dank fur eure Meldung zu unserer Veranstaltung (##event##), deren Eingang wir hiermit gern bestätigen.",
         "Bis zum Meldeschluss kannst du noch über den erstellten Zugang Änderungen an der Meldung vornehmen.",
         "",
-        "Deine aktuelle Meldung zusammengefasst:",
+        "Deine aktuelle Meldung für ##club## zusammengefasst:",
         "",
         "Gemeldete Teilnehmer:",
         "##participants##",

@@ -20,6 +20,16 @@ object ParticipantForEventRepo {
 
     private fun ParticipantForEvent.searchFields() = listOf(FIRSTNAME, LASTNAME, EXTERNAL_CLUB_NAME)
 
+    fun getByClub(
+        clubId: UUID,
+    ): JIO<List<ParticipantForEventRecord>> = Jooq.query {
+        with(PARTICIPANT_FOR_EVENT) {
+            selectFrom(this)
+                .where(CLUB_ID.eq(clubId))
+                .fetch()
+        }
+    }
+
     fun count(
         search: String?,
         eventId: UUID,
