@@ -91,6 +91,20 @@ object EventRepo {
         }
     }
 
+    fun getName(
+        id: UUID,
+    ): JIO<String?> = Jooq.query {
+        with(EVENT) {
+            select(
+                NAME
+            )
+                .from(this)
+                .where(ID.eq(id))
+                .fetchOne()
+                ?.value1()
+        }
+    }
+
     private fun filterScope(
         scope: Privilege.Scope?,
     ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT.PUBLISHED.eq(true) else DSL.trueCondition()

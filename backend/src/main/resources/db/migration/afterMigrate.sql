@@ -1,5 +1,10 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_registration_result_view;
+drop view if exists event_competition_registration;
+drop view if exists competition_club_registration;
+drop view if exists registered_competition_team;
+drop view if exists registered_competition_team_participant;
 drop view if exists event_document_download;
 drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
@@ -300,6 +305,7 @@ from event_document ed
 
 create view event_document_download as
 select ed.id,
+       ed.event,
        ed.name,
        edd.data
 from event_document ed
@@ -401,3 +407,56 @@ from event_registration er
          left join competition_registration cr on er.id = cr.event_registration
          left join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
 group by er.id, er.created_at, er.message, er.updated_at, e.id, e.name, c.id, c.name;
+
+create view registered_competition_team_participant as
+select crnp.competition_registration as team_id,
+       np.name                       as role,
+       p.firstname,
+       p.lastname,
+       p.year,
+       p.gender,
+       p.external_club_name
+from competition_registration_named_participant crnp
+         join named_participant np on crnp.named_participant = np.id
+         join participant p on crnp.participant = p.id
+;
+
+create view registered_competition_team as
+select cr.id,
+       cr.competition,
+       cr.club,
+       cr.name                                                                   as team_name,
+       coalesce(array_agg(rctp) filter ( where rctp.team_id is not null ), '{}') as participants
+from competition_registration cr
+         left join registered_competition_team_participant rctp on cr.id = rctp.team_id
+group by cr.id;
+
+create view competition_club_registration as
+select rct.competition,
+       c.name,
+       coalesce(array_agg(rct), '{}') as teams
+from registered_competition_team rct
+         join club c on rct.club = c.id
+group by rct.competition, c.id;
+
+create view event_competition_registration as
+select c.id,
+       c.event,
+       cp.identifier,
+       cp.name,
+       cp.short_name,
+       cc.name                                                                     as category_name,
+       coalesce(array_agg(ccr) filter ( where ccr.competition is not null ), '{}') as club_registrations
+from competition c
+         join competition_properties cp on c.id = cp.competition
+         left join competition_category cc on cp.competition_category = cc.id
+         left join competition_club_registration ccr on c.id = ccr.competition
+group by c.id, cp.id, cc.id;
+
+create view event_registration_result_view as
+select e.id,
+       e.name                                                             as event_name,
+       coalesce(array_agg(ecr) filter ( where ecr.id is not null ), '{}') as competitions
+from event e
+         left join event_competition_registration ecr on e.id = ecr.event
+group by e.id;
