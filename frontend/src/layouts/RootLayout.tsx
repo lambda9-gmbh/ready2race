@@ -36,12 +36,15 @@ import {
     updateEventGlobal,
 } from '@authorization/privileges.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
+import LanguageWidget from "@components/appbar/LanguageWidget.tsx";
 
 const RootLayout = () => {
     const {t} = useTranslation()
     const [drawerExpanded, setDrawerExpanded] = useState(true)
     const user = useUser()
     const location = useLocation()
+
+    const languageSet = Boolean(document.getElementById('ready2race-root')!.dataset.lng)
 
     return (
         <Container maxWidth={'xl'}>
@@ -56,7 +59,10 @@ const RootLayout = () => {
                             <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
                                 {drawerExpanded ? <MenuOpen /> : <Menu />}
                             </IconButton>
-                            <UserWidget />
+                            <Stack direction={'row'} spacing={1}>
+                                {!languageSet && <LanguageWidget />}
+                                <UserWidget />
+                            </Stack>
                         </Toolbar>
                     </AppBar>
                     <Box

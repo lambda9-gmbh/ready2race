@@ -55,7 +55,10 @@
     "back": "Zurück",
     "next": "Weiter",
     "and": "und",
-    "remove": "Entfernen"
+    "remove": "Entfernen",
+    "language": {
+      "menu": "Sprache auswählen"
+    }
   },
   "decimal": {
     "point": ","

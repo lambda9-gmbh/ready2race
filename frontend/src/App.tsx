@@ -11,23 +11,23 @@ import {LocalizationProvider} from '@mui/x-date-pickers'
 import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFnsV3'
 import i18next from 'i18next'
 import './i18n/config'
-import {fallbackLng, Language, locales} from './i18n/config.ts'
+import {isLanguage, locales} from './i18n/config.ts'
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
     credentials: 'include',
 })
 
-const language: Language = (document.getElementById('ready2race-root')!.dataset.lng ??
-    fallbackLng) as Language
-// todo: throw error on unfitting lng
-i18next.changeLanguage(language).then()
-
-const locale = locales[language]
-const theme = muiTheme(locale)
+const language = (document.getElementById('ready2race-root')!.dataset.lng)
+if (language && isLanguage(language)) {
+    i18next.changeLanguage(language).then()
+}
 
 const App = () => {
     const user = useUser()
+
+    const locale = locales[user.language]
+    const theme = muiTheme(locale)
 
     return (
         <LocalizationProvider
