@@ -56,6 +56,7 @@ const EventDayTable = (props: BaseEntityTableProps<EventDayDto>) => {
         <EntityTable
             {...props}
             parentResource={'EVENT'}
+            publicRead={true}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

@@ -508,6 +508,78 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/public:
+    get:
+      operationId: getPublicEvents
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Event page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventPublicDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/registration:
+    get:
+      operationId: getEventRegistrations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Event Registration page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventRegistrationViewDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -3107,6 +3179,80 @@ components:
           type: string
         published:
           type: boolean
+
+    EventPublicDto:
+      type: object
+      required:
+        - id
+        - name
+        - competitionCount
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        registrationAvailableFrom:
+          type: string
+          format: date-time
+        registrationAvailableTo:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        competitionCount:
+          type: number
+        eventFrom:
+          type: string
+          format: date
+        eventTo:
+          type: string
+          format: date
+
+    EventRegistrationViewDto:
+      type: object
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - eventId
+        - eventName
+        - clubId
+        - clubName
+        - competitionRegistrationCount
+        - participantCount
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        eventId:
+          type: string
+          format: uuid
+        eventName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        competitionRegistrationCount:
+          type: number
+        participantCount:
+          type: number
 
     EventRequest:
       type: object

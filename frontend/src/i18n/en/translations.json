@@ -1,6 +1,7 @@
 {
   "common": {
     "cancel": "Cancel",
+    "close": "Close",
     "confirmation": {
       "title": "Confirmation required",
       "content": "Please confirm the execution of the selected action"
@@ -37,7 +38,7 @@
       },
       "optional": "Optional",
       "required": "Please fill in this field.",
-      "selectFile" : "Select file"
+      "selectFile": "Select file"
     },
     "load": {
       "error": {
@@ -54,7 +55,7 @@
     "back": "Back",
     "next": "Next",
     "and": "and",
-    "remove" : "Remove"
+    "remove": "Remove"
   },
   "decimal": {
     "point": "."
@@ -87,6 +88,7 @@
   },
   "navigation": {
     "titles": {
+      "landing": "Home",
       "dashboard": "Dashboard",
       "events": "Events",
       "competitionConfig": "Competition Settings",
@@ -94,14 +96,20 @@
       "users": "Users",
       "config": "Configurations",
       "clubs": "Clubs",
-      "myClubs": "My Club"
+      "myClub": "My Club"
+    }
+  },
+  "dashboard": {
+    "registration": {
+      "showMessage": "Show message"
     }
   },
   "club": {
     "club": "Club",
     "clubs": "Clubs",
+    "participants": "Members",
     "participant": {
-      "title": "Participant",
+      "title": "Member",
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club"
@@ -112,14 +120,19 @@
     "events": "Events",
     "name": "Name",
     "description": "Description",
-    "registerNow": "Register now",
+    "registerNow": "To Registration",
     "invoice": {
       "prefix": "Invoice prefix"
     },
     "location": "Location",
+    "upcoming": "Upcoming events",
     "registrationAvailable": {
-      "from": "Registration period start",
-      "to": "Registration period end"
+      "timespan": "Registration period",
+      "timespanFrom": "Registration period start",
+      "timespanTo": "Registration period end",
+      "from": "from",
+      "to": "until",
+      "unknown": "Not announced yet"
     },
     "published": "Published",
     "eventDay": {
@@ -136,7 +149,7 @@
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
-      "registrationCount" : "Registrations",
+      "registrationCount": "Registrations",
       "shortName": "Short name",
       "category": {
         "category": "Category",
@@ -193,20 +206,20 @@
     },
     "participantRequirement": {
       "info": "If no column to check for the requirement is provided, all matching participants from the file will be approved.",
-      "approved" : "Approved requirements",
+      "approved": "Approved requirements",
       "checkUpload": "Check requirements",
       "checkManually": "Manually check '{{name}}'",
       "file": "CSV-File",
-      "charset" : "Charset",
+      "charset": "Charset",
       "separator": "Separator",
-      "firstnameColName":"Column to check for firstname",
+      "firstnameColName": "Column to check for firstname",
       "lastnameColName": "Column to check for lastname",
-      "yearsColName":"Column to check year of birth",
+      "yearsColName": "Column to check year of birth",
       "clubColName": "Column to check for name of club",
-      "requirementColName":"Column to check for requirement",
+      "requirementColName": "Column to check for requirement",
       "requirementIsValidValue": "Accepted value in requirement column",
-      "participantsOpen" : "Open",
-      "participantsApproved" : "Approved"
+      "participantsOpen": "Open",
+      "participantsApproved": "Approved"
     },
     "assign": {
       "save": {
@@ -240,8 +253,8 @@
       }
     },
     "registration": {
-      "registration" : "Registration",
-      "registrations" : "Registrations",
+      "registration": "Registration",
+      "registrations": "Registrations",
       "addParticipant": "Add Participant",
       "singleCompetition": "Single Competition",
       "teamCompetition": "Team Competition",
@@ -254,27 +267,28 @@
       "message": "Message",
       "optionalFee": "Optional",
       "totalFees": "Registration Fee",
-      "acceptDocuments" : "I accept the following:",
-      "infoDocuments" : "Additional info",
+      "acceptDocuments": "I accept the following:",
+      "infoDocuments": "Additional info",
       "finish": "Submit registration",
       "success": {
         "title": "Registration successful!",
         "subtitle": "You will receive a confirmation by e-mail."
-      }
+      },
+      "mostRecent": "Latest registrations"
     },
+    "participants": "Participants",
     "tabs": {
-      "general" : "General",
-      "participants" : "Participants",
+      "general": "General",
       "settings": "Settings"
     }
   },
   "participantRequirement": {
     "participantRequirement": "Participant requirement",
     "participantRequirements": "Participant requirements",
-    "active" : "Active",
-    "activate" : "Activate for event",
-    "remove" : "Remove from event",
-    "confirmRemove" : "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
+    "active": "Active",
+    "activate": "Activate for event",
+    "remove": "Remove from event",
+    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
   },
   "user": {
     "user": "User",

@@ -3,7 +3,7 @@ import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {ListItem, ListItemButton, ListItemIcon, ListItemText} from '@mui/material'
 import {useSidebar} from './SidebarContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {Privilege} from "@api/types.gen.ts";
+import {Privilege} from '@api/types.gen.ts'
 
 type Props = {
     text: string
@@ -35,7 +35,7 @@ const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: P
     }
 
     return (
-        <Link {...linkProps}>
+        <Link {...linkProps} title={text}>
             {({isActive}) => (
                 <ListItem disablePadding>
                     <ListItemButton

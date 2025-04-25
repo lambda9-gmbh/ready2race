@@ -72,24 +72,28 @@ object CompetitionService {
         KIO.ok(ApiResponse.Created(competitionId))
     }
 
-    fun <S: CompetitionSortable> pageWithPropertiesByEvent(
+    fun <S : CompetitionSortable> pageWithPropertiesByEvent(
         eventId: UUID,
         params: PaginationParameters<S>,
         eventDayId: UUID?,
-        user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope,
+        user: AppUserWithPrivilegesRecord?,
+        scope: Privilege.Scope?,
     ): App<ServiceError, ApiResponse.Page<CompetitionDto, S>> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
 
-        val total = !CompetitionRepo.countWithPropertiesByEventAndEventDay(eventId, eventDayId, params.search).orDie()
-
-        val page = if (scope == Privilege.Scope.GLOBAL) {
+        val (page, total) = if (scope == Privilege.Scope.GLOBAL) {
             !CompetitionRepo.pageWithPropertiesByEventAndEventDay(eventId, eventDayId, params, scope)
-                .map { it -> it.traverse { it.toDto() } }.orDie()
-        } else {
+                .map { it -> it.traverse { it.toDto() } }.orDie() to
+                !CompetitionRepo.countWithPropertiesByEventAndEventDay(eventId, eventDayId, params.search).orDie()
+        } else if (scope == Privilege.Scope.OWN && user != null) {
             !CompetitionRepo.pageWithPropertiesByEventAndEventDayForClub(eventId, eventDayId, params, user)
-                .map { it.traverse { it.toDto() } }.orDie()
+                .map { it.traverse { it.toDto() } }.orDie() to
+                !CompetitionRepo.countWithPropertiesByEventAndEventDay(eventId, eventDayId, params.search).orDie()
+        } else {
+            !CompetitionRepo.pagePublicByEventAndEventDay(eventId, eventDayId, params)
+                .map { it -> it.traverse { it.toDto() } }.orDie() to
+                !CompetitionRepo.countPublicByEventAndEventDay(eventId, eventDayId, params.search).orDie()
         }
 
         page.map {
@@ -102,8 +106,8 @@ object CompetitionService {
 
     fun getCompetitionWithProperties(
         competitionId: UUID,
-        user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope,
+        user: AppUserWithPrivilegesRecord?,
+        scope: Privilege.Scope?,
     ): App<CompetitionError, ApiResponse> = KIO.comprehension {
 
         val competition = if (scope == Privilege.Scope.GLOBAL) {
@@ -111,12 +115,16 @@ object CompetitionService {
                 .orDie()
                 .onNullFail { CompetitionError.CompetitionNotFound }
                 .map { it.toDto() }
-        } else {
+        } else if (user != null) {
             !CompetitionRepo.getWithPropertiesForClub(competitionId, user)
                 .orDie()
                 .onNullFail { CompetitionError.CompetitionNotFound }
                 .map { it.toDto() }
-
+        } else {
+            !CompetitionRepo.getPublic(competitionId)
+                .orDie()
+                .onNullFail { CompetitionError.CompetitionNotFound }
+                .map { it.toDto() }
         }
 
         competition.map {

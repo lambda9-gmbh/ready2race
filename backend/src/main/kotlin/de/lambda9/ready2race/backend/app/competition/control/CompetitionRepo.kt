@@ -5,11 +5,9 @@ import de.lambda9.ready2race.backend.app.competition.entity.CompetitionSortable
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionForClubView
+import de.lambda9.ready2race.backend.database.generated.tables.CompetitionPublicView
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionView
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionForClubViewRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -23,6 +21,9 @@ object CompetitionRepo {
         listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     private fun CompetitionForClubView.searchFields() =
+        listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
+
+    private fun CompetitionPublicView.searchFields() =
         listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     fun create(record: CompetitionRecord) = COMPETITION.insertReturning(record) { ID }
@@ -122,6 +123,48 @@ object CompetitionRepo {
         }
     }
 
+    fun countPublicByEventAndEventDay(
+        eventId: UUID,
+        eventDayId: UUID? = null,
+        search: String?
+    ): JIO<Int> = Jooq.query {
+        with(COMPETITION_PUBLIC_VIEW) {
+            fetchCount(
+                this, DSL.and(
+                    EVENT.eq(eventId),
+                    eventDayId?.let {
+                        ID.`in`(
+                            select(EVENT_DAY_HAS_COMPETITION.COMPETITION)
+                                .from(EVENT_DAY_HAS_COMPETITION)
+                                .where(EVENT_DAY_HAS_COMPETITION.EVENT_DAY.eq(it))
+                        )
+                    } ?: DSL.trueCondition()), search.metaSearch(searchFields())
+            )
+        }
+    }
+
+    fun <S : CompetitionSortable> pagePublicByEventAndEventDay(
+        eventId: UUID,
+        eventDayId: UUID? = null,
+        params: PaginationParameters<S>,
+    ): JIO<List<CompetitionPublicViewRecord>> = Jooq.query {
+        with(COMPETITION_PUBLIC_VIEW) {
+            selectFrom(this)
+                .page(params, searchFields()) {
+                    EVENT.eq(eventId)
+                        .and(
+                            eventDayId?.let {
+                                ID.`in`(
+                                    select(EVENT_DAY_HAS_COMPETITION.COMPETITION)
+                                        .from(EVENT_DAY_HAS_COMPETITION)
+                                        .where(EVENT_DAY_HAS_COMPETITION.EVENT_DAY.eq(it))
+                                )
+                            } ?: DSL.trueCondition())
+                }
+                .fetch()
+        }
+    }
+
     fun getWithProperties(
         competitionId: UUID,
         scope: Privilege.Scope,
@@ -148,6 +191,16 @@ object CompetitionRepo {
         with(COMPETITION_FOR_CLUB_VIEW) {
             selectFrom(this)
                 .where(ID.eq(competitionId).and(CLUB.eq(user.club)))
+                .fetchOne()
+        }
+    }
+
+    fun getPublic(
+        competitionId: UUID,
+    ): JIO<CompetitionPublicViewRecord?> = Jooq.query {
+        with(COMPETITION_PUBLIC_VIEW) {
+            selectFrom(this)
+                .where(ID.eq(competitionId))
                 .fetchOne()
         }
     }

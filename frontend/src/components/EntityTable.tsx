@@ -68,10 +68,12 @@ type ExtendedEntityTableProps<
         | {
               resource: Resource
               parentResource?: never
+              publicRead?: boolean
           }
         | {
               resource?: never
               parentResource: Resource
+              publicRead?: boolean
           }
     )
 
@@ -96,6 +98,7 @@ const EntityTable = <
 >({
     resource,
     parentResource,
+    publicRead = false,
     ...props
 }: EntityTableProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
@@ -105,7 +108,8 @@ const EntityTable = <
     if (user.loggedIn) {
         if (resource) {
             crud = {
-                create: user.checkPrivilege({action: 'CREATE', resource, scope: 'OWN'}),
+                create:
+                    user.checkPrivilege({action: 'CREATE', resource, scope: 'OWN'}) || publicRead,
                 read: user.checkPrivilege({action: 'READ', resource, scope: 'OWN'}),
                 update: user.checkPrivilege({action: 'UPDATE', resource, scope: 'OWN'}),
                 delete: user.checkPrivilege({action: 'DELETE', resource, scope: 'OWN'}),
@@ -117,7 +121,7 @@ const EntityTable = <
                 scope: 'OWN',
             })
             crud = {
-                create: rest,
+                create: rest || publicRead,
                 read: user.checkPrivilege({
                     action: 'READ',
                     resource: parentResource,
@@ -126,6 +130,13 @@ const EntityTable = <
                 update: rest,
                 delete: rest,
             }
+        }
+    } else {
+        crud = {
+            create: false,
+            read: publicRead,
+            update: false,
+            delete: false,
         }
     }
 

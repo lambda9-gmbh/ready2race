@@ -2,18 +2,18 @@ package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
+import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import io.ktor.server.routing.*
 
@@ -31,9 +31,28 @@ fun Route.event() {
 
         get {
             call.respondComprehension {
-                val (_, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                 val params = !pagination<EventSort>()
-                EventService.page(params, scope)
+                EventService.page(params, optionalUserAndScope?.second)
+            }
+
+        }
+
+        route("/public") {
+            get {
+                call.respondComprehension {
+                    val params = !pagination<EventPublicViewSort>()
+                    EventService.pagePublicView(params)
+                }
+            }
+        }
+
+        route("/registration") {
+            get {
+                call.respondComprehension {
+                    val params = !pagination<EventRegistrationViewSort>()
+                    EventRegistrationService.pageView(params)
+                }
             }
         }
 
@@ -48,9 +67,9 @@ fun Route.event() {
 
             get {
                 call.respondComprehension {
-                    val (_, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val id = !pathParam("eventId", uuid)
-                    EventService.getEvent(id, scope)
+                    EventService.getEvent(id, optionalUserAndScope?.second)
                 }
             }
 
