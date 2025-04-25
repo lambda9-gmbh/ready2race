@@ -128,7 +128,7 @@
       "date": "Datum",
       "name": "Name",
       "description": "Beschreibung",
-      "assignedCompetitions": "Wettkämpfe für den Tag"
+      "assignedCompetitions": "Wettkämpfe an diesem Tag"
     },
     "competition": {
       "competition": "Wettkampf",
@@ -136,13 +136,26 @@
       "identifier": "Kennung",
       "name": "Name",
       "description": "Beschreibung",
-      "shortName": "Kurzname",
       "registrationCount": "Meldungen",
+      "shortName": "Kurzname",
+      "tableHint": {
+        "competitionComponents": {
+          "part1": "Wettkampfkategorien, Teilnehmertypen und Gebührenarten müssen zunächst",
+          "part2Link": "hier",
+          "part3": "definiert werden."
+        },
+        "templates": {
+          "part1": "Zum vereinfachten Erstellen können",
+          "part2Link": "Vorlagen",
+          "part3": "definiert werden."
+        }
+      },
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien",
         "name": "Name",
-        "description": "Beschreibung"
+        "description": "Beschreibung",
+        "tableHint": "Ermöglichen das kategorisieren von Wettkämpfen zur besseren Übersicht"
       },
       "count": {
         "males": "Anzahl Männer",
@@ -157,6 +170,7 @@
         "description": "Beschreibung",
         "role": "Rolle",
         "add": "Teilnehmertyp hinzufügen",
+        "tableHint": "Typen von geschlechtsunabhängigen Teilnehmergruppen, welche Wettkämpfen zugeordnet werden",
         "error": {
           "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
           "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
@@ -175,6 +189,7 @@
         "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
+        "tableHint": "Gebührenarten zur Bezeichnung verschiedener Kosten eines Wettkampfs",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
@@ -184,7 +199,8 @@
         "template": "Wettkampf Vorlage",
         "templates": "Wettkampf Vorlagen",
         "name": "Name",
-        "description": "Beschreibung"
+        "description": "Beschreibung",
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung"
       },
       "assignedDays": "Tage des Wettkampfs",
       "error": {
@@ -206,7 +222,12 @@
       "requirementColName": "Spalte mit Teilnahmebedingung",
       "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
       "participantsOpen": "Offen",
-      "participantsApproved": "Überprüft"
+      "participantsApproved": "Überprüft",
+      "tableHint": {
+        "part1": "Requirements can be created or edited",
+        "part2Link": "here",
+        "part3": ""
+      }
     },
     "assign": {
       "save": {
@@ -218,13 +239,19 @@
       "document": "Dokument",
       "documents": "Dokumente",
       "name": "Name",
+      "tableHint": {
+        "part1": "Zum Gruppieren und Konfigurieren, müssen zunächst",
+        "part2Link": "Dokumenttypen",
+        "part3": "definiert werden"
+      },
       "type": {
         "type": "Typ",
         "documentType": "Dokumenttyp",
         "documentTypes": "Dokumenttypen",
         "name": "Name",
+        "tableHint": "Ermöglichen das kategorisieren verschiedener Dokumente einer Veranstaltung",
         "required": {
-          "forEvent": "Erforderlich für Event",
+          "forEvent": "Erforderlich für Veranstaltung",
           "confirmation": "Bestätigung erforderlich"
         }
       },
@@ -274,7 +301,8 @@
     "active": "Aktiv",
     "activate": "Für Veranstaltung aktivieren",
     "remove": "Von Veranstaltung entfernen",
-    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
+    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
+    "tableHint": "Können bei Veranstaltungen aktiviert werden"
   },
   "user": {
     "user": "Benutzer",

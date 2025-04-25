@@ -75,6 +75,16 @@ type LoginSearch = {
     redirect?: string
 }
 
+type TabSearch = {
+    tabIndex?: number
+}
+
+const validateTabSearch = (search: {tabIndex?: number}): TabSearch => {
+    return {
+        tabIndex: search.tabIndex,
+    }
+}
+
 export const loginRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'login',
@@ -193,6 +203,7 @@ export const configurationIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, updateEventGlobal)
     },
+    validateSearch: validateTabSearch,
 })
 
 export const eventsRoute = createRoute({
@@ -221,6 +232,7 @@ export const eventIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, readEventOwn)
     },
+    validateSearch: validateTabSearch,
 })
 
 export const eventRegisterRoute = createRoute({
@@ -263,6 +275,7 @@ export const competitionIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
+    validateSearch: validateTabSearch,
 })
 
 export const clubRoute = createRoute({

@@ -1,7 +1,7 @@
 import {Box, Divider, Stack, Tab, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {eventDayName} from '@components/event/common.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import Throbber from '@components/Throbber.tsx'
@@ -15,6 +15,7 @@ import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
+import {useNavigate} from '@tanstack/react-router'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -23,7 +24,13 @@ const CompetitionPage = () => {
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
 
-    const [activeTab, setActiveTab] = useState(0)
+    const {tabIndex} = competitionIndexRoute.useSearch()
+    const activeTab = tabIndex ?? 0
+
+    const navigate = useNavigate()
+    const switchTab = (tabIndex: number) => {
+        navigate({from: competitionIndexRoute.fullPath, search: {tabIndex: tabIndex}}).then()
+    }
 
     const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
 
@@ -111,7 +118,7 @@ const CompetitionPage = () => {
                             }
                             variant="h1"
                         />
-                        <TabSelectionContainer activeTab={activeTab} setActiveTab={setActiveTab}>
+                        <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.registration.registrations')} {...a11yProps(0)} />
                             <Tab label={t('event.tabs.settings')} {...a11yProps(1)} />
                         </TabSelectionContainer>
