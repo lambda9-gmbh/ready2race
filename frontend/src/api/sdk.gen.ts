@@ -22,6 +22,9 @@ import type {
     GetUserData,
     GetUserError,
     GetUserResponse,
+    UpdateUserData,
+    UpdateUserError,
+    UpdateUserResponse,
     RegisterUserData,
     RegisterUserError,
     RegisterUserResponse,
@@ -337,6 +340,15 @@ export const getUser = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetUserData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetUserResponse, GetUserError, ThrowOnError>({
+        ...options,
+        url: '/user/{userId}',
+    })
+}
+
+export const updateUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateUserResponse, UpdateUserError, ThrowOnError>({
         ...options,
         url: '/user/{userId}',
     })

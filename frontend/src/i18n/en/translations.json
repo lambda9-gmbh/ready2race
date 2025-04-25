@@ -336,6 +336,10 @@
         "load": "Profile could not be loaded"
       }
     },
+    "update": {
+      "error": "An error has occurred when updating the user",
+      "success": "User successfully updated"
+    },
     "invitation": {
       "invitation": "Invitation",
       "pendingInvitations": "Pending invitations",
@@ -400,6 +404,7 @@
   },
   "role": {
     "role": "Role",
+    "roles": "Roles",
     "userRoles": "User Roles",
     "name": "Name",
     "description": "Description",
