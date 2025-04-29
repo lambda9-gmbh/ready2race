@@ -1,10 +1,22 @@
-import {Outlet} from '@tanstack/react-router'
-import {AppBar, Box, Container, Divider, IconButton, Paper, Toolbar} from '@mui/material'
+import {Link, Outlet, useLocation} from '@tanstack/react-router'
+import {
+    AppBar,
+    Box,
+    Button,
+    Container,
+    Divider,
+    IconButton,
+    Paper,
+    Stack,
+    Toolbar,
+    Typography,
+} from '@mui/material'
 import {useState} from 'react'
 import {
     Dashboard,
-    EditCalendar,
     Event,
+    Home,
+    Login,
     Menu,
     MenuOpen,
     People,
@@ -18,16 +30,20 @@ import UserWidget from '@components/appbar/UserWidget.tsx'
 import {useTranslation} from 'react-i18next'
 import {
     readClubGlobal,
-    readClubOwn, readEventOwn,
+    readClubOwn,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
+import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 
 const RootLayout = () => {
     const {t} = useTranslation()
-    const [drawerExpanded, setDrawerExpanded] = useState(false)
+    const [drawerExpanded, setDrawerExpanded] = useState(true)
     const user = useUser()
+    const location = useLocation()
+
+    const languageSet = Boolean(document.getElementById('ready2race-root')!.dataset.lng)
 
     return (
         <Container maxWidth={'xl'}>
@@ -42,7 +58,10 @@ const RootLayout = () => {
                             <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
                                 {drawerExpanded ? <MenuOpen /> : <Menu />}
                             </IconButton>
-                            <UserWidget />
+                            <Stack direction={'row'} spacing={1}>
+                                {!languageSet && <LanguageWidget />}
+                                <UserWidget />
+                            </Stack>
                         </Toolbar>
                     </AppBar>
                     <Box
@@ -50,6 +69,13 @@ const RootLayout = () => {
                             display: 'flex',
                         }}>
                         <Sidebar open={drawerExpanded}>
+                            {!user.loggedIn && (
+                                <SidebarItem
+                                    text={t('navigation.titles.landing')}
+                                    icon={<Home />}
+                                    to={'/'}
+                                />
+                            )}
                             <SidebarItem
                                 text={t('navigation.titles.dashboard')}
                                 icon={<Dashboard />}
@@ -58,7 +84,7 @@ const RootLayout = () => {
                             />
                             {user.loggedIn && user.clubId && (
                                 <SidebarItem
-                                    text={t('navigation.titles.myClubs')}
+                                    text={t('navigation.titles.myClub')}
                                     icon={<Workspaces />}
                                     authenticatedOnly
                                     privilege={readClubOwn}
@@ -76,17 +102,7 @@ const RootLayout = () => {
                             <SidebarItem
                                 text={t('navigation.titles.events')}
                                 icon={<Event />}
-                                // TODO remove authenticatedOnly so everyone can see published events?
-                                authenticatedOnly
-                                privilege={readEventOwn}
                                 to={'/event'}
-                            />
-                            <SidebarItem
-                                text={t('navigation.titles.competitionConfig')}
-                                icon={<EditCalendar />} //todo: better icon
-                                authenticatedOnly
-                                privilege={updateEventGlobal}
-                                to={'/competitionConfig'}
                             />
                             <Divider />
                             <SidebarItem
@@ -111,13 +127,45 @@ const RootLayout = () => {
                                 to={'/config'}
                             />
                         </Sidebar>
-                        <Box
+                        <Stack
                             sx={{
                                 padding: 4,
                                 width: 1,
-                            }}>
+                            }}
+                            justifyContent={'space-between'}>
                             <Outlet />
-                        </Box>
+                            {!user.loggedIn &&
+                                location.pathname != '/login' &&
+                                location.pathname != '/registration' && (
+                                    <Stack spacing={1} mt={1} mb={-3}>
+                                        <Stack
+                                            spacing={2}
+                                            direction={'row'}
+                                            alignItems={'center'}
+                                            divider={<Divider orientation={'vertical'} flexItem />}
+                                            justifyContent={'center'}>
+                                            <Link to={'/login'}>
+                                                <Button endIcon={<Login />}>
+                                                    <Typography>{t('user.login.login')}</Typography>
+                                                </Button>
+                                            </Link>
+                                            <Stack
+                                                direction="row"
+                                                spacing="5px"
+                                                justifyContent="center">
+                                                <Typography sx={{fontWeight: 'light'}}>
+                                                    {t('user.login.signUp.message')}
+                                                </Typography>
+                                                <Link to="/registration">
+                                                    <Typography color={'primary'}>
+                                                        {t('user.login.signUp.link')}
+                                                    </Typography>
+                                                </Link>
+                                            </Stack>
+                                        </Stack>
+                                    </Stack>
+                                )}
+                        </Stack>
                     </Box>
                 </Box>
             </Paper>

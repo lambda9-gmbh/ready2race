@@ -1,7 +1,10 @@
 import {createContext, useContext} from 'react'
 import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
+import {Language} from "@i18n/config.ts";
 
 export type AuthenticatedUser = {
+    language: Language
+    changeLanguage: (language: Language) => Promise<void>
     loggedIn: true
     id: string
     clubId?: string
@@ -12,6 +15,8 @@ export type AuthenticatedUser = {
 }
 
 export type AnonymousUser = {
+    language: Language
+    changeLanguage: (language: Language) => Promise<void>
     loggedIn: false
     login: (data: LoginDto) => void
     checkPrivilege: (privilege: Privilege) => false

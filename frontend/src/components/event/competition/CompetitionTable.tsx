@@ -1,11 +1,13 @@
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {useTranslation} from 'react-i18next'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import EntityTable from '@components/EntityTable.tsx'
+import {GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import EntityTable, {ExtendedGridColDef} from '@components/EntityTable.tsx'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {eventIndexRoute} from '@routes'
-import {CompetitionDto} from "@api/types.gen.ts";
-import {deleteCompetition, getCompetitions} from "@api/sdk.gen.ts";
+import {CompetitionDto} from '@api/types.gen.ts'
+import {deleteCompetition, getCompetitions} from '@api/sdk.gen.ts'
+import {Chip} from '@mui/material'
+import {readRegistrationOwn} from '@authorization/privileges.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -16,7 +18,6 @@ const initialSort: GridSortModel = [{field: 'identifier', sort: 'asc'}]
 
 const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
     const {t} = useTranslation()
-
     const {eventId} = eventIndexRoute.useParams()
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
@@ -31,25 +32,23 @@ const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
         return deleteCompetition({path: {eventId: dto.event, competitionId: dto.id}})
     }
 
-    const columns: GridColDef<CompetitionDto>[] = [
+    const columns: ExtendedGridColDef<CompetitionDto>[] = [
         {
             field: 'identifier',
             headerName: t('event.competition.identifier'),
             minWidth: 120,
-            flex: 0,
             valueGetter: (_, e) => e.properties.identifier,
         },
         {
             field: 'shortName',
             headerName: t('event.competition.shortName'),
             minWidth: 120,
-            flex: 0,
             valueGetter: (_, e) => e.properties.shortName,
         },
         {
             field: 'name',
             headerName: t('event.competition.name'),
-            minWidth: 150,
+            minWidth: 100,
             flex: 1,
             valueGetter: (_, e) => e.properties.name,
         },
@@ -57,8 +56,15 @@ const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
             field: 'competitionCategory',
             headerName: t('event.competition.category.category'),
             minWidth: 150,
-            flex: 0,
             valueGetter: (_, row) => row.properties.competitionCategory?.name ?? '',
+        },
+        {
+            field: 'registrationCount',
+            headerName: t('event.competition.registrationCount'),
+            type: 'number',
+            sortable: false,
+            requiredPrivilege: readRegistrationOwn,
+            renderCell: ({formattedValue}) => <Chip label={formattedValue} />,
         },
     ]
 
@@ -66,6 +72,7 @@ const CompetitionTable = (props: BaseEntityTableProps<CompetitionDto>) => {
         <EntityTable
             {...props}
             parentResource={'EVENT'}
+            publicRead={true}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

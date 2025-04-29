@@ -46,13 +46,13 @@ const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
         {
             field: 'gender',
             headerName: t('entity.gender'),
-            minWidth: 150,
+            minWidth: 100,
             flex: 1,
         },
         {
             field: 'year',
             headerName: t('club.participant.year'),
-            minWidth: 150,
+            minWidth: 100,
             flex: 1,
         },
         {

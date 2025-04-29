@@ -11,7 +11,6 @@ import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.tailwind.core.extensions.kio.onNullDefault
 import io.ktor.server.routing.*
-import java.util.*
 
 fun Route.eventRegistration() {
 
@@ -28,13 +27,13 @@ fun Route.eventRegistration() {
             val user = !authenticate()
             val eventId = !pathParam("eventId", uuid)
             val payload = !receiveKIO(EventRegistrationUpsertDto.example)
-            EventRegistrationService.upsertRegistrationForEvent(eventId, payload, user.club!!, user.id!!)
+            EventRegistrationService.upsertRegistrationForEvent(eventId, payload, user)
         }
     }
 
     get("/registrationResult") {
         call.respondComprehension {
-            !authenticate(Privilege.ReadEventRegistrationGlobal)
+            !authenticate(Privilege.ReadRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
             val remake = !optionalQueryParam("remake", boolean).onNullDefault { false }
             EventRegistrationService.downloadResult(eventId, remake)

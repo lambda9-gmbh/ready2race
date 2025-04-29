@@ -1,9 +1,8 @@
 package de.lambda9.ready2race.backend.app.competition.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
+import de.lambda9.ready2race.backend.app.competition.entity.*
+import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.competitionRegistration
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -24,12 +23,26 @@ fun Route.competition() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val optionalUserWithScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                 val eventId = !pathParam("eventId", uuid)
-                val params = !pagination<CompetitionWithPropertiesSort>()
+
+                val params =
+                    if (optionalUserWithScope?.second == Privilege.Scope.OWN) {
+                        !pagination<CompetitionForClubWithPropertiesSort>()
+                    } else if ((optionalUserWithScope?.second == Privilege.Scope.GLOBAL)) {
+                        !pagination<CompetitionWithPropertiesSort>()
+                    } else {
+                        !pagination<CompetitionPublicSort>()
+                    }
                 val eventDayId = !optionalQueryParam("eventDayId", uuid)
 
-                CompetitionService.pageWithPropertiesByEvent(eventId, params, eventDayId)
+                CompetitionService.pageWithPropertiesByEvent(
+                    eventId,
+                    params,
+                    eventDayId,
+                    optionalUserWithScope?.first,
+                    optionalUserWithScope?.second
+                )
             }
         }
 
@@ -37,9 +50,9 @@ fun Route.competition() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val competitionId = !pathParam("competitionId", uuid)
-                    CompetitionService.getCompetitionWithProperties(competitionId)
+                    CompetitionService.getCompetitionWithProperties(competitionId, optionalUserAndScope?.first, optionalUserAndScope?.second)
                 }
             }
 
@@ -61,7 +74,7 @@ fun Route.competition() {
                 }
             }
 
-            put("/days"){
+            put("/days") {
                 call.respondComprehension {
                     val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
                     val competitionId = !pathParam("competitionId", uuid)
@@ -70,6 +83,9 @@ fun Route.competition() {
                     CompetitionService.updateEventDayHasCompetition(body, user.id!!, competitionId)
                 }
             }
+
+            competitionRegistration()
+
         }
     }
 }

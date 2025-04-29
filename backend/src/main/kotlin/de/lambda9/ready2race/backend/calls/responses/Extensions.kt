@@ -86,6 +86,10 @@ suspend fun ApplicationCall.respondKIO(
                     respond(apiResponse.dto)
                 }
 
+                is ApiResponse.ListDto<*> -> {
+                    respond(apiResponse.data)
+                }
+
                 is ApiResponse.Page<*, *> -> {
                     respond(apiResponse)
                 }

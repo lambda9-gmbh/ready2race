@@ -1,5 +1,5 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
-import {MultiSelectElement, useForm} from 'react-hook-form-mui'
+import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
@@ -10,8 +10,9 @@ import {adminId, i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {useUser} from "@contexts/user/UserContext.ts";
-import {FormInputCheckbox} from "@components/form/input/FormInputCheckbox.tsx";
+import {useUser} from '@contexts/user/UserContext.ts'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import RolesSelect from './RolesSelect'
 
 type InvitationForm = {
     email: string
@@ -51,9 +52,7 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
 
     const user = useUser()
 
-    const {data} = useFetch(
-        signal => getRoles({signal})
-    )
+    const {data} = useFetch(signal => getRoles({signal}))
 
     const onOpen = useCallback(() => {
         formContext.reset(defaultValues)
@@ -88,34 +87,10 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
                 <FormInputText name={'firstname'} label={t('user.firstname')} required />
                 <FormInputText name={'lastname'} label={t('user.lastname')} required />
                 <FormInputEmail name={'email'} label={t('user.email.email')} required />
-                { 'id' in user && user.id === adminId &&
+                {'id' in user && user.id === adminId && (
                     <FormInputCheckbox name={'admin'} label={'Admin?'} />
-                }
-                { !formContext.watch('admin') &&
-                    <MultiSelectElement
-                        name={'roles'}
-                        label={'Rollen'}
-                        options={
-                            data?.data.sort((a, b) => {
-                                if (a.name < b.name) {
-                                    return 1
-                                } else if (a.name > b.name) {
-                                    return -1
-                                } else {
-                                    return 0
-                                }
-                            }).map(r => ({
-                                id: r.id,
-                                label: r.name
-                            })) ?? []
-                        }
-                        itemKey={'id'}
-                        itemValue={'id'}
-                        itemLabel={'label'}
-                        showCheckbox={true}
-                        showChips={true}
-                    />
-                }
+                )}
+                {!formContext.watch('admin') && <RolesSelect availableRoles={data?.data} />}
             </Stack>
         </EntityDialog>
     )

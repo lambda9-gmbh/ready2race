@@ -1,8 +1,11 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.control
 
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
+import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationsViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -13,12 +16,35 @@ import java.util.*
 
 object EventRegistrationRepo {
 
+    private fun EventRegistrationsView.searchFields() = listOf(EVENT_NAME)
+
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
         EVENT_REGISTRATION.update(f) {
             EVENT_REGISTRATION.ID.eq(id)
         }
+
+    fun countForView(
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            fetchCount(
+                this,
+                search.metaSearch(searchFields())
+            )
+        }
+    }
+
+    fun pageForView(
+        params: PaginationParameters<EventRegistrationViewSort>
+    ): JIO<List<EventRegistrationsViewRecord>> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            selectFrom(this)
+                .page(params, searchFields())
+                .fetch()
+        }
+    }
 
     fun findByEventAndClub(eventId: UUID, clubId: UUID) =
         EVENT_REGISTRATION.findOneBy { EVENT_REGISTRATION.EVENT.eq(eventId).and(EVENT_REGISTRATION.CLUB.eq(clubId)) }
@@ -339,6 +365,7 @@ object EventRegistrationRepo {
             it!!.map {
                 CompetitionRegistrationTeamUpsertDto(
                     it[COMPETITION_REGISTRATION.ID]!!,
+                    null,
                     it[fees],
                     it[namedParticipants]
                 )

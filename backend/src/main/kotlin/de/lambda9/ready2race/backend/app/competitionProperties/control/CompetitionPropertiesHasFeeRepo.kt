@@ -13,6 +13,17 @@ object CompetitionPropertiesHasFeeRepo {
 
     fun create(records: Collection<CompetitionPropertiesHasFeeRecord>) = COMPETITION_PROPERTIES_HAS_FEE.insert(records)
 
+    fun existsByCompetitionIdAndFeeId(competitionId: UUID, feeId: UUID) = Jooq.query {
+        fetchExists(
+            COMPETITION_PROPERTIES_HAS_FEE.join(COMPETITION_PROPERTIES)
+                .on(COMPETITION_PROPERTIES.ID.eq(COMPETITION_PROPERTIES_HAS_FEE.COMPETITION_PROPERTIES))
+                .where(
+                    COMPETITION_PROPERTIES_HAS_FEE.FEE.eq(feeId)
+                        .and(COMPETITION_PROPERTIES.COMPETITION.eq(competitionId))
+                )
+        )
+    }
+
     fun deleteManyByCompetitionProperties(
         competitionPropertiesId: UUID,
     ): JIO<Int> = Jooq.query {

@@ -27,6 +27,17 @@ fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
         )
     }
 
+fun EveryAppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
+    roles!!.toList().traverse { it!!.toDto() }.map {
+        AppUserDto(
+            id = id!!,
+            firstname = firstname!!,
+            lastname = lastname!!,
+            email = email!!,
+            roles = it
+        )
+    }
+
 fun InviteRequest.toRecord(inviterId: UUID, lifeTime: Duration): App<Nothing, AppUserInvitationRecord> =
     KIO.ok(
         AppUserInvitationRecord(
