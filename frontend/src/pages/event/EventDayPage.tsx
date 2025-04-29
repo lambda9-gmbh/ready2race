@@ -34,28 +34,33 @@ const EventDayPage = () => {
     )
 
     const {data: assignedCompetitionsData, pending: assignedCompetitionsPending} = useFetch(
-        signal => getCompetitions({signal, path: {eventId: eventId}, query: {eventDayId: eventDayId}}),
+        signal =>
+            getCompetitions({signal, path: {eventId: eventId}, query: {eventDayId: eventDayId}}),
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.multiple.short', {entity: t('event.competition.competitions')}))
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.competitions'),
+                        }),
+                    )
                 }
             },
             deps: [eventId, eventDayId, reloadDataTrigger],
         },
     )
-    const assignedCompetitions =
-        assignedCompetitionsData?.data.map(value => ({
-            id: value.id,
-            label: competitionLabelName(value.properties.identifier, value.properties.name),
-        })) ?? []
+    const assignedCompetitions = assignedCompetitionsData?.data.map(value => value.id) ?? []
 
     const {data: competitionsData, pending: competitionsPending} = useFetch(
         signal => getCompetitions({signal, path: {eventId: eventId}}),
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('common.load.error.multiple.short', {entity: t('event.competition.competitions')}))
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.competitions'),
+                        }),
+                    )
                 }
             },
             deps: [eventId, reloadDataTrigger],

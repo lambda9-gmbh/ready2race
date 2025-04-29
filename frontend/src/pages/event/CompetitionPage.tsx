@@ -79,11 +79,7 @@ const CompetitionPage = () => {
         }
     }
 
-    const assignedEventDays =
-        assignedEventDaysData?.data.map(value => ({
-            id: value.id,
-            label: eventDayName(value.date, value.name),
-        })) ?? []
+    const assignedEventDays = assignedEventDaysData?.data.map(value => value.id) ?? []
 
     const {data: eventDaysData, pending: eventDaysPending} = useFetch(
         signal => getEventDays({signal, path: {eventId: eventId}}),
@@ -123,7 +119,10 @@ const CompetitionPage = () => {
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.settings')} {...a11yProps(0)} />
                             {user.loggedIn && (
-                                <Tab label={t('event.registration.registrations')} {...a11yProps(1)} />
+                                <Tab
+                                    label={t('event.registration.registrations')}
+                                    {...a11yProps(1)}
+                                />
                             )}
                         </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>

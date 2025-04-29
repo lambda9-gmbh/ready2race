@@ -1,35 +1,24 @@
-import {
-    Autocomplete,
-    Box,
-    Button,
-    Dialog,
-    DialogActions,
-    TextField,
-    Typography,
-} from '@mui/material'
+import {Box, Button, Dialog, DialogActions, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
+import {FormContainer, MultiSelectElement, useForm} from 'react-hook-form-mui'
 import {AutocompleteOption} from '@utils/types.ts'
 import {eventRoute} from '@routes'
 import {useState} from 'react'
-import CompetitionAndDayAssignmentList from './CompetitionAndDayAssignmentList.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {assignCompetitionsToEventDay, assignDaysToCompetition} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
+import CompetitionAndDayAssignmentList from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignmentList.tsx'
 
-type AssignmentEntry = {
-    entry: AutocompleteOption
-}
 type AssignmentForm = {
-    selected: AssignmentEntry[]
+    selected: string[]
 }
 
 type Props = {
     entityPathId: string
     options: AutocompleteOption[]
-    assignedEntities: AutocompleteOption[]
+    assignedEntities: string[]
     assignEntityLabel: string
     competitionsToDay: boolean
     onSuccess: () => void
@@ -42,18 +31,10 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     const {eventId} = eventRoute.useParams()
 
     const formContext = useForm<AssignmentForm>({
-        values: {selected: props.assignedEntities.map(value => ({entry: value}))},
+        values: {selected: props.assignedEntities},
     })
 
-    const {
-        fields: entityFields,
-        append: appendEntity,
-        remove: removeEntity,
-    } = useFieldArray({
-        control: formContext.control,
-        name: 'selected',
-        keyName: 'fieldId',
-    })
+    const watchSelected = formContext.watch('selected')
 
     const [submitting, setSubmitting] = useState(false)
 
@@ -78,21 +59,18 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
 
     const onSubmit = async (formData: AssignmentForm) => {
         setSubmitting(true)
+        console.log(formData)
         const {error} = competitionsToDay
             ? await assignCompetitionsToEventDay({
                   path: {eventId: eventId, eventDayId: props.entityPathId},
                   body: {
-                      competitions: formData.selected
-                          .map(value => value.entry?.id)
-                          .filter(value => value !== undefined),
+                      competitions: formData.selected,
                   },
               })
             : await assignDaysToCompetition({
                   path: {eventId: eventId, competitionId: props.entityPathId},
                   body: {
-                      days: formData.selected
-                          .map(value => value.entry?.id)
-                          .filter(value => value !== undefined),
+                      days: formData.selected,
                   },
               })
         setSubmitting(false)
@@ -105,12 +83,6 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
             feedback.success(t('event.assign.save.success', entityNames))
         }
     }
-
-    const filteredOptions = props.options.filter(
-        value => !entityFields.some(ar => ar.entry?.id === value?.id),
-    )
-
-    const [autocompleteContent, setAutocompleteContent] = useState<AutocompleteOption>(null)
 
     return (
         <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
@@ -125,7 +97,9 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                 </Button>
             )}
             <CompetitionAndDayAssignmentList
-                assignedEntities={entityFields.map(value => value.entry)}
+                assignedEntities={watchSelected
+                    .map(val => props.options.find(opt => opt?.id ?? '' === val))
+                    .filter(val => val !== undefined)}
                 competitionsToDay={competitionsToDay}
             />
             <Dialog
@@ -135,25 +109,13 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                 maxWidth={'xs'}
                 className="ready2race">
                 <Box sx={{mx: 4, my: 2}}>
-                    <Autocomplete
-                        value={autocompleteContent}
-                        options={filteredOptions}
-                        onChange={(_e, newValue) => {
-                            if (newValue) {
-                                appendEntity({entry: newValue})
-                                setAutocompleteContent(null)
-                            }
-                        }}
-                        renderInput={params => (
-                            <TextField {...params} placeholder={props.assignEntityLabel} />
-                        )}
-                        sx={{mt: 4}}
-                    />
                     <FormContainer formContext={formContext} onSuccess={onSubmit}>
-                        <CompetitionAndDayAssignmentList
-                            assignedEntities={entityFields.map(value => value.entry)}
-                            competitionsToDay={competitionsToDay}
-                            removeElement={removeEntity}
+                        <MultiSelectElement
+                            name={'selected'}
+                            options={props.options}
+                            showCheckbox
+                            showChips
+                            formControlProps={{sx: {width: 1, mt: 4}}}
                         />
                         <Box sx={{mt: 2}}>
                             <DialogActions>
