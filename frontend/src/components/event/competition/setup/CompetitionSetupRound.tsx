@@ -17,7 +17,7 @@ import {
     useTheme,
 } from '@mui/material'
 import CompetitionSetupMatch from '@components/event/competition/setup/CompetitionSetupMatch.tsx'
-import {useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
@@ -61,6 +61,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     const watchIsGroupRound = formContext.watch(`rounds.${round.index}.isGroupRound`)
 
+    const [matchesError, setMatchesError] = useState<string | null>(null)
+
     const {
         fields: matchFields,
         append: appendMatch,
@@ -68,6 +70,38 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     } = useFieldArray({
         control: formContext.control,
         name: `rounds.${round.index}.matches`,
+        rules: {
+            validate: value => {
+                if (value.length === 0) {
+                    setMatchesError('[todo] At least one match required')
+                    return 'matchesEmpty'
+                }
+
+                const participants = value.map(match => match.participants.map(p => p.seed)).flat()
+                const countedParticipantsMap = participants.reduce<Map<number, number>>(
+                    (acc, val) => {
+                        const seed = val
+                        const old = acc.get(seed)
+                        acc.set(seed, old ? old + 1 : 1)
+                        return acc
+                    },
+                    new Map(),
+                )
+                const duplicateParticipants = Array.from(countedParticipantsMap.entries())
+                    .filter(([, count]) => count > 1)
+                    .map(([seed]) => seed)
+
+                if (duplicateParticipants.length > 0) {
+                    setMatchesError(
+                        `[todo] Duplicate Participants Error: ${duplicateParticipants.join(', ')}`,
+                    )
+                    return 'duplicateParticipants'
+                }
+
+                setMatchesError(null)
+                return undefined
+            },
+        },
     })
 
     const watchMatches = formContext.watch(`rounds.${round.index}.matches`)
@@ -76,6 +110,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
             fields: groupFields,
             append: appendGroup,
             remove: removeGroup,
+            move: moveGroup,
         } = useFieldArray({
             control: formContext.control,
             name: `rounds.${round.index}.groups`,
@@ -147,9 +182,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         }
     }
 
-    const roundHasDuplicatableMatch = watchMatches.find(v => v.duplicatable === true) !== undefined
-    const roundHasDuplicatableGroup = watchGroups.find(v => v.duplicatable === true) !== undefined
-
     const groupsOrMatchesLength = watchIsGroupRound ? watchGroups.length : watchMatches.length
     const highestTeamCount = (watchIsGroupRound ? watchGroups : watchMatches)
         ? getHighestTeamsCount(
@@ -172,8 +204,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     // PLACES
     // The places which teams that won't partake in the next round get
     const watchPlaces = formContext.watch(`rounds.${round.index}.places`)
-
-    console.log('places', watchPlaces)
 
     const {fields: placeFields, replace: replacePlaces} = useFieldArray({
         control: formContext.control,
@@ -236,7 +266,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                 index: info.index,
                 id: info.fieldId,
             },
-            roundHasDuplicatable: isGroups ? roundHasDuplicatableGroup : roundHasDuplicatableMatch,
             outcomes: info.outcomes,
             teamCounts: {
                 thisRoundWithoutThis: props.getRoundTeamCountWithoutThis(info.index, isGroups),
@@ -272,8 +301,13 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                 updatePlaces: updatePlaces,
             },
             useStartTimeOffsets: useStartTimeOffsets,
+            isLastIndex: info.index === watchMatches.length - 1,
         }
     }
+
+    const fooWatch = formContext.watch(`rounds.${round.index}.hasDuplicatable`)
+
+    console.log(round.index, fooWatch, watchMatches)
 
     return (
         <Controller
@@ -375,8 +409,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                 variant="outlined"
                                                 onClick={() => {
                                                     appendMatch({
-                                                        duplicatable: false,
-                                                        weighting: matchFields.length + 1,
                                                         teams: `${defaultMatchTeamSize}`,
                                                         name: '',
                                                         participants: watchUseDefaultSeeding
@@ -412,6 +444,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                             </Button>*/
                                         )}
                                     </Box>
+                                    {matchesError && (
+                                        <Typography color={'error'}>{matchesError}</Typography>
+                                    )}
                                     {round.index === 0 &&
                                         watchMatches.filter(v => v.teams === '').length > 1 && (
                                             <Alert severity="info">

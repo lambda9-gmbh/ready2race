@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
@@ -42,10 +43,10 @@ data class CompetitionSetupRoundDto(
             )
         ),
         ValidationResult.oneOf(
-            this::matches validate notNull,
+            this::matches validate notEmpty,
             ValidationResult.allOf(
-                this::groups validate notNull,
-                this::statisticEvaluations validate notNull,
+                this::groups validate notEmpty,
+                this::statisticEvaluations validate notEmpty,
             )
         ),
         this::places validate collection,

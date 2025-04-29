@@ -41,8 +41,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
             validate: value => {
                 const roundHasUndefinedTeams = (round: FormSetupRound) => {
                     return (
-                        round.matches.filter(match => match.teams === '' || match.duplicatable)
-                            .length > 0
+                        round.matches.filter(match => match.teams === '').length > 0 || round.hasDuplicatable
                     )
                 }
 
@@ -51,15 +50,17 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                         setRoundsError(
                             t('event.competition.setup.validation.noFollowingUnlimitedTeamsRounds'),
                         )
-                        console.log('FEHLER')
+
                         return 'noFollowingUnlimitedTeamsRounds'
                     }
                 }
 
-                if (value.length > 0 && roundHasUndefinedTeams(value[0])) {
+                if (value.length > 0 && !roundHasUndefinedTeams(value[0])) {
+                    setRoundsError(t('event.competition.setup.validation.firstRoundUnlimitedTeams'))
+                    return 'firstRoundUnlimitedTeams'
+
                 }
 
-                console.log('KEIN FEHLER')
                 setRoundsError(null)
                 return undefined
             },
@@ -161,6 +162,8 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     const handleTemplateMenuClose = () => {
         setTemplateMenuAnchorEl(null)
     }
+
+    console.log(formWatch)
 
     return (
         <CompetitionSetupContainersWrapper

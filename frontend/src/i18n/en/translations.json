@@ -38,7 +38,7 @@
       "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
-      "selectFile" : "Select file"
+      "selectFile": "Select file"
     },
     "load": {
       "error": {
@@ -55,7 +55,7 @@
     "back": "Back",
     "next": "Next",
     "and": "and",
-    "remove" : "Remove"
+    "remove": "Remove"
   },
   "decimal": {
     "point": "."
@@ -267,26 +267,27 @@
           "enable": "Enable start time offsets"
         },
         "validation": {
-          "noFollowingUnlimitedTeamsRounds": "No two rounds may directly follow each other, neither of which has a fixed number of participants. (A match is duplicating or has no set number of teams). Please adjust one of the two rounds accordingly."
+          "noFollowingUnlimitedTeamsRounds": "No two rounds may directly follow each other, neither of which has a fixed number of participants (a match is duplicating or has no set number of teams). Please adjust one of the two rounds accordingly.",
+          "firstRoundUnlimitedTeams": "The first round must have an undefined number of participants (a match is duplicating or has no set number of teams)."
         }
       }
     },
     "participantRequirement": {
       "info": "If no column to check for the requirement is provided, all matching participants from the file will be approved.",
-      "approved" : "Approved requirements",
+      "approved": "Approved requirements",
       "checkUpload": "Check requirements",
       "checkManually": "Manually check '{{name}}'",
       "file": "CSV-File",
-      "charset" : "Charset",
+      "charset": "Charset",
       "separator": "Separator",
-      "firstnameColName":"Column to check for firstname",
+      "firstnameColName": "Column to check for firstname",
       "lastnameColName": "Column to check for lastname",
-      "yearsColName":"Column to check year of birth",
+      "yearsColName": "Column to check year of birth",
       "clubColName": "Column to check for name of club",
-      "requirementColName":"Column to check for requirement",
+      "requirementColName": "Column to check for requirement",
       "requirementIsValidValue": "Accepted value in requirement column",
-      "participantsOpen" : "Open",
-      "participantsApproved" : "Approved"
+      "participantsOpen": "Open",
+      "participantsApproved": "Approved"
     },
     "assign": {
       "save": {
@@ -332,8 +333,8 @@
       "message": "Message",
       "optionalFee": "Optional",
       "totalFees": "Registration Fee",
-      "acceptDocuments" : "I accept the following:",
-      "infoDocuments" : "Additional info",
+      "acceptDocuments": "I accept the following:",
+      "infoDocuments": "Additional info",
       "finish": "Submit registration",
       "success": {
         "title": "Registration successful!",
@@ -341,18 +342,18 @@
       }
     },
     "tabs": {
-      "general" : "General",
-      "participants" : "Participants",
+      "general": "General",
+      "participants": "Participants",
       "settings": "Settings"
     }
   },
   "participantRequirement": {
     "participantRequirement": "Participant requirement",
     "participantRequirements": "Participant requirements",
-    "active" : "Active",
-    "activate" : "Activate for event",
-    "remove" : "Remove from event",
-    "confirmRemove" : "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
+    "active": "Active",
+    "activate": "Activate for event",
+    "remove": "Remove from event",
+    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
   },
   "user": {
     "user": "User",

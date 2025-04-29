@@ -175,15 +175,13 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
             return newPlaces
         }
 
-        const tree = rounds
+        const tree: Array<FormSetupRound> = rounds
             .map((r, index) => ({round: r, index: index}))
             .sort((a, b) => b.index - a.index)
             .map(({round}, roundIndex) => ({
                 name: round.name,
                 required: roundIndex === roundCount - 1, // Only last round is required
                 matches: round.matches.map((match, matchIndex) => ({
-                    duplicatable: false,
-                    weighting: matchIndex + 1,
                     teams: match.teams.toString(),
                     name: match.name,
                     participants:
@@ -196,6 +194,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 })),
                 groups: [],
                 statisticEvaluations: undefined,
+                hasDuplicatable: false,
                 useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
                 isGroupRound: false,
                 useStartTimeOffsets: false,
@@ -203,7 +202,6 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
             }))
 
         if (replaceAll) {
-            console.log(tree)
             resetSetupForm(tree)
         } else {
             const newData: FormSetupRound[] = [...currentFormData, ...tree]

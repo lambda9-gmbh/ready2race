@@ -8,7 +8,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    Typography
+    Typography,
 } from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
@@ -39,12 +39,6 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
         ...field,
         ...watchParticipants?.[index],
     }))
-
-    // Only one duplicatable in a round is allowed
-    const watchDuplicatable = formContext.watch(
-        `rounds.${roundIndex}.matches.${fieldInfo.index}.duplicatable`,
-    )
-    const duplicatableCheckDisabled = props.roundHasDuplicatable && watchDuplicatable === false
 
     return (
         <Stack
@@ -106,18 +100,19 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                     )
                 }}
             />
-            <CheckboxElement
-                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.duplicatable`}
-                disabled={duplicatableCheckDisabled}
-                required={false}
-                label={
-                    <FormInputLabel
-                        label={t('event.competition.setup.match.duplicatable')}
-                        required={true}
-                        horizontal
-                    />
-                }
-            />
+            {props.isLastIndex && (
+                <CheckboxElement
+                    name={`rounds.${roundIndex}.hasDuplicatable`}
+                    required={false}
+                    label={
+                        <FormInputLabel
+                            label={t('event.competition.setup.match.duplicatable')}
+                            required={true}
+                            horizontal
+                        />
+                    }
+                />
+            )}
             <Divider />
             <Typography sx={{fontSize: '1.1rem'}}>
                 {t('event.competition.setup.match.outcome.outcomes')}:
@@ -135,14 +130,11 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                                     <TableHead>
                                         <TableRow>
                                             <TableCell>
-                                                {t(
-                                                    'event.competition.setup.match.outcome.result',
-                                                )} ({t('event.competition.setup.match.match')})
+                                                {t('event.competition.setup.match.outcome.result')}{' '}
+                                                ({t('event.competition.setup.match.match')})
                                             </TableCell>
                                             <TableCell>
-                                                {t(
-                                                   'event.competition.setup.match.outcome.outcome',
-                                                )}
+                                                {t('event.competition.setup.match.outcome.outcome')}
                                             </TableCell>
                                         </TableRow>
                                     </TableHead>

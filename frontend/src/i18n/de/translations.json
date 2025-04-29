@@ -267,7 +267,8 @@
           "enable": "Versetzte Startzeiten erlauben"
         },
         "validation": {
-          "noFollowingUnlimitedTeamsRounds": "Es dürfen keine zwei Runden direkt aufeinander folgen, welche beide keine festgelegte Teilnehmerzahl haben. (Eine Partie ist duplizierend oder hat keine Teamanzahl). Bitte passen Sie eine der beiden Runden entsprechend an."
+          "noFollowingUnlimitedTeamsRounds": "Es dürfen keine zwei Runden direkt aufeinander folgen, welche beide keine festgelegte Teilnehmerzahl haben (eine Partie ist duplizierend oder hat keine Teamanzahl). Bitte passen Sie eine der beiden Runden entsprechend an.",
+          "firstRoundUnlimitedTeams": "Die erste Runde muss eine unbestimmte Anzahl an Teilnehmern haben (eine Partie ist duplizierend oder hat keine Teamanzahl)."
         }
       }
     },
