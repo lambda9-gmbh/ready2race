@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.IntValidators.min
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
 
 data class CompetitionSetupMatchDto(
     val weighting: Int,
@@ -17,11 +18,8 @@ data class CompetitionSetupMatchDto(
         this::weighting validate min(1),
         this::teams validate min(1),
         this::name validate notBlank,
+        this::participants validate collection(min(1)),
     )
-
-    /* todo validations:
-        - "participants" values: min(1)
-    */
 
     companion object {
         val example

@@ -28,7 +28,7 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     const feedback = useFeedback()
     const theme = useTheme()
 
-    const [roundsError, setRoundsError] = useState<string | null>(null)
+    const [roundsError] = useState<string | null>(null)
 
     const {
         fields: roundFields,
@@ -37,28 +37,6 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
     } = useFieldArray({
         control: formContext.control,
         name: 'rounds',
-        rules: {
-            validate: value => {
-                const roundHasUndefinedTeams = (round: FormSetupRound) => {
-                    return (
-                        round.matches.filter(match => match.teams === '').length > 0
-                    )
-                }
-
-                for (let i = 1; i < value.length; i++) {
-                    if (roundHasUndefinedTeams(value[i]) && roundHasUndefinedTeams(value[i - 1])) {
-                        setRoundsError(
-                            t('event.competition.setup.validation.noFollowingUnlimitedTeamsRounds'),
-                        )
-                        return 'noFollowingUnlimitedTeamsRounds'
-                    }
-                }
-
-
-                setRoundsError(null)
-                return undefined
-            },
-        },
     })
 
     const formWatch = formContext.watch('rounds')

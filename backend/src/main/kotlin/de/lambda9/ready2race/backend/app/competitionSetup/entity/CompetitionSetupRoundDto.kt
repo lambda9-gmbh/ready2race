@@ -52,6 +52,7 @@ data class CompetitionSetupRoundDto(
         ),
         this::places validate collection,
     )
+
     /*todo validations:
         - no duplicate "participants" in one round
     */

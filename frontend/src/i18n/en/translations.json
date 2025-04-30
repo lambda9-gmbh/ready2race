@@ -267,7 +267,6 @@
           "enable": "Enable start time offsets"
         },
         "validation": {
-          "noFollowingUnlimitedTeamsRounds": "No two rounds may directly follow each other, neither of which has a number of participants. Please adjust one of the two rounds accordingly.",
           "duplicateParticipants": {
             "one": "The team: {{participants}} is used several times.",
             "multiple": "The teams: {{participants}} are used several times.",

@@ -13,10 +13,6 @@ data class CompetitionSetupDto(
         collection,
     )
 
-    /*todo validation:
-        - if one round has unlimited teams, the next round can't have unlimited teams as well
-    */
-
     companion object {
         val example
             get() = CompetitionSetupDto(
