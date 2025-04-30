@@ -339,7 +339,8 @@
             "multiple": "The teams: {{participants}} are used several times.",
             "message": "Please select each team only for one matchup per round."
           }
-        }
+        },
+        "tableHint": "Enable the quick creation of setups for different competitions."
       }
     },
     "participantRequirement": {

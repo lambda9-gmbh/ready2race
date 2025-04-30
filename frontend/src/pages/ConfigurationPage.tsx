@@ -123,6 +123,7 @@ const ConfigurationPage = () => {
                     <CompetitionSetupTemplateTable
                         {...competitionSetupTemplateProps.table}
                         title={t('event.competition.setup.template.templates')}
+                        hints={[t('event.competition.setup.tableHint')]}
                     />
                     <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
 

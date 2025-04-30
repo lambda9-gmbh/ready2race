@@ -240,7 +240,7 @@
         "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
-        "tableHint": "Definiert mögliche Gebühren eines Wettkampfs.",
+        "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
@@ -339,7 +339,8 @@
             "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
             "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
           }
-        }
+        },
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
       }
     },
     "participantRequirement": {
