@@ -18,7 +18,7 @@ sealed class Privilege(
         EVENT,
         CLUB,
         PARTICIPANT,
-        REGISTRATION
+        REGISTRATION,
     }
 
     enum class Scope(val level: Int) {

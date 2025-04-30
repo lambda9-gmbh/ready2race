@@ -1,18 +1,27 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists document_template_assignment;
 drop view if exists event_registration_result_view;
 drop view if exists event_competition_registration;
 drop view if exists competition_club_registration;
 drop view if exists registered_competition_team;
 drop view if exists registered_competition_team_participant;
+drop view if exists event_registration_report_download;
+drop view if exists event_registrations_view;
+drop view if exists event_view;
+drop view if exists event_public_view;
+drop view if exists participant_for_event;
+drop view if exists participant_id_for_event;
+drop view if exists participant_requirement_for_event;
 drop view if exists event_document_download;
 drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
 drop view if exists app_user_invitation_with_roles;
 drop view if exists competition_template_view;
-drop view if exists competition_view;
-drop view if exists competition_for_club_view;
 drop view if exists competition_public_view;
+drop view if exists competition_for_club_view;
+drop view if exists competition_view;
+drop view if exists fee_for_competition;
 drop view if exists fee_for_competition_properties;
 drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
@@ -21,13 +30,6 @@ drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
-drop view if exists fee_for_competition;
-drop view if exists participant_requirement_for_event;
-drop view if exists participant_id_for_event;
-drop view if exists participant_for_event;
-drop view if exists event_public_view;
-drop view if exists event_view;
-drop view if exists event_registrations_view;
 
 create view app_user_name as
 select au.id,
@@ -131,7 +133,9 @@ create view competition_view as
 select c.id,
        c.event,
        c.template,
-       cp.identifier,
+       substring(cp.identifier for length(cp.identifier) -
+                                   length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
+       cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix,
        cp.name,
        cp.short_name,
        cp.description,
@@ -421,6 +425,13 @@ from event_registration er
          left join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
 group by er.id, er.created_at, er.message, er.updated_at, e.id, e.name, c.id, c.name;
 
+create view event_registration_report_download as
+select err.event,
+       err.name,
+       errd.data
+from event_registration_report err
+         join event_registration_report_data errd on err.event = errd.result_document;
+
 create view registered_competition_team_participant as
 select crnp.competition_registration as team_id,
        np.name                       as role,
@@ -473,3 +484,24 @@ select e.id,
 from event e
          left join event_competition_registration ecr on e.id = ecr.event
 group by e.id;
+
+create view document_template_assignment as
+select dt.page_padding_top,
+       dt.page_padding_left,
+       dt.page_padding_right,
+       dt.page_padding_bottom,
+       dtd.data,
+       usage.document_type,
+       usage.event
+from document_template dt
+         join document_template_data dtd on dt.id = dtd.template
+         join (select edtu.document_type,
+                      edtu.template,
+                      edtu.event
+               from event_document_template_usage edtu
+               union all
+               select dtu.document_type,
+                      dtu.template,
+                      null
+               from document_template_usage dtu) usage on dt.id = usage.template
+;

@@ -10,10 +10,10 @@ enum class EventPublicViewSort : Sortable {
     EVENT_FROM,
     EVENT_TO;
 
-    override fun toField(): Field<*> = when (this) {
-        ID -> EVENT_PUBLIC_VIEW.ID
-        NAME -> EVENT_PUBLIC_VIEW.NAME
-        EVENT_FROM -> EVENT_PUBLIC_VIEW.EVENT_FROM
-        EVENT_TO -> EVENT_PUBLIC_VIEW.EVENT_TO
+    override fun toFields(): List<Field<*>> = when (this) {
+        ID -> listOf(EVENT_PUBLIC_VIEW.ID)
+        NAME -> listOf(EVENT_PUBLIC_VIEW.NAME)
+        EVENT_FROM -> listOf(EVENT_PUBLIC_VIEW.EVENT_FROM)
+        EVENT_TO -> listOf(EVENT_PUBLIC_VIEW.EVENT_TO)
     }
 }

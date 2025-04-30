@@ -61,11 +61,20 @@ export type AssignDaysToCompetitionRequest = {
     days: Array<string>
 }
 
+export type AssignDocumentTemplateRequest = {
+    template?: string
+    event?: string
+}
+
 export type AssignedEmailDto = {
     recipient: string
     sentAt?: string
     lastErrorAt?: string
     lastError?: string
+}
+
+export type AssignedTemplateId = {
+    value?: string
 }
 
 export type BadRequestError = ApiError & {
@@ -194,6 +203,29 @@ export type CompetitionTemplateDto = {
 
 export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
+}
+
+export type DocumentTemplateDto = {
+    id: string
+    name: string
+    pagePaddingTop?: number
+    pagePaddingLeft?: number
+    pagePaddingRight?: number
+    pagePaddingBottom?: number
+}
+
+export type DocumentTemplateRequest = {
+    pagePaddingTop?: number
+    pagePaddingLeft?: number
+    pagePaddingRight?: number
+    pagePaddingBottom?: number
+}
+
+export type DocumentType = 'INVOICE' | 'REGISTRATION_REPORT'
+
+export type DocumentTypeDto = {
+    type: DocumentType
+    assignedTemplate?: AssignedTemplateId
 }
 
 export type Duplicate = {
@@ -1761,11 +1793,27 @@ export type GetEventRegistrationTemplateError = ApiError
 
 export type AddEventRegistrationData = {
     body: EventRegistrationUpsertDto
+    path: {
+        eventId: string
+    }
 }
 
 export type AddEventRegistrationResponse = string
 
 export type AddEventRegistrationError = BadRequestError | ApiError
+
+export type GetRegistrationResultData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        remake?: boolean
+    }
+}
+
+export type GetRegistrationResultResponse = Blob | File
+
+export type GetRegistrationResultError = BadRequestError | ApiError
 
 export type AddFeeData = {
     body: FeeRequest
@@ -2020,3 +2068,57 @@ export type GetParticipantRequirementsResponse = {
 }
 
 export type GetParticipantRequirementsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentTemplatesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetDocumentTemplatesResponse = {
+    data: Array<DocumentTemplateDto>
+    pagination: Pagination
+}
+
+export type GetDocumentTemplatesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddDocumentTemplateData = {
+    body: {
+        request: DocumentTemplateRequest
+        files: Array<Blob | File>
+    }
+}
+
+export type AddDocumentTemplateResponse = void
+
+export type AddDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetDocumentTemplateTypesResponse = Array<DocumentTypeDto>
+
+export type GetDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignDocumentTemplateData = {
+    body: AssignDocumentTemplateRequest
+    path: {
+        documentType: DocumentType
+    }
+}
+
+export type AssignDocumentTemplateResponse = void
+
+export type AssignDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError

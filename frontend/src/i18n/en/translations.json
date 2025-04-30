@@ -60,6 +60,39 @@
       "menu": "Select language"
     }
   },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Can be added to system-generated documents to customize the layout.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      },
+      "template": "Document template",
+      "templates": "Document templates",
+      "type": {
+        "INVOICE": "Invoice",
+        "REGISTRATION_REPORT": "Event registration result"
+      },
+      "none": "No template",
+      "name": "Filename",
+      "file": {
+        "choose": "Choose template",
+        "change": "Change template",
+        "missing": "Please choose a document."
+      },
+      "pagePadding": {
+        "top": "Page margin top",
+        "left": "Page margin left",
+        "right": "Page margin right",
+        "bottom": "Page margin bottom"
+      },
+      "assignments": {
+        "global": "Globally assigned templates",
+        "event": "Event assigned templates"
+      }
+    }
+  },
   "decimal": {
     "point": "."
   },
@@ -245,6 +278,12 @@
         "part3": "."
       }
     },
+    "action": {
+      "registrationsReport": {
+        "generate": "Generate registrations result",
+        "download": "Download registrations result"
+      }
+    },
     "assign": {
       "save": {
         "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
@@ -310,7 +349,8 @@
     "participants": "Participants",
     "tabs": {
       "general": "General",
-      "settings": "Settings"
+      "settings": "Settings",
+      "actions": "Actions"
     }
   },
   "participantRequirement": {
@@ -449,7 +489,8 @@
     "tabs": {
       "competitionTemplates": "Competition templates",
       "eventElements": "Event elements",
-      "competitionElements": "Competition elements"
+      "competitionElements": "Competition elements",
+      "globalSettings": "Global settings"
     }
   },
   "captcha": {

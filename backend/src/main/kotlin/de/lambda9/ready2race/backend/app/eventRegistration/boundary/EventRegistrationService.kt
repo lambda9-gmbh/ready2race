@@ -15,21 +15,33 @@ import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.toDto
 import de.lambda9.ready2race.backend.app.eventRegistration.control.toRecord
+import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
+import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
+import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.pdf.FontStyle
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
+import de.lambda9.tailwind.core.extensions.kio.*
+import java.awt.Color
+import java.io.ByteArrayOutputStream
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 object EventRegistrationService {
@@ -154,17 +166,21 @@ object EventRegistrationService {
             val teams = c.clubRegistrations!!.flatMap { it!!.teams!!.map { it!! } }.filter { it.club == user.club }
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
-                |        ${if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
+                |        ${
+                if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
                     val ps = t.participants!!.map { it!! }.sortedBy { it.role }
                     """
                         |->${t.teamName?.let { " ($it)" } ?: ""}
-                        |            ${ps.joinToString("\n|            ") { p ->
+                        |            ${
+                        ps.joinToString("\n|            ") { p ->
                             """
                                 |[${p.role}] ${p.firstname} ${p.lastname}
                             """.trimMargin()
-                    }}
+                        }
+                    }
                     """.trimMargin()
-            }}
+                }
+            }
                 |
             """.trimMargin()
         }
@@ -346,5 +362,206 @@ object EventRegistrationService {
                 optionalFee
             )
         ).orDie()
+    }
+
+    fun downloadResult(
+        eventId: UUID,
+        remake: Boolean,
+    ): App<EventRegistrationError, ApiResponse.File> = KIO.comprehension {
+
+        val existing = if (remake) {
+            EventRegistrationReportRepo.delete(eventId).orDie()
+                .map { null }
+        } else {
+            EventRegistrationReportRepo.getDownload(eventId).orDie()
+                .mapNotNull { it.name!! to it.data!! }
+        }
+
+        existing.onNull { generateResultDocument(eventId) }
+            .map { (name, data) ->
+                ApiResponse.File(
+                    name = name,
+                    bytes = data,
+                )
+            }
+    }
+
+    private fun generateResultDocument(
+        eventId: UUID,
+    ): App<EventRegistrationError, Pair<String, ByteArray>> = KIO.comprehension {
+
+        val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
+            .onNullFail { EventRegistrationError.EventNotFound }
+
+        val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.REGISTRATION_REPORT, eventId).orDie()
+            .andThenNotNull { it.toPdfTemplate() }
+
+        val doc = document(pdfTemplate) {
+            // TODO: Instead don't allow this action
+            if (result.competitions!!.isEmpty()) {
+                page {
+                    text { "keine Wettkämpfe in dieser Veranstaltung" }
+                }
+            }
+            result.competitions!!.sortedWith { a, b ->
+                val identA = a!!.identifier!!
+                val identB = b!!.identifier!!
+
+                val digitsA = identA.takeLastWhile { it.isDigit() }
+                val digitsB = identB.takeLastWhile { it.isDigit() }
+
+                val prefixA = identA.removeSuffix(digitsA)
+                val prefixB = identB.removeSuffix(digitsB)
+
+                val intA = digitsA.toIntOrNull() ?: 0
+                val intB = digitsB.toIntOrNull() ?: 0
+
+                // sort by lexicographical, except integer suffixes
+                when {
+                    prefixA < prefixB -> -1
+                    prefixA > prefixB -> 1
+                    intA < intB -> -1
+                    intA > intB -> 1
+                    else -> 0
+                }
+            }.forEach { competition ->
+                competition!!
+                page {
+                    block(
+                        padding = Padding(0f, 0f, 0f, 20f)
+                    ) {
+                        text(
+                            fontStyle = FontStyle.BOLD,
+                            fontSize = 12f,
+                        ) {
+                            "Wettkampf / "
+                        }
+                        text(
+                            fontSize = 11f,
+                            newLine = false,
+                        ) {
+                            "Competition"
+                        }
+
+                        table(
+                            padding = Padding(5f, 20f, 0f, 0f)
+                        ) {
+                            column(0.1f)
+                            column(0.25f)
+                            column(0.65f)
+
+                            row {
+                                cell {
+                                    text(
+                                        fontSize = 12f,
+                                    ) { competition.identifier!! }
+                                }
+                                cell {
+                                    competition.shortName?.let {
+                                        text(
+                                            fontSize = 12f,
+                                        ) { it }
+                                    }
+                                }
+                                cell {
+                                    text(
+                                        fontSize = 12f,
+                                    ) { competition.name!! }
+                                }
+                            }
+                        }
+                    }
+
+                    if (competition.clubRegistrations!!.isEmpty()) {
+                        text(
+                            fontStyle = FontStyle.BOLD,
+                            fontSize = 11f,
+                        ) { "Wettkampf entfällt / " }
+                        text(
+                            newLine = false,
+                        ) { "Competition cancelled" }
+                    } else {
+                        competition.clubRegistrations!!.forEach { club ->
+                            club!!.teams!!.forEach { team ->
+
+                                block(
+                                    padding = Padding(0f, 0f, 0f, 10f)
+                                ) {
+                                    text(
+                                        fontStyle = FontStyle.BOLD,
+                                    ) { club.name!! }
+                                    team!!.teamName?.let {
+                                        text(
+                                            newLine = false,
+                                        ) { " $it" }
+                                    }
+                                    table(
+                                        padding = Padding(5f, 0f, 0f, 0f),
+                                        withBorder = true,
+                                    ) {
+                                        column(0.15f)
+                                        column(0.2f)
+                                        column(0.2f)
+                                        column(0.1f)
+                                        column(0.35f)
+
+                                        team.participants!!
+                                            .sortedBy { it!!.role }
+                                            .forEachIndexed { idx, member ->
+                                                row(
+                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                ) {
+                                                    cell {
+                                                        text { member!!.role!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.firstname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.lastname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.year!!.toString() }
+                                                    }
+                                                    cell {
+                                                        text { member!!.externalClubName ?: club.name!! }
+                                                    }
+                                                }
+                                            }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        val out = ByteArrayOutputStream()
+        doc.save(out)
+        doc.close()
+
+        val filename = "registration_result_${result.eventName!!.replace(" ", "-")}_${
+            LocalDateTime.now().format(
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME
+            )
+        }.pdf"
+
+        val bytes = out.toByteArray()
+        out.close()
+
+        val documentRecord = EventRegistrationReportRecord(
+            event = eventId,
+            name = filename,
+            createdAt = LocalDateTime.now(),
+        )
+        val id = !EventRegistrationReportRepo.create(documentRecord).orDie()
+        val dataRecord = EventRegistrationReportDataRecord(
+            resultDocument = id,
+            data = bytes,
+        )
+        !EventRegistrationReportDataRepo.create(dataRecord).orDie()
+
+        KIO.ok(filename to bytes)
     }
 }

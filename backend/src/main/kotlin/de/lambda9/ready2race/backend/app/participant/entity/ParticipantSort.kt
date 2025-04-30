@@ -12,12 +12,12 @@ enum class ParticipantSort : Sortable {
     EXTERNAL_CLUB_NAME,
     CREATED_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        ID -> PARTICIPANT.ID
-        FIRSTNAME -> PARTICIPANT.FIRSTNAME
-        LASTNAME -> PARTICIPANT.LASTNAME
-        EXTERNAL -> PARTICIPANT.EXTERNAL
-        EXTERNAL_CLUB_NAME -> PARTICIPANT.EXTERNAL_CLUB_NAME
-        CREATED_AT -> PARTICIPANT.CREATED_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        ID -> listOf(PARTICIPANT.ID)
+        FIRSTNAME -> listOf(PARTICIPANT.FIRSTNAME)
+        LASTNAME -> listOf(PARTICIPANT.LASTNAME)
+        EXTERNAL -> listOf(PARTICIPANT.EXTERNAL)
+        EXTERNAL_CLUB_NAME -> listOf(PARTICIPANT.EXTERNAL_CLUB_NAME)
+        CREATED_AT -> listOf(PARTICIPANT.CREATED_AT)
     }
 }

@@ -9,9 +9,9 @@ enum class EventDocumentTypeSort : Sortable {
     REQUIRED,
     CONFIRMATION_REQUIRED;
 
-    override fun toField(): Field<*> = when(this) {
-        NAME -> EVENT_DOCUMENT_TYPE.NAME
-        REQUIRED -> EVENT_DOCUMENT_TYPE.REQUIRED
-        CONFIRMATION_REQUIRED -> EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED
+    override fun toFields(): List<Field<*>> = when(this) {
+        NAME -> listOf(EVENT_DOCUMENT_TYPE.NAME)
+        REQUIRED -> listOf(EVENT_DOCUMENT_TYPE.REQUIRED)
+        CONFIRMATION_REQUIRED -> listOf(EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED)
     }
 }

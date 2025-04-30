@@ -9,9 +9,9 @@ enum class ParticipantRequirementForEventSort : Sortable {
     NAME,
     ACTIVE;
 
-    override fun toField(): Field<*> = when (this) {
-        ID -> PARTICIPANT_REQUIREMENT_FOR_EVENT.ID
-        NAME -> PARTICIPANT_REQUIREMENT_FOR_EVENT.NAME
-        ACTIVE -> PARTICIPANT_REQUIREMENT_FOR_EVENT.ACTIVE
+    override fun toFields(): List<Field<*>> = when (this) {
+        ID -> listOf(PARTICIPANT_REQUIREMENT_FOR_EVENT.ID)
+        NAME -> listOf(PARTICIPANT_REQUIREMENT_FOR_EVENT.NAME)
+        ACTIVE -> listOf(PARTICIPANT_REQUIREMENT_FOR_EVENT.ACTIVE)
     }
 }

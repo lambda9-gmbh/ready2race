@@ -4,6 +4,7 @@ import {useEntityAdministration} from '@utils/hooks.ts'
 import {
     CompetitionCategoryDto,
     CompetitionTemplateDto,
+    DocumentTemplateDto,
     EventDocumentTypeDto,
     FeeDto,
     NamedParticipantDto,
@@ -25,6 +26,10 @@ import CompetitionTemplateTable from '@components/event/competition/template/Com
 import CompetitionTemplateDialog from '@components/event/competition/template/CompetitionTemplateDialog.tsx'
 import {configurationIndexRoute} from '@routes'
 import {useNavigate} from '@tanstack/react-router'
+import DocumentTemplateTable from "@components/documentTemplate/DocumentTemplateTable.tsx";
+import DocumentTemplateDialog from "@components/documentTemplate/DocumentTemplateDialog.tsx";
+import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentTemplate.tsx";
+import InlineLink from "@components/InlineLink.tsx";
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -64,6 +69,12 @@ const ConfigurationPage = () => {
             t('participantRequirement.participantRequirement'),
         )
 
+    const documentTemplateAdministrationProps =
+        useEntityAdministration<DocumentTemplateDto>(
+            t('document.template.template'),
+            {entityUpdate: false}
+        )
+
     return (
         <Stack spacing={4}>
             <Typography variant={'h1'}>{t('configuration.configuration')}</Typography>
@@ -71,6 +82,7 @@ const ConfigurationPage = () => {
                 <Tab label={t('configuration.tabs.competitionTemplates')} {...a11yProps(0)} />
                 <Tab label={t('configuration.tabs.competitionElements')} {...a11yProps(1)} />
                 <Tab label={t('configuration.tabs.eventElements')} {...a11yProps(2)} />
+                <Tab label={t('configuration.tabs.globalSettings')} {...a11yProps(3)} />
             </TabSelectionContainer>
             <TabPanel index={0} activeTab={activeTab}>
                 <CompetitionTemplateTable
@@ -118,6 +130,28 @@ const ConfigurationPage = () => {
                     <ParticipantRequirementDialog
                         {...participantRequirementAdministrationProps.dialog}
                     />
+                    <DocumentTemplateTable
+                        {...documentTemplateAdministrationProps.table}
+                        title={t('document.template.templates')}
+                        hints={[
+                            t('document.template.tableHint.1'),
+                            <>
+                                {t('document.template.tableHint.2')}
+                                <InlineLink to={'/config'} search={{tabIndex: 3}}>
+                                    {t('document.template.tableHint.3')}
+                                </InlineLink>
+                                {t('document.template.tableHint.4')}
+                            </>
+                        ]}
+                    />
+                    <DocumentTemplateDialog
+                        {...documentTemplateAdministrationProps.dialog}
+                    />
+                </Stack>
+            </TabPanel>
+            <TabPanel index={3} activeTab={activeTab}>
+                <Stack spacing={2}>
+                    <AssignDocumentTemplate />
                 </Stack>
             </TabPanel>
         </Stack>

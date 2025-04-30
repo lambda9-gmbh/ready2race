@@ -226,6 +226,9 @@ import type {
     AddEventRegistrationData,
     AddEventRegistrationError,
     AddEventRegistrationResponse,
+    GetRegistrationResultData,
+    GetRegistrationResultError,
+    GetRegistrationResultResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -281,6 +284,17 @@ import type {
     AddParticipantRequirementResponse,
     GetParticipantRequirementsError,
     GetParticipantRequirementsResponse,
+    GetDocumentTemplatesData,
+    GetDocumentTemplatesError,
+    GetDocumentTemplatesResponse,
+    AddDocumentTemplateData,
+    AddDocumentTemplateError,
+    AddDocumentTemplateResponse,
+    GetDocumentTemplateTypesError,
+    GetDocumentTemplateTypesResponse,
+    AssignDocumentTemplateData,
+    AssignDocumentTemplateError,
+    AssignDocumentTemplateResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1145,6 +1159,19 @@ export const addEventRegistration = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getRegistrationResult = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationResultData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationResultResponse,
+        GetRegistrationResultError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationResult',
+    })
+}
+
 export const addFee = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddFeeData, ThrowOnError>,
 ) => {
@@ -1378,5 +1405,62 @@ export const getParticipantRequirements = <ThrowOnError extends boolean = false>
     >({
         ...options,
         url: '/participantRequirement',
+    })
+}
+
+export const getDocumentTemplates = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetDocumentTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetDocumentTemplatesResponse,
+        GetDocumentTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplate',
+    })
+}
+
+export const addDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddDocumentTemplateResponse,
+        AddDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/documentTemplate',
+    })
+}
+
+export const getDocumentTemplateTypes = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetDocumentTemplateTypesResponse,
+        GetDocumentTemplateTypesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplateType',
+    })
+}
+
+export const assignDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignDocumentTemplateResponse,
+        AssignDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplateType/{documentType}/assignTemplate',
     })
 }
