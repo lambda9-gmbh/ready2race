@@ -166,17 +166,21 @@ object EventRegistrationService {
             val teams = c.clubRegistrations!!.flatMap { it!!.teams!!.map { it!! } }.filter { it.club == user.club }
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
-                |        ${if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
+                |        ${
+                if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
                     val ps = t.participants!!.map { it!! }.sortedBy { it.role }
                     """
                         |->${t.teamName?.let { " ($it)" } ?: ""}
-                        |            ${ps.joinToString("\n|            ") { p ->
+                        |            ${
+                        ps.joinToString("\n|            ") { p ->
                             """
                                 |[${p.role}] ${p.firstname} ${p.lastname}
                             """.trimMargin()
-                    }}
+                        }
+                    }
                     """.trimMargin()
-            }}
+                }
+            }
                 |
             """.trimMargin()
         }
@@ -480,7 +484,9 @@ object EventRegistrationService {
                         competition.clubRegistrations!!.forEach { club ->
                             club!!.teams!!.forEach { team ->
 
-                                block {
+                                block(
+                                    padding = Padding(0f, 0f, 0f, 10f)
+                                ) {
                                     text(
                                         fontStyle = FontStyle.BOLD,
                                     ) { club.name!! }
@@ -499,27 +505,29 @@ object EventRegistrationService {
                                         column(0.1f)
                                         column(0.35f)
 
-                                        team.participants!!.forEachIndexed { idx, member ->
-                                            row(
-                                                color = if (idx % 2 == 1) Color(230, 230, 230) else null,
-                                            ) {
-                                                cell {
-                                                    text { member!!.role!! }
-                                                }
-                                                cell {
-                                                    text { member!!.firstname!! }
-                                                }
-                                                cell {
-                                                    text { member!!.lastname!! }
-                                                }
-                                                cell {
-                                                    text { member!!.year!!.toString() }
-                                                }
-                                                cell {
-                                                    text { member!!.externalClubName ?: club.name!! }
+                                        team.participants!!
+                                            .sortedBy { it!!.role }
+                                            .forEachIndexed { idx, member ->
+                                                row(
+                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                ) {
+                                                    cell {
+                                                        text { member!!.role!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.firstname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.lastname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.year!!.toString() }
+                                                    }
+                                                    cell {
+                                                        text { member!!.externalClubName ?: club.name!! }
+                                                    }
                                                 }
                                             }
-                                        }
                                     }
                                 }
                             }

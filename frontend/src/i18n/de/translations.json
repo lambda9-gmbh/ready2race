@@ -62,6 +62,12 @@
   },
   "document": {
     "template": {
+      "tableHint": {
+        "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
+        "2": "In den ",
+        "3": "globalen Einstellungen",
+        "4": " können die Zuweisungen vorgenommen werden."
+      },
       "template": "Dokumentvorlage",
       "templates": "Dokumentvorlagen",
       "type": {
@@ -72,7 +78,8 @@
       "name": "Name",
       "file": {
         "choose": "Vorlage auswählen",
-        "change": "Vorlage ändern"
+        "change": "Vorlage ändern",
+        "missing": "Bitte wählen Sie ein Dokument aus."
       },
       "pagePadding": {
         "top": "Rand oben",
@@ -482,7 +489,8 @@
     "tabs": {
       "competitionTemplates": "Vorlagen Wettkampf",
       "eventElements": "Komponenten Veranstaltung",
-      "competitionElements": "Komponenten Wettkampf"
+      "competitionElements": "Komponenten Wettkampf",
+      "globalSettings": "Globale Einstellungen"
     }
   },
   "captcha": {

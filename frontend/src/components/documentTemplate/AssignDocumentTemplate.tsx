@@ -1,6 +1,6 @@
 import {useFetch} from "@utils/hooks.ts";
 import {assignDocumentTemplate, getDocumentTemplates, getDocumentTemplateTypes} from "@api/sdk.gen.ts";
-import {Box, List, ListItem, MenuItem, Select, Stack, Typography} from "@mui/material";
+import {Box, List, ListItem, MenuItem, Select, Typography} from "@mui/material";
 import Throbber from "@components/Throbber.tsx";
 import {useTranslation} from "react-i18next";
 import {DocumentType} from "@api/types.gen.ts";
@@ -47,7 +47,12 @@ const AssignDocumentTemplate = () => {
                 <List>
                     {types.map(type => (
                         <ListItem key={type.type}>
-                            <Stack direction={'row'}>
+                            <Box sx={{
+                                width: 1,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                            }}>
                                 <Typography>
                                     {t(`document.template.type.${type.type}`)}
                                 </Typography>
@@ -71,7 +76,7 @@ const AssignDocumentTemplate = () => {
                                         </MenuItem>
                                     ))}
                                 </Select>
-                            </Stack>
+                            </Box>
                         </ListItem>
                     ))}
                 </List>

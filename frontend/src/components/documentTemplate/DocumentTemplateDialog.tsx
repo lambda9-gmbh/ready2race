@@ -51,7 +51,12 @@ const addAction = (formData: Form) =>
     })
 
 const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto>) => {
-    const formContext = useForm<Form>()
+    const formContext = useForm<Form>({
+        resolver: (values) =>
+            values.files.length === 1 || props.entity
+                ? { values, errors: {} }
+                : { values: {}, errors: { files: { type: 'required', message: t('document.template.file.missing') } } }
+    })
     const {t} = useTranslation()
 
     const onOpen = useCallback(() => {
@@ -59,6 +64,7 @@ const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto
     }, [props.entity])
 
     const chosenFile = formContext.watch('files')?.[0]?.file?.name
+    const noFileError = formContext.formState.errors.files?.message
 
     return (
         <EntityDialog
@@ -78,6 +84,7 @@ const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto
                             accept={'application/pdf'}>
                             {chosenFile ? t('document.template.file.change') : t('document.template.file.choose')}
                         </SelectFileButton>
+                        {noFileError && <Typography color={'error'}>{noFileError}</Typography>}
                     </>
                 }
                 <FormInputNumber
