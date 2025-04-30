@@ -197,7 +197,6 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 groups: [],
                 statisticEvaluations: undefined,
                 useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
-                hasDuplicatable: false,
                 isGroupRound: false,
                 useStartTimeOffsets: false,
                 places: getPlacesForRound(roundIndex),

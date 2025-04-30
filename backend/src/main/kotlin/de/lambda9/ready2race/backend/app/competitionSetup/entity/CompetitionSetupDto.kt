@@ -14,8 +14,7 @@ data class CompetitionSetupDto(
     )
 
     /*todo validation:
-        - if one round has unlimited teams (a match or group has teams == undefined OR the round hasDuplicatable is true) the next round can't have unlimited teams
-        - ? First round needs to have unlimited teams
+        - if one round has unlimited teams, the next round can't have unlimited teams as well
     */
 
     companion object {

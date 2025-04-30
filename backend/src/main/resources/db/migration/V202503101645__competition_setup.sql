@@ -29,7 +29,6 @@ create table competition_setup_round
     name                       text    not null,
     required                   boolean not null,
     use_default_seeding        boolean not null,
-    has_duplicatable           boolean not null,
     constraint chk_either_competition_setup_or_competition_setup_template check (
         (competition_setup is null and competition_setup_template is not null) or
         (competition_setup is not null and competition_setup_template is null) )

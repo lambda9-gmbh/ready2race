@@ -23,7 +23,6 @@ export type FormSetupRound = {
     groups: Array<FormSetupGroup>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
-    hasDuplicatable: boolean
     places: Array<{
         roundOutcome: number
         place: number
@@ -104,8 +103,6 @@ export function mapFormRoundsToDtoRounds(
             : undefined,
         groups: round.isGroupRound
             ? round.groups.map((group, groupIndex) => ({
-                  duplicatable:
-                      groupIndex === round.groups.length - 1 ? round.hasDuplicatable : false,
                   weighting: groupIndex + 1,
                   teams: group.teams !== '' ? Number(group.teams) : undefined,
                   name: takeIfNotEmpty(group.name),
@@ -113,7 +110,7 @@ export function mapFormRoundsToDtoRounds(
                       mapFormMatchToDtoMatch(
                           match,
                           matchIndex,
-                          round.hasDuplicatable,
+                          round.useStartTimeOffsets,
                           group.matchTeams,
                       ),
                   ),
@@ -122,7 +119,6 @@ export function mapFormRoundsToDtoRounds(
             : undefined,
         statisticEvaluations: round.statisticEvaluations,
         useDefaultSeeding: round.useDefaultSeeding,
-        hasDuplicatable: round.hasDuplicatable,
         places: round.places,
     }))
 }
@@ -183,10 +179,9 @@ function mapDtoRoundsToFormRounds(
             })) ?? [],
         statisticEvaluations: round.statisticEvaluations,
         useDefaultSeeding: round.useDefaultSeeding,
-        hasDuplicatable: round.hasDuplicatable,
         places: round.places,
         isGroupRound: round.groups !== undefined,
-        // If a match has an offset, useStartTimeOffsets is set to true
+        // If at least one match/group has an offset, useStartTimeOffsets is set to true
         useStartTimeOffsets:
             (round.matches?.filter(m => m.startTimeOffset !== undefined).length ?? 0) > 0 ||
             (round.groups

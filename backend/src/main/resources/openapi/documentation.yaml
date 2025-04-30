@@ -3480,7 +3480,6 @@ components:
         - name
         - required
         - useDefaultSeeding
-        - hasDuplicatable
         - places
       properties:
         name:
@@ -3500,8 +3499,6 @@ components:
           items:
             $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
         useDefaultSeeding:
-          type: boolean
-        hasDuplicatable:
           type: boolean
         places:
           type: array

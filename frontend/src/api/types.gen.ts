@@ -205,7 +205,6 @@ export type CompetitionSetupRoundDto = {
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
-    hasDuplicatable: boolean
     places: Array<CompetitionSetupPlaceDto>
 }
 

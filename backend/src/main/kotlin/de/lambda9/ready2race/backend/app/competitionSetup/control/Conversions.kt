@@ -16,7 +16,6 @@ fun CompetitionSetupRoundDto.toRecord(
     name = name,
     required = required,
     useDefaultSeeding = useDefaultSeeding,
-    hasDuplicatable = hasDuplicatable
 )
 
 fun CompetitionSetupRoundRecord.toDto(
@@ -31,7 +30,6 @@ fun CompetitionSetupRoundRecord.toDto(
     groups = groups,
     statisticEvaluations = statisticEvaluations,
     useDefaultSeeding = useDefaultSeeding,
-    hasDuplicatable = hasDuplicatable,
     places = places
 )
 

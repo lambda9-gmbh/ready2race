@@ -209,7 +209,6 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                         if (newValue) {
                             const appendableGroupMatch = (weighting: number, position: number) => {
                                 return {
-                                    duplicatable: false,
                                     weighting: weighting,
                                     teams: '',
                                     name: '',

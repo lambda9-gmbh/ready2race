@@ -71,12 +71,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         control: formContext.control,
         name: `rounds.${round.index}.matches`,
         rules: {
-            validate: (value, formValues) => {
-                if (value.length === 0) {
-                    setMatchesError(t('event.competition.setup.validation.matchesEmpty'))
-                    return 'matchesEmpty'
-                }
-
+            validate: value => {
                 const participants = value.map(match => match.participants.map(p => p.seed)).flat()
                 const countedParticipantsMap = participants.reduce<Map<number, number>>(
                     (acc, val) => {
@@ -105,17 +100,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                             t('event.competition.setup.validation.duplicateParticipants.message'),
                     )
                     return 'duplicateParticipants'
-                }
-
-                if (
-                    formValues.rounds[round.index].hasDuplicatable &&
-                    value.filter(
-                        (match, matchIndex) =>
-                            match.teams === '' && matchIndex !== value.length - 1,
-                    ).length > 0
-                ) {
-                    setMatchesError(t("event.competition.setup.validation.duplicateMayHaveUndefinedTeams"))
-                    return 'duplicateMayHaveUndefinedTeams'
                 }
 
                 setMatchesError(null)
@@ -148,6 +132,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         )
     }*/
 
+    const isFirstRound = round.index === 0
+
     // When appending or removing a match/group, the participants are updated or places are updated
     useEffect(() => {
         if (watchUseDefaultSeeding) {
@@ -162,7 +148,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         } else {
             props.allowRoundUpdates.set(true)
         }
-    }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding])
+    }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding, isFirstRound])
 
     function findLowestMissingParticipant(
         isGroups: boolean,
@@ -446,7 +432,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                 variant="outlined"
                                                 onClick={() => {
                                                     appendGroup({
-                                                        duplicatable: false,
                                                         weighting: groupFields.length + 1,
                                                         teams: `${defaultGroupTeamSize}`,
                                                         name: '',

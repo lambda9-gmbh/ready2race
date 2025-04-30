@@ -1,4 +1,4 @@
-import {CheckboxElement, useFieldArray} from 'react-hook-form-mui'
+import {useFieldArray} from 'react-hook-form-mui'
 import {
     Divider,
     Stack,
@@ -12,7 +12,6 @@ import {
 } from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {
     CompetitionSetupMatchOrGroupProps,
     onTeamsChanged,
@@ -106,19 +105,6 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                     }
                 }}
             />
-            {props.isLastIndex && (
-                <CheckboxElement
-                    name={`rounds.${roundIndex}.hasDuplicatable`}
-                    required={false}
-                    label={
-                        <FormInputLabel
-                            label={t('event.competition.setup.match.duplicatable')}
-                            required={true}
-                            horizontal
-                        />
-                    }
-                />
-            )}
             <Divider />
             <Typography sx={{fontSize: '1.1rem'}}>
                 {t('event.competition.setup.match.outcome.outcomes')}:
