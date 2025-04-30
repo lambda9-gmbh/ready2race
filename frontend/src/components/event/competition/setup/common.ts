@@ -22,8 +22,8 @@ export type FormSetupRound = {
     matches: Array<FormSetupMatch>
     groups: Array<FormSetupGroup>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
-    hasDuplicatable: boolean
     useDefaultSeeding: boolean
+    hasDuplicatable: boolean
     places: Array<{
         roundOutcome: number
         place: number
@@ -99,8 +99,6 @@ export function mapFormRoundsToDtoRounds(
                           value.match,
                           value.originalIndex,
                           round.useStartTimeOffsets,
-                          round.hasDuplicatable,
-                          round.matches.length,
                       ),
                   )
             : undefined,
@@ -110,13 +108,12 @@ export function mapFormRoundsToDtoRounds(
                       groupIndex === round.groups.length - 1 ? round.hasDuplicatable : false,
                   weighting: groupIndex + 1,
                   teams: group.teams !== '' ? Number(group.teams) : undefined,
-                  name: group.name,
+                  name: takeIfNotEmpty(group.name),
                   matches: group.matches.map((match, matchIndex) =>
                       mapFormMatchToDtoMatch(
                           match,
                           matchIndex,
                           round.hasDuplicatable,
-                          round.useStartTimeOffsets,
                           group.matchTeams,
                       ),
                   ),
@@ -125,6 +122,7 @@ export function mapFormRoundsToDtoRounds(
             : undefined,
         statisticEvaluations: round.statisticEvaluations,
         useDefaultSeeding: round.useDefaultSeeding,
+        hasDuplicatable: round.hasDuplicatable,
         places: round.places,
     }))
 }
@@ -133,13 +131,9 @@ function mapFormMatchToDtoMatch(
     formMatch: FormSetupMatch,
     matchIndex: number,
     useStartTimeOffsets: boolean,
-    roundHasDuplicatable: boolean,
-    matchesLength?: number,
     setTeamsValue?: number,
 ): CompetitionSetupMatchDto {
-    console.log('XXXXX', roundHasDuplicatable, matchesLength)
     return {
-        duplicatable: matchIndex === (matchesLength ?? 0) - 1 ? roundHasDuplicatable : false,
         weighting: matchIndex + 1, // The Array Position defines the Match Weighting
         teams:
             setTeamsValue === undefined // Groups provide a set value for the teams since all matches in one group need to have the same amount of participants
@@ -147,7 +141,7 @@ function mapFormMatchToDtoMatch(
                     ? Number(formMatch.teams)
                     : undefined
                 : setTeamsValue,
-        name: formMatch.name,
+        name: takeIfNotEmpty(formMatch.name),
         participants: formMatch.participants.map(p => p.seed),
         startTimeOffset: useStartTimeOffsets ? formMatch.startTimeOffset : undefined,
     }
@@ -188,12 +182,8 @@ function mapDtoRoundsToFormRounds(
                 matchTeams: group.matches[0]?.teams ?? 0,
             })) ?? [],
         statisticEvaluations: round.statisticEvaluations,
-        hasDuplicatable:
-            round.matches !== undefined
-                ? round.matches.sort((a, b) => a.weighting - b.weighting)[round.matches.length - 1]
-                      .duplicatable // Only the element with the highest can be duplicatable so this gets the element with highest weighting
-                : (round.groups?.[round.groups.length - 1].duplicatable ?? false),
         useDefaultSeeding: round.useDefaultSeeding,
+        hasDuplicatable: round.hasDuplicatable,
         places: round.places,
         isGroupRound: round.groups !== undefined,
         // If a match has an offset, useStartTimeOffsets is set to true

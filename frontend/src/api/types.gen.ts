@@ -169,7 +169,6 @@ export type CompetitionSetupDto = {
 }
 
 export type CompetitionSetupGroupDto = {
-    duplicatable: boolean
     weighting: number
     teams?: number
     name?: string
@@ -187,7 +186,6 @@ export type CompetitionSetupGroupStatisticEvaluationDto = {
 }
 
 export type CompetitionSetupMatchDto = {
-    duplicatable: boolean
     weighting: number
     teams?: number
     name?: string
@@ -207,6 +205,7 @@ export type CompetitionSetupRoundDto = {
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
+    hasDuplicatable: boolean
     places: Array<CompetitionSetupPlaceDto>
 }
 

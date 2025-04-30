@@ -3400,12 +3400,9 @@ components:
     CompetitionSetupMatchDto:
       type: object
       required:
-        - duplicatable
         - weighting
         - participants
       properties:
-        duplicatable:
-          type: boolean
         weighting:
           type: integer
         teams:
@@ -3422,13 +3419,10 @@ components:
     CompetitionSetupGroupDto:
       type: object
       required:
-        - duplicatable
         - weighting
         - matches
         - participants
       properties:
-        duplicatable:
-          type: boolean
         weighting:
           type: integer
         teams:
@@ -3486,6 +3480,7 @@ components:
         - name
         - required
         - useDefaultSeeding
+        - hasDuplicatable
         - places
       properties:
         name:
@@ -3505,6 +3500,8 @@ components:
           items:
             $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
         useDefaultSeeding:
+          type: boolean
+        hasDuplicatable:
           type: boolean
         places:
           type: array

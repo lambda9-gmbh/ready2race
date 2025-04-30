@@ -37,6 +37,8 @@ const CompetitionSetupParticipants = ({
                                 transform={{
                                     output: value => Number(value.target.value),
                                 }}
+                                integer
+                                min={1}
                             />
                         </Stack>
                     ))}

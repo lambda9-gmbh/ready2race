@@ -72,7 +72,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.position`}
                 label={t('event.competition.setup.match.executionOrder')}
                 required
-                integer={true}
+                integer
                 transform={{
                     output: value => Number(value.target.value),
                 }}
@@ -98,6 +98,12 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         props.participantFunctions,
                         props.teamCounts,
                     )
+                }}
+                rules={{
+                    min: {
+                        value: 1,
+                        message: t('common.form.number.invalid.minOrUndefined', {min: 1})
+                    }
                 }}
             />
             {props.isLastIndex && (

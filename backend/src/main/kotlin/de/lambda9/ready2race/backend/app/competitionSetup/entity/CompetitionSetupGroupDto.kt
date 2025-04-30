@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.validation.validators.IntValidators.min
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 
 data class CompetitionSetupGroupDto(
-    val duplicatable: Boolean,
     val weighting: Int,
     val teams: Int?,
     val name: String?,
@@ -27,7 +26,6 @@ data class CompetitionSetupGroupDto(
     companion object {
         val example
             get() = CompetitionSetupGroupDto(
-                duplicatable = false,
                 weighting = 1,
                 teams = 4,
                 name = "Group name",

@@ -17,6 +17,7 @@ data class CompetitionSetupRoundDto(
     val groups: List<CompetitionSetupGroupDto>?,
     val statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?,
     val useDefaultSeeding: Boolean,
+    val hasDuplicatable: Boolean,
     val places: List<CompetitionSetupPlaceDto>,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
@@ -43,9 +44,14 @@ data class CompetitionSetupRoundDto(
             )
         ),
         ValidationResult.oneOf(
-            this::matches validate notEmpty,
             ValidationResult.allOf(
+                this::matches validate notNull,
+                this::matches validate notEmpty,
+            ),
+            ValidationResult.allOf(
+                this::groups validate notNull,
                 this::groups validate notEmpty,
+                this::statisticEvaluations validate notNull,
                 this::statisticEvaluations validate notEmpty,
             )
         ),
@@ -53,9 +59,7 @@ data class CompetitionSetupRoundDto(
     )
     /*todo validations:
         - no duplicate "participants" in one round
-        - max 1 "duplicatable" in 1 round (match and group)
-        - A "duplicatable" match/group needs the highest weighting in the round
-        - only the "duplicatable" match/group can have undefined "teams" in a round
+        - if hasDuplicatable is true, only the match/group with the highest weighting can have undefined "teams"
     */
 
     companion object {
@@ -67,6 +71,7 @@ data class CompetitionSetupRoundDto(
                 groups = listOf(CompetitionSetupGroupDto.example),
                 statisticEvaluations = listOf(CompetitionSetupGroupStatisticEvaluationDto.example),
                 useDefaultSeeding = true,
+                hasDuplicatable = false,
                 places = listOf(CompetitionSetupPlaceDto.example),
             )
     }

@@ -33,7 +33,8 @@
             "number": "Bitte geben Sie eine gültige Zahl ein."
           },
           "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
-        }
+        },
+        "minOrUndefined": "Bitte wählen Sie eine Zahl größer als {{min}} oder lassen Sie das Feld leer."
       },
       "seconds": "Sekunden",
       "optional": "Optional",
@@ -268,7 +269,14 @@
         },
         "validation": {
           "noFollowingUnlimitedTeamsRounds": "Es dürfen keine zwei Runden direkt aufeinander folgen, welche beide keine festgelegte Teilnehmerzahl haben (eine Partie ist duplizierend oder hat keine Teamanzahl). Bitte passen Sie eine der beiden Runden entsprechend an.",
-          "firstRoundUnlimitedTeams": "Die erste Runde muss eine unbestimmte Anzahl an Teilnehmern haben (eine Partie ist duplizierend oder hat keine Teamanzahl)."
+          "firstRoundUnlimitedTeams": "Die erste Runde muss eine unbestimmte Anzahl an Teilnehmern haben (eine Partie ist duplizierend oder hat keine Teamanzahl).",
+          "matchesEmpty": "Bitte fügen Sie mindestens eine Partie hinzu",
+          "duplicateParticipants":{
+            "one": "Das Team: {{participants}} wird mehrfach verwendet.",
+            "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
+            "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
+          },
+          "duplicateMayHaveUndefinedTeams": "Bitte geben Sie die Teamanzahl für jede andere Partie als die duplizierende an."
         }
       }
     },

@@ -32,7 +32,8 @@
             "integer": "Please enter an integer number.",
             "number": "Please enter a valid number."
           },
-          "range": "Please enter a number between {{min}} and {{max}}."
+          "range": "Please enter a number between {{min}} and {{max}}.",
+          "minOrUndefined": "Please enter a number greater than {{min}} or leave the field blank."
         }
       },
       "seconds": "Seconds",
@@ -268,7 +269,14 @@
         },
         "validation": {
           "noFollowingUnlimitedTeamsRounds": "No two rounds may directly follow each other, neither of which has a fixed number of participants (a match is duplicating or has no set number of teams). Please adjust one of the two rounds accordingly.",
-          "firstRoundUnlimitedTeams": "The first round must have an undefined number of participants (a match is duplicating or has no set number of teams)."
+          "firstRoundUnlimitedTeams": "The first round must have an undefined number of participants (a match is duplicating or has no set number of teams).",
+          "matchesEmpty": "Please add at least one match",
+          "duplicateParticipants":{
+            "one": "The team: {{participants}} is used several times.",
+            "multiple": "The teams: {{participants}} are used several times.",
+            "message": "Please select each team only for one matchup per round."
+          },
+          "duplicateMayHaveUndefinedTeams": "Please enter a number of teams for every other match than the one duplicating."
         }
       }
     },

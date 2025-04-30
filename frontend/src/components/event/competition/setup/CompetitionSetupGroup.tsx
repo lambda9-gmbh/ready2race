@@ -186,7 +186,8 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                             name={`rounds[${roundIndex}].groups[${fieldInfo.index}].matches[${matchIndex}].position`}
                             label={'Execution order'}
                             required
-                            integer={true}
+                            integer
+                            min={0}
                             transform={{
                                 output: value => Number(value.target.value),
                             }}

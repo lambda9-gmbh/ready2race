@@ -180,7 +180,7 @@ const CompetitionPage = () => {
                             eventId: eventId,
                             competitionId: competitionId,
                         }}>
-                        <Button variant="contained">[todo] Setup</Button>
+                        <Button variant="contained">{t('event.competition.setup.setup')}</Button>
                     </Link>
                 </Box>
             </Stack>

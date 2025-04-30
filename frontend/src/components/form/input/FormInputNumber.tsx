@@ -21,7 +21,7 @@ const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) =>
                               value: min,
                               message: t('common.form.number.invalid.range', {
                                   min: min,
-                                  max: max,
+                                  max: max ?? '∞',
                               }),
                           }
                         : undefined,
@@ -31,7 +31,7 @@ const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) =>
                         ? {
                               value: max,
                               message: t('common.form.number.invalid.range', {
-                                  min: min,
+                                  min: min ?? '∞',
                                   max: max,
                               }),
                           }

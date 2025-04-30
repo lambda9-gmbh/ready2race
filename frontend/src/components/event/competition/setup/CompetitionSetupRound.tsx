@@ -71,9 +71,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         control: formContext.control,
         name: `rounds.${round.index}.matches`,
         rules: {
-            validate: value => {
+            validate: (value, formValues) => {
                 if (value.length === 0) {
-                    setMatchesError('[todo] At least one match required')
+                    setMatchesError(t('event.competition.setup.validation.matchesEmpty'))
                     return 'matchesEmpty'
                 }
 
@@ -93,9 +93,29 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
                 if (duplicateParticipants.length > 0) {
                     setMatchesError(
-                        `[todo] Duplicate Participants Error: ${duplicateParticipants.join(', ')}`,
+                        (duplicateParticipants.length === 1
+                            ? t('event.competition.setup.validation.duplicateParticipants.one', {
+                                  participants: duplicateParticipants[0],
+                              })
+                            : t(
+                                  'event.competition.setup.validation.duplicateParticipants.multiple',
+                                  {participants: duplicateParticipants.join(', ')},
+                              )) +
+                            ' ' +
+                            t('event.competition.setup.validation.duplicateParticipants.message'),
                     )
                     return 'duplicateParticipants'
+                }
+
+                if (
+                    formValues.rounds[round.index].hasDuplicatable &&
+                    value.filter(
+                        (match, matchIndex) =>
+                            match.teams === '' && matchIndex !== value.length - 1,
+                    ).length > 0
+                ) {
+                    setMatchesError(t("event.competition.setup.validation.duplicateMayHaveUndefinedTeams"))
+                    return 'duplicateMayHaveUndefinedTeams'
                 }
 
                 setMatchesError(null)
@@ -304,10 +324,6 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
             isLastIndex: info.index === watchMatches.length - 1,
         }
     }
-
-    const fooWatch = formContext.watch(`rounds.${round.index}.hasDuplicatable`)
-
-    console.log(round.index, fooWatch, watchMatches)
 
     return (
         <Controller
@@ -562,6 +578,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                                         name={`rounds.${round.index}.places.${placeIndex}.place`}
                                                                         placeholder={`${teamCounts.nextRound + 1}`}
                                                                         required
+                                                                        integer
+                                                                        min={1}
                                                                     />
                                                                 </TableCell>
                                                             </TableRow>

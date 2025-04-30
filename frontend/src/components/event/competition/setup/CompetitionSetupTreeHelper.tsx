@@ -188,14 +188,16 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                         matchForPlaceThree && roundIndex === roundCount - 1
                             ? matchIndex === 0
                                 ? [{seed: 1}, {seed: 2}]
-                                : [{seed: 3}, {seed: 4}]
+                                : teams > 3
+                                  ? [{seed: 3}, {seed: 4}]
+                                  : [{seed: 3}]
                             : [],
                     position: match.position,
                 })),
                 groups: [],
                 statisticEvaluations: undefined,
-                hasDuplicatable: false,
                 useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
+                hasDuplicatable: false,
                 isGroupRound: false,
                 useStartTimeOffsets: false,
                 places: getPlacesForRound(roundIndex),
@@ -246,6 +248,9 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                                     label={t(
                                         'event.competition.setup.tournamentTree.participatingTeams',
                                     )}
+                                    integer
+                                    min={3}
+                                    max={128}
                                 />
                                 <Box>
                                     <CheckboxElement
