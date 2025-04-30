@@ -15,7 +15,7 @@ fun Application.configureRequests() {
     install(DoubleReceive)
     install(RateLimit) {
         register(RateLimitName("login")) {
-            rateLimiter(limit = 3, refillPeriod = 5.minutes)
+            rateLimiter(limit = 10, refillPeriod = 5.minutes)
             requestKey { call ->
                 call.receiveKIO(LoginRequest.example).unsafeRunSync().getOrThrow().email
             }

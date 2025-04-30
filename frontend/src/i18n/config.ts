@@ -40,7 +40,12 @@ export const locales: Record<Language, Locale> = {
     },
 }
 
-export const fallbackLng: Language = 'de'
+export const languageNames: Record<Language, string> = {
+    de: "deutsch",
+    en: "english",
+}
+
+export const fallbackLng: Language = 'en'
 export const defaultNS = 'translations'
 export const resources = {
     en: {

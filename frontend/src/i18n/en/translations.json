@@ -1,6 +1,7 @@
 {
   "common": {
     "cancel": "Cancel",
+    "close": "Close",
     "confirmation": {
       "title": "Confirmation required",
       "content": "Please confirm the execution of the selected action"
@@ -56,7 +57,43 @@
     "back": "Back",
     "next": "Next",
     "and": "and",
-    "remove": "Remove"
+    "remove": "Remove",
+    "language": {
+      "menu": "Select language"
+    }
+  },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Can be added to system-generated documents to customize the layout.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      },
+      "template": "Document template",
+      "templates": "Document templates",
+      "type": {
+        "INVOICE": "Invoice",
+        "REGISTRATION_REPORT": "Event registration result"
+      },
+      "none": "No template",
+      "name": "Filename",
+      "file": {
+        "choose": "Choose template",
+        "change": "Change template",
+        "missing": "Please choose a document."
+      },
+      "pagePadding": {
+        "top": "Page margin top",
+        "left": "Page margin left",
+        "right": "Page margin right",
+        "bottom": "Page margin bottom"
+      },
+      "assignments": {
+        "global": "Globally assigned templates",
+        "event": "Event assigned templates"
+      }
+    }
   },
   "decimal": {
     "point": "."
@@ -89,6 +126,7 @@
   },
   "navigation": {
     "titles": {
+      "landing": "Home",
       "dashboard": "Dashboard",
       "events": "Events",
       "competitionConfig": "Competition Settings",
@@ -96,13 +134,20 @@
       "users": "Users",
       "config": "Configurations",
       "clubs": "Clubs",
-      "myClubs": "My Club"
+      "myClub": "My Club"
+    }
+  },
+  "dashboard": {
+    "registration": {
+      "showMessage": "Show message"
     }
   },
   "club": {
     "club": "Club",
+    "clubs": "Clubs",
+    "participants": "Members",
     "participant": {
-      "title": "Participant",
+      "title": "Member",
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club"
@@ -113,14 +158,19 @@
     "events": "Events",
     "name": "Name",
     "description": "Description",
-    "registerNow": "Register now",
+    "registerNow": "To Registration",
     "invoice": {
       "prefix": "Invoice prefix"
     },
     "location": "Location",
+    "upcoming": "Upcoming events",
     "registrationAvailable": {
-      "from": "Registration period start",
-      "to": "Registration period end"
+      "timespan": "Registration period",
+      "timespanFrom": "Registration period start",
+      "timespanTo": "Registration period end",
+      "from": "from",
+      "to": "until",
+      "unknown": "Not announced yet"
     },
     "published": "Published",
     "eventDay": {
@@ -129,7 +179,7 @@
       "date": "Date",
       "name": "Name",
       "description": "Description",
-      "assignedCompetitions": "Competitions for the day"
+      "assignedCompetitions": "Competitions on this day"
     },
     "competition": {
       "competition": "Competition",
@@ -137,12 +187,26 @@
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
+      "registrationCount": "Registrations",
       "shortName": "Short name",
+      "tableHint": {
+        "competitionComponents": {
+          "part1": "Categories, participants types and fee types for the competitions can be defined ",
+          "part2Link": "here",
+          "part3": "."
+        },
+        "templates": {
+          "part1": "For reuse in different events, ",
+          "part2Link": "templates",
+          "part3": " can be defined."
+        }
+      },
       "category": {
         "category": "Category",
         "categories": "Categories",
         "name": "Name",
-        "description": "Description"
+        "description": "Description",
+        "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
       },
       "count": {
         "males": "Number of men",
@@ -151,19 +215,20 @@
         "mixed": "Number of any"
       },
       "namedParticipant": {
-        "namedParticipant": "Named Participant",
-        "namedParticipants": "Named Participants",
+        "namedParticipant": "Participant Type",
+        "namedParticipants": "Participant Types",
         "name": "Name",
         "description": "Description",
         "role": "Role",
-        "add": "Add Named Participant",
+        "add": "Add Participant Type",
+        "tableHint": "Roles that participants can have in a competition.",
         "error": {
-          "emptyList": "Please add one or more named participants",
+          "emptyList": "Please add one or more participant types",
           "noCount": "Please enter at least one participant of any kind for this role",
           "duplicates": {
             "one": "The role {{label}} is used several times.",
             "multiple": "The roles {{labels}} are used several times.",
-            "message": "Please select a unique role for each named participant."
+            "message": "Please select a unique role for each participant type."
           }
         }
       },
@@ -175,18 +240,20 @@
         "amount": "Amount",
         "add": "Add Fee",
         "type": "Fee type",
+        "tableHint": "Defines possible fees for a competition.",
         "required": {
           "notRequired": "Fee is optional",
           "required": "Fee is mandatory"
         }
       },
       "template": {
-        "template": "Template",
-        "templates": "Templates",
+        "template": "Competition Template",
+        "templates": "Competition Templates",
         "name": "Name",
-        "description": "Description"
+        "description": "Description",
+        "tableHint": "Provide a quick way to create competitions for an event."
       },
-      "assignedDays": "Days of the competition",
+      "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
@@ -290,7 +357,18 @@
       "requirementColName": "Column to check for requirement",
       "requirementIsValidValue": "Accepted value in requirement column",
       "participantsOpen": "Open",
-      "participantsApproved": "Approved"
+      "participantsApproved": "Approved",
+      "tableHint": {
+        "part1": "Requirements can be created or edited ",
+        "part2Link": "here",
+        "part3": "."
+      }
+    },
+    "action": {
+      "registrationsReport": {
+        "generate": "Generate registrations result",
+        "download": "Download registrations result"
+      }
     },
     "assign": {
       "save": {
@@ -302,13 +380,20 @@
       "document": "Document",
       "documents": "Documents",
       "name": "Name",
+      "tableHint": {
+        "description": "Will be provided upon event registration.",
+        "part1": "In order to group and configure documents, ",
+        "part2Link": "document types",
+        "part3": " must first be defined."
+      },
       "type": {
         "type": "Type",
         "documentType": "Document Type",
         "documentTypes": "Document Types",
         "name": "Name",
+        "tableHint": "Enable the categorization of different documents for an event.",
         "required": {
-          "forEvent": "Erforderlich für Event",
+          "forEvent": "Required for event",
           "confirmation": "Confirmation required"
         }
       },
@@ -324,6 +409,8 @@
       }
     },
     "registration": {
+      "registration": "Registration",
+      "registrations": "Registrations",
       "addParticipant": "Add Participant",
       "singleCompetition": "Single Competition",
       "teamCompetition": "Team Competition",
@@ -342,12 +429,14 @@
       "success": {
         "title": "Registration successful!",
         "subtitle": "You will receive a confirmation by e-mail."
-      }
+      },
+      "mostRecent": "Latest registrations"
     },
+    "participants": "Participants",
     "tabs": {
       "general": "General",
-      "participants": "Participants",
-      "settings": "Settings"
+      "settings": "Settings",
+      "actions": "Actions"
     }
   },
   "participantRequirement": {
@@ -356,7 +445,8 @@
     "active": "Active",
     "activate": "Activate for event",
     "remove": "Remove from event",
-    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?"
+    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
+    "tableHint": "Can be enabled for events."
   },
   "user": {
     "user": "User",
@@ -403,6 +493,10 @@
       "error": {
         "load": "Profile could not be loaded"
       }
+    },
+    "update": {
+      "error": "An error has occurred when updating the user",
+      "success": "User successfully updated"
     },
     "invitation": {
       "invitation": "Invitation",
@@ -468,11 +562,21 @@
   },
   "role": {
     "role": "Role",
+    "roles": "Roles",
     "userRoles": "User Roles",
     "name": "Name",
     "description": "Description",
     "error": {
       "cannotAssign": "Role(s) could not be assigned to the user"
+    }
+  },
+  "configuration": {
+    "configuration": "Configuration",
+    "tabs": {
+      "competitionTemplates": "Competition templates",
+      "eventElements": "Event elements",
+      "competitionElements": "Competition elements",
+      "globalSettings": "Global settings"
     }
   },
   "captcha": {

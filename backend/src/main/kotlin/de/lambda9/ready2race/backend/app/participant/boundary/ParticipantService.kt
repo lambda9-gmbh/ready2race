@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
@@ -12,6 +13,7 @@ import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -36,9 +38,11 @@ object ParticipantService {
     fun page(
         params: PaginationParameters<ParticipantSort>,
         clubId: UUID? = null,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
     ): App<Nothing, ApiResponse.Page<ParticipantDto, ParticipantSort>> = KIO.comprehension {
-        val total = !ParticipantRepo.count(params.search, clubId).orDie()
-        val page = !ParticipantRepo.page(params, clubId).orDie()
+        val total = !ParticipantRepo.count(params.search, clubId, user, scope).orDie()
+        val page = !ParticipantRepo.page(params, clubId, user, scope).orDie()
 
         page.traverse { it.participantDto() }.map {
             ApiResponse.Page(
@@ -51,9 +55,11 @@ object ParticipantService {
     fun pageForEvent(
         params: PaginationParameters<ParticipantForEventSort>,
         eventId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope
     ): App<Nothing, ApiResponse.Page<ParticipantForEventDto, ParticipantForEventSort>> = KIO.comprehension {
-        val total = !ParticipantForEventRepo.count(params.search, eventId).orDie()
-        val page = !ParticipantForEventRepo.page(params, eventId).orDie()
+        val total = !ParticipantForEventRepo.count(params.search, eventId, user, scope).orDie()
+        val page = !ParticipantForEventRepo.page(params, eventId, user, scope).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
@@ -66,9 +72,11 @@ object ParticipantService {
     fun getParticipant(
         id: UUID,
         clubId: UUID? = null,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
     ): App<ParticipantError, ApiResponse.Dto<ParticipantDto>> = KIO.comprehension {
         val participant =
-            !ParticipantRepo.getParticipant(id, clubId).orDie().onNullFail { ParticipantError.ParticipantNotFound }
+            !ParticipantRepo.getParticipant(id, clubId, user, scope).orDie().onNullFail { ParticipantError.ParticipantNotFound }
         participant.participantDto().map { ApiResponse.Dto(it) }
     }
 
@@ -77,8 +85,10 @@ object ParticipantService {
         userId: UUID,
         clubId: UUID? = null,
         participantId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
     ): App<ParticipantError, ApiResponse.NoData> =
-        ParticipantRepo.update(participantId, clubId) {
+        ParticipantRepo.update(participantId, clubId, user, scope) {
             firstname = request.firstname
             lastname = request.lastname
             year = request.year
@@ -95,8 +105,10 @@ object ParticipantService {
     fun deleteParticipant(
         id: UUID,
         clubId: UUID? = null,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
     ): App<ParticipantError, ApiResponse.NoData> = KIO.comprehension {
-        val deleted = !ParticipantRepo.delete(id, clubId).orDie()
+        val deleted = !ParticipantRepo.delete(id, clubId, user, scope).orDie()
 
         if (deleted < 1) {
             KIO.fail(ParticipantError.ParticipantNotFound)

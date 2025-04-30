@@ -1,13 +1,13 @@
 import EntityDialog from '@components/EntityDialog.tsx'
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {EventDocumentTypeDto, EventDocumentTypeRequest} from '@api/types.gen.ts'
-import {SwitchElement, useForm} from 'react-hook-form-mui'
+import {useForm} from 'react-hook-form-mui'
 import {addDocumentType, updateDocumentType} from '@api/sdk.gen.ts'
 import {useCallback} from 'react'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {Stack} from '@mui/material'
-import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {useTranslation} from 'react-i18next'
+import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 
 type Form = EventDocumentTypeRequest
 
@@ -54,15 +54,17 @@ const DocumentTypeDialog = (props: BaseEntityDialogProps<EventDocumentTypeDto>) 
             editAction={editAction}>
             <Stack spacing={4}>
                 <FormInputText name={'name'} label={t('event.document.type.name')} required />
-                <SwitchElement
+                <FormInputSwitch
                     name={'required'}
-                    label={<FormInputLabel label={t('event.document.type.required.forEvent')} />}
+                    label={t('event.document.type.required.forEvent')}
+                    horizontal
+                    reverse
                 />
-                <SwitchElement
+                <FormInputSwitch
                     name={'confirmationRequired'}
-                    label={
-                        <FormInputLabel label={t('event.document.type.required.confirmation')} />
-                    }
+                    label={t('event.document.type.required.confirmation')}
+                    horizontal
+                    reverse
                 />
                 {/*todo: change slider required, shows optional, doesnt force true when required*/}
             </Stack>

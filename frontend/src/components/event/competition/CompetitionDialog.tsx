@@ -16,9 +16,12 @@ import {
 import {CompetitionPropertiesFormInputs} from './CompetitionPropertiesFormInputs.tsx'
 import {CompetitionDto, CompetitionRequest} from '@api/types.gen.ts'
 import {addCompetition, getCompetitionTemplates, updateCompetition} from '@api/sdk.gen.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {createEventGlobal} from '@authorization/privileges.ts'
 
 const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     const {t} = useTranslation()
+    const user = useUser()
     const feedback = useFeedback()
 
     const {eventId} = eventIndexRoute.useParams()
@@ -40,6 +43,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     const {data: templatesData, pending: templatesPending} = useFetch(
         signal => getCompetitionTemplates({signal}),
         {
+            preCondition: () => user.checkPrivilege(createEventGlobal),
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(

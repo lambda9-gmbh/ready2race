@@ -1,13 +1,15 @@
 package de.lambda9.ready2race.backend.app.club.control
 
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object ClubRepo {
@@ -19,19 +21,38 @@ object ClubRepo {
     ): JIO<UUID> = CLUB.insertReturning(record) { ID }
 
     fun count(
-        search: String?
+        search: String?,
+        eventId: UUID?
     ): JIO<Int> = Jooq.query {
         with(CLUB) {
-            fetchCount(this, search.metaSearch(searchFields()))
+            fetchCount(
+                this, search.metaSearch(searchFields()).and(
+                    eventId?.let {
+                    DSL.exists(
+                        selectFrom(EVENT_REGISTRATION).where(
+                            EVENT_REGISTRATION.CLUB.eq(this.ID).and(EVENT_REGISTRATION.EVENT.eq(it))
+                        )
+                    )
+                } ?: DSL.trueCondition()
+            ))
         }
     }
 
     fun page(
-        params: PaginationParameters<ClubSort>
+        params: PaginationParameters<ClubSort>,
+        eventId: UUID?
     ): JIO<List<ClubRecord>> = Jooq.query {
         with(CLUB) {
             selectFrom(this)
-                .page(params, searchFields())
+                .page(params, searchFields()) {
+                    eventId?.let {
+                        DSL.exists(
+                            selectFrom(EVENT_REGISTRATION).where(
+                                EVENT_REGISTRATION.CLUB.eq(this.ID).and(EVENT_REGISTRATION.EVENT.eq(it))
+                            )
+                        )
+                    } ?: DSL.trueCondition()
+                }
                 .fetch()
         }
     }
@@ -43,6 +64,20 @@ object ClubRepo {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
+        }
+    }
+
+    fun getName(
+        id: UUID,
+    ): JIO<String?> = Jooq.query {
+        with(CLUB) {
+            select(
+                NAME
+            )
+                .from(this)
+                .where(ID.eq(id))
+                .fetchOne()
+                ?.value1()
         }
     }
 

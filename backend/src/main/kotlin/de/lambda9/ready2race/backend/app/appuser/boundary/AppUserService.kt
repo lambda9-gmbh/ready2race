@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
@@ -46,6 +47,27 @@ object AppUserService {
         }
     }
 
+    fun getIncludingAllAdmins(
+        id: UUID,
+    ): App<AppUserError, ApiResponse.Dto<AppUserDto>> = KIO.comprehension {
+        val record = !AppUserRepo.getWithRolesIncludingAllAdmins(id).orDie().onNullFail { AppUserError.NotFound }
+        record.appUserDto().map {
+            ApiResponse.Dto(it)
+        }
+    }
+
+    fun getAllByClubId(
+        clubId: UUID,
+    ): App<AppUserError, ApiResponse.ListDto<AppUserDto>> = KIO.comprehension {
+        val list = !AppUserRepo.getAllByClubIdWithRoles(clubId).orDie()
+
+        list.traverse { it.appUserDto() }.map {
+            ApiResponse.ListDto(
+                data = it
+            )
+        }
+    }
+
     fun page(
         params: PaginationParameters<AppUserWithRolesSort>,
     ): App<Nothing, ApiResponse.Page<AppUserDto, AppUserWithRolesSort>> = KIO.comprehension {
@@ -58,6 +80,62 @@ object AppUserService {
                 pagination = params.toPagination(total)
             )
         }
+    }
+
+    fun pageIncludingAdmins(
+        params: PaginationParameters<EveryAppUserWithRolesSort>,
+    ): App<Nothing, ApiResponse.Page<AppUserDto, EveryAppUserWithRolesSort>> = KIO.comprehension {
+        val total = !AppUserRepo.countWithRolesIncludingAdmins(params.search).orDie()
+        val page = !AppUserRepo.pageWithRolesIncludingAdmins(params).orDie()
+
+        page.traverse { it.appUserDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
+    fun update(
+        request: UpdateAppUserRequest,
+        scope: Privilege.Scope,
+        requestingUserId: UUID,
+        targetUserId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val targetIsAdmin = !AppUserHasRoleRepo.exists(targetUserId, ADMIN_ROLE).orDie()
+
+        !KIO.failOn(
+            scope == Privilege.Scope.OWN
+                && (requestingUserId != targetUserId || request.roles.isNotEmpty())
+                || targetIsAdmin && requestingUserId != targetUserId && requestingUserId != SYSTEM_USER
+        ) { AuthError.PrivilegeMissing }
+
+
+        !AppUserRepo.update(targetUserId) {
+            firstname = request.firstname
+            lastname = request.lastname
+            updatedBy = requestingUserId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+            .onNullFail { AppUserError.NotFound }
+            .map { ApiResponse.NoData }
+
+        if (scope == Privilege.Scope.GLOBAL) {
+            !RoleService.checkAssignable(request.roles)
+
+            !AppUserHasRoleRepo.deleteExceptSystem(targetUserId).orDie()
+            !AppUserHasRoleRepo.create(
+                request.roles.map {
+                    AppUserHasRoleRecord(
+                        appUser = targetUserId,
+                        role = it
+                    )
+                }
+            ).orDie()
+        }
+
+        noData
     }
 
     fun pageInvitations(

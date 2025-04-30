@@ -15,10 +15,10 @@ fun Route.participantForEvent() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val (user, scope) =!authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
                 val eventId = !pathParam("eventId", uuid)
                 val params = !pagination<ParticipantForEventSort>()
-                ParticipantService.pageForEvent(params, eventId)
+                ParticipantService.pageForEvent(params, eventId, user, scope)
             }
         }
 

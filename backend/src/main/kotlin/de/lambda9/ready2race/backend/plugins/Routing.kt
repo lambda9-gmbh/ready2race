@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.club.boundary.club
 import de.lambda9.ready2race.backend.app.competitionCategory.boundary.competitionCategory
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.boundary.competitionSetupTemplate
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.competitionTemplate
+import de.lambda9.ready2race.backend.app.documentTemplate.boundary.documentTemplate
 import de.lambda9.ready2race.backend.app.event.boundary.event
 import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumentType
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
@@ -20,8 +21,8 @@ import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
-        swaggerUI(path = "openapi")
         route("/api") {
+            swaggerUI(path = "documentation")
             auth()
             user()
             role()
@@ -36,6 +37,7 @@ fun Application.configureRouting() {
             competitionSetupTemplate()
             captcha()
             eventDocumentType()
+            documentTemplate()
         }
     }
 }

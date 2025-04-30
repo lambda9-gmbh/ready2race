@@ -134,6 +134,29 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+    put:
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAppUserRequest'
+      responses:
+        204:
+          description: User successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /user/registration:
     post:
       operationId: registerUser
@@ -496,6 +519,78 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/EventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/public:
+    get:
+      operationId: getPublicEvents
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Event page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventPublicDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/registration:
+    get:
+      operationId: getEventRegistrations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Event Registration page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventRegistrationViewDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         400:
@@ -882,6 +977,113 @@ paths:
           $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionRegistrations
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: CompetitionRegistration page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionRegistrationTeamDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    put:
+      operationId: updateCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
+      responses:
+        204:
+          description: Competition registration successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionRegistration
+      responses:
+        204:
+          description: CompetitionRegistration successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionSetup:
@@ -1530,6 +1732,30 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /club/{clubId}/user:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getClubUsers
+      responses:
+        200:
+          description: User list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppUserDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
   /club/{clubId}/participant:
     parameters:
       - in: path
@@ -1662,6 +1888,12 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - in: query
+          name: eventId
+          description: Filter for clubs, which registered for this event
+          required: false
+          schema:
+           type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -1714,6 +1946,12 @@ paths:
           $ref: '#/components/responses/500'
 
   /event/{eventId}/register:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
     post:
       operationId: addEventRegistration
       requestBody:
@@ -1725,6 +1963,44 @@ paths:
       responses:
         201:
           $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/registrationResult:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getRegistrationResult
+      parameters:
+        - in: query
+          name: remake
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Report for event registrations successfully retrieved/generated
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
         400:
           $ref: '#/components/responses/400'
         401:
@@ -2382,6 +2658,129 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /documentTemplate:
+    get:
+      operationId: getDocumentTemplates
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Document templates page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentTemplateDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/DocumentTemplateRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /documentTemplateType:
+    get:
+      operationId: getDocumentTemplateTypes
+      responses:
+        200:
+          description: Document types successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentTypeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /documentTemplateType/{documentType}/assignTemplate:
+    parameters:
+      - in: path
+        name: documentType
+        required: true
+        schema:
+          $ref: '#/components/schemas/DocumentType'
+    put:
+      operationId: assignDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignDocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully assigned template to document type
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -2460,6 +2859,14 @@ components:
 
     competitionId:
       name: competitionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    competitionRegistrationId:
+      name: competitionRegistrationId
       in: path
       required: true
       schema:
@@ -2564,6 +2971,7 @@ components:
         - EVENT
         - CLUB
         - PARTICIPANT
+        - REGISTRATION
 
     Scope:
       type: string
@@ -2896,6 +3304,23 @@ components:
           items:
             $ref: '#/components/schemas/RoleDto'
 
+    UpdateAppUserRequest:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - roles
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+            format: uuid
+
     AppUserRegistrationDto:
       type: object
       required:
@@ -3129,6 +3554,80 @@ components:
           type: string
         published:
           type: boolean
+
+    EventPublicDto:
+      type: object
+      required:
+        - id
+        - name
+        - competitionCount
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        registrationAvailableFrom:
+          type: string
+          format: date-time
+        registrationAvailableTo:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        competitionCount:
+          type: number
+        eventFrom:
+          type: string
+          format: date
+        eventTo:
+          type: string
+          format: date
+
+    EventRegistrationViewDto:
+      type: object
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - eventId
+        - eventName
+        - clubId
+        - clubName
+        - competitionRegistrationCount
+        - participantCount
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        eventId:
+          type: string
+          format: uuid
+        eventName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        competitionRegistrationCount:
+          type: number
+        participantCount:
+          type: number
 
     EventRequest:
       type: object
@@ -3371,6 +3870,8 @@ components:
         template:
           type: string
           format: uuid
+        registrationCount:
+          type: number
 
 
     CompetitionRequest:
@@ -3393,6 +3894,72 @@ components:
           items:
             type: string
             format: uuid
+
+    CompetitionRegistrationTeamDto:
+      type: object
+      required:
+        - id
+        - name
+        - clubName
+        - clubId
+        - optionalFees
+        - namedParticipants
+        - updatedAt
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        optionalFees:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationFeeDto'
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantDto'
+        updatedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    CompetitionRegistrationFeeDto:
+      type: object
+      required:
+        - feeId
+        - feeName
+      properties:
+        feeId:
+          type: string
+          format: uuid
+        feeName:
+          type: string
+
+    CompetitionRegistrationNamedParticipantDto:
+      type: object
+      required:
+        - namedParticipantId
+        - namedParticipantName
+        - participants
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantForEventDto'
 
 
     # competitionSetup
@@ -4231,11 +4798,9 @@ components:
         id:
           type: string
           format: uuid
-        participants:
-          type: array
-          items:
-            type: string
-            format: uuid
+        clubId:
+          type: string
+          format: uuid
         optionalFees:
           type: array
           items:
@@ -4311,3 +4876,76 @@ components:
             format: uuid
       required:
         - competitionId
+
+    DocumentType:
+      type: string
+      enum:
+        - 'INVOICE'
+        - 'REGISTRATION_REPORT'
+
+    DocumentTemplateDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        pagePaddingTop:
+          type: number
+          format: double
+        pagePaddingLeft:
+          type: number
+          format: double
+        pagePaddingRight:
+          type: number
+          format: double
+        pagePaddingBottom:
+          type: number
+          format: double
+
+    DocumentTemplateRequest:
+      type: object
+      properties:
+        pagePaddingTop:
+          type: number
+          format: double
+        pagePaddingLeft:
+          type: number
+          format: double
+        pagePaddingRight:
+          type: number
+          format: double
+        pagePaddingBottom:
+          type: number
+          format: double
+
+    AssignDocumentTemplateRequest:
+      type: object
+      properties:
+        template:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedTemplateId:
+      type: object
+      properties:
+        value:
+          type: string
+          format: uuid
+
+    DocumentTypeDto:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        assignedTemplate:
+          $ref: '#/components/schemas/AssignedTemplateId'

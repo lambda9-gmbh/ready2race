@@ -35,10 +35,11 @@ object ClubService {
 
     fun <T: Any> page(
         params: PaginationParameters<ClubSort>,
+        eventId: UUID? = null,
         convert: (ClubRecord) -> App<Nothing,T>
     ): App<Nothing, ApiResponse.Page<T, ClubSort>> = KIO.comprehension {
-        val total = !ClubRepo.count(params.search).orDie()
-        val page = !ClubRepo.page(params).orDie()
+        val total = !ClubRepo.count(params.search, eventId).orDie()
+        val page = !ClubRepo.page(params, eventId).orDie()
 
         page.traverse { convert(it) }.map {
             ApiResponse.Page(

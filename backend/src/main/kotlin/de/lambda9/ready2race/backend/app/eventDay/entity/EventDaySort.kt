@@ -10,10 +10,10 @@ enum class EventDaySort : Sortable {
     DATE,
     NAME;
 
-    override fun toField(): Field<*> = when(this) {
-        ID -> EVENT_DAY.ID
-        EVENT -> EVENT_DAY.EVENT
-        DATE -> EVENT_DAY.DATE
-        NAME -> EVENT_DAY.NAME
+    override fun toFields(): List<Field<*>> = when(this) {
+        ID -> listOf(EVENT_DAY.ID)
+        EVENT -> listOf(EVENT_DAY.EVENT)
+        DATE -> listOf(EVENT_DAY.DATE)
+        NAME -> listOf(EVENT_DAY.NAME)
     }
 }

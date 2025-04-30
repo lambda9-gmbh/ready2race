@@ -1,11 +1,12 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.control
 
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
-import de.lambda9.ready2race.backend.database.findOneBy
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.database.*
+import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationsViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -15,6 +16,8 @@ import java.util.*
 
 object EventRegistrationRepo {
 
+    private fun EventRegistrationsView.searchFields() = listOf(EVENT_NAME)
+
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
@@ -22,8 +25,31 @@ object EventRegistrationRepo {
             EVENT_REGISTRATION.ID.eq(id)
         }
 
+    fun countForView(
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            fetchCount(
+                this,
+                search.metaSearch(searchFields())
+            )
+        }
+    }
+
+    fun pageForView(
+        params: PaginationParameters<EventRegistrationViewSort>
+    ): JIO<List<EventRegistrationsViewRecord>> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            selectFrom(this)
+                .page(params, searchFields())
+                .fetch()
+        }
+    }
+
     fun findByEventAndClub(eventId: UUID, clubId: UUID) =
         EVENT_REGISTRATION.findOneBy { EVENT_REGISTRATION.EVENT.eq(eventId).and(EVENT_REGISTRATION.CLUB.eq(clubId)) }
+
+    fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
     fun getEventRegistrationInfo(eventId: UUID): JIO<EventRegistrationInfoDto?> = Jooq.query {
 
@@ -161,7 +187,8 @@ object EventRegistrationRepo {
         alias: String
     ) = DSL.select(
         COMPETITION_VIEW.ID,
-        COMPETITION_VIEW.IDENTIFIER,
+        COMPETITION_VIEW.IDENTIFIER_PREFIX,
+        COMPETITION_VIEW.IDENTIFIER_SUFFIX,
         COMPETITION_VIEW.NAME,
         COMPETITION_VIEW.SHORT_NAME,
         COMPETITION_VIEW.DESCRIPTION,
@@ -179,7 +206,7 @@ object EventRegistrationRepo {
             it.map {
                 EventRegistrationCompetitionDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[COMPETITION_VIEW.IDENTIFIER]!!,
+                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + it[COMPETITION_VIEW.IDENTIFIER_SUFFIX]!!.toString(),
                     it[COMPETITION_VIEW.NAME]!!,
                     it[COMPETITION_VIEW.SHORT_NAME],
                     it[COMPETITION_VIEW.DESCRIPTION],
@@ -338,6 +365,7 @@ object EventRegistrationRepo {
             it!!.map {
                 CompetitionRegistrationTeamUpsertDto(
                     it[COMPETITION_REGISTRATION.ID]!!,
+                    null,
                     it[fees],
                     it[namedParticipants]
                 )

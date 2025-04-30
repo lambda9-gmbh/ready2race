@@ -56,3 +56,44 @@ export const deleteParticipantOwn: Privilege = {
     resource: 'PARTICIPANT',
     scope: 'OWN',
 }
+
+export const createRegistrationGlobal: Privilege = {
+    action: 'CREATE',
+    resource: 'REGISTRATION',
+    scope: 'GLOBAL',
+}
+export const createRegistrationOwn: Privilege = {
+    action: 'CREATE',
+    resource: 'REGISTRATION',
+    scope: 'OWN',
+}
+export const readRegistrationGlobal: Privilege = {
+    action: 'READ',
+    resource: 'REGISTRATION',
+    scope: 'GLOBAL',
+}
+export const readRegistrationOwn: Privilege = {
+    action: 'READ',
+    resource: 'REGISTRATION',
+    scope: 'OWN',
+}
+export const updateRegistrationGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'REGISTRATION',
+    scope: 'GLOBAL',
+}
+export const updateRegistrationOwn: Privilege = {
+    action: 'UPDATE',
+    resource: 'REGISTRATION',
+    scope: 'OWN',
+}
+export const deleteRegistrationGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'REGISTRATION',
+    scope: 'GLOBAL',
+}
+export const deleteRegistrationOwn: Privilege = {
+    action: 'UPDATE',
+    resource: 'REGISTRATION',
+    scope: 'OWN',
+}

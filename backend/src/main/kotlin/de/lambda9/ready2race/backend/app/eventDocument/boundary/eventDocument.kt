@@ -30,7 +30,7 @@ fun Route.eventDocument() {
 		        Please refer to 'flow' documentation or use 'flowOn' instead
             * */
 
-            val uploads = mutableListOf<Pair<String, ByteArray>>()
+            val uploads = mutableListOf<FileUpload>()
             var documentType: String? = null
 
             var done = false
@@ -42,7 +42,11 @@ fun Route.eventDocument() {
                     when (part) {
                         is PartData.FileItem -> {
                             uploads.add(
-                                part.originalFileName!! to part.provider().toByteArray()
+                                FileUpload(
+                                    part.originalFileName!!,
+                                    part.provider().toByteArray(),
+
+                                )
                             )
                         }
 
@@ -81,7 +85,7 @@ fun Route.eventDocument() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
+                    !authenticate(Privilege.ReadEventOwn)
                     val id = !pathParam("eventDocumentId", uuid)
                     EventDocumentService.downloadDocument(id)
                 }

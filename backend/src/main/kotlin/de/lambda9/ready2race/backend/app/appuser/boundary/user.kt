@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
@@ -14,9 +15,14 @@ fun Route.user() {
     route("/user") {
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadUserGlobal)
-                val params = !pagination<AppUserWithRolesSort>()
-                AppUserService.page(params)
+                val user = !authenticate(Privilege.ReadUserGlobal)
+                if (user.id == SYSTEM_USER) {
+                    val params = !pagination<EveryAppUserWithRolesSort>()
+                    AppUserService.pageIncludingAdmins(params)
+                } else {
+                    val params = !pagination<AppUserWithRolesSort>()
+                    AppUserService.page(params)
+                }
             }
         }
 
@@ -27,14 +33,23 @@ fun Route.user() {
                     val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.USER)
                     if (scope == Privilege.Scope.OWN && user.id != id) {
                         KIO.fail(AuthError.PrivilegeMissing)
+                    } else if (user.id == SYSTEM_USER || user.id == id) {
+                        AppUserService.getIncludingAllAdmins(id)
                     } else {
+                        // TODO: This gives 404 instead of 403, when trying to get another admin as non system user admin
                         AppUserService.get(id)
                     }
                 }
             }
 
             put {
+                call.respondComprehension {
+                    val id = !pathParam("userId", uuid)
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.USER)
+                    val body = !receiveKIO(UpdateAppUserRequest.example)
 
+                    AppUserService.update(body, scope, user.id!!, id)
+                }
             }
         }
 

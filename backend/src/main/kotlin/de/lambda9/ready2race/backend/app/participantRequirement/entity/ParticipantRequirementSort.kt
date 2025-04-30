@@ -8,8 +8,8 @@ enum class ParticipantRequirementSort : Sortable {
     ID,
     NAME;
 
-    override fun toField(): Field<*> = when (this) {
-        ID -> PARTICIPANT_REQUIREMENT.ID
-        NAME -> PARTICIPANT_REQUIREMENT.NAME
+    override fun toFields(): List<Field<*>> = when (this) {
+        ID -> listOf(PARTICIPANT_REQUIREMENT.ID)
+        NAME -> listOf(PARTICIPANT_REQUIREMENT.NAME)
     }
 }

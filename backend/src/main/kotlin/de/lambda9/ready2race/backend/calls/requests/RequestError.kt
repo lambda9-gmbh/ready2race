@@ -18,6 +18,11 @@ sealed interface RequestError : ToApiError {
     data class InvalidPagination(val result: ValidationResult.Invalid) : RequestError
     data class TooManyRequests(val retryAfter: String?) : RequestError
 
+    sealed interface File : RequestError {
+        data object Missing : File
+        data object Multiple : File
+    }
+
     data class Other(val cause: Throwable) : RequestError
 
     override fun respond(): ApiError = when (this) {
@@ -81,6 +86,18 @@ sealed interface RequestError : ToApiError {
                     }
                 }",
                 details = mapOf("retryAfter" to retryAfter)
+            )
+
+        File.Missing ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Missing required file upload"
+            )
+
+        File.Multiple ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Expected one file, got multiple"
             )
 
         is Other ->

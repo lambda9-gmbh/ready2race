@@ -9,9 +9,9 @@ enum class ClubSort : Sortable {
     NAME,
     CREATED_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        ID -> CLUB.ID
-        NAME -> CLUB.NAME
-        CREATED_AT -> CLUB.CREATED_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        ID -> listOf(CLUB.ID)
+        NAME -> listOf(CLUB.NAME)
+        CREATED_AT -> listOf(CLUB.CREATED_AT)
     }
 }

@@ -8,8 +8,8 @@ enum class CompetitionSetupTemplateSort : Sortable {
     ID,
     NAME;
 
-    override fun toField(): Field<*> = when (this) {
-        ID -> COMPETITION_SETUP_TEMPLATE.ID
-        NAME -> COMPETITION_SETUP_TEMPLATE.NAME
+    override fun toFields(): List<Field<*>> = when (this) {
+        ID -> listOf(COMPETITION_SETUP_TEMPLATE.ID)
+        NAME -> listOf(COMPETITION_SETUP_TEMPLATE.NAME)
     }
 }

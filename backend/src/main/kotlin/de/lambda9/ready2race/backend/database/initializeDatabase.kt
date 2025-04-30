@@ -125,6 +125,7 @@ fun initializeDatabase(env: JEnv) {
         !persistRole(
             now, allPrivileges, USER_ROLE, "User", "Global user role", listOf(
                 Privilege.ReadUserOwn,
+                Privilege.UpdateUserOwn
             )
         )
 
@@ -137,6 +138,10 @@ fun initializeDatabase(env: JEnv) {
                 Privilege.UpdateParticipantOwn,
                 Privilege.DeleteParticipantOwn,
                 Privilege.ReadEventOwn,
+                Privilege.ReadRegistrationOwn,
+                Privilege.CreateRegistrationOwn,
+                Privilege.UpdateRegistrationOwn,
+                Privilege.DeleteRegistrationOwn
             )
         )
 

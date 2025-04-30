@@ -36,6 +36,8 @@ out/
 .vscode/
 target/
 
+### Tests ###
+testOutputs/
 
 ### Local configuration ###
 .env

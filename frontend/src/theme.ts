@@ -54,6 +54,13 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
                 },
             },
         },
+        MuiTab: {
+            styleOverrides: {
+                root: {
+                    textTransform: 'none',
+                },
+            },
+        },
         MuiToolbar: {
             styleOverrides: {
                 root: {

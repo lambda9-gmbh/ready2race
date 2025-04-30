@@ -1,13 +1,14 @@
 {
   "common": {
     "cancel": "Abbrechen",
+    "close": "Schließen",
     "confirmation": {
       "title": "Bestätigung erforderlich",
       "content": "Bitte bestätigen Sie das Ausführen der gewählten Aktion"
     },
     "delete": "Löschen",
     "edit": "Bearbeiten",
-    "selected" : "Ausgewählt",
+    "selected": "Ausgewählt",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -39,7 +40,7 @@
       "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
-      "selectFile" : "Datei auswählen"
+      "selectFile": "Datei auswählen"
     },
     "load": {
       "error": {
@@ -56,7 +57,43 @@
     "back": "Zurück",
     "next": "Weiter",
     "and": "und",
-    "remove" : "Entfernen"
+    "remove": "Entfernen",
+    "language": {
+      "menu": "Sprache auswählen"
+    }
+  },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
+        "2": "In den ",
+        "3": "globalen Einstellungen",
+        "4": " können die Zuweisungen vorgenommen werden."
+      },
+      "template": "Dokumentvorlage",
+      "templates": "Dokumentvorlagen",
+      "type": {
+        "INVOICE": "Rechnung",
+        "REGISTRATION_REPORT": "Meldeergebnis"
+      },
+      "none": "Keine Vorlage",
+      "name": "Name",
+      "file": {
+        "choose": "Vorlage auswählen",
+        "change": "Vorlage ändern",
+        "missing": "Bitte wählen Sie ein Dokument aus."
+      },
+      "pagePadding": {
+        "top": "Rand oben",
+        "left": "Rand links",
+        "right": "Rand rechts",
+        "bottom": "Rand unten"
+      },
+      "assignments": {
+        "global": "Global zugewiesene Vorlagen",
+        "event": "Für Veranstaltung zugewiesene Vorlagen"
+      }
+    }
   },
   "decimal": {
     "point": ","
@@ -89,6 +126,7 @@
   },
   "navigation": {
     "titles": {
+      "landing": "Start",
       "dashboard": "Dashboard",
       "events": "Veranstaltungen",
       "competitionConfig": "Wettkampf Einstellungen",
@@ -99,10 +137,17 @@
       "myClub": "Mein Verein"
     }
   },
+  "dashboard": {
+    "registration": {
+      "showMessage": "Nachricht anzeigen"
+    }
+  },
   "club": {
     "club": "Verein",
+    "clubs": "Vereine",
+    "participants": "Mitglieder",
     "participant": {
-      "title": "Teilnehmer",
+      "title": "Mitglied",
       "year": "Geburtsjahr",
       "external": "Extern",
       "externalClub": "Externer Verein"
@@ -113,14 +158,19 @@
     "events": "Veranstaltungen",
     "name": "Name",
     "description": "Beschreibung",
-    "registerNow": "Jetzt anmelden",
+    "registerNow": "Zur Meldung",
     "invoice": {
       "prefix": "Rechnungspräfix"
     },
     "location": "Ort",
+    "upcoming": "Anstehende Veranstaltungen",
     "registrationAvailable": {
-      "from": "Anmeldezeitraum von",
-      "to": "Anmeldezeitraum bis"
+      "timespan": "Anmeldezeitraum",
+      "timespanFrom": "Anmeldezeitraum von",
+      "timespanTo": "Anmeldezeitraum bis",
+      "from": "ab",
+      "to": "bis",
+      "unknown": "Noch nicht bekannt gegeben"
     },
     "published": "Veröffentlicht",
     "eventDay": {
@@ -129,7 +179,7 @@
       "date": "Datum",
       "name": "Name",
       "description": "Beschreibung",
-      "assignedCompetitions": "Wettkämpfe für den Tag"
+      "assignedCompetitions": "Wettkämpfe an diesem Tag"
     },
     "competition": {
       "competition": "Wettkampf",
@@ -137,12 +187,26 @@
       "identifier": "Kennung",
       "name": "Name",
       "description": "Beschreibung",
+      "registrationCount": "Meldungen",
       "shortName": "Kurzname",
+      "tableHint": {
+        "competitionComponents": {
+          "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
+          "part2Link": "hier",
+          "part3": " definiert werden."
+        },
+        "templates": {
+          "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
+          "part2Link": "Vorlagen",
+          "part3": " definiert werden."
+        }
+      },
       "category": {
         "category": "Kategorie",
         "categories": "Kategorien",
         "name": "Name",
-        "description": "Beschreibung"
+        "description": "Beschreibung",
+        "tableHint": "Ermöglichen das Sortieren und Filtern von Wettkämpfen (noch nicht implementiert)."
       },
       "count": {
         "males": "Anzahl Männer",
@@ -151,19 +215,20 @@
         "mixed": "Anzahl Beliebige"
       },
       "namedParticipant": {
-        "namedParticipant": "Spezifizierter Teilnehmer",
-        "namedParticipants": "Spezifizierte Teilnehmer",
+        "namedParticipant": "Teilnehmertyp",
+        "namedParticipants": "Teilnehmertypen",
         "name": "Name",
         "description": "Beschreibung",
         "role": "Rolle",
-        "add": "Spezifischen Teilnehmer hinzufügen",
+        "add": "Teilnehmertyp hinzufügen",
+        "tableHint": "Rollen, die Teilnehmende in einem Wettkampf einnehmen können.",
         "error": {
-          "emptyList": "Bitte fügen Sie mindestens einen spezifischen Teilnehmer hinzu",
+          "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
           "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
           "duplicates": {
             "one": "Die Rolle {{label}} wird mehrfach verwendet.",
             "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
-            "message": "Bitte wählen Sie für jeden spezifischen Teilnehmer eine einzigartige Rolle aus."
+            "message": "Bitte wählen Sie für jeden Teilnehmertyp eine einzigartige Rolle aus."
           }
         }
       },
@@ -175,18 +240,20 @@
         "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
+        "tableHint": "Definiert mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
         }
       },
       "template": {
-        "template": "Vorlage",
-        "templates": "Vorlagen",
+        "template": "Wettkampf Vorlage",
+        "templates": "Wettkampf Vorlagen",
         "name": "Name",
-        "description": "Beschreibung"
+        "description": "Beschreibung",
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung."
       },
-      "assignedDays": "Tage des Wettkampfs",
+      "assignedDays": "Wettkampftage",
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       },
@@ -277,20 +344,31 @@
     },
     "participantRequirement": {
       "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
-      "approved" : "Überprüfte Bedingungen",
+      "approved": "Überprüfte Bedingungen",
       "checkUpload": "Bedingungen abgleichen",
       "checkManually": "\"{{name}}\" überprüfen",
-      "file" : "CSV-Datei",
-      "charset" : "Charset",
+      "file": "CSV-Datei",
+      "charset": "Charset",
       "separator": "Trennzeichen",
-      "firstnameColName":"Spalte mit Vornamen",
+      "firstnameColName": "Spalte mit Vornamen",
       "lastnameColName": "Spalte mit Nachnamen",
-      "yearsColName":"Spalte mit Jahrgang",
+      "yearsColName": "Spalte mit Jahrgang",
       "clubColName": "Spalte mit Vereinsnamen",
-      "requirementColName":"Spalte mit Teilnahmebedingung",
+      "requirementColName": "Spalte mit Teilnahmebedingung",
       "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
-      "participantsOpen" : "Offen",
-      "participantsApproved" : "Überprüft"
+      "participantsOpen": "Offen",
+      "participantsApproved": "Überprüft",
+      "tableHint": {
+        "part1": "Bedingungen können ",
+        "part2Link": "hier",
+        "part3": " erstellt oder bearbeitet werden."
+      }
+    },
+    "action": {
+      "registrationsReport": {
+        "generate": "Erzeuge Meldeergebnis",
+        "download": "Download Meldeergebnis"
+      }
     },
     "assign": {
       "save": {
@@ -302,13 +380,20 @@
       "document": "Dokument",
       "documents": "Dokumente",
       "name": "Name",
+      "tableHint": {
+        "description": "Werden bei der Meldung zur Verfügung gestellt.",
+        "part1": "Zum Gruppieren und Konfigurieren können ",
+        "part2Link": "Dokumenttypen",
+        "part3": " definiert werden."
+      },
       "type": {
         "type": "Typ",
         "documentType": "Dokumenttyp",
         "documentTypes": "Dokumenttypen",
         "name": "Name",
+        "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
         "required": {
-          "forEvent": "Erforderlich für Event",
+          "forEvent": "Erforderlich für Veranstaltung",
           "confirmation": "Bestätigung erforderlich"
         }
       },
@@ -324,7 +409,9 @@
       }
     },
     "registration": {
-      "addParticipant": "Teilnehmer hinzufügen",
+      "registration": "Anmeldung",
+      "registrations": "Anmeldungen",
+      "addParticipant": "Mitglied hinzufügen",
       "singleCompetition": "Einzelwettkampf",
       "teamCompetition": "Teamwettkampf",
       "males": "Männer",
@@ -336,27 +423,30 @@
       "message": "Nachricht",
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
-      "acceptDocuments" : "Ich akzeptiere Folgendes:",
-      "infoDocuments" : "Weitere Informationen",
+      "acceptDocuments": "Ich akzeptiere Folgendes:",
+      "infoDocuments": "Weitere Informationen",
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",
         "subtitle": "Du bekommst eine Bestätigung per Mail."
-      }
+      },
+      "mostRecent": "Neuste Anmeldungen"
     },
+    "participants": "Teilnehmende",
     "tabs": {
-      "general" : "Allgemein",
-      "participants" : "Teilnehmer",
-      "settings": "Einstellungen"
+      "general": "Allgemein",
+      "settings": "Einstellungen",
+      "actions": "Aktionen"
     }
   },
   "participantRequirement": {
     "participantRequirement": "Teilnahmebedingung",
     "participantRequirements": "Teilnahmebedingungen",
-    "active" : "Aktiv",
-    "activate" : "Für Veranstaltung aktivieren",
-    "remove" : "Von Veranstaltung entfernen",
-    "confirmRemove" : "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?"
+    "active": "Aktiv",
+    "activate": "Für Veranstaltung aktivieren",
+    "remove": "Von Veranstaltung entfernen",
+    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
+    "tableHint": "Können bei Veranstaltungen aktiviert werden."
   },
   "user": {
     "user": "Benutzer",
@@ -403,6 +493,10 @@
       "error": {
         "load": "Profile could not be loaded"
       }
+    },
+    "update": {
+      "error": "Beim Aktualisieren des Benutzers ist ein Fehler aufgetreten",
+      "success": "Benutzer erfolgreich aktualisiert"
     },
     "invitation": {
       "invitation": "Einladung",
@@ -468,11 +562,21 @@
   },
   "role": {
     "role": "Rolle",
+    "roles": "Rollen",
     "userRoles": "Benutzerrollen",
     "name": "Name",
     "description": "Beschreibung",
     "error": {
       "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
+    }
+  },
+  "configuration": {
+    "configuration": "Konfigurationen",
+    "tabs": {
+      "competitionTemplates": "Vorlagen Wettkampf",
+      "eventElements": "Komponenten Veranstaltung",
+      "competitionElements": "Komponenten Wettkampf",
+      "globalSettings": "Globale Einstellungen"
     }
   },
   "captcha": {

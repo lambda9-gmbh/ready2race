@@ -12,7 +12,7 @@ import org.jooq.impl.TableImpl
 fun Collection<Condition>.and() = DSL.and(*this.toTypedArray())
 fun Collection<Condition>.or() = DSL.or(*this.toTypedArray())
 
-fun String?.metaSearch(fields: List<TableField<*, *>>, splitRegex: Regex = Regex("\\s")): Condition =
+fun String?.metaSearch(fields: List<Field<*>>, splitRegex: Regex = Regex("\\s")): Condition =
     this
         ?.takeIf { it.isNotBlank() }
         ?.split(splitRegex)
@@ -23,7 +23,7 @@ fun String?.metaSearch(fields: List<TableField<*, *>>, splitRegex: Regex = Regex
 
 fun <R : Record, S : Sortable> SelectWhereStep<R>.page(
     paginationParameter: PaginationParameters<S>,
-    searchFields: List<TableField<*, *>> = emptyList(),
+    searchFields: List<Field<*>> = emptyList(),
     where: () -> Condition = { DSL.trueCondition() }
 ): SelectForUpdateStep<R> =
     this
@@ -67,6 +67,24 @@ fun <R : Record, T : TableImpl<R>, A> T.insertReturning(
         .value1()!!
 }
 
+fun <R : Record, T : TableImpl<R>> T.select(
+    condition: T.() -> Condition
+): JIO<List<R>> = Jooq.query {
+    fetch(this@select, condition())
+}
+
+fun <R : Record, T : TableImpl<R>> T.selectAny(
+    condition: T.() -> Condition
+): JIO<R?> = Jooq.query {
+    fetchAny(this@selectAny, condition())
+}
+
+fun <R : Record, T : TableImpl<R>> T.selectOne(
+    condition: T.() -> Condition
+): JIO<R?> = Jooq.query {
+    fetchOne(this@selectOne, condition())
+}
+
 private fun <R : UpdatableRecord<R>> R.updateChanges(
     f: R.() -> Unit,
 ): R = apply {
@@ -85,11 +103,7 @@ fun <R : UpdatableRecord<R>, T : TableImpl<R>> T.update(
     f: R.() -> Unit,
     condition: T.() -> Condition,
 ): JIO<R?> = Jooq.query {
-    selectFrom(this@update)
-        .where(condition())
-        .fetchOne {
-            it.updateChanges(f)
-        }
+    fetchOne(this@update, condition())?.updateChanges(f)
 }
 
 fun <R : Record, T : TableImpl<R>> T.exists(
