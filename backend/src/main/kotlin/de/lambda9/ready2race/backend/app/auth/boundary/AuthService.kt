@@ -13,12 +13,12 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
+import kotlin.time.Duration.Companion.hours
 import de.lambda9.tailwind.core.extensions.kio.traverse
-import kotlin.time.Duration.Companion.minutes
 
 object AuthService {
 
-    private val tokenLifetime = 30.minutes
+    private val tokenLifetime = 6.hours
 
     fun getAllPrivileges(): App<Nothing, ApiResponse.Dto<List<PrivilegeDto>>> = KIO.comprehension {
         val records = !PrivilegeRepo.all().orDie()

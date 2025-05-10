@@ -122,7 +122,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                             />
                         )}
                         value={template}
-                        onChange={(_e, newValue: AutocompleteOption | null) => {
+                        onChange={(_e, newValue: AutocompleteOption) => {
                             setTemplate(newValue)
                             if (newValue) {
                                 fillFormWithTemplate(newValue.id)
