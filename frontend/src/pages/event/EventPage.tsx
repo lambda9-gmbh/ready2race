@@ -14,6 +14,7 @@ import {
     EventDocumentDto,
     ParticipantForEventDto,
     ParticipantRequirementForEventDto,
+    TaskDto,
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
@@ -27,6 +28,10 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {readEventGlobal, readEventOwn, updateEventGlobal} from '@authorization/privileges.ts'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
+import TaskTable from '@components/event/task/TaskTable.tsx'
+import TaskDialog from '@components/event/task/TaskDialog.tsx'
+
+export const EVENT_ORGANISATION_TAB_INDEX = 2
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -74,6 +79,8 @@ const EventPage = () => {
         {entityCreate: false, entityUpdate: false},
     )
 
+    const taskProps = useEntityAdministration<TaskDto>(t('task.task'))
+
     const a11yProps = (index: number) => {
         return {
             id: `event-tab-${index}`,
@@ -94,10 +101,10 @@ const EventPage = () => {
 
     const handleReportDownload = async () => {
         const {data, error} = await getRegistrationResult({
-            path: { eventId },
+            path: {eventId},
             query: {
-                remake: true
-            }
+                remake: true,
+            },
         })
         const anchor = downloadRef.current
 
@@ -139,10 +146,16 @@ const EventPage = () => {
                                 <Tab label={t('event.participants')} {...a11yProps(1)} />
                             )}
                             {user.checkPrivilege(readEventGlobal) && (
-                                <Tab label={t('event.tabs.settings')} {...a11yProps(2)} />
+                                <Tab
+                                    label={t('event.tabs.organisation')}
+                                    {...a11yProps(EVENT_ORGANISATION_TAB_INDEX)}
+                                />
                             )}
                             {user.checkPrivilege(readEventGlobal) && (
-                                <Tab label={t('event.tabs.actions')} {...a11yProps(3)} />
+                                <Tab label={t('event.tabs.settings')} {...a11yProps(3)} />
+                            )}
+                            {user.checkPrivilege(readEventGlobal) && (
+                                <Tab label={t('event.tabs.actions')} {...a11yProps(4)} />
                             )}
                         </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
@@ -201,7 +214,13 @@ const EventPage = () => {
                                 title={t('event.participants')}
                             />
                         </TabPanel>
-                        <TabPanel index={2} activeTab={activeTab}>
+                        <TabPanel index={EVENT_ORGANISATION_TAB_INDEX} activeTab={activeTab}>
+                            <Stack spacing={2}>
+                                <TaskTable {...taskProps.table} title={t('task.tasks')} />
+                                <TaskDialog {...taskProps.dialog} eventId={eventId} />
+                            </Stack>
+                        </TabPanel>
+                        <TabPanel index={3} activeTab={activeTab}>
                             <Stack spacing={2}>
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
@@ -235,7 +254,7 @@ const EventPage = () => {
                                 />
                             </Stack>
                         </TabPanel>
-                        <TabPanel index={3} activeTab={activeTab}>
+                        <TabPanel index={4} activeTab={activeTab}>
                             <Button variant={'contained'} onClick={handleReportDownload}>
                                 {t('event.action.registrationsReport.download')}
                             </Button>

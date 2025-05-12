@@ -20,7 +20,9 @@ export const DashboardWidget = (props: {
                         ' 100%)',
                 }}>
                 <CardHeader action={props.headerAction} subheader={props.header} sx={{pb: 0}} />
-                <CardContent>{props.content}</CardContent>
+                <CardContent sx={{maxHeight: 300, overflowY: 'scroll'}}>
+                    {props.content}
+                </CardContent>
                 {props.footerAction && (
                     <CardActions sx={{justifyContent: 'end'}}>{props.footerAction}</CardActions>
                 )}
