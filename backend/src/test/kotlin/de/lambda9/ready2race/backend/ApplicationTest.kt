@@ -20,10 +20,10 @@ class ApplicationTest {
             configureRouting()
         }
 
-        val swagger = client.get("/openapi")
+        val swagger = client.get("/api/documentation")
         assertEquals(HttpStatusCode.OK, swagger.status)
 
-        val openapi = client.get("/openapi/documentation.yaml")
+        val openapi = client.get("/api/documentation/documentation.yaml")
         assertEquals(HttpStatusCode.OK, openapi.status)
     }
 }
