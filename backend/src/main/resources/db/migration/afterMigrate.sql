@@ -30,6 +30,7 @@ drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
+drop view if exists task_with_responsible_users;
 
 create view app_user_name as
 select au.id,
@@ -139,13 +140,13 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
-       nps.total_count                        as total_count,
-       cc.id                                  as category_id,
-       cc.name                                as category_name,
-       cc.description                         as category_description,
-       coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees,
-       count(distinct cr.id)                  as registrations_count
+       nps.total_count                                                           as total_count,
+       cc.id                                                                     as category_id,
+       cc.name                                                                   as category_name,
+       cc.description                                                            as category_description,
+       coalesce(nps.named_participants, '{}')                                    as named_participants,
+       coalesce(fs.fees, '{}')                                                   as fees,
+       count(distinct cr.id)                                                     as registrations_count
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -505,3 +506,25 @@ from document_template dt
                       null
                from document_template_usage dtu) usage on dt.id = usage.template
 ;
+
+create view task_with_responsible_users as
+select t.id,
+       t.event,
+       e.name                                                         as event_name,
+       t.name,
+       t.due_date,
+       t.description,
+       t.remark,
+       t.state,
+       t.created_at,
+       t.created_by,
+       t.updated_at,
+       t.updated_by,
+       coalesce(array_agg(u) filter ( where u.id is not null ), '{}') as responsible_user
+from task t
+         left join event e on t.event = e.id
+         left join task_has_responsible_user ru on t.id = ru.task
+         left join app_user u on ru.app_user = u.id
+group by t.id, t.event, e.name, t.name, t.due_date, t.description, t.remark, t.state, t.created_at, t.created_by,
+         t.updated_at,
+         t.updated_by;
