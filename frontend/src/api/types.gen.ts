@@ -84,6 +84,21 @@ export type BadRequestError = ApiError & {
     }
 }
 
+export type BankAccountDto = {
+    id: string
+    holder: string
+    iban: string
+    bic: string
+    bank: string
+}
+
+export type BankAccountRequest = {
+    holder: string
+    iban: string
+    bic: string
+    bank: string
+}
+
 export type CaptchaDto = {
     id: string
     imgSrc: string
@@ -2200,6 +2215,24 @@ export type GetOpenTasksForUserData = {
     path: {
         userId: string
     }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
 }
 
 export type GetOpenTasksForUserResponse = {
@@ -2208,3 +2241,60 @@ export type GetOpenTasksForUserResponse = {
 }
 
 export type GetOpenTasksForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetBankAccountsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetBankAccountsResponse = {
+    data: Array<BankAccountDto>
+    pagination: Pagination
+}
+
+export type GetBankAccountsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddBankAccountData = {
+    body: BankAccountRequest
+}
+
+export type AddBankAccountResponse = string
+
+export type AddBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateBankAccountData = {
+    body: BankAccountRequest
+    path: {
+        bankAccountId: string
+    }
+}
+
+export type UpdateBankAccountResponse = void
+
+export type UpdateBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteBankAccountData = {
+    path: {
+        bankAccountId: string
+    }
+}
+
+export type DeleteBankAccountResponse = void
+
+export type DeleteBankAccountError = BadRequestError | ApiError

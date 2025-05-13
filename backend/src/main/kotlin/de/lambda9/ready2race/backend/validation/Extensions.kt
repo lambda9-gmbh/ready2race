@@ -6,6 +6,7 @@ import kotlin.reflect.KProperty0
 
 fun Collection<ValidationResult>.allOf() = ValidationResult.allOf(*this.toTypedArray())
 fun Collection<ValidationResult>.anyOf() = ValidationResult.anyOf(*this.toTypedArray())
+fun Collection<ValidationResult>.oneOf() = ValidationResult.oneOf(*this.toTypedArray())
 
 infix fun <V> KProperty0<V>.validate(validator: Validator<V?>) = when (val result = validator(this)) {
     ValidationResult.Valid -> ValidationResult.Valid

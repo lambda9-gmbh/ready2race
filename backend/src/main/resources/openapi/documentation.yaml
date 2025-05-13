@@ -2734,6 +2734,11 @@ paths:
         schema:
           type: string
     get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       operationId: getOpenTasksForUser
       responses:
         200:
@@ -2761,6 +2766,111 @@ paths:
           $ref: '#/components/responses/403'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+          
+  /bankAccount:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getBankAccounts
+      responses:
+        200:
+          description: Bank accounts page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BankAccountDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /bankAccount/{bankAccountId}:
+    parameters:
+      - in: path
+        name: bankAccountId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountRequest'
+      responses:
+        204:
+          description: Bank account successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteBankAccount
+      responses:
+        204:
+          description: Bank account successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
 
@@ -4858,3 +4968,41 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
+          
+    BankAccountDto:
+      type: object
+      required:
+        - id
+        - holder
+        - iban
+        - bic
+        - bank
+      properties:
+        id:
+          type: string
+          format: uuid
+        holder:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        bank: 
+          type: string
+          
+    BankAccountRequest:
+      type: object
+      required:
+        - holder
+        - iban
+        - bic
+        - bank
+      properties:
+        holder:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        bank:
+          type: string

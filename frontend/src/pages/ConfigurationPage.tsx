@@ -2,6 +2,7 @@ import DocumentTypeTable from '@components/event/document/type/DocumentTypeTable
 import DocumentTypeDialog from '@components/event/document/type/DocumentTypeDialog.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {
+    BankAccountDto,
     CompetitionCategoryDto,
     CompetitionTemplateDto,
     DocumentTemplateDto,
@@ -30,6 +31,11 @@ import DocumentTemplateTable from "@components/documentTemplate/DocumentTemplate
 import DocumentTemplateDialog from "@components/documentTemplate/DocumentTemplateDialog.tsx";
 import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentTemplate.tsx";
 import InlineLink from "@components/InlineLink.tsx";
+import BankAccountTable from "@components/bankAccount/BankAccountTable.tsx";
+import BankAccountDialog from "@components/bankAccount/BankAccountDialog.tsx";
+
+
+// TODO: @Improve, @Discussion: Maybe extract TabContents into several Components
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -74,6 +80,10 @@ const ConfigurationPage = () => {
             t('document.template.template'),
             {entityUpdate: false}
         )
+
+    const bankAccountAdministrationProps = useEntityAdministration<BankAccountDto>(
+        "[todo] bank account"
+    )
 
     return (
         <Stack spacing={4}>
@@ -146,6 +156,14 @@ const ConfigurationPage = () => {
                     />
                     <DocumentTemplateDialog
                         {...documentTemplateAdministrationProps.dialog}
+                    />
+                    <BankAccountTable
+                        {...bankAccountAdministrationProps.table}
+                        title={'[todo] bank accounts'}
+                        hints={["[todo] missing hints"]}
+                    />
+                    <BankAccountDialog
+                        {...bankAccountAdministrationProps.dialog}
                     />
                 </Stack>
             </TabPanel>

@@ -10,14 +10,126 @@ import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 
 class PdfTest {
 
-    @Test
-    fun exampleRegRes() {
+    @BeforeTest
+    fun setUp() {
 
         Files.createDirectories(Paths.get("testOutputs"))
+
+    }
+
+    @Test
+    fun exampleInvoice() {
+
+        val doc = document {
+            page {
+                table {
+                    column(0.6f)
+                    column(0.4f)
+
+                    row {
+                        cell {
+                            text { "Meld. Verein" }
+                            text { "Max Mustermann" }
+                        }
+
+                        cell {
+                            text { "Adresse - Straße" }
+                            text { "Adresse - Ort" }
+                            text { "E-Mail" }
+                            text { "" }
+                            text { "Datum" }
+                        }
+                    }
+                }
+
+                block(
+                    padding = Padding(top = 20f)
+                ) {
+                    text(
+                        fontSize = 13f,
+                        fontStyle = FontStyle.BOLD,
+                    ) { "Regatta Name" }
+                }
+
+                block(
+                    padding = Padding(top = 10f),
+                ) {
+                    text(
+                        fontSize = 11f,
+                        fontStyle = FontStyle.BOLD,
+                    ) { "Rechnungsnummer: 00001" }
+                }
+
+                block(
+                    padding = Padding(top = 20f),
+                ) {
+                    text { "Sehr geehrter Herr ...sen," }
+                    text { "" }
+                    text { "vielen Danke für die Meldung zur Regatta Name." }
+                    text { "" }
+                    text { "Für die Meldung wird ein Gesamtbetrag von $€ fällig." }
+                    text { "Wir bitten um Überweisung des entsprechenden Betrags unter Angabe der Rechnungsnummer as Verwendungszweck auf das nachfolgende Konto des Ruderklub Flensburgs bis zum Datum:" }
+                    text { "" }
+                    text { "" }
+
+                    table {
+                        column(0.25f)
+                        column(0.75f)
+
+                        row {
+                            cell {
+                                text { "Empfänger:" }
+                            }
+                            cell {
+                                text { "Ruderklub Flensburg e.V." }
+                            }
+                        }
+
+                        row {
+                            cell {
+                                text { "IBAN:" }
+                            }
+                            cell {
+                                text { "DE00 0000 0000 0000 0000 00" }
+                            }
+                        }
+
+                        row {
+                            cell {
+                                text { "BIC:" }
+                            }
+                            cell {
+                                text { "XXXXXXXX000" }
+                            }
+                        }
+
+                        row {
+                            cell {
+                                text { "Bank:" }
+                            }
+                            cell {
+                                text { "Deutsche Bank" }
+                            }
+                        }
+                    }
+
+                    text { "" }
+                    text { "Vielen Dank im Voraus." }
+                }
+            }
+        }
+
+        doc.save("testOutputs/exampleInvoice.pdf")
+        doc.close()
+    }
+
+    @Test
+    fun exampleRegRes() {
 
         val doc = document {
             page {
@@ -113,8 +225,6 @@ class PdfTest {
     @Test
     fun makeTemplate() {
 
-        Files.createDirectories(Paths.get("testOutputs"))
-
         val templateDoc = PDDocument()
         val templatePage = PDPage(PDRectangle.A4)
         templateDoc.addPage(templatePage)
@@ -132,8 +242,6 @@ class PdfTest {
 
     @Test
     fun makePdf() {
-
-        Files.createDirectories(Paths.get("testOutputs"))
 
         val templateDoc = PDDocument()
         val templatePage = PDPage(PDRectangle.A4)
@@ -167,9 +275,9 @@ class PdfTest {
 
                 repeat(3) { i ->
                     table(padding = Padding(0f, 2f)) {
-                        column(100F)
-                        column(100F)
-                        column(100F)
+                        column(0.3F)
+                        column(0.3F)
+                        column(0.3F)
 
                         repeat(2) { j ->
                             row(color = Color.CYAN) {
@@ -226,9 +334,9 @@ class PdfTest {
                     }
 
                     table(padding = Padding(10f, 2f)) {
-                        column(100F)
-                        column(100F)
-                        column(100F)
+                        column(0.3F)
+                        column(0.3F)
+                        column(0.3F)
 
                         row(color = Color.CYAN) {
                             cell {

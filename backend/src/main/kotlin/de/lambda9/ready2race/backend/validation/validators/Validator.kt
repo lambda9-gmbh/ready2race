@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.allOf
 import de.lambda9.ready2race.backend.validation.anyOf
+import de.lambda9.ready2race.backend.validation.oneOf
 import kotlin.reflect.KProperty0
 
 fun interface Validator<T> {
@@ -36,6 +37,10 @@ fun interface Validator<T> {
 
         fun <T> anyOf(vararg validators: Validator<in T>) = Validator<T> { value ->
             validators.map { it(value) }.anyOf()
+        }
+
+        fun <T> oneOf(vararg validators: Validator<in T>) = Validator<T> { value ->
+            validators.map { it(value) }.oneOf()
         }
 
         @Suppress("UNCHECKED_CAST")
