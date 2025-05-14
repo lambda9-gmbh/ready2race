@@ -322,6 +322,12 @@ import type {
     DeleteBankAccountData,
     DeleteBankAccountError,
     DeleteBankAccountResponse,
+    GetAssignedBankAccountData,
+    GetAssignedBankAccountError,
+    GetAssignedBankAccountResponse,
+    AssignBankAccountData,
+    AssignBankAccountError,
+    AssignBankAccountResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1590,5 +1596,31 @@ export const deleteBankAccount = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/bankAccount/{bankAccountId}',
+    })
+}
+
+export const getAssignedBankAccount = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetAssignedBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAssignedBankAccountResponse,
+        GetAssignedBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedBankAccount',
+    })
+}
+
+export const assignBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignBankAccountResponse,
+        AssignBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedBankAccount',
     })
 }

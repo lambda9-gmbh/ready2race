@@ -3,12 +3,14 @@ package de.lambda9.ready2race.backend.app.bankAccount.control
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountSort
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.BankAccount
 import de.lambda9.ready2race.backend.database.generated.tables.records.BankAccountRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.BANK_ACCOUNT
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -17,6 +19,10 @@ import java.util.UUID
 object BankAccountRepo {
 
     private fun BankAccount.searchFields() = listOf(ID, HOLDER, IBAN, BIC, BANK)
+
+    fun exists(id: UUID) = BANK_ACCOUNT.exists { ID.eq(id) }
+
+    fun get(id: UUID) = BANK_ACCOUNT.selectOne { ID.eq(id) }
 
     fun create(record: BankAccountRecord) = BANK_ACCOUNT.insertReturning(record) { ID }
 

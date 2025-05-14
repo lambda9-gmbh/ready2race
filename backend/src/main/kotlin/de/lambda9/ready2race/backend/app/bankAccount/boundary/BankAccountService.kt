@@ -1,15 +1,22 @@
 package de.lambda9.ready2race.backend.app.bankAccount.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.bankAccount.control.BankAccountRepo
+import de.lambda9.ready2race.backend.app.bankAccount.control.PayeeBankAccountRepo
 import de.lambda9.ready2race.backend.app.bankAccount.control.toDto
 import de.lambda9.ready2race.backend.app.bankAccount.control.toRecord
+import de.lambda9.ready2race.backend.app.bankAccount.entity.AssignBankAccountRequest
+import de.lambda9.ready2race.backend.app.bankAccount.entity.AssignedBankAccountDto
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountDto
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountError
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountRequest
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountSort
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -19,6 +26,45 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 object BankAccountService {
+
+    fun getAssigned(
+        event: UUID?
+    ): App<ServiceError, ApiResponse.Dto<AssignedBankAccountDto>> = KIO.comprehension {
+        if (event != null) {
+            !EventService.checkEventExisting(event)
+        }
+
+        val payee = !PayeeBankAccountRepo.getByEvent(event).orDie()
+        val assigned = payee?.let { !BankAccountRepo.get(it.bankAccount).orDie() }
+        val dto = assigned?.toDto()?.not()
+
+        KIO.ok(
+            ApiResponse.Dto(
+                AssignedBankAccountDto(
+                    assigned = dto
+                )
+            )
+        )
+    }
+
+    fun assignAccount(
+        request: AssignBankAccountRequest,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        if (request.event != null) {
+            !EventService.checkEventExisting(request.event)
+        }
+        if (request.bankAccount != null) {
+            !BankAccountRepo.exists(request.bankAccount).orDie().onFalseFail { BankAccountError.NotFound }
+            val record = !request.toRecord(userId)
+            !PayeeBankAccountRepo.upsert(record).orDie()
+        } else {
+            !PayeeBankAccountRepo.deleteByEvent(request.event).orDie()
+        }
+
+        noData
+    }
 
     fun addAccount(
         request: BankAccountRequest,

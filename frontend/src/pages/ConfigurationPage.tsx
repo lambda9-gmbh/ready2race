@@ -33,6 +33,7 @@ import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentT
 import InlineLink from "@components/InlineLink.tsx";
 import BankAccountTable from "@components/bankAccount/BankAccountTable.tsx";
 import BankAccountDialog from "@components/bankAccount/BankAccountDialog.tsx";
+import AssignBankAccount from "@components/bankAccount/AssignBankAccount.tsx";
 
 
 // TODO: @Improve, @Discussion: Maybe extract TabContents into several Components
@@ -170,6 +171,7 @@ const ConfigurationPage = () => {
             <TabPanel index={3} activeTab={activeTab}>
                 <Stack spacing={2}>
                     <AssignDocumentTemplate />
+                    <AssignBankAccount />
                 </Stack>
             </TabPanel>
         </Stack>

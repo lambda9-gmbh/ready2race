@@ -54,6 +54,11 @@ export type AppUserRegistrationDto = {
     assignedEmail?: AssignedEmailDto
 }
 
+export type AssignBankAccountRequest = {
+    bankAccount?: string
+    event?: string
+}
+
 export type AssignCompetitionsToDayRequest = {
     competitions: Array<string>
 }
@@ -65,6 +70,10 @@ export type AssignDaysToCompetitionRequest = {
 export type AssignDocumentTemplateRequest = {
     template?: string
     event?: string
+}
+
+export type AssignedBankAccountDto = {
+    assigned?: BankAccountDto
 }
 
 export type AssignedEmailDto = {
@@ -2298,3 +2307,21 @@ export type DeleteBankAccountData = {
 export type DeleteBankAccountResponse = void
 
 export type DeleteBankAccountError = BadRequestError | ApiError
+
+export type GetAssignedBankAccountData = {
+    query?: {
+        event?: string
+    }
+}
+
+export type GetAssignedBankAccountResponse = AssignedBankAccountDto
+
+export type GetAssignedBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignBankAccountData = {
+    body: AssignBankAccountRequest
+}
+
+export type AssignBankAccountResponse = void
+
+export type AssignBankAccountError = BadRequestError | ApiError | UnprocessableEntityError

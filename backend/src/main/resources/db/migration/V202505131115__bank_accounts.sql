@@ -12,3 +12,13 @@ create table bank_account
     updated_at timestamp not null,
     updated_by uuid references app_user on delete set null
 );
+
+create table payee_bank_account
+(
+    bank_account uuid not null references bank_account on delete cascade,
+    event uuid references event on delete cascade,
+    assigned_at timestamp not null,
+    assigned_by uuid references app_user on delete set null
+);
+
+create unique index on payee_bank_account (event) nulls not distinct;

@@ -2873,6 +2873,59 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+  /assignedBankAccount:
+    get:
+      operationId: getAssignedBankAccount
+      parameters:
+        - in: query
+          required: false
+          name: event
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Assigned bank account retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedBankAccountDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: assignBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignBankAccountRequest'
+      responses:
+        204:
+          description: Bank account successfully assigned
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -5006,3 +5059,19 @@ components:
           type: string
         bank:
           type: string
+
+    AssignBankAccountRequest:
+      type: object
+      properties:
+        bankAccount:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedBankAccountDto:
+      type: object
+      properties:
+        assigned:
+          $ref: '#/components/schemas/BankAccountDto'
