@@ -22,3 +22,7 @@ create table payee_bank_account
 );
 
 create unique index on payee_bank_account (event) nulls not distinct;
+
+alter table invoice
+    add column payee_information text not null default 'n/a'
+;
