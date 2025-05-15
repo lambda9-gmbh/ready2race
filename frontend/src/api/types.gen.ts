@@ -312,6 +312,7 @@ export type EventDto = {
     registrationAvailableTo?: string
     invoicePrefix?: string
     published?: boolean
+    invoicesProduced?: string
 }
 
 export type EventPublicDto = {
@@ -2325,3 +2326,13 @@ export type AssignBankAccountData = {
 export type AssignBankAccountResponse = void
 
 export type AssignBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ProduceInvoicesForEventRegistrationsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type ProduceInvoicesForEventRegistrationsResponse = void
+
+export type ProduceInvoicesForEventRegistrationsError = BadRequestError | ApiError

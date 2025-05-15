@@ -3729,6 +3729,9 @@ components:
           type: string
         published:
           type: boolean
+        invoicesProduced:
+          type: string
+          format: date-time
 
     EventPublicDto:
       type: object

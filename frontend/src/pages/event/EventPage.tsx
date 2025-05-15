@@ -7,7 +7,7 @@ import CompetitionDialog from '@components/event/competition/CompetitionDialog.t
 import Throbber from '@components/Throbber.tsx'
 import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
 import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
-import {getEvent, getRegistrationResult} from '@api/sdk.gen.ts'
+import {getEvent, getRegistrationResult, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
 import {
     CompetitionDto,
     EventDayDto,
@@ -116,6 +116,18 @@ const EventPage = () => {
             anchor.click()
             anchor.href = ''
             anchor.download = ''
+        }
+    }
+
+    const handleProduceInvoices = async () => {
+        const {data, error} = await produceInvoicesForEventRegistrations({
+            path: {eventId}
+        })
+
+        if (error !== undefined) {
+            feedback.error('[todo] could not produce invoices, cause: ...')
+        } else if (data !== undefined) {
+            feedback.success('[todo] invoice producing jobs created')
         }
     }
 
@@ -255,9 +267,14 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={4} activeTab={activeTab}>
-                            <Button variant={'contained'} onClick={handleReportDownload}>
-                                {t('event.action.registrationsReport.download')}
-                            </Button>
+                            <Stack spacing={4}>
+                                <Button variant={'contained'} onClick={handleReportDownload}>
+                                    {t('event.action.registrationsReport.download')}
+                                </Button>
+                                <Button variant={'contained'} onClick={handleProduceInvoices}>
+                                    [todo] Produce invoices
+                                </Button>
+                            </Stack>
                         </TabPanel>
                     </Stack>
                 ) : (

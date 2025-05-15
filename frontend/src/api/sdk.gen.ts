@@ -328,6 +328,9 @@ import type {
     AssignBankAccountData,
     AssignBankAccountError,
     AssignBankAccountResponse,
+    ProduceInvoicesForEventRegistrationsData,
+    ProduceInvoicesForEventRegistrationsError,
+    ProduceInvoicesForEventRegistrationsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1622,5 +1625,18 @@ export const assignBankAccount = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/assignedBankAccount',
+    })
+}
+
+export const produceInvoicesForEventRegistrations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ProduceInvoicesForEventRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ProduceInvoicesForEventRegistrationsResponse,
+        ProduceInvoicesForEventRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/produceInvoices',
     })
 }
