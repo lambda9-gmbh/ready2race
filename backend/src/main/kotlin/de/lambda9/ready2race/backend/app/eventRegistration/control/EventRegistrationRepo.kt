@@ -20,6 +20,19 @@ object EventRegistrationRepo {
 
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
+    fun getIdsByEvent(
+        eventId: UUID
+    ): JIO<List<UUID>> = Jooq.query {
+        with(EVENT_REGISTRATION) {
+            select(ID)
+                .from(this)
+                .where(EVENT.eq(eventId))
+                .fetch {
+                    it.value1()
+                }
+        }
+    }
+
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
         EVENT_REGISTRATION.update(f) {
             EVENT_REGISTRATION.ID.eq(id)

@@ -2927,6 +2927,32 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/produceInvoices:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: produceInvoicesForEventRegistrations
+      responses:
+        204:
+          description: invoice produce jobs successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:

@@ -63,7 +63,7 @@ object EventService {
         id: UUID,
         scope: Privilege.Scope?
     ): App<EventError, ApiResponse.Dto<EventDto>> = KIO.comprehension {
-        val event = !EventRepo.getEvent(id, scope).orDie().onNullFail { EventError.NotFound }
+        val event = !EventRepo.getScoped(id, scope).orDie().onNullFail { EventError.NotFound }
         event.eventDto().map { ApiResponse.Dto(it) }
     }
 

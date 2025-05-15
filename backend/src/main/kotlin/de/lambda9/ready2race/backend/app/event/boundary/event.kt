@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
+import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
@@ -90,6 +91,14 @@ fun Route.event() {
                     !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
                     val id = !pathParam("eventId", uuid)
                     EventService.deleteEvent(id)
+                }
+            }
+
+            post("/produceInvoices") {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("eventId", uuid)
+                    InvoiceService.produceRegistrationInvoicesForEvent(id, user.id!!)
                 }
             }
         }
