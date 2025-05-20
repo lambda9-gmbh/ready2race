@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_registration_for_invoice;
+drop view if exists competition_registration_with_fees;
 drop view if exists document_template_assignment;
 drop view if exists event_registration_result_view;
 drop view if exists event_competition_registration;
@@ -528,3 +530,30 @@ from task t
 group by t.id, t.event, e.name, t.name, t.due_date, t.description, t.remark, t.state, t.created_at, t.created_by,
          t.updated_at,
          t.updated_by;
+
+create view competition_registration_with_fees as
+select cr.event_registration,
+       cp.id as properties_id,
+       cp.identifier,
+       cp.name,
+       cp.short_name,
+       coalesce(array_agg(f) filter ( where f.id is not null ), '{}') as fees
+from competition_registration cr
+         join competition_properties cp on cr.competition = cp.competition
+         left join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
+         left join competition_registration_optional_fee crof on cr.id = crof.competition_registration
+         left join fee f on cphf.fee = f.id and cphf.required is true or crof.fee = f.id
+group by cr.id, cp.id
+;
+
+create view event_registration_for_invoice as
+select er.id,
+       c.name as club_name,
+       au as recipient,
+       coalesce(array_agg(crwf) filter ( where crwf.event_registration is not null ), '{}') as competitions
+from event_registration er
+         join club c on er.club = c.id
+         left join app_user au on c.id = au.club
+         left join competition_registration_with_fees crwf on er.id = crwf.event_registration
+group by er.id, c.id, au.id
+;

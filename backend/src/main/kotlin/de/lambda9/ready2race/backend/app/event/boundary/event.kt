@@ -98,7 +98,7 @@ fun Route.event() {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("eventId", uuid)
-                    InvoiceService.produceRegistrationInvoicesForEvent(id, user.id!!)
+                    InvoiceService.createRegistrationInvoicesForEventJobs(id, user.id!!)
                 }
             }
         }
