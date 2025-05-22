@@ -33,6 +33,24 @@ class PdfTest {
 
                     row {
                         cell {
+                            block(
+                                padding = Padding(top = 20f, bottom = 5f)
+                            ) {
+                                text(
+                                    fontSize = 6f
+                                ) { "verein - adresse - ort" }
+                            }
+                        }
+                        cell {
+                            text(
+                                fontSize = 15f,
+                                fontStyle = FontStyle.BOLD,
+                            ) { "todo Verein" }
+                        }
+                    }
+
+                    row {
+                        cell {
                             text { "Meld. Verein" }
                             text { "Max Mustermann" }
                         }

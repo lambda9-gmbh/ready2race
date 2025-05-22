@@ -55,3 +55,11 @@ create table produce_invoice_for_registration
 alter table event
     add column invoices_produced timestamp
 ;
+
+create table event_registration_invoice
+(
+    event_registration uuid not null references event_registration on delete cascade,
+    invoice            uuid not null references invoice on delete cascade
+);
+
+create unique index only_one_registration_per_invoice on event_registration_invoice (invoice);
