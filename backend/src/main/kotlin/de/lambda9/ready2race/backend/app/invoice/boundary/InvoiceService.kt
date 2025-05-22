@@ -86,6 +86,7 @@ object InvoiceService {
             registrations.map {
                 ProduceInvoiceForRegistrationRecord(
                     eventRegistration = it,
+                    contact = TODO(),
                     payee = bankAccount.bankAccount,
                     createdAt = LocalDateTime.now(),
                     createdBy = userId,

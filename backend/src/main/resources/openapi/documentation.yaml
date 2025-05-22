@@ -2953,6 +2953,99 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /contact:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getContacts
+      responses:
+        200:
+          description: contacts page retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactInformationDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInformationRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /contact/{contactId}:
+    parameter:
+      - in: path
+        name: contactId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInformationRequest'
+      responses:
+        204:
+          description: contact information successfully changed
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteContact
+      responses:
+        204:
+          description: contact information successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -5104,3 +5197,41 @@ components:
       properties:
         assigned:
           $ref: '#/components/schemas/BankAccountDto'
+
+    ContactInformationRequest:
+      type: object
+      required:
+        - name
+        - addressZip
+        - addressStreet
+        - email
+      properties:
+        name:
+          type: string
+        addressZip:
+          type: string
+        addressStreet:
+          type: string
+        email:
+          type: string
+
+    ContactInformationDto:
+      type: object
+      required:
+        - id
+        - name
+        - addressZip
+        - addressStreet
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        addressZip:
+          type: string
+        addressStreet:
+          type: string
+        email:
+          type: string

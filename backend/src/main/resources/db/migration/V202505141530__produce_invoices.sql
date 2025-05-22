@@ -42,9 +42,23 @@ create table invoice_document_data
     data    bytea not null
 );
 
+create table contact_information
+(
+    id uuid primary key,
+    name text not null,
+    address_zip text not null,
+    address_street text not null,
+    email text not null,
+    created_at timestamp not null,
+    created_by uuid references app_user on delete set null,
+    updated_at timestamp not null,
+    updated_by uuid references app_user on delete set null
+);
+
 create table produce_invoice_for_registration
 (
     event_registration uuid primary key references event_registration,
+    contact            uuid      not null references contact_information,
     payee              uuid      not null references bank_account,
     last_error_at      timestamp,
     last_error         text,
