@@ -53,6 +53,7 @@
     },
     "ok": "Ok",
     "save": "Speichern",
+    "saveAndNew": "Speichern und Neu",
     "search": "Suchen",
     "back": "Zurück",
     "next": "Weiter",
@@ -122,7 +123,8 @@
     "firstname": "Vorname",
     "lastname": "Nachname",
     "gender": "Geschlecht",
-    "phone": "Telefon"
+    "phone": "Telefon",
+    "remark" : "Anmerkung"
   },
   "navigation": {
     "titles": {
@@ -437,8 +439,22 @@
     "tabs": {
       "general": "Allgemein",
       "settings": "Einstellungen",
-      "actions": "Aktionen"
+      "actions": "Aktionen",
+      "organisation": "Organisation"
     }
+  },
+  "task": {
+    "task": "Aufgabe",
+    "tasks": "Aufgaben",
+    "myTasks": "Meine Aufgaben",
+    "name" : "Titel",
+    "dueDate": "Fälligkeitsdatum",
+    "state": "Status",
+    "OPEN" : "Offen",
+    "IN_PROGRESS" : "In Bearbeitung",
+    "DONE" : "Erledigt",
+    "CANCELED" : "Abgebrochen",
+    "responsibleUsers": "Verantwortlich"
   },
   "participantRequirement": {
     "participantRequirement": "Teilnahmebedingung",

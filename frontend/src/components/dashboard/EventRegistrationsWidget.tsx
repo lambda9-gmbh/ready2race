@@ -62,21 +62,21 @@ export function EventRegistrationsWidget() {
                                                     spacing={2}
                                                     alignItems={'center'}>
                                                     <Link
-                                                        to={'/event/$eventId'}
-                                                        params={{eventId: registration.eventId}}>
-                                                        <Button>
-                                                            <Typography color={'primary'}>
-                                                                {registration.eventName}
-                                                            </Typography>
-                                                        </Button>
-                                                    </Link>
-                                                    <Typography>-</Typography>
-                                                    <Link
                                                         to={'/club/$clubId'}
                                                         params={{clubId: registration.clubId}}>
                                                         <Button color={'primary'}>
                                                             <Typography>
                                                                 {registration.clubName}
+                                                            </Typography>
+                                                        </Button>
+                                                    </Link>
+                                                    <Typography>|</Typography>
+                                                    <Link
+                                                        to={'/event/$eventId'}
+                                                        params={{eventId: registration.eventId}}>
+                                                        <Button>
+                                                            <Typography color={'primary'}>
+                                                                {registration.eventName}
                                                             </Typography>
                                                         </Button>
                                                     </Link>

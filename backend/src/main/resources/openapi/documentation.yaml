@@ -2782,6 +2782,156 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/task:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: addTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpsertDto'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getTasks
+      responses:
+        200:
+          description: Task list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaskDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/task/{taskId}:
+    parameters:
+      - name: taskId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: updateTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpsertDto'
+      responses:
+        204:
+          description: Task successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteTask
+      responses:
+        204:
+          description: Task successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /user/{userId}/task:
+    parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getOpenTasksForUser
+      responses:
+        200:
+          description: Task list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TaskDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -3273,9 +3423,13 @@ components:
     AppUserNameDto:
       type: object
       required:
+        - id
         - firstname
         - lastname
       properties:
+        id:
+          type: string
+          format: uuid
         firstname:
           type: string
         lastname:
@@ -4939,6 +5093,86 @@ components:
         value:
           type: string
           format: uuid
+
+    TaskDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+        eventName:
+          type: string
+        name:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        remark:
+          type: string
+          nullable: true
+        state:
+          $ref: '#/components/schemas/TaskState'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        responsibleUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppUserNameDto'
+      required:
+        - id
+        - event
+        - eventName
+        - name
+        - state
+        - createdAt
+        - updatedAt
+        - responsibleUsers
+
+    TaskUpsertDto:
+      type: object
+      properties:
+        name:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        remark:
+          type: string
+          nullable: true
+        state:
+          $ref: '#/components/schemas/TaskState'
+        responsibleUsers:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - name
+        - state
+        - responsibleUsers
+
+    TaskState:
+      type: string
+      enum:
+        - OPEN
+        - IN_PROGRESS
+        - DONE
+        - CANCELED
 
     DocumentTypeDto:
       type: object

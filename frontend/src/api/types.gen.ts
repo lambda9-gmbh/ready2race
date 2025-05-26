@@ -38,6 +38,7 @@ export type AppUserInvitationDto = {
 }
 
 export type AppUserNameDto = {
+    id: string
     firstname: string
     lastname: string
 }
@@ -760,6 +761,31 @@ export type RoleRequest = {
 }
 
 export type Scope = 'OWN' | 'GLOBAL'
+
+export type TaskDto = {
+    id: string
+    event: string
+    eventName: string
+    name: string
+    dueDate?: string | null
+    description?: string | null
+    remark?: string | null
+    state: TaskState
+    createdAt: string
+    updatedAt: string
+    responsibleUsers: Array<AppUserNameDto>
+}
+
+export type TaskState = 'OPEN' | 'IN_PROGRESS' | 'DONE' | 'CANCELED'
+
+export type TaskUpsertDto = {
+    name: string
+    dueDate?: string | null
+    description?: string | null
+    remark?: string | null
+    state: TaskState
+    responsibleUsers: Array<string>
+}
 
 export type TooManyRequestsError = ApiError & {
     details: {
@@ -2275,3 +2301,63 @@ export type AssignDocumentTemplateData = {
 export type AssignDocumentTemplateResponse = void
 
 export type AssignDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddTaskData = {
+    body: TaskUpsertDto
+    path: {
+        eventId: string
+    }
+}
+
+export type AddTaskResponse = string
+
+export type AddTaskError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetTasksData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetTasksResponse = {
+    data: Array<TaskDto>
+    pagination: Pagination
+}
+
+export type GetTasksError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateTaskData = {
+    body: TaskUpsertDto
+    path: {
+        eventId: string
+        taskId: string
+    }
+}
+
+export type UpdateTaskResponse = void
+
+export type UpdateTaskError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteTaskData = {
+    path: {
+        eventId: string
+        taskId: string
+    }
+}
+
+export type DeleteTaskResponse = void
+
+export type DeleteTaskError = BadRequestError | ApiError
+
+export type GetOpenTasksForUserData = {
+    path: {
+        userId: string
+    }
+}
+
+export type GetOpenTasksForUserResponse = {
+    data: Array<TaskDto>
+    pagination: Pagination
+}
+
+export type GetOpenTasksForUserError = BadRequestError | ApiError | UnprocessableEntityError

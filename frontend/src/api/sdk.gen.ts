@@ -316,6 +316,21 @@ import type {
     AssignDocumentTemplateData,
     AssignDocumentTemplateError,
     AssignDocumentTemplateResponse,
+    AddTaskData,
+    AddTaskError,
+    AddTaskResponse,
+    GetTasksData,
+    GetTasksError,
+    GetTasksResponse,
+    UpdateTaskData,
+    UpdateTaskError,
+    UpdateTaskResponse,
+    DeleteTaskData,
+    DeleteTaskError,
+    DeleteTaskResponse,
+    GetOpenTasksForUserData,
+    GetOpenTasksForUserError,
+    GetOpenTasksForUserResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1574,5 +1589,54 @@ export const assignDocumentTemplate = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/documentTemplateType/{documentType}/assignTemplate',
+    })
+}
+
+export const addTask = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddTaskData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddTaskResponse, AddTaskError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task',
+    })
+}
+
+export const getTasks = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTasksData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetTasksResponse, GetTasksError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task',
+    })
+}
+
+export const updateTask = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateTaskData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateTaskResponse, UpdateTaskError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task/{taskId}',
+    })
+}
+
+export const deleteTask = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteTaskData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteTaskResponse, DeleteTaskError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task/{taskId}',
+    })
+}
+
+export const getOpenTasksForUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetOpenTasksForUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetOpenTasksForUserResponse,
+        GetOpenTasksForUserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/task',
     })
 }

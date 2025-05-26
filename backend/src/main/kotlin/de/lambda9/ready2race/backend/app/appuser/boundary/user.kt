@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.task.boundary.TaskService
+import de.lambda9.ready2race.backend.app.task.entity.TaskWithResponsibleUsersSort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -51,6 +53,19 @@ fun Route.user() {
                     AppUserService.update(body, scope, user.id!!, id)
                 }
             }
+
+            route("/task") {
+                get {
+                    call.respondComprehension {
+                        val id = !pathParam("userId", uuid)
+                        !authenticate(Privilege.ReadEventGlobal)
+                        val params = !pagination<TaskWithResponsibleUsersSort>()
+
+                        TaskService.pageOpenForUser(params, id)
+                    }
+                }
+            }
+
         }
 
         route("/registration") {

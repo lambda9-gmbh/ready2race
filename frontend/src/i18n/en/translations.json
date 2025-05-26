@@ -53,6 +53,7 @@
     },
     "ok": "Ok",
     "save": "Save",
+    "saveAndNew": "Save and new",
     "search": "Search",
     "back": "Back",
     "next": "Next",
@@ -122,7 +123,8 @@
     "firstname": "Firstname",
     "lastname": "Lastname",
     "gender": "Gender",
-    "phone": "Phone"
+    "phone": "Phone",
+    "remark": "Remark"
   },
   "navigation": {
     "titles": {
@@ -437,8 +439,22 @@
     "tabs": {
       "general": "General",
       "settings": "Settings",
-      "actions": "Actions"
+      "actions": "Actions",
+      "organisation": "Organisation"
     }
+  },
+  "task": {
+    "task": "Task",
+    "tasks": "Tasks",
+    "myTasks": "My open tasks",
+    "name" : "Title",
+    "dueDate": "Due date",
+    "state": "State",
+    "OPEN" : "Open",
+    "IN_PROGRESS" : "In Progress",
+    "DONE" : "Done",
+    "CANCELED" : "Canceled",
+    "responsibleUsers": "Responsible"
   },
   "participantRequirement": {
     "participantRequirement": "Participant requirement",
