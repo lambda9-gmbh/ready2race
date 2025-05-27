@@ -33,8 +33,13 @@
             "integer": "Please enter an integer number.",
             "number": "Please enter a valid number."
           },
-          "range": "Please enter a number between {{min}} and {{max}}.",
-          "minOrUndefined": "Please enter a number greater than {{min}} or leave the field blank."
+          "value": {
+            "messageStart": "Please enter a number ",
+            "min": "above {{min}}.",
+            "max": "below {{max}}.",
+            "range": "between {{min}} and {{max}}."
+          },
+          "minOrUndefined": "Please enter a number above {{min}} or leave the field blank."
         }
       },
       "seconds": "Seconds",
@@ -298,7 +303,10 @@
           "participants": "Matchup",
           "name": "Name",
           "executionOrder": "Order of execution",
-          "teams": "Number of teams",
+          "teams": {
+            "teams": "Number of teams",
+            "unlimited": "Unlimited"
+          },
           "outcome": {
             "outcome": "Seeding",
             "outcomes": "Seedings",
@@ -340,6 +348,11 @@
             "one": "The team: {{participants}} is used several times.",
             "multiple": "The teams: {{participants}} are used several times.",
             "message": "Please select each team only for one matchup per round."
+          },
+          "duplicatePositions": {
+            "one": "In the order of execution, {{positions}} is used several times.",
+            "multiple": "In the order of execution, {{positions}} are used several times.",
+            "message": "Please select each value only once per round."
           }
         },
         "tableHint": "Enable the quick creation of setups for different competitions."

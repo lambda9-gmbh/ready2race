@@ -34,6 +34,7 @@ import {
 } from '@components/event/competition/setup/common.ts'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {useTranslation} from 'react-i18next'
+import {FormInputSelect} from "@components/form/input/FormInputSelect.tsx";
 
 type Props = {
     round: {index: number; id: string}
@@ -143,12 +144,18 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         if (props.allowRoundUpdates.value) {
             if (!watchUseDefaultSeeding) {
                 // Changes made for the places are overwritten - Because of this "allowRoundUpdates" is necessary to prevent updating directly after resetting the form
-                updatePlaces(true, getTeamsCountInMatches(watchMatches))
+                updatePlaces(round.index, true, getTeamsCountInMatches(watchMatches))
             }
         } else {
             props.allowRoundUpdates.set(true)
         }
-    }, [watchMatches.length, watchGroups.length, watchIsGroupRound, watchUseDefaultSeeding, isFirstRound])
+    }, [
+        watchMatches.length,
+        watchGroups.length,
+        watchIsGroupRound,
+        watchUseDefaultSeeding,
+        isFirstRound,
+    ])
 
     function findLowestMissingParticipant(
         isGroups: boolean,
@@ -211,7 +218,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     // The places which teams that won't partake in the next round get
     const watchPlaces = formContext.watch(`rounds.${round.index}.places`)
 
-    const {fields: placeFields, replace: replacePlaces} = useFieldArray({
+    const {fields: placeFields} = useFieldArray({
         control: formContext.control,
         name: `rounds.${round.index}.places`,
     })
@@ -221,7 +228,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         ...watchPlaces?.[index],
     }))
 
-    const updatePlaces = (updateThisRound: boolean, newTeamsCount?: number) => {
+    const updatePlaces = (roundIndex: number, updateThisRound: boolean, newTeamsCount?: number) => {
         const thisRoundTeams = newTeamsCount ?? teamCounts.thisRound
 
         // If the participants of this round changed, the places in this round are updated
@@ -229,10 +236,10 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
             const nextRoundParticipants = watchIsGroupRound
                 ? getParticipantsFromMatchOrGroup(
                       undefined,
-                      formContext.getValues(`rounds.${round.index + 1}.groups`),
+                      formContext.getValues(`rounds.${roundIndex + 1}.groups`),
                   )
                 : getParticipantsFromMatchOrGroup(
-                      formContext.getValues(`rounds.${round.index + 1}.matches`),
+                      formContext.getValues(`rounds.${roundIndex + 1}.matches`),
                   )
 
             const newPlaces = getNewPlaces(
@@ -241,16 +248,16 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                 teamCounts.nextRound,
             )
 
-            replacePlaces(newPlaces)
+            formContext.setValue(`rounds.${roundIndex}.places`, newPlaces)
         }
 
         // Update the places of the previous round
-        if (round.index > 0) {
+        if (roundIndex > 0) {
             const participants = getParticipantsFromMatchOrGroup(watchMatches)
 
             const newPlaces = getNewPlaces(participants, teamCounts.prevRound, thisRoundTeams)
 
-            formContext.setValue(`rounds.${round.index - 1}.places`, newPlaces)
+            formContext.setValue(`rounds.${roundIndex - 1}.places`, newPlaces)
         }
     }
 
@@ -343,6 +350,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                 <FormInputText
                                     name={`rounds.${round.index}.name`}
                                     label={t('event.competition.setup.round.name')}
+                                    required
                                 />
                             </Box>
 
@@ -416,7 +424,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                         participants: watchUseDefaultSeeding
                                                             ? []
                                                             : appendPreparedParticipants,
-                                                        position: matchFields.length + 1,
+                                                        executionOrder: matchFields.length + 1,
                                                     })
                                                 }}
                                                 sx={{width: 1}}>

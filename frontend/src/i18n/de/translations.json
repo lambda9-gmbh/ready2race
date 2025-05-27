@@ -33,9 +33,14 @@
             "integer": "Bitte geben Sie eine ganze Zahl ein.",
             "number": "Bitte geben Sie eine gültige Zahl ein."
           },
-          "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
-        },
-        "minOrUndefined": "Bitte wählen Sie eine Zahl größer als {{min}} oder lassen Sie das Feld leer."
+          "value": {
+            "messageStart": "Bitte wählen Sie eine Zahl ",
+            "min": "über {{min}}.",
+            "max": "unter {{max}}.",
+            "range": "zwischen {{min}} und {{max}}."
+          },
+          "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
+        }
       },
       "seconds": "Sekunden",
       "optional": "Optional",
@@ -298,7 +303,10 @@
           "participants": "Matchup",
           "name": "Name",
           "executionOrder": "Durchführungsreihenfolge",
-          "teams": "Teamanzahl",
+          "teams": {
+            "teams": "Teamanzahl",
+            "unlimited": "Unbegrenzt"
+          },
           "outcome": {
             "outcome": "Setzung",
             "outcomes": "Setzungen",

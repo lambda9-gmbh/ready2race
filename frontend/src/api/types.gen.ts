@@ -223,6 +223,7 @@ export type CompetitionSetupMatchDto = {
     teams?: number
     name?: string
     participants: Array<number>
+    executionOrder: number
     startTimeOffset?: number
 }
 

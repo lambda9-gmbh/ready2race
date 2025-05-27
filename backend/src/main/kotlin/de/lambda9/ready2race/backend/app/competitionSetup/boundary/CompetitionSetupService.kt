@@ -73,20 +73,20 @@ object CompetitionSetupService {
                 }
             }
 
-            if (!round.matches.isNullOrEmpty()) {
-                round.matches.forEachIndexed { index, match ->
-                    val matchRecord = match.toRecord(index, roundRecord.id, null)
+            if (round.matches != null) {
+                round.matches.forEach { match ->
+                    val matchRecord = match.toRecord(roundRecord.id, null)
                     records.matches.add(matchRecord)
 
                     addParticipants(match.participants, matchRecord.id, null)
                 }
-            } else if (!round.groups.isNullOrEmpty()) {
-                round.groups.forEachIndexed { index, group ->
-                    val groupRecord = group.toRecord(index)
+            } else if (round.groups != null) {
+                round.groups.forEach { group ->
+                    val groupRecord = group.toRecord()
                     records.groups.add(groupRecord)
 
                     group.matches.forEach { match ->
-                        val matchRecord = match.toRecord(index, roundRecord.id, groupRecord.id)
+                        val matchRecord = match.toRecord(roundRecord.id, groupRecord.id)
                         records.matches.add(matchRecord)
                     }
 

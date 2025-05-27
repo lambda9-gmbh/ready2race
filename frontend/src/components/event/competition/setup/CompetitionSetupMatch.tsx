@@ -11,7 +11,6 @@ import {
     Typography,
 } from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {
     CompetitionSetupMatchOrGroupProps,
     onTeamsChanged,
@@ -21,6 +20,7 @@ import {FormInputSeconds} from '@components/form/input/FormInputSeconds.tsx'
 import {useTranslation} from 'react-i18next'
 import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
+import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 
 type Props = CompetitionSetupMatchOrGroupProps
 const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: Props) => {
@@ -38,6 +38,13 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
         ...field,
         ...watchParticipants?.[index],
     }))
+
+    const executionOrderOptions = formContext
+        .getValues(`rounds.${roundIndex}.matches`)
+        .map((_, index) => ({
+            id: index + 1,
+            label: index + 1,
+        }))
 
     return (
         <Stack
@@ -67,11 +74,11 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.name`}
                 label={t('event.competition.setup.match.name')}
             />
-            <FormInputNumber
-                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.position`}
+            <FormInputSelect
+                name={`rounds.${roundIndex}.matches.${fieldInfo.index}.executionOrder`}
                 label={t('event.competition.setup.match.executionOrder')}
+                options={executionOrderOptions}
                 required
-                integer
                 transform={{
                     output: value => Number(value.target.value),
                 }}
@@ -88,7 +95,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             )}
             <FormInputText
                 name={`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`}
-                label={t('event.competition.setup.match.teams')}
+                label={t('event.competition.setup.match.teams.teams')}
                 onChange={v => {
                     onTeamsChanged(
                         roundIndex,
@@ -101,9 +108,10 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 rules={{
                     min: {
                         value: 1,
-                        message: t('common.form.number.invalid.minOrUndefined', {min: 1})
-                    }
+                        message: t('common.form.number.invalid.minOrUndefined', {min: 1}),
+                    },
                 }}
+                placeholder={t('event.competition.setup.match.teams.unlimited')}
             />
             <Divider />
             <Typography sx={{fontSize: '1.1rem'}}>

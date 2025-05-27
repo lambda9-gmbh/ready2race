@@ -12,6 +12,7 @@ data class CompetitionSetupMatchDto(
     val teams: Int?,
     val name: String?,
     val participants: List<Int>,
+    val executionOrder: Int,
     val startTimeOffset: Long?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
@@ -19,6 +20,7 @@ data class CompetitionSetupMatchDto(
         this::teams validate min(1),
         this::name validate notBlank,
         this::participants validate collection(min(1)),
+        this::executionOrder validate min(1)
     )
 
     companion object {
@@ -28,6 +30,7 @@ data class CompetitionSetupMatchDto(
                 teams = 2,
                 name = "Match name",
                 participants = listOf(1, 8),
+                executionOrder = 1,
                 startTimeOffset = 60000
             )
     }

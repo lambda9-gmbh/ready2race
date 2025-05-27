@@ -4123,6 +4123,7 @@ components:
       required:
         - weighting
         - participants
+        - executionOrder
       properties:
         weighting:
           type: integer
@@ -4134,6 +4135,8 @@ components:
           type: array
           items:
             type: integer
+        executionOrder:
+          type: integer
         startTimeOffset:
           type: integer
 
@@ -4143,6 +4146,7 @@ components:
         - weighting
         - matches
         - participants
+        - executionOrder
       properties:
         weighting:
           type: integer

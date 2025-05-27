@@ -18,7 +18,7 @@ data class CompetitionSetupGroupDto(
         this::weighting validate min(1),
         this::teams validate min(1),
         this::name validate notBlank,
-        this::participants validate collection(min(1))
+        this::participants validate collection(min(1)),
     )
 
     companion object {
@@ -28,7 +28,7 @@ data class CompetitionSetupGroupDto(
                 teams = 4,
                 name = "Group name",
                 matches = listOf(CompetitionSetupMatchDto.example),
-                participants = listOf(1, 8, 9, 16)
+                participants = listOf(1, 8, 9, 16),
             )
     }
 }

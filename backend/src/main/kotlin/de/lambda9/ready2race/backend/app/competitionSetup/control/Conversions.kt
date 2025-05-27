@@ -33,12 +33,11 @@ fun CompetitionSetupRoundRecord.toDto(
     places = places
 )
 
-fun CompetitionSetupGroupDto.toRecord(index: Int) = CompetitionSetupGroupRecord(
+fun CompetitionSetupGroupDto.toRecord() = CompetitionSetupGroupRecord(
     id = UUID.randomUUID(),
     weighting = weighting,
     teams = teams,
     name = name,
-    position = index
 )
 
 fun CompetitionSetupGroupRecord.toDto(matches: List<CompetitionSetupMatchDto>, participants: List<Int>) =
@@ -69,7 +68,7 @@ fun CompetitionSetupGroupStatisticEvaluationRecord.toDto() = CompetitionSetupGro
     asAverage = asAverage,
 )
 
-fun CompetitionSetupMatchDto.toRecord(index: Int, competitionSetupRoundId: UUID, competitionSetupGroupId: UUID?) =
+fun CompetitionSetupMatchDto.toRecord(competitionSetupRoundId: UUID, competitionSetupGroupId: UUID?) =
     CompetitionSetupMatchRecord(
         id = UUID.randomUUID(),
         competitionSetupRound = competitionSetupRoundId,
@@ -77,7 +76,7 @@ fun CompetitionSetupMatchDto.toRecord(index: Int, competitionSetupRoundId: UUID,
         weighting = weighting,
         teams = teams,
         name = name,
-        position = index,
+        executionOrder = executionOrder,
         startTimeOffset = startTimeOffset,
     )
 
@@ -86,6 +85,7 @@ fun CompetitionSetupMatchRecord.toDto(participants: List<Int>) = CompetitionSetu
     teams = teams,
     name = name,
     participants = participants,
+    executionOrder = executionOrder,
     startTimeOffset = startTimeOffset
 )
 

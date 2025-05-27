@@ -123,8 +123,8 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
 
             const matches: TreeHelperMatch[] = matchesTeams.map((v, index) => ({
                 teams: v,
-                name: matchesInBracketOrder[index]?.name ?? '',
-                position: matchesInBracketOrder[index]?.position ?? 0,
+                name: matchesInBracketOrder[index].name,
+                position: matchesInBracketOrder[index].position,
             }))
 
             const newRound: TreeHelperRound = {
@@ -192,7 +192,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                                   ? [{seed: 3}, {seed: 4}]
                                   : [{seed: 3}]
                             : [],
-                    position: match.position,
+                    executionOrder: match.position,
                 })),
                 groups: [],
                 statisticEvaluations: undefined,

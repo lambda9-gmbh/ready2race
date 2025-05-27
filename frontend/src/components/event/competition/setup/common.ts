@@ -34,7 +34,7 @@ export type FormSetupMatch = {
     teams: string // String because it's easier to work with '' as an empty field instead of undefined
     name?: string
     participants: Array<{seed: number}> // in round 1 the list will be empty
-    position: number // Will be translated to the array order in the dto
+    executionOrder: number
     startTimeOffset?: number
 }
 export type FormSetupGroup = {
@@ -62,7 +62,7 @@ export type ParticipantFunctions = {
     updateRoundParticipants: (repeatForPreviousRound: boolean, nextRoundTeams: number) => void
     setParticipantValuesForThis: (participants: number[]) => void
     updatePreviousRoundParticipants: (thisRoundTeams: number) => void
-    updatePlaces: (updateThisRound: boolean, newTeamsCount?: number) => void
+    updatePlaces: (roundIndex: number, updateThisRound: boolean, newTeamsCount?: number) => void
 }
 
 // Form map functions
@@ -90,16 +90,9 @@ export function mapFormRoundsToDtoRounds(
         name: round.name,
         required: round.required,
         matches: !round.isGroupRound
-            ? [...round.matches]
-                  .map((match, matchIndex) => ({originalIndex: matchIndex, match: match}))
-                  .sort((a, b) => a.match.position - b.match.position)
-                  .map(value =>
-                      mapFormMatchToDtoMatch(
-                          value.match,
-                          value.originalIndex,
-                          round.useStartTimeOffsets,
-                      ),
-                  )
+            ? round.matches.map((match, index) =>
+                  mapFormMatchToDtoMatch(match, index, round.useStartTimeOffsets),
+              )
             : undefined,
         groups: round.isGroupRound
             ? round.groups.map((group, groupIndex) => ({
@@ -139,6 +132,7 @@ function mapFormMatchToDtoMatch(
                 : setTeamsValue,
         name: takeIfNotEmpty(formMatch.name),
         participants: formMatch.participants.map(p => p.seed),
+        executionOrder: formMatch.executionOrder,
         startTimeOffset: useStartTimeOffsets ? formMatch.startTimeOffset : undefined,
     }
 }
@@ -165,15 +159,12 @@ function mapDtoRoundsToFormRounds(
     return dtoRounds.map(round => ({
         name: round.name,
         required: round.required,
-        matches:
-            round.matches
-                ?.sort((a, b) => a.weighting - b.weighting)
-                .map((match, index) => mapDtoMatchToFormMatch(match, index)) ?? [],
+        matches: round.matches?.map(match => mapDtoMatchToFormMatch(match)) ?? [],
         groups:
             round.groups?.map(group => ({
                 teams: group.teams?.toString() ?? '',
                 name: group.name,
-                matches: group.matches.map((match, index) => mapDtoMatchToFormMatch(match, index)),
+                matches: group.matches.map(match => mapDtoMatchToFormMatch(match)),
                 participants: group.participants.map(participant => ({seed: participant})),
                 matchTeams: group.matches[0]?.teams ?? 0,
             })) ?? [],
@@ -191,12 +182,12 @@ function mapDtoRoundsToFormRounds(
     }))
 }
 
-function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto, order: number): FormSetupMatch {
+function mapDtoMatchToFormMatch(matchDto: CompetitionSetupMatchDto): FormSetupMatch {
     return {
         teams: matchDto.teams?.toString() ?? '',
         name: matchDto.name,
-        participants: matchDto.participants?.map(participant => ({seed: participant})),
-        position: order,
+        participants: matchDto.participants.map(participant => ({seed: participant})),
+        executionOrder: matchDto.executionOrder,
         startTimeOffset: matchDto.startTimeOffset,
     }
 }
@@ -305,7 +296,7 @@ export const updateParticipants = (
     roundIndex: number,
     repeatForPreviousRound: boolean,
     nextRoundTeams: number,
-    updatePlaces: (updateThisRound: boolean, newTeamsCount: number) => void,
+    updatePlaces: (roundIndex: number, updateThisRound: boolean, newTeamsCount: number) => void,
 ) => {
     const isGroupRound = formContext.getValues(`rounds.${roundIndex}.isGroupRound`)
 
@@ -349,7 +340,7 @@ export const updateParticipants = (
                 ? getTeamsCountInMatches(matches)
                 : newParticipants.map(p => p.participants).flat().length
 
-        updatePlaces(true, teamsCount)
+        updatePlaces(roundIndex, true, teamsCount)
 
         // To prevent infinit loop because of the recursive call
         if (repeatForPreviousRound) {
@@ -408,7 +399,7 @@ export const updatePreviousRoundParticipants = (
     formContext: UseFormReturn<CompetitionSetupForm>,
     prevRoundIndex: number,
     thisRoundTeams: number,
-    updatePlaces: (updateThisRound: boolean, newTeamsCount: number) => void,
+    updatePlaces: (roundIndex: number, updateThisRound: boolean, newTeamsCount: number) => void,
 ) => {
     if (prevRoundIndex >= 0) {
         const prevRoundIsGroupRound = formContext.getValues(`rounds.${prevRoundIndex}.isGroupRound`)
@@ -458,6 +449,7 @@ export const onTeamsChanged = (
             participants.length + teamCounts.thisRoundWithoutThis,
         )
         participantFunctions.updatePlaces(
+            roundIndex,
             true,
             participants.length + teamCounts.thisRoundWithoutThis,
         )

@@ -38,11 +38,10 @@ create index on competition_setup_round (competition_setup);
 
 create table competition_setup_group
 (
-    id           uuid primary key,
-    weighting    integer not null,
-    teams        integer,
-    name         text,
-    position     integer not null
+    id              uuid primary key,
+    weighting       integer not null,
+    teams           integer,
+    name            text
 );
 
 create table competition_setup_group_statistic_evaluation
@@ -68,7 +67,7 @@ create table competition_setup_match
     weighting               integer not null,
     teams                   integer,
     name                    text,
-    position                integer not null,
+    execution_order         integer not null,
     start_time_offset       bigint
 );
 
