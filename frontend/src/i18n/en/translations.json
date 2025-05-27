@@ -320,7 +320,12 @@
         },
         "place": {
           "place": "Place",
-          "places": "Overall placings"
+          "places": "Overall placings",
+          "placesOption": {
+            "equal": "Equal (Place = {{place}})",
+            "ascending": "Ascending (Place = Seeding)",
+            "custom": "Custom"
+          }
         },
         "tournamentTree": {
           "generate": "Generate",

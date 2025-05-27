@@ -239,8 +239,11 @@ export type CompetitionSetupRoundDto = {
     groups?: Array<CompetitionSetupGroupDto>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
-    places: Array<CompetitionSetupPlaceDto>
+    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM'
+    places?: Array<CompetitionSetupPlaceDto>
 }
+
+export type placesOption = 'EQUAL' | 'ASCENDING' | 'CUSTOM'
 
 export type CompetitionSetupTemplateDto = {
     id: string

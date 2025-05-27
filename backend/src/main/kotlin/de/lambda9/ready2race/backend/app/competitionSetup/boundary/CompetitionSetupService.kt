@@ -3,10 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionSetup.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupDto
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlaceDto
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupRoundDto
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
@@ -99,9 +96,12 @@ object CompetitionSetupService {
                 records.statisticEvaluations.add(statisticEvaluationRecord)
             }
 
-            round.places.forEach { place ->
-                val placeRecord = place.toRecord(roundRecord.id)
-                records.places.add(placeRecord)
+            // If the option is NOT custom, no places are saved in the database since they can be calculated anytime
+            if (round.placesOption == CompetitionSetupPlacesOption.CUSTOM) {
+                round.places?.forEach { place ->
+                    val placeRecord = place.toRecord(roundRecord.id)
+                    records.places.add(placeRecord)
+                }
             }
         }
 
@@ -219,7 +219,13 @@ object CompetitionSetupService {
                 } else {
                     null
                 },
-                places = placeRecords.filter { place -> place.competitionSetupRound == round.id }.map { it.toDto() }
+                // If placesOption is not custom, no places will be returned
+                places = if (CompetitionSetupPlacesOption.valueOf(round.placesOption) == CompetitionSetupPlacesOption.CUSTOM) {
+                    placeRecords.filter { place -> place.competitionSetupRound == round.id }.map { it.toDto() }
+                } else {
+                    null
+                }
+
             )
         }
 

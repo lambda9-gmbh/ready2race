@@ -46,6 +46,8 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
             label: index + 1,
         }))
 
+    const watchTeams = formContext.watch(`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`)
+
     return (
         <Stack
             spacing={2}
@@ -118,7 +120,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 {t('event.competition.setup.match.outcome.outcomes')}:
             </Typography>
             <Stack direction={'row'} spacing={2}>
-                <Typography>{props.outcomes.join(', ')}</Typography>
+                <Typography>{props.outcomes.join(', ') + (watchTeams === '' ? ", ..." : "")}</Typography>
                 <HtmlTooltip
                     title={
                         <Stack p={1}>

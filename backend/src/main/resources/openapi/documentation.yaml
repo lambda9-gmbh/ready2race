@@ -4205,7 +4205,7 @@ components:
         - name
         - required
         - useDefaultSeeding
-        - places
+        - placesOption
       properties:
         name:
           type: string
@@ -4225,6 +4225,12 @@ components:
             $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
         useDefaultSeeding:
           type: boolean
+        placesOption:
+          type: string
+          enum:
+            - EQUAL
+            - ASCENDING
+            - CUSTOM
         places:
           type: array
           items:

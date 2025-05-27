@@ -16,13 +16,14 @@ fun CompetitionSetupRoundDto.toRecord(
     name = name,
     required = required,
     useDefaultSeeding = useDefaultSeeding,
+    placesOption = placesOption.name
 )
 
 fun CompetitionSetupRoundRecord.toDto(
     matches: List<CompetitionSetupMatchDto>?,
     groups: List<CompetitionSetupGroupDto>?,
     statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?,
-    places: List<CompetitionSetupPlaceDto>
+    places: List<CompetitionSetupPlaceDto>?
 ) = CompetitionSetupRoundDto(
     name = name,
     required = required,
@@ -30,6 +31,7 @@ fun CompetitionSetupRoundRecord.toDto(
     groups = groups,
     statisticEvaluations = statisticEvaluations,
     useDefaultSeeding = useDefaultSeeding,
+    placesOption = CompetitionSetupPlacesOption.valueOf(placesOption),
     places = places
 )
 

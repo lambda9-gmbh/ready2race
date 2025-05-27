@@ -129,7 +129,7 @@
     "lastname": "Nachname",
     "gender": "Geschlecht",
     "phone": "Telefon",
-    "remark" : "Anmerkung"
+    "remark": "Anmerkung"
   },
   "navigation": {
     "titles": {
@@ -320,7 +320,12 @@
         },
         "place": {
           "place": "Platz",
-          "places": "Gesamtplatzierungen"
+          "places": "Gesamtplatzierungen",
+          "placesOption": {
+            "equal": "Gleichgestellt (Platz = {{place}})",
+            "ascending": "Aufsteigend (Platz = Setzung)",
+            "custom": "Benutzerdefiniert"
+          }
         },
         "tournamentTree": {
           "generate": "Generieren",
@@ -344,7 +349,7 @@
           "enable": "Versetzte Startzeiten erlauben"
         },
         "validation": {
-          "duplicateParticipants":{
+          "duplicateParticipants": {
             "one": "Das Team: {{participants}} wird mehrfach verwendet.",
             "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
             "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
@@ -455,13 +460,13 @@
     "task": "Aufgabe",
     "tasks": "Aufgaben",
     "myTasks": "Meine Aufgaben",
-    "name" : "Titel",
+    "name": "Titel",
     "dueDate": "Fälligkeitsdatum",
     "state": "Status",
-    "OPEN" : "Offen",
-    "IN_PROGRESS" : "In Bearbeitung",
-    "DONE" : "Erledigt",
-    "CANCELED" : "Abgebrochen",
+    "OPEN": "Offen",
+    "IN_PROGRESS": "In Bearbeitung",
+    "DONE": "Erledigt",
+    "CANCELED": "Abgebrochen",
     "responsibleUsers": "Verantwortlich"
   },
   "participantRequirement": {

@@ -134,47 +134,6 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
             rounds.push(newRound)
         }
 
-        const getPlacesForRound = (roundIndex: number) => {
-            const invertedIndex = roundCount - roundIndex
-
-            if (matchForPlaceThree && roundIndex !== 0) {
-                if (roundIndex === roundCount - 1) {
-                    // If there is a match for place 3 the places need to be modified so that the loser of the main final does not get place 4 (because of default seeding)
-                    return [
-                        {roundOutcome: 1, place: 1},
-                        {roundOutcome: 2, place: 3},
-                        {roundOutcome: 3, place: 4},
-                        {roundOutcome: 4, place: 2},
-                    ]
-                }
-
-                if (roundIndex === roundCount - 2) {
-                    // If this is the semi-final and there is a match for place three there are no places
-                    return []
-                }
-            }
-
-            const newPlaces = []
-
-            // The amount of places that need to be provided by this round
-            const placeCount =
-                roundCount !== 1
-                    ? roundIndex !== 0
-                        ? Math.pow(2, invertedIndex) - Math.pow(2, invertedIndex - 1)
-                        : teams - Math.pow(2, invertedIndex - 1)
-                    : teams
-
-            // This provides the same places for everyone leaving in this round (e.g. round of 16: 9-16 are all place 9)
-            for (let i = 0; i < placeCount; i++) {
-                newPlaces.push({
-                    roundOutcome: Math.pow(2, invertedIndex - 1) + 1 + i,
-                    place: Math.pow(2, invertedIndex - 1) + 1,
-                })
-            }
-
-            return newPlaces
-        }
-
         const tree: Array<FormSetupRound> = rounds
             .map((r, index) => ({round: r, index: index}))
             .sort((a, b) => b.index - a.index)
@@ -197,9 +156,23 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 groups: [],
                 statisticEvaluations: undefined,
                 useDefaultSeeding: matchForPlaceThree ? roundIndex !== roundCount - 1 : true,
+                placesOption:
+                    roundIndex === roundCount - 1
+                        ? matchForPlaceThree
+                            ? 'CUSTOM'
+                            : 'ASCENDING'
+                        : 'EQUAL',
                 isGroupRound: false,
                 useStartTimeOffsets: false,
-                places: getPlacesForRound(roundIndex),
+                places:
+                    roundIndex === roundCount - 1 && matchForPlaceThree
+                        ? [
+                              {roundOutcome: 1, place: 1},
+                              {roundOutcome: 2, place: 3},
+                              {roundOutcome: 3, place: 4},
+                              {roundOutcome: 4, place: 2},
+                          ]
+                        : [],
             }))
 
         if (replaceAll) {

@@ -29,6 +29,7 @@ create table competition_setup_round
     name                       text    not null,
     required                   boolean not null,
     use_default_seeding        boolean not null,
+    places_option  text    not null,
     constraint chk_either_competition_setup_or_competition_setup_template check (
         (competition_setup is null and competition_setup_template is not null) or
         (competition_setup is not null and competition_setup_template is null) )
@@ -38,10 +39,10 @@ create index on competition_setup_round (competition_setup);
 
 create table competition_setup_group
 (
-    id              uuid primary key,
-    weighting       integer not null,
-    teams           integer,
-    name            text
+    id        uuid primary key,
+    weighting integer not null,
+    teams     integer,
+    name      text
 );
 
 create table competition_setup_group_statistic_evaluation

@@ -16,7 +16,8 @@ data class CompetitionSetupRoundDto(
     val groups: List<CompetitionSetupGroupDto>?,
     val statisticEvaluations: List<CompetitionSetupGroupStatisticEvaluationDto>?,
     val useDefaultSeeding: Boolean,
-    val places: List<CompetitionSetupPlaceDto>,
+    val placesOption: CompetitionSetupPlacesOption,
+    val places: List<CompetitionSetupPlaceDto>?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::name validate notBlank,
@@ -55,6 +56,7 @@ data class CompetitionSetupRoundDto(
 
     /*todo validations:
         - no duplicate "participants" in one round
+        - if placesOption is not CUSTOM, "places" should be undefined
     */
 
     companion object {
@@ -66,6 +68,7 @@ data class CompetitionSetupRoundDto(
                 groups = listOf(CompetitionSetupGroupDto.example),
                 statisticEvaluations = listOf(CompetitionSetupGroupStatisticEvaluationDto.example),
                 useDefaultSeeding = true,
+                placesOption = CompetitionSetupPlacesOption.CUSTOM,
                 places = listOf(CompetitionSetupPlaceDto.example),
             )
     }

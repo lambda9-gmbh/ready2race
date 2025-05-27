@@ -23,6 +23,7 @@ export type FormSetupRound = {
     groups: Array<FormSetupGroup>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
+    placesOption: "EQUAL" | "ASCENDING" | "CUSTOM"
     places: Array<{
         roundOutcome: number
         place: number
@@ -112,7 +113,8 @@ export function mapFormRoundsToDtoRounds(
             : undefined,
         statisticEvaluations: round.statisticEvaluations,
         useDefaultSeeding: round.useDefaultSeeding,
-        places: round.places,
+        placesOption: round.placesOption,
+        places: round.placesOption === "CUSTOM" ? round.places : undefined,
     }))
 }
 
@@ -170,7 +172,8 @@ function mapDtoRoundsToFormRounds(
             })) ?? [],
         statisticEvaluations: round.statisticEvaluations,
         useDefaultSeeding: round.useDefaultSeeding,
-        places: round.places,
+        placesOption: round.placesOption,
+        places: round.places ?? [],
         isGroupRound: round.groups !== undefined,
         // If at least one match/group has an offset, useStartTimeOffsets is set to true
         useStartTimeOffsets:
