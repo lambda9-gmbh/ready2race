@@ -478,6 +478,7 @@ export const getNewPlaces = (
     participants: number[],
     thisRoundTeams: number,
     nextRoundTeams: number,
+    currentPlaces: {roundOutcome: number; place: number}[],
 ) => {
     return new Array(thisRoundTeams)
         .fill(null)
@@ -486,6 +487,14 @@ export const getNewPlaces = (
             place: (nextRoundTeams !== 0 ? nextRoundTeams : i) + 1, // If there is no next round the places are set by the roundOutcome
         }))
         .filter(v => !participants.includes(v.roundOutcome))
+        .map(v => {
+            const oldVal = currentPlaces.find(cp => cp.roundOutcome === v.roundOutcome)
+            if (oldVal !== undefined) {
+                return oldVal
+            } else {
+                return v
+            }
+        })
 }
 
 export const getTeamsCountInMatches = (matches: FormSetupMatch[]) => {

@@ -29,6 +29,7 @@ object CompetitionSetupTemplateService {
                 CompetitionSetupTemplateRecord(
                     id = UUID.randomUUID(),
                     name = request.name,
+                    description = request.description,
                     createdAt = now,
                     createdBy = userId,
                     updatedAt = now,
@@ -81,6 +82,7 @@ object CompetitionSetupTemplateService {
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !CompetitionSetupTemplateRepo.update(competitionSetupTemplateId) {
             name = request.name
+            description = request.description
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie().onNullFail { CompetitionSetupTemplateError.NotFound }

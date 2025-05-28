@@ -232,6 +232,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
     const updatePlaces = (roundIndex: number, updateThisRound: boolean, newTeamsCount?: number) => {
         const thisRoundTeams = newTeamsCount ?? teamCounts.thisRound
 
+        const currentPlaces = formContext.getValues(`rounds.${roundIndex}.places`)
+
         // If the participants of this round changed, the places in this round are updated
         if (updateThisRound) {
             const nextRoundParticipants = watchIsGroupRound
@@ -243,10 +245,12 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                       formContext.getValues(`rounds.${roundIndex + 1}.matches`),
                   )
 
+
             const newPlaces = getNewPlaces(
                 nextRoundParticipants,
                 thisRoundTeams,
                 teamCounts.nextRound,
+                currentPlaces
             )
 
             formContext.setValue(`rounds.${roundIndex}.places`, newPlaces)
@@ -256,7 +260,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         if (roundIndex > 0) {
             const participants = getParticipantsFromMatchOrGroup(watchMatches)
 
-            const newPlaces = getNewPlaces(participants, teamCounts.prevRound, thisRoundTeams)
+            const newPlaces = getNewPlaces(participants, teamCounts.prevRound, thisRoundTeams, currentPlaces)
 
             formContext.setValue(`rounds.${roundIndex - 1}.places`, newPlaces)
         }
