@@ -7,6 +7,8 @@ import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 
 data class CompetitionSetupRoundDto(
@@ -52,11 +54,15 @@ data class CompetitionSetupRoundDto(
             )
         ),
         this::places validate collection,
+        ValidationResult.oneOf(
+            this::placesOption validate isValue(CompetitionSetupPlacesOption.CUSTOM),
+            this::places validate isNull
+        )
     )
 
     /*todo validations:
         - no duplicate "participants" in one round
-        - if placesOption is not CUSTOM, "places" should be undefined
+        - placeOption can not be "custom" if a match in the round has undefined teams
     */
 
     companion object {

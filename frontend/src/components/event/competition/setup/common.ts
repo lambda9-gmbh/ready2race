@@ -23,7 +23,7 @@ export type FormSetupRound = {
     groups: Array<FormSetupGroup>
     statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
     useDefaultSeeding: boolean
-    placesOption: "EQUAL" | "ASCENDING" | "CUSTOM"
+    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM'
     places: Array<{
         roundOutcome: number
         place: number
@@ -114,7 +114,7 @@ export function mapFormRoundsToDtoRounds(
         statisticEvaluations: round.statisticEvaluations,
         useDefaultSeeding: round.useDefaultSeeding,
         placesOption: round.placesOption,
-        places: round.placesOption === "CUSTOM" ? round.places : undefined,
+        places: round.placesOption === 'CUSTOM' ? round.places : undefined,
     }))
 }
 
@@ -432,6 +432,7 @@ export const onTeamsChanged = (
         thisRoundWithoutThis: number
         nextRound: number
     },
+    resetPlacesOption: () => void,
 ) => {
     if (!useDefaultSeeding) {
         const participants: number[] = []
@@ -458,6 +459,9 @@ export const onTeamsChanged = (
         )
     } else {
         participantFunctions.updateRoundParticipants(true, teamCounts.nextRound)
+    }
+    if (teamsValue === 0) {
+        resetPlacesOption()
     }
 }
 

@@ -105,6 +105,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         props.useDefaultSeeding,
                         props.participantFunctions,
                         props.teamCounts,
+                        () => {formContext.setValue(`rounds.${roundIndex}.placesOption`, 'EQUAL')}
                     )
                 }}
                 rules={{

@@ -1,8 +1,7 @@
 import {Autocomplete, Box, Divider, IconButton, Stack, TextField, Typography} from '@mui/material'
 import {
     CompetitionSetupMatchOrGroupProps,
-    onTeamsChanged,
-} from '@components/event/competition/setup/common.ts'
+    onTeamsChanged} from '@components/event/competition/setup/common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {useFieldArray} from 'react-hook-form-mui'
 import CompetitionSetupParticipants from '@components/event/competition/setup/CompetitionSetupParticipants.tsx'

@@ -264,7 +264,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
     const roundHasUndefinedTeams = watchMatches.filter(match => match.teams === '').length > 0
 
-    console.log(`R${round.index}`, roundHasUndefinedTeams, teamCounts, (roundHasUndefinedTeams || teamCounts.thisRound > teamCounts.nextRound))
+    formContext.watch(`rounds.${round.index}.placesOption`) // To trigger rerender of placesOption when teams are changed
 
     type MatchOrGroupInfo = {
         index: number
@@ -415,7 +415,9 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     display: 'flex',
                                     flexDirection: 'row',
                                     justifyContent: 'space-between',
-                                    [theme.breakpoints.down('lg')]: {flexDirection: 'column'},
+                                    [theme.breakpoints.down('lg')]: {
+                                        flexDirection: 'column',
+                                    },
                                 }}>
                                 <Stack spacing={2} sx={{flex: 1, alignSelf: 'start'}}>
                                     <Box sx={{alignSelf: 'start'}}>
@@ -484,7 +486,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                         key={match.id}
                                                         direction="column"
                                                         spacing={1}
-                                                        sx={{maxWidth: 245}}>
+                                                        sx={{maxWidth: 240}}>
                                                         <CompetitionSetupMatch
                                                             {...getGroupOrMatchProps(
                                                                 false,
@@ -541,98 +543,112 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
 
                                 <Controller
                                     name={`rounds.${round.index}.placesOption`}
+                                    rules={{
+                                        required: t('common.form.required'),
+                                    }}
                                     render={({
                                         field: {
                                             onChange: placesOptionOnChange,
                                             value: placesOptionValue = 'EQUAL',
                                         },
-                                    }) => (<>
-                                        { (roundHasUndefinedTeams || teamCounts.thisRound > teamCounts.nextRound) && (
-                                        <Stack
-                                            spacing={2}
-                                            sx={{justifySelf: 'flex-end', maxWidth: 250, m: 2}}>
-                                            <Typography variant={'h3'}>
-                                                {`${t('event.competition.setup.place.places')}`}
-                                            </Typography>
-                                            <Select
-                                                value={placesOptionValue}
-                                                onChange={e => {
-                                                    placesOptionOnChange(e)
-                                                }}>
-                                                <MenuItem value={'EQUAL'}>
-                                                    {t(
-                                                        'event.competition.setup.place.placesOption.equal',
-                                                        {place: teamCounts.nextRound + 1},
-                                                    )}
-                                                </MenuItem>
-                                                <MenuItem value={'ASCENDING'}>
-                                                    {t(
-                                                        'event.competition.setup.place.placesOption.ascending',
-                                                    )}
-                                                </MenuItem>
-                                                <MenuItem value={'CUSTOM'}>
-                                                    {t(
-                                                        'event.competition.setup.place.placesOption.custom',
-                                                    )}
-                                                </MenuItem>
-                                            </Select>
-                                            {placesOptionValue === 'CUSTOM' && (
-                                                <>
-                                                    {controlledPlacesFields.length > 0 ? (
-                                                        <TableContainer>
-                                                            <Table>
-                                                                <TableHead>
-                                                                    <TableRow>
-                                                                        <TableCell>
-                                                                            {t(
-                                                                                'event.competition.setup.match.outcome.outcome',
-                                                                            )}
-                                                                        </TableCell>
-                                                                        <TableCell>
-                                                                            {t(
-                                                                                'event.competition.setup.place.place',
-                                                                            )}
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                </TableHead>
-                                                                <TableBody>
-                                                                    {controlledPlacesFields.map(
-                                                                        (place, placeIndex) => (
-                                                                            <TableRow
-                                                                                key={place.id}>
+                                    }) => (
+                                        <>
+                                            {(roundHasUndefinedTeams ||
+                                                teamCounts.thisRound > teamCounts.nextRound) && (
+                                                <Stack
+                                                    spacing={2}
+                                                    sx={{
+                                                        justifySelf: 'flex-end',
+                                                        maxWidth: 262,
+                                                        m: 2,
+                                                    }}>
+                                                    <Typography variant={'h3'}>
+                                                        {`${t('event.competition.setup.place.places')}`}
+                                                    </Typography>
+                                                    <Select
+                                                        value={placesOptionValue}
+                                                        onChange={e => {
+                                                            placesOptionOnChange(e)
+                                                        }}>
+                                                        <MenuItem value={'EQUAL'}>
+                                                            {t(
+                                                                'event.competition.setup.place.placesOption.equal',
+                                                                {place: teamCounts.nextRound + 1},
+                                                            )}
+                                                        </MenuItem>
+                                                        <MenuItem value={'ASCENDING'}>
+                                                            {t(
+                                                                'event.competition.setup.place.placesOption.ascending',
+                                                            )}
+                                                        </MenuItem>
+                                                        {!roundHasUndefinedTeams && (
+                                                            <MenuItem value={'CUSTOM'}>
+                                                                {t(
+                                                                    'event.competition.setup.place.placesOption.custom',
+                                                                )}
+                                                            </MenuItem>
+                                                        )}
+                                                    </Select>
+                                                    {placesOptionValue === 'CUSTOM' &&
+                                                        controlledPlacesFields.length > 0 && (
+                                                            <>
+                                                                <TableContainer>
+                                                                    <Table>
+                                                                        <TableHead>
+                                                                            <TableRow>
                                                                                 <TableCell>
-                                                                                    {
-                                                                                        controlledPlacesFields[
-                                                                                            placeIndex
-                                                                                        ]
-                                                                                            .roundOutcome
-                                                                                    }
+                                                                                    {t(
+                                                                                        'event.competition.setup.match.outcome.outcome',
+                                                                                    )}
                                                                                 </TableCell>
                                                                                 <TableCell>
-                                                                                    <FormInputNumber
-                                                                                        name={`rounds.${round.index}.places.${placeIndex}.place`}
-                                                                                        placeholder={`${teamCounts.nextRound + 1}`}
-                                                                                        required
-                                                                                        integer
-                                                                                        min={1}
-                                                                                    />
+                                                                                    {t(
+                                                                                        'event.competition.setup.place.place',
+                                                                                    )}
                                                                                 </TableCell>
                                                                             </TableRow>
-                                                                        ),
-                                                                    )}
-                                                                </TableBody>
-                                                            </Table>
-                                                        </TableContainer>
-                                                    ) : (
-                                                        <Typography>
-                                                            [todo] No places in this round
-                                                        </Typography>
-                                                    )}
-                                                </>
+                                                                        </TableHead>
+                                                                        <TableBody>
+                                                                            {controlledPlacesFields.map(
+                                                                                (
+                                                                                    place,
+                                                                                    placeIndex,
+                                                                                ) => (
+                                                                                    <TableRow
+                                                                                        key={
+                                                                                            place.id
+                                                                                        }>
+                                                                                        <TableCell>
+                                                                                            {
+                                                                                                controlledPlacesFields[
+                                                                                                    placeIndex
+                                                                                                ]
+                                                                                                    .roundOutcome
+                                                                                            }
+                                                                                        </TableCell>
+                                                                                        <TableCell>
+                                                                                            <FormInputNumber
+                                                                                                name={`rounds.${round.index}.places.${placeIndex}.place`}
+                                                                                                placeholder={`${teamCounts.nextRound + 1}`}
+                                                                                                required
+                                                                                                integer
+                                                                                                min={
+                                                                                                    1
+                                                                                                }
+                                                                                            />
+                                                                                        </TableCell>
+                                                                                    </TableRow>
+                                                                                ),
+                                                                            )}
+                                                                        </TableBody>
+                                                                    </Table>
+                                                                </TableContainer>
+                                                            </>
+                                                        )}
+                                                </Stack>
                                             )}
-                                        </Stack>
-                                        )}
-                                    </>)}
+                                        </>
+                                    )}
                                 />
                             </Box>
                         </Stack>
