@@ -17,6 +17,7 @@ import CompetitionRegistrationDialog from '@components/event/competition/registr
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate, Link} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {AccountTreeOutlined} from '@mui/icons-material'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -205,7 +206,7 @@ const CompetitionPage = () => {
                                     ))}
                                 </Stack>
                                 <Stack direction={'column'} spacing={4}>
-                                    <Box sx={{flex: 1, maxWidth: 400}}>
+                                    <Box>
                                         {(eventDaysData && assignedEventDaysData && (
                                             <CompetitionAndDayAssignment
                                                 entityPathId={competitionId}
@@ -222,14 +223,16 @@ const CompetitionPage = () => {
                                                 <Throbber />
                                             ))}
                                     </Box>
-                                    <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                                    <Box sx={{display: 'flex', justifyContent: 'end'}}>
                                         <Link
                                             to="/event/$eventId/competition/$competitionId/competitionSetup"
                                             params={{
                                                 eventId: eventId,
                                                 competitionId: competitionId,
                                             }}>
-                                            <Button variant="contained">
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<AccountTreeOutlined />}>
                                                 {t('event.competition.setup.setup')}
                                             </Button>
                                         </Link>
