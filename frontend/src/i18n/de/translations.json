@@ -33,9 +33,16 @@
             "integer": "Bitte geben Sie eine ganze Zahl ein.",
             "number": "Bitte geben Sie eine gültige Zahl ein."
           },
-          "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
+          "value": {
+            "messageStart": "Bitte wählen Sie eine Zahl ",
+            "min": "über {{min}}.",
+            "max": "unter {{max}}.",
+            "range": "zwischen {{min}} und {{max}}."
+          },
+          "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
         }
       },
+      "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
       "selectFile": "Datei auswählen"
@@ -122,7 +129,7 @@
     "lastname": "Nachname",
     "gender": "Geschlecht",
     "phone": "Telefon",
-    "remark" : "Anmerkung"
+    "remark": "Anmerkung"
   },
   "navigation": {
     "titles": {
@@ -240,7 +247,7 @@
         "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
-        "tableHint": "Definiert mögliche Gebühren eines Wettkampfs.",
+        "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
@@ -256,6 +263,99 @@
       "assignedDays": "Wettkampftage",
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+      },
+      "setup": {
+        "setup": "Wettbewerbsablauf",
+        "save": {
+          "save": "Speichern",
+          "error": "Ein Fehler ist aufgetreten - Der Wettbewerbsablauf konnte nicht gespeichert werden",
+          "success": "Wettbewerbsablauf erfolgreich gespeichert"
+        },
+        "reset": "Ablauf zurücksetzen",
+        "round": {
+          "round": "Runde",
+          "name": "Name",
+          "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
+          "required": "Runde muss durchgeführt werden",
+          "finals": {
+            "long": {
+              "final": {
+                "round": "Finalrunde",
+                "final": "Finale",
+                "matchForThirdPlace": "Partie um Platz 3"
+              },
+              "semifinal": "Halbfinale",
+              "quarterfinal": "Viertelfinale",
+              "roundOf16": "Achtelfinale",
+              "roundOf32": "Sechzehntelfinale"
+            },
+            "short": {
+              "semifinal": "HF",
+              "quarterfinal": "VF",
+              "roundOf16": "AF",
+              "roundOf32": "SF"
+            }
+          },
+          "remove": "Runde entfernen"
+        },
+        "match": {
+          "match": "Partie",
+          "participants": "Matchup",
+          "name": "Name",
+          "executionOrder": "Durchführungsreihenfolge",
+          "teams": {
+            "teams": "Teamanzahl",
+            "unlimited": "Unbegrenzt"
+          },
+          "outcome": {
+            "outcome": "Setzung",
+            "outcomes": "Setzungen",
+            "tooltip": "Resultierende Setzungen dieser Partie",
+            "result": "Ergebnis"
+          },
+          "remove": "Partie entfernen",
+          "info": {
+            "roundOneFillMatches": "Die Partien werden gleichmäßig mit zufällig gewählten Teams befüllt."
+          }
+        },
+        "place": {
+          "place": "Platz",
+          "places": "Gesamtplatzierungen",
+          "placesOption": {
+            "equal": "Gleichgestellt (Platz = {{place}})",
+            "ascending": "Aufsteigend (Platz = Setzung)",
+            "custom": "Benutzerdefiniert"
+          }
+        },
+        "tournamentTree": {
+          "generate": "Generieren",
+          "generateTree": "Turnierbaum generieren",
+          "participatingTeams": "Teilnehmende Teams",
+          "includeMatchForThirdPlace": "Partie um Platz 3 erstellen",
+          "overwriteSetup": "Bisherigen Ablauf überschreiben",
+          "info": {
+            "noOverwrite": "Die generierten Runden werden an das Ende des bisherigen Ablaufs angehängt."
+          }
+        },
+        "template": {
+          "template": "Vorlage für Wettbewerbsablauf",
+          "templates": "Vorlagen für Wettbewerbsabläufe",
+          "name": "Name",
+          "description": "Beschreibung",
+          "select": "Vorlage auswählen"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Versetzte Startzeit",
+          "enable": "Versetzte Startzeiten erlauben"
+        },
+        "validation": {
+          "duplicateParticipants": {
+            "one": "Das Team: {{participants}} wird mehrfach verwendet.",
+            "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
+            "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
+          }
+        },
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
       }
     },
     "participantRequirement": {
@@ -360,13 +460,13 @@
     "task": "Aufgabe",
     "tasks": "Aufgaben",
     "myTasks": "Meine Aufgaben",
-    "name" : "Titel",
+    "name": "Titel",
     "dueDate": "Fälligkeitsdatum",
     "state": "Status",
-    "OPEN" : "Offen",
-    "IN_PROGRESS" : "In Bearbeitung",
-    "DONE" : "Erledigt",
-    "CANCELED" : "Abgebrochen",
+    "OPEN": "Offen",
+    "IN_PROGRESS": "In Bearbeitung",
+    "DONE": "Erledigt",
+    "CANCELED": "Abgebrochen",
     "responsibleUsers": "Verantwortlich"
   },
   "participantRequirement": {

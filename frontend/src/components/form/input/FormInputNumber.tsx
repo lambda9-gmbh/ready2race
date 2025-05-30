@@ -10,6 +10,9 @@ type FormInputNumberProps = Omit<BaseFormInputProps, 'type'> & {
 
 const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) => {
     const {t} = useTranslation()
+
+    const minMaxMsgStart = t('common.form.number.invalid.value.messageStart')
+
     return (
         <FormInputText
             {...props}
@@ -19,10 +22,13 @@ const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) =>
                     min: min
                         ? {
                               value: min,
-                              message: t('common.form.number.invalid.range', {
-                                  min: min,
-                                  max: max,
-                              }),
+                              message:
+                                  minMaxMsgStart + (max !== undefined
+                                      ? t('common.form.number.invalid.value.range', {
+                                            min: min,
+                                            max: max,
+                                        })
+                                      : t('common.form.number.invalid.value.min', {min: min})),
                           }
                         : undefined,
                 }),
@@ -30,10 +36,13 @@ const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) =>
                     max: max
                         ? {
                               value: max,
-                              message: t('common.form.number.invalid.range', {
-                                  min: min,
-                                  max: max,
-                              }),
+                              message:
+                                  minMaxMsgStart + (min !== undefined
+                                      ? t('common.form.number.invalid.value.range', {
+                                            min: min,
+                                            max: max,
+                                        })
+                                      : t('common.form.number.invalid.value.max', {max: max})),
                           }
                         : undefined,
                 }),

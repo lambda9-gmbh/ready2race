@@ -130,9 +130,11 @@ const RootLayout = () => {
                         <Stack
                             sx={{
                                 padding: 4,
-                                width: 1,
-                            }}
-                            justifyContent={'space-between'}>
+                                boxSizing: 'border-box',
+                                flex: 1,
+                                minWidth: 0,
+                                justifyContent: 'space-between'
+                            }}>
                             <Outlet />
                             {!user.loggedIn &&
                                 location.pathname != '/login' &&
