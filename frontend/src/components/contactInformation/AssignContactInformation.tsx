@@ -1,33 +1,31 @@
-import {Box, MenuItem, Select, Typography} from "@mui/material";
-import {assignBankAccount, getAssignedBankAccount, getBankAccounts} from "@api/sdk.gen.ts";
-import {useFetch} from "@utils/hooks.ts";
 import {useState} from "react";
+import {useFetch} from "@utils/hooks.ts";
+import {Box, MenuItem, Select, Typography} from "@mui/material";
 import Throbber from "@components/Throbber.tsx";
+import {assignContact, getAssignedContact, getContacts} from "@api/sdk.gen.ts";
 import {Trans} from "react-i18next";
 
-const AssignBankAccount = () => {
+const AssignContactInformation = () => {
 
     const [lastRequested, setLastRequested] = useState(Date.now())
 
-    const handleChange = async (accountId?: string) => {
-        await assignBankAccount({
-            body: {
-                bankAccount: accountId
-            }
+    const handleChange = async (contactId?: string) => {
+        await assignContact({
+            body: { contact: contactId }
         })
 
         setLastRequested(Date.now())
     }
 
-    const {data: accounts} = useFetch(
-        signal => getBankAccounts({signal}),
+    const {data: contacts} = useFetch(
+        signal => getContacts({signal}),
         {
             deps: [lastRequested]
         }
     )
 
     const {data: assigned} = useFetch(
-        signal => getAssignedBankAccount({signal}),
+        signal => getAssignedContact({signal}),
         {
             deps: [lastRequested]
         }
@@ -36,9 +34,9 @@ const AssignBankAccount = () => {
     return (
         <Box>
             <Typography variant={'h2'}>
-                <Trans i18nKey={'invoice.bank.global'}/>
+                <Trans i18nKey={'contact.global'} />
             </Typography>
-            {accounts && assigned ? (
+            {contacts && assigned ? (
                 <Box sx={{mt: 2, pr: 2,display: 'flex', justifyContent: 'end'}}>
                     <Select
                         value={assigned?.assigned?.id ?? 'none'}
@@ -54,9 +52,9 @@ const AssignBankAccount = () => {
                         <MenuItem value={'none'}>
                             <Trans i18nKey={'common.form.select.none'} />
                         </MenuItem>
-                        {accounts?.data.map(acc => (
-                            <MenuItem key={acc.id} value={acc.id}>
-                                {acc.iban}
+                        {contacts?.data.map(con => (
+                            <MenuItem key={con.id} value={con.id}>
+                                {con.name}
                             </MenuItem>
                         ))}
                     </Select>
@@ -66,6 +64,7 @@ const AssignBankAccount = () => {
             )}
         </Box>
     )
+
 }
 
-export default AssignBankAccount
+export default AssignContactInformation

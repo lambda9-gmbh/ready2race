@@ -331,6 +331,24 @@ import type {
     ProduceInvoicesForEventRegistrationsData,
     ProduceInvoicesForEventRegistrationsError,
     ProduceInvoicesForEventRegistrationsResponse,
+    GetContactsData,
+    GetContactsError,
+    GetContactsResponse,
+    AddContactData,
+    AddContactError,
+    AddContactResponse,
+    UpdateContactData,
+    UpdateContactError,
+    UpdateContactResponse,
+    DeleteContactData,
+    DeleteContactError,
+    DeleteContactResponse,
+    GetAssignedContactData,
+    GetAssignedContactError,
+    GetAssignedContactResponse,
+    AssignContactData,
+    AssignContactError,
+    AssignContactResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1639,4 +1657,70 @@ export const produceInvoicesForEventRegistrations = <ThrowOnError extends boolea
         ...options,
         url: '/event/{eventId}/produceInvoices',
     })
+}
+
+export const getContacts = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetContactsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetContactsResponse, GetContactsError, ThrowOnError>({
+        ...options,
+        url: '/contact',
+    })
+}
+
+export const addContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddContactResponse, AddContactError, ThrowOnError>({
+        ...options,
+        url: '/contact',
+    })
+}
+
+export const updateContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateContactResponse, UpdateContactError, ThrowOnError>(
+        {
+            ...options,
+            url: '/contact/{contactId}',
+        },
+    )
+}
+
+export const deleteContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteContactResponse,
+        DeleteContactError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/contact/{contactId}',
+    })
+}
+
+export const getAssignedContact = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetAssignedContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAssignedContactResponse,
+        GetAssignedContactError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedContact',
+    })
+}
+
+export const assignContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<AssignContactResponse, AssignContactError, ThrowOnError>(
+        {
+            ...options,
+            url: '/assignedContact',
+        },
+    )
 }

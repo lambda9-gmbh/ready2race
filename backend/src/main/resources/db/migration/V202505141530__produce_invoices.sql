@@ -47,6 +47,7 @@ create table contact_information
     id uuid primary key,
     name text not null,
     address_zip text not null,
+    address_city text not null,
     address_street text not null,
     email text not null,
     created_at timestamp not null,
@@ -54,6 +55,16 @@ create table contact_information
     updated_at timestamp not null,
     updated_by uuid references app_user on delete set null
 );
+
+create table contact_information_usage
+(
+    contact_information uuid not null references contact_information on delete cascade,
+    event uuid references event on delete cascade,
+    assigned_at timestamp not null,
+    assigned_by uuid references app_user on delete set null
+);
+
+create unique index on contact_information_usage (event) nulls not distinct;
 
 create table produce_invoice_for_registration
 (

@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 data class ContactInformationRequest(
     val name: String,
     val addressZip: String,
+    val addressCity: String,
     val addressStreet: String,
     val email: String,
 ) : Validatable {
@@ -15,6 +16,7 @@ data class ContactInformationRequest(
         val example get() = ContactInformationRequest(
             name = "Corp.",
             addressZip = "12345",
+            addressCity = "Town",
             addressStreet = "Gardenstreet 32",
             email = "example@corp.com"
         )

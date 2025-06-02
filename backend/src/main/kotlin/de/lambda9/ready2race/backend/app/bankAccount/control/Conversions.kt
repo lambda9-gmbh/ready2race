@@ -37,7 +37,7 @@ fun BankAccountRequest.toRecord(userId: UUID): App<Nothing, BankAccountRecord> =
 )
 
 /**
- * This conversion assumes the bankAccount to not be null!
+ * This conversion assumes `bankAccount` to not be null!
  */
 
 fun AssignBankAccountRequest.toRecord(userId: UUID): App<Nothing, PayeeBankAccountRecord> = KIO.ok(

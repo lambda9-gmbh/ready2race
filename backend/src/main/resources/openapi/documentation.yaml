@@ -2967,7 +2967,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContactInformationDto'
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContactInformationDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -3000,7 +3010,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
   /contact/{contactId}:
-    parameter:
+    parameters:
       - in: path
         name: contactId
         required: true
@@ -3043,6 +3053,60 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /assignedContact:
+    get:
+      operationId: getAssignedContact
+      parameters:
+        - in: query
+          required: false
+          name: event
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Assigned contact info retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedContactInformationDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: assignContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignContactInformationRequest'
+      responses:
+        204:
+          description: contact successfully assigned
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -5203,12 +5267,15 @@ components:
       required:
         - name
         - addressZip
+        - addressCity
         - addressStreet
         - email
       properties:
         name:
           type: string
         addressZip:
+          type: string
+        addressCity:
           type: string
         addressStreet:
           type: string
@@ -5221,6 +5288,7 @@ components:
         - id
         - name
         - addressZip
+        - addressCity
         - addressStreet
         - email
       properties:
@@ -5231,7 +5299,25 @@ components:
           type: string
         addressZip:
           type: string
+        addressCity:
+          type: string
         addressStreet:
           type: string
         email:
           type: string
+
+    AssignContactInformationRequest:
+      type: object
+      properties:
+        contact:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedContactInformationDto:
+      type: object
+      properties:
+        assigned:
+          $ref: '#/components/schemas/ContactInformationDto'

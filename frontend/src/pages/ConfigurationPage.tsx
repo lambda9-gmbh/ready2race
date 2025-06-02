@@ -4,7 +4,7 @@ import {useEntityAdministration} from '@utils/hooks.ts'
 import {
     BankAccountDto,
     CompetitionCategoryDto,
-    CompetitionTemplateDto,
+    CompetitionTemplateDto, ContactInformationDto,
     DocumentTemplateDto,
     EventDocumentTypeDto,
     FeeDto,
@@ -34,6 +34,9 @@ import InlineLink from "@components/InlineLink.tsx";
 import BankAccountTable from "@components/bankAccount/BankAccountTable.tsx";
 import BankAccountDialog from "@components/bankAccount/BankAccountDialog.tsx";
 import AssignBankAccount from "@components/bankAccount/AssignBankAccount.tsx";
+import ContactInformationTable from "@components/contactInformation/ContactInformationTable.tsx";
+import ContactInformationDialog from "@components/contactInformation/ContactInformationDialog.tsx";
+import AssignContactInformation from "@components/contactInformation/AssignContactInformation.tsx";
 
 
 // TODO: @Improve, @Discussion: Maybe extract TabContents into several Components
@@ -83,7 +86,11 @@ const ConfigurationPage = () => {
         )
 
     const bankAccountAdministrationProps = useEntityAdministration<BankAccountDto>(
-        "[todo] bank account"
+        t('invoice.bank.account')
+    )
+
+    const contactInformationAdministrationProps = useEntityAdministration<ContactInformationDto>(
+        t('contact.information')
     )
 
     return (
@@ -158,10 +165,36 @@ const ConfigurationPage = () => {
                     <DocumentTemplateDialog
                         {...documentTemplateAdministrationProps.dialog}
                     />
+                    <ContactInformationTable
+                        {...contactInformationAdministrationProps.table}
+                        title={t('contact.contacts')}
+                        hints={[
+                            t('contact.tableHint.1'),
+                            <>
+                                {t('contact.tableHint.2')}
+                                <InlineLink to={'/config'} search={{tabIndex: 3}}>
+                                    {t('contact.tableHint.3')}
+                                </InlineLink>
+                                {t('contact.tableHint.4')}
+                            </>
+                        ]}
+                    />
+                    <ContactInformationDialog
+                        {...contactInformationAdministrationProps.dialog}
+                    />
                     <BankAccountTable
                         {...bankAccountAdministrationProps.table}
-                        title={'[todo] bank accounts'}
-                        hints={["[todo] missing hints"]}
+                        title={t('invoice.bank.accounts')}
+                        hints={[
+                            t('invoice.bank.tableHint.1'),
+                            <>
+                                {t('invoice.bank.tableHint.2')}
+                                <InlineLink to={'/config'} search={{tabIndex: 3}}>
+                                    {t('invoice.bank.tableHint.3')}
+                                </InlineLink>
+                                {t('invoice.bank.tableHint.4')}
+                            </>
+                        ]}
                     />
                     <BankAccountDialog
                         {...bankAccountAdministrationProps.dialog}
@@ -172,6 +205,7 @@ const ConfigurationPage = () => {
                 <Stack spacing={2}>
                     <AssignDocumentTemplate />
                     <AssignBankAccount />
+                    <AssignContactInformation />
                 </Stack>
             </TabPanel>
         </Stack>

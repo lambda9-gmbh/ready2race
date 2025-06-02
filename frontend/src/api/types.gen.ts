@@ -63,6 +63,11 @@ export type AssignCompetitionsToDayRequest = {
     competitions: Array<string>
 }
 
+export type AssignContactInformationRequest = {
+    contact?: string
+    event?: string
+}
+
 export type AssignDaysToCompetitionRequest = {
     days: Array<string>
 }
@@ -74,6 +79,10 @@ export type AssignDocumentTemplateRequest = {
 
 export type AssignedBankAccountDto = {
     assigned?: BankAccountDto
+}
+
+export type AssignedContactInformationDto = {
+    assigned?: ContactInformationDto
 }
 
 export type AssignedEmailDto = {
@@ -228,6 +237,23 @@ export type CompetitionTemplateDto = {
 
 export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
+}
+
+export type ContactInformationDto = {
+    id: string
+    name: string
+    addressZip: string
+    addressCity: string
+    addressStreet: string
+    email: string
+}
+
+export type ContactInformationRequest = {
+    name: string
+    addressZip: string
+    addressCity: string
+    addressStreet: string
+    email: string
 }
 
 export type DocumentTemplateDto = {
@@ -2336,3 +2362,78 @@ export type ProduceInvoicesForEventRegistrationsData = {
 export type ProduceInvoicesForEventRegistrationsResponse = void
 
 export type ProduceInvoicesForEventRegistrationsError = BadRequestError | ApiError
+
+export type GetContactsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetContactsResponse = {
+    data: Array<ContactInformationDto>
+    pagination: Pagination
+}
+
+export type GetContactsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddContactData = {
+    body: ContactInformationRequest
+}
+
+export type AddContactResponse = string
+
+export type AddContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateContactData = {
+    body: ContactInformationRequest
+    path: {
+        contactId: string
+    }
+}
+
+export type UpdateContactResponse = void
+
+export type UpdateContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteContactData = {
+    path: {
+        contactId: string
+    }
+}
+
+export type DeleteContactResponse = void
+
+export type DeleteContactError = BadRequestError | ApiError
+
+export type GetAssignedContactData = {
+    query?: {
+        event?: string
+    }
+}
+
+export type GetAssignedContactResponse = AssignedContactInformationDto
+
+export type GetAssignedContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignContactData = {
+    body: AssignContactInformationRequest
+}
+
+export type AssignContactResponse = void
+
+export type AssignContactError = BadRequestError | ApiError | UnprocessableEntityError
