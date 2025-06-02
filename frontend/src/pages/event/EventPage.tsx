@@ -1,7 +1,7 @@
 import {Box, Button, Link as MuiLink, Stack, Tab, Typography} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import CompetitionTable from '@components/event/competition/CompetitionTable.tsx'
 import CompetitionDialog from '@components/event/competition/CompetitionDialog.tsx'
 import Throbber from '@components/Throbber.tsx'
@@ -272,7 +272,7 @@ const EventPage = () => {
                                     {t('event.action.registrationsReport.download')}
                                 </Button>
                                 <Button variant={'contained'} onClick={handleProduceInvoices}>
-                                    [todo] Produce invoices
+                                    <Trans i18nKey={'event.action.produceInvoices'}/>
                                 </Button>
                             </Stack>
                         </TabPanel>

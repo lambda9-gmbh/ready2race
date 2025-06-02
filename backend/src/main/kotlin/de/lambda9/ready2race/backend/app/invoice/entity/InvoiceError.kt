@@ -15,11 +15,18 @@ sealed interface InvoiceError : ServiceError {
 
     data object MissingAssignedPayeeBankAccount : InvoiceError
 
+    data object MissingAssignedContactInformation : InvoiceError
+
     override fun respond(): ApiError = when (this) {
         MissingAssignedPayeeBankAccount -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "No bank account assigned as payee information for this event or globally",
             errorCode = ErrorCode.NO_ASSIGNED_PAYEE_INFORMATION,
+        )
+        MissingAssignedContactInformation -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "No contact information for this event or globally",
+            errorCode = ErrorCode.NO_ASSIGNED_CONTACT_INFORMATION,
         )
         Registration.Ongoing -> ApiError(
             status = HttpStatusCode.Conflict,

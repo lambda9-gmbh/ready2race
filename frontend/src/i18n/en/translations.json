@@ -287,7 +287,8 @@
       "registrationsReport": {
         "generate": "Generate registrations result",
         "download": "Download registrations result"
-      }
+      },
+      "produceInvoices": "Produce invoices"
     },
     "assign": {
       "save": {

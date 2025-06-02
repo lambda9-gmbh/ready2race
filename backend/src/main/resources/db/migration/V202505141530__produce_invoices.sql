@@ -17,6 +17,11 @@ create table invoice
     payee_iban             text      not null,
     payee_bic              text      not null,
     payee_bank             text      not null,
+    contact_name           text      not null,
+    contact_zip            text      not null,
+    contact_city           text      not null,
+    contact_street         text      not null,
+    contact_email          text      not null,
     created_at             timestamp not null,
     created_by             uuid      references app_user on delete set null
 );
@@ -44,24 +49,24 @@ create table invoice_document_data
 
 create table contact_information
 (
-    id uuid primary key,
-    name text not null,
-    address_zip text not null,
-    address_city text not null,
-    address_street text not null,
-    email text not null,
-    created_at timestamp not null,
-    created_by uuid references app_user on delete set null,
-    updated_at timestamp not null,
-    updated_by uuid references app_user on delete set null
+    id             uuid primary key,
+    name           text      not null,
+    address_zip    text      not null,
+    address_city   text      not null,
+    address_street text      not null,
+    email          text      not null,
+    created_at     timestamp not null,
+    created_by     uuid      references app_user on delete set null,
+    updated_at     timestamp not null,
+    updated_by     uuid      references app_user on delete set null
 );
 
 create table contact_information_usage
 (
-    contact_information uuid not null references contact_information on delete cascade,
-    event uuid references event on delete cascade,
-    assigned_at timestamp not null,
-    assigned_by uuid references app_user on delete set null
+    contact_information uuid      not null references contact_information on delete cascade,
+    event               uuid references event on delete cascade,
+    assigned_at         timestamp not null,
+    assigned_by         uuid      references app_user on delete set null
 );
 
 create unique index on contact_information_usage (event) nulls not distinct;

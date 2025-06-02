@@ -287,7 +287,8 @@
       "registrationsReport": {
         "generate": "Erzeuge Meldeergebnis",
         "download": "Download Meldeergebnis"
-      }
+      },
+      "produceInvoices": "Rechnungen erstellen"
     },
     "assign": {
       "save": {

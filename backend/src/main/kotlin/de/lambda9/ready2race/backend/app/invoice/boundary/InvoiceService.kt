@@ -5,6 +5,8 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService.fullName
 import de.lambda9.ready2race.backend.app.bankAccount.control.BankAccountRepo
 import de.lambda9.ready2race.backend.app.bankAccount.control.PayeeBankAccountRepo
+import de.lambda9.ready2race.backend.app.contactInformation.control.ContactInformationRepo
+import de.lambda9.ready2race.backend.app.contactInformation.control.ContactInformationUsageRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
@@ -80,13 +82,19 @@ object InvoiceService {
             }
             .onNullFail { InvoiceError.MissingAssignedPayeeBankAccount }
 
+        val contactUsage = !ContactInformationUsageRepo.getByEvent(eventId).orDie()
+            .onNull {
+                ContactInformationUsageRepo.getByEvent(null).orDie()
+            }
+            .onNullFail { InvoiceError.MissingAssignedContactInformation }
+
         val registrations = !EventRegistrationRepo.getIdsByEvent(eventId).orDie()
 
         !ProduceInvoiceForRegistrationRepo.create(
             registrations.map {
                 ProduceInvoiceForRegistrationRecord(
                     eventRegistration = it,
-                    contact = TODO(),
+                    contact = contactUsage.contactInformation,
                     payee = bankAccount.bankAccount,
                     createdAt = LocalDateTime.now(),
                     createdBy = userId,
@@ -117,6 +125,7 @@ object InvoiceService {
             KIO.fail(ProduceInvoiceError.MissingRecipient(registration.id!!))
         } else {
             val payee = !BankAccountRepo.get(job.payee).orDie().onNullDie("foreign key constraint")
+            val contact = !ContactInformationRepo.get(job.contact).orDie().onNullDie("foreign key constraint")
             val event = !EventRepo.get(registration.event!!).orDie().onNullDie("foreign key constraint")
 
             KIO.comprehension {
@@ -135,6 +144,11 @@ object InvoiceService {
                     payeeIban = payee.iban,
                     payeeBic = payee.bic,
                     payeeBank = payee.bank,
+                    contactName = contact.name,
+                    contactZip = contact.addressZip,
+                    contactCity = contact.addressCity,
+                    contactStreet = contact.addressStreet,
+                    contactEmail = contact.email,
                     createdAt = LocalDateTime.now(),
                     createdBy = job.createdBy
                 )
@@ -226,14 +240,14 @@ object InvoiceService {
                             ) {
                                 text(
                                     fontSize = 6f
-                                ) { "[TODO] verein - adresse - ort" }
+                                ) { "${invoice.contactName} – ${invoice.contactStreet} – ${invoice.contactZip} ${invoice.contactCity}" }
                             }
                         }
                         cell {
                             text(
                                 fontSize = 15f,
                                 fontStyle = FontStyle.BOLD,
-                            ) { "[TODO] Verein" }
+                            ) { invoice.contactName }
                         }
                     }
 
@@ -246,9 +260,9 @@ object InvoiceService {
                         }
 
                         cell {
-                            text { "[TODO] Adresse - Straße" }
-                            text { "[TODO] Adresse - Ort" }
-                            text { "[TODO] E-Mail" }
+                            text { invoice.contactStreet }
+                            text { "${invoice.contactZip} ${invoice.contactCity}" }
+                            text { invoice.contactEmail }
                             text { "" }
                             text { invoice.createdAt.format(DateTimeFormatter.ISO_DATE_TIME) }
                         }
