@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists competition_setup_round_with_matches;
 drop view if exists document_template_assignment;
 drop view if exists event_registration_result_view;
 drop view if exists event_competition_registration;
@@ -528,3 +529,17 @@ from task t
 group by t.id, t.event, e.name, t.name, t.due_date, t.description, t.remark, t.state, t.created_at, t.created_by,
          t.updated_at,
          t.updated_by;
+
+create view competition_setup_round_with_matches as
+select sr.id as setup_round_id,
+       sr.competition_setup,
+       sr.next_round,
+       sr.name setup_round_name,
+       sr.required,
+       sr.places_option,
+       coalesce(array_agg(sm) filter(where sm.id is not null), '{}') as setup_matches,
+       coalesce(array_agg(m) filter(where m.competition_setup_match is not null), '{}') as matches
+from competition_setup_round sr
+    left join competition_setup_match sm on sr.id = sm.competition_setup_round
+         left join competition_match m on sm.id = m.competition_setup_match
+group by sr.id
