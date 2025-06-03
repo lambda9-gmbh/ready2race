@@ -163,7 +163,8 @@
     "description": "Description",
     "registerNow": "To Registration",
     "invoice": {
-      "prefix": "Invoice prefix"
+      "prefix": "Invoice prefix",
+      "paymentDueBy": "Payment due by"
     },
     "location": "Location",
     "upcoming": "Upcoming events",

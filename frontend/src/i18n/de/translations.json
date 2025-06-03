@@ -163,7 +163,8 @@
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
     "invoice": {
-      "prefix": "Rechnungspräfix"
+      "prefix": "Rechnungspräfix",
+      "paymentDueBy": "Zahlungstermin Meldegebühren"
     },
     "location": "Ort",
     "upcoming": "Anstehende Veranstaltungen",

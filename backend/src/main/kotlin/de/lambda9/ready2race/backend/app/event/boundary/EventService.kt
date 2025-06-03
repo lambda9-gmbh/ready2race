@@ -80,6 +80,7 @@ object EventService {
             registrationAvailableTo = request.registrationAvailableTo
             invoicePrefix = request.invoicePrefix
             published = request.published
+            paymentDueBy = request.paymentDueBy
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

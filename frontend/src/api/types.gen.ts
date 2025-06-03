@@ -339,6 +339,7 @@ export type EventDto = {
     invoicePrefix?: string
     published?: boolean
     invoicesProduced?: string
+    paymentDueBy?: string
 }
 
 export type EventPublicDto = {
@@ -463,6 +464,7 @@ export type EventRequest = {
     registrationAvailableTo?: string
     invoicePrefix?: string
     published: boolean
+    paymentDueBy?: string
 }
 
 export type FeeDto = {

@@ -12,7 +12,7 @@ create table invoice
     filename               text      not null,
     billed_to_name         text      not null,
     billed_to_organization text,
-    payment_due_by         timestamp not null,
+    payment_due_by         date not null,
     payee_holder           text      not null,
     payee_iban             text      not null,
     payee_bic              text      not null,
@@ -83,6 +83,7 @@ create table produce_invoice_for_registration
 );
 
 alter table event
+    add column payment_due_by date,
     add column invoices_produced timestamp
 ;
 

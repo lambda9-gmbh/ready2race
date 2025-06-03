@@ -36,6 +36,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceDo
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoicePositionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ProduceInvoiceForRegistrationRecord
+import de.lambda9.ready2race.backend.hr
+import de.lambda9.ready2race.backend.hrDate
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -48,9 +50,10 @@ import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.transact
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.awt.Color
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
 
@@ -139,7 +142,7 @@ object InvoiceService {
                     filename = filename,
                     billedToName = recipient.fullName(),
                     billedToOrganization = registration.clubName,
-                    paymentDueBy = LocalDateTime.now(), // todo: use correct time from event configuration
+                    paymentDueBy = event.paymentDueBy ?: LocalDate.now().plusDays(14), // TODO @Evaluate 14 days default?
                     payeeHolder = payee.holder,
                     payeeIban = payee.iban,
                     payeeBic = payee.bic,
@@ -197,7 +200,7 @@ object InvoiceService {
                     mailTemplate.toContent(
                         EmailTemplatePlaceholder.EVENT to event.name,
                         EmailTemplatePlaceholder.RECIPIENT to recipient.fullName(),
-                        EmailTemplatePlaceholder.DATE to invoice.paymentDueBy.format(DateTimeFormatter.ISO_DATE_TIME),
+                        EmailTemplatePlaceholder.DATE to invoice.paymentDueBy.hr(),
                     )
                 }
 
@@ -264,7 +267,7 @@ object InvoiceService {
                             text { "${invoice.contactZip} ${invoice.contactCity}" }
                             text { invoice.contactEmail }
                             text { "" }
-                            text { invoice.createdAt.format(DateTimeFormatter.ISO_DATE_TIME) }
+                            text { invoice.createdAt.hrDate() }
                         }
                     }
                 }
@@ -295,15 +298,28 @@ object InvoiceService {
                     text { "vielen Dank für die Meldung zu ${event.name}." }
                     text { "" }
                     text { "Für die Meldung wird ein Gesamtbetrag von $totalAmount € fällig." }
-                    text { "Wir bitten um Überweisung des entsprechenden Betrags unter Angabe der Rechnungsnummer " +
-                        "als Verwendungszweck auf das nachfolgende Konto bis zum ${invoice.paymentDueBy.format(
-                        DateTimeFormatter.ISO_DATE)}:" }
+                    text { "Wir bitten um Überweisung des entsprechenden Betrags auf das nachfolgende Konto bis zum ${invoice.paymentDueBy.hr()}. Eine Aufschlüsselung der einzelnen Position finden Sie weiter unten." }
                     text { "" }
                     text { "" }
 
                     table {
                         column(0.25f)
                         column(0.75f)
+
+                        row {
+                            cell {
+                                text { "Verwendungszweck:" }
+                            }
+                            cell {
+                                text { invoice.invoiceNumber }
+                            }
+                        }
+
+                        row {
+                            cell {
+                                text { "" }
+                            }
+                        }
 
                         row {
                             cell {
@@ -344,6 +360,63 @@ object InvoiceService {
 
                     text { "" }
                     text { "Vielen Dank im Voraus." }
+                    text { "" }
+                    text { "" }
+                    text(
+                        fontStyle = FontStyle.BOLD,
+                    ) { "Rechnungspositionen" }
+                    text { "" }
+                    table(
+                        withBorder = true,
+                    ) {
+                        column(0.1f)
+                        column(0.25f)
+                        column(0.4f)
+                        column(0.1f)
+                        column(0.15f)
+
+                        row(
+                            color = Color(230, 230, 230)
+                        ) {
+                            cell {
+                                text { "Pos." }
+                            }
+                            cell {
+                                text { "Item" }
+                            }
+                            cell {
+                                text { "Beschreibung" }
+                            }
+                            cell {
+                                text { "Anzahl" }
+                            }
+                            cell {
+                                text { "Einzelpreis" }
+                            }
+                        }
+
+                        positions.map { position ->
+
+                            row {
+                                cell {
+                                    text { position.position.toString() }
+                                }
+                                cell {
+                                    text { position.item }
+                                }
+                                cell {
+                                    text { position.description ?: "" }
+                                }
+                                cell {
+                                    text { position.quantity.toString() }
+                                }
+                                cell {
+                                    text { position.unitPrice.toString() }
+                                }
+                            }
+
+                        }
+                    }
                 }
             }
         }

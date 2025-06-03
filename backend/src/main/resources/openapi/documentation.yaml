@@ -3889,6 +3889,9 @@ components:
         invoicesProduced:
           type: string
           format: date-time
+        paymentDueBy:
+          type: string
+          format: date
 
     EventPublicDto:
       type: object
@@ -3986,6 +3989,9 @@ components:
           type: string
         published:
           type: boolean
+        paymentDueBy:
+          type: string
+          format: date
 
 
 

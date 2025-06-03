@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 data class EventRequest(
@@ -13,7 +14,8 @@ data class EventRequest(
     val registrationAvailableFrom: LocalDateTime?,
     val registrationAvailableTo: LocalDateTime?,
     val invoicePrefix: String?,
-    val published: Boolean
+    val published: Boolean,
+    val paymentDueBy: LocalDate?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -33,6 +35,7 @@ data class EventRequest(
                 registrationAvailableTo = LocalDateTime.now().plusDays(7),
                 invoicePrefix = "Invoice-Prefix",
                 published = false,
+                paymentDueBy = LocalDate.now().plusDays(14),
             )
     }
 }
