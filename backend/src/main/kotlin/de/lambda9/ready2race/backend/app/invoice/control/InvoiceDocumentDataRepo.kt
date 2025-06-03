@@ -6,5 +6,5 @@ import de.lambda9.ready2race.backend.database.insertReturning
 
 object InvoiceDocumentDataRepo {
 
-    fun create(record: InvoiceDocumentDataRecord) = INVOICE_DOCUMENT_DATA.insertReturning(record) { INVOICE_DOCUMENT }
+    fun create(record: InvoiceDocumentDataRecord) = INVOICE_DOCUMENT_DATA.insertReturning(record) { INVOICE }
 }

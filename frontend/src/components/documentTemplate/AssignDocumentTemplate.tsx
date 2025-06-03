@@ -63,7 +63,7 @@ const AssignDocumentTemplate = () => {
                                         if (value === 'none') {
                                             updateTemplateAssignment(type.type)
                                         } else {
-                                            updateTemplateAssignment(type.type, e.target.value as string)
+                                            updateTemplateAssignment(type.type, value)
                                         }
                                     }}
                                 >

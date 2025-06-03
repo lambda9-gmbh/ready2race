@@ -199,3 +199,6 @@ values ('23220b76-189f-4270-842f-4ae7e47e0eb2', 1, 1),
        ('23220b76-189f-4270-842f-4ae7e47e0eb2', 2, 3),
        ('23220b76-189f-4270-842f-4ae7e47e0eb2', 3, 4),
        ('23220b76-189f-4270-842f-4ae7e47e0eb2', 4, 2);
+
+insert into competition_setup (competition_properties, created_at, created_by, updated_at, updated_by)
+(select cp.id, now(), null, now(), null from competition_properties cp)

@@ -70,6 +70,18 @@
         "",
         "Attached to this email you will find all relevant documents again."
       ]
+    },
+    {
+      "key": "EVENT_REGISTRATION_INVOICE",
+      "subject": "Ready2Race - Invoice for ##event## registration",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "Thank you very much for your registration (##event##).",
+        "You will find the corresponding invoice as an attachment (please pay before ##date##).",
+        "",
+        "We look forward to seeing you."
+      ]
     }
   ]
 }

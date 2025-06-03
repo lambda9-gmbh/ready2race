@@ -2902,6 +2902,11 @@ paths:
         schema:
           type: string
     get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       operationId: getOpenTasksForUser
       responses:
         200:
@@ -2927,6 +2932,347 @@ paths:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+          
+  /bankAccount:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getBankAccounts
+      responses:
+        200:
+          description: Bank accounts page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BankAccountDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /bankAccount/{bankAccountId}:
+    parameters:
+      - in: path
+        name: bankAccountId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountRequest'
+      responses:
+        204:
+          description: Bank account successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteBankAccount
+      responses:
+        204:
+          description: Bank account successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /assignedBankAccount:
+    get:
+      operationId: getAssignedBankAccount
+      parameters:
+        - in: query
+          required: false
+          name: event
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Assigned bank account retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedBankAccountDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: assignBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignBankAccountRequest'
+      responses:
+        204:
+          description: Bank account successfully assigned
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/produceInvoices:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: produceInvoicesForEventRegistrations
+      responses:
+        204:
+          description: invoice produce jobs successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /contact:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getContacts
+      responses:
+        200:
+          description: contacts page retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContactInformationDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInformationRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /contact/{contactId}:
+    parameters:
+      - in: path
+        name: contactId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInformationRequest'
+      responses:
+        204:
+          description: contact information successfully changed
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteContact
+      responses:
+        204:
+          description: contact information successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /assignedContact:
+    get:
+      operationId: getAssignedContact
+      parameters:
+        - in: query
+          required: false
+          name: event
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Assigned contact info retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedContactInformationDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: assignContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignContactInformationRequest'
+      responses:
+        204:
+          description: contact successfully assigned
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -3708,6 +4054,12 @@ components:
           type: string
         published:
           type: boolean
+        invoicesProduced:
+          type: string
+          format: date-time
+        paymentDueBy:
+          type: string
+          format: date
 
     EventPublicDto:
       type: object
@@ -3805,6 +4157,9 @@ components:
           type: string
         published:
           type: boolean
+        paymentDueBy:
+          type: string
+          format: date
 
 
 
@@ -5193,3 +5548,117 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
+          
+    BankAccountDto:
+      type: object
+      required:
+        - id
+        - holder
+        - iban
+        - bic
+        - bank
+      properties:
+        id:
+          type: string
+          format: uuid
+        holder:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        bank: 
+          type: string
+          
+    BankAccountRequest:
+      type: object
+      required:
+        - holder
+        - iban
+        - bic
+        - bank
+      properties:
+        holder:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        bank:
+          type: string
+
+    AssignBankAccountRequest:
+      type: object
+      properties:
+        bankAccount:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedBankAccountDto:
+      type: object
+      properties:
+        assigned:
+          $ref: '#/components/schemas/BankAccountDto'
+
+    ContactInformationRequest:
+      type: object
+      required:
+        - name
+        - addressZip
+        - addressCity
+        - addressStreet
+        - email
+      properties:
+        name:
+          type: string
+        addressZip:
+          type: string
+        addressCity:
+          type: string
+        addressStreet:
+          type: string
+        email:
+          type: string
+
+    ContactInformationDto:
+      type: object
+      required:
+        - id
+        - name
+        - addressZip
+        - addressCity
+        - addressStreet
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        addressZip:
+          type: string
+        addressCity:
+          type: string
+        addressStreet:
+          type: string
+        email:
+          type: string
+
+    AssignContactInformationRequest:
+      type: object
+      properties:
+        contact:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedContactInformationDto:
+      type: object
+      properties:
+        assigned:
+          $ref: '#/components/schemas/ContactInformationDto'

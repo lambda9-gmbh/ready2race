@@ -331,6 +331,45 @@ import type {
     GetOpenTasksForUserData,
     GetOpenTasksForUserError,
     GetOpenTasksForUserResponse,
+    GetBankAccountsData,
+    GetBankAccountsError,
+    GetBankAccountsResponse,
+    AddBankAccountData,
+    AddBankAccountError,
+    AddBankAccountResponse,
+    UpdateBankAccountData,
+    UpdateBankAccountError,
+    UpdateBankAccountResponse,
+    DeleteBankAccountData,
+    DeleteBankAccountError,
+    DeleteBankAccountResponse,
+    GetAssignedBankAccountData,
+    GetAssignedBankAccountError,
+    GetAssignedBankAccountResponse,
+    AssignBankAccountData,
+    AssignBankAccountError,
+    AssignBankAccountResponse,
+    ProduceInvoicesForEventRegistrationsData,
+    ProduceInvoicesForEventRegistrationsError,
+    ProduceInvoicesForEventRegistrationsResponse,
+    GetContactsData,
+    GetContactsError,
+    GetContactsResponse,
+    AddContactData,
+    AddContactError,
+    AddContactResponse,
+    UpdateContactData,
+    UpdateContactError,
+    UpdateContactResponse,
+    DeleteContactData,
+    DeleteContactError,
+    DeleteContactResponse,
+    GetAssignedContactData,
+    GetAssignedContactError,
+    GetAssignedContactResponse,
+    AssignContactData,
+    AssignContactError,
+    AssignContactResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1639,4 +1678,161 @@ export const getOpenTasksForUser = <ThrowOnError extends boolean = false>(
         ...options,
         url: '/user/{userId}/task',
     })
+}
+
+export const getBankAccounts = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetBankAccountsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetBankAccountsResponse,
+        GetBankAccountsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount',
+    })
+}
+
+export const addBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddBankAccountResponse,
+        AddBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount',
+    })
+}
+
+export const updateBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateBankAccountResponse,
+        UpdateBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount/{bankAccountId}',
+    })
+}
+
+export const deleteBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteBankAccountResponse,
+        DeleteBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount/{bankAccountId}',
+    })
+}
+
+export const getAssignedBankAccount = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetAssignedBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAssignedBankAccountResponse,
+        GetAssignedBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedBankAccount',
+    })
+}
+
+export const assignBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignBankAccountResponse,
+        AssignBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedBankAccount',
+    })
+}
+
+export const produceInvoicesForEventRegistrations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ProduceInvoicesForEventRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ProduceInvoicesForEventRegistrationsResponse,
+        ProduceInvoicesForEventRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/produceInvoices',
+    })
+}
+
+export const getContacts = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetContactsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetContactsResponse, GetContactsError, ThrowOnError>({
+        ...options,
+        url: '/contact',
+    })
+}
+
+export const addContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddContactResponse, AddContactError, ThrowOnError>({
+        ...options,
+        url: '/contact',
+    })
+}
+
+export const updateContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateContactResponse, UpdateContactError, ThrowOnError>(
+        {
+            ...options,
+            url: '/contact/{contactId}',
+        },
+    )
+}
+
+export const deleteContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteContactResponse,
+        DeleteContactError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/contact/{contactId}',
+    })
+}
+
+export const getAssignedContact = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetAssignedContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAssignedContactResponse,
+        GetAssignedContactError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedContact',
+    })
+}
+
+export const assignContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<AssignContactResponse, AssignContactError, ThrowOnError>(
+        {
+            ...options,
+            url: '/assignedContact',
+        },
+    )
 }

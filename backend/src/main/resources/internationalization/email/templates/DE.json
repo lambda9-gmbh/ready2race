@@ -70,6 +70,18 @@
         "",
         "Im Anhang findest du nochmal alle relevanten Dokumente."
       ]
+    },
+    {
+      "key": "EVENT_REGISTRATION_INVOICE",
+      "subject": "Ready2Race - Rechnung zur Meldung für ##event##",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "vielen Dank fur eure Meldung zu unserer Veranstaltung (##event##).",
+        "Die entsprechende Rechnung (zu begleichen bis ##date##) findest du im Anhang.",
+        "",
+        "Wir freuen uns auf euch."
+      ]
     }
   ]
 }

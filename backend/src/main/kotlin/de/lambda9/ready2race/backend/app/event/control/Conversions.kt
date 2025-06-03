@@ -39,7 +39,9 @@ fun EventRecord.eventDto(): App<Nothing, EventDto> = KIO.ok(
         registrationAvailableFrom = registrationAvailableFrom,
         registrationAvailableTo = registrationAvailableTo,
         invoicePrefix = invoicePrefix,
-        published = published
+        published = published,
+        invoicesProduced = invoicesProduced,
+        paymentDueBy = paymentDueBy,
     )
 )
 
