@@ -136,6 +136,9 @@ import type {
     GetCompetitionSetupData,
     GetCompetitionSetupError,
     GetCompetitionSetupResponse,
+    CreateNextCompetitionRoundData,
+    CreateNextCompetitionRoundError,
+    CreateNextCompetitionRoundResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -824,6 +827,19 @@ export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionSetup',
+    })
+}
+
+export const createNextCompetitionRound = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateNextCompetitionRoundData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateNextCompetitionRoundResponse,
+        CreateNextCompetitionRoundError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/createNextRound',
     })
 }
 

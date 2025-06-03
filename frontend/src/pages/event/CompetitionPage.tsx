@@ -8,7 +8,7 @@ import Throbber from '@components/Throbber.tsx'
 import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
 import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
-import {getCompetition, getEventDays} from '@api/sdk.gen.ts'
+import {createNextCompetitionRound, getCompetition, getEventDays} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
@@ -237,6 +237,7 @@ const CompetitionPage = () => {
                                             </Button>
                                         </Link>
                                     </Box>
+                                    <Button onClick={() => createNextCompetitionRound({path: {eventId: eventId, competitionId: competitionId}})}>Create next round</Button>
                                 </Stack>
                             </Stack>
                         </TabPanel>

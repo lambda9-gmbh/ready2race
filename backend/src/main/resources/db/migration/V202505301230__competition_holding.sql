@@ -11,7 +11,7 @@ create table competition_match
     updated_by              uuid      references app_user on delete set null
 );
 
-create table competition_team
+create table competition_match_team
 (
     id                       uuid primary key,
     competition_match        uuid      not null references competition_match on delete cascade,
@@ -24,6 +24,6 @@ create table competition_team
     updated_by               uuid      references app_user on delete set null
 );
 
-create unique index starting_position_unique_in_match on competition_team (competition_match);
+create unique index starting_position_unique_in_match on competition_match_team (competition_match);
 
-create index on competition_team (competition_match);
+create index on competition_match_team (competition_match);

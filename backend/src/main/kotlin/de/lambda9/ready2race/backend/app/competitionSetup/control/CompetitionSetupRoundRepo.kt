@@ -2,7 +2,9 @@ package de.lambda9.ready2race.backend.app.competitionSetup.control
 
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND_WITH_MATCHES
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -19,6 +21,14 @@ object CompetitionSetupRoundRepo {
         with(COMPETITION_SETUP_ROUND) {
             selectFrom(this)
                 .where(COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key)))
+                .fetch()
+        }
+    }
+
+    fun getWithMatchesBySetup(setupId: UUID): JIO<List<CompetitionSetupRoundWithMatchesRecord>> = Jooq.query {
+        with(COMPETITION_SETUP_ROUND_WITH_MATCHES) {
+            selectFrom(this)
+                .where(COMPETITION_SETUP.eq(setupId))
                 .fetch()
         }
     }

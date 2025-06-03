@@ -1483,6 +1483,17 @@ export type GetCompetitionSetupResponse = CompetitionSetupDto
 
 export type GetCompetitionSetupError = BadRequestError | ApiError
 
+export type CreateNextCompetitionRoundData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type CreateNextCompetitionRoundResponse = void
+
+export type CreateNextCompetitionRoundError = BadRequestError | ApiError
+
 export type AddDocumentsData = {
     body: {
         documentType?: string
