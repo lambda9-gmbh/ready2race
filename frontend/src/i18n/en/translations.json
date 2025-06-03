@@ -33,9 +33,16 @@
             "integer": "Please enter an integer number.",
             "number": "Please enter a valid number."
           },
-          "range": "Please enter a number between {{min}} and {{max}}."
+          "value": {
+            "messageStart": "Please enter a number ",
+            "min": "above {{min}}.",
+            "max": "below {{max}}.",
+            "range": "between {{min}} and {{max}}."
+          },
+          "minOrUndefined": "Please enter a number above {{min}} or leave the field blank."
         }
       },
+      "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
       "selectFile": "Select file",
@@ -260,6 +267,104 @@
       "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      },
+      "setup": {
+        "setup": "Competition Setup",
+        "save": {
+          "save": "Save",
+          "error": "An error has occurred when saving the competition setup",
+          "success": "Competition setup successfully saved"
+        },
+        "reset": "Reset setup",
+        "round": {
+          "round": "Round",
+          "name": "Name",
+          "useDefaultSeeding": "Use default seeding for matchups",
+          "required": "Round must be held",
+          "finals": {
+            "long": {
+              "final": {
+                "round": "Finals",
+                "final": "Final",
+                "matchForThirdPlace": "Match for 3rd place"
+              },
+              "semifinal": "Semi-final",
+              "quarterfinal": "Quarter-final",
+              "roundOf16": "Round of 16",
+              "roundOf32": "Round of 32"
+            },
+            "short": {
+              "semifinal": "SF",
+              "quarterfinal": "QF",
+              "roundOf16": "R16",
+              "roundOf32": "R32"
+            }
+          },
+          "remove": "Remove round"
+        },
+        "match": {
+          "match": "Match",
+          "participants": "Matchup",
+          "name": "Name",
+          "executionOrder": "Order of execution",
+          "teams": {
+            "teams": "Number of teams",
+            "unlimited": "Unlimited"
+          },
+          "outcome": {
+            "outcome": "Seeding",
+            "outcomes": "Seedings",
+            "tooltip": "Resulting seedings of this match",
+            "result": "Result"
+          },
+          "remove": "Remove match",
+          "info": {
+            "roundOneFillMatches": "The matches are filled evenly with randomly selected teams."
+          }
+        },
+        "place": {
+          "place": "Place",
+          "places": "Overall placings",
+          "placesOption": {
+            "equal": "Equal (Place = {{place}})",
+            "ascending": "Ascending (Place = Seeding)",
+            "custom": "Custom"
+          }
+        },
+        "tournamentTree": {
+          "generate": "Generate",
+          "generateTree": "Generate tournament tree",
+          "participatingTeams": "Participating Teams",
+          "includeMatchForThirdPlace": "Include match for 3rd place",
+          "overwriteSetup": "Overwrite current setup",
+          "info": {
+            "noOverwrite": "The generated rounds will be added to the end of your current setup."
+          }
+        },
+        "template": {
+          "template": "Competition Setup Template",
+          "templates": "Competition Setup Templates",
+          "name": "Name",
+          "description": "Description",
+          "select": "Select template"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Offset start time",
+          "enable": "Enable start time offsets"
+        },
+        "validation": {
+          "duplicateParticipants": {
+            "one": "The team: {{participants}} is used several times.",
+            "multiple": "The teams: {{participants}} are used several times.",
+            "message": "Please select each team only for one matchup per round."
+          },
+          "duplicatePositions": {
+            "one": "In the order of execution, {{positions}} is used several times.",
+            "multiple": "In the order of execution, {{positions}} are used several times.",
+            "message": "Please select each value only once per round."
+          }
+        },
+        "tableHint": "Enable the quick creation of setups for different competitions."
       }
     },
     "participantRequirement": {

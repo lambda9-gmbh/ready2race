@@ -21,6 +21,14 @@ fun interface Validator<T> {
                 }
             }
 
+        val isNull get() = Validator<Any?> {
+            if (it != null) {
+                ValidationResult.Invalid.Message { "is not null" }
+            } else {
+                ValidationResult.Valid
+            }
+        }
+
         fun <T> simple(message: String, valid: (T & Any) -> Boolean) = Validator<T> { value ->
             if (value != null && !valid(value)) {
                 ValidationResult.Invalid.Message { message }
@@ -56,5 +64,7 @@ fun interface Validator<T> {
         }
 
         val collection get() = collection(selfValidator)
+
+        fun <T>isValue(value: T) = simple<T>("is not $value") { it == value }
     }
 }

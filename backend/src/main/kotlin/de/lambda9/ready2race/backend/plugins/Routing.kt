@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.bankAccount.boundary.bankAccount
 import de.lambda9.ready2race.backend.app.captcha.boundary.captcha
 import de.lambda9.ready2race.backend.app.club.boundary.club
 import de.lambda9.ready2race.backend.app.competitionCategory.boundary.competitionCategory
+import de.lambda9.ready2race.backend.app.competitionSetupTemplate.boundary.competitionSetupTemplate
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.competitionTemplate
 import de.lambda9.ready2race.backend.app.contactInformation.boundary.contactInformation
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.documentTemplate
@@ -35,6 +36,7 @@ fun Application.configureRouting() {
             participantRequirement()
             competitionCategory()
             competitionTemplate()
+            competitionSetupTemplate()
             captcha()
             eventDocumentType()
             documentTemplate()

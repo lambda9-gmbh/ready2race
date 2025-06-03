@@ -3,7 +3,7 @@ import DocumentTypeDialog from '@components/event/document/type/DocumentTypeDial
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {
     BankAccountDto,
-    CompetitionCategoryDto,
+    CompetitionCategoryDto, CompetitionSetupTemplateDto,
     CompetitionTemplateDto, ContactInformationDto,
     DocumentTemplateDto,
     EventDocumentTypeDto,
@@ -31,6 +31,10 @@ import DocumentTemplateTable from "@components/documentTemplate/DocumentTemplate
 import DocumentTemplateDialog from "@components/documentTemplate/DocumentTemplateDialog.tsx";
 import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentTemplate.tsx";
 import InlineLink from "@components/InlineLink.tsx";
+import CompetitionSetupTemplateTable
+    from "@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx";
+import CompetitionSetupTemplateDialog
+    from "@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx";
 import BankAccountTable from "@components/bankAccount/BankAccountTable.tsx";
 import BankAccountDialog from "@components/bankAccount/BankAccountDialog.tsx";
 import AssignBankAccount from "@components/bankAccount/AssignBankAccount.tsx";
@@ -78,6 +82,10 @@ const ConfigurationPage = () => {
         useEntityAdministration<ParticipantRequirementDto>(
             t('participantRequirement.participantRequirement'),
         )
+
+    const competitionSetupTemplateProps = useEntityAdministration<CompetitionSetupTemplateDto>(
+        t('event.competition.setup.template.template'),
+    )
 
     const documentTemplateAdministrationProps =
         useEntityAdministration<DocumentTemplateDto>(
@@ -130,6 +138,13 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.fee.tableHint')]}
                     />
                     <FeeDialog {...feeAdministrationProps.dialog} />
+                    <CompetitionSetupTemplateTable
+                        {...competitionSetupTemplateProps.table}
+                        title={t('event.competition.setup.template.templates')}
+                        hints={[t('event.competition.setup.tableHint')]}
+                    />
+                    <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
+
                 </Stack>
             </TabPanel>
             <TabPanel index={2} activeTab={activeTab}>

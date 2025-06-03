@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.app.competition.control.toRecord
 import de.lambda9.ready2race.backend.app.competition.entity.*
 import de.lambda9.ready2race.backend.app.competitionProperties.boundary.CompetitionPropertiesService
 import de.lambda9.ready2race.backend.app.competitionProperties.control.*
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.applyCompetitionProperties
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.toUpdateFunction
@@ -57,6 +58,8 @@ object CompetitionService {
                 }
             )
 
+            !CompetitionSetupService.createCompetitionSetup(userId, competitionPropertiesId)
+
         } else {
             !CompetitionPropertiesService.checkRequestReferences(request.properties!!)
 
@@ -67,6 +70,8 @@ object CompetitionService {
                 namedParticipants = request.properties.namedParticipants.map { it.toRecord(competitionPropertiesId) },
                 fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) }
             )
+
+            !CompetitionSetupService.createCompetitionSetup(userId, competitionPropertiesId)
         }
 
         KIO.ok(ApiResponse.Created(competitionId))
