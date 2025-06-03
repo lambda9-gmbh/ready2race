@@ -2,7 +2,7 @@ import DocumentTypeTable from '@components/event/document/type/DocumentTypeTable
 import DocumentTypeDialog from '@components/event/document/type/DocumentTypeDialog.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {
-    CompetitionCategoryDto,
+    CompetitionCategoryDto, CompetitionSetupTemplateDto,
     CompetitionTemplateDto,
     DocumentTemplateDto,
     EventDocumentTypeDto,
@@ -30,6 +30,10 @@ import DocumentTemplateTable from "@components/documentTemplate/DocumentTemplate
 import DocumentTemplateDialog from "@components/documentTemplate/DocumentTemplateDialog.tsx";
 import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentTemplate.tsx";
 import InlineLink from "@components/InlineLink.tsx";
+import CompetitionSetupTemplateTable
+    from "@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx";
+import CompetitionSetupTemplateDialog
+    from "@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx";
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -68,6 +72,10 @@ const ConfigurationPage = () => {
         useEntityAdministration<ParticipantRequirementDto>(
             t('participantRequirement.participantRequirement'),
         )
+
+    const competitionSetupTemplateProps = useEntityAdministration<CompetitionSetupTemplateDto>(
+        t('event.competition.setup.template.template'),
+    )
 
     const documentTemplateAdministrationProps =
         useEntityAdministration<DocumentTemplateDto>(
@@ -112,6 +120,13 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.fee.tableHint')]}
                     />
                     <FeeDialog {...feeAdministrationProps.dialog} />
+                    <CompetitionSetupTemplateTable
+                        {...competitionSetupTemplateProps.table}
+                        title={t('event.competition.setup.template.templates')}
+                        hints={[t('event.competition.setup.tableHint')]}
+                    />
+                    <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
+
                 </Stack>
             </TabPanel>
             <TabPanel index={2} activeTab={activeTab}>
