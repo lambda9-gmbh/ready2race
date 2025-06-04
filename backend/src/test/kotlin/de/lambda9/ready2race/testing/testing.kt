@@ -14,6 +14,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
 import de.lambda9.tailwind.jooq.JooqQueryPrinter
 import io.ktor.serialization.*
+import io.ktor.server.application.Application
 import io.ktor.server.testing.*
 import org.flywaydb.core.Flyway
 import org.jooq.ConnectionProvider
@@ -44,7 +45,19 @@ fun testComprehension(block: TestComprehensionScope<JEnv>.() -> Unit) =
 fun testApplicationComprehension(block: suspend TestApplicationComprehensionScope<JEnv>.() -> Unit) =
     TestRunner.runApplication(block)
 
-interface TestApplicationComprehensionScope<R> : TestComprehensionScope<R>, ClientProvider
+interface TestApplicationExtension {
+
+    fun extendApplication(block: Application.() -> Unit)
+
+}
+
+open class DefaultTestApplicationExtension(val builder: ApplicationTestBuilder) : TestApplicationExtension {
+    override fun extendApplication(block: Application.() -> Unit) {
+        builder.application { block() }
+    }
+}
+
+interface TestApplicationComprehensionScope<R> : TestApplicationExtension, TestComprehensionScope<R>, ClientProvider
 
 private object TestRunner {
 
@@ -144,6 +157,7 @@ private object TestRunner {
         }
 
         val scope = object : TestApplicationComprehensionScope<JEnv>,
+            TestApplicationExtension by DefaultTestApplicationExtension(this),
             TestComprehensionScope<JEnv> by DefaultTestComprehensionScope(env),
             ClientProvider by this {}
         block(scope)
