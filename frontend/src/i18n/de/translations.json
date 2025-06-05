@@ -412,6 +412,7 @@
         "documentType": "Dokumenttyp",
         "documentTypes": "Dokumenttypen",
         "name": "Name",
+        "description": "Beschreibung",
         "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
         "required": {
           "forEvent": "Erforderlich für Veranstaltung",

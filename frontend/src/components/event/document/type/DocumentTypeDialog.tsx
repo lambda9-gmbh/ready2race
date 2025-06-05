@@ -8,11 +8,13 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 
 type Form = EventDocumentTypeRequest
 
 const defaultValues: Form = {
     name: '',
+    description: '',
     required: false,
     confirmationRequired: false,
 }
@@ -21,7 +23,7 @@ const mapFormToRequest = (formData: Form): EventDocumentTypeRequest => formData
 
 const mapEntityToForm = (dto: EventDocumentTypeDto): Form => {
     const {id, ...rest} = dto
-    return rest
+    return {...rest, description: takeIfNotEmpty(rest.description)}
 }
 
 const addAction = (formData: Form) =>
@@ -54,6 +56,7 @@ const DocumentTypeDialog = (props: BaseEntityDialogProps<EventDocumentTypeDto>) 
             editAction={editAction}>
             <Stack spacing={4}>
                 <FormInputText name={'name'} label={t('event.document.type.name')} required />
+                <FormInputText name={'description'} label={t('event.document.type.description')} />
                 <FormInputSwitch
                     name={'required'}
                     label={t('event.document.type.required.forEvent')}

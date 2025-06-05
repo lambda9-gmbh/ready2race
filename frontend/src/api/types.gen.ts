@@ -380,12 +380,14 @@ export type EventDocumentRequest = {
 export type EventDocumentTypeDto = {
     id: string
     name: string
+    description?: string
     required: boolean
     confirmationRequired: boolean
 }
 
 export type EventDocumentTypeRequest = {
     name: string
+    description?: string
     required: boolean
     confirmationRequired: boolean
 }
@@ -447,6 +449,7 @@ export type EventRegistrationDocumentFileDto = {
 export type EventRegistrationDocumentTypeDto = {
     id: string
     name: string
+    description?: string
     confirmationRequired?: boolean
     files: Array<EventRegistrationDocumentFileDto>
 }
