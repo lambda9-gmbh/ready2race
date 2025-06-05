@@ -2,7 +2,7 @@ package de.lambda9.ready2race.testing
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import de.lambda9.ready2race.backend.Config
+import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.database.initializeDatabase

@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.plugins
 
-import de.lambda9.ready2race.backend.Config
+import de.lambda9.ready2race.backend.config.Config
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*

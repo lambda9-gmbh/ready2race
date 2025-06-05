@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.calls.responses
 
-import de.lambda9.ready2race.backend.Config
+import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.calls.comprehension.comprehension

@@ -4,8 +4,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentRequest
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
 import de.lambda9.ready2race.backend.calls.requests.*
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
 import io.ktor.server.request.*
