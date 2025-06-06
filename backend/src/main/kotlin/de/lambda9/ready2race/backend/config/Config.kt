@@ -129,11 +129,11 @@ data class Config(
                 password = required("SMTP_PASSWORD"),
                 strategy = required("SMTP_STRATEGY", enum<TransportStrategy>()),
                 from = Smtp.From(
-                    name = required("SMTP_FROM_NAME"),
+                    name = optional("SMTP_FROM_NAME"),
                     address = required("SMTP_FROM_ADDRESS")
                 ),
-                replyTo = required("SMTP_REPLY"),
-                localhost = required("SMTP_LOCALHOST")
+                replyTo = optional("SMTP_REPLY"),
+                localhost = optional("SMTP_LOCALHOST")
             ),
             security = Security(
                 pepper = required("SECURITY_PEPPER"),

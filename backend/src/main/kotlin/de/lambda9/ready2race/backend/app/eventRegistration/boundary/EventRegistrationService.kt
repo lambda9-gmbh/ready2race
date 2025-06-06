@@ -28,8 +28,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.document
-import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
+import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
@@ -110,8 +110,22 @@ object EventRegistrationService {
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
+        val singleCompetitionMultipleCounts = registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
+            .groupingBy { it.competitionId }
+            .eachCount()
+            .filter { it.value > 1 }
+            .mapValues { 0 }.toMutableMap()
+
         val participantIdMap = !registrationDto.participants.traverse { pDto ->
-            handleSingleCompetitionRegistration(pDto, user.id!!, user.club!!, template, persistedRegistrationId, now)
+            handleSingleCompetitionRegistration(
+                pDto,
+                user.id!!,
+                user.club!!,
+                template,
+                persistedRegistrationId,
+                now,
+                singleCompetitionMultipleCounts
+            )
         }.map { it.toMap(mutableMapOf()) }
 
         !registrationDto.competitionRegistrations.traverse { competitionRegistrationDto ->
@@ -130,31 +144,10 @@ object EventRegistrationService {
         val clubName = !ClubRepo.getName(user.club!!).orDie()
         val participants = !ParticipantForEventRepo.getByClub(user.club!!).orDie()
 
-        //TODO: @refactor: after merging registration result, move to Repo, extract sorting
+        //TODO: @refactor: move to Repo, !don't! query for ALL clubs
         val competitions = (!Jooq.query {
             fetch(EVENT_COMPETITION_REGISTRATION)
-        }.orDie()).sortedWith { a, b ->
-            val identA = a!!.identifier!!
-            val identB = b!!.identifier!!
-
-            val digitsA = identA.takeLastWhile { it.isDigit() }
-            val digitsB = identB.takeLastWhile { it.isDigit() }
-
-            val prefixA = identA.removeSuffix(digitsA)
-            val prefixB = identB.removeSuffix(digitsB)
-
-            val intA = digitsA.toIntOrNull() ?: 0
-            val intB = digitsB.toIntOrNull() ?: 0
-
-            // sort by lexicographical, except integer suffixes
-            when {
-                prefixA < prefixB -> -1
-                prefixA > prefixB -> 1
-                intA < intB -> -1
-                intA > intB -> 1
-                else -> 0
-            }
-        }
+        }.orDie()).sortedWith(lexiNumberComp { it.identifier })
 
         val summaryParticipants = participants.joinToString("\n") { p ->
             """
@@ -167,10 +160,10 @@ object EventRegistrationService {
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
-                if (teams.isEmpty()) "---" else teams.joinToString("\n|        ") { t ->
+                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName }).joinToString("\n|        ") { t ->
                     val ps = t.participants!!.map { it!! }.sortedBy { it.role }
                     """
-                        |->${t.teamName?.let { " ($it)" } ?: ""}
+                        |->${t.teamName?.let { " $it" } ?: ""}
                         |            ${
                         ps.joinToString("\n|            ") { p ->
                             """
@@ -223,7 +216,8 @@ object EventRegistrationService {
         clubId: UUID,
         template: EventRegistrationInfoDto?,
         persistedRegistrationId: UUID,
-        now: LocalDateTime
+        now: LocalDateTime,
+        singleCompetitionMultiCounts: MutableMap<UUID, Int>
     ): App<EventRegistrationError, Pair<UUID, UUID>> = KIO.comprehension {
         val persistedId = if (pDto.isNew == true) {
             !ParticipantRepo.create(!pDto.toRecord(userId, clubId)).orDie()
@@ -252,13 +246,20 @@ object EventRegistrationService {
                 template?.competitionsSingle?.first { it.id == competitionRegistrationDto.competitionId }
                     ?: return@traverse KIO.fail(EventRegistrationError.InvalidRegistration)
 
+            val name = singleCompetitionMultiCounts[competitionRegistrationDto.competitionId]
+                ?.plus(1)
+                ?.let {
+                    singleCompetitionMultiCounts[competitionRegistrationDto.competitionId] = it
+                    "#$it"
+                }
+
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
                     UUID.randomUUID(),
                     persistedRegistrationId,
                     competitionRegistrationDto.competitionId,
                     clubId,
-                    null,
+                    name,
                     now,
                     userId,
                     now,
@@ -302,14 +303,24 @@ object EventRegistrationService {
         val competition = template?.competitionsTeam?.first { it.id == competitionRegistrationDto.competitionId }
             ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration)
 
+        var count = competitionRegistrationDto.teams?.takeIf { it.size > 1 }?.let { 0 }
+
         competitionRegistrationDto.teams?.traverse { teamDto ->
+
+            val name = count
+                ?.plus(1)
+                ?.let {
+                    count = it
+                    "#$it"
+                }
+
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
                     UUID.randomUUID(),
                     persistedRegistrationId,
                     competitionRegistrationDto.competitionId,
                     clubId,
-                    null,
+                    name,
                     now,
                     userId,
                     now,
@@ -403,28 +414,7 @@ object EventRegistrationService {
                     text { "keine Wettkämpfe in dieser Veranstaltung" }
                 }
             }
-            result.competitions!!.sortedWith { a, b ->
-                val identA = a!!.identifier!!
-                val identB = b!!.identifier!!
-
-                val digitsA = identA.takeLastWhile { it.isDigit() }
-                val digitsB = identB.takeLastWhile { it.isDigit() }
-
-                val prefixA = identA.removeSuffix(digitsA)
-                val prefixB = identB.removeSuffix(digitsB)
-
-                val intA = digitsA.toIntOrNull() ?: 0
-                val intB = digitsB.toIntOrNull() ?: 0
-
-                // sort by lexicographical, except integer suffixes
-                when {
-                    prefixA < prefixB -> -1
-                    prefixA > prefixB -> 1
-                    intA < intB -> -1
-                    intA > intB -> 1
-                    else -> 0
-                }
-            }.forEach { competition ->
+            result.competitions!!.sortedWith(lexiNumberComp { it?.identifier }).forEach { competition ->
                 competition!!
                 page {
                     block(
@@ -482,7 +472,7 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.forEach { team ->
+                            club!!.teams!!.sortedWith(lexiNumberComp { it?.teamName }).forEach { team ->
 
                                 block(
                                     padding = Padding(0f, 0f, 0f, 10f)

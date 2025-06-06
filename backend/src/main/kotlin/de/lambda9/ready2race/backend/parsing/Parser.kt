@@ -12,10 +12,10 @@ import java.util.UUID
 import kotlin.enums.enumEntries
 import kotlin.reflect.KClass
 
-fun interface Parser<T : Any> {
+fun interface Parser<A : Any> {
 
-    fun parse(input: String): T
-    operator fun <R> invoke(input: String, execution: (task: Task<T>) -> R) =
+    fun parse(input: String): A
+    operator fun <R> invoke(input: String, execution: (task: Task<A>) -> R) =
         execution(KIO.effect { parse(input) })
 
     companion object {
