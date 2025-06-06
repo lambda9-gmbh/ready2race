@@ -397,9 +397,27 @@ object EventRegistrationService {
             }
     }
 
+    private fun setStartNumbers(
+        eventId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+
+        val registrations = !CompetitionRegistrationRepo.allForEvent(eventId).orDie()
+
+        registrations.groupBy { it.competition }.values.forEach { registrationsForSameComp ->
+            registrationsForSameComp.shuffled().forEachIndexed { idx, record ->
+                record.startNumber = idx + 1
+                record.update()
+            }
+        }
+
+        unit
+    }
+
     private fun generateResultDocument(
         eventId: UUID,
     ): App<EventRegistrationError, Pair<String, ByteArray>> = KIO.comprehension {
+
+        !setStartNumbers(eventId)
 
         val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
@@ -422,19 +440,19 @@ object EventRegistrationService {
                     ) {
                         text(
                             fontStyle = FontStyle.BOLD,
-                            fontSize = 12f,
+                            fontSize = 14f,
                         ) {
                             "Wettkampf / "
                         }
                         text(
-                            fontSize = 11f,
+                            fontSize = 12f,
                             newLine = false,
                         ) {
                             "Competition"
                         }
 
                         table(
-                            padding = Padding(5f, 20f, 0f, 0f)
+                            padding = Padding(5f, 10f, 0f, 0f)
                         ) {
                             column(0.1f)
                             column(0.25f)
@@ -472,52 +490,72 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.sortedWith(lexiNumberComp { it?.teamName }).forEach { team ->
-
+                            club!!.teams!!.sortedBy { it!!.startNumber }.forEach { team ->
+                                team!!
                                 block(
-                                    padding = Padding(0f, 0f, 0f, 10f)
+                                    padding = Padding(0f, 0f, 0f, 15f)
                                 ) {
-                                    text(
-                                        fontStyle = FontStyle.BOLD,
-                                    ) { club.name!! }
-                                    team!!.teamName?.let {
+                                    block(
+                                        padding = Padding(bottom = 5f)
+                                    ) {
+                                        text(
+                                            fontStyle = FontStyle.BOLD,
+                                            fontSize = 11f,
+                                        ) { "Startnummer / " }
                                         text(
                                             newLine = false,
-                                        ) { " $it" }
+                                        ) { "Start number  " }
+                                        text(
+                                            newLine = false,
+                                            fontSize = 11f,
+                                            fontStyle = FontStyle.BOLD,
+                                        ) { team.startNumber.toString() }
                                     }
-                                    table(
-                                        padding = Padding(5f, 0f, 0f, 0f),
-                                        withBorder = true,
-                                    ) {
-                                        column(0.15f)
-                                        column(0.2f)
-                                        column(0.2f)
-                                        column(0.1f)
-                                        column(0.35f)
 
-                                        team.participants!!
-                                            .sortedBy { it!!.role }
-                                            .forEachIndexed { idx, member ->
-                                                row(
-                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
-                                                ) {
-                                                    cell {
-                                                        text { member!!.role!! }
-                                                    }
-                                                    cell {
-                                                        text { member!!.firstname!! }
-                                                    }
-                                                    cell {
-                                                        text { member!!.lastname!! }
-                                                    }
-                                                    cell {
-                                                        text { member!!.year!!.toString() }
-                                                    }
-                                                    cell {
-                                                        text { member!!.externalClubName ?: club.name!! }
+                                    block(
+                                        padding = Padding(left = 10f)
+                                    ) {
+                                        text { club.name!! }
+                                        team.teamName?.let {
+                                            text(
+                                                newLine = false,
+                                            ) { " $it" }
+                                        }
+
+                                        table(
+                                            padding = Padding(5f, 0f, 0f, 0f),
+                                            withBorder = true,
+                                        ) {
+                                            column(0.15f)
+                                            column(0.2f)
+                                            column(0.2f)
+                                            column(0.1f)
+                                            column(0.35f)
+
+                                            team.participants!!
+                                                .sortedBy { it!!.role }
+                                                .forEachIndexed { idx, member ->
+                                                    row(
+                                                        color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                    ) {
+                                                        cell {
+                                                            text { member!!.role!! }
+                                                        }
+                                                        cell {
+                                                            text { member!!.firstname!! }
+                                                        }
+                                                        cell {
+                                                            text { member!!.lastname!! }
+                                                        }
+                                                        cell {
+                                                            text { member!!.year!!.toString() }
+                                                        }
+                                                        cell {
+                                                            text { member!!.externalClubName ?: club.name!! }
+                                                        }
                                                     }
                                                 }
-                                            }
+                                        }
                                     }
                                 }
                             }
