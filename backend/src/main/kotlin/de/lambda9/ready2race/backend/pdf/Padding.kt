@@ -3,10 +3,10 @@ package de.lambda9.ready2race.backend.pdf
 import org.apache.pdfbox.pdmodel.common.PDRectangle
 
 data class Padding(
-    val top: Float,
-    val left: Float,
-    val right: Float,
-    val bottom: Float,
+    val top: Float = 0F,
+    val left: Float = 0F,
+    val right: Float = 0F,
+    val bottom: Float = 0F,
 ) {
 
     constructor(padding: Float) : this(padding, padding, padding, padding)

@@ -8,6 +8,8 @@ import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
+import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
+import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
 import de.lambda9.ready2race.backend.database.initializeDatabase
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.DynamicIntervalJobState
@@ -71,6 +73,17 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                                 logger.warn(error.cause) { "Error sending email ${error.emailId}" }
                                 DynamicIntervalJobState.Processed
                             }
+                        }
+                    }
+            }
+
+            scheduleDynamic("Produce next invoice", 5.minutes) {
+                InvoiceService.produceNextRegistrationInvoice()
+                    .map { DynamicIntervalJobState.Processed }
+                    .recoverDefault { error ->
+                        when (error) {
+                            is ProduceInvoiceError.MissingRecipient -> DynamicIntervalJobState.Processed
+                            ProduceInvoiceError.NoOpenJobs -> DynamicIntervalJobState.Empty
                         }
                     }
             }

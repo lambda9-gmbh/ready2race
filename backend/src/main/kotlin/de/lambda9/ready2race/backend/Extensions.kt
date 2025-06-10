@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend
 
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 import kotlin.time.Duration
 
@@ -33,3 +36,6 @@ fun Duration.beforeNow(): LocalDateTime =
 
 fun Duration.afterNow(): LocalDateTime =
     LocalDateTime.now().plusSeconds(this.inWholeSeconds)
+
+fun LocalDate.hr(locale: Locale? = null) = format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).localizedBy(locale ?: Locale.GERMANY))
+fun LocalDateTime.hrDate(locale: Locale? = null) = toLocalDate().hr(locale)

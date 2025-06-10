@@ -34,6 +34,8 @@ import kotlin.time.Duration.Companion.days
 
 object AppUserService {
 
+    fun AppUserRecord.fullName(): String = "$firstname $lastname"
+
     private val registrationLifeTime = 1.days
     private val invitationLifeTime = 7.days
     private val passwordResetLifeTime = 1.days

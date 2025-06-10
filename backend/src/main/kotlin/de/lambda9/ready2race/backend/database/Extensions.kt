@@ -68,7 +68,7 @@ fun <R : Record, T : TableImpl<R>, A> T.insertReturning(
 }
 
 fun <R : Record, T : TableImpl<R>> T.select(
-    condition: T.() -> Condition
+    condition: T.() -> Condition = { DSL.trueCondition() }
 ): JIO<List<R>> = Jooq.query {
     fetch(this@select, condition())
 }

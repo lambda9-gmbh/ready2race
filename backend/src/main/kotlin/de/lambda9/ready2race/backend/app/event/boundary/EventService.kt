@@ -63,7 +63,7 @@ object EventService {
         id: UUID,
         scope: Privilege.Scope?
     ): App<EventError, ApiResponse.Dto<EventDto>> = KIO.comprehension {
-        val event = !EventRepo.getEvent(id, scope).orDie().onNullFail { EventError.NotFound }
+        val event = !EventRepo.getScoped(id, scope).orDie().onNullFail { EventError.NotFound }
         event.eventDto().map { ApiResponse.Dto(it) }
     }
 
@@ -80,6 +80,7 @@ object EventService {
             registrationAvailableTo = request.registrationAvailableTo
             invoicePrefix = request.invoicePrefix
             published = request.published
+            paymentDueBy = request.paymentDueBy
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

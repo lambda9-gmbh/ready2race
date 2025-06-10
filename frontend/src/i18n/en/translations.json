@@ -45,7 +45,10 @@
       "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
-      "selectFile": "Select file"
+      "selectFile": "Select file",
+      "select": {
+        "none": "None"
+      }
     },
     "load": {
       "error": {
@@ -167,7 +170,8 @@
     "description": "Description",
     "registerNow": "To Registration",
     "invoice": {
-      "prefix": "Invoice prefix"
+      "prefix": "Invoice prefix",
+      "paymentDueBy": "Payment due by"
     },
     "location": "Location",
     "upcoming": "Upcoming events",
@@ -389,7 +393,8 @@
       "registrationsReport": {
         "generate": "Generate registrations result",
         "download": "Download registrations result"
-      }
+      },
+      "produceInvoices": "Produce invoices"
     },
     "assign": {
       "save": {
@@ -612,6 +617,41 @@
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings"
+    }
+  },
+  "contact": {
+    "name": "Name",
+    "zip": "Zip code",
+    "city": "City",
+    "street": "Street (with No.)",
+    "email": "Email",
+    "information": "Contact information",
+    "contacts": "Contacts information",
+    "global": "Globally assigned contact information",
+    "tableHint": {
+      "1": "Used as sender for invoicing.",
+      "2": "The assignments can be made in the ",
+      "3": "global settings",
+      "4": "."
+    }
+  },
+  "invoice": {
+    "bank": {
+      "accountData": {
+        "holder": "Holder",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bank": "Bank"
+      },
+      "account": "Bank account",
+      "accounts": "Bank accounts",
+      "global": "Globally assigned bank account",
+      "tableHint": {
+        "1": "Used as payee for invoicing.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      }
     }
   },
   "captcha": {

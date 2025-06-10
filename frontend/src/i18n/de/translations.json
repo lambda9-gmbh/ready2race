@@ -45,7 +45,10 @@
       "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
-      "selectFile": "Datei auswählen"
+      "selectFile": "Datei auswählen",
+      "select": {
+        "none": "Keine"
+      }
     },
     "load": {
       "error": {
@@ -167,7 +170,8 @@
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
     "invoice": {
-      "prefix": "Rechnungspräfix"
+      "prefix": "Rechnungspräfix",
+      "paymentDueBy": "Zahlungstermin Meldegebühren"
     },
     "location": "Ort",
     "upcoming": "Anstehende Veranstaltungen",
@@ -384,7 +388,8 @@
       "registrationsReport": {
         "generate": "Erzeuge Meldeergebnis",
         "download": "Download Meldeergebnis"
-      }
+      },
+      "produceInvoices": "Rechnungen erstellen"
     },
     "assign": {
       "save": {
@@ -607,6 +612,41 @@
       "eventElements": "Komponenten Veranstaltung",
       "competitionElements": "Komponenten Wettkampf",
       "globalSettings": "Globale Einstellungen"
+    }
+  },
+  "contact": {
+    "name": "Name",
+    "zip": "PLZ",
+    "city": "Ort",
+    "street": "Straße (mit Hausnummer)",
+    "email": "E-Mail",
+    "information": "Kontaktinformation",
+    "contacts": "Kontaktinformationen",
+    "global": "Global zugewiesene Kontaktinformation",
+    "tableHint": {
+      "1": "Werden für die Rechnungsstellung als Absender verwendet.",
+      "2": "In den ",
+      "3": "globalen Einstellungen",
+      "4": " können die Zuweisungen vorgenommen werden."
+    }
+  },
+  "invoice": {
+    "bank": {
+      "accountData": {
+        "holder": "Kontoinhaber",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bank": "Bank"
+      },
+      "account": "Bankverbindung",
+      "accounts": "Bankverbindungen",
+      "global": "Global zugewiesene Bankverbindung",
+      "tableHint": {
+        "1": "Werden für die Rechnungsstellung als Empfängerkonto verwendet.",
+        "2": "In den ",
+        "3": "globalen Einstellungen",
+        "4": " können die Zuweisungen vorgenommen werden."
+      }
     }
   },
   "captcha": {
