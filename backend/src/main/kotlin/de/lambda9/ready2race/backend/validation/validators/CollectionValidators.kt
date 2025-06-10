@@ -34,4 +34,11 @@ object CollectionValidators : Validators<Collection<Any?>?>() {
             }
 
     val noDuplicates get() = noDuplicatesImpl<Any?, _> { it }
+
+    fun <S, T> flatMap(validator: Validator<Collection<S>?>, field: KProperty1<T, Collection<S>>) = Validator<Collection<T>?> { collection ->
+        collection
+            ?.flatMap { field.get(it) }
+            ?.let { validator(it) }
+            ?: ValidationResult.Valid
+    }
 }

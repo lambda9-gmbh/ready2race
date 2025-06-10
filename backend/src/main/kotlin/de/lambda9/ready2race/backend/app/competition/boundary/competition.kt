@@ -9,8 +9,8 @@ import de.lambda9.ready2race.backend.app.competition.entity.*
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.competitionExecution
 import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.competitionRegistration
 import de.lambda9.ready2race.backend.calls.requests.*
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
 fun Route.competition() {

@@ -157,6 +157,7 @@ object EventRegistrationRepo {
     ) = DSL.select(
         EVENT_DOCUMENT_TYPE.ID,
         EVENT_DOCUMENT_TYPE.NAME,
+        EVENT_DOCUMENT_TYPE.DESCRIPTION,
         EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED,
         documents
     ).from(EVENT_DOCUMENT_TYPE)
@@ -170,6 +171,7 @@ object EventRegistrationRepo {
                 EventRegistrationDocumentTypeDto(
                     it[EVENT_DOCUMENT_TYPE.ID]!!,
                     it[EVENT_DOCUMENT_TYPE.NAME]!!,
+                    it[EVENT_DOCUMENT_TYPE.DESCRIPTION],
                     it[EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED]!!,
                     it[documents]
                 )

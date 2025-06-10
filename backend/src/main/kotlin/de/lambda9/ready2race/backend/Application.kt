@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend
 
-import de.lambda9.ready2race.backend.Config.Companion.parseConfig
+import de.lambda9.ready2race.backend.config.Config.Companion.parseConfig
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService

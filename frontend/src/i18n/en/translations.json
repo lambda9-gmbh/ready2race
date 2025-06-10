@@ -417,6 +417,7 @@
         "documentType": "Document Type",
         "documentTypes": "Document Types",
         "name": "Name",
+        "description": "Description",
         "tableHint": "Enable the categorization of different documents for an event.",
         "required": {
           "forEvent": "Required for event",

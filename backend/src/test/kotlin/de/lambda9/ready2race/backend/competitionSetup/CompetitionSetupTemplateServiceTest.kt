@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupDto
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupMatchDto
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlaceDto
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupRoundDto
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.CompetitionTemplateService
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
@@ -89,14 +90,16 @@ class CompetitionSetupTemplateServiceTest {
                                 teams = 4,
                                 name = "MatchName1",
                                 participants = listOf(1, 4, 5, 8),
-                                startTimeOffset = null
+                                startTimeOffset = null,
+                                executionOrder = 1,
                             ),
                             CompetitionSetupMatchDto(
                                 weighting = 2,
                                 teams = 4,
                                 name = "MatchName2",
                                 participants = listOf(2, 3, 6, 7),
-                                startTimeOffset = null
+                                startTimeOffset = null,
+                                executionOrder = 2,
                             )
                         ),
                         groups = null,
@@ -107,7 +110,8 @@ class CompetitionSetupTemplateServiceTest {
                             CompetitionSetupPlaceDto(roundOutcome = 6, place = 5),
                             CompetitionSetupPlaceDto(roundOutcome = 7, place = 5),
                             CompetitionSetupPlaceDto(roundOutcome = 8, place = 5)
-                        )
+                        ),
+                        placesOption = CompetitionSetupPlacesOption.CUSTOM
                     ),
                     CompetitionSetupRoundDto(
                         name = "Name1",
@@ -118,7 +122,8 @@ class CompetitionSetupTemplateServiceTest {
                                 teams = 2,
                                 name = "MatchName",
                                 participants = listOf(1, 2),
-                                startTimeOffset = null
+                                startTimeOffset = null,
+                                executionOrder = 1,
                             )
                         ),
                         groups = null,
@@ -127,7 +132,8 @@ class CompetitionSetupTemplateServiceTest {
                         places = listOf(
                             CompetitionSetupPlaceDto(roundOutcome = 1, place = 1),
                             CompetitionSetupPlaceDto(roundOutcome = 2, place = 2)
-                        )
+                        ),
+                        placesOption = CompetitionSetupPlacesOption.CUSTOM
                     ),
 
                     )

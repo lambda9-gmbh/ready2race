@@ -8,11 +8,14 @@ import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
 import de.lambda9.ready2race.backend.calls.pagination.Order
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.int
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.json
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
+import de.lambda9.ready2race.backend.config.ParseEnvException
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.unwrap
+import de.lambda9.ready2race.backend.parsing.Parser
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.json
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.sessions.UserSession
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
@@ -27,6 +30,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.sessions.*
+import kotlin.reflect.KClass
 
 val logger = KotlinLogging.logger {}
 
@@ -95,13 +99,18 @@ fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> 
     AuthService.useSessionToken(userSession?.token)
 }
 
+fun <T: Any> Parser<T>.param(key: String, input: String, kClass: KClass<T>): IO<RequestError, T> =
+    invoke(input) { task ->
+        task.mapError { RequestError.ParameterUnparsable(key, input, kClass) }
+    }
+
 inline fun <reified T : Any> ApplicationCall.pathParam(
     key: String,
-    parser: ParamParser<T>,
+    parser: Parser<T>,
 ): IO<RequestError, T> =
     KIO.ok(parameters[key])
         .onNullFail { RequestError.PathParameterMissing(key) }
-        .andThen { parser(key, it, T::class) }
+        .andThen { parser.param(key, it, T::class) }
 
 fun ApplicationCall.pathParam(
     key: String,
@@ -109,9 +118,9 @@ fun ApplicationCall.pathParam(
 
 inline fun <reified T : Any> ApplicationCall.optionalQueryParam(
     key: String,
-    parser: ParamParser<T>,
+    parser: Parser<T>,
 ): IO<RequestError, T?> =
-    KIO.ok(request.queryParameters[key]).andThenNotNull { parser(key, it, T::class) }
+    KIO.ok(request.queryParameters[key]).andThenNotNull { parser.param(key, it, T::class) }
 
 fun ApplicationCall.optionalQueryParam(
     key: String,
@@ -119,7 +128,7 @@ fun ApplicationCall.optionalQueryParam(
 
 inline fun <reified T : Any> ApplicationCall.queryParam(
     key: String,
-    parser: ParamParser<T>,
+    parser: Parser<T>,
 ): IO<RequestError, T> =
     optionalQueryParam(key, parser).onNullFail { RequestError.RequiredQueryParameterMissing(key) }
 

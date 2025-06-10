@@ -4903,6 +4903,8 @@ components:
       properties:
         name:
           type: string
+        description:
+          type: string
         required:
           type: boolean
         confirmationRequired:
@@ -4920,6 +4922,8 @@ components:
           type: string
           format: uuid
         name:
+          type: string
+        description:
           type: string
         required:
           type: boolean
@@ -5178,6 +5182,8 @@ components:
           type: string
           format: uuid
         name:
+          type: string
+        description:
           type: string
         confirmationRequired:
           type: boolean

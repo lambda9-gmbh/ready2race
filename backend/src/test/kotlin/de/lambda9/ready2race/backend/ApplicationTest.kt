@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend
 
+import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.plugins.configureHTTP
 import de.lambda9.ready2race.backend.plugins.configureRequests
 import de.lambda9.ready2race.backend.plugins.configureRouting
