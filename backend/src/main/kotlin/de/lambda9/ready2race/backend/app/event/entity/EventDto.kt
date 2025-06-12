@@ -15,4 +15,5 @@ data class EventDto(
     val published: Boolean?,
     val invoicesProduced: LocalDateTime?,
     val paymentDueBy: LocalDate?,
+    val registrationsFinalized: Boolean,
 )

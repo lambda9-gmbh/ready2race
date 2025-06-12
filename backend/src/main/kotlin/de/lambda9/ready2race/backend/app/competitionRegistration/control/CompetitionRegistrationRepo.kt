@@ -63,7 +63,7 @@ object CompetitionRegistrationRepo {
     fun getByCompetitionId(id: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
         with(COMPETITION_REGISTRATION){
             selectFrom(this)
-                .where(ID.eq(id))
+                .where(COMPETITION.eq(id))
                 .fetch()
         }
     }

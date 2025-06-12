@@ -80,7 +80,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                     return result
                 }
 
-                if (r === 0 && teamsMatchesDiff === 0) {
+                if (r === 0) {
                     result = t(
                         `event.competition.setup.round.finals.long.final.${!short ? 'round' : matchForPlaceThree ? 'matchForThirdPlace' : 'final'}`,
                     )

@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.competition.entity.*
 import de.lambda9.ready2race.backend.app.competitionProperties.boundary.CompetitionPropertiesService
 import de.lambda9.ready2race.backend.app.competitionProperties.control.*
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
+import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.CompetitionTemplateService
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.applyCompetitionProperties
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.toUpdateFunction
@@ -37,6 +38,10 @@ object CompetitionService {
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
+
+        if (request.template != null) {
+            !CompetitionTemplateService.checkTemplateExisting(request.template)
+        }
 
         val record = !request.toRecord(userId, eventId)
         val competitionId = !CompetitionRepo.create(record).orDie()
@@ -143,6 +148,10 @@ object CompetitionService {
         userId: UUID,
         competitionId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        if (request.template != null) {
+            !CompetitionTemplateService.checkTemplateExisting(request.template)
+        }
 
         !CompetitionRepo.update(competitionId) {
             template = request.template

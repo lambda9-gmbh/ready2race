@@ -1153,12 +1153,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addDocuments
       requestBody:
@@ -1232,12 +1227,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument/{eventDocumentId}:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
       - name: eventDocumentId
         in: path
         required: true
@@ -1912,7 +1902,7 @@ paths:
           description: Filter for clubs, which registered for this event
           required: false
           schema:
-           type: string
+            type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -1941,11 +1931,7 @@ paths:
 
   /event/{eventId}/registrationTemplate:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getEventRegistrationTemplate
       responses:
@@ -1966,11 +1952,7 @@ paths:
 
   /event/{eventId}/register:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addEventRegistration
       requestBody:
@@ -1993,21 +1975,62 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/finalizeRegistrations:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: query
+        name: keepNumbers
+        description: Whether already set team numbers should be kept
+        required: false
+        schema:
+          type: boolean
+    post:
+      operationId: finalizeRegistrations
+      responses:
+        204:
+          description: Registrations successfully finalized
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+
+  /event/{eventId}/missingTeamNumbers:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRegistrationsWithoutTeamNumber
+      responses:
+        200:
+          description: List of registrations with missing team numbers successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionRegistrationsWithoutTeamNumberDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/registrationResult:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getRegistrationResult
-      parameters:
-        - in: query
-          name: remake
-          required: false
-          schema:
-            type: boolean
       responses:
         200:
           description: Report for event registrations successfully retrieved/generated
@@ -2235,12 +2258,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getParticipantRequirementsForEvent
       responses:
@@ -2305,12 +2323,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/approve:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: approveParticipantRequirementsForEvent
       requestBody:
@@ -2336,12 +2349,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/active:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getActiveParticipantRequirementsForEvent
       responses:
@@ -2375,12 +2383,7 @@ paths:
 
   /event/{eventId}/participantRequirement/{participantRequirementId}:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
       - name: participantRequirementId
         in: path
         required: true
@@ -2419,11 +2422,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participant:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getParticipantsForEvent
       parameters:
@@ -2803,11 +2802,7 @@ paths:
 
   /event/{eventId}/task:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addTask
       requestBody:
@@ -2867,11 +2862,7 @@ paths:
         schema:
           type: string
           format: uuid
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     put:
       operationId: updateTask
       requestBody:
@@ -2955,7 +2946,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-          
+
   /bankAccount:
     get:
       parameters:
@@ -3116,12 +3107,7 @@ paths:
 
   /event/{eventId}/produceInvoices:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: produceInvoicesForEventRegistrations
       responses:
@@ -4053,6 +4039,7 @@ components:
       required:
         - id
         - name
+        - registrationsFinalized
       properties:
         id:
           type: string
@@ -4079,6 +4066,8 @@ components:
         paymentDueBy:
           type: string
           format: date
+        registrationsFinalized:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -4488,6 +4477,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantForEventDto'
+
+
+    CompetitionRegistrationsWithoutTeamNumberDto:
+      type: object
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - registrationId
+        - registrationClub
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        registrationId:
+          type: string
+          format: uuid
+        registrationClub:
+          type: string
+        registrationName:
+          type: string
+
 
 
     # competitionSetup
@@ -5206,8 +5221,8 @@ components:
         name:
           type: string
       required:
-      - id
-      - name
+        - id
+        - name
 
     EventRegistrationCompetitionDto:
       type: object
@@ -5573,7 +5588,7 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
-          
+
     BankAccountDto:
       type: object
       required:
@@ -5592,9 +5607,9 @@ components:
           type: string
         bic:
           type: string
-        bank: 
+        bank:
           type: string
-          
+
     BankAccountRequest:
       type: object
       required:

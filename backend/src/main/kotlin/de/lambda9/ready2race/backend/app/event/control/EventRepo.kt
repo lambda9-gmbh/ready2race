@@ -2,15 +2,17 @@ package de.lambda9.ready2race.backend.app.event.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
-import de.lambda9.ready2race.backend.app.event.entity.EventSort
+import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
-import de.lambda9.ready2race.backend.database.generated.tables.Event
 import de.lambda9.ready2race.backend.database.generated.tables.EventPublicView
+import de.lambda9.ready2race.backend.database.generated.tables.EventView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_PUBLIC_VIEW
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_VIEW
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -19,7 +21,7 @@ import java.util.*
 
 object EventRepo {
 
-    private fun Event.searchFields() = listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
+    private fun EventView.searchFields() = listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
     private fun EventPublicView.searchFields() = listOf(NAME, DESCRIPTION)
 
     fun create(record: EventRecord) = EVENT.insertReturning(record) { ID }
@@ -36,7 +38,7 @@ object EventRepo {
         search: String?,
         scope: Privilege.Scope?,
     ): JIO<Int> = Jooq.query {
-        with(EVENT) {
+        with(EVENT_VIEW) {
             fetchCount(
                 this,
                 DSL.and(
@@ -49,10 +51,10 @@ object EventRepo {
     }
 
     fun page(
-        params: PaginationParameters<EventSort>,
+        params: PaginationParameters<EventViewSort>,
         scope: Privilege.Scope?,
-    ): JIO<List<EventRecord>> = Jooq.query {
-        with(EVENT) {
+    ): JIO<List<EventViewRecord>> = Jooq.query {
+        with(EVENT_VIEW) {
             selectFrom(this)
                 .page(params, searchFields()) {
                     filterScope(scope)
@@ -85,8 +87,8 @@ object EventRepo {
     fun getScoped(
         id: UUID,
         scope: Privilege.Scope?,
-    ): JIO<EventRecord?> = Jooq.query {
-        with(EVENT) {
+    ): JIO<EventViewRecord?> = Jooq.query {
+        with(EVENT_VIEW) {
             selectFrom(this)
                 .where(ID.eq(id)).and(filterScope(scope))
                 .fetchOne()
@@ -109,5 +111,5 @@ object EventRepo {
 
     private fun filterScope(
         scope: Privilege.Scope?,
-    ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT.PUBLISHED.eq(true) else DSL.trueCondition()
+    ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT_VIEW.PUBLISHED.eq(true) else DSL.trueCondition()
 }

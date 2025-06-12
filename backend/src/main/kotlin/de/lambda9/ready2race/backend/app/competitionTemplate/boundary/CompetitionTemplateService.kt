@@ -13,10 +13,13 @@ import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionT
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateError
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateRequest
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateWithPropertiesSort
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -123,4 +126,10 @@ object CompetitionTemplateService {
             noData
         }
     }
+
+    fun checkTemplateExisting(
+        templateId: UUID,
+    ): App<CompetitionTemplateError, Unit> = CompetitionTemplateRepo.exists(templateId)
+        .orDie()
+        .onFalseFail { CompetitionTemplateError.NotFound }
 }

@@ -1,10 +1,12 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationsWithoutTeamNumberDto
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailAttachment
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
@@ -18,12 +20,15 @@ import de.lambda9.ready2race.backend.app.eventRegistration.control.toRecord
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -54,15 +59,13 @@ object EventRegistrationService {
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
-                data = it,
-                pagination = params.toPagination(total)
+                data = it, pagination = params.toPagination(total)
             )
         }
     }
 
     fun getEventRegistrationTemplate(
-        eventId: UUID,
-        clubId: UUID
+        eventId: UUID, clubId: UUID
     ): App<EventRegistrationError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
         val info = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
@@ -85,20 +88,12 @@ object EventRegistrationService {
 
         val now = LocalDateTime.now()
 
-        val (persistedRegistrationId, isUpdate) =
-            !EventRegistrationRepo.findByEventAndClub(eventId, user.club!!).map { it?.let { it.id to true } }.orDie()
-                ?: (!EventRegistrationRepo.create(
-                    EventRegistrationRecord(
-                        UUID.randomUUID(),
-                        eventId,
-                        user.club!!,
-                        registrationDto.message,
-                        now,
-                        user.id!!,
-                        now,
-                        user.id!!
-                    )
-                ).orDie() to false)
+        val (persistedRegistrationId, isUpdate) = !EventRegistrationRepo.findByEventAndClub(eventId, user.club!!)
+            .map { it?.let { it.id to true } }.orDie() ?: (!EventRegistrationRepo.create(
+            EventRegistrationRecord(
+                UUID.randomUUID(), eventId, user.club!!, registrationDto.message, now, user.id!!, now, user.id!!
+            )
+        ).orDie() to false)
 
         if (isUpdate) {
             !EventRegistrationRepo.update(persistedRegistrationId) {
@@ -110,21 +105,13 @@ object EventRegistrationService {
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
-        val singleCompetitionMultipleCounts = registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
-            .groupingBy { it.competitionId }
-            .eachCount()
-            .filter { it.value > 1 }
-            .mapValues { 0 }.toMutableMap()
+        val singleCompetitionMultipleCounts =
+            registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
+                .groupingBy { it.competitionId }.eachCount().filter { it.value > 1 }.mapValues { 0 }.toMutableMap()
 
         val participantIdMap = !registrationDto.participants.traverse { pDto ->
             handleSingleCompetitionRegistration(
-                pDto,
-                user.id!!,
-                user.club!!,
-                template,
-                persistedRegistrationId,
-                now,
-                singleCompetitionMultipleCounts
+                pDto, user.id!!, user.club!!, template, persistedRegistrationId, now, singleCompetitionMultipleCounts
             )
         }.map { it.toMap(mutableMapOf()) }
 
@@ -160,27 +147,27 @@ object EventRegistrationService {
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
-                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName }).joinToString("\n|        ") { t ->
-                    val ps = t.participants!!.map { it!! }.sortedBy { it.role }
-                    """
+                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName })
+                    .joinToString("\n|        ") { t ->
+                        val ps = t.participants!!.map { it!! }.sortedBy { it.role }
+                        """
                         |->${t.teamName?.let { " $it" } ?: ""}
                         |            ${
-                        ps.joinToString("\n|            ") { p ->
-                            """
+                            ps.joinToString("\n|            ") { p ->
+                                """
                                 |[${p.role}] ${p.firstname} ${p.lastname}
                             """.trimMargin()
+                            }
                         }
-                    }
                     """.trimMargin()
-                }
+                    }
             }
                 |
             """.trimMargin()
         }
 
         val content = !EmailService.getTemplate(
-            EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION,
-            EmailLanguage.valueOf(user.language!!)
+            EmailTemplateKey.EVENT_REGISTRATION_CONFIRMATION, EmailLanguage.valueOf(user.language!!)
         ).map { mailTemplate ->
             mailTemplate.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to user.firstname + " " + user.lastname,
@@ -194,16 +181,13 @@ object EventRegistrationService {
         val attachments = !EventDocumentRepo.getDownloadsByEvent(eventId).orDie().map {
             it.map { rec ->
                 EmailAttachment(
-                    name = rec.name!!,
-                    data = rec.data!!
+                    name = rec.name!!, data = rec.data!!
                 )
             }
         }
 
         !EmailService.enqueue(
-            recipient = user.email!!,
-            content = content,
-            attachments = attachments
+            recipient = user.email!!, content = content, attachments = attachments
         )
 
         ok(ApiResponse.Created(persistedRegistrationId))
@@ -242,16 +226,13 @@ object EventRegistrationService {
 
         pDto.competitionsSingle?.traverse { competitionRegistrationDto ->
 
-            val competition =
-                template?.competitionsSingle?.first { it.id == competitionRegistrationDto.competitionId }
-                    ?: return@traverse KIO.fail(EventRegistrationError.InvalidRegistration)
+            val competition = template?.competitionsSingle?.first { it.id == competitionRegistrationDto.competitionId }
+                ?: return@traverse KIO.fail(EventRegistrationError.InvalidRegistration)
 
-            val name = singleCompetitionMultiCounts[competitionRegistrationDto.competitionId]
-                ?.plus(1)
-                ?.let {
-                    singleCompetitionMultiCounts[competitionRegistrationDto.competitionId] = it
-                    "#$it"
-                }
+            val name = singleCompetitionMultiCounts[competitionRegistrationDto.competitionId]?.plus(1)?.let {
+                singleCompetitionMultiCounts[competitionRegistrationDto.competitionId] = it
+                "#$it"
+            }
 
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
@@ -269,17 +250,13 @@ object EventRegistrationService {
 
             !CompetitionRegistrationNamedParticipantRepo.create(
                 CompetitionRegistrationNamedParticipantRecord(
-                    competitionRegistrationId,
-                    competition.namedParticipant?.first()?.id!!,
-                    persistedId
+                    competitionRegistrationId, competition.namedParticipant?.first()?.id!!, persistedId
                 )
             ).orDie()
 
             competitionRegistrationDto.optionalFees?.traverse {
                 handleOptionalFee(
-                    competition,
-                    competitionRegistrationId,
-                    it
+                    competition, competitionRegistrationId, it
                 )
             }?.not()
 
@@ -307,12 +284,10 @@ object EventRegistrationService {
 
         competitionRegistrationDto.teams?.traverse { teamDto ->
 
-            val name = count
-                ?.plus(1)
-                ?.let {
-                    count = it
-                    "#$it"
-                }
+            val name = count?.plus(1)?.let {
+                count = it
+                "#$it"
+            }
 
             val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                 CompetitionRegistrationRecord(
@@ -339,9 +314,7 @@ object EventRegistrationService {
 
                     !CompetitionRegistrationNamedParticipantRepo.create(
                         CompetitionRegistrationNamedParticipantRecord(
-                            competitionRegistrationId,
-                            namedParticipantDto.namedParticipantId,
-                            persistedId
+                            competitionRegistrationId, namedParticipantDto.namedParticipantId, persistedId
                         )
                     ).orDie()
                 }
@@ -358,9 +331,7 @@ object EventRegistrationService {
     }
 
     private fun handleOptionalFee(
-        competition: EventRegistrationCompetitionDto,
-        competitionRegistrationId: UUID,
-        optionalFee: UUID
+        competition: EventRegistrationCompetitionDto, competitionRegistrationId: UUID, optionalFee: UUID
     ) = KIO.comprehension {
 
         if (competition.fees.find { it.id == optionalFee }?.required != false) {
@@ -369,55 +340,105 @@ object EventRegistrationService {
 
         CompetitionRegistrationOptionalFeeRepo.create(
             CompetitionRegistrationOptionalFeeRecord(
-                competitionRegistrationId,
-                optionalFee
+                competitionRegistrationId, optionalFee
             )
         ).orDie()
     }
 
-    fun downloadResult(
-        eventId: UUID,
-        remake: Boolean,
-    ): App<EventRegistrationError, ApiResponse.File> = KIO.comprehension {
+    fun getRegistrationsWithoutTeamNumber(
+        eventId: UUID
+    ): App<EventError, ApiResponse.ListDto<CompetitionRegistrationsWithoutTeamNumberDto>> = KIO.comprehension {
 
-        val existing = if (remake) {
-            EventRegistrationReportRepo.delete(eventId).orDie()
-                .map { null }
-        } else {
-            EventRegistrationReportRepo.getDownload(eventId).orDie()
-                .mapNotNull { it.name!! to it.data!! }
+        !EventService.checkEventExisting(eventId)
+
+        val eventRegistrationResult = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
+
+        val result = mutableListOf<CompetitionRegistrationsWithoutTeamNumberDto>()
+
+        eventRegistrationResult?.competitions?.forEach { competition ->
+            competition?.clubRegistrations?.forEach { clubRegistration ->
+                clubRegistration?.teams?.forEach { registrationTeam ->
+                    if (registrationTeam?.teamNumber == null) {
+                        result.add(
+                            CompetitionRegistrationsWithoutTeamNumberDto(
+                                competitionId = competition.id!!,
+                                competitionIdentifier = competition.identifier!!,
+                                competitionName = competition.name!!,
+                                registrationId = registrationTeam?.id!!,
+                                registrationClub = clubRegistration.name!!,
+                                registrationName = registrationTeam.teamName,
+                            )
+                        )
+                    }
+                }
+            }
         }
 
-        existing.onNull { generateResultDocument(eventId) }
-            .map { (name, data) ->
-                ApiResponse.File(
-                    name = name,
-                    bytes = data,
-                )
-            }
+        ok(
+            ApiResponse.ListDto(result)
+        )
     }
 
-    private fun setStartNumbers(
+    fun finalizeRegistrations(
+        userId: UUID,
         eventId: UUID,
-    ): App<Nothing, Unit> = KIO.comprehension {
+        keepNumbers: Boolean
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+
+        !EventService.checkEventExisting(eventId)
 
         val registrations = !CompetitionRegistrationRepo.allForEvent(eventId).orDie()
 
         registrations.groupBy { it.competition }.values.forEach { registrationsForSameComp ->
-            registrationsForSameComp.shuffled().forEachIndexed { idx, record ->
-                record.startNumber = idx + 1
-                record.update()
+            if (keepNumbers) {
+
+                val missingNumbers = mutableListOf<Int>()
+                val teamNumbers = registrationsForSameComp.map { it.teamNumber }
+                for (i in 1..registrationsForSameComp.size) {
+                    if (teamNumbers.contains(i)) {
+                        missingNumbers.add(i)
+                    }
+                }
+                registrationsForSameComp.filter { it.teamNumber == null }.forEach { record ->
+                    record.teamNumber = missingNumbers.first()
+                    record.updatedBy = userId
+                    record.updatedAt = LocalDateTime.now()
+                    record.update()
+
+                    missingNumbers.removeFirst()
+                }
+            } else {
+                registrationsForSameComp.shuffled().forEachIndexed { idx, record ->
+                    record.teamNumber = idx + 1
+                    record.updatedBy = userId
+                    record.updatedAt = LocalDateTime.now()
+                    record.update()
+                }
             }
         }
 
-        unit
+        generateResultDocument(eventId)
+
+        noData
+    }
+
+    fun downloadResult(
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkEventExisting(eventId)
+
+        EventRegistrationReportRepo.getDownload(eventId).orDie()
+            .onNullFail { EventRegistrationError.RegistrationsNotFinalized }.map {
+                ApiResponse.File(
+                    name = it.name!!,
+                    bytes = it.data!!,
+                )
+            }
     }
 
     private fun generateResultDocument(
         eventId: UUID,
     ): App<EventRegistrationError, Pair<String, ByteArray>> = KIO.comprehension {
-
-        !setStartNumbers(eventId)
 
         val result = !EventRegistrationRepo.getRegistrationResult(eventId).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
@@ -490,7 +511,7 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.sortedBy { it!!.startNumber }.forEach { team ->
+                            club!!.teams!!.sortedBy { it!!.teamNumber }.forEach { team ->
                                 team!!
                                 block(
                                     padding = Padding(0f, 0f, 0f, 15f)
@@ -501,15 +522,15 @@ object EventRegistrationService {
                                         text(
                                             fontStyle = FontStyle.BOLD,
                                             fontSize = 11f,
-                                        ) { "Startnummer / " }
+                                        ) { "Teamnummer / " }
                                         text(
                                             newLine = false,
-                                        ) { "Start number  " }
+                                        ) { "Team number  " }
                                         text(
                                             newLine = false,
                                             fontSize = 11f,
                                             fontStyle = FontStyle.BOLD,
-                                        ) { team.startNumber.toString() }
+                                        ) { team.teamNumber.toString() }
                                     }
 
                                     block(
@@ -532,29 +553,27 @@ object EventRegistrationService {
                                             column(0.1f)
                                             column(0.35f)
 
-                                            team.participants!!
-                                                .sortedBy { it!!.role }
-                                                .forEachIndexed { idx, member ->
-                                                    row(
-                                                        color = if (idx % 2 == 1) Color(230, 230, 230) else null,
-                                                    ) {
-                                                        cell {
-                                                            text { member!!.role!! }
-                                                        }
-                                                        cell {
-                                                            text { member!!.firstname!! }
-                                                        }
-                                                        cell {
-                                                            text { member!!.lastname!! }
-                                                        }
-                                                        cell {
-                                                            text { member!!.year!!.toString() }
-                                                        }
-                                                        cell {
-                                                            text { member!!.externalClubName ?: club.name!! }
-                                                        }
+                                            team.participants!!.sortedBy { it!!.role }.forEachIndexed { idx, member ->
+                                                row(
+                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                ) {
+                                                    cell {
+                                                        text { member!!.role!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.firstname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.lastname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.year!!.toString() }
+                                                    }
+                                                    cell {
+                                                        text { member!!.externalClubName ?: club.name!! }
                                                     }
                                                 }
+                                            }
                                         }
                                     }
                                 }
@@ -590,6 +609,6 @@ object EventRegistrationService {
         )
         !EventRegistrationReportDataRepo.create(dataRecord).orDie()
 
-        KIO.ok(filename to bytes)
+        ok(filename to bytes)
     }
 }

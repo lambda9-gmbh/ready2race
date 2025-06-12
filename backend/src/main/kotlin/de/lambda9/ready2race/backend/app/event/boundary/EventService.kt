@@ -31,9 +31,9 @@ object EventService {
     }
 
     fun page(
-        params: PaginationParameters<EventSort>,
+        params: PaginationParameters<EventViewSort>,
         scope: Privilege.Scope?,
-    ): App<Nothing, ApiResponse.Page<EventDto, EventSort>> = KIO.comprehension {
+    ): App<Nothing, ApiResponse.Page<EventDto, EventViewSort>> = KIO.comprehension {
         val total = !EventRepo.count(params.search, scope).orDie()
         val page = !EventRepo.page(params, scope).orDie()
 

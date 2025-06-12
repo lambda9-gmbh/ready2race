@@ -36,6 +36,8 @@ object CompetitionSetupService {
         competitionSetupTemplateId: UUID?
     ): App<Nothing, Unit> = KIO.comprehension {
 
+        // Todo: Check if a round has already been generated for the competition - that round should be locked from being updated
+
         // Deletes all rounds for this competition - including matches, groups, places etc. by cascade
         !CompetitionSetupRoundRepo.delete(
             competitionPropertiesId ?: competitionSetupTemplateId!! // There has to be one of the two

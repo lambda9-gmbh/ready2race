@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 import java.util.*
 
@@ -14,7 +15,7 @@ fun Route.competitionSetup(pathParamKey: String) {
         put {
             call.respondComprehension {
                 val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                val key = !pathParam(pathParamKey) { UUID.fromString(it) }
+                val key = !pathParam(pathParamKey, uuid)
 
                 val body = !receiveKIO(CompetitionSetupDto.example)
                 CompetitionSetupService.updateCompetitionSetup(body, user.id!!, key)
@@ -24,7 +25,7 @@ fun Route.competitionSetup(pathParamKey: String) {
 
         get {
             call.respondComprehension {
-                val key = !pathParam(pathParamKey) { UUID.fromString(it) }
+                val key = !pathParam(pathParamKey, uuid)
 
                 CompetitionSetupService.getCompetitionSetup(key)
             }

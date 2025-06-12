@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_with_event_registration_report;
 drop view if exists competition_setup_round_with_matches;
 drop view if exists event_registration_for_invoice;
 drop view if exists competition_registration_with_fees;
@@ -393,25 +394,6 @@ having max(ed.date) is null
     or max(ed.date) >= current_date
 ;
 
-create view event_view as
-select e.id,
-       e.name,
-       e.description,
-       e.location,
-       e.registration_available_from,
-       e.registration_available_to,
-       e.created_at,
-       count(c.id)  as competition_count,
-       min(ed.date) as event_from,
-       max(ed.date) as event_to,
-       count(e.id)  as registration_count
-from event e
-         left join competition c on e.id = c.event
-         left join event_day ed on e.id = ed.event
-         left join event_registration er on e.id = er.event
-group by e.id, e.name, e.description, e.location, e.registration_available_from, e.registration_available_to,
-         e.created_at;
-
 create view event_registrations_view as
 select er.id,
        er.created_at,
@@ -455,7 +437,7 @@ select cr.id,
        cr.competition,
        cr.club,
        cr.name                                                                   as team_name,
-       cr.start_number,
+       cr.team_number,
        coalesce(array_agg(rctp) filter ( where rctp.team_id is not null ), '{}') as participants
 from competition_registration cr
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
@@ -575,15 +557,32 @@ group by er.id, c.id, au.id
 ;
 
 create view competition_setup_round_with_matches as
-select sr.id as setup_round_id,
+select sr.id                                                                             as setup_round_id,
        sr.competition_setup,
        sr.next_round,
-       sr.name setup_round_name,
+       sr.name                                                                              setup_round_name,
        sr.required,
        sr.places_option,
-       coalesce(array_agg(sm) filter(where sm.id is not null), '{}') as setup_matches,
-       coalesce(array_agg(m) filter(where m.competition_setup_match is not null), '{}') as matches
+       coalesce(array_agg(sm) filter (where sm.id is not null), '{}')                    as setup_matches,
+       coalesce(array_agg(m) filter (where m.competition_setup_match is not null), '{}') as matches
 from competition_setup_round sr
-    left join competition_setup_match sm on sr.id = sm.competition_setup_round
+         left join competition_setup_match sm on sr.id = sm.competition_setup_round
          left join competition_match m on sm.id = m.competition_setup_match
 group by sr.id
+;
+
+create view event_view as
+select e.id,
+       e.name,
+       e.description,
+       e.location,
+       e.registration_available_from,
+       e.registration_available_to,
+       e.invoice_prefix,
+       e.published,
+       e.invoices_produced,
+       e.payment_due_by,
+       err.event is not null as registrations_finalized
+from event e
+         left join event_registration_report err on e.id = err.event
+;
