@@ -383,7 +383,7 @@ object EventRegistrationService {
         userId: UUID,
         eventId: UUID,
         keepNumbers: Boolean
-    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
 
@@ -392,21 +392,17 @@ object EventRegistrationService {
         registrations.groupBy { it.competition }.values.forEach { registrationsForSameComp ->
             if (keepNumbers) {
 
-                val missingNumbers = mutableListOf<Int>()
-                val teamNumbers = registrationsForSameComp.map { it.teamNumber }
-                for (i in 1..registrationsForSameComp.size) {
-                    if (teamNumbers.contains(i)) {
-                        missingNumbers.add(i)
-                    }
-                }
-                registrationsForSameComp.filter { it.teamNumber == null }.forEach { record ->
-                    record.teamNumber = missingNumbers.first()
-                    record.updatedBy = userId
-                    record.updatedAt = LocalDateTime.now()
-                    record.update()
+                val highestNumber = registrationsForSameComp.mapNotNull { it.teamNumber }.maxOfOrNull { it } ?: 0
 
-                    missingNumbers.removeFirst()
-                }
+                registrationsForSameComp
+                    .filter { it.teamNumber == null }
+                    .shuffled()
+                    .forEachIndexed { idx, record ->
+                        record.teamNumber = highestNumber + idx + 1
+                        record.updatedBy = userId
+                        record.updatedAt = LocalDateTime.now()
+                        record.update()
+                    }
             } else {
                 registrationsForSameComp.shuffled().forEachIndexed { idx, record ->
                     record.teamNumber = idx + 1
@@ -417,7 +413,9 @@ object EventRegistrationService {
             }
         }
 
-        generateResultDocument(eventId)
+        !EventRegistrationReportRepo.delete(eventId).orDie()
+
+        !generateResultDocument(eventId)
 
         noData
     }

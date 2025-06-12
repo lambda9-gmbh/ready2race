@@ -235,6 +235,12 @@ import type {
     AddEventRegistrationData,
     AddEventRegistrationError,
     AddEventRegistrationResponse,
+    FinalizeRegistrationsData,
+    FinalizeRegistrationsError,
+    FinalizeRegistrationsResponse,
+    GetRegistrationsWithoutTeamNumberData,
+    GetRegistrationsWithoutTeamNumberError,
+    GetRegistrationsWithoutTeamNumberResponse,
     GetRegistrationResultData,
     GetRegistrationResultError,
     GetRegistrationResultResponse,
@@ -1273,6 +1279,32 @@ export const addEventRegistration = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/register',
+    })
+}
+
+export const finalizeRegistrations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinalizeRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        FinalizeRegistrationsResponse,
+        FinalizeRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/finalizeRegistrations',
+    })
+}
+
+export const getRegistrationsWithoutTeamNumber = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationsWithoutTeamNumberData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationsWithoutTeamNumberResponse,
+        GetRegistrationsWithoutTeamNumberError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/missingTeamNumbers',
     })
 }
 

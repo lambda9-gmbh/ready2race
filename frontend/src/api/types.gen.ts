@@ -202,6 +202,15 @@ export type CompetitionRegistrationSingleUpsertDto = {
     optionalFees?: Array<string>
 }
 
+export type CompetitionRegistrationsWithoutTeamNumberDto = {
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    registrationId: string
+    registrationClub: string
+    registrationName?: string
+}
+
 export type CompetitionRegistrationTeamDto = {
     id: string
     name: string
@@ -403,6 +412,7 @@ export type EventDto = {
     published?: boolean
     invoicesProduced?: string
     paymentDueBy?: string
+    registrationsFinalized: boolean
 }
 
 export type EventPublicDto = {
@@ -1979,12 +1989,36 @@ export type AddEventRegistrationResponse = string
 
 export type AddEventRegistrationError = BadRequestError | ApiError
 
-export type GetRegistrationResultData = {
+export type FinalizeRegistrationsData = {
     path: {
         eventId: string
     }
     query?: {
-        remake?: boolean
+        /**
+         * Whether already set team numbers should be kept
+         */
+        keepNumbers?: boolean
+    }
+}
+
+export type FinalizeRegistrationsResponse = void
+
+export type FinalizeRegistrationsError = BadRequestError | ApiError
+
+export type GetRegistrationsWithoutTeamNumberData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRegistrationsWithoutTeamNumberResponse =
+    Array<CompetitionRegistrationsWithoutTeamNumberDto>
+
+export type GetRegistrationsWithoutTeamNumberError = BadRequestError | ApiError
+
+export type GetRegistrationResultData = {
+    path: {
+        eventId: string
     }
 }
 

@@ -13,7 +13,7 @@ const VerifyRegistrationPage = () => {
 
     const [verifying, setVerifying] = useState(false)
 
-    useEffect(() => {
+    useEffect(() => { // todo: should this be useFetch instead?
         ;(async () => {
             setVerifying(true)
             await verifyUserRegistration({
