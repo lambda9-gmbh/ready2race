@@ -19,6 +19,5 @@ enum class CompetitionExecutionError : ServiceError {
             status = HttpStatusCode.BadRequest,
             message = "More registrations than the setup has allowed"
         )
-
     }
 }

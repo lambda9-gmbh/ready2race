@@ -234,7 +234,7 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={4} activeTab={activeTab}>
-                            <EventActions />
+                            <EventActions registrationsFinalized={data.registrationsFinalized}/>
                         </TabPanel>
                     </Stack>
                 ) : (

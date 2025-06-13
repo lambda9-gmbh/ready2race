@@ -43,7 +43,7 @@ object CompetitionExecutionService {
         logger.info { "rounds $rounds" }
 
         if (rounds.isEmpty()) {
-            logger.error { "Error 1 (Keine Runden)" }
+            logger.error { "Error (Keine Runden)" }
             return@comprehension KIO.fail(CompetitionExecutionError.NoSetupRoundFound)
         }
 
@@ -57,18 +57,16 @@ object CompetitionExecutionService {
         logger.info { "Current Round $currentRound" }
 
         if (currentRound == null) {
-            // First Round
+            // First Round - The round that is not referenced by another "nextRound"
             val nextRound = rounds.find { r1 -> rounds.find { r2 -> r1.setupRoundId == r2.nextRound } == null }
             if (nextRound == null) {
-                logger.error { "Error 2 (letzte Runde bereits erstellt)" }
+                logger.error { "Error (erste Runde nicht gefunden)" }
                 return@comprehension KIO.fail(CompetitionExecutionError.NoSetupRoundFound)
             }
 
             val nextRoundSetupMatches = nextRound.setupMatches!!.filterNotNull().sortedBy { it.weighting }
 
             // todo Check CanCreateNewRound
-
-            // todo: If there are no teamNumber: Create them here?
 
             val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
             val shuffledRegistrations = registrations
@@ -78,14 +76,14 @@ object CompetitionExecutionService {
             logger.info { "Shuffled Registrations: $shuffledRegistrations" }
 
             if (shuffledRegistrations.isEmpty()) {
-                logger.error { "Error 3 (keine Registrierungen)" }
+                logger.error { "Error (keine Registrierungen)" }
                 return@comprehension KIO.fail(CompetitionExecutionError.NoRegistrations)
             }
 
             if (nextRoundSetupMatches.find { it.teams == null } == null && nextRoundSetupMatches.sumOf {
                     it.teams ?: 0
                 } < shuffledRegistrations.size) {
-                logger.error { "Error 4 (nicht genug Setup Teams / zu viele Registrierungen)" }
+                logger.error { "Error (nicht genug Setup Teams / zu viele Registrierungen)" }
                 return@comprehension KIO.fail(CompetitionExecutionError.NotEnoughSetupTeams)
             }
 
@@ -117,6 +115,7 @@ object CompetitionExecutionService {
                     updatedBy = userId,
                 )
             }
+            !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
 
             logger.info { "Team Records: $newTeamRecords" }
 
@@ -124,7 +123,7 @@ object CompetitionExecutionService {
             // Following Round
             val nextRound = rounds.find { it.setupRoundId == currentRound.nextRound }
             if (nextRound == null) {
-                logger.error { "Error 2 (letzte Runde bereits erstellt)" }
+                logger.error { "Error (letzte Runde bereits erstellt)" }
                 return@comprehension KIO.fail(CompetitionExecutionError.NoSetupRoundFound)
             }
 
@@ -134,10 +133,8 @@ object CompetitionExecutionService {
 
             // todo Check CanCreateNewRound
 
-            val matchRecords = nextRoundSetupMatches.map {
-                !it.applyCompetitionMatch(userId, null)
-            }
-            !CompetitionMatchRepo.create(matchRecords).orDie()
+
+            // --- Collect current round data
 
             val currentRoundTeams = !CompetitionMatchTeamRepo
                 .get(currentRound.matches!!.map { it!!.competitionSetupMatch })
@@ -149,24 +146,56 @@ object CompetitionExecutionService {
 
             val currentTeamsSortedByMatches =
                 currentRoundSetupMatches.map { match ->
-                    match to currentRoundTeams.filter { it.competitionMatch == match.id }.sortedBy { it.place }
+                    currentRoundTeams.filter { it.competitionMatch == match.id }.sortedBy { it.place }
                 }
 
             logger.info { "currentTeamsSortedByMatches: $currentTeamsSortedByMatches" }
 
-            val foo = currentRoundOutcomes
+            val currentTeamsWithOutcome = currentRoundOutcomes
                 .mapIndexed { outcomesIndex, outcomes ->
                     currentTeamsSortedByMatches[outcomesIndex]
-                        .second
                         .mapIndexed { teamIndex, team -> team to outcomes[teamIndex] }
                 }.flatten()
 
-            logger.info { "Mapped Teams and Outcomes: $foo" }
+            logger.info { "Current Teams with Outcomes: $currentTeamsWithOutcome" }
+
+            // --- Create next round
 
             val nextRoundSetupParticipants =
                 !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
             logger.info { "nextRoundSetupParticipants: $nextRoundSetupParticipants" }
 
+            val matchRecords = nextRoundSetupMatches
+                .filterIndexed { index, _ -> index < currentRoundTeams.size }
+                .map {
+                    !it.applyCompetitionMatch(userId, null)
+                }
+            !CompetitionMatchRepo.create(matchRecords).orDie()
+
+            val oldTeamToParticipantId = currentTeamsWithOutcome.map { cTeam ->
+                cTeam.first to nextRoundSetupParticipants.find { p -> p.seed == cTeam.second } // Match Outcomes with ParticipantSeeds
+            }.filter { team -> team.second != null } // Filter teams that have not made it to next round
+            logger.info { "Old team to new participantSeed: $oldTeamToParticipantId" }
+
+
+            val newTeamRecords = oldTeamToParticipantId.map { oldTeam ->
+
+                val match = oldTeam.second!!.competitionSetupMatch!!
+
+                CompetitionMatchTeamRecord(
+                    id = UUID.randomUUID(),
+                    competitionMatch = match,
+                    competitionRegistration = oldTeam.first.competitionRegistration,
+                    place = null,
+                    createdAt = LocalDateTime.now(),
+                    createdBy = userId,
+                    updatedAt = LocalDateTime.now(),
+                    updatedBy = userId,
+                )
+            }
+            !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+
+            logger.info { "New Team Records: $newTeamRecords" }
         }
 
 

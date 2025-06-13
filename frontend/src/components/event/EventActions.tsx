@@ -6,7 +6,12 @@ import {
     Dialog,
     Link as MuiLink,
     Stack,
-    Typography,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
 } from '@mui/material'
 import {Trans, useTranslation} from 'react-i18next'
 import {
@@ -21,6 +26,12 @@ import {eventRoute} from '@routes'
 import * as React from 'react'
 import Checkbox from '@mui/material/Checkbox'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
+import Throbber from '@components/Throbber.tsx'
+import ReplayIcon from '@mui/icons-material/Replay'
+import DownloadIcon from '@mui/icons-material/Download'
+import ReceiptIcon from '@mui/icons-material/Receipt'
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
+import {Info} from '@mui/icons-material'
 
 type Props = {
     registrationsFinalized: boolean
@@ -33,7 +44,9 @@ const EventActions = ({registrationsFinalized}: Props) => {
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
 
-    const [finalizeSuccessful, setFinalizeSuccessful] = useState(false)
+    const [finalized, setFinalized] = useState<false | number>(
+        registrationsFinalized ? Date.now() : false,
+    )
 
     const handleFinalizeRegistrations = async (keepNumbers: boolean) => {
         const {error} = await finalizeRegistrations({
@@ -42,12 +55,11 @@ const EventActions = ({registrationsFinalized}: Props) => {
                 keepNumbers: keepNumbers,
             },
         })
-
         if (error) {
             feedback.error('[todo] Error when finalizing Registrations')
         } else {
-            setFinalizeSuccessful(true)
             feedback.success('Registrations finalized')
+            setFinalized(Date.now())
         }
     }
 
@@ -71,27 +83,14 @@ const EventActions = ({registrationsFinalized}: Props) => {
         }
     }
 
-    const handleProduceInvoices = async () => {
-        const {data, error} = await produceInvoicesForEventRegistrations({
-            path: {eventId},
-        })
-
-        if (error !== undefined) {
-            feedback.error('[todo] could not produce invoices, cause: ...')
-        } else if (data !== undefined) {
-            feedback.success('[todo] invoice producing jobs created')
-        }
-    }
-
     const {data: registrationsWithoutTeamNumber, pending: pendingRegistrationsWithoutTeamNumber} =
         useFetch(signal => getRegistrationsWithoutTeamNumber({signal, path: {eventId}}), {
-            onResponse: ({data, error}) => {
+            onResponse: ({error}) => {
                 if (error) {
                     feedback.error('[todo] Error when loading competition registrations')
-                } else {
                 }
             },
-            deps: [],
+            deps: [eventId, finalized],
         })
 
     const [dialogIsOpen, setDialogIsOpen] = useState(false)
@@ -101,33 +100,108 @@ const EventActions = ({registrationsFinalized}: Props) => {
         setKeepTeamNumbersSelected(event.target.checked)
     }
 
+    const handleProduceInvoices = async () => {
+        const {data, error} = await produceInvoicesForEventRegistrations({
+            path: {eventId},
+        })
+
+        if (error !== undefined) {
+            feedback.error('[todo] could not produce invoices, cause: ...') // todo: if 409: Provide Bank Account and Contact Information
+        } else if (data !== undefined) {
+            feedback.success('[todo] invoice producing jobs created')
+        }
+    }
+
     return (
         <>
             <MuiLink ref={downloadRef} display={'none'}></MuiLink>
             <Stack spacing={4}>
-                {registrationsFinalized ? (
-                    <Button
-                        variant={'contained'}
-                        onClick={() => handleFinalizeRegistrations(false)}>
-                        {'[todo] Finalize Registrations'}
-                    </Button>
-                ) : (
-                    registrationsWithoutTeamNumber !== null && (
+                {registrationsWithoutTeamNumber !== null ? (
+                    finalized === false ? (
+                        <Button
+                            variant={'contained'}
+                            onClick={() => handleFinalizeRegistrations(false)}>
+                            {'[todo] Finalize Registrations'}
+                        </Button>
+                    ) : (
                         <>
                             {registrationsWithoutTeamNumber.length > 0 && (
                                 <Alert severity={'warning'}>
-                                    <AlertTitle>{'[todo] There are new registrations'}</AlertTitle>
+                                    <Box sx={{display: 'flex', gap: 1}}>
+                                        <AlertTitle>
+                                            {'[todo] There are new registrations'}
+                                        </AlertTitle>
+                                        <HtmlTooltip
+                                            placement={'bottom'}
+                                            title={
+                                                <TableContainer>
+                                                    <Table>
+                                                        <TableHead>
+                                                            <TableRow>
+                                                                <TableCell>
+                                                                    {'[todo] Competition'}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    {'[todo] Registration'}
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        </TableHead>
+                                                        <TableBody>
+                                                            {registrationsWithoutTeamNumber
+                                                                ?.sort((a, b) =>
+                                                                    a.competitionIdentifier ===
+                                                                    b.competitionIdentifier
+                                                                        ? a.registrationClub >
+                                                                          b.registrationClub
+                                                                            ? -1
+                                                                            : 1
+                                                                        : a.competitionIdentifier >
+                                                                            b.competitionIdentifier
+                                                                          ? -1
+                                                                          : 1,
+                                                                )
+                                                                .map(reg => (
+                                                                    <TableRow
+                                                                        key={reg.registrationId}>
+                                                                        <TableCell>
+                                                                            {
+                                                                                reg.competitionIdentifier
+                                                                            }
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            {reg.registrationClub +
+                                                                                (reg.registrationName ??
+                                                                                    '')}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </TableContainer>
+                                            }>
+                                            <Info color={'info'} fontSize={'small'} />
+                                        </HtmlTooltip>
+                                    </Box>
                                     [todo] Since the last finalization, new registrations were made.
                                     These new registrations will not participate in the competitions
                                     until the registrations are refinalized.
                                 </Alert>
                             )}
-                            <Button variant={'contained'} onClick={handleReportDownload}>
-                                {t('event.action.registrationsReport.download')}
-                            </Button>
-                            <Button variant={'contained'} onClick={() => setDialogIsOpen(true)}>
-                                {'[todo] Refinalize Registrations'}
-                            </Button>
+                            <Box sx={{display: 'flex', gap: 2}}>
+                                <Button
+                                    variant={'contained'}
+                                    onClick={handleReportDownload}
+                                    startIcon={<DownloadIcon />}
+                                    sx={{flex: 1}}>
+                                    {t('event.action.registrationsReport.download')}
+                                </Button>
+                                <Button
+                                    variant={'outlined'}
+                                    onClick={() => setDialogIsOpen(true)}
+                                    startIcon={<ReplayIcon />}>
+                                    {'[todo] Refinalize Registrations'}
+                                </Button>
+                            </Box>
                             <Dialog
                                 open={dialogIsOpen}
                                 onClose={() => setDialogIsOpen(false)}
@@ -182,9 +256,13 @@ const EventActions = ({registrationsFinalized}: Props) => {
                             </Dialog>
                         </>
                     )
+                ) : (
+                    pendingRegistrationsWithoutTeamNumber && <Throbber />
                 )}
-
-                <Button variant={'contained'} onClick={handleProduceInvoices}>
+                <Button
+                    variant={'contained'}
+                    onClick={handleProduceInvoices}
+                    startIcon={<ReceiptIcon />}>
                     <Trans i18nKey={'event.action.produceInvoices'} />
                 </Button>
             </Stack>
