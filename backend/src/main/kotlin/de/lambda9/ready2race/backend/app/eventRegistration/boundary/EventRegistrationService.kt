@@ -490,72 +490,54 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.sortedBy { it!!.startNumber }.forEach { team ->
+                            club!!.teams!!.forEach { team ->
                                 team!!
                                 block(
                                     padding = Padding(0f, 0f, 0f, 15f)
                                 ) {
-                                    block(
-                                        padding = Padding(bottom = 5f)
-                                    ) {
-                                        text(
-                                            fontStyle = FontStyle.BOLD,
-                                            fontSize = 11f,
-                                        ) { "Startnummer / " }
+
+                                    text(
+                                        fontStyle = FontStyle.BOLD
+                                    ) { club.name!! }
+                                    team.teamName?.let {
                                         text(
                                             newLine = false,
-                                        ) { "Start number  " }
-                                        text(
-                                            newLine = false,
-                                            fontSize = 11f,
-                                            fontStyle = FontStyle.BOLD,
-                                        ) { team.startNumber.toString() }
+                                        ) { " $it" }
                                     }
 
-                                    block(
-                                        padding = Padding(left = 10f)
+                                    table(
+                                        padding = Padding(5f, 0f, 0f, 0f),
+                                        withBorder = true,
                                     ) {
-                                        text { club.name!! }
-                                        team.teamName?.let {
-                                            text(
-                                                newLine = false,
-                                            ) { " $it" }
-                                        }
+                                        column(0.15f)
+                                        column(0.2f)
+                                        column(0.2f)
+                                        column(0.1f)
+                                        column(0.35f)
 
-                                        table(
-                                            padding = Padding(5f, 0f, 0f, 0f),
-                                            withBorder = true,
-                                        ) {
-                                            column(0.15f)
-                                            column(0.2f)
-                                            column(0.2f)
-                                            column(0.1f)
-                                            column(0.35f)
-
-                                            team.participants!!
-                                                .sortedBy { it!!.role }
-                                                .forEachIndexed { idx, member ->
-                                                    row(
-                                                        color = if (idx % 2 == 1) Color(230, 230, 230) else null,
-                                                    ) {
-                                                        cell {
-                                                            text { member!!.role!! }
-                                                        }
-                                                        cell {
-                                                            text { member!!.firstname!! }
-                                                        }
-                                                        cell {
-                                                            text { member!!.lastname!! }
-                                                        }
-                                                        cell {
-                                                            text { member!!.year!!.toString() }
-                                                        }
-                                                        cell {
-                                                            text { member!!.externalClubName ?: club.name!! }
-                                                        }
+                                        team.participants!!
+                                            .sortedBy { it!!.role }
+                                            .forEachIndexed { idx, member ->
+                                                row(
+                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                ) {
+                                                    cell {
+                                                        text { member!!.role!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.firstname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.lastname!! }
+                                                    }
+                                                    cell {
+                                                        text { member!!.year!!.toString() }
+                                                    }
+                                                    cell {
+                                                        text { member!!.externalClubName ?: club.name!! }
                                                     }
                                                 }
-                                        }
+                                            }
                                     }
                                 }
                             }
