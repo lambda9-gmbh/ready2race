@@ -509,49 +509,34 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.sortedBy { it!!.teamNumber }.forEach { team ->
+                            club!!.teams!!.forEach { team ->
                                 team!!
                                 block(
                                     padding = Padding(0f, 0f, 0f, 15f)
                                 ) {
-                                    block(
-                                        padding = Padding(bottom = 5f)
-                                    ) {
-                                        text(
-                                            fontStyle = FontStyle.BOLD,
-                                            fontSize = 11f,
-                                        ) { "Teamnummer / " }
+
+                                    text(
+                                        fontStyle = FontStyle.BOLD
+                                    ) { club.name!! }
+                                    team.teamName?.let {
                                         text(
                                             newLine = false,
-                                        ) { "Team number  " }
-                                        text(
-                                            newLine = false,
-                                            fontSize = 11f,
-                                            fontStyle = FontStyle.BOLD,
-                                        ) { team.teamNumber.toString() }
+                                        ) { " $it" }
                                     }
 
-                                    block(
-                                        padding = Padding(left = 10f)
+                                    table(
+                                        padding = Padding(5f, 0f, 0f, 0f),
+                                        withBorder = true,
                                     ) {
-                                        text { club.name!! }
-                                        team.teamName?.let {
-                                            text(
-                                                newLine = false,
-                                            ) { " $it" }
-                                        }
+                                        column(0.15f)
+                                        column(0.2f)
+                                        column(0.2f)
+                                        column(0.1f)
+                                        column(0.35f)
 
-                                        table(
-                                            padding = Padding(5f, 0f, 0f, 0f),
-                                            withBorder = true,
-                                        ) {
-                                            column(0.15f)
-                                            column(0.2f)
-                                            column(0.2f)
-                                            column(0.1f)
-                                            column(0.35f)
-
-                                            team.participants!!.sortedBy { it!!.role }.forEachIndexed { idx, member ->
+                                        team.participants!!
+                                            .sortedBy { it!!.role }
+                                            .forEachIndexed { idx, member ->
                                                 row(
                                                     color = if (idx % 2 == 1) Color(230, 230, 230) else null,
                                                 ) {
@@ -572,7 +557,6 @@ object EventRegistrationService {
                                                     }
                                                 }
                                             }
-                                        }
                                     }
                                 }
                             }

@@ -352,6 +352,7 @@ object EventRegistrationRepo {
             teams
         ).from(COMPETITION_VIEW)
             .where(COMPETITION_VIEW.TOTAL_COUNT.greaterThan(1))
+            .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
             .orderBy(COMPETITION_VIEW.NAME)
             .asMultiset("teamCompetitions")
             .convertFrom {
@@ -420,6 +421,7 @@ object EventRegistrationRepo {
         )
         .where(COMPETITION_VIEW.TOTAL_COUNT.eq(1))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
+        .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
         .asMultiset("singleCompetitions")
         .convertFrom {
             it!!.map {
