@@ -421,6 +421,7 @@ object EventRegistrationRepo {
         )
         .where(COMPETITION_VIEW.TOTAL_COUNT.eq(1))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
+        .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
         .asMultiset("singleCompetitions")
         .convertFrom {
             it!!.map {
