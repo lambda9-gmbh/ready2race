@@ -7,7 +7,8 @@ import io.ktor.http.*
 enum class CompetitionExecutionError : ServiceError {
     NoSetupRoundFound,
     NoRegistrations,
-    NotEnoughSetupTeams;
+    NotEnoughSetupTeams,
+    NotAllPlacesSet;
 
     override fun respond(): ApiError = when (this) {
         NoSetupRoundFound -> ApiError(status = HttpStatusCode.BadRequest, message = "No setup round found")
@@ -18,6 +19,10 @@ enum class CompetitionExecutionError : ServiceError {
         NotEnoughSetupTeams -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "More registrations than the setup has allowed"
+        )
+        NotAllPlacesSet -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Not all places are set in the current round"
         )
     }
 }

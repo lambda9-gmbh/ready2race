@@ -17,8 +17,10 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noDat
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupMatchRecord
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import org.jooq.impl.QOM.Not
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -66,48 +68,45 @@ object CompetitionExecutionService {
 
             val nextRoundSetupMatches = nextRound.setupMatches!!.filterNotNull().sortedBy { it.weighting }
 
-            // todo Check CanCreateNewRound
-
             val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
-            val shuffledRegistrations = registrations
+            val sortedRegistrations = registrations
                 .filter { it.teamNumber != null } // Registrations without teamNumber are ignored. A confirmation Dialog makes aware of this behaviour
                 .sortedBy { it.teamNumber }
 
-            logger.info { "Shuffled Registrations: $shuffledRegistrations" }
+            logger.info { "Registrations: $sortedRegistrations" }
 
-            if (shuffledRegistrations.isEmpty()) {
+            if (sortedRegistrations.isEmpty()) {
                 logger.error { "Error (keine Registrierungen)" }
                 return@comprehension KIO.fail(CompetitionExecutionError.NoRegistrations)
             }
 
             if (nextRoundSetupMatches.find { it.teams == null } == null && nextRoundSetupMatches.sumOf {
                     it.teams ?: 0
-                } < shuffledRegistrations.size) {
+                } < sortedRegistrations.size) {
                 logger.error { "Error (nicht genug Setup Teams / zu viele Registrierungen)" }
                 return@comprehension KIO.fail(CompetitionExecutionError.NotEnoughSetupTeams)
             }
 
             val matchRecords = nextRoundSetupMatches
-                .filterIndexed { index, _ -> index < shuffledRegistrations.size }
+                .filterIndexed { index, _ -> index < sortedRegistrations.size }
                 .map {
                     !it.applyCompetitionMatch(userId, null)
                 }
             !CompetitionMatchRepo.create(matchRecords).orDie()
 
-            logger.info { "Matches: $matchRecords" }
-
             // todo: Leihboote zu beachten?
 
             val seedingList = getSeedingList(nextRoundSetupMatches, registrations.size)
 
-            val newTeamRecords = shuffledRegistrations.mapIndexed { index, reg ->
+            val newTeamRecords = sortedRegistrations.mapIndexed { index, reg ->
 
-                val match = matchRecords[seedingList.indexOfFirst { it.contains(index + 1) }]
+                val matchIndex = seedingList.indexOfFirst { it.contains(index + 1) }
 
                 CompetitionMatchTeamRecord(
                     id = UUID.randomUUID(),
-                    competitionMatch = match.competitionSetupMatch,
+                    competitionMatch = matchRecords[matchIndex].competitionSetupMatch,
                     competitionRegistration = reg.id,
+                    startNumber = seedingList[matchIndex].indexOfFirst { it == index + 1 } + 1,
                     place = null,
                     createdAt = LocalDateTime.now(),
                     createdBy = userId,
@@ -115,9 +114,9 @@ object CompetitionExecutionService {
                     updatedBy = userId,
                 )
             }
+            logger.info { "Team Records: $newTeamRecords" }
             !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
 
-            logger.info { "Team Records: $newTeamRecords" }
 
         } else {
             // Following Round
@@ -130,9 +129,7 @@ object CompetitionExecutionService {
             val currentRoundSetupMatches = currentRound.setupMatches!!.filterNotNull().sortedBy { it.weighting }
             val nextRoundSetupMatches = nextRound.setupMatches!!.filterNotNull().sortedBy { it.weighting }
 
-
-            // todo Check CanCreateNewRound
-
+            // todo ?? Automatic skip round if it is optional and just 1-Participant-Matches? - (Frontend Dialog?)
 
             // --- Collect current round data
 
@@ -140,9 +137,14 @@ object CompetitionExecutionService {
                 .get(currentRound.matches!!.map { it!!.competitionSetupMatch })
                 .orDie()
 
+
+            if (currentRoundTeams.find { it.place == null } != null) {
+                logger.error { "Error (Nicht alle Platzierungen eingetragen)" }
+                return@comprehension KIO.fail(CompetitionExecutionError.NotAllPlacesSet)
+            }
+
             val currentRoundOutcomes =
                 getSeedingList(currentRoundSetupMatches, nextRoundSetupMatches.sumOf { it.teams!! })
-            logger.info { "Current round outcomes: $currentRoundOutcomes" }
 
             val currentTeamsSortedByMatches =
                 currentRoundSetupMatches.map { match ->
@@ -157,13 +159,10 @@ object CompetitionExecutionService {
                         .mapIndexed { teamIndex, team -> team to outcomes[teamIndex] }
                 }.flatten()
 
-            logger.info { "Current Teams with Outcomes: $currentTeamsWithOutcome" }
-
             // --- Create next round
 
             val nextRoundSetupParticipants =
                 !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
-            logger.info { "nextRoundSetupParticipants: $nextRoundSetupParticipants" }
 
             val matchRecords = nextRoundSetupMatches
                 .filterIndexed { index, _ -> index < currentRoundTeams.size }
@@ -175,17 +174,15 @@ object CompetitionExecutionService {
             val oldTeamToParticipantId = currentTeamsWithOutcome.map { cTeam ->
                 cTeam.first to nextRoundSetupParticipants.find { p -> p.seed == cTeam.second } // Match Outcomes with ParticipantSeeds
             }.filter { team -> team.second != null } // Filter teams that have not made it to next round
-            logger.info { "Old team to new participantSeed: $oldTeamToParticipantId" }
 
 
             val newTeamRecords = oldTeamToParticipantId.map { oldTeam ->
 
-                val match = oldTeam.second!!.competitionSetupMatch!!
-
                 CompetitionMatchTeamRecord(
                     id = UUID.randomUUID(),
-                    competitionMatch = match,
+                    competitionMatch = oldTeam.second!!.competitionSetupMatch!!,
                     competitionRegistration = oldTeam.first.competitionRegistration,
+                    startNumber = oldTeam.second!!.ranking,
                     place = null,
                     createdAt = LocalDateTime.now(),
                     createdBy = userId,
@@ -193,11 +190,10 @@ object CompetitionExecutionService {
                     updatedBy = userId,
                 )
             }
+            logger.info { "New Team Records: $newTeamRecords" }
             !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
 
-            logger.info { "New Team Records: $newTeamRecords" }
         }
-
 
         noData
     }
