@@ -18,7 +18,7 @@ import java.util.*
 object CompetitionRepo {
 
     private fun CompetitionView.searchFields() =
-        listOf(ID, EVENT, NAME, SHORT_NAME, DSL.concat(IDENTIFIER_PREFIX, IDENTIFIER_SUFFIX), CATEGORY_NAME)
+        listOf(ID, EVENT, NAME, SHORT_NAME, DSL.concat(IDENTIFIER_PREFIX, DSL.coalesce(IDENTIFIER_SUFFIX, "")), CATEGORY_NAME)
 
     private fun CompetitionForClubView.searchFields() =
         listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
