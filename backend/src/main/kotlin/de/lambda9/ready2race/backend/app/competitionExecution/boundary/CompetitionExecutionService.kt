@@ -4,8 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionProgressDto
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
@@ -75,7 +74,6 @@ object CompetitionExecutionService {
         val rounds = !CompetitionSetupRoundRepo.getWithMatchesBySetup(setupId).orDie()
 
         val currentAndNextRound = getCurrentAndNextRound(rounds)
-        logger.info { "Current and next Round $currentAndNextRound" }
 
         if (currentAndNextRound.first == null) {
 
@@ -118,7 +116,6 @@ object CompetitionExecutionService {
                     updatedBy = userId,
                 )
             }
-            logger.info { "Team Records: $newTeamRecords" }
             !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
 
 
@@ -182,7 +179,6 @@ object CompetitionExecutionService {
                     updatedBy = userId,
                 )
             }
-            logger.info { "New Team Records: $newTeamRecords" }
             !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
 
         }
@@ -246,6 +242,43 @@ object CompetitionExecutionService {
                 )
             }
         }
+
+    fun updateMatch(
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchRequest
+    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+
+        CompetitionMatchRepo.update(matchId) {
+            startTime = request.startTime
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !request.teams.traverse { team ->
+            CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, team.registrationId) {
+                startNumber = team.startNumber
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+        }
+
+        noData
+    }
+
+    fun updateMatchResult(
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchResultRequest,
+    ): App<CompetitionExecutionError, ApiResponse.NoData> =
+        request.teamResults.traverse { result ->
+            CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
+                place = result.place
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+        }.map { ApiResponse.NoData }
+
 
     private fun getCurrentAndNextRound(
         rounds: List<CompetitionSetupRoundWithMatchesRecord>

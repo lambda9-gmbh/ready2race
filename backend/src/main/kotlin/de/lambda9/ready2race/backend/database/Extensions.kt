@@ -106,6 +106,16 @@ fun <R : UpdatableRecord<R>, T : TableImpl<R>> T.update(
     fetchOne(this@update, condition())?.updateChanges(f)
 }
 
+fun <R : UpdatableRecord<R>, T : TableImpl<R>> T.updateMany(
+    f: R.() -> Unit,
+    condition: T.() -> Condition
+) = Jooq.query {
+    val records = fetch(this@updateMany, condition())
+    records.forEach { it.f() }
+    batchUpdate(records)
+        .execute()
+}
+
 fun <R : Record, T : TableImpl<R>> T.exists(
     condition: T.() -> Condition
 ): JIO<Boolean> = Jooq.query {

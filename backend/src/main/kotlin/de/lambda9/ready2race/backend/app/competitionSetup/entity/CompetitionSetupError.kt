@@ -7,9 +7,11 @@ import io.ktor.http.*
 sealed interface CompetitionSetupError : ServiceError {
     data object NotFound : CompetitionSetupError
     data object CompetitionPropertiesNotFound: CompetitionSetupError
+    data object RoundNotFound: CompetitionSetupError
 
     override fun respond(): ApiError = when (this) {
-        NotFound -> ApiError(status = HttpStatusCode.NotFound, message = "CompetitionSetupError not found")
+        NotFound -> ApiError(status = HttpStatusCode.NotFound, message = "CompetitionSetup not found")
         CompetitionPropertiesNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "CompetitionProperties not found")
+        RoundNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "CompetitionSetupRound not found")
     }
 }

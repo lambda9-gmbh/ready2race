@@ -6,6 +6,8 @@ import de.lambda9.ready2race.backend.calls.responses.ErrorCode
 import io.ktor.http.*
 
 enum class CompetitionExecutionError : ServiceError {
+    MatchNotFound,
+    MatchTeamNotFound,
     NoRoundsInSetup,
     FinalRoundAlreadyCreated,
     NoSetupMatchesInRound,
@@ -14,6 +16,16 @@ enum class CompetitionExecutionError : ServiceError {
     NotAllPlacesSet;
 
     override fun respond(): ApiError = when (this) {
+        MatchNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            message = "Competition match not found",
+        )
+
+        MatchTeamNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            message = "Team not found",
+        )
+
         NoRoundsInSetup -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Competition setup has no rounds defined",
