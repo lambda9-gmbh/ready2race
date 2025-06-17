@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrat
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -66,6 +67,7 @@ fun Route.event() {
             participantRequirementForEvent()
             participantForEvent()
             task()
+            workShift()
 
             get {
                 call.respondComprehension {

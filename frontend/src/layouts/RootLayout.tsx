@@ -132,6 +132,7 @@ const RootLayout = () => {
                                 padding: 4,
                                 width: 1,
                             }}
+                            overflow={'auto'}
                             justifyContent={'space-between'}>
                             <Outlet />
                             {!user.loggedIn &&

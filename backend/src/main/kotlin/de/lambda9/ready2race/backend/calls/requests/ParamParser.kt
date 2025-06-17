@@ -4,6 +4,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -16,6 +17,7 @@ fun interface ParamParser<A : Any> {
 
         val int get() = ParamParser { it.toInt() }
         val uuid get() = ParamParser { UUID.fromString(it) }
+        val datetime get() = ParamParser { LocalDateTime.parse(it) }
         val boolean get() = ParamParser { it.toBooleanStrict() }
 
         inline fun <reified T : Any> json() = ParamParser { jsonMapper.readValue<T>(it) }

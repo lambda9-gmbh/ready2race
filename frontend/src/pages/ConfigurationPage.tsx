@@ -9,6 +9,7 @@ import {
     FeeDto,
     NamedParticipantDto,
     ParticipantRequirementDto,
+    WorkTypeDto,
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import ParticipantRequirementTable from '@components/event/participantRequirement/ParticipantRequirementTable.tsx'
@@ -26,10 +27,14 @@ import CompetitionTemplateTable from '@components/event/competition/template/Com
 import CompetitionTemplateDialog from '@components/event/competition/template/CompetitionTemplateDialog.tsx'
 import {configurationIndexRoute} from '@routes'
 import {useNavigate} from '@tanstack/react-router'
-import DocumentTemplateTable from "@components/documentTemplate/DocumentTemplateTable.tsx";
-import DocumentTemplateDialog from "@components/documentTemplate/DocumentTemplateDialog.tsx";
-import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentTemplate.tsx";
-import InlineLink from "@components/InlineLink.tsx";
+import DocumentTemplateTable from '@components/documentTemplate/DocumentTemplateTable.tsx'
+import DocumentTemplateDialog from '@components/documentTemplate/DocumentTemplateDialog.tsx'
+import AssignDocumentTemplate from '@components/documentTemplate/AssignDocumentTemplate.tsx'
+import InlineLink from '@components/InlineLink.tsx'
+import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
+import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
+
+export const CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX = 2
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -69,11 +74,12 @@ const ConfigurationPage = () => {
             t('participantRequirement.participantRequirement'),
         )
 
-    const documentTemplateAdministrationProps =
-        useEntityAdministration<DocumentTemplateDto>(
-            t('document.template.template'),
-            {entityUpdate: false}
-        )
+    const documentTemplateAdministrationProps = useEntityAdministration<DocumentTemplateDto>(
+        t('document.template.template'),
+        {entityUpdate: false},
+    )
+
+    const workTypeAdministrationProps = useEntityAdministration<WorkTypeDto>(t('work.type.type'))
 
     return (
         <Stack spacing={4}>
@@ -81,7 +87,10 @@ const ConfigurationPage = () => {
             <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                 <Tab label={t('configuration.tabs.competitionTemplates')} {...a11yProps(0)} />
                 <Tab label={t('configuration.tabs.competitionElements')} {...a11yProps(1)} />
-                <Tab label={t('configuration.tabs.eventElements')} {...a11yProps(2)} />
+                <Tab
+                    label={t('configuration.tabs.eventElements')}
+                    {...a11yProps(CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX)}
+                />
                 <Tab label={t('configuration.tabs.globalSettings')} {...a11yProps(3)} />
             </TabSelectionContainer>
             <TabPanel index={0} activeTab={activeTab}>
@@ -114,7 +123,7 @@ const ConfigurationPage = () => {
                     <FeeDialog {...feeAdministrationProps.dialog} />
                 </Stack>
             </TabPanel>
-            <TabPanel index={2} activeTab={activeTab}>
+            <TabPanel index={CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX} activeTab={activeTab}>
                 <Stack spacing={2}>
                     <DocumentTypeTable
                         {...documentTypeAdministrationProps.table}
@@ -141,12 +150,16 @@ const ConfigurationPage = () => {
                                     {t('document.template.tableHint.3')}
                                 </InlineLink>
                                 {t('document.template.tableHint.4')}
-                            </>
+                            </>,
                         ]}
                     />
-                    <DocumentTemplateDialog
-                        {...documentTemplateAdministrationProps.dialog}
+                    <DocumentTemplateDialog {...documentTemplateAdministrationProps.dialog} />
+                    <WorkTypeTable
+                        {...workTypeAdministrationProps.table}
+                        title={t('work.type.types')}
+                        hints={[t('work.type.tableHint')]}
                     />
+                    <WorkTypeDialog {...workTypeAdministrationProps.dialog} />
                 </Stack>
             </TabPanel>
             <TabPanel index={3} activeTab={activeTab}>
