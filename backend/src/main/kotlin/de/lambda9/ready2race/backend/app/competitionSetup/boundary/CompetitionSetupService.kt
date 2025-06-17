@@ -162,18 +162,6 @@ object CompetitionSetupService {
         val placeRecords = !CompetitionSetupPlaceRepo.get(roundRecords.map { it.id }).orDie()
 
 
-        // Map and filter the Records into the Dto
-        val rounds: MutableList<CompetitionSetupRoundRecord> = mutableListOf()
-        fun addRoundToSortedList(r: CompetitionSetupRoundRecord?) {
-            if (r != null) {
-                rounds.add(r)
-
-                addRoundToSortedList(roundRecords.firstOrNull { it.nextRound == r.id })
-            }
-        }
-        addRoundToSortedList(roundRecords.firstOrNull { it.nextRound == null })
-
-
         val roundDtos = roundRecords.reversed().map { round ->
             // If there are Groups in this round (every match has a group reference): round.matches = null
             // In that case the Matches are assigned to the respective group

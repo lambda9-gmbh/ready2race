@@ -8,14 +8,31 @@ import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
 fun Route.competitionExecution(){
-    route("/createNextRound"){
-        post {
+    route("competitionExecution"){
+        get{
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                 val competitionId = !pathParam("competitionId", uuid)
 
-                CompetitionExecutionService.createNewRound(competitionId, user.id!!)
+                CompetitionExecutionService.getProgress(competitionId)
             }
         }
+        route("/createNextRound"){
+            post {
+                call.respondComprehension {
+                    val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
+
+                    CompetitionExecutionService.createNewRound(competitionId, user.id!!)
+                }
+            }
+        }
+        route("currentRound"){
+            put{
+                // todo Update Places and Start Time
+            }
+        }
+
     }
+
 }

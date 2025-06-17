@@ -220,10 +220,10 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                 />
                                             </FormInputLabel>
                                             <Alert severity={'info'}>
-                                                [todo] When keeping the team numbers, new
-                                                teams/participants will receive new random team
+                                                [todo] When keeping the start numbers, new
+                                                teams/participants will receive new random start
                                                 numbers. These will be higher than the currently
-                                                highest of the competition. If not, all the team
+                                                highest of the competition. If not, all the start
                                                 numbers will be reshuffled.
                                             </Alert>
                                             <Button
@@ -240,7 +240,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                     ) : (
                                         <>
                                             <Alert severity={'info'}>
-                                                [todo] This will reshuffle all team numbers
+                                                [todo] This will reshuffle all start numbers
                                             </Alert>
                                             <Button
                                                 variant={'contained'}
@@ -250,6 +250,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                 }}>
                                                 {'[todo] Refinalize'}
                                             </Button>
+                                            {/* todo cancel button */}
                                         </>
                                     )}
                                 </Stack>

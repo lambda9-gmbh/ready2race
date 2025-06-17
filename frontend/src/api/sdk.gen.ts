@@ -136,6 +136,9 @@ import type {
     GetCompetitionSetupData,
     GetCompetitionSetupError,
     GetCompetitionSetupResponse,
+    GetCompetitionExecutionProgressData,
+    GetCompetitionExecutionProgressError,
+    GetCompetitionExecutionProgressResponse,
     CreateNextCompetitionRoundData,
     CreateNextCompetitionRoundError,
     CreateNextCompetitionRoundResponse,
@@ -875,6 +878,19 @@ export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getCompetitionExecutionProgress = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionExecutionProgressData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionExecutionProgressResponse,
+        GetCompetitionExecutionProgressError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution',
+    })
+}
+
 export const createNextCompetitionRound = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<CreateNextCompetitionRoundData, ThrowOnError>,
 ) => {
@@ -884,7 +900,7 @@ export const createNextCompetitionRound = <ThrowOnError extends boolean = false>
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/createNextRound',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/createNextRound',
     })
 }
 

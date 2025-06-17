@@ -1,7 +1,9 @@
 set search_path to ready2race, pg_catalog, public;
 
-drop view if exists event_with_event_registration_report;
+drop view if exists event_view;
 drop view if exists competition_setup_round_with_matches;
+drop view if exists competition_match_with_teams;
+drop view if exists competition_match_team_with_registrations;
 drop view if exists event_registration_for_invoice;
 drop view if exists competition_registration_with_fees;
 drop view if exists applied_fee;
@@ -13,7 +15,6 @@ drop view if exists registered_competition_team;
 drop view if exists registered_competition_team_participant;
 drop view if exists event_registration_report_download;
 drop view if exists event_registrations_view;
-drop view if exists event_view;
 drop view if exists event_public_view;
 drop view if exists participant_for_event;
 drop view if exists participant_id_for_event;
@@ -556,18 +557,43 @@ from event_registration er
 group by er.id, c.id, au.id
 ;
 
+create view competition_match_team_with_registrations as
+select cmt.id,
+       cmt.competition_match,
+       cmt.start_number,
+       cmt.place,
+       cmt.competition_registration,
+       cr.club as club_id,
+       c.name  as club_name,
+       cr.name as registration_name,
+       cr.team_number
+from competition_match_team cmt
+         left join competition_registration cr on cr.id = cmt.competition_registration
+         left join club c on c.id = cr.club
+;
+
+create view competition_match_with_teams as
+select cm.competition_setup_match,
+       cm.start_time,
+       coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams
+from competition_match cm
+         left join competition_match_team_with_registrations cmtwr
+                   on cm.competition_setup_match = cmtwr.competition_match
+group by cm.competition_setup_match
+;
+
 create view competition_setup_round_with_matches as
-select sr.id                                                                             as setup_round_id,
+select sr.id                                                                                 as setup_round_id,
        sr.competition_setup,
        sr.next_round,
-       sr.name                                                                              setup_round_name,
+       sr.name                                                                                  setup_round_name,
        sr.required,
        sr.places_option,
-       coalesce(array_agg(sm) filter (where sm.id is not null), '{}')                    as setup_matches,
-       coalesce(array_agg(m) filter (where m.competition_setup_match is not null), '{}') as matches
+       coalesce(array_agg(sm) filter (where sm.id is not null), '{}')                        as setup_matches,
+       coalesce(array_agg(mwt) filter (where mwt.competition_setup_match is not null), '{}') as matches
 from competition_setup_round sr
          left join competition_setup_match sm on sr.id = sm.competition_setup_round
-         left join competition_match m on sm.id = m.competition_setup_match
+         left join competition_match_with_teams mwt on sm.id = mwt.competition_setup_match
 group by sr.id
 ;
 

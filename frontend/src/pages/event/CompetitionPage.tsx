@@ -8,7 +8,7 @@ import Throbber from '@components/Throbber.tsx'
 import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
 import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
-import {createNextCompetitionRound, getCompetition, getEventDays} from '@api/sdk.gen.ts'
+import {getCompetition, getEventDays} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
@@ -18,6 +18,7 @@ import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate, Link} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {AccountTreeOutlined} from '@mui/icons-material'
+import CompetitionExecution from '@components/event/competition/CompetitionExecution.tsx'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -129,6 +130,8 @@ const CompetitionPage = () => {
                                     {...a11yProps(1)}
                                 />
                             )}
+                            <Tab label={'[todo] Execution'} {...a11yProps(2)} />
+                            <Tab label={t('event.competition.setup.setup')} {...a11yProps(3)} />
                         </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
                             <Stack direction={'row'} spacing={2}>
@@ -205,40 +208,23 @@ const CompetitionPage = () => {
                                         </Box>
                                     ))}
                                 </Stack>
-                                <Stack direction={'column'} spacing={4}>
-                                    <Box>
-                                        {(eventDaysData && assignedEventDaysData && (
-                                            <CompetitionAndDayAssignment
-                                                entityPathId={competitionId}
-                                                options={selection}
-                                                assignedEntities={assignedEventDays}
-                                                assignEntityLabel={t('event.eventDay.eventDay')}
-                                                competitionsToDay={false}
-                                                onSuccess={() =>
-                                                    setReloadDataTrigger(!reloadDataTrigger)
-                                                }
-                                            />
-                                        )) ||
-                                            ((eventDaysPending || assignedEventDaysPending) && (
-                                                <Throbber />
-                                            ))}
-                                    </Box>
-                                    <Box sx={{display: 'flex', justifyContent: 'end'}}>
-                                        <Link
-                                            to="/event/$eventId/competition/$competitionId/competitionSetup"
-                                            params={{
-                                                eventId: eventId,
-                                                competitionId: competitionId,
-                                            }}>
-                                            <Button
-                                                variant="outlined"
-                                                startIcon={<AccountTreeOutlined />}>
-                                                {t('event.competition.setup.setup')}
-                                            </Button>
-                                        </Link>
-                                    </Box>
-                                    <Button onClick={() => createNextCompetitionRound({path: {eventId: eventId, competitionId: competitionId}})}>Create next round</Button>
-                                </Stack>
+                                <Box>
+                                    {(eventDaysData && assignedEventDaysData && (
+                                        <CompetitionAndDayAssignment
+                                            entityPathId={competitionId}
+                                            options={selection}
+                                            assignedEntities={assignedEventDays}
+                                            assignEntityLabel={t('event.eventDay.eventDay')}
+                                            competitionsToDay={false}
+                                            onSuccess={() =>
+                                                setReloadDataTrigger(!reloadDataTrigger)
+                                            }
+                                        />
+                                    )) ||
+                                        ((eventDaysPending || assignedEventDaysPending) && (
+                                            <Throbber />
+                                        ))}
+                                </Box>
                             </Stack>
                         </TabPanel>
                         {user.loggedIn && (
@@ -253,6 +239,23 @@ const CompetitionPage = () => {
                                 />
                             </TabPanel>
                         )}
+                        <TabPanel index={2} activeTab={activeTab}>
+                            <CompetitionExecution />
+                        </TabPanel>
+                        <TabPanel index={3} activeTab={activeTab}>
+                            <Box>
+                                <Link
+                                    to="/event/$eventId/competition/$competitionId/competitionSetup"
+                                    params={{
+                                        eventId: eventId,
+                                        competitionId: competitionId,
+                                    }}>
+                                    <Button variant="outlined" startIcon={<AccountTreeOutlined />}>
+                                        {t('event.competition.setup.setup')}
+                                    </Button>
+                                </Link>
+                            </Box>
+                        </TabPanel>
                     </Stack>
                 )) ||
                     (competitionPending && <Throbber />)}

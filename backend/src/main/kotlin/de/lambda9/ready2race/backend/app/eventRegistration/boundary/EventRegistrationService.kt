@@ -509,7 +509,7 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.forEach { team ->
+                            club!!.teams!!.sortedWith(lexiNumberComp { it?.teamName }).forEach { team ->
                                 team!!
                                 block(
                                     padding = Padding(0f, 0f, 0f, 15f)

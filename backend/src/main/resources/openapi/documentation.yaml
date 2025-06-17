@@ -1132,7 +1132,30 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/createNextRound:
+  /event/{eventId}/competition/{competitionId}/competitionExecution:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionExecutionProgress
+      responses:
+        200:
+          description: Competition execution progress successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionExecutionProgressDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/createNextRound:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
@@ -3492,6 +3515,12 @@ components:
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES
+        - CE_SETUP_HAS_NO_ROUNDS,
+        - CE_FINAL_ROUND_ALREADY_CREATED,
+        - CE_NO_SETUP_MATCHES_FOR_NEXT_ROUND,
+        - CE_NO_REGISTRATIONS_FOR_COMPETITION,
+        - CE_NOT_ENOUGH_TEAM_SPACE_IN_FIRST_ROUND,
+        - CE_NOT_ALL_PLACES_SET
 
     Gender:
       type: string
@@ -5702,3 +5731,86 @@ components:
       properties:
         assigned:
           $ref: '#/components/schemas/ContactInformationDto'
+
+
+
+    CompetitionExecutionProgressDto:
+      type: object
+      required:
+        - rounds
+        - lastRoundFinished
+        - canCreateNewRound
+      properties:
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRoundDto'
+        lastRoundFinished:
+          type: boolean
+        canCreateNewRound:
+          type: boolean
+
+    CompetitionRoundDto:
+      type: object
+      required:
+        - name
+        - matches
+        - required
+      properties:
+        name:
+          type: string
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionMatchDto'
+        required:
+          type: boolean
+
+    CompetitionMatchDto:
+      type: object
+      required:
+        - teams
+        - weighting
+        - executionOrder
+      properties:
+        name:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionMatchTeamDto'
+        weighting:
+          type: integer
+        executionOrder:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        startTimeOffset:
+          type: integer
+
+    CompetitionMatchTeamDto:
+      type: object
+      required:
+        - registrationId
+        - teamNumber
+        - clubId
+        - clubName
+        - startNumber
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        teamNumber:
+          type: integer
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        name:
+          type: string
+        startNumber:
+          type: integer
+        place:
+          type: integer

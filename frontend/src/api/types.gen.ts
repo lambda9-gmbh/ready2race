@@ -161,6 +161,31 @@ export type CompetitionDto = {
     registrationCount?: number
 }
 
+export type CompetitionExecutionProgressDto = {
+    rounds: Array<CompetitionRoundDto>
+    lastRoundFinished: boolean
+    canCreateNewRound: boolean
+}
+
+export type CompetitionMatchDto = {
+    name?: string
+    teams: Array<CompetitionMatchTeamDto>
+    weighting: number
+    executionOrder: number
+    startTime?: string
+    startTimeOffset?: number
+}
+
+export type CompetitionMatchTeamDto = {
+    registrationId: string
+    teamNumber: number
+    clubId: string
+    clubName: string
+    name?: string
+    startNumber: number
+    place?: number
+}
+
 export type CompetitionPropertiesDto = {
     identifier: string
     name: string
@@ -237,6 +262,12 @@ export type CompetitionRegistrationUpsertDto = {
 export type CompetitionRequest = {
     properties?: CompetitionPropertiesRequestDto
     template?: string
+}
+
+export type CompetitionRoundDto = {
+    name: string
+    matches: Array<CompetitionMatchDto>
+    required: boolean
 }
 
 export type CompetitionSetupDto = {
@@ -356,7 +387,16 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
-export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE' | 'CANNOT_ASSIGN_ROLES'
+export type ErrorCode =
+    | 'CAPTCHA_WRONG'
+    | 'EMAIL_IN_USE'
+    | 'CANNOT_ASSIGN_ROLES'
+    | 'CE_SETUP_HAS_NO_ROUNDS,'
+    | 'CE_FINAL_ROUND_ALREADY_CREATED,'
+    | 'CE_NO_SETUP_MATCHES_FOR_NEXT_ROUND,'
+    | 'CE_NO_REGISTRATIONS_FOR_COMPETITION,'
+    | 'CE_NOT_ENOUGH_TEAM_SPACE_IN_FIRST_ROUND,'
+    | 'CE_NOT_ALL_PLACES_SET'
 
 export type EventDayDto = {
     id: string
@@ -1548,6 +1588,17 @@ export type GetCompetitionSetupData = {
 export type GetCompetitionSetupResponse = CompetitionSetupDto
 
 export type GetCompetitionSetupError = BadRequestError | ApiError
+
+export type GetCompetitionExecutionProgressData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionExecutionProgressResponse = CompetitionExecutionProgressDto
+
+export type GetCompetitionExecutionProgressError = BadRequestError | ApiError
 
 export type CreateNextCompetitionRoundData = {
     path: {
