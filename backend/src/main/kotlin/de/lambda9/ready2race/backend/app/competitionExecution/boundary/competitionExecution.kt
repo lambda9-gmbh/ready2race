@@ -31,13 +31,15 @@ fun Route.competitionExecution() {
             }
         }
         route("/{competitionMatchId}") {
-            put {
-                call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+            route("/data"){
+                put {
+                    call.respondComprehension {
+                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                        val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
-                    val body = !receiveKIO(UpdateCompetitionMatchRequest.example)
-                    CompetitionExecutionService.updateMatch(competitionMatchId, user.id!!, body)
+                        val body = !receiveKIO(UpdateCompetitionMatchRequest.example)
+                        CompetitionExecutionService.updateMatchData(competitionMatchId, user.id!!, body)
+                    }
                 }
             }
             route("/results") {

@@ -1,14 +1,48 @@
 import {createNextCompetitionRound, getCompetitionExecutionProgress} from '@api/sdk.gen.ts'
-import {Box, Typography} from '@mui/material'
+import {
+    Box,
+    Button,
+    Card,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    Divider,
+    Stack,
+    Typography,
+    useTheme
+} from '@mui/material'
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
 import {useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
+import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
+import Throbber from '@components/Throbber.tsx'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import {SubmitButton} from "@components/form/SubmitButton.tsx";
+
+type EditMatchDataTeam = {
+    registrationId: string
+    startNumber: number
+}
+type EditMatchDataForm = {
+    startTime: string
+    teams: EditMatchDataTeam[]
+}
+
+type EnterResultsTeam = {
+    registrationId: string
+    place: number
+}
+type EnterResultsForm = {
+    selectedMatchIndex: number | null
+    teamResults: EnterResultsTeam[]
+}
 
 const CompetitionExecution = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const theme = useTheme()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -17,7 +51,7 @@ const CompetitionExecution = () => {
 
     const [reloadData, setReloadData] = useState(false)
 
-    const {data: progressDto} = useFetch(
+    const {data: progressDto, pending: progressDtoPending} = useFetch(
         signal =>
             getCompetitionExecutionProgress({
                 signal,
@@ -53,65 +87,208 @@ const CompetitionExecution = () => {
         }
     }
 
-    console.log(progressDto)
+    const currentRound = progressDto?.rounds[progressDto?.rounds.length - 1]
+
+    const editDataFormContext = useForm<EditMatchDataForm>()
+    const resultsFormContext = useForm<EnterResultsForm>({
+        values: {
+            selectedMatchIndex: null,
+            teamResults: [],
+        },
+    })
+
+    const selectedMatchResultIndex = resultsFormContext.watch('selectedMatchIndex')
+    const selectedMatchResultMatch = currentRound?.matches[selectedMatchResultIndex ?? -1]
+
+    const {fields: resultFields} = useFieldArray({
+        control: resultsFormContext.control,
+        name: 'teamResults',
+    })
+
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const openDialog = (matchIndex: number) => {
+        if (currentRound) {
+            setDialogOpen(true)
+            resultsFormContext.reset({
+                selectedMatchIndex: matchIndex,
+                teamResults: currentRound.matches[matchIndex].teams.map(team => ({
+                    registrationId: team.registrationId,
+                    place: team.place,
+                })),
+            })
+        }
+    }
+
+    const closeDialog = () => {
+        setDialogOpen(false)
+    }
+
+    const onSubmitResults = async (data: EnterResultsForm) => {
+        // todo
+        if(true){
+            closeDialog()
+        }
+    }
 
     return (
-        <Box>
-            <LoadingButton
-                label={'Create next round'}
-                pending={submitting}
-                disabled={
-                    progressDto?.canCreateNewRound === false || progressDto?.lastRoundFinished
-                        ? true
-                        : undefined
-                }
-                variant={'contained'}
-                onClick={handleCreateNextRound}
-            />
-            <Box>
-                {progressDto?.rounds.map(round => (
-                    <Box sx={{p: 2, border: 1}}>
-                        <Typography variant={'h3'}>{round.name}</Typography>
-                        {round.required && (
-                            <Typography>{t('event.competition.setup.round.required')}</Typography>
-                        )}
-                        {round.matches
-                            .sort((a, b) => a.executionOrder - b.executionOrder)
-                            .map(match => (
-                                <Box sx={{p: 2, mb: 2, border: 1}}>
-                                    {match.name && <Typography>{match.name}</Typography>}
-                                    <Typography>Weighting: {match.weighting}</Typography>
-                                    {match.startTime && (
-                                        <Typography>Start time: {match.startTime}</Typography>
-                                    )}
-                                    {match.startTimeOffset && (
-                                        <Typography>
-                                            Start time offset: {match.startTimeOffset}
-                                        </Typography>
-                                    )}
-                                    <Typography>Teams:</Typography>
-                                    <Box sx={{display: 'flex', gap: 2}}>
-                                        {match.teams
-                                            .sort((a, b) => a.startNumber - b.startNumber)
-                                            .map(team => (
-                                                <Box sx={{p: 2, border: 1}}>
+        <>
+            {progressDto && currentRound ? (
+                <Box>
+                    <LoadingButton
+                        label={'Create next round'}
+                        pending={submitting}
+                        disabled={
+                            progressDto.canNotCreateRoundReasons.length > 0 ||
+                            progressDto.lastRoundFinished
+                                ? true
+                                : undefined
+                        }
+                        variant={'contained'}
+                        onClick={handleCreateNextRound}
+                    />
+                    {progressDto.canNotCreateRoundReasons.map(reason => (
+                        <Typography>{reason}</Typography>
+                    ))}
+                    <Box>
+                        {progressDto.rounds.map((round, roundIndex) => (
+                            <Box sx={{p: 2, border: 1}}>
+                                <Typography variant={'h3'}>{round.name}</Typography>
+                                {round.required && (
+                                    <Typography>
+                                        {t('event.competition.setup.round.required')}
+                                    </Typography>
+                                )}
+                                {round.matches
+                                    .sort((a, b) => a.executionOrder - b.executionOrder)
+                                    .map((match, matchIndex) => (
+                                        <Card sx={{p: 2, mb: 2}}>
+                                            <Stack
+                                                direction={'row'}
+                                                sx={{
+                                                    justifyContent: 'space-between',
+                                                    [theme.breakpoints.down('md')]: {
+                                                        flexDirection: 'column',
+                                                    },
+                                                }}>
+                                                <Box>
+                                                    {match.name && (
+                                                        <Typography>{match.name}</Typography>
+                                                    )}
                                                     <Typography>
-                                                        {team.clubName +
-                                                            (team.name && ` ${team.name}`)}
+                                                        Weighting: {match.weighting}
                                                     </Typography>
-                                                    <Typography>
-                                                        Start number: {team.startNumber}
-                                                    </Typography>
-                                                    <Typography>Place: {team.place}</Typography>
+                                                    {match.startTime && (
+                                                        <Typography>
+                                                            Start time: {match.startTime}
+                                                        </Typography>
+                                                    )}
+                                                    {match.startTimeOffset && (
+                                                        <Typography>
+                                                            Start time offset:{' '}
+                                                            {match.startTimeOffset}
+                                                        </Typography>
+                                                    )}
                                                 </Box>
-                                            ))}
-                                    </Box>
-                                </Box>
-                            ))}
+                                                <Stack direction={'column'} spacing={1}>
+                                                    {roundIndex ===
+                                                        progressDto.rounds.length - 1 && (
+                                                        <Button
+                                                            onClick={() => openDialog(matchIndex)}
+                                                            variant={'outlined'}>
+                                                            Enter Results
+                                                        </Button>
+                                                    )}
+                                                    <Button variant={'outlined'}>Edit Match</Button>
+                                                </Stack>
+                                            </Stack>
+
+                                            <Typography>Teams:</Typography>
+                                            <Box sx={{display: 'flex', gap: 2}}>
+                                                {match.teams
+                                                    .sort((a, b) => a.startNumber - b.startNumber)
+                                                    .map(team => (
+                                                        <Box sx={{p: 2, border: 1}}>
+                                                            <Typography>
+                                                                {team.clubName +
+                                                                    (team.name && ` ${team.name}`)}
+                                                            </Typography>
+                                                            <Typography>
+                                                                Start number: {team.startNumber}
+                                                            </Typography>
+                                                            <Typography>
+                                                                Place: {team.place}
+                                                            </Typography>
+                                                        </Box>
+                                                    ))}
+                                            </Box>
+                                        </Card>
+                                    ))}
+                                {roundIndex === progressDto.rounds.length - 1 && (
+                                    <Button variant={'outlined'}>TODO Delete Round</Button>
+                                )}
+                            </Box>
+                        ))}
                     </Box>
-                ))}
-            </Box>
-        </Box>
+                    <Dialog
+                        open={dialogOpen}
+                        fullWidth
+                        maxWidth={'xs'}
+                        onClose={closeDialog}
+                        className="ready2race">
+                        <Box sx={{m: 4}}>
+                            <FormContainer formContext={resultsFormContext} onSuccess={onSubmitResults}>
+                                {selectedMatchResultMatch && (
+                                    <>
+                                    <DialogContent>
+                                        {selectedMatchResultMatch.name && (<>
+                                            <Typography variant={'h2'}>
+                                                Results for "{selectedMatchResultMatch.name}"
+                                            </Typography>
+                                                <Divider sx={{my: 4}}/>
+                                            </>
+                                        )}
+                                        <Stack spacing={2}>
+                                            {resultFields.map((_, fieldIndex) => (
+                                                <Card sx={{p: 2, flex: 1}}>
+                                                    <Stack spacing={2}>
+                                                        <Typography variant={'h6'}>
+                                                            {`${selectedMatchResultMatch.teams[fieldIndex].clubName}` +
+                                                                (selectedMatchResultMatch.teams[
+                                                                    fieldIndex
+                                                                ].name
+                                                                    ? ` - ${selectedMatchResultMatch.teams[fieldIndex].name}`
+                                                                    : '')}
+                                                        </Typography>
+                                                        <FormInputNumber
+                                                            label={'[todo] Place'}
+                                                            name={`teamResults[${fieldIndex}.required`}
+                                                            required
+                                                            min={1}
+                                                            max={resultFields.length}
+                                                        />
+                                                    </Stack>
+                                                </Card>
+                                            ))}
+                                        </Stack>
+                                        </DialogContent>
+                                        <DialogActions>
+                                            <Button onClick={closeDialog} disabled={submitting}>
+                                                {t('common.cancel')}
+                                            </Button>
+                                            {/* todo "Save and next button"*/}
+                                            <SubmitButton label={t('common.save')} submitting={submitting} />
+
+                                        </DialogActions>
+                                    </>
+                                )}
+                            </FormContainer>
+                        </Box>
+                    </Dialog>
+                </Box>
+            ) : (
+                progressDtoPending && <Throbber />
+            )}
+        </>
     )
 }
 export default CompetitionExecution

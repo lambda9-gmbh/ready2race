@@ -161,10 +161,19 @@ export type CompetitionDto = {
     registrationCount?: number
 }
 
+export type CompetitionExecutionCanNotCreateRoundReason =
+    | 'ALL_ROUNDS_CREATED'
+    | 'NO_ROUNDS_IN_SETUP'
+    | 'NO_SETUP_MATCHES'
+    | 'NO_REGISTRATIONS'
+    | 'REGISTRATIONS_NOT_FINALIZED'
+    | 'NOT_ENOUGH_TEAM_SPACE'
+    | 'NOT_ALL_PLACES_SET'
+
 export type CompetitionExecutionProgressDto = {
     rounds: Array<CompetitionRoundDto>
+    canNotCreateRoundReasons: Array<CompetitionExecutionCanNotCreateRoundReason>
     lastRoundFinished: boolean
-    canCreateNewRound: boolean
 }
 
 export type CompetitionMatchDto = {
@@ -387,16 +396,7 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
-export type ErrorCode =
-    | 'CAPTCHA_WRONG'
-    | 'EMAIL_IN_USE'
-    | 'CANNOT_ASSIGN_ROLES'
-    | 'CE_SETUP_HAS_NO_ROUNDS,'
-    | 'CE_FINAL_ROUND_ALREADY_CREATED,'
-    | 'CE_NO_SETUP_MATCHES_FOR_NEXT_ROUND,'
-    | 'CE_NO_REGISTRATIONS_FOR_COMPETITION,'
-    | 'CE_NOT_ENOUGH_TEAM_SPACE_IN_FIRST_ROUND,'
-    | 'CE_NOT_ALL_PLACES_SET'
+export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE' | 'CANNOT_ASSIGN_ROLES'
 
 export type EventDayDto = {
     id: string
@@ -917,6 +917,25 @@ export type UpdateAppUserRequest = {
     firstname: string
     lastname: string
     roles: Array<string>
+}
+
+export type UpdateCompetitionMatchRequest = {
+    startTime: string
+    teams: Array<UpdateCompetitionMatchTeamRequest>
+}
+
+export type UpdateCompetitionMatchResultRequest = {
+    teamResults: Array<UpdateCompetitionMatchTeamResultRequest>
+}
+
+export type UpdateCompetitionMatchTeamRequest = {
+    registrationId: string
+    startNumber: number
+}
+
+export type UpdateCompetitionMatchTeamResultRequest = {
+    registrationId: string
+    place: number
 }
 
 export type VerifyRegistrationRequest = {
@@ -1610,6 +1629,32 @@ export type CreateNextCompetitionRoundData = {
 export type CreateNextCompetitionRoundResponse = void
 
 export type CreateNextCompetitionRoundError = BadRequestError | ApiError
+
+export type UpdateMatchDataData = {
+    body: UpdateCompetitionMatchRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchDataResponse = void
+
+export type UpdateMatchDataError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateMatchResultsData = {
+    body: UpdateCompetitionMatchResultRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchResultsResponse = void
+
+export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddDocumentsData = {
     body: {

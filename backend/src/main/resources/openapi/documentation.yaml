@@ -1174,6 +1174,73 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompetitionMatchRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchResults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompetitionMatchResultRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/eventDocument:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -3515,12 +3582,6 @@ components:
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES
-        - CE_SETUP_HAS_NO_ROUNDS,
-        - CE_FINAL_ROUND_ALREADY_CREATED,
-        - CE_NO_SETUP_MATCHES_FOR_NEXT_ROUND,
-        - CE_NO_REGISTRATIONS_FOR_COMPETITION,
-        - CE_NOT_ENOUGH_TEAM_SPACE_IN_FIRST_ROUND,
-        - CE_NOT_ALL_PLACES_SET
 
     Gender:
       type: string
@@ -5738,17 +5799,30 @@ components:
       type: object
       required:
         - rounds
+        - canNotCreateRoundReasons
         - lastRoundFinished
-        - canCreateNewRound
       properties:
         rounds:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionRoundDto'
+        canNotCreateRoundReasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionExecutionCanNotCreateRoundReason'
         lastRoundFinished:
           type: boolean
-        canCreateNewRound:
-          type: boolean
+
+    CompetitionExecutionCanNotCreateRoundReason:
+      type: string
+      enum:
+        - ALL_ROUNDS_CREATED
+        - NO_ROUNDS_IN_SETUP
+        - NO_SETUP_MATCHES
+        - NO_REGISTRATIONS
+        - REGISTRATIONS_NOT_FINALIZED
+        - NOT_ENOUGH_TEAM_SPACE
+        - NOT_ALL_PLACES_SET
 
     CompetitionRoundDto:
       type: object
@@ -5812,5 +5886,54 @@ components:
           type: string
         startNumber:
           type: integer
+        place:
+          type: integer
+
+
+    UpdateCompetitionMatchRequest:
+      type: object
+      required:
+        - startTime
+        - teams
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    UpdateCompetitionMatchTeamRequest:
+      type: object
+      required:
+        - registrationId
+        - startNumber
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        startNumber:
+          type: integer
+
+    UpdateCompetitionMatchResultRequest:
+      type: object
+      required:
+        - teamResults
+      properties:
+        teamResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateCompetitionMatchTeamResultRequest'
+
+    UpdateCompetitionMatchTeamResultRequest:
+      type: object
+      required:
+        - registrationId
+        - place
+      properties:
+        registrationId:
+          type: string
+          format: uuid
         place:
           type: integer

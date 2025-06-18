@@ -142,6 +142,12 @@ import type {
     CreateNextCompetitionRoundData,
     CreateNextCompetitionRoundError,
     CreateNextCompetitionRoundResponse,
+    UpdateMatchDataData,
+    UpdateMatchDataError,
+    UpdateMatchDataResponse,
+    UpdateMatchResultsData,
+    UpdateMatchResultsError,
+    UpdateMatchResultsResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -901,6 +907,32 @@ export const createNextCompetitionRound = <ThrowOnError extends boolean = false>
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/createNextRound',
+    })
+}
+
+export const updateMatchData = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchDataData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchDataResponse,
+        UpdateMatchDataError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data',
+    })
+}
+
+export const updateMatchResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchResultsResponse,
+        UpdateMatchResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results',
     })
 }
 

@@ -12,57 +12,15 @@ import de.lambda9.ready2race.backend.app.competitionSetup.control.applyCompetiti
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
-import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.onNullFail
-import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.recoverDefault
-import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.core.extensions.kio.*
 import java.time.LocalDateTime
 import java.util.UUID
 
 object CompetitionExecutionService {
-
-    private fun checkRoundCreation(
-        rounds: List<CompetitionSetupRoundWithMatchesRecord>,
-        currentRound: CompetitionSetupRoundWithMatchesRecord?,
-        nextRound: CompetitionSetupRoundWithMatchesRecord?,
-        registrations: List<CompetitionRegistrationRecord>?
-    ): App<CompetitionExecutionError, Unit> = KIO.comprehension {
-        if (rounds.isEmpty())
-            return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
-        else if (nextRound == null)
-            return@comprehension KIO.fail(CompetitionExecutionError.FinalRoundAlreadyCreated)
-
-        val nextRoundSetupMatches = nextRound.setupMatches!!.filterNotNull()
-
-        if (nextRoundSetupMatches.isEmpty())
-            return@comprehension KIO.fail(CompetitionExecutionError.NoSetupMatchesInRound)
-
-
-        if (currentRound == null) {
-            if (registrations.isNullOrEmpty())
-                return@comprehension KIO.fail(CompetitionExecutionError.NoRegistrations)
-
-            if (nextRoundSetupMatches.find { it.teams == null } == null && nextRoundSetupMatches.sumOf {
-                    it.teams ?: 0
-                } < registrations.size) {
-                return@comprehension KIO.fail(CompetitionExecutionError.NotEnoughTeamSpace)
-            }
-        } else {
-            val currentRoundPlaces =
-                currentRound.matches!!.flatMap { match -> match!!.teams!!.map { team -> team!!.place } }
-
-            if (currentRoundPlaces.contains(null))
-                return@comprehension KIO.fail(CompetitionExecutionError.NotAllPlacesSet)
-
-        }
-
-        KIO.unit
-    }
 
     fun createNewRound(
         competitionId: UUID,
@@ -79,7 +37,7 @@ object CompetitionExecutionService {
 
             val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
 
-            !checkRoundCreation(rounds, null, currentAndNextRound.second, registrations)
+            !checkRoundCreation(true, rounds, null, currentAndNextRound.second, registrations)
 
             val nextRoundSetupMatches =
                 currentAndNextRound.second!!.setupMatches!!.filterNotNull().sortedBy { it.weighting }
@@ -121,7 +79,7 @@ object CompetitionExecutionService {
 
         } else {
 
-            !checkRoundCreation(rounds, currentAndNextRound.first, currentAndNextRound.second, null)
+            !checkRoundCreation(true, rounds, currentAndNextRound.first, currentAndNextRound.second, null)
 
             // todo ?? Automatic skip round if it is optional and just 1-Participant-Matches? - (Frontend Dialog?)
 
@@ -188,7 +146,7 @@ object CompetitionExecutionService {
 
     fun getProgress(
         competitionId: UUID,
-    ): App<CompetitionSetupError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
+    ): App<ServiceError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
         KIO.comprehension {
             val setupId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(competitionId).orDie()
                 .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
@@ -203,15 +161,13 @@ object CompetitionExecutionService {
                 null
             }
 
-            val canCreateNextRound =
-                !checkRoundCreation(
-                    setupRounds,
-                    currentAndNextRound.first,
-                    currentAndNextRound.second,
-                    registrationsIfFirst
-                )
-                    .map { true }
-                    .recoverDefault { false }
+            val canNotCreateRoundReasons = !checkRoundCreation(
+                false,
+                setupRounds,
+                currentAndNextRound.first,
+                currentAndNextRound.second,
+                registrationsIfFirst,
+            )
 
             val lastRoundFinished =
                 if (currentAndNextRound.second == null && currentAndNextRound.first != null) {
@@ -236,28 +192,105 @@ object CompetitionExecutionService {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
                         rounds = it,
-                        lastRoundFinished = lastRoundFinished,
-                        canCreateNewRound = canCreateNextRound
+                        canNotCreateRoundReasons,
+                        lastRoundFinished
                     )
                 )
             }
         }
 
-    fun updateMatch(
+    private fun checkRoundCreation(
+        failOnError: Boolean,
+        rounds: List<CompetitionSetupRoundWithMatchesRecord>,
+        currentRound: CompetitionSetupRoundWithMatchesRecord?,
+        nextRound: CompetitionSetupRoundWithMatchesRecord?,
+        registrations: List<CompetitionRegistrationRecord>?
+    ): App<CompetitionExecutionError, List<CompetitionExecutionCanNotCreateRoundReason>> = KIO.comprehension {
+        val reasons = mutableListOf<Pair<CompetitionExecutionCanNotCreateRoundReason, CompetitionExecutionError>>()
+
+        val nextRoundSetupMatches = nextRound?.setupMatches?.filterNotNull()
+
+
+        if (rounds.isEmpty()) {
+            reasons.add(CompetitionExecutionCanNotCreateRoundReason.NO_ROUNDS_IN_SETUP to CompetitionExecutionError.NoRoundsInSetup)
+        } else {
+            if (nextRound == null) {
+                reasons.add(CompetitionExecutionCanNotCreateRoundReason.ALL_ROUNDS_CREATED to CompetitionExecutionError.AllRoundsCreated)
+            }
+
+            if (nextRoundSetupMatches?.isEmpty() == true)
+                reasons.add(CompetitionExecutionCanNotCreateRoundReason.NO_SETUP_MATCHES to CompetitionExecutionError.NoSetupMatchesInRound)
+
+        }
+
+
+        if (currentRound == null) {
+            if (registrations.isNullOrEmpty())
+                reasons.add(CompetitionExecutionCanNotCreateRoundReason.NO_REGISTRATIONS to CompetitionExecutionError.NoRegistrations)
+            else {
+                if (nextRoundSetupMatches != null) {
+                    if (nextRoundSetupMatches.find { it.teams == null } == null && nextRoundSetupMatches.sumOf {
+                            it.teams ?: 0
+                        } < registrations.size) {
+                        reasons.add(CompetitionExecutionCanNotCreateRoundReason.NOT_ENOUGH_TEAM_SPACE to CompetitionExecutionError.NotEnoughTeamSpace)
+
+                    }
+                }
+
+                if (registrations.none { it.teamNumber != null })
+                    reasons.add(CompetitionExecutionCanNotCreateRoundReason.REGISTRATIONS_NOT_FINALIZED to CompetitionExecutionError.RegistrationsNotFinalized)
+            }
+
+
+        } else {
+            val currentRoundPlaces =
+                currentRound.matches!!.flatMap { match -> match!!.teams!!.map { team -> team!!.place } }
+
+            if (currentRoundPlaces.contains(null))
+                reasons.add(CompetitionExecutionCanNotCreateRoundReason.NOT_ALL_PLACES_SET to CompetitionExecutionError.NotAllPlacesSet)
+        }
+
+        if (failOnError && reasons.isNotEmpty()) {
+            return@comprehension KIO.fail(reasons.first().second)
+        } else {
+            KIO.ok(
+                reasons.map { it.first }
+            )
+        }
+    }
+
+    fun updateMatchData(
         matchId: UUID,
         userId: UUID,
         request: UpdateCompetitionMatchRequest
     ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
 
-        CompetitionMatchRepo.update(matchId) {
+        !CompetitionMatchRepo.update(matchId) {
             startTime = request.startTime
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.onNullFail { CompetitionExecutionError.MatchNotFound }
+        }.orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
-        !request.teams.traverse { team ->
-            CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, team.registrationId) {
-                startNumber = team.startNumber
+        val teamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+
+        if (teamRecords.size != request.teams.size) {
+            return@comprehension KIO.fail(CompetitionExecutionError.TeamsNotMatching)
+        }
+        teamRecords.forEach { tr ->
+            if (request.teams.filter { it.registrationId == tr.competitionRegistration }.size != 1)
+                return@comprehension KIO.fail(CompetitionExecutionError.TeamsNotMatching)
+        }
+
+        !teamRecords.traverse { team ->
+            CompetitionMatchTeamRepo.update(team) {
+                startNumber = (team.startNumber * -1)
+            }.orDie()
+        }
+
+        !teamRecords.traverse { team ->
+            CompetitionMatchTeamRepo.update(team) {
+                startNumber =
+                    request.teams.find { it.registrationId == team.competitionRegistration }!!.startNumber // Can be guaranteed by previous checks
                 updatedBy = userId
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
@@ -266,6 +299,7 @@ object CompetitionExecutionService {
         noData
     }
 
+    // Todo: Error when match is not in "currentRound"
     fun updateMatchResult(
         matchId: UUID,
         userId: UUID,
