@@ -156,6 +156,7 @@ const EntityTableInternal = <
 >({
     entityName,
     title,
+    id,
     hints,
     lastRequested,
     reloadData,
@@ -295,7 +296,7 @@ const EntityTableInternal = <
     }, [data?.pagination?.total])
 
     return (
-        <Box>
+        <Box id={id}>
             {title && <Typography variant={'h2'}>{title}</Typography>}
             {hints &&
                 hints.map((hint, index) => (
