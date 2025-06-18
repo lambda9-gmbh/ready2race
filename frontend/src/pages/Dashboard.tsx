@@ -6,6 +6,7 @@ import {UpcomingEventsWidget} from '@components/dashboard/UpcomingEventsWidget.t
 import {EventRegistrationsWidget} from '@components/dashboard/EventRegistrationsWidget.tsx'
 import {readEventGlobal, readRegistrationGlobal} from '@authorization/privileges.ts'
 import {TasksWidget} from '@components/dashboard/TasksWidget.tsx'
+import {ShiftWidget} from '@components/dashboard/ShiftWidget.tsx'
 
 const Dashboard = () => {
     const user = useUser()
@@ -29,9 +30,10 @@ const Dashboard = () => {
             alignContent={'flex-start'}
             alignItems={'stretch'}>
             <Grid2 size={{xs: 12}}>
-                <Typography variant={'h5'}>{t('task.tasks')}</Typography>
+                <Typography variant={'h5'}>{t('common.organisation')}</Typography>
             </Grid2>
             {userId && eventReadPrivilege && <TasksWidget userId={userId} />}
+            {userId && eventReadPrivilege && <ShiftWidget userId={userId} />}
             <Grid2 size={{xs: 12}}>
                 <Typography variant={'h5'}>{t('event.events')}</Typography>
             </Grid2>

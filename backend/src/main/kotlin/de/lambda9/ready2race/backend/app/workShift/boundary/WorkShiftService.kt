@@ -54,6 +54,7 @@ object WorkShiftService {
             workType = request.workType
             minUser = request.minUser
             maxUser = request.maxUser
+            remark = request.remark
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()
@@ -95,6 +96,24 @@ object WorkShiftService {
         KIO.comprehension {
             val total = !WorkShiftWithAssignedUsersRepo.countByEvent(eventId, params.search, timeFrom, timeTo).orDie()
             val page = !WorkShiftWithAssignedUsersRepo.pageByEvent(eventId, params, timeFrom, timeTo).orDie()
+
+            page.traverse { it.toDto() }.map {
+                ApiResponse.Page(
+                    data = it,
+                    pagination = params.toPagination(total)
+                )
+            }
+        }
+
+    fun pageByUser(
+        params: PaginationParameters<WorkShiftWithAssignedUsersSort>,
+        userId: UUID,
+        timeFrom: LocalDateTime? = null,
+        timeTo: LocalDateTime? = null,
+    ): App<Nothing, ApiResponse.Page<WorkShiftWithAssignedUsersDto, WorkShiftWithAssignedUsersSort>> =
+        KIO.comprehension {
+            val total = !WorkShiftWithAssignedUsersRepo.countByUser(userId, params.search, timeFrom, timeTo).orDie()
+            val page = !WorkShiftWithAssignedUsersRepo.pageByUser(userId, params, timeFrom, timeTo).orDie()
 
             page.traverse { it.toDto() }.map {
                 ApiResponse.Page(

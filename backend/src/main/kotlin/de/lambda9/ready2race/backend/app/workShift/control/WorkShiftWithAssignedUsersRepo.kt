@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftWithAssignedU
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.WorkShiftWithAssignedUsers
 import de.lambda9.ready2race.backend.database.generated.tables.records.WorkShiftWithAssignedUsersRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.WORK_SHIFT_HAS_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.WORK_SHIFT_WITH_ASSIGNED_USERS
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
@@ -36,6 +37,31 @@ object WorkShiftWithAssignedUsersRepo {
         }
     }
 
+    fun countByUser(
+        userId: UUID,
+        search: String?,
+        timeFrom: LocalDateTime?,
+        timeTo: LocalDateTime?
+    ): JIO<Int> = Jooq.query {
+        with(WORK_SHIFT_WITH_ASSIGNED_USERS) {
+            fetchCount(
+                this,
+                DSL.and(
+                    DSL.exists(
+                        selectFrom(
+                            WORK_SHIFT_HAS_USER
+                        ).where(
+                            WORK_SHIFT_HAS_USER.APP_USER.eq(userId)
+                                .and(WORK_SHIFT_HAS_USER.WORK_SHIFT.eq(this@with.ID))
+                        )
+                    ),
+                    filterTimeRange(timeFrom, timeTo),
+                    search.metaSearch(searchFields())
+                )
+            )
+        }
+    }
+
     fun pageByEvent(
         eventId: UUID,
         params: PaginationParameters<WorkShiftWithAssignedUsersSort>,
@@ -47,6 +73,30 @@ object WorkShiftWithAssignedUsersRepo {
                 .page(params, searchFields()) {
                     EVENT.eq(eventId)
                         .and(filterTimeRange(timeFrom, timeTo))
+                }
+                .fetch()
+        }
+    }
+
+    fun pageByUser(
+        userId: UUID,
+        params: PaginationParameters<WorkShiftWithAssignedUsersSort>,
+        timeFrom: LocalDateTime?,
+        timeTo: LocalDateTime?,
+    ): JIO<List<WorkShiftWithAssignedUsersRecord>> = Jooq.query {
+        with(WORK_SHIFT_WITH_ASSIGNED_USERS) {
+            selectFrom(this)
+                .page(params, searchFields()) {
+                    filterTimeRange(timeFrom, timeTo).and(
+                        DSL.exists(
+                            selectFrom(
+                                WORK_SHIFT_HAS_USER
+                            ).where(
+                                WORK_SHIFT_HAS_USER.APP_USER.eq(userId)
+                                    .and(WORK_SHIFT_HAS_USER.WORK_SHIFT.eq(this@with.ID))
+                            )
+                        )
+                    )
                 }
                 .fetch()
         }

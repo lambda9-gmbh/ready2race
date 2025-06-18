@@ -10,7 +10,16 @@ import {
 } from 'react-big-calendar'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.scss'
-import {Box, Button, FormControlLabel, FormGroup, Stack, Switch, Typography} from '@mui/material'
+import {
+    Alert,
+    Box,
+    Button,
+    FormControlLabel,
+    FormGroup,
+    Stack,
+    Switch,
+    Typography,
+} from '@mui/material'
 import {de} from 'date-fns/locale/de'
 import {enGB} from 'date-fns/locale/en-GB'
 import withDragAndDrop, {EventInteractionArgs} from 'react-big-calendar/lib/addons/dragAndDrop'
@@ -21,13 +30,39 @@ import {useTranslation} from 'react-i18next'
 import {eventIndexRoute} from '@routes'
 import {WorkShiftWithAssignedUsersDto, WorkTypeDto} from '@api/types.gen.ts'
 import InlineLink from '@components/InlineLink.tsx'
-import {Add, CheckCircleOutlined} from '@mui/icons-material'
+import {Add, CheckCircleOutlined, FilterAlt} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createEventGlobal} from '@authorization/privileges.ts'
 
 const DragAndDropCalendar = withDragAndDrop<WorkShiftWithAssignedUsersDto, WorkTypeDto>(
     Calendar<WorkShiftWithAssignedUsersDto, WorkTypeDto>,
 )
+
+const locales = {
+    'de-DE': de,
+    'en-GB': enGB,
+}
+
+const lang = {
+    'en-GB': {
+        // use default values
+    },
+    'de-DE': {
+        date: 'Datum',
+        time: 'Uhrzeit',
+        week: 'Woche',
+        day: 'Tag',
+        month: 'Monat',
+        previous: 'Zurück',
+        next: 'Vor',
+        today: 'Heute',
+        agenda: 'Agenda',
+        noEventsInRange: 'Keine Schichten in diesem Zeitraum',
+        event: 'Schicht',
+        allDay: 'ganztägig',
+        showMore: (total: number) => `+${total} weitere`,
+    },
+}
 
 export const Shiftplan = () => {
     const {t} = useTranslation()
@@ -84,31 +119,6 @@ export const Shiftplan = () => {
         () => workTypes?.data?.filter(r => activeResources[r.id]) || [],
         [activeResources, workTypes],
     )
-
-    const locales = {
-        'de-DE': de,
-        'en-GB': enGB,
-    }
-
-    const lang = {
-        'en-GB': {
-            // use default values
-        },
-        'de-DE': {
-            date: 'Datum',
-            time: 'Uhrzeit',
-            week: 'Woche',
-            day: 'Tag',
-            month: 'Monat',
-            previous: 'Zurück',
-            next: 'Vor',
-            today: 'Heute',
-            agenda: 'Agenda',
-            noEventsInRange: 'Keine Schichten in diesem Zeitraum',
-            event: 'Schicht',
-            showMore: (total: number) => `+${total} weitere`,
-        },
-    }
 
     const {messages, culture} = useMemo(() => {
         if (user.language === 'de') {
@@ -256,7 +266,7 @@ export const Shiftplan = () => {
                 openDialog(start, end, resourceId as string)
             }
         },
-        [currentView, dialogProps.table],
+        [currentView],
     )
 
     const openDialog = (start: Date, end: Date, resourceId: string) => {
@@ -288,35 +298,42 @@ export const Shiftplan = () => {
         <Stack spacing={2}>
             <Typography variant={'h2'}>{t('work.shift.plan')}</Typography>
             <Stack direction={'row'} justifyContent={'space-between'} alignItems={'start'}>
-                <Stack>
-                    <Stack direction={'row'} spacing={1} alignItems={'center'}>
-                        <Typography variant={'h6'}>{t('work.type.types')}</Typography>
-                        <InlineLink to={'/config'} search={{tabIndex: 2}}>
-                            {t('common.manage')}
-                        </InlineLink>
+                <Alert icon={<FilterAlt />} color={'info'} sx={{flexGrow: 1}}>
+                    <Stack>
+                        <Stack direction={'row'} spacing={1} alignItems={'center'}>
+                            <Typography variant={'h6'}>{t('work.type.types')}</Typography>
+                            <InlineLink to={'/config'} search={{tabIndex: 2}}>
+                                {t('common.manage')}
+                            </InlineLink>
+                        </Stack>
+                        <FormGroup row>
+                            {workTypes?.data.length == 0 && (
+                                <Typography>{t('work.type.noneAvailable')}</Typography>
+                            )}
+                            {workTypes?.data.map(wt => (
+                                <FormControlLabel
+                                    key={wt.id}
+                                    control={
+                                        <Switch
+                                            style={{color: wt.color}}
+                                            checked={activeResources[wt.id] || false}
+                                            onChange={(_, checked) =>
+                                                setActiveResources({
+                                                    ...activeResources,
+                                                    [wt.id]: checked,
+                                                })
+                                            }
+                                        />
+                                    }
+                                    label={wt.name}
+                                />
+                            ))}
+                        </FormGroup>
                     </Stack>
-                    <FormGroup row>
-                        {workTypes?.data.map(wt => (
-                            <FormControlLabel
-                                key={wt.id}
-                                control={
-                                    <Switch
-                                        style={{color: wt.color}}
-                                        checked={activeResources[wt.id] || false}
-                                        onChange={(_, checked) =>
-                                            setActiveResources({
-                                                ...activeResources,
-                                                [wt.id]: checked,
-                                            })
-                                        }
-                                    />
-                                }
-                                label={wt.name}
-                            />
-                        ))}
-                    </FormGroup>
-                </Stack>
-                {userCanEdit && (
+                </Alert>
+            </Stack>
+            {userCanEdit && (
+                <Stack direction={'row'} justifyContent={'flex-end'}>
                     <Button
                         variant={'outlined'}
                         startIcon={<Add />}
@@ -325,8 +342,8 @@ export const Shiftplan = () => {
                         }>
                         {t('entity.add.action', {entity: t('work.shift.shift')})}
                     </Button>
-                )}
-            </Stack>
+                </Stack>
+            )}
             <ShiftDialog {...dialogProps.dialog} reloadData={() => setLastRequested(Date.now())} />
             <Box height={800} maxWidth={'100%'}>
                 <DragAndDropCalendar
@@ -348,6 +365,14 @@ export const Shiftplan = () => {
                     step={15}
                     timeslots={4}
                     showMultiDayTimes
+                    formats={{
+                        eventTimeRangeStartFormat: r => {
+                            return `${format(r.start, 'HH:mm')} –`
+                        },
+                        eventTimeRangeEndFormat: r => {
+                            return `- ${format(r.end, 'HH:mm')}`
+                        },
+                    }}
                     resizable
                     selectable
                     popup

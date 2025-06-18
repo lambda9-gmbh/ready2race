@@ -2306,6 +2306,10 @@ export type GetWorkShiftsData = {
     path: {
         eventId: string
     }
+    query?: {
+        timeFrom?: string
+        timeTo?: string
+    }
 }
 
 export type GetWorkShiftsResponse = {
@@ -2318,8 +2322,8 @@ export type GetWorkShiftsError = BadRequestError | ApiError | UnprocessableEntit
 export type UpdateWorkShiftData = {
     body: WorkShiftUpsertDto
     path: {
-        eventId: unknown
-        workShiftId: unknown
+        eventId: string
+        workShiftId: string
     }
 }
 
@@ -2329,11 +2333,28 @@ export type UpdateWorkShiftError = BadRequestError | ApiError | UnprocessableEnt
 
 export type DeleteWorkShiftData = {
     path: {
-        eventId: unknown
-        workShiftId: unknown
+        eventId: string
+        workShiftId: string
     }
 }
 
 export type DeleteWorkShiftResponse = void
 
 export type DeleteWorkShiftError = BadRequestError | ApiError
+
+export type GetWorkShiftsForUserData = {
+    path: {
+        userId: string
+    }
+    query?: {
+        timeFrom?: string
+        timeTo?: string
+    }
+}
+
+export type GetWorkShiftsForUserResponse = {
+    data: Array<WorkShiftWithAssignedUsersDto>
+    pagination: Pagination
+}
+
+export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError

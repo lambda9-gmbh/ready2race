@@ -333,6 +333,9 @@ import type {
     DeleteWorkShiftData,
     DeleteWorkShiftError,
     DeleteWorkShiftResponse,
+    GetWorkShiftsForUserData,
+    GetWorkShiftsForUserError,
+    GetWorkShiftsForUserResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1639,5 +1642,18 @@ export const deleteWorkShift = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: 'event/{eventId}/workshift/{workShiftId}',
+    })
+}
+
+export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWorkShiftsForUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWorkShiftsForUserResponse,
+        GetWorkShiftsForUserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/workshift',
     })
 }

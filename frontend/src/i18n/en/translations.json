@@ -14,6 +14,7 @@
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
     },
+    "organisation": "Organisation",
     "form": {
       "autocomplete": {
         "noOptions": "No options",
@@ -375,11 +376,13 @@
     "type": {
       "type": "Work Type",
       "types": "Work Types",
-      "tableHint": "Enable the planning of work shifts for an event."
+      "tableHint": "Enable the planning of work shifts for an event.",
+      "noneAvailable": "No work types exist yet."
     },
     "shift" : {
       "shift" : "Shift",
       "shifts" : "Shifts",
+      "myShifts" : "My Shifts",
       "plan": "Shift Schedule",
       "timeFrom": "Start",
       "timeTo": "End",

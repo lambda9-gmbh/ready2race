@@ -2896,6 +2896,19 @@ paths:
           $ref: '#/components/responses/500'
     get:
       operationId: getWorkShifts
+      parameters:
+        - name: timeFrom
+          in: query
+          required: false
+          schema:
+            type: string
+            format: datetime
+        - name: timeTo
+          in: query
+          required: false
+          schema:
+            type: string
+            format: datetime
       responses:
         200:
           description: WorkShift list successfully retrieved
@@ -2924,20 +2937,21 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+
   event/{eventId}/workshift/{workShiftId}:
     parameters:
       - name: workShiftId
         in: path
         required: true
         schema:
-          shift: string
+          type: string
           format: uuid
       - name: eventId
         in: path
         required: true
         schema:
-        type: string
-        format: uuid
+          type: string
+          format: uuid
     put:
       operationId: updateWorkShift
       requestBody:
@@ -2976,6 +2990,56 @@ paths:
           $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /user/{userId}/workshift:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: timeFrom
+        in: query
+        required: false
+        schema:
+          type: string
+          format: datetime
+      - name: timeTo
+        in: query
+        required: false
+        schema:
+          type: string
+          format: datetime
+    get:
+      operationId: getWorkShiftsForUser
+      responses:
+        200:
+          description: Shifts list successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkShiftWithAssignedUsersDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
