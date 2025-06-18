@@ -39,7 +39,6 @@ export const FormInputAutocompleteUser = (props: {
             autocompleteProps={{
                 size: 'small',
                 filterSelectedOptions: true,
-                autoSelect: true,
                 disabled: props.disabled,
                 limitTags: 5,
                 getOptionLabel: option => `${option?.firstname} ${option?.lastname}`,
