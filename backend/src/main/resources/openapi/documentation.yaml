@@ -1086,6 +1086,52 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionSetup:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    put:
+      operationId: updateCompetitionSetup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionSetupDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionSetup
+      responses:
+        200:
+          description: CompetitionSetup successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionSetupDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - name: eventId
@@ -1842,7 +1888,7 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
-        - in: query 
+        - in: query
           name: eventId
           description: Filter for clubs, which registered for this event
           required: false
@@ -2489,6 +2535,128 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /competitionSetupTemplate:
+    post:
+      operationId: addCompetitionSetupTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionSetupTemplateRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getCompetitionSetupTemplates
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: CompetitionSetupTemplate page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionSetupTemplateDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /competitionSetupTemplate/{competitionSetupTemplateId}:
+    parameters:
+      - name: competitionSetupTemplateId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getCompetitionSetupTemplate
+      responses:
+        200:
+          description: CompetitionSetupTemplate successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionSetupTemplateDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: updateCompetitionSetupTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionSetupTemplateRequest'
+      responses:
+        204:
+          description: CompetitionSetupTemplate successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCompetitionSetupTemplate
+      responses:
+        204:
+          description: CompetitionSetupTemplate successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
   /documentTemplate:
     get:
@@ -2734,6 +2902,11 @@ paths:
         schema:
           type: string
     get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       operationId: getOpenTasksForUser
       responses:
         200:
@@ -2759,6 +2932,347 @@ paths:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+          
+  /bankAccount:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getBankAccounts
+      responses:
+        200:
+          description: Bank accounts page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BankAccountDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /bankAccount/{bankAccountId}:
+    parameters:
+      - in: path
+        name: bankAccountId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccountRequest'
+      responses:
+        204:
+          description: Bank account successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteBankAccount
+      responses:
+        204:
+          description: Bank account successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /assignedBankAccount:
+    get:
+      operationId: getAssignedBankAccount
+      parameters:
+        - in: query
+          required: false
+          name: event
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Assigned bank account retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedBankAccountDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: assignBankAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignBankAccountRequest'
+      responses:
+        204:
+          description: Bank account successfully assigned
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/produceInvoices:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: produceInvoicesForEventRegistrations
+      responses:
+        204:
+          description: invoice produce jobs successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /contact:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getContacts
+      responses:
+        200:
+          description: contacts page retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContactInformationDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: addContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInformationRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /contact/{contactId}:
+    parameters:
+      - in: path
+        name: contactId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactInformationRequest'
+      responses:
+        204:
+          description: contact information successfully changed
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteContact
+      responses:
+        204:
+          description: contact information successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /assignedContact:
+    get:
+      operationId: getAssignedContact
+      parameters:
+        - in: query
+          required: false
+          name: event
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Assigned contact info retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedContactInformationDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: assignContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignContactInformationRequest'
+      responses:
+        204:
+          description: contact successfully assigned
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -3819,6 +4333,12 @@ components:
           type: string
         published:
           type: boolean
+        invoicesProduced:
+          type: string
+          format: date-time
+        paymentDueBy:
+          type: string
+          format: date
 
     EventPublicDto:
       type: object
@@ -3916,6 +4436,9 @@ components:
           type: string
         published:
           type: boolean
+        paymentDueBy:
+          type: string
+          format: date
 
 
 
@@ -4226,6 +4749,173 @@ components:
           items:
             $ref: '#/components/schemas/ParticipantForEventDto'
 
+
+    # competitionSetup
+
+    CompetitionSetupMatchDto:
+      type: object
+      required:
+        - weighting
+        - participants
+        - executionOrder
+      properties:
+        weighting:
+          type: integer
+        teams:
+          type: integer
+        name:
+          type: string
+        participants:
+          type: array
+          items:
+            type: integer
+        executionOrder:
+          type: integer
+        startTimeOffset:
+          type: integer
+
+    CompetitionSetupGroupDto:
+      type: object
+      required:
+        - weighting
+        - matches
+        - participants
+        - executionOrder
+      properties:
+        weighting:
+          type: integer
+        teams:
+          type: integer
+        name:
+          type: string
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupMatchDto'
+        participants:
+          type: array
+          items:
+            type: integer
+
+    CompetitionSetupGroupStatisticEvaluationDto:
+      type: object
+      required:
+        - name
+        - priority
+        - rankByBiggest
+        - ignoreBiggestValues
+        - ignoreSmallestValues
+        - asAverage
+      properties:
+        name:
+          type: string
+        priority:
+          type: integer
+        rankByBiggest:
+          type: boolean
+        ignoreBiggestValues:
+          type: integer
+        ignoreSmallestValues:
+          type: integer
+        asAverage:
+          type: boolean
+
+
+    CompetitionSetupPlaceDto:
+      type: object
+      required:
+        - roundOutcome
+        - place
+      properties:
+        roundOutcome:
+          type: integer
+        place:
+          type: integer
+
+
+    CompetitionSetupRoundDto:
+      type: object
+      required:
+        - name
+        - required
+        - useDefaultSeeding
+        - placesOption
+      properties:
+        name:
+          type: string
+        required:
+          type: boolean
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupMatchDto'
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupGroupDto'
+        statisticEvaluations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupGroupStatisticEvaluationDto'
+        useDefaultSeeding:
+          type: boolean
+        placesOption:
+          type: string
+          enum:
+            - EQUAL
+            - ASCENDING
+            - CUSTOM
+        places:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupPlaceDto'
+
+    CompetitionSetupDto:
+      type: object
+      required:
+        - rounds
+      properties:
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupRoundDto'
+
+
+    CompetitionSetupTemplateRequest:
+      type: object
+      required:
+        - name
+        - rounds
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupRoundDto'
+
+    CompetitionSetupTemplateDto:
+      type: object
+      required:
+        - id
+        - name
+        - rounds
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionSetupRoundDto'
+
+
     # competitionTemplate
 
     CompetitionTemplateDto:
@@ -4473,6 +5163,8 @@ components:
       properties:
         name:
           type: string
+        description:
+          type: string
         required:
           type: boolean
         confirmationRequired:
@@ -4490,6 +5182,8 @@ components:
           type: string
           format: uuid
         name:
+          type: string
+        description:
           type: string
         required:
           type: boolean
@@ -4748,6 +5442,8 @@ components:
           type: string
           format: uuid
         name:
+          type: string
+        description:
           type: string
         confirmationRequired:
           type: boolean
@@ -5272,3 +5968,117 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
+          
+    BankAccountDto:
+      type: object
+      required:
+        - id
+        - holder
+        - iban
+        - bic
+        - bank
+      properties:
+        id:
+          type: string
+          format: uuid
+        holder:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        bank: 
+          type: string
+          
+    BankAccountRequest:
+      type: object
+      required:
+        - holder
+        - iban
+        - bic
+        - bank
+      properties:
+        holder:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        bank:
+          type: string
+
+    AssignBankAccountRequest:
+      type: object
+      properties:
+        bankAccount:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedBankAccountDto:
+      type: object
+      properties:
+        assigned:
+          $ref: '#/components/schemas/BankAccountDto'
+
+    ContactInformationRequest:
+      type: object
+      required:
+        - name
+        - addressZip
+        - addressCity
+        - addressStreet
+        - email
+      properties:
+        name:
+          type: string
+        addressZip:
+          type: string
+        addressCity:
+          type: string
+        addressStreet:
+          type: string
+        email:
+          type: string
+
+    ContactInformationDto:
+      type: object
+      required:
+        - id
+        - name
+        - addressZip
+        - addressCity
+        - addressStreet
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        addressZip:
+          type: string
+        addressCity:
+          type: string
+        addressStreet:
+          type: string
+        email:
+          type: string
+
+    AssignContactInformationRequest:
+      type: object
+      properties:
+        contact:
+          type: string
+          format: uuid
+        event:
+          type: string
+          format: uuid
+
+    AssignedContactInformationDto:
+      type: object
+      properties:
+        assigned:
+          $ref: '#/components/schemas/ContactInformationDto'

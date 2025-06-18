@@ -1,4 +1,4 @@
-import {Box, Divider, Stack, Tab, Typography} from '@mui/material'
+import {Box, Button, Divider, Stack, Tab, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
@@ -15,8 +15,9 @@ import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
-import {useNavigate} from '@tanstack/react-router'
+import {useNavigate, Link} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
+import {AccountTreeOutlined} from '@mui/icons-material'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -123,7 +124,10 @@ const CompetitionPage = () => {
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.settings')} {...a11yProps(0)} />
                             {user.loggedIn && (
-                                <Tab label={t('event.registration.registrations')} {...a11yProps(1)} />
+                                <Tab
+                                    label={t('event.registration.registrations')}
+                                    {...a11yProps(1)}
+                                />
                             )}
                         </TabSelectionContainer>
                         <TabPanel index={0} activeTab={activeTab}>
@@ -157,6 +161,7 @@ const CompetitionPage = () => {
                                     {competitionData.properties.namedParticipants.map(
                                         (np, index) => (
                                             <Box key={`box${index}`}>
+                                                {/*todo: should have np.id instead of index to prevent updating errors*/}
                                                 <Typography variant="subtitle1">
                                                     {np.name}
                                                 </Typography>
@@ -183,6 +188,7 @@ const CompetitionPage = () => {
                                     <Divider />
                                     {competitionData.properties.fees.map((f, index) => (
                                         <Box key={`box${index}`}>
+                                            {/*todo: should have fee.id instead of index to prevent updating errors*/}
                                             <Typography variant="subtitle1">{f.name}</Typography>
                                             <Typography>{f.description}</Typography>
                                             <Typography>
@@ -199,23 +205,39 @@ const CompetitionPage = () => {
                                         </Box>
                                     ))}
                                 </Stack>
-                                <Box sx={{flex: 1, maxWidth: 400}}>
-                                    {(eventDaysData && assignedEventDaysData && (
-                                        <CompetitionAndDayAssignment
-                                            entityPathId={competitionId}
-                                            options={selection}
-                                            assignedEntities={assignedEventDays}
-                                            assignEntityLabel={t('event.eventDay.eventDay')}
-                                            competitionsToDay={false}
-                                            onSuccess={() =>
-                                                setReloadDataTrigger(!reloadDataTrigger)
-                                            }
-                                        />
-                                    )) ||
-                                        ((eventDaysPending || assignedEventDaysPending) && (
-                                            <Throbber />
-                                        ))}
-                                </Box>
+                                <Stack direction={'column'} spacing={4}>
+                                    <Box>
+                                        {(eventDaysData && assignedEventDaysData && (
+                                            <CompetitionAndDayAssignment
+                                                entityPathId={competitionId}
+                                                options={selection}
+                                                assignedEntities={assignedEventDays}
+                                                assignEntityLabel={t('event.eventDay.eventDay')}
+                                                competitionsToDay={false}
+                                                onSuccess={() =>
+                                                    setReloadDataTrigger(!reloadDataTrigger)
+                                                }
+                                            />
+                                        )) ||
+                                            ((eventDaysPending || assignedEventDaysPending) && (
+                                                <Throbber />
+                                            ))}
+                                    </Box>
+                                    <Box sx={{display: 'flex', justifyContent: 'end'}}>
+                                        <Link
+                                            to="/event/$eventId/competition/$competitionId/competitionSetup"
+                                            params={{
+                                                eventId: eventId,
+                                                competitionId: competitionId,
+                                            }}>
+                                            <Button
+                                                variant="outlined"
+                                                startIcon={<AccountTreeOutlined />}>
+                                                {t('event.competition.setup.setup')}
+                                            </Button>
+                                        </Link>
+                                    </Box>
+                                </Stack>
                             </Stack>
                         </TabPanel>
                         {user.loggedIn && (

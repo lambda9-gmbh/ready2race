@@ -8,4 +8,5 @@ enum class EmailTemplatePlaceholder(val key: String) {
     CLUB("##club##"),
     PARTICIPANTS("##participants##"),
     COMPETITIONS("##competitions##"),
+    DATE("##date##"),
 }

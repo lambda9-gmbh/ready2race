@@ -1,5 +1,8 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_registration_for_invoice;
+drop view if exists competition_registration_with_fees;
+drop view if exists applied_fee;
 drop view if exists document_template_assignment;
 drop view if exists event_registration_result_view;
 drop view if exists event_competition_registration;
@@ -452,6 +455,7 @@ select cr.id,
        cr.competition,
        cr.club,
        cr.name                                                                   as team_name,
+       cr.start_number,
        coalesce(array_agg(rctp) filter ( where rctp.team_id is not null ), '{}') as participants
 from competition_registration cr
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
@@ -530,6 +534,45 @@ group by t.id, t.event, e.name, t.name, t.due_date, t.description, t.remark, t.s
          t.updated_at,
          t.updated_by;
 
+create view applied_fee as
+select cphf.id,
+       cr.id as competition_registration,
+       f.name,
+       cphf.amount
+from competition_registration cr
+         join competition_properties cp on cr.competition = cp.competition
+         left join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
+         left join competition_registration_optional_fee crof on cr.id = crof.competition_registration
+         left join fee f on cphf.fee = f.id
+where cphf.required is true
+   or crof.fee = f.id
+;
+
+create view competition_registration_with_fees as
+select cr.event_registration,
+       cp.id                                                            as properties_id,
+       cp.identifier,
+       cp.name,
+       cp.short_name,
+       coalesce(array_agg(af) filter ( where af.id is not null ), '{}') as applied_fees
+from competition_registration cr
+         join competition_properties cp on cr.competition = cp.competition
+         left join applied_fee af on cr.id = af.competition_registration
+group by cr.id, cp.id
+;
+
+create view event_registration_for_invoice as
+select er.id,
+       er.event,
+       c.name                                                                               as club_name,
+       au                                                                                   as recipient,
+       coalesce(array_agg(crwf) filter ( where crwf.event_registration is not null ), '{}') as competitions
+from event_registration er
+         join club c on er.club = c.id
+         left join app_user au on c.id = au.club
+         left join competition_registration_with_fees crwf on er.id = crwf.event_registration
+group by er.id, c.id, au.id
+;
 create view work_shift_with_assigned_users as
 select ws.id,
        ws.event,

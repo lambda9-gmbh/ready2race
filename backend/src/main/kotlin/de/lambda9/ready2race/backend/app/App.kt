@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app
 
-import de.lambda9.ready2race.backend.Config
+import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.jooq.Jooq
 import de.lambda9.tailwind.jooq.JooqQueryPrinter

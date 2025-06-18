@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.allOf
 import de.lambda9.ready2race.backend.validation.anyOf
+import de.lambda9.ready2race.backend.validation.oneOf
 import kotlin.reflect.KProperty0
 
 fun interface Validator<T> {
@@ -19,6 +20,14 @@ fun interface Validator<T> {
                     ValidationResult.Valid
                 }
             }
+
+        val isNull get() = Validator<Any?> {
+            if (it != null) {
+                ValidationResult.Invalid.Message { "is not null" }
+            } else {
+                ValidationResult.Valid
+            }
+        }
 
         fun <T> simple(message: String, valid: (T & Any) -> Boolean) = Validator<T> { value ->
             if (value != null && !valid(value)) {
@@ -38,6 +47,10 @@ fun interface Validator<T> {
             validators.map { it(value) }.anyOf()
         }
 
+        fun <T> oneOf(vararg validators: Validator<in T>) = Validator<T> { value ->
+            validators.map { it(value) }.oneOf()
+        }
+
         @Suppress("UNCHECKED_CAST")
         fun <T, C : Collection<T>?> collection(validator: Validator<T>) = Validator<C> { collection ->
             (
@@ -51,5 +64,7 @@ fun interface Validator<T> {
         }
 
         val collection get() = collection(selfValidator)
+
+        fun <T>isValue(value: T) = simple<T>("is not $value") { it == value }
     }
 }

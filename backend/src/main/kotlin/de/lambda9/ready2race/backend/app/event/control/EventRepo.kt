@@ -26,6 +26,8 @@ object EventRepo {
 
     fun exists(id: UUID) = EVENT.exists { ID.eq(id) }
 
+    fun get(id: UUID) = EVENT.selectOne { ID.eq(id) }
+
     fun update(id: UUID, f: EventRecord.() -> Unit) = EVENT.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = EVENT.delete { ID.eq(id) }
@@ -80,7 +82,7 @@ object EventRepo {
         }
     }
 
-    fun getEvent(
+    fun getScoped(
         id: UUID,
         scope: Privilege.Scope?,
     ): JIO<EventRecord?> = Jooq.query {

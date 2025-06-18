@@ -28,6 +28,15 @@ object CompetitionRegistrationRepo {
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
         COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }
 
+    fun allForEvent(eventId: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
+        select(COMPETITION_REGISTRATION)
+            .from(COMPETITION_REGISTRATION)
+            .join(EVENT_REGISTRATION)
+            .on(COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(EVENT_REGISTRATION.ID))
+            .where(EVENT_REGISTRATION.EVENT.eq(eventId))
+            .fetch { it.value1() }
+    }
+
     fun delete(
         competitionId: UUID,
         scope: Privilege.Scope,

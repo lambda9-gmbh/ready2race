@@ -54,8 +54,18 @@ export type AppUserRegistrationDto = {
     assignedEmail?: AssignedEmailDto
 }
 
+export type AssignBankAccountRequest = {
+    bankAccount?: string
+    event?: string
+}
+
 export type AssignCompetitionsToDayRequest = {
     competitions: Array<string>
+}
+
+export type AssignContactInformationRequest = {
+    contact?: string
+    event?: string
 }
 
 export type AssignDaysToCompetitionRequest = {
@@ -65,6 +75,14 @@ export type AssignDaysToCompetitionRequest = {
 export type AssignDocumentTemplateRequest = {
     template?: string
     event?: string
+}
+
+export type AssignedBankAccountDto = {
+    assigned?: BankAccountDto
+}
+
+export type AssignedContactInformationDto = {
+    assigned?: ContactInformationDto
 }
 
 export type AssignedEmailDto = {
@@ -82,6 +100,21 @@ export type BadRequestError = ApiError & {
     details?: {
         validExample?: unknown
     }
+}
+
+export type BankAccountDto = {
+    id: string
+    holder: string
+    iban: string
+    bic: string
+    bank: string
+}
+
+export type BankAccountRequest = {
+    holder: string
+    iban: string
+    bic: string
+    bank: string
 }
 
 export type CaptchaDto = {
@@ -197,6 +230,67 @@ export type CompetitionRequest = {
     template?: string
 }
 
+export type CompetitionSetupDto = {
+    rounds: Array<CompetitionSetupRoundDto>
+}
+
+export type CompetitionSetupGroupDto = {
+    weighting: number
+    teams?: number
+    name?: string
+    matches: Array<CompetitionSetupMatchDto>
+    participants: Array<number>
+}
+
+export type CompetitionSetupGroupStatisticEvaluationDto = {
+    name: string
+    priority: number
+    rankByBiggest: boolean
+    ignoreBiggestValues: number
+    ignoreSmallestValues: number
+    asAverage: boolean
+}
+
+export type CompetitionSetupMatchDto = {
+    weighting: number
+    teams?: number
+    name?: string
+    participants: Array<number>
+    executionOrder: number
+    startTimeOffset?: number
+}
+
+export type CompetitionSetupPlaceDto = {
+    roundOutcome: number
+    place: number
+}
+
+export type CompetitionSetupRoundDto = {
+    name: string
+    required: boolean
+    matches?: Array<CompetitionSetupMatchDto>
+    groups?: Array<CompetitionSetupGroupDto>
+    statisticEvaluations?: Array<CompetitionSetupGroupStatisticEvaluationDto>
+    useDefaultSeeding: boolean
+    placesOption: 'EQUAL' | 'ASCENDING' | 'CUSTOM'
+    places?: Array<CompetitionSetupPlaceDto>
+}
+
+export type placesOption = 'EQUAL' | 'ASCENDING' | 'CUSTOM'
+
+export type CompetitionSetupTemplateDto = {
+    id: string
+    name: string
+    description?: string
+    rounds: Array<CompetitionSetupRoundDto>
+}
+
+export type CompetitionSetupTemplateRequest = {
+    name: string
+    description?: string
+    rounds: Array<CompetitionSetupRoundDto>
+}
+
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
@@ -204,6 +298,23 @@ export type CompetitionTemplateDto = {
 
 export type CompetitionTemplateRequest = {
     properties: CompetitionPropertiesRequestDto
+}
+
+export type ContactInformationDto = {
+    id: string
+    name: string
+    addressZip: string
+    addressCity: string
+    addressStreet: string
+    email: string
+}
+
+export type ContactInformationRequest = {
+    name: string
+    addressZip: string
+    addressCity: string
+    addressStreet: string
+    email: string
 }
 
 export type DocumentTemplateDto = {
@@ -269,12 +380,14 @@ export type EventDocumentRequest = {
 export type EventDocumentTypeDto = {
     id: string
     name: string
+    description?: string
     required: boolean
     confirmationRequired: boolean
 }
 
 export type EventDocumentTypeRequest = {
     name: string
+    description?: string
     required: boolean
     confirmationRequired: boolean
 }
@@ -288,6 +401,8 @@ export type EventDto = {
     registrationAvailableTo?: string
     invoicePrefix?: string
     published?: boolean
+    invoicesProduced?: string
+    paymentDueBy?: string
 }
 
 export type EventPublicDto = {
@@ -334,6 +449,7 @@ export type EventRegistrationDocumentFileDto = {
 export type EventRegistrationDocumentTypeDto = {
     id: string
     name: string
+    description?: string
     confirmationRequired?: boolean
     files: Array<EventRegistrationDocumentFileDto>
 }
@@ -412,6 +528,7 @@ export type EventRequest = {
     registrationAvailableTo?: string
     invoicePrefix?: string
     published: boolean
+    paymentDueBy?: string
 }
 
 export type FeeDto = {
@@ -1445,6 +1562,29 @@ export type DeleteCompetitionRegistrationResponse = void
 
 export type DeleteCompetitionRegistrationError = BadRequestError | ApiError
 
+export type UpdateCompetitionSetupData = {
+    body: CompetitionSetupDto
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type UpdateCompetitionSetupResponse = void
+
+export type UpdateCompetitionSetupError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionSetupData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionSetupResponse = CompetitionSetupDto
+
+export type GetCompetitionSetupError = BadRequestError | ApiError
+
 export type AddDocumentsData = {
     body: {
         documentType?: string
@@ -2141,6 +2281,79 @@ export type GetParticipantRequirementsResponse = {
 
 export type GetParticipantRequirementsError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type AddCompetitionSetupTemplateData = {
+    body: CompetitionSetupTemplateRequest
+}
+
+export type AddCompetitionSetupTemplateResponse = string
+
+export type AddCompetitionSetupTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionSetupTemplatesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetCompetitionSetupTemplatesResponse = {
+    data: Array<CompetitionSetupTemplateDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionSetupTemplatesError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetCompetitionSetupTemplateData = {
+    path: {
+        competitionSetupTemplateId: string
+    }
+}
+
+export type GetCompetitionSetupTemplateResponse = CompetitionSetupTemplateDto
+
+export type GetCompetitionSetupTemplateError = BadRequestError | ApiError
+
+export type UpdateCompetitionSetupTemplateData = {
+    body: CompetitionSetupTemplateRequest
+    path: {
+        competitionSetupTemplateId: string
+    }
+}
+
+export type UpdateCompetitionSetupTemplateResponse = void
+
+export type UpdateCompetitionSetupTemplateError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type DeleteCompetitionSetupTemplateData = {
+    path: {
+        competitionSetupTemplateId: string
+    }
+}
+
+export type DeleteCompetitionSetupTemplateResponse = void
+
+export type DeleteCompetitionSetupTemplateError = BadRequestError | ApiError
+
 export type GetDocumentTemplatesData = {
     query?: {
         /**
@@ -2246,6 +2459,24 @@ export type GetOpenTasksForUserData = {
     path: {
         userId: string
     }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
 }
 
 export type GetOpenTasksForUserResponse = {
@@ -2254,6 +2485,166 @@ export type GetOpenTasksForUserResponse = {
 }
 
 export type GetOpenTasksForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetBankAccountsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetBankAccountsResponse = {
+    data: Array<BankAccountDto>
+    pagination: Pagination
+}
+
+export type GetBankAccountsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddBankAccountData = {
+    body: BankAccountRequest
+}
+
+export type AddBankAccountResponse = string
+
+export type AddBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateBankAccountData = {
+    body: BankAccountRequest
+    path: {
+        bankAccountId: string
+    }
+}
+
+export type UpdateBankAccountResponse = void
+
+export type UpdateBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteBankAccountData = {
+    path: {
+        bankAccountId: string
+    }
+}
+
+export type DeleteBankAccountResponse = void
+
+export type DeleteBankAccountError = BadRequestError | ApiError
+
+export type GetAssignedBankAccountData = {
+    query?: {
+        event?: string
+    }
+}
+
+export type GetAssignedBankAccountResponse = AssignedBankAccountDto
+
+export type GetAssignedBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignBankAccountData = {
+    body: AssignBankAccountRequest
+}
+
+export type AssignBankAccountResponse = void
+
+export type AssignBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ProduceInvoicesForEventRegistrationsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type ProduceInvoicesForEventRegistrationsResponse = void
+
+export type ProduceInvoicesForEventRegistrationsError = BadRequestError | ApiError
+
+export type GetContactsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetContactsResponse = {
+    data: Array<ContactInformationDto>
+    pagination: Pagination
+}
+
+export type GetContactsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddContactData = {
+    body: ContactInformationRequest
+}
+
+export type AddContactResponse = string
+
+export type AddContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateContactData = {
+    body: ContactInformationRequest
+    path: {
+        contactId: string
+    }
+}
+
+export type UpdateContactResponse = void
+
+export type UpdateContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteContactData = {
+    path: {
+        contactId: string
+    }
+}
+
+export type DeleteContactResponse = void
+
+export type DeleteContactError = BadRequestError | ApiError
+
+export type GetAssignedContactData = {
+    query?: {
+        event?: string
+    }
+}
+
+export type GetAssignedContactResponse = AssignedContactInformationDto
+
+export type GetAssignedContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AssignContactData = {
+    body: AssignContactInformationRequest
+}
+
+export type AssignContactResponse = void
+
+export type AssignContactError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddWorkTypeData = {
     body: WorkTypeUpsertDto

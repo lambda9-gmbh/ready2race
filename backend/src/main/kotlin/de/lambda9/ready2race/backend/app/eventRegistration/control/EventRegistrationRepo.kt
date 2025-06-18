@@ -20,6 +20,19 @@ object EventRegistrationRepo {
 
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
+    fun getIdsByEvent(
+        eventId: UUID
+    ): JIO<List<UUID>> = Jooq.query {
+        with(EVENT_REGISTRATION) {
+            select(ID)
+                .from(this)
+                .where(EVENT.eq(eventId))
+                .fetch {
+                    it.value1()
+                }
+        }
+    }
+
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
         EVENT_REGISTRATION.update(f) {
             EVENT_REGISTRATION.ID.eq(id)
@@ -144,6 +157,7 @@ object EventRegistrationRepo {
     ) = DSL.select(
         EVENT_DOCUMENT_TYPE.ID,
         EVENT_DOCUMENT_TYPE.NAME,
+        EVENT_DOCUMENT_TYPE.DESCRIPTION,
         EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED,
         documents
     ).from(EVENT_DOCUMENT_TYPE)
@@ -157,6 +171,7 @@ object EventRegistrationRepo {
                 EventRegistrationDocumentTypeDto(
                     it[EVENT_DOCUMENT_TYPE.ID]!!,
                     it[EVENT_DOCUMENT_TYPE.NAME]!!,
+                    it[EVENT_DOCUMENT_TYPE.DESCRIPTION],
                     it[EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED]!!,
                     it[documents]
                 )
@@ -206,7 +221,7 @@ object EventRegistrationRepo {
             it.map {
                 EventRegistrationCompetitionDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + it[COMPETITION_VIEW.IDENTIFIER_SUFFIX]!!.toString(),
+                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + (it[COMPETITION_VIEW.IDENTIFIER_SUFFIX] ?: ""),
                     it[COMPETITION_VIEW.NAME]!!,
                     it[COMPETITION_VIEW.SHORT_NAME],
                     it[COMPETITION_VIEW.DESCRIPTION],
@@ -337,6 +352,7 @@ object EventRegistrationRepo {
             teams
         ).from(COMPETITION_VIEW)
             .where(COMPETITION_VIEW.TOTAL_COUNT.greaterThan(1))
+            .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
             .orderBy(COMPETITION_VIEW.NAME)
             .asMultiset("teamCompetitions")
             .convertFrom {
@@ -405,6 +421,7 @@ object EventRegistrationRepo {
         )
         .where(COMPETITION_VIEW.TOTAL_COUNT.eq(1))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
+        .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
         .asMultiset("singleCompetitions")
         .convertFrom {
             it!!.map {

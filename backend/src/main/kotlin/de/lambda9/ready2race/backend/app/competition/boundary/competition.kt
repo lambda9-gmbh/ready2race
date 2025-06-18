@@ -1,11 +1,15 @@
 package de.lambda9.ready2race.backend.app.competition.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
 import de.lambda9.ready2race.backend.app.competition.entity.*
 import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.competitionRegistration
 import de.lambda9.ready2race.backend.calls.requests.*
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
 fun Route.competition() {
@@ -85,7 +89,7 @@ fun Route.competition() {
             }
 
             competitionRegistration()
-
+            competitionSetup("competitionId")
         }
     }
 }
