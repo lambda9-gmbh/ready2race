@@ -1290,6 +1290,7 @@ paths:
         - $ref: '#/components/parameters/search'
       responses:
         200:
+          description: Retrieved event documents
           content:
             application/json:
               schema:
@@ -1328,6 +1329,7 @@ paths:
       operationId: downloadDocument
       responses:
         200:
+          description: File retrieved
           headers:
             Content-Disposition:
               schema:
@@ -2275,6 +2277,7 @@ paths:
         - $ref: '#/components/parameters/search'
       responses:
         200:
+          description: document type list retrieved
           content:
             application/json:
               schema:

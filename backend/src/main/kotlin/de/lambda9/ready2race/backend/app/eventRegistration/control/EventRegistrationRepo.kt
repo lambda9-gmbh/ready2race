@@ -221,7 +221,7 @@ object EventRegistrationRepo {
             it.map {
                 EventRegistrationCompetitionDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + it[COMPETITION_VIEW.IDENTIFIER_SUFFIX]!!.toString(),
+                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + (it[COMPETITION_VIEW.IDENTIFIER_SUFFIX] ?: ""),
                     it[COMPETITION_VIEW.NAME]!!,
                     it[COMPETITION_VIEW.SHORT_NAME],
                     it[COMPETITION_VIEW.DESCRIPTION],

@@ -16,10 +16,12 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionReg
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
+import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -70,6 +72,8 @@ object CompetitionRegistrationService {
         val registrationId = !EventRegistrationRepo.findByEventAndClub(eventId, request.clubId!!).map { it?.id }.orDie()
             .onNullFail { CompetitionRegistrationError.EventRegistrationNotFound }
 
+        val existingCount = !CompetitionRegistrationRepo.countForCompetitionAndClub(competitionId, request.clubId).orDie()
+
         val now = LocalDateTime.now()
 
         val competitionRegistrationId = !CompetitionRegistrationRepo.create(
@@ -78,7 +82,7 @@ object CompetitionRegistrationService {
                 registrationId,
                 competitionId,
                 request.clubId,
-                null,
+                "#${existingCount + 1}",
                 now,
                 user.id,
                 now,
@@ -199,9 +203,20 @@ object CompetitionRegistrationService {
             // TODO check no race exists yet
         }
 
-        CompetitionRegistrationRepo.delete(competitionRegistrationId, scope, user).orDie()
+        val clubId = !CompetitionRegistrationRepo.getClub(competitionRegistrationId).orDie()
+            .onNullFail { CompetitionRegistrationError.NotFound }
+
+        !CompetitionRegistrationRepo.delete(competitionRegistrationId, scope, user).orDie()
             .failIf({ it < 1 }) { CompetitionRegistrationError.NotFound }
-            .map { ApiResponse.NoData }
+
+        val remaining = !CompetitionRegistrationRepo.getByCompetitionAndClub(competitionId, clubId).orDie()
+
+        remaining.sortedWith(lexiNumberComp { it.name }).mapIndexed { idx, rec ->
+            rec.name = "#${idx + 1}"
+            rec.update()
+        }
+
+        noData
     }
 
 }
