@@ -921,7 +921,7 @@ export type UpdateAppUserRequest = {
 }
 
 export type UpdateCompetitionMatchRequest = {
-    startTime: string
+    startTime?: string
     teams: Array<UpdateCompetitionMatchTeamRequest>
 }
 

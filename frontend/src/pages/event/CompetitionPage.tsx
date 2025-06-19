@@ -18,7 +18,7 @@ import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate, Link} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {AccountTreeOutlined} from '@mui/icons-material'
-import CompetitionExecution from '@components/event/competition/CompetitionExecution.tsx'
+import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()

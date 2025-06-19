@@ -5900,7 +5900,6 @@ components:
     UpdateCompetitionMatchRequest:
       type: object
       required:
-        - startTime
         - teams
       properties:
         startTime:
