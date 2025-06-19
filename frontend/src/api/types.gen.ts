@@ -177,6 +177,7 @@ export type CompetitionExecutionProgressDto = {
 }
 
 export type CompetitionMatchDto = {
+    id: string
     name?: string
     teams: Array<CompetitionMatchTeamDto>
     weighting: number

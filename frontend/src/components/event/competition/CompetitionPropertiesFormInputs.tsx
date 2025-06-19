@@ -18,6 +18,7 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
 import {useState} from 'react'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
+import {groupBy} from "@utils/helpers.ts";
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -107,17 +108,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     return 'empty'
                 }
 
-                const countedMap = values.reduce<Map<string, number>>((acc, val) => {
-                    if (val.namedParticipant) {
-                        const id = val.namedParticipant.id
-                        const old = acc.get(id)
-                        acc.set(id, old ? old + 1 : 1)
-                    }
-                    return acc
-                }, new Map())
-                const duplicates = Array.from(countedMap.entries())
-                    .filter(([, count]) => count > 1)
-                    .map(([id]) => namedParticipants.find(x => x?.id === id)?.label)
+                const duplicates = Array.from(groupBy(values, (val)  => val.namedParticipant?.id))
+                    .filter(([, items] ) => items.length > 1)
+                    .map(([, items]) => items[0].namedParticipant?.label)
                     .filter(label => label !== undefined)
 
                 if (duplicates.length > 0) {

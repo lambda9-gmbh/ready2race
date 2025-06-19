@@ -17,7 +17,7 @@ const EventDayPage = () => {
     const {eventId} = eventRoute.useParams()
     const {eventDayId} = eventDayRoute.useParams()
 
-    const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
+    const [reloadData, setReloadData] = useState(false)
 
     const {data: eventDayData, pending: eventDayPending} = useFetch(
         signal => getEventDay({signal, path: {eventId: eventId, eventDayId: eventDayId}}),
@@ -41,7 +41,7 @@ const EventDayPage = () => {
                     feedback.error(t('common.load.error.multiple.short', {entity: t('event.competition.competitions')}))
                 }
             },
-            deps: [eventId, eventDayId, reloadDataTrigger],
+            deps: [eventId, eventDayId, reloadData],
         },
     )
     const assignedCompetitions =
@@ -58,7 +58,7 @@ const EventDayPage = () => {
                     feedback.error(t('common.load.error.multiple.short', {entity: t('event.competition.competitions')}))
                 }
             },
-            deps: [eventId, reloadDataTrigger],
+            deps: [eventId, reloadData],
         },
     )
 
@@ -94,7 +94,7 @@ const EventDayPage = () => {
                         assignedEntities={assignedCompetitions}
                         assignEntityLabel={t('event.competition.competition')}
                         competitionsToDay={true}
-                        onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
+                        reloadData={() => setReloadData(!reloadData)}
                     />
                 )) ||
                     ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}

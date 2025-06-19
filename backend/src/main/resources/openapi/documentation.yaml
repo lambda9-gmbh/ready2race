@@ -5843,10 +5843,14 @@ components:
     CompetitionMatchDto:
       type: object
       required:
+        - id
         - teams
         - weighting
         - executionOrder
       properties:
+        id:
+          type: string
+          format: uuid
         name:
           type: string
         teams:

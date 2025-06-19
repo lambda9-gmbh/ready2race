@@ -12,6 +12,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionRoundDto() = KIO.ok(
         matches = setupMatches!!.map { setupMatch -> setupMatch!! to matches!!.find { match -> match!!.competitionSetupMatch == setupMatch.id } }
             .map { match ->
                 CompetitionMatchDto(
+                    id = match.first.id,
                     name = match.first.name,
                     teams = if (match.second == null) {
                         emptyList()

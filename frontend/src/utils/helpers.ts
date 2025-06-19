@@ -32,7 +32,7 @@ export const i18nLanguage = (): Language =>
     isLanguage(i18next.language) ? i18next.language : fallbackLng
 
 export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
-    const map = new Map()
+    const map = new Map<K, T[]>()
     list.forEach(item => {
         const key = keyGetter(item)
         const collection = map.get(key)
