@@ -85,6 +85,17 @@ fun <R : Record, T : TableImpl<R>> T.selectOne(
     fetchOne(this@selectOne, condition())
 }
 
+fun <R : Record, T : TableImpl<R>, A> T.selectOne(
+    selection: T.() -> TableField<R, A>,
+    condition: T.() -> Condition
+): JIO<A?> = Jooq.query {
+    select(selection())
+        .from(this@selectOne)
+        .where(condition())
+        .fetchOne()
+        ?.value1()
+}
+
 private fun <R : UpdatableRecord<R>> R.updateChanges(
     f: R.() -> Unit,
 ): R = apply {

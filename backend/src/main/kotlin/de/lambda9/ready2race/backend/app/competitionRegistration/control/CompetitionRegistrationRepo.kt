@@ -14,6 +14,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -25,6 +27,7 @@ object CompetitionRegistrationRepo {
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
 
+    // TODO: @What?: Why also competitionId? id is already unique
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
         COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }
 
@@ -45,6 +48,25 @@ object CompetitionRegistrationRepo {
 
     fun deleteByEventRegistration(eventRegistrationId: UUID) =
         COMPETITION_REGISTRATION.delete { COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId) }
+
+    fun getClub(id: UUID) = COMPETITION_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
+
+    fun getByCompetitionAndClub(competitionId: UUID, clubId: UUID) = COMPETITION_REGISTRATION.select { COMPETITION.eq(competitionId).and(CLUB.eq(clubId)) }
+
+    fun countForCompetitionAndClub(
+        competitionId: UUID,
+        clubId: UUID,
+    ): JIO<Int> = Jooq.query {
+        with(COMPETITION_REGISTRATION) {
+            fetchCount(
+                this,
+                DSL.and(
+                    COMPETITION.eq(competitionId),
+                    CLUB.eq(clubId)
+                )
+            )
+        }
+    }
 
     fun countForCompetition(
         competitionId: UUID,
