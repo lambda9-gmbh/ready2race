@@ -12,6 +12,8 @@ import de.lambda9.ready2race.backend.app.competitionSetup.control.applyCompetiti
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
@@ -26,119 +28,137 @@ object CompetitionExecutionService {
         competitionId: UUID,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
-        val setupId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(competitionId).orDie()
-            .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
+        var createFollowingRound = true
+        while (createFollowingRound) {
+            val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
-        val rounds = !CompetitionSetupRoundRepo.getWithMatchesBySetup(setupId).orDie()
+            val currentAndNextRound = getCurrentAndNextRound(setupRounds)
 
-        val currentAndNextRound = getCurrentAndNextRound(rounds)
+            if (currentAndNextRound.first == null) {
 
-        if (currentAndNextRound.first == null) {
+                val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
 
-            val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
+                !checkRoundCreation(true, setupRounds, null, currentAndNextRound.second, registrations)
 
-            !checkRoundCreation(true, rounds, null, currentAndNextRound.second, registrations)
+                val nextRoundSetupMatches =
+                    currentAndNextRound.second!!.setupMatches!!.filterNotNull().sortedBy { it.weighting }
 
-            val nextRoundSetupMatches =
-                currentAndNextRound.second!!.setupMatches!!.filterNotNull().sortedBy { it.weighting }
-
-            val sortedRegistrations = registrations
-                .filter { it.teamNumber != null } // Registrations without teamNumber are ignored. A confirmation Dialog makes aware of this behaviour
-                .sortedBy { it.teamNumber }
-
-
-            val matchRecords = nextRoundSetupMatches
-                .filterIndexed { index, _ -> index < sortedRegistrations.size }
-                .map {
-                    !it.applyCompetitionMatch(userId, null)
-                }
-            !CompetitionMatchRepo.create(matchRecords).orDie()
-
-            // todo: Leihboote zu beachten?
-
-            val seedingList = getSeedingList(nextRoundSetupMatches.map { it.teams }, registrations.size)
-
-            val newTeamRecords = sortedRegistrations.mapIndexed { index, reg ->
-
-                val matchIndex = seedingList.indexOfFirst { it.contains(index + 1) }
-
-                CompetitionMatchTeamRecord(
-                    id = UUID.randomUUID(),
-                    competitionMatch = matchRecords[matchIndex].competitionSetupMatch,
-                    competitionRegistration = reg.id,
-                    startNumber = seedingList[matchIndex].indexOfFirst { it == index + 1 } + 1,
-                    place = null,
-                    createdAt = LocalDateTime.now(),
-                    createdBy = userId,
-                    updatedAt = LocalDateTime.now(),
-                    updatedBy = userId,
-                )
-            }
-            !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+                val sortedRegistrations = registrations
+                    .filter { it.teamNumber != null } // Registrations without teamNumber are ignored. A confirmation Dialog makes aware of this behaviour
+                    .sortedBy { it.teamNumber }
 
 
-        } else {
-
-            !checkRoundCreation(true, rounds, currentAndNextRound.first, currentAndNextRound.second, null)
-
-            // todo ?? Automatic skip round if it is optional and just 1-Participant-Matches? - (Frontend Dialog?)
-
-
-            // --- Collect current round data
-
-            val currentRoundMatches = currentAndNextRound.first!!.setupMatches!!
-                .filterNotNull()
-                .sortedBy { it.weighting }
-                .map { setupMatch ->
-                    setupMatch to currentAndNextRound.first!!.matches!!.find { match -> match!!.competitionSetupMatch == setupMatch.id }
-                }
-            val nextRoundSetupMatches =
-                currentAndNextRound.second!!.setupMatches!!.filterNotNull().sortedBy { it.weighting }
-
-            val currentRoundOutcomes =
-                getSeedingList(currentRoundMatches.map { it.first.teams }, nextRoundSetupMatches.sumOf { it.teams!! })
-
-
-            val currentTeamsWithOutcome =
-                currentRoundMatches.filter { it.second != null }.mapIndexed { matchIdx, match ->
-                    match.second!!.teams!!.sortedBy { team -> team!!.place }.mapIndexed { teamIdx, team ->
-                        team!! to currentRoundOutcomes[matchIdx][teamIdx]
+                val matchRecords = nextRoundSetupMatches
+                    .filterIndexed { index, _ -> index < sortedRegistrations.size }
+                    .map {
+                        !it.applyCompetitionMatch(userId, null)
                     }
-                }.flatten()
+                !CompetitionMatchRepo.create(matchRecords).orDie()
 
-            // --- Create next round
 
-            val matchRecords = nextRoundSetupMatches
-                .filterIndexed { index, _ -> index < currentTeamsWithOutcome.size }
-                .map {
-                    !it.applyCompetitionMatch(userId, null)
+                val seedingList = getSeedingList(nextRoundSetupMatches.map { it.teams }, registrations.size)
+
+
+                val newTeamRecords = sortedRegistrations.mapIndexed { index, reg ->
+                    val matchIndex = seedingList.indexOfFirst { it.contains(index + 1) }
+
+                    val automaticFirstPlace = seedingList[matchIndex].filter { it <= registrations.size }.size == 1
+
+                    CompetitionMatchTeamRecord(
+                        id = UUID.randomUUID(),
+                        competitionMatch = matchRecords[matchIndex].competitionSetupMatch,
+                        competitionRegistration = reg.id,
+                        startNumber = seedingList[matchIndex].indexOfFirst { it == index + 1 } + 1,
+                        place = if (automaticFirstPlace) 1 else null,
+                        createdAt = LocalDateTime.now(),
+                        createdBy = userId,
+                        updatedAt = LocalDateTime.now(),
+                        updatedBy = userId,
+                    )
                 }
-            !CompetitionMatchRepo.create(matchRecords).orDie()
+                !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
 
-            val nextRoundSetupParticipants =
-                !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
+                if(newTeamRecords.size > nextRoundSetupMatches.size
+                    || currentAndNextRound.second?.required == true
+                    || currentAndNextRound.second?.nextRound == null){
+                    createFollowingRound = false
+                }
 
-            val currentTeamsToParticipantId = currentTeamsWithOutcome.map { cTeam ->
-                cTeam.first to nextRoundSetupParticipants.find { p -> p.seed == cTeam.second } // Match Outcomes with ParticipantSeeds
-            }.filter { team -> team.second != null } // Filter teams that have not made it to next round
+            } else {
+
+                !checkRoundCreation(true, setupRounds, currentAndNextRound.first, currentAndNextRound.second, null)
+
+                // --- Collect current round data
+
+                val currentRoundMatches = currentAndNextRound.first!!.setupMatches!!
+                    .filterNotNull()
+                    .sortedBy { it.weighting }
+                    .map { setupMatch ->
+                        setupMatch to currentAndNextRound.first!!.matches!!.find { match -> match!!.competitionSetupMatch == setupMatch.id }
+                    }
+                val nextRoundSetupMatches =
+                    currentAndNextRound.second!!.setupMatches!!.filterNotNull().sortedBy { it.weighting }
+
+                val currentRoundOutcomes =
+                    getSeedingList(
+                        currentRoundMatches.map { it.first.teams },
+                        nextRoundSetupMatches.sumOf { it.teams!! })
 
 
-            val newTeamRecords = currentTeamsToParticipantId.map { oldTeam ->
+                val currentTeamsWithOutcome =
+                    currentRoundMatches.filter { it.second != null }.mapIndexed { matchIdx, match ->
+                        match.second!!.teams!!.sortedBy { team -> team!!.place }.mapIndexed { teamIdx, team ->
+                            team!! to currentRoundOutcomes[matchIdx][teamIdx]
+                        }
+                    }.flatten()
 
-                CompetitionMatchTeamRecord(
-                    id = UUID.randomUUID(),
-                    competitionMatch = oldTeam.second!!.competitionSetupMatch!!,
-                    competitionRegistration = oldTeam.first.competitionRegistration!!,
-                    startNumber = oldTeam.second!!.ranking,
-                    place = null,
-                    createdAt = LocalDateTime.now(),
-                    createdBy = userId,
-                    updatedAt = LocalDateTime.now(),
-                    updatedBy = userId,
-                )
+                // --- Create next round
+
+                val matchRecords = nextRoundSetupMatches
+                    .filterIndexed { index, _ -> index < currentTeamsWithOutcome.size }
+                    .map {
+                        !it.applyCompetitionMatch(userId, null)
+                    }
+                !CompetitionMatchRepo.create(matchRecords).orDie()
+
+                val nextRoundSetupParticipants =
+                    !CompetitionSetupParticipantRepo.get(nextRoundSetupMatches.map { it.id }).orDie()
+
+                val currentTeamsToParticipantId = currentTeamsWithOutcome.map { cTeam ->
+                    cTeam.first to nextRoundSetupParticipants.find { p -> p.seed == cTeam.second } // Match Outcomes with ParticipantSeeds
+                }.filter { team -> team.second != null } // Filter teams that have not made it to next round
+
+
+                val newTeamRecords = currentTeamsToParticipantId.map { team ->
+
+                    val prevTeam = team.first
+                    val nextRoundTeam = team.second!!
+
+                    val automaticFirstPlace =
+                        currentTeamsToParticipantId.filter {
+                            it.second!!.competitionSetupMatch == nextRoundTeam.competitionSetupMatch
+                        }.size == 1
+
+                    CompetitionMatchTeamRecord(
+                        id = UUID.randomUUID(),
+                        competitionMatch = nextRoundTeam.competitionSetupMatch!!,
+                        competitionRegistration = prevTeam.competitionRegistration!!,
+                        startNumber = nextRoundTeam.ranking,
+                        place = if (automaticFirstPlace) 1 else null,
+                        createdAt = LocalDateTime.now(),
+                        createdBy = userId,
+                        updatedAt = LocalDateTime.now(),
+                        updatedBy = userId,
+                    )
+                }
+                !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+
+                if(newTeamRecords.size > nextRoundSetupMatches.size
+                    || currentAndNextRound.second?.required == true
+                    || currentAndNextRound.second?.nextRound == null){
+                    createFollowingRound = false
+                }
             }
-            !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
-
         }
 
         noData
@@ -148,10 +168,7 @@ object CompetitionExecutionService {
         competitionId: UUID,
     ): App<ServiceError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
         KIO.comprehension {
-            val setupId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(competitionId).orDie()
-                .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
-
-            val setupRounds = !CompetitionSetupRoundRepo.getWithMatchesBySetup(setupId).orDie()
+            val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
             val currentAndNextRound = getCurrentAndNextRound(setupRounds)
 
@@ -265,6 +282,8 @@ object CompetitionExecutionService {
         request: UpdateCompetitionMatchRequest
     ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
 
+        // todo: Prevent Update if Match is not being held (one participant and round is not required)
+
         !CompetitionMatchRepo.update(matchId) {
             startTime = request.startTime
             updatedBy = userId
@@ -299,12 +318,24 @@ object CompetitionExecutionService {
         noData
     }
 
-    // Todo: Error when match is not in "currentRound"
     fun updateMatchResult(
+        competitionId: UUID,
         matchId: UUID,
         userId: UUID,
         request: UpdateCompetitionMatchResultRequest,
-    ): App<CompetitionExecutionError, ApiResponse.NoData> =
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        // todo: Prevent Update if Match is not being held (one participant and round is not required)
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+
+        if (currentRound.matches!!.find { it!!.competitionSetupMatch == matchId } == null) {
+            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
+        }
+
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
                 place = result.place
@@ -312,6 +343,25 @@ object CompetitionExecutionService {
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
         }.map { ApiResponse.NoData }
+    }
+
+
+    fun deleteCurrentRound(
+        competitionId: UUID
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+
+        val deleted = !CompetitionMatchRepo.delete(currentRound.matches!!.map { it!!.competitionSetupMatch!! }).orDie()
+
+        if (deleted < 1) {
+            KIO.fail(CompetitionExecutionError.RoundNotFound)
+        } else {
+            noData
+        }
+    }
 
 
     private fun getCurrentAndNextRound(

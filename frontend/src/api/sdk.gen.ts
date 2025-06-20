@@ -139,6 +139,9 @@ import type {
     GetCompetitionExecutionProgressData,
     GetCompetitionExecutionProgressError,
     GetCompetitionExecutionProgressResponse,
+    DeleteCurrentCompetitionExecutionRoundData,
+    DeleteCurrentCompetitionExecutionRoundError,
+    DeleteCurrentCompetitionExecutionRoundResponse,
     CreateNextCompetitionRoundData,
     CreateNextCompetitionRoundError,
     CreateNextCompetitionRoundResponse,
@@ -890,6 +893,19 @@ export const getCompetitionExecutionProgress = <ThrowOnError extends boolean = f
     return (options?.client ?? client).get<
         GetCompetitionExecutionProgressResponse,
         GetCompetitionExecutionProgressError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution',
+    })
+}
+
+export const deleteCurrentCompetitionExecutionRound = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCurrentCompetitionExecutionRoundData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCurrentCompetitionExecutionRoundResponse,
+        DeleteCurrentCompetitionExecutionRoundError,
         ThrowOnError
     >({
         ...options,

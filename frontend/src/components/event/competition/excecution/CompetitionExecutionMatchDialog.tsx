@@ -1,13 +1,4 @@
-import {
-    Button,
-    DialogActions,
-    DialogContent,
-    Divider,
-    Stack,
-    Table,
-    TableContainer,
-    Typography,
-} from '@mui/material'
+import {Button, DialogActions, DialogContent, Divider, Stack, Typography} from '@mui/material'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {CompetitionMatchDto} from '@api/types.gen.ts'
 import {PropsWithChildren} from 'react'
@@ -33,9 +24,7 @@ const CompetitionExecutionMatchDialog = ({selectedMatchDto, submitting, ...props
                     {props.fieldArrayError && (
                         <Typography color={'error'}>{props.fieldArrayError}</Typography>
                     )}
-                    <TableContainer>
-                        <Table>{props.children}</Table>
-                    </TableContainer>
+                    {props.children}
                 </Stack>
             </DialogContent>
             <DialogActions>

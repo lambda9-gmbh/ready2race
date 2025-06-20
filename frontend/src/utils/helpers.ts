@@ -46,3 +46,17 @@ export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
 }
 
 export const adminId = '00000000-0000-0000-0000-000000000000'
+
+export const shuffle = <T>(list: T[]) => {
+    const newList: T[] = {...list}
+    let currentIndex = list.length
+
+    while (currentIndex != 0) {
+        let randomIndex = Math.floor(Math.random() * currentIndex)
+        currentIndex--
+        const currentValue = newList[currentIndex]
+        newList[currentIndex] = newList[randomIndex]
+        newList[randomIndex] = currentValue
+    }
+    return newList
+}

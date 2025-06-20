@@ -20,6 +20,14 @@ fun Route.competitionExecution() {
                 CompetitionExecutionService.getProgress(competitionId)
             }
         }
+        delete{
+            call.respondComprehension {
+                !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                val competitionId = !pathParam("competitionId", uuid)
+
+                CompetitionExecutionService.deleteCurrentRound(competitionId)
+            }
+        }
         route("/createNextRound") {
             post {
                 call.respondComprehension {
@@ -31,7 +39,7 @@ fun Route.competitionExecution() {
             }
         }
         route("/{competitionMatchId}") {
-            route("/data"){
+            route("/data") {
                 put {
                     call.respondComprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
@@ -46,10 +54,11 @@ fun Route.competitionExecution() {
                 put {
                     call.respondComprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                        val competitionId = !pathParam("competitionId", uuid)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                         val body = !receiveKIO(UpdateCompetitionMatchResultRequest.example)
-                        CompetitionExecutionService.updateMatchResult(competitionMatchId, user.id!!, body)
+                        CompetitionExecutionService.updateMatchResult(competitionId, competitionMatchId, user.id!!, body)
                     }
                 }
             }

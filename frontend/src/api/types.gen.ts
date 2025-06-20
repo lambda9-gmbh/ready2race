@@ -1620,6 +1620,17 @@ export type GetCompetitionExecutionProgressResponse = CompetitionExecutionProgre
 
 export type GetCompetitionExecutionProgressError = BadRequestError | ApiError
 
+export type DeleteCurrentCompetitionExecutionRoundData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type DeleteCurrentCompetitionExecutionRoundResponse = void
+
+export type DeleteCurrentCompetitionExecutionRoundError = BadRequestError | ApiError
+
 export type CreateNextCompetitionRoundData = {
     path: {
         competitionId: string

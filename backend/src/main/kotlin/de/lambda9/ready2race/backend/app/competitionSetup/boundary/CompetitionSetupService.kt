@@ -234,4 +234,13 @@ object CompetitionSetupService {
             ApiResponse.Dto(CompetitionSetupDto(roundDtos))
         )
     }
+
+    fun getSetupRoundsWithMatches(
+        key: UUID,
+    ): App<CompetitionSetupError, List<CompetitionSetupRoundWithMatchesRecord>> = KIO.comprehension {
+        val setupId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(key).orDie()
+            .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
+
+        CompetitionSetupRoundRepo.getWithMatchesBySetup(setupId).orDie()
+    }
 }

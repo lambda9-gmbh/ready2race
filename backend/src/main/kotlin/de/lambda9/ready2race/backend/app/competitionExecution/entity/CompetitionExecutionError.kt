@@ -14,7 +14,9 @@ enum class CompetitionExecutionError : ServiceError {
     RegistrationsNotFinalized,
     NotEnoughTeamSpace,
     NotAllPlacesSet,
-    TeamsNotMatching;
+    TeamsNotMatching,
+    RoundNotFound,
+    MatchResultsLocked;
 
     override fun respond(): ApiError = when (this) {
         MatchNotFound -> ApiError(
@@ -65,6 +67,16 @@ enum class CompetitionExecutionError : ServiceError {
         TeamsNotMatching -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "The specified teams do not match the actual teams of the match"
+        )
+
+        RoundNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            message = "Round not found",
+        )
+
+        MatchResultsLocked -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Match results locked. Only results of the latest round can be edited.",
         )
     }
 }
