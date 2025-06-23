@@ -223,20 +223,26 @@ const CompetitionPage = () => {
                                                 <Throbber />
                                             ))}
                                     </Box>
-                                    <Box sx={{display: 'flex', justifyContent: 'end'}}>
-                                        <Link
-                                            to="/event/$eventId/competition/$competitionId/competitionSetup"
-                                            params={{
-                                                eventId: eventId,
-                                                competitionId: competitionId,
-                                            }}>
-                                            <Button
-                                                variant="outlined"
-                                                startIcon={<AccountTreeOutlined />}>
-                                                {t('event.competition.setup.setup')}
-                                            </Button>
-                                        </Link>
-                                    </Box>
+                                    {user.checkPrivilege({
+                                        action: 'UPDATE',
+                                        resource: 'EVENT',
+                                        scope: 'GLOBAL',
+                                    }) && (
+                                        <Box sx={{display: 'flex', justifyContent: 'end'}}>
+                                            <Link
+                                                to="/event/$eventId/competition/$competitionId/competitionSetup"
+                                                params={{
+                                                    eventId: eventId,
+                                                    competitionId: competitionId,
+                                                }}>
+                                                <Button
+                                                    variant="outlined"
+                                                    startIcon={<AccountTreeOutlined />}>
+                                                    {t('event.competition.setup.setup')}
+                                                </Button>
+                                            </Link>
+                                        </Box>
+                                    )}
                                 </Stack>
                             </Stack>
                         </TabPanel>
