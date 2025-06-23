@@ -6,10 +6,6 @@ import io.ktor.server.sessions.*
 
 fun Application.configureSessions() {
     install(Sessions) {
-        cookie<UserSession>("user-session") {
-            cookie.sameSite = "strict"
-            cookie.secure = true
-            cookie.httpOnly = true
-        }
+        header<UserSession>("X-Api-Session")
     }
 }
