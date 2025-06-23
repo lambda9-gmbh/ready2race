@@ -76,6 +76,8 @@ object AuthService {
         token: String?
     ): App<AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
 
+        println(token)
+
         if (token == null) {
             return@comprehension KIO.fail(AuthError.TokenInvalid)
         }

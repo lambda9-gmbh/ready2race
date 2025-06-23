@@ -15,6 +15,7 @@ fun Application.configureHTTP(mode: Config.Mode) {
         install(CORS) {
             anyHost()
             allowHeader(HttpHeaders.ContentType)
+            allowHeader("X-Api-Session")
             exposeHeader(HttpHeaders.ContentDisposition)
             allowMethod(HttpMethod.Options)
             allowMethod(HttpMethod.Put)
