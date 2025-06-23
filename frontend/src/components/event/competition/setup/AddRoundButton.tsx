@@ -20,6 +20,7 @@ const AddRoundButton = ({index, insertRound}: Props) => {
                         matches: [],
                         groups: [],
                         useDefaultSeeding: true,
+                        placesOption: 'EQUAL',
                         places: [],
                         isGroupRound: false,
                         useStartTimeOffsets: false,
