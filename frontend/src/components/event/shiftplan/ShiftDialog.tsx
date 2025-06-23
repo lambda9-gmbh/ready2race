@@ -1,7 +1,7 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
-import {useForm} from 'react-hook-form-mui'
-import {useCallback, useMemo} from 'react'
+import {useForm, useWatch} from 'react-hook-form-mui'
+import {useCallback, useEffect, useMemo} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
@@ -69,6 +69,15 @@ const ShiftDialog = (props: BaseEntityDialogProps<WorkShiftWithAssignedUsersDto>
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
+
+    const type = useWatch({control: formContext.control, name: 'workType'})
+
+    useEffect(() => {
+        const minUser = workTypes?.data.filter(wt => wt.id === type)?.[0]?.minUser
+        if (minUser !== undefined) {
+            formContext.setValue('minUser', minUser)
+        }
+    }, [type])
 
     return (
         <EntityDialog
