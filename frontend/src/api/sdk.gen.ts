@@ -370,6 +370,32 @@ import type {
     AssignContactData,
     AssignContactError,
     AssignContactResponse,
+    AddWorkTypeData,
+    AddWorkTypeError,
+    AddWorkTypeResponse,
+    GetWorkTypesError,
+    GetWorkTypesResponse,
+    UpdateWorkTypeData,
+    UpdateWorkTypeError,
+    UpdateWorkTypeResponse,
+    DeleteWorkTypeData,
+    DeleteWorkTypeError,
+    DeleteWorkTypeResponse,
+    AddWorkShiftData,
+    AddWorkShiftError,
+    AddWorkShiftResponse,
+    GetWorkShiftsData,
+    GetWorkShiftsError,
+    GetWorkShiftsResponse,
+    UpdateWorkShiftData,
+    UpdateWorkShiftError,
+    UpdateWorkShiftResponse,
+    DeleteWorkShiftData,
+    DeleteWorkShiftError,
+    DeleteWorkShiftResponse,
+    GetWorkShiftsForUserData,
+    GetWorkShiftsForUserError,
+    GetWorkShiftsForUserResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1835,4 +1861,107 @@ export const assignContact = <ThrowOnError extends boolean = false>(
             url: '/assignedContact',
         },
     )
+}
+
+export const addWorkType = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddWorkTypeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddWorkTypeResponse, AddWorkTypeError, ThrowOnError>({
+        ...options,
+        url: '/worktype',
+    })
+}
+
+export const getWorkTypes = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetWorkTypesResponse, GetWorkTypesError, ThrowOnError>({
+        ...options,
+        url: '/worktype',
+    })
+}
+
+export const updateWorkType = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateWorkTypeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateWorkTypeResponse,
+        UpdateWorkTypeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/worktype/{workTypeId}',
+    })
+}
+
+export const deleteWorkType = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteWorkTypeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteWorkTypeResponse,
+        DeleteWorkTypeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/worktype/{workTypeId}',
+    })
+}
+
+export const addWorkShift = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddWorkShiftData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddWorkShiftResponse, AddWorkShiftError, ThrowOnError>({
+        ...options,
+        url: 'event/{eventId}/workshift',
+    })
+}
+
+export const getWorkShifts = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWorkShiftsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetWorkShiftsResponse, GetWorkShiftsError, ThrowOnError>(
+        {
+            ...options,
+            url: 'event/{eventId}/workshift',
+        },
+    )
+}
+
+export const updateWorkShift = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateWorkShiftData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateWorkShiftResponse,
+        UpdateWorkShiftError,
+        ThrowOnError
+    >({
+        ...options,
+        url: 'event/{eventId}/workshift/{workShiftId}',
+    })
+}
+
+export const deleteWorkShift = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteWorkShiftData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteWorkShiftResponse,
+        DeleteWorkShiftError,
+        ThrowOnError
+    >({
+        ...options,
+        url: 'event/{eventId}/workshift/{workShiftId}',
+    })
+}
+
+export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWorkShiftsForUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWorkShiftsForUserResponse,
+        GetWorkShiftsForUserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/workshift',
+    })
 }

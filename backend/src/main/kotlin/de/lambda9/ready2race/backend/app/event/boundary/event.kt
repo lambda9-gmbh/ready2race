@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -67,6 +68,7 @@ fun Route.event() {
             participantRequirementForEvent()
             participantForEvent()
             task()
+            workShift()
 
             get {
                 call.respondComprehension {

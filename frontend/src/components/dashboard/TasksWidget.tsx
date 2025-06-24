@@ -61,6 +61,7 @@ export function TasksWidget({userId}: {userId: string}) {
     return (
         <React.Fragment>
             <DashboardWidget
+                color={'#e9c46a75'}
                 size={12}
                 header={`${t('task.myTasks')} (${tasks?.pagination.total ?? 0})`}
                 content={
@@ -76,7 +77,9 @@ export function TasksWidget({userId}: {userId: string}) {
                             />
                             {tasks?.data?.map((task, index) => (
                                 <>
-                                    {index !== 0 && <Divider variant={'middle'} />}
+                                    {index !== 0 && (
+                                        <Divider key={'div-' + task.id} variant={'middle'} />
+                                    )}
                                     <ListItem key={task.id}>
                                         <ListItemText
                                             primary={

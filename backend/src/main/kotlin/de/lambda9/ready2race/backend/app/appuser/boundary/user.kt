@@ -5,9 +5,12 @@ import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.task.boundary.TaskService
 import de.lambda9.ready2race.backend.app.task.entity.TaskWithResponsibleUsersSort
+import de.lambda9.ready2race.backend.app.workShift.boundary.WorkShiftService
+import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftWithAssignedUsersSort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.datetime
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.plugins.ratelimit.*
@@ -62,6 +65,20 @@ fun Route.user() {
                         val params = !pagination<TaskWithResponsibleUsersSort>()
 
                         TaskService.pageOpenForUser(params, id)
+                    }
+                }
+            }
+
+            route("/workshift") {
+                get {
+                    call.respondComprehension {
+                        val id = !pathParam("userId", uuid)
+                        !authenticate(Privilege.ReadEventGlobal)
+                        val params = !pagination<WorkShiftWithAssignedUsersSort>()
+                        val timeFrom = !optionalQueryParam("timeFrom", datetime)
+                        val timeTo = !optionalQueryParam("timeTo", datetime)
+
+                        WorkShiftService.pageByUser(params, id, timeFrom, timeTo)
                     }
                 }
             }

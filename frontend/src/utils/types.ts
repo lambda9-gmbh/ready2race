@@ -12,6 +12,7 @@ export type BaseEntityTableProps<E> = {
     openDialog: (entity?: E) => void
     options: UseEntityAdministrationOptions
     title?: string
+    id?: string
     hints?: ReactNode[]
 }
 

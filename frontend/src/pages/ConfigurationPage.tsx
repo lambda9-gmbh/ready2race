@@ -3,13 +3,16 @@ import DocumentTypeDialog from '@components/event/document/type/DocumentTypeDial
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {
     BankAccountDto,
-    CompetitionCategoryDto, CompetitionSetupTemplateDto,
-    CompetitionTemplateDto, ContactInformationDto,
+    CompetitionCategoryDto,
+    CompetitionSetupTemplateDto,
+    CompetitionTemplateDto,
+    ContactInformationDto,
     DocumentTemplateDto,
     EventDocumentTypeDto,
     FeeDto,
     NamedParticipantDto,
     ParticipantRequirementDto,
+    WorkTypeDto,
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import ParticipantRequirementTable from '@components/event/participantRequirement/ParticipantRequirementTable.tsx'
@@ -27,23 +30,23 @@ import CompetitionTemplateTable from '@components/event/competition/template/Com
 import CompetitionTemplateDialog from '@components/event/competition/template/CompetitionTemplateDialog.tsx'
 import {configurationIndexRoute} from '@routes'
 import {useNavigate} from '@tanstack/react-router'
-import DocumentTemplateTable from "@components/documentTemplate/DocumentTemplateTable.tsx";
-import DocumentTemplateDialog from "@components/documentTemplate/DocumentTemplateDialog.tsx";
-import AssignDocumentTemplate from "@components/documentTemplate/AssignDocumentTemplate.tsx";
-import InlineLink from "@components/InlineLink.tsx";
-import CompetitionSetupTemplateTable
-    from "@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx";
-import CompetitionSetupTemplateDialog
-    from "@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx";
-import BankAccountTable from "@components/bankAccount/BankAccountTable.tsx";
-import BankAccountDialog from "@components/bankAccount/BankAccountDialog.tsx";
-import AssignBankAccount from "@components/bankAccount/AssignBankAccount.tsx";
-import ContactInformationTable from "@components/contactInformation/ContactInformationTable.tsx";
-import ContactInformationDialog from "@components/contactInformation/ContactInformationDialog.tsx";
-import AssignContactInformation from "@components/contactInformation/AssignContactInformation.tsx";
-
-
 // TODO: @Improve, @Discussion: Maybe extract TabContents into several Components
+import DocumentTemplateTable from '@components/documentTemplate/DocumentTemplateTable.tsx'
+import DocumentTemplateDialog from '@components/documentTemplate/DocumentTemplateDialog.tsx'
+import AssignDocumentTemplate from '@components/documentTemplate/AssignDocumentTemplate.tsx'
+import InlineLink from '@components/InlineLink.tsx'
+import CompetitionSetupTemplateTable from '@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx'
+import CompetitionSetupTemplateDialog from '@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx'
+import BankAccountTable from '@components/bankAccount/BankAccountTable.tsx'
+import BankAccountDialog from '@components/bankAccount/BankAccountDialog.tsx'
+import AssignBankAccount from '@components/bankAccount/AssignBankAccount.tsx'
+import ContactInformationTable from '@components/contactInformation/ContactInformationTable.tsx'
+import ContactInformationDialog from '@components/contactInformation/ContactInformationDialog.tsx'
+import AssignContactInformation from '@components/contactInformation/AssignContactInformation.tsx'
+import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
+import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
+
+export const CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX = 2
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -87,18 +90,19 @@ const ConfigurationPage = () => {
         t('event.competition.setup.template.template'),
     )
 
-    const documentTemplateAdministrationProps =
-        useEntityAdministration<DocumentTemplateDto>(
-            t('document.template.template'),
-            {entityUpdate: false}
-        )
+    const documentTemplateAdministrationProps = useEntityAdministration<DocumentTemplateDto>(
+        t('document.template.template'),
+        {entityUpdate: false},
+    )
+
+    const workTypeAdministrationProps = useEntityAdministration<WorkTypeDto>(t('work.type.type'))
 
     const bankAccountAdministrationProps = useEntityAdministration<BankAccountDto>(
-        t('invoice.bank.account')
+        t('invoice.bank.account'),
     )
 
     const contactInformationAdministrationProps = useEntityAdministration<ContactInformationDto>(
-        t('contact.information')
+        t('contact.information'),
     )
 
     return (
@@ -107,7 +111,10 @@ const ConfigurationPage = () => {
             <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                 <Tab label={t('configuration.tabs.competitionTemplates')} {...a11yProps(0)} />
                 <Tab label={t('configuration.tabs.competitionElements')} {...a11yProps(1)} />
-                <Tab label={t('configuration.tabs.eventElements')} {...a11yProps(2)} />
+                <Tab
+                    label={t('configuration.tabs.eventElements')}
+                    {...a11yProps(CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX)}
+                />
                 <Tab label={t('configuration.tabs.globalSettings')} {...a11yProps(3)} />
             </TabSelectionContainer>
             <TabPanel index={0} activeTab={activeTab}>
@@ -144,10 +151,9 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.setup.tableHint')]}
                     />
                     <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
-
                 </Stack>
             </TabPanel>
-            <TabPanel index={2} activeTab={activeTab}>
+            <TabPanel index={CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX} activeTab={activeTab}>
                 <Stack spacing={2}>
                     <DocumentTypeTable
                         {...documentTypeAdministrationProps.table}
@@ -174,12 +180,17 @@ const ConfigurationPage = () => {
                                     {t('document.template.tableHint.3')}
                                 </InlineLink>
                                 {t('document.template.tableHint.4')}
-                            </>
+                            </>,
                         ]}
                     />
-                    <DocumentTemplateDialog
-                        {...documentTemplateAdministrationProps.dialog}
+                    <DocumentTemplateDialog {...documentTemplateAdministrationProps.dialog} />
+                    <WorkTypeTable
+                        {...workTypeAdministrationProps.table}
+                        id={'worktypes'}
+                        title={t('work.type.types')}
+                        hints={[t('work.type.tableHint')]}
                     />
+                    <WorkTypeDialog {...workTypeAdministrationProps.dialog} />
                     <ContactInformationTable
                         {...contactInformationAdministrationProps.table}
                         title={t('contact.contacts')}
@@ -191,12 +202,10 @@ const ConfigurationPage = () => {
                                     {t('contact.tableHint.3')}
                                 </InlineLink>
                                 {t('contact.tableHint.4')}
-                            </>
+                            </>,
                         ]}
                     />
-                    <ContactInformationDialog
-                        {...contactInformationAdministrationProps.dialog}
-                    />
+                    <ContactInformationDialog {...contactInformationAdministrationProps.dialog} />
                     <BankAccountTable
                         {...bankAccountAdministrationProps.table}
                         title={t('invoice.bank.accounts')}
@@ -208,12 +217,10 @@ const ConfigurationPage = () => {
                                     {t('invoice.bank.tableHint.3')}
                                 </InlineLink>
                                 {t('invoice.bank.tableHint.4')}
-                            </>
+                            </>,
                         ]}
                     />
-                    <BankAccountDialog
-                        {...bankAccountAdministrationProps.dialog}
-                    />
+                    <BankAccountDialog {...bankAccountAdministrationProps.dialog} />
                 </Stack>
             </TabPanel>
             <TabPanel index={3} activeTab={activeTab}>

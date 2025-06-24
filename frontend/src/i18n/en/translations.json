@@ -9,10 +9,12 @@
     "delete": "Delete",
     "edit": "Edit",
     "selected": "Selected",
+    "manage" : "Manage",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
     },
+    "organisation": "Organisation",
     "form": {
       "autocomplete": {
         "noOptions": "No options",
@@ -132,7 +134,8 @@
     "lastname": "Lastname",
     "gender": "Gender",
     "phone": "Phone",
-    "remark": "Remark"
+    "remark": "Remark",
+    "color" : "Color"
   },
   "navigation": {
     "titles": {
@@ -479,6 +482,26 @@
     "DONE" : "Done",
     "CANCELED" : "Canceled",
     "responsibleUsers": "Responsible"
+  },
+  "work": {
+    "type": {
+      "type": "Work Type",
+      "types": "Work Types",
+      "tableHint": "Enable the planning of work shifts for an event.",
+      "noneAvailable": "No work types exist yet."
+    },
+    "shift" : {
+      "shift" : "Shift",
+      "shifts" : "Shifts",
+      "myShifts" : "My Shifts",
+      "plan": "Shift Schedule",
+      "timeFrom": "Start",
+      "timeTo": "End",
+      "minUser": "Min. Persons",
+      "maxUser": "Max. Persons",
+      "remark": "Remark",
+      "assignedUsers": "Assigned Persons"
+    }
   },
   "participantRequirement": {
     "participantRequirement": "Participant requirement",

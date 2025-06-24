@@ -34,6 +34,7 @@ drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
 drop view if exists task_with_responsible_users;
+drop view if exists work_shift_with_assigned_users;
 
 create view app_user_name as
 select au.id,
@@ -572,3 +573,28 @@ from event_registration er
          left join competition_registration_with_fees crwf on er.id = crwf.event_registration
 group by er.id, c.id, au.id
 ;
+create view work_shift_with_assigned_users as
+select ws.id,
+       ws.event,
+       ws.time_from,
+       ws.time_to,
+       ws.remark,
+       e.name                                                         as event_name,
+       ws.work_type,
+       wt.name                                                        as work_type_name,
+       ws.min_user,
+       ws.max_user,
+       ws.created_at,
+       ws.created_by,
+       ws.updated_at,
+       ws.updated_by,
+       coalesce(string_agg(u.firstname || ' ' || u.lastname, ', ' order by u.firstname, u.lastname)
+                filter ( where u.id is not null ), '')              as title,
+       coalesce(array_agg(u) filter ( where u.id is not null ), '{}') as assigned_user
+from work_shift ws
+         left join work_type wt on ws.work_type = wt.id
+         left join event e on ws.event = e.id
+         left join work_shift_has_user wu on ws.id = wu.work_shift
+         left join app_user u on wu.app_user = u.id
+group by ws.id, ws.event, ws.time_from, ws.time_to, ws.remark, e.name, ws.work_type, wt.name, ws.min_user, ws.max_user,
+         ws.created_at, ws.created_by, ws.updated_at, ws.updated_by;

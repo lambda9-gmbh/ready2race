@@ -34,6 +34,8 @@ import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
+import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
+import {CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX} from '../ConfigurationPage.tsx'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
 
 export const EVENT_ORGANISATION_TAB_INDEX = 2
@@ -233,6 +235,7 @@ const EventPage = () => {
                         </TabPanel>
                         <TabPanel index={EVENT_ORGANISATION_TAB_INDEX} activeTab={activeTab}>
                             <Stack spacing={2}>
+                                <Shiftplan />
                                 <TaskTable {...taskProps.table} title={t('task.tasks')} />
                                 <TaskDialog {...taskProps.dialog} eventId={eventId} />
                             </Stack>
@@ -246,7 +249,12 @@ const EventPage = () => {
                                         <>{t('event.document.tableHint.description')}</>,
                                         <>
                                             {t('event.document.tableHint.part1')}
-                                            <InlineLink to={'/config'} search={{tabIndex: 2}}>
+                                            <InlineLink
+                                                to={'/config'}
+                                                search={{
+                                                    tabIndex:
+                                                        CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX,
+                                                }}>
                                                 {t('event.document.tableHint.part2Link')}
                                             </InlineLink>
                                             {t('event.document.tableHint.part3')}

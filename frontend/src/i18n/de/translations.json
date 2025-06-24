@@ -9,10 +9,12 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "selected": "Ausgewählt",
+    "manage": "Verwalten",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
     },
+    "organisation": "Organisation",
     "form": {
       "autocomplete": {
         "noOptions": "Keine Auswahl",
@@ -132,7 +134,8 @@
     "lastname": "Nachname",
     "gender": "Geschlecht",
     "phone": "Telefon",
-    "remark": "Anmerkung"
+    "remark": "Anmerkung",
+    "color" : "Farbe"
   },
   "navigation": {
     "titles": {
@@ -474,6 +477,26 @@
     "DONE": "Erledigt",
     "CANCELED": "Abgebrochen",
     "responsibleUsers": "Verantwortlich"
+  },
+  "work": {
+    "type": {
+      "type": "Arbeitsart",
+      "types": "Arbeitsarten",
+      "tableHint": "Ermöglichen das Planen von Schichten für eine Veranstaltung.",
+      "noneAvailable": "Es wurden noch keine Arbeitsarten angelegt."
+    },
+    "shift": {
+      "shift": "Schicht",
+      "shifts": "Schichten",
+      "myShifts": "Meine Schichten",
+      "plan": "Schichtplan",
+      "timeFrom": "Beginn",
+      "timeTo": "Ende",
+      "minUser": "Min. Personen",
+      "maxUser": "Max. Personen",
+      "remark": "Anmerkung",
+      "assignedUsers": "Eingeteilte Personen"
+    }
   },
   "participantRequirement": {
     "participantRequirement": "Teilnahmebedingung",

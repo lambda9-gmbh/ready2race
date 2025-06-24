@@ -873,6 +873,52 @@ export type VerifyRegistrationRequest = {
     token: string
 }
 
+export type WorkShiftUpsertDto = {
+    workType: string
+    timeFrom: string
+    timeTo: string
+    minUser: number
+    maxUser?: number
+    remark?: string
+    assignedUsers: Array<string>
+}
+
+export type WorkShiftWithAssignedUsersDto = {
+    id: string
+    title: string
+    event: string
+    timeFrom: string
+    timeTo: string
+    eventName: string
+    workType: string
+    workTypeName?: string
+    remark?: string
+    minUser: number
+    maxUser?: number
+    createdAt: string
+    updatedAt: string
+    assignedUsers: Array<AppUserNameDto>
+}
+
+export type WorkTypeDto = {
+    id: string
+    name: string
+    description?: string | null
+    color?: string
+    minUser: number
+    maxUser?: number
+    createdAt: string
+    updatedAt: string
+}
+
+export type WorkTypeUpsertDto = {
+    name: string
+    description?: string
+    color?: string
+    minUser: number
+    maxUser?: number
+}
+
 export type UserLoginData = {
     body: LoginRequest
 }
@@ -2599,3 +2645,107 @@ export type AssignContactData = {
 export type AssignContactResponse = void
 
 export type AssignContactError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type AddWorkTypeData = {
+    body: WorkTypeUpsertDto
+}
+
+export type AddWorkTypeResponse = string
+
+export type AddWorkTypeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetWorkTypesResponse = {
+    data: Array<WorkTypeDto>
+    pagination: Pagination
+}
+
+export type GetWorkTypesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateWorkTypeData = {
+    body: WorkTypeUpsertDto
+    path: {
+        workTypeId: string
+    }
+}
+
+export type UpdateWorkTypeResponse = void
+
+export type UpdateWorkTypeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteWorkTypeData = {
+    path: {
+        workTypeId: string
+    }
+}
+
+export type DeleteWorkTypeResponse = void
+
+export type DeleteWorkTypeError = BadRequestError | ApiError
+
+export type AddWorkShiftData = {
+    body: WorkShiftUpsertDto
+    path: {
+        eventId: string
+    }
+}
+
+export type AddWorkShiftResponse = string
+
+export type AddWorkShiftError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetWorkShiftsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        timeFrom?: string
+        timeTo?: string
+    }
+}
+
+export type GetWorkShiftsResponse = {
+    data: Array<WorkShiftWithAssignedUsersDto>
+    pagination: Pagination
+}
+
+export type GetWorkShiftsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateWorkShiftData = {
+    body: WorkShiftUpsertDto
+    path: {
+        eventId: string
+        workShiftId: string
+    }
+}
+
+export type UpdateWorkShiftResponse = void
+
+export type UpdateWorkShiftError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteWorkShiftData = {
+    path: {
+        eventId: string
+        workShiftId: string
+    }
+}
+
+export type DeleteWorkShiftResponse = void
+
+export type DeleteWorkShiftError = BadRequestError | ApiError
+
+export type GetWorkShiftsForUserData = {
+    path: {
+        userId: string
+    }
+    query?: {
+        timeFrom?: string
+        timeTo?: string
+    }
+}
+
+export type GetWorkShiftsForUserResponse = {
+    data: Array<WorkShiftWithAssignedUsersDto>
+    pagination: Pagination
+}
+
+export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
