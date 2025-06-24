@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionSetup.entity
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.flatMap
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
@@ -27,6 +28,10 @@ data class CompetitionSetupRoundDto(
             collection,
             noDuplicates(
                 CompetitionSetupMatchDto::weighting
+            ),
+            flatMap(
+                noDuplicates,
+                CompetitionSetupMatchDto::participants
             ),
         ),
         this::groups validate allOf(
@@ -61,7 +66,6 @@ data class CompetitionSetupRoundDto(
     )
 
     /*todo validations:
-        - no duplicate "participants" in one round
         - placeOption can not be "custom" if a match in the round has undefined teams
     */
 
