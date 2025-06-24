@@ -8,7 +8,7 @@ import Throbber from '@components/Throbber.tsx'
 import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
 import {useState} from 'react'
 import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
-import {getCompetition, getEventDays} from '@api/sdk.gen.ts'
+import {getCompetition, getEvent, getEventDays} from '@api/sdk.gen.ts'
 import CompetitionCountEntry from '@components/event/competition/CompetitionCountEntry.tsx'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
@@ -18,6 +18,7 @@ import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate, Link} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {AccountTreeOutlined} from '@mui/icons-material'
+import {eventRegistrationPossible} from '@utils/helpers.ts'
 
 const CompetitionPage = () => {
     const {t} = useTranslation()
@@ -35,6 +36,15 @@ const CompetitionPage = () => {
         navigate({from: competitionIndexRoute.fullPath, search: {tabIndex: tabIndex}}).then()
     }
 
+    const {data: eventData} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+            }
+        },
+        deps: [eventId],
+    })
+
     const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
 
     const {data: competitionData, pending: competitionPending} = useFetch(
@@ -47,7 +57,7 @@ const CompetitionPage = () => {
                     )
                 }
             },
-            deps: [eventId, competitionId],
+            deps: [eventId, competitionId, reloadDataTrigger],
         },
     )
 
@@ -68,9 +78,29 @@ const CompetitionPage = () => {
         },
     )
 
+    const registrationPossible = eventRegistrationPossible(
+        eventData?.registrationAvailableFrom,
+        eventData?.registrationAvailableTo,
+    )
+
+    const createRegistrationScope = user.loggedIn
+        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
+        : undefined
+    const updateRegistrationScope = user.loggedIn
+        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
+        : undefined
+
     const competitionRegistrationTeamsProps =
         useEntityAdministration<CompetitionRegistrationTeamDto>(
             t('event.registration.registration'),
+            {
+                entityCreate:
+                    createRegistrationScope === 'GLOBAL' ||
+                    (createRegistrationScope === 'OWN' && registrationPossible),
+                entityUpdate:
+                    updateRegistrationScope === 'GLOBAL' ||
+                    (updateRegistrationScope === 'OWN' && registrationPossible),
+            },
         )
 
     const a11yProps = (index: number) => {
@@ -158,37 +188,31 @@ const CompetitionPage = () => {
 
                                     <Divider />
 
-                                    {competitionData.properties.namedParticipants.map(
-                                        (np, index) => (
-                                            <Box key={`box${index}`}>
-                                                {/*todo: should have np.id instead of index to prevent updating errors*/}
-                                                <Typography variant="subtitle1">
-                                                    {np.name}
-                                                </Typography>
-                                                <Typography>{np.description}</Typography>
-                                                <CompetitionCountEntry
-                                                    label={t('event.competition.count.males')}
-                                                    content={np.countMales}
-                                                />
-                                                <CompetitionCountEntry
-                                                    label={t('event.competition.count.females')}
-                                                    content={np.countFemales}
-                                                />
-                                                <CompetitionCountEntry
-                                                    label={t('event.competition.count.nonBinary')}
-                                                    content={np.countNonBinary}
-                                                />
-                                                <CompetitionCountEntry
-                                                    label={t('event.competition.count.mixed')}
-                                                    content={np.countMixed}
-                                                />
-                                            </Box>
-                                        ),
-                                    )}
+                                    {competitionData.properties.namedParticipants.map(np => (
+                                        <Box key={np.id}>
+                                            <Typography variant="subtitle1">{np.name}</Typography>
+                                            <Typography>{np.description}</Typography>
+                                            <CompetitionCountEntry
+                                                label={t('event.competition.count.males')}
+                                                content={np.countMales}
+                                            />
+                                            <CompetitionCountEntry
+                                                label={t('event.competition.count.females')}
+                                                content={np.countFemales}
+                                            />
+                                            <CompetitionCountEntry
+                                                label={t('event.competition.count.nonBinary')}
+                                                content={np.countNonBinary}
+                                            />
+                                            <CompetitionCountEntry
+                                                label={t('event.competition.count.mixed')}
+                                                content={np.countMixed}
+                                            />
+                                        </Box>
+                                    ))}
                                     <Divider />
-                                    {competitionData.properties.fees.map((f, index) => (
-                                        <Box key={`box${index}`}>
-                                            {/*todo: should have fee.id instead of index to prevent updating errors*/}
+                                    {competitionData.properties.fees.map(f => (
+                                        <Box key={competitionData.id}>
                                             <Typography variant="subtitle1">{f.name}</Typography>
                                             <Typography>{f.description}</Typography>
                                             <Typography>

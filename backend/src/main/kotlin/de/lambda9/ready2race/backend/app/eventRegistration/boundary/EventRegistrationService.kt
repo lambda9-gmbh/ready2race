@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
@@ -29,6 +30,7 @@ import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
@@ -77,11 +79,15 @@ object EventRegistrationService {
         eventId: UUID,
         registrationDto: EventRegistrationUpsertDto,
         user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope
     ): App<EventRegistrationError, ApiResponse.Created> = KIO.comprehension {
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
 
-        // TODO Event is open for registrations OR is admin
+        if (scope == Privilege.Scope.OWN) {
+            !EventRepo.isOpenForRegistration(eventId, LocalDateTime.now()).orDie()
+                .onFalseFail { EventRegistrationError.RegistrationClosed }
+        }
 
         val now = LocalDateTime.now()
 
@@ -110,11 +116,12 @@ object EventRegistrationService {
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
-        val singleCompetitionMultipleCounts = registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
-            .groupingBy { it.competitionId }
-            .eachCount()
-            .filter { it.value > 1 }
-            .mapValues { 0 }.toMutableMap()
+        val singleCompetitionMultipleCounts =
+            registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
+                .groupingBy { it.competitionId }
+                .eachCount()
+                .filter { it.value > 1 }
+                .mapValues { 0 }.toMutableMap()
 
         val participantIdMap = !registrationDto.participants.traverse { pDto ->
             handleSingleCompetitionRegistration(
@@ -160,19 +167,20 @@ object EventRegistrationService {
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
-                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName }).joinToString("\n|        ") { t ->
-                    val ps = t.participants!!.map { it!! }.sortedBy { it.role }
-                    """
+                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName })
+                    .joinToString("\n|        ") { t ->
+                        val ps = t.participants!!.map { it!! }.sortedBy { it.role }
+                        """
                         |->${t.teamName?.let { " $it" } ?: ""}
                         |            ${
-                        ps.joinToString("\n|            ") { p ->
-                            """
+                            ps.joinToString("\n|            ") { p ->
+                                """
                                 |[${p.role}] ${p.firstname} ${p.lastname}
                             """.trimMargin()
+                            }
                         }
-                    }
                     """.trimMargin()
-                }
+                    }
             }
                 |
             """.trimMargin()
@@ -572,6 +580,6 @@ object EventRegistrationService {
         )
         !EventRegistrationReportDataRepo.create(dataRecord).orDie()
 
-        KIO.ok(filename to bytes)
+        ok(filename to bytes)
     }
 }
