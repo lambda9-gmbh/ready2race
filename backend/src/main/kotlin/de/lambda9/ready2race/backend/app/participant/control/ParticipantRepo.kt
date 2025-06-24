@@ -46,6 +46,9 @@ object ParticipantRepo {
     fun existsByIdAndClub(id: UUID, clubId: UUID) =
         PARTICIPANT.exists { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
 
+    fun findByIdAndClub(id: UUID, clubId: UUID) =
+        PARTICIPANT.findOneBy { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
+
     fun count(
         search: String?,
         clubId: UUID?,

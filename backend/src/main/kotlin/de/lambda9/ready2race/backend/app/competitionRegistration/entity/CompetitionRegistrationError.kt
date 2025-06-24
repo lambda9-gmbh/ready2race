@@ -8,14 +8,20 @@ enum class CompetitionRegistrationError : ServiceError {
     RegistrationClosed,
     EventRegistrationNotFound,
     RegistrationInvalid,
+    DuplicateParticipant,
     NotFound;
 
     override fun respond(): ApiError = when (this) {
+
         NotFound -> ApiError(
             status = HttpStatusCode.NotFound,
             message = "Registration not found"
         )
         RegistrationInvalid -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Invalid request"
+        )
+        DuplicateParticipant -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Invalid request"
         )

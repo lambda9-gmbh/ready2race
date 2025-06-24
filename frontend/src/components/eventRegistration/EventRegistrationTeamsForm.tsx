@@ -11,12 +11,13 @@ import {GroupAdd} from '@mui/icons-material'
 import {v4 as uuid} from 'uuid'
 import {
     EventRegistrationCompetitionDto,
+    EventRegistrationNamedParticipantDto,
     EventRegistrationParticipantUpsertDto,
     EventRegistrationUpsertDto,
 } from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
-import {useMemo} from 'react'
+import {useCallback, useMemo} from 'react'
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
 
@@ -34,6 +35,24 @@ const TeamInput = (props: {
 }) => {
     const {t} = useTranslation()
 
+    const getFilteredParticipants = useCallback(
+        (namedParticipant: EventRegistrationNamedParticipantDto) => {
+            return props.participants.filter(p => {
+                switch (p.gender) {
+                    case 'M':
+                        return namedParticipant.countMales > 0 || namedParticipant.countMixed > 0
+                    case 'F':
+                        return namedParticipant.countFemales > 0 || namedParticipant.countMixed > 0
+                    case 'D':
+                        return (
+                            namedParticipant.countNonBinary > 0 || namedParticipant.countMixed > 0
+                        )
+                }
+            })
+        },
+        [props.participants],
+    )
+
     return (
         <Paper sx={{p: 2}} elevation={2} key={props.team.fieldId}>
             <Stack rowGap={2}>
@@ -47,7 +66,8 @@ const TeamInput = (props: {
                                     key={`${namedParticipant.id}`}
                                     label={t('club.participant.title')}
                                     required={true}
-                                    options={props.participants}
+                                    competitionPath={`competitionRegistrations.${props.competitionIndex}`}
+                                    options={getFilteredParticipants(namedParticipant)}
                                     transform={{
                                         input: value =>
                                             props.participants.filter(p =>
@@ -62,12 +82,10 @@ const TeamInput = (props: {
                                             }
                                         },
                                     }}
-                                    count={
-                                        namedParticipant.countMales +
-                                        namedParticipant.countFemales +
-                                        namedParticipant.countMixed +
-                                        namedParticipant.countNonBinary
-                                    }
+                                    countMales={namedParticipant.countMales}
+                                    countFemales={namedParticipant.countFemales}
+                                    countMixed={namedParticipant.countMixed}
+                                    countNonBinary={namedParticipant.countNonBinary}
                                 />
                             </Stack>
                         ),
