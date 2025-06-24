@@ -78,6 +78,11 @@ const CompetitionPage = () => {
         },
     )
 
+    const registrationPossible = eventRegistrationPossible(
+        eventData?.registrationAvailableFrom,
+        eventData?.registrationAvailableTo,
+    )
+
     const competitionRegistrationTeamsProps =
         useEntityAdministration<CompetitionRegistrationTeamDto>(
             t('event.registration.registration'),
@@ -93,10 +98,19 @@ const CompetitionPage = () => {
                         resource: 'REGISTRATION',
                         scope: 'OWN',
                     }) &&
-                        eventRegistrationPossible(
-                            eventData?.registrationAvailableFrom,
-                            eventData?.registrationAvailableTo,
-                        )),
+                        registrationPossible),
+                entityUpdate:
+                    user.checkPrivilege({
+                        action: 'UPDATE',
+                        resource: 'REGISTRATION',
+                        scope: 'GLOBAL',
+                    }) ||
+                    (user.checkPrivilege({
+                        action: 'UPDATE',
+                        resource: 'REGISTRATION',
+                        scope: 'OWN',
+                    }) &&
+                        registrationPossible),
             },
         )
 
