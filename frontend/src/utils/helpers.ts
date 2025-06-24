@@ -52,5 +52,5 @@ export const eventRegistrationPossible = (from?: string, to?: string) => {
         from !== undefined &&
         new Date(from) < new Date() &&
         (to === undefined || new Date(to) > new Date())
-    ) || true
+    )
 }
