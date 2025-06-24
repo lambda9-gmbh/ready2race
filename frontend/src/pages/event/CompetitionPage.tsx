@@ -83,34 +83,23 @@ const CompetitionPage = () => {
         eventData?.registrationAvailableTo,
     )
 
+    const createRegistrationScope = user.loggedIn
+        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
+        : undefined
+    const updateRegistrationScope = user.loggedIn
+        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
+        : undefined
+
     const competitionRegistrationTeamsProps =
         useEntityAdministration<CompetitionRegistrationTeamDto>(
             t('event.registration.registration'),
             {
                 entityCreate:
-                    user.checkPrivilege({
-                        action: 'CREATE',
-                        resource: 'REGISTRATION',
-                        scope: 'GLOBAL',
-                    }) ||
-                    (user.checkPrivilege({
-                        action: 'CREATE',
-                        resource: 'REGISTRATION',
-                        scope: 'OWN',
-                    }) &&
-                        registrationPossible),
+                    createRegistrationScope === 'GLOBAL' ||
+                    (createRegistrationScope === 'OWN' && registrationPossible),
                 entityUpdate:
-                    user.checkPrivilege({
-                        action: 'UPDATE',
-                        resource: 'REGISTRATION',
-                        scope: 'GLOBAL',
-                    }) ||
-                    (user.checkPrivilege({
-                        action: 'UPDATE',
-                        resource: 'REGISTRATION',
-                        scope: 'OWN',
-                    }) &&
-                        registrationPossible),
+                    updateRegistrationScope === 'GLOBAL' ||
+                    (updateRegistrationScope === 'OWN' && registrationPossible),
             },
         )
 

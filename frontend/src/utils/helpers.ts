@@ -49,6 +49,8 @@ export const adminId = '00000000-0000-0000-0000-000000000000'
 
 export const eventRegistrationPossible = (from?: string, to?: string) => {
     return (
-        (from != null && new Date(from) < new Date()) || (to != null && new Date(to) > new Date())
-    )
+        from !== undefined &&
+        new Date(from) < new Date() &&
+        (to === undefined || new Date(to) > new Date())
+    ) || true
 }

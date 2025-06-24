@@ -6,10 +6,12 @@ import io.ktor.http.*
 
 enum class EventRegistrationError : ServiceError {
     EventNotFound,
-    InvalidRegistration;
+    InvalidRegistration,
+    RegistrationClosed;
 
     override fun respond(): ApiError = when (this) {
         EventNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Event not found")
         InvalidRegistration -> ApiError(status = HttpStatusCode.BadRequest, message = "Invalid registration")
+        RegistrationClosed -> ApiError(status = HttpStatusCode.Forbidden, message = "Registration already closed")
     }
 }
