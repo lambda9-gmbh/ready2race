@@ -99,7 +99,7 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                         },
                     ]}
                 />
-                <FormInputNumber name={'year'} label={t('club.participant.year')} />
+                <FormInputNumber required name={'year'} label={t('club.participant.year')} />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
                 <Stack direction="row" spacing={2} alignItems={'center'}>
                     <FormInputCheckbox

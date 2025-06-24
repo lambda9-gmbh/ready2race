@@ -8,11 +8,18 @@ import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 import i18next from "i18next";
 import {fallbackLng, isLanguage, Language} from "@i18n/config.ts";
 
+type Session = {
+    token: string
+}
+
 type UserData = LoginDto
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(isLanguage(i18next.language) ? i18next.language : fallbackLng)
     const [userData, setUserData] = useState<UserData>()
+    const [token, setToken] = useState<string | null>(
+        sessionStorage.getItem('session')
+    )
     const [ready, setReady] = useState(false)
     const prevLoggedIn = useRef(false)
     const autoLogin = useRef(false)
@@ -31,6 +38,19 @@ const UserProvider = ({children}: PropsWithChildren) => {
         client.interceptors.response.use(f)
         return () => client.interceptors.response.eject(f)
     }, [client])
+
+    useEffect(() => {
+
+        if (token) {
+            const f = async (req: Request) => {
+                req.headers.set('X-Api-Session', JSON.stringify({token}))
+                return req
+            }
+
+            client.interceptors.request.use(f)
+            return () => client.interceptors.request.eject(f)
+        }
+    }, [token, client])
 
     useEffect(() => {
         if (!autoLogin.current && prevLoggedIn.current !== loggedIn) {
@@ -52,13 +72,23 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 autoLogin.current = true
                 login(data)
             } else {
+                sessionStorage.removeItem('session')
                 setReady(true)
             }
         },
     })
 
-    const login = (data: LoginDto) => {
+    const login = (data: LoginDto, headers?: Headers) => {
         autoLogin.current = false
+        if (headers) {
+            const sessionHeader = headers.get("X-Api-Session")
+            if (sessionHeader === null) {
+                throw Error("Missing header on login response")
+            }
+            const token = (JSON.parse(sessionHeader) as Session).token
+            sessionStorage.setItem("session", token)
+            setToken(token)
+        }
         setUserData({...data})
     }
 
@@ -66,7 +96,9 @@ const UserProvider = ({children}: PropsWithChildren) => {
         autoLogin.current = false
         const {error} = await userLogout()
         if (error === undefined) {
+            sessionStorage.removeItem("session")
             setUserData(undefined)
+            setToken(null)
         }
     }
 
