@@ -7,7 +7,11 @@ import CompetitionDialog from '@components/event/competition/CompetitionDialog.t
 import Throbber from '@components/Throbber.tsx'
 import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
 import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
-import {getEvent, getRegistrationResult, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
+import {
+    getEvent,
+    getRegistrationResult,
+    produceInvoicesForEventRegistrations,
+} from '@api/sdk.gen.ts'
 import {
     CompetitionDto,
     EventDayDto,
@@ -30,6 +34,7 @@ import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
+import {eventRegistrationPossible} from '@utils/helpers.ts'
 
 export const EVENT_ORGANISATION_TAB_INDEX = 2
 
@@ -92,10 +97,10 @@ const EventPage = () => {
         () =>
             user.loggedIn &&
             user.clubId != null &&
-            data?.registrationAvailableFrom != null &&
-            new Date(data?.registrationAvailableFrom) < new Date() &&
-            (data?.registrationAvailableTo == null ||
-                new Date(data?.registrationAvailableTo) > new Date()),
+            eventRegistrationPossible(
+                data?.registrationAvailableFrom,
+                data?.registrationAvailableTo,
+            ),
         [data, user],
     )
 
@@ -121,7 +126,7 @@ const EventPage = () => {
 
     const handleProduceInvoices = async () => {
         const {data, error} = await produceInvoicesForEventRegistrations({
-            path: {eventId}
+            path: {eventId},
         })
 
         if (error !== undefined) {
@@ -272,7 +277,7 @@ const EventPage = () => {
                                     {t('event.action.registrationsReport.download')}
                                 </Button>
                                 <Button variant={'contained'} onClick={handleProduceInvoices}>
-                                    <Trans i18nKey={'event.action.produceInvoices'}/>
+                                    <Trans i18nKey={'event.action.produceInvoices'} />
                                 </Button>
                             </Stack>
                         </TabPanel>

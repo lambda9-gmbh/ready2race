@@ -7,6 +7,7 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getPublicEvents} from '@api/sdk.gen.ts'
 import {Link} from '@tanstack/react-router'
 import {Event, Forward, LocationOn} from '@mui/icons-material'
+import {eventRegistrationPossible} from '@utils/helpers.ts'
 
 export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
     const feedback = useFeedback()
@@ -52,12 +53,10 @@ export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
                                         key={event.id}
                                         secondaryAction={
                                             !props.hideRegistration &&
-                                            ((event.registrationAvailableFrom != null &&
-                                                new Date(event.registrationAvailableFrom) <
-                                                    new Date()) ||
-                                                (event.registrationAvailableTo != null &&
-                                                    new Date(event.registrationAvailableTo) >
-                                                        new Date())) && (
+                                            eventRegistrationPossible(
+                                                event.registrationAvailableFrom,
+                                                event.registrationAvailableTo,
+                                            ) && (
                                                 <Link
                                                     to={'/event/$eventId/register'}
                                                     params={{eventId: event.id}}>

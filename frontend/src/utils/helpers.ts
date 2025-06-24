@@ -46,3 +46,9 @@ export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
 }
 
 export const adminId = '00000000-0000-0000-0000-000000000000'
+
+export const eventRegistrationPossible = (from?: string, to?: string) => {
+    return (
+        (from != null && new Date(from) < new Date()) || (to != null && new Date(to) > new Date())
+    )
+}

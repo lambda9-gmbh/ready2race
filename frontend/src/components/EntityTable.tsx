@@ -108,9 +108,8 @@ const EntityTable = <
     if (user.loggedIn) {
         if (resource) {
             crud = {
-                create:
-                    user.checkPrivilege({action: 'CREATE', resource, scope: 'OWN'}) || publicRead,
-                read: user.checkPrivilege({action: 'READ', resource, scope: 'OWN'}),
+                create: user.checkPrivilege({action: 'CREATE', resource, scope: 'OWN'}),
+                read: user.checkPrivilege({action: 'READ', resource, scope: 'OWN'}) || publicRead,
                 update: user.checkPrivilege({action: 'UPDATE', resource, scope: 'OWN'}),
                 delete: user.checkPrivilege({action: 'DELETE', resource, scope: 'OWN'}),
             }
@@ -121,12 +120,13 @@ const EntityTable = <
                 scope: 'OWN',
             })
             crud = {
-                create: rest || publicRead,
-                read: user.checkPrivilege({
-                    action: 'READ',
-                    resource: parentResource,
-                    scope: 'OWN',
-                }),
+                create: rest,
+                read:
+                    user.checkPrivilege({
+                        action: 'READ',
+                        resource: parentResource,
+                        scope: 'OWN',
+                    }) || publicRead,
                 update: rest,
                 delete: rest,
             }
