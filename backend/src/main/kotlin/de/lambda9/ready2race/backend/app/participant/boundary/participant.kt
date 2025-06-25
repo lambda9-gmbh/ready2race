@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.participant.boundary
 
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
@@ -9,6 +10,7 @@ import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
 
 fun Route.participant() {
@@ -26,11 +28,14 @@ fun Route.participant() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.PARTICIPANT)
+                val (user, scope) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.PARTICIPANT)
                 val clubId = !pathParam("clubId", uuid)
                 val payload = !receiveKIO(ParticipantUpsertDto.example)
-                ParticipantService.addParticipant(payload, user.id!!, clubId)
-
+                if (scope == Privilege.Scope.OWN && clubId != user.club) {
+                    KIO.fail(AuthError.PrivilegeMissing)
+                } else {
+                    ParticipantService.addParticipant(payload, user.id!!, clubId)
+                }
             }
         }
 
@@ -57,7 +62,7 @@ fun Route.participant() {
 
             delete {
                 call.respondComprehension {
-                    val (user, scope) =!authenticate(Privilege.Action.DELETE, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) = !authenticate(Privilege.Action.DELETE, Privilege.Resource.PARTICIPANT)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
                     ParticipantService.deleteParticipant(id, clubId, user, scope)

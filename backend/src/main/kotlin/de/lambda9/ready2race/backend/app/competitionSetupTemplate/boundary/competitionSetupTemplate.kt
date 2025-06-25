@@ -12,7 +12,7 @@ fun Route.competitionSetupTemplate() {
     route("/competitionSetupTemplate") {
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
 
                 val body = !receiveKIO(CompetitionSetupTemplateRequest.example)
                 CompetitionSetupTemplateService.add(body, user.id!!)
@@ -21,7 +21,7 @@ fun Route.competitionSetupTemplate() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<CompetitionSetupTemplateSort>()
                 CompetitionSetupTemplateService.page(params)
             }
@@ -30,7 +30,7 @@ fun Route.competitionSetupTemplate() {
         route("/{competitionSetupTemplateId}") {
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.ReadEventGlobal)
                     val id = !pathParam("competitionSetupTemplateId", uuid)
                     CompetitionSetupTemplateService.getById(id)
                 }
@@ -38,7 +38,7 @@ fun Route.competitionSetupTemplate() {
 
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("competitionSetupTemplateId", uuid)
 
                     val body = !receiveKIO(CompetitionSetupTemplateRequest.example)
@@ -48,7 +48,7 @@ fun Route.competitionSetupTemplate() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("competitionSetupTemplateId", uuid)
                     CompetitionSetupTemplateService.delete(id)
                 }

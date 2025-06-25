@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentReque
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
 import de.lambda9.ready2race.backend.app.eventDocumentType.control.EventDocumentTypeRepo
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeError
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
@@ -34,8 +35,7 @@ object EventDocumentService {
         params: PaginationParameters<EventDocumentViewSort>,
     ): App<Nothing, ApiResponse.Page<EventDocumentDto, EventDocumentViewSort>> = KIO.comprehension {
         val total = !EventDocumentRepo.count(params.search).orDie()
-        val page = !EventDocumentRepo.
-        page(params).orDie()
+        val page = !EventDocumentRepo.page(params).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
@@ -82,15 +82,22 @@ object EventDocumentService {
     }
 
     fun downloadDocument(
-        id: UUID,
-    ): App<EventDocumentError, ApiResponse.File> =
-        EventDocumentRepo.getDownload(id).orDie().onNullFail { EventDocumentError.NotFound }
-            .map {
-                ApiResponse.File(
-                    name = it.name!!,
-                    bytes = it.data!!,
-                )
-            }
+        id: UUID
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+
+        val document = !EventDocumentRepo.getDownload(id).orDie().onNullFail { EventDocumentError.NotFound }
+
+        !EventRepo.isOpenForRegistration(document.event!!, LocalDateTime.now()).orDie()
+            .onFalseFail { EventRegistrationError.RegistrationClosed }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = document.name!!,
+                bytes = document.data!!,
+            )
+        )
+
+    }
 
     fun updateDocument(
         id: UUID,

@@ -9,4 +9,5 @@ data class AppUserDto(
     val firstname: String,
     val lastname: String,
     val roles: List<RoleDto>,
+    val club: UUID?
 )

@@ -19,7 +19,7 @@ fun Route.club() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.CLUB)
+                val user = !authenticate(Privilege.CreateClubGlobal)
                 val payload = !receiveKIO(ClubUpsertDto.example)
                 ClubService.addClub(payload, user.id!!)
 
@@ -28,7 +28,7 @@ fun Route.club() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                !authenticate(Privilege.ReadClubGlobal)
                 val params = !pagination<ClubSort>()
                 ClubService.page(params) { it.clubDto() }
             }
@@ -38,7 +38,7 @@ fun Route.club() {
         route("/search") {
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                    !authenticate()
                     val params = !pagination<ClubSort>()
                     val eventId = !optionalQueryParam("eventId", uuid)
                     ClubService.page(params, eventId) { it.clubSearchDto() }
@@ -50,24 +50,32 @@ fun Route.club() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
                     val id = !pathParam("clubId", uuid)
-                    ClubService.getClub(id)
+                    if (scope == Privilege.Scope.OWN && id != user.club) {
+                        KIO.fail(AuthError.PrivilegeMissing)
+                    } else {
+                        ClubService.getClub(id)
+                    }
                 }
             }
 
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
                     val id = !pathParam("clubId", uuid)
                     val payload = !receiveKIO(ClubUpsertDto.example)
-                    ClubService.updateClub(payload, user.id!!, id)
+                    if (scope == Privilege.Scope.OWN && id != user.club) {
+                        KIO.fail(AuthError.PrivilegeMissing)
+                    } else {
+                        ClubService.updateClub(payload, user.id!!, id)
+                    }
                 }
             }
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.CLUB)
+                    !authenticate(Privilege.DeleteClubGlobal)
                     val id = !pathParam("clubId", uuid)
                     ClubService.deleteClub(id)
                 }

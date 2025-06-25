@@ -21,7 +21,7 @@ fun Route.participantRequirementForEvent() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<ParticipantRequirementForEventSort>()
                 val eventId = !pathParam("eventId", uuid)
                 ParticipantRequirementService.pageForEvent(params, eventId)
@@ -63,7 +63,7 @@ fun Route.participantRequirementForEvent() {
                     }
                 }
 
-                val (user, _) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 ParticipantRequirementService.checkRequirementForEvent(
                     eventId,
@@ -77,7 +77,7 @@ fun Route.participantRequirementForEvent() {
         route("/active") {
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    !authenticate()
                     val params = !pagination<ParticipantRequirementForEventSort>()
                     val eventId = !pathParam("eventId", uuid)
                     ParticipantRequirementService.getActiveForEvent(params, eventId)
@@ -88,7 +88,7 @@ fun Route.participantRequirementForEvent() {
         route("/approve") {
             post {
                 call.respondComprehension {
-                    val (user) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val body = !receiveKIO(ParticipantRequirementCheckForEventUpsertDto.example)
                     ParticipantRequirementService.approveRequirementForEvent(eventId, body, user.id!!)
@@ -96,11 +96,12 @@ fun Route.participantRequirementForEvent() {
             }
         }
 
+        // Todo: Merge the following 2 Requests into one endpoint
         route("/{participantRequirementId}") {
 
             get {
                 call.respondComprehension {
-                    val (user) = !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     ParticipantRequirementService.activateRequirementForEvent(
@@ -113,7 +114,7 @@ fun Route.participantRequirementForEvent() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     ParticipantRequirementService.removeRequirementForEvent(participantRequirementId, eventId)

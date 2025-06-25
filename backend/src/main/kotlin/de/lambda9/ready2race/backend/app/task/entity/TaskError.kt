@@ -5,7 +5,8 @@ import de.lambda9.ready2race.backend.calls.responses.ApiError
 import io.ktor.http.*
 
 enum class TaskError : ServiceError {
-    NotFound;
+    NotFound,
+    ASSIGNED_CLUB_REPRESENTATIVE;
 
     override fun respond(): ApiError = when (this) {
         NotFound ->
@@ -13,5 +14,6 @@ enum class TaskError : ServiceError {
                 status = HttpStatusCode.NotFound,
                 message = "Task not found",
             )
+        ASSIGNED_CLUB_REPRESENTATIVE -> ApiError(status = HttpStatusCode.BadRequest, message = "Assigned a club representative to the task")
     }
 }

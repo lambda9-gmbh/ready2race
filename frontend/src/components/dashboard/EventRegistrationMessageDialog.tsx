@@ -13,7 +13,8 @@ export function EventRegistrationMessageDialog(props: {
             maxWidth={'md'}
             scroll={'paper'}
             open={props.open}
-            onClose={props.onClose}>
+            onClose={props.onClose}
+            className={'ready2race'}>
             <DialogTitle>{t('event.registration.message')}</DialogTitle>
             <DialogContent dividers={true} sx={{minHeight: 200}}>
                 {props.content}

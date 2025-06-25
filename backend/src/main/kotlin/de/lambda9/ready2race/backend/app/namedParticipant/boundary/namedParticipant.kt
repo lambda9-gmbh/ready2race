@@ -15,7 +15,7 @@ fun Route.namedParticipant() {
     route("/namedParticipant") {
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
 
                 val body = !receiveKIO(NamedParticipantRequest.example)
                 NamedParticipantService.addNamedParticipant(body, user.id!!)
@@ -24,7 +24,7 @@ fun Route.namedParticipant() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<NamedParticipantSort>()
                 NamedParticipantService.page(params)
             }
@@ -33,7 +33,7 @@ fun Route.namedParticipant() {
         route("/{namedParticipantId}"){
             put{
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val namedParticipantId = !pathParam("namedParticipantId", uuid)
 
                     val body = !receiveKIO(NamedParticipantRequest.example)
@@ -43,7 +43,7 @@ fun Route.namedParticipant() {
 
             delete{
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val namedParticipantId = !pathParam("namedParticipantId", uuid)
                     NamedParticipantService.deleteNamedParticipant(namedParticipantId)
                 }

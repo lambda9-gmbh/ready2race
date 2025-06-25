@@ -66,7 +66,7 @@ const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
     return (
         <EntityTable
             {...props}
-            parentResource={'PARTICIPANT'}
+            resource={'PARTICIPANT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

@@ -22,6 +22,7 @@ export type AppUserDto = {
     firstname: string
     lastname: string
     roles: Array<RoleDto>
+    club?: string
 }
 
 export type AppUserInvitationDto = {

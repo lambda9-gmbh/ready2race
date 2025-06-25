@@ -24,7 +24,7 @@ fun Route.workType() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val body = !receiveKIO(WorkTypeUpsertDto.example)
                 WorkTypeService.addWorkType(body, user.id!!)
             }
@@ -33,7 +33,7 @@ fun Route.workType() {
         route("/{workTypeId}") {
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val workTypeId = !pathParam("workTypeId", uuid)
                     val body = !receiveKIO(WorkTypeUpsertDto.example)
                     WorkTypeService.updateWorkType(workTypeId, body, user.id!!)
@@ -42,7 +42,7 @@ fun Route.workType() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val workTypeId = !pathParam("workTypeId", uuid)
                     WorkTypeService.deleteWorkType(workTypeId)
                 }

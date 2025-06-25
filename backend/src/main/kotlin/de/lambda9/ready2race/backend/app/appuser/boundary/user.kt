@@ -61,10 +61,17 @@ fun Route.user() {
                 get {
                     call.respondComprehension {
                         val id = !pathParam("userId", uuid)
-                        !authenticate(Privilege.ReadEventGlobal)
+                        val (user, scope) = !authenticate(
+                            Privilege.Action.READ,
+                            Privilege.Resource.EVENT
+                        )
                         val params = !pagination<TaskWithResponsibleUsersSort>()
 
-                        TaskService.pageOpenForUser(params, id)
+                        if (scope == Privilege.Scope.OWN && id != user.id!!) {
+                            KIO.fail(AuthError.PrivilegeMissing)
+                        } else {
+                            TaskService.pageOpenForUser(params, id)
+                        }
                     }
                 }
             }
@@ -73,12 +80,19 @@ fun Route.user() {
                 get {
                     call.respondComprehension {
                         val id = !pathParam("userId", uuid)
-                        !authenticate(Privilege.ReadEventGlobal)
+                        val (user, scope) = !authenticate(
+                            Privilege.Action.READ,
+                            Privilege.Resource.EVENT
+                        )
                         val params = !pagination<WorkShiftWithAssignedUsersSort>()
                         val timeFrom = !optionalQueryParam("timeFrom", datetime)
                         val timeTo = !optionalQueryParam("timeTo", datetime)
 
-                        WorkShiftService.pageByUser(params, id, timeFrom, timeTo)
+                        if (scope == Privilege.Scope.OWN && id != user.id!!) {
+                            KIO.fail(AuthError.PrivilegeMissing)
+                        } else {
+                            WorkShiftService.pageByUser(params, id, timeFrom, timeTo)
+                        }
                     }
                 }
             }

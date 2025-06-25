@@ -130,6 +130,7 @@ const ShiftDialog = (props: BaseEntityDialogProps<WorkShiftWithAssignedUsersDto>
                     name="assignedUsers"
                     label={t('work.shift.assignedUsers')}
                     disabled={!userCanEdit}
+                    noClubRepresentatives
                 />
             </Stack>
         </EntityDialog>

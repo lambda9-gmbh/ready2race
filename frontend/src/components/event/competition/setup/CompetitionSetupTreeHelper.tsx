@@ -209,7 +209,7 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                     onClose={closeTournamentTreeDialog}
                     fullWidth={true}
                     maxWidth={'xs'}
-                    className="ready2competition">
+                    className="ready2race">
                     <Box sx={{mx: 4, my: 2}}>
                         <FormContainer
                             formContext={formContext}

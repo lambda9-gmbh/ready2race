@@ -127,4 +127,13 @@ object AppUserRepo {
         }
     }
 
+    fun getManyById(
+        ids: List<UUID>
+    ): JIO<List<AppUserRecord>> = Jooq.query {
+        with(APP_USER){
+            selectFrom(this)
+                .where(ID.`in`(ids))
+                .fetch()
+        }
+    }
 }

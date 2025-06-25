@@ -9,6 +9,7 @@ export const FormInputAutocompleteUser = (props: {
     required?: boolean
     disabled?: boolean
     onChange?: () => void
+    noClubRepresentatives?: boolean
 }) => {
     const {t} = useTranslation()
 
@@ -29,7 +30,11 @@ export const FormInputAutocompleteUser = (props: {
         <FormInputAutocomplete
             name={props.name}
             label={props.label}
-            options={data?.data ?? []}
+            options={
+                data?.data.filter(user =>
+                    props.noClubRepresentatives ? user.club === undefined : true,
+                ) ?? []
+            }
             loading={pending}
             matchId
             required={props.required}

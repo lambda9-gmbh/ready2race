@@ -82,6 +82,7 @@ const TaskDialog = (props: BaseEntityDialogProps<TaskDto> & {eventId: string}) =
                 <FormInputAutocompleteUser
                     name="responsibleUsers"
                     label={t('task.responsibleUsers')}
+                    noClubRepresentatives
                 />
                 <FormInputText multiline={true} rows={5} name="remark" label={t('entity.remark')} />
             </Stack>
