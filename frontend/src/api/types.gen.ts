@@ -703,6 +703,7 @@ export type ParticipantDto = {
     phone?: string | null
     external?: boolean | null
     externalClubName?: string | null
+    usedInRegistration: boolean
     createdAt: string
     updatedAt: string
 }

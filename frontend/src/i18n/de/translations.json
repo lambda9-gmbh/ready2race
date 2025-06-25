@@ -163,7 +163,8 @@
       "title": "Mitglied",
       "year": "Geburtsjahr",
       "external": "Extern",
-      "externalClub": "Externer Verein"
+      "externalClub": "Externer Verein",
+      "usedInRegistration": "In Meldung"
     }
   },
   "event": {

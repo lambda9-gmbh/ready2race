@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
@@ -32,18 +33,19 @@ fun ParticipantUpsertDto.toRecord(userId: UUID, clubId: UUID): App<Nothing, Part
         }
     )
 
-fun ParticipantRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.ok(
+fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.ok(
     ParticipantDto(
-        id = id,
-        firstname = firstname,
-        lastname = lastname,
+        id = id!!,
+        firstname = firstname!!,
+        lastname = lastname!!,
         year = year,
-        gender = gender,
+        gender = gender!!,
         phone = phone,
         external = external,
         externalClubName = externalClubName,
-        createdAt = createdAt,
-        updatedAt = updatedAt
+        usedInRegistration = usedInRegistration!!,
+        createdAt = createdAt!!,
+        updatedAt = updatedAt!!
     )
 )
 

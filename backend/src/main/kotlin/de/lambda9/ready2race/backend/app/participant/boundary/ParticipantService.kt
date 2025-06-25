@@ -3,17 +3,14 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.control.*
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventSort
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
+import de.lambda9.ready2race.backend.app.participant.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -76,7 +73,8 @@ object ParticipantService {
         scope: Privilege.Scope,
     ): App<ParticipantError, ApiResponse.Dto<ParticipantDto>> = KIO.comprehension {
         val participant =
-            !ParticipantRepo.getParticipant(id, clubId, user, scope).orDie().onNullFail { ParticipantError.ParticipantNotFound }
+            !ParticipantRepo.getParticipant(id, clubId, user, scope).orDie()
+                .onNullFail { ParticipantError.ParticipantNotFound }
         participant.participantDto().map { ApiResponse.Dto(it) }
     }
 
@@ -108,6 +106,13 @@ object ParticipantService {
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope,
     ): App<ParticipantError, ApiResponse.NoData> = KIO.comprehension {
+
+        !CompetitionRegistrationNamedParticipantRepo.existsByParticipantId(id)
+            .orDie()
+            .onTrueFail {
+                ParticipantError.ParticipantInUse
+            }
+
         val deleted = !ParticipantRepo.delete(id, clubId, user, scope).orDie()
 
         if (deleted < 1) {

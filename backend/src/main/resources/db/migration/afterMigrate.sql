@@ -35,6 +35,7 @@ drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
 drop view if exists task_with_responsible_users;
 drop view if exists work_shift_with_assigned_users;
+drop view if exists participant_view;
 
 create view app_user_name as
 select au.id,
@@ -589,7 +590,7 @@ select ws.id,
        ws.updated_at,
        ws.updated_by,
        coalesce(string_agg(u.firstname || ' ' || u.lastname, ', ' order by u.firstname, u.lastname)
-                filter ( where u.id is not null ), '')              as title,
+                filter ( where u.id is not null ), '')                as title,
        coalesce(array_agg(u) filter ( where u.id is not null ), '{}') as assigned_user
 from work_shift ws
          left join work_type wt on ws.work_type = wt.id
@@ -598,3 +599,8 @@ from work_shift ws
          left join app_user u on wu.app_user = u.id
 group by ws.id, ws.event, ws.time_from, ws.time_to, ws.remark, e.name, ws.work_type, wt.name, ws.min_user, ws.max_user,
          ws.created_at, ws.created_by, ws.updated_at, ws.updated_by;
+
+create view participant_view as
+select p.*,
+       exists(select * from competition_registration_named_participant where participant = p.id) as used_in_registration
+from participant p;

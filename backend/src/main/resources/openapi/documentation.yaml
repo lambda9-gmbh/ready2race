@@ -5281,6 +5281,7 @@ components:
         - firstname
         - lastname
         - gender
+        - usedInRegistration
         - createdAt
         - updatedAt
       properties:
@@ -5305,6 +5306,8 @@ components:
         externalClubName:
           type: string
           nullable: true
+        usedInRegistration:
+          type: boolean
         createdAt:
           type: string
           format: date-time
