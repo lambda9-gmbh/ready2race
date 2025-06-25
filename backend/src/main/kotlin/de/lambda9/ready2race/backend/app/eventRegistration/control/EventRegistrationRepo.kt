@@ -20,6 +20,8 @@ object EventRegistrationRepo {
 
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
+    fun delete(id: UUID) = EVENT_REGISTRATION.delete { ID.eq(id) }
+
     fun getIdsByEvent(
         eventId: UUID
     ): JIO<List<UUID>> = Jooq.query {
@@ -55,6 +57,34 @@ object EventRegistrationRepo {
         with(EVENT_REGISTRATIONS_VIEW) {
             selectFrom(this)
                 .page(params, searchFields())
+                .fetch()
+        }
+    }
+
+    fun countForEvent(
+        eventId: UUID,
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            fetchCount(
+                this,
+                DSL.and(
+                    search.metaSearch(searchFields()),
+                    EVENT_ID.eq(eventId)
+                )
+            )
+        }
+    }
+
+    fun pageForEvent(
+        eventId: UUID,
+        params: PaginationParameters<EventRegistrationViewSort>
+    ): JIO<List<EventRegistrationsViewRecord>> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            selectFrom(this)
+                .page(params, searchFields()) {
+                    EVENT_ID.eq(eventId)
+                }
                 .fetch()
         }
     }

@@ -19,7 +19,7 @@ client.setConfig({
 })
 
 const language = (document.getElementById('ready2race-root')!.dataset.lng)
-if (language && isLanguage(language)) {
+if (isLanguage(language)) {
     i18next.changeLanguage(language).then()
 }
 

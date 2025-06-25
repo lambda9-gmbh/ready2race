@@ -22,6 +22,7 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEvent
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
@@ -48,6 +49,21 @@ object EventRegistrationService {
     ): App<Nothing, ApiResponse.Page<EventRegistrationViewDto, EventRegistrationViewSort>> = KIO.comprehension {
         val total = !EventRegistrationRepo.countForView(params.search).orDie()
         val page = !EventRegistrationRepo.pageForView(params).orDie()
+
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
+    fun pageForEvent(
+        eventId: UUID,
+        params: PaginationParameters<EventRegistrationViewSort>,
+    ): App<Nothing, ApiResponse.Page<EventRegistrationViewDto, EventRegistrationViewSort>> = KIO.comprehension {
+        val total = !EventRegistrationRepo.countForEvent(eventId, params.search).orDie()
+        val page = !EventRegistrationRepo.pageForEvent(eventId, params).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
@@ -430,6 +446,18 @@ object EventRegistrationService {
                 optionalFee
             )
         ).orDie()
+    }
+
+    fun deleteRegistration(
+        id: UUID,
+    ): App<EventRegistrationError, ApiResponse.NoData> = KIO.comprehension {
+        val deleted = !EventRegistrationRepo.delete(id).orDie()
+
+        if (deleted < 1) {
+            KIO.fail(EventRegistrationError.NotFound)
+        } else {
+            noData
+        }
     }
 
     fun downloadResult(

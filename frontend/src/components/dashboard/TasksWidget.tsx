@@ -20,7 +20,6 @@ import {TaskStateIcon} from '@components/event/task/TaskStateIcon.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Edit} from '@mui/icons-material'
 import {TaskDto} from '@api/types.gen.ts'
-import {EVENT_ORGANISATION_TAB_INDEX} from '../../pages/event/EventPage.tsx'
 
 export function TasksWidget({userId}: {userId: string}) {
     const feedback = useFeedback()
@@ -104,7 +103,7 @@ export function TasksWidget({userId}: {userId: string}) {
                                                     <Link
                                                         to={'/event/$eventId'}
                                                         search={{
-                                                            tabIndex: EVENT_ORGANISATION_TAB_INDEX,
+                                                            tab: 'organization',
                                                         }}
                                                         params={{eventId: task.event}}>
                                                         <Button>

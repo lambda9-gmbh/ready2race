@@ -1994,6 +1994,48 @@ export type GetClubNamesResponse = {
 
 export type GetClubNamesError = ApiError
 
+export type GetRegistrationsForEventData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRegistrationsForEventResponse = {
+    data: Array<EventRegistrationViewDto>
+    pagination: Pagination
+}
+
+export type GetRegistrationsForEventError = ApiError
+
+export type DeleteEventRegistrationData = {
+    path: {
+        eventId: string
+        eventRegistrationId: string
+    }
+}
+
+export type DeleteEventRegistrationResponse = void
+
+export type DeleteEventRegistrationError = BadRequestError | ApiError
+
 export type GetEventRegistrationTemplateData = {
     path: {
         eventId: string

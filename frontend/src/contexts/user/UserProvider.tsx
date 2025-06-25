@@ -115,7 +115,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
             changeLanguage,
             loggedIn: false,
             login,
-            checkPrivilege: () => false
+            checkPrivilege: () => false,
+            getPrivilegeScope: () => undefined,
         } satisfies AnonymousUser
     } else {
         const checkPrivilege = (privilege: Privilege): boolean =>

@@ -20,6 +20,9 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {AccountTreeOutlined} from '@mui/icons-material'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
 
+const COMPETITION_TABS = ['general', 'registrations'] as const
+export type CompetitionTab = typeof COMPETITION_TABS[number]
+
 const CompetitionPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
@@ -28,12 +31,12 @@ const CompetitionPage = () => {
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
 
-    const {tabIndex} = competitionIndexRoute.useSearch()
-    const activeTab = tabIndex ?? 0
+    const {tab} = competitionIndexRoute.useSearch()
+    const activeTab: CompetitionTab = tab ?? 'general'
 
     const navigate = useNavigate()
-    const switchTab = (tabIndex: number) => {
-        navigate({from: competitionIndexRoute.fullPath, search: {tabIndex: tabIndex}}).then()
+    const switchTab = (tab: CompetitionTab) => {
+        navigate({from: competitionIndexRoute.fullPath, search: {tab}}).then()
     }
 
     const {data: eventData} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
@@ -103,8 +106,9 @@ const CompetitionPage = () => {
             },
         )
 
-    const a11yProps = (index: number) => {
+    const a11yProps = (index: CompetitionTab) => {
         return {
+            value: index,
             id: `event-tab-${index}`,
             'aria-controls': `event-tabpanel-${index}`,
         }
@@ -152,15 +156,15 @@ const CompetitionPage = () => {
                             variant="h1"
                         />
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                            <Tab label={t('event.tabs.settings')} {...a11yProps(0)} />
+                            <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
                             {user.loggedIn && (
                                 <Tab
                                     label={t('event.registration.registrations')}
-                                    {...a11yProps(1)}
+                                    {...a11yProps('registrations')}
                                 />
                             )}
                         </TabSelectionContainer>
-                        <TabPanel index={0} activeTab={activeTab}>
+                        <TabPanel index={'general'} activeTab={activeTab}>
                             <Stack direction={'row'} spacing={2}>
                                 <Stack flex={1} spacing={2}>
                                     <EntityDetailsEntry
@@ -271,7 +275,7 @@ const CompetitionPage = () => {
                             </Stack>
                         </TabPanel>
                         {user.loggedIn && (
-                            <TabPanel index={1} activeTab={activeTab}>
+                            <TabPanel index={'registrations'} activeTab={activeTab}>
                                 <CompetitionRegistrationDialog
                                     {...competitionRegistrationTeamsProps.dialog}
                                     competition={competitionData}

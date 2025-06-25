@@ -19,6 +19,7 @@ export type AnonymousUser = {
     changeLanguage: (language: Language) => Promise<void>
     loggedIn: false
     login: (data: LoginDto, headers: Headers) => void
+    getPrivilegeScope: (action: Action, resource: Resource) => undefined
     checkPrivilege: (privilege: Privilege) => false
 }
 

@@ -66,9 +66,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
                 to: '/event/$eventId',
                 params: {eventId: entity.id},
             })}
-            entityName={t('event.event')}
             deleteRequest={deleteRequest}
-            onDelete={() => {}}
         />
     )
 }
