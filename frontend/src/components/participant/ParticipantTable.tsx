@@ -5,6 +5,7 @@ import {deleteClubParticipant, getClubParticipants, ParticipantDto} from '../../
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
+import {Check} from '@mui/icons-material'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -61,11 +62,17 @@ const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
             minWidth: 150,
             flex: 1,
         },
+        {
+            field: 'usedInRegistration',
+            headerName: t('club.participant.usedInRegistration'),
+            renderCell: ({value}) => (value ? <Check /> : <></>),
+        },
     ]
 
     return (
         <EntityTable
             {...props}
+            deletableIf={p => !p.usedInRegistration}
             parentResource={'PARTICIPANT'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}

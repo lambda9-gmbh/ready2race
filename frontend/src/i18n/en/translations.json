@@ -163,7 +163,8 @@
       "title": "Member",
       "year": "Year of birth",
       "external": "External",
-      "externalClub": "External club"
+      "externalClub": "External club",
+      "usedInRegistration": "In Registration"
     }
   },
   "event": {

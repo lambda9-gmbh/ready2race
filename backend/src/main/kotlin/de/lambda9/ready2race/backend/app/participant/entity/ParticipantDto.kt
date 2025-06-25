@@ -13,6 +13,7 @@ data class ParticipantDto(
     val phone: String?,
     val external: Boolean?,
     val externalClubName: String?,
+    val usedInRegistration: Boolean,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
 )

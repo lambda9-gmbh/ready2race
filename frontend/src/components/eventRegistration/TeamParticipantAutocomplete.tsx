@@ -69,9 +69,10 @@ export const TeamParticipantAutocomplete = (props: {
                           props.countMales +
                           props.countFemales
                     : false,
-                limitReachedMale: countByGender.M >= props.countMales + remainingMixed,
-                limitReachedFemale: countByGender.F >= props.countFemales + remainingMixed,
-                limitReachedNonBinary: countByGender.D >= props.countNonBinary + remainingMixed,
+                limitReachedMale: countByGender.M >= props.countMales && remainingMixed <= 0,
+                limitReachedFemale: countByGender.F >= props.countFemales && remainingMixed <= 0,
+                limitReachedNonBinary:
+                    countByGender.D >= props.countNonBinary && remainingMixed <= 0,
             }
         }, [value, props.countMales, props.countFemales, props.countNonBinary, props.countMixed])
 
