@@ -9,7 +9,7 @@ import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {FormInputToggleButtonGroup} from '@components/form/input/FormInputToggleButtonGroup.tsx'
-import {FormInputAutocompleteUser} from '@components/form/input/FormInputAutocompleteUser.tsx'
+import {AutocompleteUser} from '@components/user/AutocompleteUser.tsx'
 import {TaskStateIcon} from '@components/event/task/TaskStateIcon.tsx'
 
 const TaskDialog = (props: BaseEntityDialogProps<TaskDto> & {eventId: string}) => {
@@ -79,7 +79,7 @@ const TaskDialog = (props: BaseEntityDialogProps<TaskDto> & {eventId: string}) =
                         },
                     ]}
                 />
-                <FormInputAutocompleteUser
+                <AutocompleteUser
                     name="responsibleUsers"
                     label={t('task.responsibleUsers')}
                     noClubRepresentatives

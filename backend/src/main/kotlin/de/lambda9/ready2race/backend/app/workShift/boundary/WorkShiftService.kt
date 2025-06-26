@@ -136,7 +136,7 @@ object WorkShiftService {
     ): App<WorkShiftError, Unit> = KIO.comprehension {
         val users = !AppUserRepo.getManyById(request.assignedUsers).orDie()
         if (users.find { it.club != null } != null) {
-            KIO.fail(WorkShiftError.ASSIGNED_CLUB_REPRESENTATIVE)
+            KIO.fail(WorkShiftError.AssignedAClubRepresentative)
         } else {
             unit
         }

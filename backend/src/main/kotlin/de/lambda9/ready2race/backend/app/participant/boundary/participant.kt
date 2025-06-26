@@ -19,7 +19,7 @@ fun Route.participant() {
 
         get {
             call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
                 val clubId = !pathParam("clubId", uuid)
                 val params = !pagination<ParticipantSort>()
                 ParticipantService.page(params, clubId, user, scope)
@@ -28,7 +28,7 @@ fun Route.participant() {
 
         post {
             call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.PARTICIPANT)
+                val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
                 val clubId = !pathParam("clubId", uuid)
                 val payload = !receiveKIO(ParticipantUpsertDto.example)
                 if (scope == Privilege.Scope.OWN && clubId != user.club) {
@@ -43,7 +43,7 @@ fun Route.participant() {
 
             get {
                 call.respondComprehension {
-                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
                     ParticipantService.getParticipant(id, clubId, user, scope)
@@ -52,7 +52,7 @@ fun Route.participant() {
 
             put {
                 call.respondComprehension {
-                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
                     val payload = !receiveKIO(ParticipantUpsertDto.example)
@@ -62,7 +62,7 @@ fun Route.participant() {
 
             delete {
                 call.respondComprehension {
-                    val (user, scope) = !authenticate(Privilege.Action.DELETE, Privilege.Resource.PARTICIPANT)
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.CLUB)
                     val id = !pathParam("participantId", uuid)
                     val clubId = !pathParam("clubId", uuid)
                     ParticipantService.deleteParticipant(id, clubId, user, scope)

@@ -1,9 +1,9 @@
 import {useTranslation} from 'react-i18next'
-import {getUsers} from '../../../api'
+import {getUsers} from '@api/index.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {useFetch} from '@utils/hooks.ts'
 
-export const FormInputAutocompleteUser = (props: {
+export const AutocompleteUser = (props: {
     name: string
     label: string
     required?: boolean
@@ -21,6 +21,7 @@ export const FormInputAutocompleteUser = (props: {
                     {field: 'FIRSTNAME', direction: 'ASC'},
                     {field: 'LASTNAME', direction: 'ASC'},
                 ]),
+                noClub: props.noClubRepresentatives
             },
             signal,
         }),
@@ -31,9 +32,7 @@ export const FormInputAutocompleteUser = (props: {
             name={props.name}
             label={props.label}
             options={
-                data?.data.filter(user =>
-                    props.noClubRepresentatives ? user.club === undefined : true,
-                ) ?? []
+                data?.data ?? []
             }
             loading={pending}
             matchId

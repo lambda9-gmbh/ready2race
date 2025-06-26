@@ -136,7 +136,7 @@ object TaskService {
     ): App<TaskError, Unit> = KIO.comprehension {
         val users = !AppUserRepo.getManyById(request.responsibleUsers).orDie()
         if (users.find { it.club != null } != null) {
-            KIO.fail(TaskError.ASSIGNED_CLUB_REPRESENTATIVE)
+            KIO.fail(TaskError.AssignedAClubRepresentative)
         } else {
             unit
         }

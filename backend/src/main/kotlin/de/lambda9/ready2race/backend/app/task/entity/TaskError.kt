@@ -6,7 +6,7 @@ import io.ktor.http.*
 
 enum class TaskError : ServiceError {
     NotFound,
-    ASSIGNED_CLUB_REPRESENTATIVE;
+    AssignedAClubRepresentative;
 
     override fun respond(): ApiError = when (this) {
         NotFound ->
@@ -14,6 +14,6 @@ enum class TaskError : ServiceError {
                 status = HttpStatusCode.NotFound,
                 message = "Task not found",
             )
-        ASSIGNED_CLUB_REPRESENTATIVE -> ApiError(status = HttpStatusCode.BadRequest, message = "Assigned a club representative to the task")
+        AssignedAClubRepresentative -> ApiError(status = HttpStatusCode.BadRequest, message = "Assigned a club representative to the task")
     }
 }

@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventDocument.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentDataRepo
@@ -82,13 +83,16 @@ object EventDocumentService {
     }
 
     fun downloadDocument(
-        id: UUID
+        id: UUID,
+        scope: Privilege.Scope
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
 
         val document = !EventDocumentRepo.getDownload(id).orDie().onNullFail { EventDocumentError.NotFound }
 
-        !EventRepo.isOpenForRegistration(document.event!!, LocalDateTime.now()).orDie()
-            .onFalseFail { EventRegistrationError.RegistrationClosed }
+        if (scope == Privilege.Scope.OWN) {
+            !EventRepo.isOpenForRegistration(document.event!!, LocalDateTime.now()).orDie()
+                .onFalseFail { EventRegistrationError.RegistrationClosed }
+        }
 
         KIO.ok(
             ApiResponse.File(

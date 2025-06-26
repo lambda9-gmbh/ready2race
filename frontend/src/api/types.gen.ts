@@ -22,7 +22,6 @@ export type AppUserDto = {
     firstname: string
     lastname: string
     roles: Array<RoleDto>
-    club?: string
 }
 
 export type AppUserInvitationDto = {
@@ -807,7 +806,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'PARTICIPANT' | 'REGISTRATION'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION'
 
 export type RoleDto = {
     id: string
@@ -951,6 +950,10 @@ export type GetUsersData = {
          * Page size for pagination
          */
         limit?: number
+        /**
+         * Optional parameter that filters users that have a club assigned to them
+         */
+        noClub?: boolean
         /**
          * Result offset for pagination
          */

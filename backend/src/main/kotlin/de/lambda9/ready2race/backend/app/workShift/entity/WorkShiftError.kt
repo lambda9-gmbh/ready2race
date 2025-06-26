@@ -6,7 +6,7 @@ import io.ktor.http.*
 
 enum class WorkShiftError : ServiceError {
     NotFound,
-    ASSIGNED_CLUB_REPRESENTATIVE;
+    AssignedAClubRepresentative;
 
     override fun respond(): ApiError = when (this) {
         NotFound ->
@@ -14,7 +14,7 @@ enum class WorkShiftError : ServiceError {
                 status = HttpStatusCode.NotFound,
                 message = "WorkShift not found",
             )
-        ASSIGNED_CLUB_REPRESENTATIVE -> ApiError(status = HttpStatusCode.BadRequest, message = "Assigned a club representative to the work shift")
+        AssignedAClubRepresentative -> ApiError(status = HttpStatusCode.BadRequest, message = "Assigned a club representative to the work shift")
 
     }
 }

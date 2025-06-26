@@ -16,6 +16,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.APP_US
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVERY_APP_USER_WITH_ROLES
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.Condition
+import org.jooq.impl.DSL
 import java.util.*
 
 object AppUserRepo {
@@ -71,37 +73,63 @@ object AppUserRepo {
 
     fun countWithRoles(
         search: String?,
+        noClub: Boolean?
     ): JIO<Int> = Jooq.query {
+
+        val noClubCondition = if (noClub == true) {
+            APP_USER_WITH_ROLES.CLUB.isNull
+        } else DSL.trueCondition()
+
         with(APP_USER_WITH_ROLES) {
-            fetchCount(this, search.metaSearch(searchFields()))
+            fetchCount(this, search.metaSearch(searchFields()).and(noClubCondition))
         }
     }
 
     fun pageWithRoles(
-        params: PaginationParameters<AppUserWithRolesSort>
+        params: PaginationParameters<AppUserWithRolesSort>,
+        noClub: Boolean?
     ): JIO<List<AppUserWithRolesRecord>> = Jooq.query {
+
+        val noClubCondition = if (noClub == true) {
+            APP_USER_WITH_ROLES.CLUB.isNull
+        } else DSL.trueCondition()
+
         with(APP_USER_WITH_ROLES) {
             selectFrom(this)
-                .page(params, searchFields())
+                .page(params, searchFields()) {
+                    noClubCondition
+                }
                 .fetch()
         }
     }
 
     fun countWithRolesIncludingAdmins(
         search: String?,
+        noClub: Boolean?
     ): JIO<Int> = Jooq.query {
+
+        val noClubCondition = if (noClub == true) {
+            EVERY_APP_USER_WITH_ROLES.CLUB.isNull
+        } else DSL.trueCondition()
+
         with(EVERY_APP_USER_WITH_ROLES) {
-            fetchCount(this, search.metaSearch(searchFields()).and(ID.ne(SYSTEM_USER)))
+            fetchCount(this, search.metaSearch(searchFields()).and(ID.ne(SYSTEM_USER).and(noClubCondition)))
         }
     }
 
     fun pageWithRolesIncludingAdmins(
-        params: PaginationParameters<EveryAppUserWithRolesSort>
+        params: PaginationParameters<EveryAppUserWithRolesSort>,
+        noClub: Boolean?
     ): JIO<List<EveryAppUserWithRolesRecord>> = Jooq.query {
+
+        val noClubCondition = if (noClub == true) {
+            EVERY_APP_USER_WITH_ROLES.CLUB.isNull
+        } else DSL.trueCondition()
+
         with(EVERY_APP_USER_WITH_ROLES) {
             selectFrom(this)
                 .page(params, searchFields()) {
-                    ID.ne(SYSTEM_USER)
+                    ID.ne(SYSTEM_USER).and(noClubCondition)
                 }
                 .fetch()
         }
@@ -130,7 +158,7 @@ object AppUserRepo {
     fun getManyById(
         ids: List<UUID>
     ): JIO<List<AppUserRecord>> = Jooq.query {
-        with(APP_USER){
+        with(APP_USER) {
             selectFrom(this)
                 .where(ID.`in`(ids))
                 .fetch()

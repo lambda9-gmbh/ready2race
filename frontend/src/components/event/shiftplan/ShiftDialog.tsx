@@ -5,7 +5,7 @@ import {useCallback, useEffect, useMemo} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
-import {FormInputAutocompleteUser} from '@components/form/input/FormInputAutocompleteUser.tsx'
+import {AutocompleteUser} from '@components/user/AutocompleteUser.tsx'
 import {addWorkShift, getWorkTypes, updateWorkShift} from '@api/sdk.gen.ts'
 import {eventIndexRoute} from '@routes'
 import {WorkShiftUpsertDto, WorkShiftWithAssignedUsersDto} from '@api/types.gen.ts'
@@ -126,7 +126,7 @@ const ShiftDialog = (props: BaseEntityDialogProps<WorkShiftWithAssignedUsersDto>
                     label={t('work.shift.remark')}
                     disabled={!userCanEdit}
                 />
-                <FormInputAutocompleteUser
+                <AutocompleteUser
                     name="assignedUsers"
                     label={t('work.shift.assignedUsers')}
                     disabled={!userCanEdit}

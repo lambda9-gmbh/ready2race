@@ -24,7 +24,6 @@ fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
             lastname = lastname!!,
             email = email!!,
             roles = it,
-            club = club,
         )
     }
 
@@ -36,7 +35,6 @@ fun EveryAppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
             lastname = lastname!!,
             email = email!!,
             roles = it,
-            club = club,
         )
     }
 

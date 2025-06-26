@@ -47,6 +47,7 @@ object CompetitionRepo {
                                 EVENT.REGISTRATION_AVAILABLE_TO.ge(at)
                             )
                         )
+                        .and(EVENT.PUBLISHED.isTrue)
                 )
         )
     }

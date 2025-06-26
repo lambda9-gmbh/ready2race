@@ -73,7 +73,7 @@ const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
         <EntityTable
             {...props}
             deletableIf={p => !p.usedInRegistration}
-            resource={'PARTICIPANT'}
+            parentResource={'CLUB'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}
