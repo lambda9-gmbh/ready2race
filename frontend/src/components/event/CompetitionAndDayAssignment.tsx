@@ -1,4 +1,14 @@
-import {Box, Button, Dialog, DialogActions, Typography} from '@mui/material'
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    Divider,
+    List,
+    ListItem,
+    Stack,
+    Typography,
+} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {FormContainer, MultiSelectElement, useForm} from 'react-hook-form-mui'
@@ -9,7 +19,8 @@ import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {assignCompetitionsToEventDay, assignDaysToCompetition} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
-import CompetitionAndDayAssignmentList from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignmentList.tsx'
+import {Link} from '@tanstack/react-router'
+import InputIcon from '@mui/icons-material/Input'
 
 type AssignmentForm = {
     selected: string[]
@@ -33,8 +44,6 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     const formContext = useForm<AssignmentForm>({
         values: {selected: props.assignedEntities},
     })
-
-    const watchSelected = formContext.watch('selected')
 
     const [submitting, setSubmitting] = useState(false)
 
@@ -84,6 +93,10 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
         }
     }
 
+    const assignedEntities = props.assignedEntities.map(entityId =>
+        props.options.find(opt => opt?.id === entityId),
+    )
+
     return (
         <>
             <Typography variant="h6">
@@ -96,12 +109,40 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                     {t('common.edit')}
                 </Button>
             )}
-            <CompetitionAndDayAssignmentList
-                assignedEntities={watchSelected
-                    .map(val => props.options.find(opt => opt?.id ?? '' === val))
-                    .filter(val => val !== undefined)}
-                competitionsToDay={competitionsToDay}
-            />
+            <List>
+                {assignedEntities
+                    .filter(field => field !== null)
+                    .map(
+                        (field, index) =>
+                            field && (
+                                <ListItem key={field.id + index}>
+                                    <Stack
+                                        direction="row"
+                                        spacing={2}
+                                        sx={{mt: 1, alignItems: 'center'}}>
+                                        <Link
+                                            to={
+                                                competitionsToDay
+                                                    ? '/event/$eventId/competition/$competitionId'
+                                                    : '/event/$eventId/eventDay/$eventDayId'
+                                            }
+                                            params={
+                                                competitionsToDay
+                                                    ? {eventId: eventId, competitionId: field.id}
+                                                    : {eventId: eventId, eventDayId: field.id}
+                                            }
+                                            style={{alignItems: 'center', display: 'flex'}}>
+                                            <InputIcon />
+                                        </Link>
+                                        <Typography variant="body1">{field.label}</Typography>
+                                    </Stack>
+                                    {index < assignedEntities.length - 1 && (
+                                        <Divider orientation="horizontal" sx={{mt: 1}} />
+                                    )}
+                                </ListItem>
+                            ),
+                    )}
+            </List>
             <Dialog
                 open={dialogOpen}
                 onClose={closeDialog}
@@ -112,7 +153,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                     <FormContainer formContext={formContext} onSuccess={onSubmit}>
                         <MultiSelectElement
                             name={'selected'}
-                            options={props.options}
+                            options={[...props.options]}
                             showCheckbox
                             showChips
                             formControlProps={{sx: {width: 1, mt: 4}}}
