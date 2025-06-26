@@ -229,6 +229,12 @@
         "nonBinary": "Number of non-binary",
         "mixed": "Number of any"
       },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "nonBinary": "Non-binary",
+        "mixed": "Any"
+      },
       "namedParticipant": {
         "namedParticipant": "Participant Type",
         "namedParticipants": "Participant Types",
@@ -247,6 +253,7 @@
           }
         }
       },
+      "teamComposition": "Team composition",
       "fee": {
         "fee": "Fee",
         "fees": "Fees",
