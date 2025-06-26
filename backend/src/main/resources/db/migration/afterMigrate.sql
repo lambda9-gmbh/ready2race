@@ -1,5 +1,8 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists participant_view;
+drop view if exists work_shift_with_assigned_users;
+drop view if exists task_with_responsible_users;
 drop view if exists event_registration_for_invoice;
 drop view if exists competition_registration_with_fees;
 drop view if exists applied_fee;
@@ -33,9 +36,6 @@ drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
-drop view if exists task_with_responsible_users;
-drop view if exists work_shift_with_assigned_users;
-drop view if exists participant_view;
 
 create view app_user_name as
 select au.id,
@@ -513,28 +513,6 @@ from document_template dt
                from document_template_usage dtu) usage on dt.id = usage.template
 ;
 
-create view task_with_responsible_users as
-select t.id,
-       t.event,
-       e.name                                                         as event_name,
-       t.name,
-       t.due_date,
-       t.description,
-       t.remark,
-       t.state,
-       t.created_at,
-       t.created_by,
-       t.updated_at,
-       t.updated_by,
-       coalesce(array_agg(u) filter ( where u.id is not null ), '{}') as responsible_user
-from task t
-         left join event e on t.event = e.id
-         left join task_has_responsible_user ru on t.id = ru.task
-         left join app_user u on ru.app_user = u.id
-group by t.id, t.event, e.name, t.name, t.due_date, t.description, t.remark, t.state, t.created_at, t.created_by,
-         t.updated_at,
-         t.updated_by;
-
 create view applied_fee as
 select cphf.id,
        cr.id as competition_registration,
@@ -574,6 +552,29 @@ from event_registration er
          left join competition_registration_with_fees crwf on er.id = crwf.event_registration
 group by er.id, c.id, au.id
 ;
+
+create view task_with_responsible_users as
+select t.id,
+       t.event,
+       e.name                                                         as event_name,
+       t.name,
+       t.due_date,
+       t.description,
+       t.remark,
+       t.state,
+       t.created_at,
+       t.created_by,
+       t.updated_at,
+       t.updated_by,
+       coalesce(array_agg(u) filter ( where u.id is not null ), '{}') as responsible_user
+from task t
+         left join event e on t.event = e.id
+         left join task_has_responsible_user ru on t.id = ru.task
+         left join app_user u on ru.app_user = u.id
+group by t.id, t.event, e.name, t.name, t.due_date, t.description, t.remark, t.state, t.created_at, t.created_by,
+         t.updated_at,
+         t.updated_by;
+
 create view work_shift_with_assigned_users as
 select ws.id,
        ws.event,

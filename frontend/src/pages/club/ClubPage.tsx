@@ -1,19 +1,22 @@
-import {Box, Button, CardActions, CardContent, Stack, Typography} from '@mui/material'
+import {Box, Button, CardActions, CardContent, IconButton, Stack, Typography} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {clubRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import Throbber from '../../components/Throbber.tsx'
-import {getClub, getClubUsers, ParticipantDto} from '../../api'
+import {ClubDto, getClub, getClubUsers, ParticipantDto} from '../../api'
 import ParticipantTable from '../../components/participant/ParticipantTable.tsx'
 import ParticipantDialog from '../../components/participant/ParticipantDialog.tsx'
 import Card from '@mui/material/Card'
-import {AccountCircle, Email} from '@mui/icons-material'
+import {AccountCircle, Edit, Email} from '@mui/icons-material'
+import ClubDialog from "@components/club/ClubDialog.tsx";
 
 const ClubPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
     const {clubId} = clubRoute.useParams()
+
+    const clubProps = useEntityAdministration<ClubDto>(t('club.club'), {entityCreate: false})
 
     const {data} = useFetch(signal => getClub({signal, path: {clubId: clubId}}), {
         onResponse: ({error}) => {
@@ -22,7 +25,7 @@ const ClubPage = () => {
                 console.log(error)
             }
         },
-        deps: [clubId],
+        deps: [clubId, clubProps.table.lastRequested],
     })
 
     const {data: userData} = useFetch(signal => getClubUsers({signal, path: {clubId: clubId}}), {
@@ -41,7 +44,10 @@ const ClubPage = () => {
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(data && (
                 <Stack spacing={2}>
-                    <Typography variant="h2">{data.name}</Typography>
+                    <Stack direction={'row'} spacing={1}>
+                        <Typography variant="h2">{data.name}</Typography>
+                        <IconButton onClick={() => clubProps.table.openDialog(data)}><Edit /></IconButton>
+                    </Stack>
                     <Stack direction={'row'}>
                         {userData?.map(u => (
                             <Card key={u.id} sx={{background: '#FFF'}}>
@@ -80,6 +86,7 @@ const ClubPage = () => {
                             title={t('club.participants')}
                         />
                         <ParticipantDialog {...participantProps.dialog} />
+                        <ClubDialog {...clubProps.dialog} />
                     </Box>
                 </Stack>
             )) || <Throbber />}
