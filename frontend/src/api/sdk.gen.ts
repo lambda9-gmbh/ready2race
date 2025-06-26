@@ -226,6 +226,12 @@ import type {
     GetClubNamesData,
     GetClubNamesError,
     GetClubNamesResponse,
+    GetRegistrationsForEventData,
+    GetRegistrationsForEventError,
+    GetRegistrationsForEventResponse,
+    DeleteEventRegistrationData,
+    DeleteEventRegistrationError,
+    DeleteEventRegistrationResponse,
     GetEventRegistrationTemplateData,
     GetEventRegistrationTemplateError,
     GetEventRegistrationTemplateResponse,
@@ -1257,6 +1263,32 @@ export const getClubNames = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<GetClubNamesResponse, GetClubNamesError, ThrowOnError>({
         ...options,
         url: '/club/search',
+    })
+}
+
+export const getRegistrationsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationsForEventResponse,
+        GetRegistrationsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration',
+    })
+}
+
+export const deleteEventRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteEventRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteEventRegistrationResponse,
+        DeleteEventRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/{eventRegistrationId}',
     })
 }
 

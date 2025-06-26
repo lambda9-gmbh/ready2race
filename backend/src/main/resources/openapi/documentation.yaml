@@ -1920,7 +1920,74 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventRegistration:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getRegistrationsForEvent
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Registration page for event retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EventRegistrationViewDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
 
+  /event/{eventId}/eventRegistration/{eventRegistrationId}:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: eventRegistrationId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteEventRegistration
+      responses:
+        204:
+          description: Event registration successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 
   /event/{eventId}/registrationTemplate:
     parameters:

@@ -46,21 +46,23 @@ import AssignContactInformation from '@components/contactInformation/AssignConta
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
 
-export const CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX = 2
+const CONFIGURATION_TABS = ['competition-templates', 'competition-elements', 'event-elements', 'global-settings'] as const
+export type ConfigurationTab = typeof CONFIGURATION_TABS[number]
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
 
-    const {tabIndex} = configurationIndexRoute.useSearch()
-    const activeTab = tabIndex ?? 0
+    const {tab} = configurationIndexRoute.useSearch()
+    const activeTab = tab ?? 'competition-templates'
 
     const navigate = useNavigate()
-    const switchTab = (tabIndex: number) => {
-        navigate({from: configurationIndexRoute.fullPath, search: {tabIndex: tabIndex}}).then()
+    const switchTab = (tab: ConfigurationTab) => {
+        navigate({from: configurationIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const a11yProps = (index: number) => {
+    const a11yProps = (index: ConfigurationTab) => {
         return {
+            value: index,
             id: `configuration-tab-${index}`,
             'aria-controls': `configuration-tabpanel-${index}`,
         }
@@ -109,15 +111,15 @@ const ConfigurationPage = () => {
         <Stack spacing={4}>
             <Typography variant={'h1'}>{t('configuration.configuration')}</Typography>
             <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                <Tab label={t('configuration.tabs.competitionTemplates')} {...a11yProps(0)} />
-                <Tab label={t('configuration.tabs.competitionElements')} {...a11yProps(1)} />
+                <Tab label={t('configuration.tabs.competitionTemplates')} {...a11yProps('competition-templates')} />
+                <Tab label={t('configuration.tabs.competitionElements')} {...a11yProps('competition-elements')} />
                 <Tab
                     label={t('configuration.tabs.eventElements')}
-                    {...a11yProps(CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX)}
+                    {...a11yProps('event-elements')}
                 />
-                <Tab label={t('configuration.tabs.globalSettings')} {...a11yProps(3)} />
+                <Tab label={t('configuration.tabs.globalSettings')} {...a11yProps('global-settings')} />
             </TabSelectionContainer>
-            <TabPanel index={0} activeTab={activeTab}>
+            <TabPanel index={'competition-templates'} activeTab={activeTab}>
                 <CompetitionTemplateTable
                     {...competitionTemplateAdministrationProps.table}
                     title={t('event.competition.template.templates')}
@@ -125,7 +127,7 @@ const ConfigurationPage = () => {
                 />
                 <CompetitionTemplateDialog {...competitionTemplateAdministrationProps.dialog} />
             </TabPanel>
-            <TabPanel index={1} activeTab={activeTab}>
+            <TabPanel index={'competition-elements'} activeTab={activeTab}>
                 <Stack spacing={2}>
                     <CompetitionCategoryTable
                         {...competitionCategoryAdministrationProps.table}
@@ -153,7 +155,7 @@ const ConfigurationPage = () => {
                     <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
                 </Stack>
             </TabPanel>
-            <TabPanel index={CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX} activeTab={activeTab}>
+            <TabPanel index={'event-elements'} activeTab={activeTab}>
                 <Stack spacing={2}>
                     <DocumentTypeTable
                         {...documentTypeAdministrationProps.table}
@@ -176,7 +178,7 @@ const ConfigurationPage = () => {
                             t('document.template.tableHint.1'),
                             <>
                                 {t('document.template.tableHint.2')}
-                                <InlineLink to={'/config'} search={{tabIndex: 3}}>
+                                <InlineLink to={'/config'} search={{tab: 'global-settings'}}>
                                     {t('document.template.tableHint.3')}
                                 </InlineLink>
                                 {t('document.template.tableHint.4')}
@@ -198,7 +200,7 @@ const ConfigurationPage = () => {
                             t('contact.tableHint.1'),
                             <>
                                 {t('contact.tableHint.2')}
-                                <InlineLink to={'/config'} search={{tabIndex: 3}}>
+                                <InlineLink to={'/config'} search={{tab: 'global-settings'}}>
                                     {t('contact.tableHint.3')}
                                 </InlineLink>
                                 {t('contact.tableHint.4')}
@@ -213,7 +215,7 @@ const ConfigurationPage = () => {
                             t('invoice.bank.tableHint.1'),
                             <>
                                 {t('invoice.bank.tableHint.2')}
-                                <InlineLink to={'/config'} search={{tabIndex: 3}}>
+                                <InlineLink to={'/config'} search={{tab: 'global-settings'}}>
                                     {t('invoice.bank.tableHint.3')}
                                 </InlineLink>
                                 {t('invoice.bank.tableHint.4')}
@@ -223,7 +225,7 @@ const ConfigurationPage = () => {
                     <BankAccountDialog {...bankAccountAdministrationProps.dialog} />
                 </Stack>
             </TabPanel>
-            <TabPanel index={3} activeTab={activeTab}>
+            <TabPanel index={'global-settings'} activeTab={activeTab}>
                 <Stack spacing={2}>
                     <AssignDocumentTemplate />
                     <AssignBankAccount />

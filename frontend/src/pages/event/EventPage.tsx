@@ -15,7 +15,7 @@ import {
 import {
     CompetitionDto,
     EventDayDto,
-    EventDocumentDto,
+    EventDocumentDto, EventRegistrationViewDto,
     ParticipantForEventDto,
     ParticipantRequirementForEventDto,
     TaskDto,
@@ -41,22 +41,23 @@ import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
-import {CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX} from '../ConfigurationPage.tsx'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
+import EventRegistrationTable from "@components/eventRegistration/EventRegistrationTable.tsx";
 
-export const EVENT_ORGANISATION_TAB_INDEX = 2
+const EVENT_TABS = ['general', 'participants', 'registrations', 'organization', 'settings', 'actions'] as const
+export type EventTab = typeof EVENT_TABS[number]
 
 const EventPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const user = useUser()
 
-    const {tabIndex} = eventIndexRoute.useSearch()
-    const activeTab = tabIndex ?? 0
+    const {tab} = eventIndexRoute.useSearch()
+    const activeTab = tab ?? 'general'
 
     const navigate = useNavigate()
-    const switchTab = (tabIndex: number) => {
-        navigate({from: eventIndexRoute.fullPath, search: {tabIndex: tabIndex}}).then()
+    const switchTab = (tab: EventTab) => {
+        navigate({from: eventIndexRoute.fullPath, search: {tab}}).then()
     }
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
@@ -92,10 +93,16 @@ const EventPage = () => {
         {entityCreate: false, entityUpdate: false},
     )
 
+    const eventRegistrationProps = useEntityAdministration<EventRegistrationViewDto>(
+        t('event.registration.registration'),
+        {entityCreate: false, entityUpdate: false}
+    )
+
     const taskProps = useEntityAdministration<TaskDto>(t('task.task'))
 
-    const a11yProps = (index: number) => {
+    const a11yProps = (index: EventTab) => {
         return {
+            value: index,
             id: `event-tab-${index}`,
             'aria-controls': `event-tabpanel-${index}`,
         }
@@ -165,26 +172,29 @@ const EventPage = () => {
                             </Link>
                         </Stack>
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                            <Tab label={t('event.tabs.general')} {...a11yProps(0)} />
+                            <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
                             {(user.checkPrivilege(readRegistrationGlobal) ||
                                 user.checkPrivilege(readRegistrationOwn)) && (
-                                <Tab label={t('event.participants')} {...a11yProps(1)} />
+                                <Tab label={t('event.participants')} {...a11yProps('participants')} />
                             )}
+                            {user.checkPrivilege(readEventGlobal) &&
+                                <Tab label={t('event.tabs.registrations')} {...a11yProps('registrations')} />
+                            }
                             {user.checkPrivilege(readEventGlobal) &&
                                 user.checkPrivilege(readUserGlobal) && (
                                     <Tab
                                         label={t('event.tabs.organisation')}
-                                        {...a11yProps(EVENT_ORGANISATION_TAB_INDEX)}
+                                        {...a11yProps('organization')}
                                     />
                                 )}
                             {user.checkPrivilege(readEventGlobal) && (
-                                <Tab label={t('event.tabs.settings')} {...a11yProps(3)} />
+                                <Tab label={t('event.tabs.settings')} {...a11yProps('settings')} />
                             )}
                             {user.checkPrivilege(readEventGlobal) && (
-                                <Tab label={t('event.tabs.actions')} {...a11yProps(4)} />
+                                <Tab label={t('event.tabs.actions')} {...a11yProps('actions')} />
                             )}
                         </TabSelectionContainer>
-                        <TabPanel index={0} activeTab={activeTab}>
+                        <TabPanel index={'general'} activeTab={activeTab}>
                             <Stack spacing={2}>
                                 <CompetitionTable
                                     {...competitionAdministrationProps.table}
@@ -198,7 +208,7 @@ const EventPage = () => {
                                                       )}
                                                       <InlineLink
                                                           to={'/config'}
-                                                          search={{tabIndex: 0}}>
+                                                          search={{tab: 'competition-templates'}}>
                                                           {t(
                                                               'event.competition.tableHint.templates.part2Link',
                                                           )}
@@ -213,7 +223,7 @@ const EventPage = () => {
                                                       )}
                                                       <InlineLink
                                                           to={'/config'}
-                                                          search={{tabIndex: 1}}>
+                                                          search={{tab: 'competition-elements'}}>
                                                           {t(
                                                               'event.competition.tableHint.competitionComponents.part2Link',
                                                           )}
@@ -234,20 +244,27 @@ const EventPage = () => {
                                 <EventDayDialog {...eventDayAdministrationProps.dialog} />
                             </Stack>
                         </TabPanel>
-                        <TabPanel index={1} activeTab={activeTab}>
+                        <TabPanel index={'registrations'} activeTab={activeTab}>
+                            <EventRegistrationTable
+                                {...eventRegistrationProps.table}
+                                title={t('event.registration.registrations')}
+                                eventId={eventId}
+                            />
+                        </TabPanel>
+                        <TabPanel index={'participants'} activeTab={activeTab}>
                             <ParticipantForEventTable
                                 {...participantForEventProps.table}
                                 title={t('event.participants')}
                             />
                         </TabPanel>
-                        <TabPanel index={EVENT_ORGANISATION_TAB_INDEX} activeTab={activeTab}>
+                        <TabPanel index={'organization'} activeTab={activeTab}>
                             <Stack spacing={2}>
                                 <Shiftplan />
                                 <TaskTable {...taskProps.table} title={t('task.tasks')} />
                                 <TaskDialog {...taskProps.dialog} eventId={eventId} />
                             </Stack>
                         </TabPanel>
-                        <TabPanel index={3} activeTab={activeTab}>
+                        <TabPanel index={'settings'} activeTab={activeTab}>
                             <Stack spacing={2}>
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
@@ -259,8 +276,7 @@ const EventPage = () => {
                                             <InlineLink
                                                 to={'/config'}
                                                 search={{
-                                                    tabIndex:
-                                                        CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX,
+                                                    tab: 'event-elements',
                                                 }}>
                                                 {t('event.document.tableHint.part2Link')}
                                             </InlineLink>
@@ -275,7 +291,7 @@ const EventPage = () => {
                                     hints={[
                                         <>
                                             {t('event.participantRequirement.tableHint.part1')}
-                                            <InlineLink to={'/config'} search={{tabIndex: 2}}>
+                                            <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
                                                 {t(
                                                     'event.participantRequirement.tableHint.part2Link',
                                                 )}
@@ -286,7 +302,7 @@ const EventPage = () => {
                                 />
                             </Stack>
                         </TabPanel>
-                        <TabPanel index={4} activeTab={activeTab}>
+                        <TabPanel index={'actions'} activeTab={activeTab}>
                             <Stack spacing={4}>
                                 <Button variant={'contained'} onClick={handleReportDownload}>
                                     {t('event.action.registrationsReport.download')}

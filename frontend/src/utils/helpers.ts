@@ -54,3 +54,5 @@ export const eventRegistrationPossible = (from?: string, to?: string) => {
         (to === undefined || new Date(to) > new Date())
     )
 }
+
+export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A => u.includes(s as A)

@@ -33,7 +33,6 @@ import InlineLink from '@components/InlineLink.tsx'
 import {Add, CheckCircleOutlined, FilterAlt} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createEventGlobal} from '@authorization/privileges.ts'
-import {CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX} from '../../../pages/ConfigurationPage.tsx'
 
 const DragAndDropCalendar = withDragAndDrop<WorkShiftWithAssignedUsersDto, WorkTypeDto>(
     Calendar<WorkShiftWithAssignedUsersDto, WorkTypeDto>,
@@ -305,7 +304,7 @@ export const Shiftplan = () => {
                             <Typography variant={'h6'}>{t('work.type.types')}</Typography>
                             <InlineLink
                                 to={'/config'}
-                                search={{tabIndex: CONFIGURATION_EVENT_ELEMENTS_TAB_INDEX}}
+                                search={{tab: 'event-elements'}}
                                 hash={'worktypes'}>
                                 {t('common.manage')}
                             </InlineLink>

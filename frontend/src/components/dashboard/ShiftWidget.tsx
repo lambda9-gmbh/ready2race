@@ -15,7 +15,6 @@ import {DashboardWidget} from '@components/dashboard/DashboardWidget.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getWorkShiftsForUser} from '@api/sdk.gen.ts'
 import {Link} from '@tanstack/react-router'
-import {EVENT_ORGANISATION_TAB_INDEX} from '../../pages/event/EventPage.tsx'
 import {formatISO} from 'date-fns'
 import {WorkShiftWithAssignedUsersDto} from '@api/types.gen.ts'
 import {blue} from '@mui/material/colors'
@@ -180,8 +179,7 @@ export function ShiftWidget({userId}: {userId: string}) {
                                                             <Link
                                                                 to={'/event/$eventId'}
                                                                 search={{
-                                                                    tabIndex:
-                                                                        EVENT_ORGANISATION_TAB_INDEX,
+                                                                    tab: 'organization',
                                                                 }}
                                                                 params={{eventId: shift.event}}>
                                                                 <Button>
