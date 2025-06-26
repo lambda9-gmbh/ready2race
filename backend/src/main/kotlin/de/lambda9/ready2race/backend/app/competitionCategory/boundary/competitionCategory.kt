@@ -15,7 +15,7 @@ fun Route.competitionCategory() {
     route("/competitionCategory") {
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
 
                 val body = !receiveKIO(CompetitionCategoryRequest.example)
                 CompetitionCategoryService.addCompetitionCategory(body, user.id!!)
@@ -24,7 +24,7 @@ fun Route.competitionCategory() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<CompetitionCategorySort>()
                 CompetitionCategoryService.page(params)
             }
@@ -33,7 +33,7 @@ fun Route.competitionCategory() {
         route("/{competitionCategoryId}") {
             put{
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionCategoryId = !pathParam("competitionCategoryId", uuid)
 
                     val body = !receiveKIO(CompetitionCategoryRequest.example)
@@ -43,7 +43,7 @@ fun Route.competitionCategory() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val competitionCategoryId = !pathParam("competitionCategoryId",uuid)
                     CompetitionCategoryService.deleteCompetitionCategory(competitionCategoryId)
                 }

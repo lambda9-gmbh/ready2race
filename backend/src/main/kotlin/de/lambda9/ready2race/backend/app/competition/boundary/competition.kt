@@ -17,7 +17,7 @@ fun Route.competition() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
 
                 val body = !receiveKIO(CompetitionRequest.example)
@@ -62,7 +62,7 @@ fun Route.competition() {
 
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionId = !pathParam("competitionId", uuid)
 
                     val body = !receiveKIO(CompetitionRequest.example)
@@ -72,7 +72,7 @@ fun Route.competition() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val competitionId = !pathParam("competitionId", uuid)
                     CompetitionService.deleteCompetition(competitionId)
                 }
@@ -80,7 +80,7 @@ fun Route.competition() {
 
             put("/days") {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionId = !pathParam("competitionId", uuid)
 
                     val body = !receiveKIO(AssignDaysToCompetitionRequest.example)

@@ -5,7 +5,8 @@ import de.lambda9.ready2race.backend.calls.responses.ApiError
 import io.ktor.http.*
 
 enum class WorkShiftError : ServiceError {
-    NotFound;
+    NotFound,
+    AssignedAClubRepresentative;
 
     override fun respond(): ApiError = when (this) {
         NotFound ->
@@ -13,5 +14,7 @@ enum class WorkShiftError : ServiceError {
                 status = HttpStatusCode.NotFound,
                 message = "WorkShift not found",
             )
+        AssignedAClubRepresentative -> ApiError(status = HttpStatusCode.BadRequest, message = "Assigned a club representative to the work shift")
+
     }
 }

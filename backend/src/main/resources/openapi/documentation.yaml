@@ -80,6 +80,12 @@ paths:
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'
         - $ref: '#/components/parameters/search'
+        - name: noClub
+          in: query
+          schema:
+            type: boolean
+          description: Optional parameter that filters users that have a club assigned to them
+          required: false
       responses:
         200:
           description: User page successfully retrieved
@@ -3815,7 +3821,6 @@ components:
         - USER
         - EVENT
         - CLUB
-        - PARTICIPANT
         - REGISTRATION
 
     Scope:

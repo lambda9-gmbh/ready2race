@@ -46,7 +46,7 @@ fun Route.eventDocument() {
                                     part.originalFileName!!,
                                     part.provider().toByteArray(),
 
-                                )
+                                    )
                             )
                         }
 
@@ -67,7 +67,8 @@ fun Route.eventDocument() {
                 val eventId = !pathParam("eventId", uuid)
                 val type = !KIO.effect {
                     documentType?.let { UUID.fromString(it) }
-                }.mapError { RequestError.Other(Exception("Expected UUID or null as 'documentType'")) } // todo: @improve: specific Error type
+                }
+                    .mapError { RequestError.Other(Exception("Expected UUID or null as 'documentType'")) } // todo: @improve: specific Error type
                 EventDocumentService.saveDocuments(eventId, uploads, type, user.id!!)
             }
 
@@ -85,9 +86,10 @@ fun Route.eventDocument() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadEventOwn)
+                    val (_, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val id = !pathParam("eventDocumentId", uuid)
-                    EventDocumentService.downloadDocument(id)
+
+                    EventDocumentService.downloadDocument(id, scope)
                 }
             }
 

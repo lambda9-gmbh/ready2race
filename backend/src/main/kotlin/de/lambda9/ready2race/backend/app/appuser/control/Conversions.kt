@@ -23,7 +23,7 @@ fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
             firstname = firstname!!,
             lastname = lastname!!,
             email = email!!,
-            roles = it
+            roles = it,
         )
     }
 
@@ -34,7 +34,7 @@ fun EveryAppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
             firstname = firstname!!,
             lastname = lastname!!,
             email = email!!,
-            roles = it
+            roles = it,
         )
     }
 

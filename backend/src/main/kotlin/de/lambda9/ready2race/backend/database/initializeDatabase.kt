@@ -134,10 +134,6 @@ fun initializeDatabase(env: JEnv) {
             now, allPrivileges, CLUB_REPRESENTATIVE_ROLE, "Club representative", "Club representative role", listOf(
                 Privilege.ReadClubOwn,
                 Privilege.UpdateClubOwn,
-                Privilege.ReadParticipantOwn,
-                Privilege.CreateParticipantOwn,
-                Privilege.UpdateParticipantOwn,
-                Privilege.DeleteParticipantOwn,
                 Privilege.ReadEventOwn,
                 Privilege.ReadRegistrationOwn,
                 Privilege.CreateRegistrationOwn,

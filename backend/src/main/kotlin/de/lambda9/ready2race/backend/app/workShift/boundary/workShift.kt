@@ -25,7 +25,7 @@ fun Route.workShift() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 val body = !receiveKIO(WorkShiftUpsertDto.example)
 
@@ -36,7 +36,7 @@ fun Route.workShift() {
         route("/{workshiftId}") {
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val workshiftId = !pathParam("workshiftId", uuid)
                     val body = !receiveKIO(WorkShiftUpsertDto.example)
 
@@ -46,7 +46,7 @@ fun Route.workShift() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val workTypeId = !pathParam("workTypeId", uuid)
 
                     WorkShiftService.deleteWorkShift(workTypeId)

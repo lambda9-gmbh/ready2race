@@ -52,7 +52,7 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
 
     const user = useUser()
 
-    const {data} = useFetch(signal => getRoles({signal}))
+    const {data} = useFetch(signal => getRoles({signal})) // The backend checks for the privilege READUserGlobal
 
     const onOpen = useCallback(() => {
         formContext.reset(defaultValues)

@@ -29,7 +29,13 @@ import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {readEventGlobal, readEventOwn, updateEventGlobal} from '@authorization/privileges.ts'
+import {
+    readEventGlobal,
+    readRegistrationGlobal,
+    readRegistrationOwn,
+    readUserGlobal,
+    updateEventGlobal,
+} from '@authorization/privileges.ts'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
@@ -167,19 +173,20 @@ const EventPage = () => {
                         </Stack>
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
-                            {(user.checkPrivilege(readEventGlobal) ||
-                                user.checkPrivilege(readEventOwn)) && (
+                            {(user.checkPrivilege(readRegistrationGlobal) ||
+                                user.checkPrivilege(readRegistrationOwn)) && (
                                 <Tab label={t('event.participants')} {...a11yProps('participants')} />
                             )}
                             {user.checkPrivilege(readEventGlobal) &&
                                 <Tab label={t('event.tabs.registrations')} {...a11yProps('registrations')} />
                             }
-                            {user.checkPrivilege(readEventGlobal) && (
-                                <Tab
-                                    label={t('event.tabs.organisation')}
-                                    {...a11yProps('organization')}
-                                />
-                            )}
+                            {user.checkPrivilege(readEventGlobal) &&
+                                user.checkPrivilege(readUserGlobal) && (
+                                    <Tab
+                                        label={t('event.tabs.organisation')}
+                                        {...a11yProps('organization')}
+                                    />
+                                )}
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.settings')} {...a11yProps('settings')} />
                             )}
