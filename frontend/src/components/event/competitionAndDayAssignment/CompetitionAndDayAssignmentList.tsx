@@ -1,9 +1,10 @@
-import {Box, Divider, IconButton, Stack, Tooltip, Typography, Zoom} from '@mui/material'
+import {Divider, IconButton, List, ListItem, Stack, Tooltip, Typography} from '@mui/material'
 import {Link} from '@tanstack/react-router'
 import {eventRoute} from '@routes'
 import {AutocompleteOption} from '@utils/types.ts'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {useTranslation} from 'react-i18next'
+import InputIcon from '@mui/icons-material/Input'
 
 type Props = {
     assignedEntities: AutocompleteOption[]
@@ -18,18 +19,12 @@ const CompetitionAndDayAssignmentList = ({
     const {t} = useTranslation()
     const {eventId} = eventRoute.useParams()
     return (
-        // todo: maybe use mui List component
-        <>
+        <List>
             {assignedEntities
                 .filter(field => field !== null)
                 .map((field, index) => (
-                    <Box key={`entry${index}`}>
-                        <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{mt: 1}}>
+                    <ListItem key={field.id + index}>
+                        <Stack direction="row" spacing={2} sx={{mt: 1, alignItems: 'center'}}>
                             <Link
                                 to={
                                     competitionsToDay
@@ -40,16 +35,13 @@ const CompetitionAndDayAssignmentList = ({
                                     competitionsToDay
                                         ? {eventId: eventId, competitionId: field.id}
                                         : {eventId: eventId, eventDayId: field.id}
-                                }>
-                                <Typography variant="body1">{field?.label}</Typography>
+                                }
+                                style={{alignItems: 'center', display: 'flex'}}>
+                                <InputIcon />
                             </Link>
+                            <Typography variant="body1">{field.label}</Typography>
                             {removeElement && (
-                                <Tooltip
-                                    title={t('common.delete')}
-                                    disableInteractive
-                                    slots={{
-                                        transition: Zoom,
-                                    }}>
+                                <Tooltip title={t('common.delete')}>
                                     <IconButton onClick={() => removeElement(index)}>
                                         <DeleteIcon />
                                     </IconButton>
@@ -59,9 +51,9 @@ const CompetitionAndDayAssignmentList = ({
                         {index < assignedEntities.length - 1 && (
                             <Divider orientation="horizontal" sx={{mt: 1}} />
                         )}
-                    </Box>
+                    </ListItem>
                 ))}
-        </>
+        </List>
     )
 }
 export default CompetitionAndDayAssignmentList

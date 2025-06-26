@@ -75,7 +75,7 @@
   },
   "format": {
     "date": "MM/dd/yyyy",
-    "datetime": "MM/dd/yyyy, h:mm a"
+    "datetime": "MM/dd/yyyy, hh:mm a"
   },
   "document": {
     "template": {
@@ -191,7 +191,10 @@
       "to": "until",
       "unknown": "Not announced yet"
     },
-    "published": "Published",
+    "published": {
+      "published": "Published",
+      "not": "Not published"
+    },
     "eventDay": {
       "eventDay": "Day",
       "eventDays": "Days",
@@ -233,6 +236,12 @@
         "nonBinary": "Number of non-binary",
         "mixed": "Number of any"
       },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "nonBinary": "Non-binary",
+        "mixed": "Any"
+      },
       "namedParticipant": {
         "namedParticipant": "Participant Type",
         "namedParticipants": "Participant Types",
@@ -251,6 +260,7 @@
           }
         }
       },
+      "teamComposition": "Team composition",
       "fee": {
         "fee": "Fee",
         "fees": "Fees",

@@ -33,7 +33,6 @@ import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx
 import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import LandingPage from './pages/LandingPage.tsx'
-import CompetitionSetupPage from './pages/event/CompetitionSetupPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -274,15 +273,6 @@ export const competitionIndexRoute = createRoute({
     validateSearch: validateTabSearch<CompetitionTab>,
 })
 
-export const competitionSetupRoute = createRoute({
-    getParentRoute: () => competitionRoute,
-    path: 'competitionSetup',
-    component: () => <CompetitionSetupPage />,
-    beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
-    },
-})
-
 export const clubRoute = createRoute({
     getParentRoute: () => clubsRoute,
     path: '$clubId',
@@ -329,7 +319,6 @@ const routeTree = rootRoute.addChildren([
             eventDayRoute.addChildren([eventDayIndexRoute]),
             competitionRoute.addChildren([
                 competitionIndexRoute,
-                competitionSetupRoute
             ]),
             eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),

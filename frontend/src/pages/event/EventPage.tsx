@@ -1,21 +1,28 @@
-import {Box, Button, Link as MuiLink, Stack, Tab, Typography} from '@mui/material'
+import {
+    Box,
+    Button,
+    Card,
+    List,
+    ListItem,
+    Link as MuiLink,
+    Stack,
+    Tab,
+    Typography,
+    ListItemIcon,
+    ListItemText,
+} from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
 import {Trans, useTranslation} from 'react-i18next'
-import CompetitionTable from '@components/event/competition/CompetitionTable.tsx'
-import CompetitionDialog from '@components/event/competition/CompetitionDialog.tsx'
 import Throbber from '@components/Throbber.tsx'
-import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
-import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
 import {
     getEvent,
     getRegistrationResult,
     produceInvoicesForEventRegistrations,
 } from '@api/sdk.gen.ts'
 import {
-    CompetitionDto,
-    EventDayDto,
-    EventDocumentDto, EventRegistrationViewDto,
+    EventDocumentDto,
+    EventRegistrationViewDto,
     ParticipantForEventDto,
     ParticipantRequirementForEventDto,
     TaskDto,
@@ -34,7 +41,6 @@ import {
     readRegistrationGlobal,
     readRegistrationOwn,
     readUserGlobal,
-    updateEventGlobal,
 } from '@authorization/privileges.ts'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
@@ -42,10 +48,23 @@ import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
-import EventRegistrationTable from "@components/eventRegistration/EventRegistrationTable.tsx";
+import EventRegistrationTable from '@components/eventRegistration/EventRegistrationTable.tsx'
+import PlaceIcon from '@mui/icons-material/Place'
+import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays.tsx'
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
+import {format} from 'date-fns'
 
-const EVENT_TABS = ['general', 'participants', 'registrations', 'organization', 'settings', 'actions'] as const
-export type EventTab = typeof EVENT_TABS[number]
+const EVENT_TABS = [
+    'general',
+    'competitions',
+    'participants',
+    'registrations',
+    'organization',
+    'settings',
+    'actions',
+] as const
+export type EventTab = (typeof EVENT_TABS)[number]
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -73,12 +92,6 @@ const EventPage = () => {
         deps: [eventId],
     })
 
-    const competitionAdministrationProps = useEntityAdministration<CompetitionDto>(
-        t('event.competition.competition'),
-    )
-    const eventDayAdministrationProps = useEntityAdministration<EventDayDto>(
-        t('event.eventDay.eventDay'),
-    )
     const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
         t('event.document.document'),
     )
@@ -95,7 +108,7 @@ const EventPage = () => {
 
     const eventRegistrationProps = useEntityAdministration<EventRegistrationViewDto>(
         t('event.registration.registration'),
-        {entityCreate: false, entityUpdate: false}
+        {entityCreate: false, entityUpdate: false},
     )
 
     const taskProps = useEntityAdministration<TaskDto>(t('task.task'))
@@ -151,6 +164,13 @@ const EventPage = () => {
         }
     }
 
+    const regAvailableFrom = data?.registrationAvailableFrom
+        ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
+        : undefined
+    const regAvailableTo = data?.registrationAvailableTo
+        ? format(new Date(data.registrationAvailableTo), t('format.datetime'))
+        : undefined
+
     return (
         <Box>
             <MuiLink ref={downloadRef} display={'none'}></MuiLink>
@@ -173,13 +193,23 @@ const EventPage = () => {
                         </Stack>
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
+                            <Tab
+                                label={t('event.competition.competitions')}
+                                {...a11yProps('competitions')}
+                            />
                             {(user.checkPrivilege(readRegistrationGlobal) ||
                                 user.checkPrivilege(readRegistrationOwn)) && (
-                                <Tab label={t('event.participants')} {...a11yProps('participants')} />
+                                <Tab
+                                    label={t('event.participants')}
+                                    {...a11yProps('participants')}
+                                />
                             )}
-                            {user.checkPrivilege(readEventGlobal) &&
-                                <Tab label={t('event.tabs.registrations')} {...a11yProps('registrations')} />
-                            }
+                            {user.checkPrivilege(readEventGlobal) && (
+                                <Tab
+                                    label={t('event.tabs.registrations')}
+                                    {...a11yProps('registrations')}
+                                />
+                            )}
                             {user.checkPrivilege(readEventGlobal) &&
                                 user.checkPrivilege(readUserGlobal) && (
                                     <Tab
@@ -195,54 +225,82 @@ const EventPage = () => {
                             )}
                         </TabSelectionContainer>
                         <TabPanel index={'general'} activeTab={activeTab}>
-                            <Stack spacing={2}>
-                                <CompetitionTable
-                                    {...competitionAdministrationProps.table}
-                                    title={t('event.competition.competitions')}
-                                    hints={
-                                        user.checkPrivilege(updateEventGlobal)
-                                            ? [
-                                                  <>
-                                                      {t(
-                                                          'event.competition.tableHint.templates.part1',
-                                                      )}
-                                                      <InlineLink
-                                                          to={'/config'}
-                                                          search={{tab: 'competition-templates'}}>
-                                                          {t(
-                                                              'event.competition.tableHint.templates.part2Link',
-                                                          )}
-                                                      </InlineLink>
-                                                      {t(
-                                                          'event.competition.tableHint.templates.part3',
-                                                      )}
-                                                  </>,
-                                                  <>
-                                                      {t(
-                                                          'event.competition.tableHint.competitionComponents.part1',
-                                                      )}
-                                                      <InlineLink
-                                                          to={'/config'}
-                                                          search={{tab: 'competition-elements'}}>
-                                                          {t(
-                                                              'event.competition.tableHint.competitionComponents.part2Link',
-                                                          )}
-                                                      </InlineLink>
-                                                      {t(
-                                                          'event.competition.tableHint.competitionComponents.part3',
-                                                      )}
-                                                  </>,
-                                              ]
-                                            : undefined
-                                    }
-                                />
-                                <CompetitionDialog {...competitionAdministrationProps.dialog} />
-                                <EventDayTable
-                                    {...eventDayAdministrationProps.table}
-                                    title={t('event.eventDay.eventDays')}
-                                />
-                                <EventDayDialog {...eventDayAdministrationProps.dialog} />
+                            <Stack spacing={4}>
+                                <Card
+                                    sx={{
+                                        p: 2,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: 2,
+                                    }}>
+                                    {user.checkPrivilege(readEventGlobal) && (
+                                        <Typography variant={'overline'}>
+                                            {data.published
+                                                ? t('event.published.published')
+                                                : t('event.published.not')}
+                                        </Typography>
+                                    )}
+                                    {data.description && (
+                                        <Typography>{data.description}</Typography>
+                                    )}
+                                    <Box>
+                                        <List>
+                                            {data.location && (
+                                                <ListItem>
+                                                    <ListItemIcon>
+                                                        <PlaceIcon />
+                                                    </ListItemIcon>
+                                                    <ListItemText primary={data.location} />
+                                                </ListItem>
+                                            )}
+                                            {(data.registrationAvailableFrom ||
+                                                data.registrationAvailableTo) && (
+                                                <ListItem>
+                                                    <ListItemIcon>
+                                                        <AccessTimeIcon />
+                                                    </ListItemIcon>
+                                                    <ListItemText
+                                                        primary={
+                                                            regAvailableFrom && regAvailableTo
+                                                                ? t(
+                                                                      'event.registrationAvailable.timespan',
+                                                                  ) +
+                                                                  ': ' +
+                                                                  regAvailableFrom +
+                                                                  ' - ' +
+                                                                  regAvailableTo
+                                                                : regAvailableFrom
+                                                                  ? t(
+                                                                        'event.registrationAvailable.timespanFrom',
+                                                                    ) + ` ${regAvailableFrom}`
+                                                                  : t(
+                                                                        'event.registrationAvailable.timespanTo',
+                                                                    ) + ` ${regAvailableTo}`
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            )}
+                                            {data.paymentDueBy && (
+                                                <ListItem>
+                                                    <ListItemIcon>
+                                                        <HourglassEmptyIcon />
+                                                    </ListItemIcon>
+                                                    <ListItemText
+                                                        primary={
+                                                            t('event.invoice.paymentDueBy') +
+                                                            ': ' +
+                                                            format(new Date(data.paymentDueBy), t('format.datetime'))
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            )}
+                                        </List>
+                                    </Box>
+                                </Card>
                             </Stack>
+                        </TabPanel>
+                        <TabPanel index={'competitions'} activeTab={activeTab}>
+                            <CompetitionsAndEventDays />
                         </TabPanel>
                         <TabPanel index={'registrations'} activeTab={activeTab}>
                             <EventRegistrationTable
@@ -291,7 +349,9 @@ const EventPage = () => {
                                     hints={[
                                         <>
                                             {t('event.participantRequirement.tableHint.part1')}
-                                            <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
+                                            <InlineLink
+                                                to={'/config'}
+                                                search={{tab: 'event-elements'}}>
                                                 {t(
                                                     'event.participantRequirement.tableHint.part2Link',
                                                 )}

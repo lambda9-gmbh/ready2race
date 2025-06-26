@@ -75,7 +75,7 @@
   },
   "format": {
     "date": "dd.MM.yyyy",
-    "datetime": "dd.MM.yyyy, hh:mm"
+    "datetime": "dd.MM.yyyy, HH:mm"
   },
   "document": {
     "template": {
@@ -191,7 +191,10 @@
       "to": "bis",
       "unknown": "Noch nicht bekannt gegeben"
     },
-    "published": "Veröffentlicht",
+    "published": {
+      "published": "Veröffentlicht",
+      "not": "Nicht veröffentlicht"
+    },
     "eventDay": {
       "eventDay": "Tag",
       "eventDays": "Tage",
@@ -230,8 +233,14 @@
       "count": {
         "males": "Anzahl Männer",
         "females": "Anzahl Frauen",
-        "nonBinary": "Anzahl nichtbinäre Personen",
+        "nonBinary": "Anzahl nicht-binäre Personen",
         "mixed": "Anzahl Beliebige"
+      },
+      "gender": {
+        "male": "Männlich",
+        "female": "Weiblich",
+        "nonBinary": "Nicht-binär",
+        "mixed": "Beliebig"
       },
       "namedParticipant": {
         "namedParticipant": "Teilnehmertyp",
@@ -251,6 +260,7 @@
           }
         }
       },
+      "teamComposition": "Teamzusammensetzung",
       "fee": {
         "fee": "Gebühr",
         "fees": "Gebühren",
@@ -446,7 +456,7 @@
       "teamCompetition": "Teamwettkampf",
       "males": "Männer",
       "females": "Frauen",
-      "nonBinary": "Nichtbinäre Personen",
+      "nonBinary": "Nicht-binäre Personen",
       "mixed": "Beliebig",
       "summary": "Zusammenfassung",
       "schedule": "Programm",
