@@ -75,7 +75,7 @@
   },
   "format": {
     "date": "MM/dd/yyyy",
-    "datetime": "MM/dd/yyyy, h:mm a"
+    "datetime": "MM/dd/yyyy, hh:mm a"
   },
   "document": {
     "template": {

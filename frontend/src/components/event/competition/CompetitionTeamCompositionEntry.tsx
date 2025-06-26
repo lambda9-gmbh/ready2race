@@ -8,7 +8,7 @@ type Props = {
     np: NamedParticipantForCompetitionDto
     gender: 'male' | 'female' | 'nonBinary' | 'mixed'
 }
-const CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
+const  CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
     const {t} = useTranslation()
 
     const count =
@@ -25,7 +25,6 @@ const CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
             <Stack
                 spacing={1}
                 direction={'row'}
-                key={np.id + '-m'}
                 sx={{flexWrap: 'wrap', alignItems: 'center'}}>
                 <ListItemText>
                     {count} {np.name}{' '}

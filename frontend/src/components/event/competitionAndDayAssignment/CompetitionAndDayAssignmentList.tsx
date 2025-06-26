@@ -23,7 +23,7 @@ const CompetitionAndDayAssignmentList = ({
             {assignedEntities
                 .filter(field => field !== null)
                 .map((field, index) => (
-                    <ListItem key={`entry${index}`}>
+                    <ListItem key={field.id + index}>
                         <Stack direction="row" spacing={2} sx={{mt: 1, alignItems: 'center'}}>
                             <Link
                                 to={

@@ -41,9 +41,6 @@ import {
     readRegistrationGlobal,
     readRegistrationOwn,
     readUserGlobal,
-    updateEventGlobal,
-    readEventGlobal,
-    readEventOwn,
 } from '@authorization/privileges.ts'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import InlineLink from '@components/InlineLink.tsx'
@@ -56,6 +53,7 @@ import PlaceIcon from '@mui/icons-material/Place'
 import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays.tsx'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
+import {format} from 'date-fns'
 
 const EVENT_TABS = [
     'general',
@@ -166,6 +164,13 @@ const EventPage = () => {
         }
     }
 
+    const regAvailableFrom = data?.registrationAvailableFrom
+        ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
+        : undefined
+    const regAvailableTo = data?.registrationAvailableTo
+        ? format(new Date(data.registrationAvailableTo), t('format.datetime'))
+        : undefined
+
     return (
         <Box>
             <MuiLink ref={downloadRef} display={'none'}></MuiLink>
@@ -256,29 +261,25 @@ const EventPage = () => {
                                                     </ListItemIcon>
                                                     <ListItemText
                                                         primary={
-                                                            data.registrationAvailableFrom &&
-                                                            data.registrationAvailableTo
+                                                            regAvailableFrom && regAvailableTo
                                                                 ? t(
                                                                       'event.registrationAvailable.timespan',
                                                                   ) +
                                                                   ': ' +
-                                                                  data.registrationAvailableFrom +
+                                                                  regAvailableFrom +
                                                                   ' - ' +
-                                                                  data.registrationAvailableTo
-                                                                : data.registrationAvailableFrom
+                                                                  regAvailableTo
+                                                                : regAvailableFrom
                                                                   ? t(
                                                                         'event.registrationAvailable.timespanFrom',
-                                                                    ) +
-                                                                    ` ${data.registrationAvailableFrom}`
+                                                                    ) + ` ${regAvailableFrom}`
                                                                   : t(
                                                                         'event.registrationAvailable.timespanTo',
-                                                                    ) +
-                                                                    ` ${data.registrationAvailableTo}`
+                                                                    ) + ` ${regAvailableTo}`
                                                         }
                                                     />
                                                 </ListItem>
                                             )}
-                                            {/*todo format dates*/}
                                             {data.paymentDueBy && (
                                                 <ListItem>
                                                     <ListItemIcon>
@@ -288,7 +289,7 @@ const EventPage = () => {
                                                         primary={
                                                             t('event.invoice.paymentDueBy') +
                                                             ': ' +
-                                                            data.paymentDueBy
+                                                            format(new Date(data.paymentDueBy), t('format.datetime'))
                                                         }
                                                     />
                                                 </ListItem>

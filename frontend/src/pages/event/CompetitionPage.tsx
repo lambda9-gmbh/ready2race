@@ -6,7 +6,7 @@ import {eventDayName} from '@components/event/common.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import Throbber from '@components/Throbber.tsx'
 import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
-import {useState} from 'react'
+import {Fragment, useState} from 'react'
 import {getCompetition, getEvent, getEventDays} from '@api/sdk.gen.ts'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
@@ -225,7 +225,7 @@ const CompetitionPage = () => {
                                 </Typography>
                                 <List>
                                     {competitionData.properties.namedParticipants.map(np => (
-                                        <>
+                                        <Fragment key={np.id}>
                                             <CompetitionTeamCompositionEntry
                                                 np={np}
                                                 gender={'male'}
@@ -242,7 +242,7 @@ const CompetitionPage = () => {
                                                 np={np}
                                                 gender={'mixed'}
                                             />
-                                        </>
+                                        </Fragment>
                                     ))}
                                 </List>
                             </Card>
@@ -252,8 +252,8 @@ const CompetitionPage = () => {
                                         {t('event.competition.fee.fees')}
                                     </Typography>
                                     <List>
-                                        {competitionData.properties.fees.map(f => (
-                                            <ListItem key={competitionData.id}>
+                                        {competitionData.properties.fees.map((f, idx) => (
+                                            <ListItem key={f.id + idx}>
                                                 <Box>
                                                     <Stack
                                                         direction={'row'}
@@ -277,15 +277,11 @@ const CompetitionPage = () => {
                                                         )}
                                                     </Stack>
                                                     <Typography>{f.amount}€</Typography>
-                                                    <Typography>
-                                                        {f.required
-                                                            ? t(
-                                                                  'event.competition.fee.required.required',
-                                                              )
-                                                            : t(
-                                                                  'event.competition.fee.required.notRequired',
-                                                              )}
-                                                    </Typography>
+                                                    {!f.required && (
+                                                        <Typography>
+                                                            {t('event.registration.optionalFee')}
+                                                        </Typography>
+                                                    )}
                                                 </Box>
                                             </ListItem>
                                         ))}
