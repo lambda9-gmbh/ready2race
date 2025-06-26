@@ -10,10 +10,10 @@ enum class AppUserRegistrationSort : Sortable {
     LASTNAME,
     EXPIRES_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        EMAIL -> APP_USER_REGISTRATION_VIEW.EMAIL
-        FIRSTNAME -> APP_USER_REGISTRATION_VIEW.FIRSTNAME
-        LASTNAME -> APP_USER_REGISTRATION_VIEW.LASTNAME
-        EXPIRES_AT -> APP_USER_REGISTRATION_VIEW.EXPIRES_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        EMAIL -> listOf(APP_USER_REGISTRATION_VIEW.EMAIL)
+        FIRSTNAME -> listOf(APP_USER_REGISTRATION_VIEW.FIRSTNAME)
+        LASTNAME -> listOf(APP_USER_REGISTRATION_VIEW.LASTNAME)
+        EXPIRES_AT -> listOf(APP_USER_REGISTRATION_VIEW.EXPIRES_AT)
     }
 }

@@ -8,8 +8,8 @@ enum class EventRegistrationViewSort : Sortable {
     EVENT_NAME,
     CREATED_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        EVENT_NAME -> EVENT_REGISTRATIONS_VIEW.EVENT_NAME
-        CREATED_AT -> EVENT_REGISTRATIONS_VIEW.CREATED_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        EVENT_NAME -> listOf(EVENT_REGISTRATIONS_VIEW.EVENT_NAME)
+        CREATED_AT -> listOf(EVENT_REGISTRATIONS_VIEW.CREATED_AT)
     }
 }

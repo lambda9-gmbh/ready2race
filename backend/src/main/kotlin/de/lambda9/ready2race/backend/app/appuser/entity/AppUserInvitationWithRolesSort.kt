@@ -10,10 +10,10 @@ enum class AppUserInvitationWithRolesSort : Sortable {
     LASTNAME,
     EXPIRES_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        EMAIL -> APP_USER_INVITATION_WITH_ROLES.EMAIL
-        FIRSTNAME -> APP_USER_INVITATION_WITH_ROLES.FIRSTNAME
-        LASTNAME -> APP_USER_INVITATION_WITH_ROLES.LASTNAME
-        EXPIRES_AT -> APP_USER_INVITATION_WITH_ROLES.EXPIRES_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        EMAIL -> listOf(APP_USER_INVITATION_WITH_ROLES.EMAIL)
+        FIRSTNAME -> listOf(APP_USER_INVITATION_WITH_ROLES.FIRSTNAME)
+        LASTNAME -> listOf(APP_USER_INVITATION_WITH_ROLES.LASTNAME)
+        EXPIRES_AT -> listOf(APP_USER_INVITATION_WITH_ROLES.EXPIRES_AT)
     }
 }

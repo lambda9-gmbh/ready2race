@@ -4,8 +4,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentRequest
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
 import de.lambda9.ready2race.backend.calls.requests.*
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -30,7 +30,7 @@ fun Route.eventDocument() {
 		        Please refer to 'flow' documentation or use 'flowOn' instead
             * */
 
-            val uploads = mutableListOf<Pair<String, ByteArray>>()
+            val uploads = mutableListOf<FileUpload>()
             var documentType: String? = null
 
             var done = false
@@ -42,7 +42,11 @@ fun Route.eventDocument() {
                     when (part) {
                         is PartData.FileItem -> {
                             uploads.add(
-                                part.originalFileName!! to part.provider().toByteArray()
+                                FileUpload(
+                                    part.originalFileName!!,
+                                    part.provider().toByteArray(),
+
+                                    )
                             )
                         }
 
@@ -63,7 +67,8 @@ fun Route.eventDocument() {
                 val eventId = !pathParam("eventId", uuid)
                 val type = !KIO.effect {
                     documentType?.let { UUID.fromString(it) }
-                }.mapError { RequestError.Other(Exception("Expected UUID or null as 'documentType'")) } // todo: @improve: specific Error type
+                }
+                    .mapError { RequestError.Other(Exception("Expected UUID or null as 'documentType'")) } // todo: @improve: specific Error type
                 EventDocumentService.saveDocuments(eventId, uploads, type, user.id!!)
             }
 
@@ -81,9 +86,10 @@ fun Route.eventDocument() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadEventOwn)
+                    val (_, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val id = !pathParam("eventDocumentId", uuid)
-                    EventDocumentService.downloadDocument(id)
+
+                    EventDocumentService.downloadDocument(id, scope)
                 }
             }
 

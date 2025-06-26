@@ -1,4 +1,4 @@
-import {PropsWithChildren, useEffect, useState} from 'react'
+import {BaseSyntheticEvent, PropsWithChildren, useEffect, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
 import {Button, Dialog, DialogActions, DialogContent, DialogProps, DialogTitle} from '@mui/material'
@@ -32,6 +32,8 @@ type ExtendedEntityDialogProps<
     onAddError?: (error: AddError) => void
     onEditError?: (error: UpdateError) => void
     title?: string
+    showSaveAndNew?: boolean
+    disableSave?: boolean
 }
 
 //todo: add semantic tabs
@@ -54,6 +56,8 @@ const EntityDialog = <
     onEditError,
     children,
     title,
+    showSaveAndNew,
+    disableSave,
     ...props
 }: PropsWithChildren<EntityDialogProps<Entity, Form, AddError, UpdateError>>) => {
     const {t} = useTranslation()
@@ -73,7 +77,12 @@ const EntityDialog = <
         }
     }
 
-    const onSubmit = async (formData: Form) => {
+    const onSubmit = async (formData: Form, event: BaseSyntheticEvent | undefined) => {
+        const addNew =
+            showSaveAndNew &&
+            entity == null &&
+            (event?.nativeEvent as SubmitEvent)?.submitter?.id === 'saveAndNew'
+
         if (entity) {
             if (!editAction) throw Error('Missing edit action')
         } else {
@@ -89,7 +98,11 @@ const EntityDialog = <
         } else if (editResult?.error) {
             onEditError ? onEditError(editResult.error) : handleErrorGeneric(editResult.error)
         } else {
-            handleClose()
+            if (addNew) {
+                onOpen()
+            } else {
+                handleClose()
+            }
             reloadData()
             if (entity) {
                 feedback.success(t('entity.edit.success', {entity: entityName}))
@@ -116,7 +129,7 @@ const EntityDialog = <
             <FormContainer
                 FormProps={{style: {display: 'contents'}}}
                 formContext={formContext}
-                onSuccess={data => onSubmit(data)}>
+                onSuccess={(data, event) => onSubmit(data, event)}>
                 <DialogTitle>
                     {title ?? t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
                 </DialogTitle>
@@ -126,7 +139,18 @@ const EntityDialog = <
                     <Button onClick={handleClose} disabled={submitting}>
                         {t('common.cancel')}
                     </Button>
-                    <SubmitButton label={t('common.save')} submitting={submitting} />
+                    {showSaveAndNew && entity == null && (
+                        <SubmitButton
+                            id={'saveAndNew'}
+                            label={t('common.saveAndNew')}
+                            submitting={submitting}
+                        />
+                    )}
+                    <SubmitButton
+                        disabled={disableSave}
+                        label={t('common.save')}
+                        submitting={submitting}
+                    />
                 </DialogActions>
             </FormContainer>
         </Dialog>

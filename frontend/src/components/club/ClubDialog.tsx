@@ -1,5 +1,5 @@
 import {addClub, ClubDto, ClubUpsertDto, updateClub} from '../../api'
-import {BaseEntityDialogProps} from '../../utils/types.ts'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '../EntityDialog.tsx'
 import {Stack} from '@mui/material'
@@ -36,7 +36,6 @@ const ClubDialog = (props: BaseEntityDialogProps<ClubDto>) => {
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
-
 
     return (
         <EntityDialog

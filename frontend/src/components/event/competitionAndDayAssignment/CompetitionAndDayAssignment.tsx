@@ -85,8 +85,8 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     }
 
     return (
-        <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
-            <Typography variant="h2">
+        <>
+            <Typography variant="h6">
                 {competitionsToDay
                     ? t('event.eventDay.assignedCompetitions')
                     : t('event.competition.assignedDays')}
@@ -128,7 +128,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                     </FormContainer>
                 </Box>
             </Dialog>
-        </Box>
+        </>
     )
 }
 

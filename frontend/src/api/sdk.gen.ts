@@ -130,6 +130,12 @@ import type {
     DeleteCompetitionRegistrationData,
     DeleteCompetitionRegistrationError,
     DeleteCompetitionRegistrationResponse,
+    UpdateCompetitionSetupData,
+    UpdateCompetitionSetupError,
+    UpdateCompetitionSetupResponse,
+    GetCompetitionSetupData,
+    GetCompetitionSetupError,
+    GetCompetitionSetupResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -220,12 +226,21 @@ import type {
     GetClubNamesData,
     GetClubNamesError,
     GetClubNamesResponse,
+    GetRegistrationsForEventData,
+    GetRegistrationsForEventError,
+    GetRegistrationsForEventResponse,
+    DeleteEventRegistrationData,
+    DeleteEventRegistrationError,
+    DeleteEventRegistrationResponse,
     GetEventRegistrationTemplateData,
     GetEventRegistrationTemplateError,
     GetEventRegistrationTemplateResponse,
     AddEventRegistrationData,
     AddEventRegistrationError,
     AddEventRegistrationResponse,
+    GetRegistrationResultData,
+    GetRegistrationResultError,
+    GetRegistrationResultResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -281,6 +296,112 @@ import type {
     AddParticipantRequirementResponse,
     GetParticipantRequirementsError,
     GetParticipantRequirementsResponse,
+    AddCompetitionSetupTemplateData,
+    AddCompetitionSetupTemplateError,
+    AddCompetitionSetupTemplateResponse,
+    GetCompetitionSetupTemplatesData,
+    GetCompetitionSetupTemplatesError,
+    GetCompetitionSetupTemplatesResponse,
+    GetCompetitionSetupTemplateData,
+    GetCompetitionSetupTemplateError,
+    GetCompetitionSetupTemplateResponse,
+    UpdateCompetitionSetupTemplateData,
+    UpdateCompetitionSetupTemplateError,
+    UpdateCompetitionSetupTemplateResponse,
+    DeleteCompetitionSetupTemplateData,
+    DeleteCompetitionSetupTemplateError,
+    DeleteCompetitionSetupTemplateResponse,
+    GetDocumentTemplatesData,
+    GetDocumentTemplatesError,
+    GetDocumentTemplatesResponse,
+    AddDocumentTemplateData,
+    AddDocumentTemplateError,
+    AddDocumentTemplateResponse,
+    GetDocumentTemplateTypesError,
+    GetDocumentTemplateTypesResponse,
+    AssignDocumentTemplateData,
+    AssignDocumentTemplateError,
+    AssignDocumentTemplateResponse,
+    AddTaskData,
+    AddTaskError,
+    AddTaskResponse,
+    GetTasksData,
+    GetTasksError,
+    GetTasksResponse,
+    UpdateTaskData,
+    UpdateTaskError,
+    UpdateTaskResponse,
+    DeleteTaskData,
+    DeleteTaskError,
+    DeleteTaskResponse,
+    GetOpenTasksForUserData,
+    GetOpenTasksForUserError,
+    GetOpenTasksForUserResponse,
+    GetBankAccountsData,
+    GetBankAccountsError,
+    GetBankAccountsResponse,
+    AddBankAccountData,
+    AddBankAccountError,
+    AddBankAccountResponse,
+    UpdateBankAccountData,
+    UpdateBankAccountError,
+    UpdateBankAccountResponse,
+    DeleteBankAccountData,
+    DeleteBankAccountError,
+    DeleteBankAccountResponse,
+    GetAssignedBankAccountData,
+    GetAssignedBankAccountError,
+    GetAssignedBankAccountResponse,
+    AssignBankAccountData,
+    AssignBankAccountError,
+    AssignBankAccountResponse,
+    ProduceInvoicesForEventRegistrationsData,
+    ProduceInvoicesForEventRegistrationsError,
+    ProduceInvoicesForEventRegistrationsResponse,
+    GetContactsData,
+    GetContactsError,
+    GetContactsResponse,
+    AddContactData,
+    AddContactError,
+    AddContactResponse,
+    UpdateContactData,
+    UpdateContactError,
+    UpdateContactResponse,
+    DeleteContactData,
+    DeleteContactError,
+    DeleteContactResponse,
+    GetAssignedContactData,
+    GetAssignedContactError,
+    GetAssignedContactResponse,
+    AssignContactData,
+    AssignContactError,
+    AssignContactResponse,
+    AddWorkTypeData,
+    AddWorkTypeError,
+    AddWorkTypeResponse,
+    GetWorkTypesError,
+    GetWorkTypesResponse,
+    UpdateWorkTypeData,
+    UpdateWorkTypeError,
+    UpdateWorkTypeResponse,
+    DeleteWorkTypeData,
+    DeleteWorkTypeError,
+    DeleteWorkTypeResponse,
+    AddWorkShiftData,
+    AddWorkShiftError,
+    AddWorkShiftResponse,
+    GetWorkShiftsData,
+    GetWorkShiftsError,
+    GetWorkShiftsResponse,
+    UpdateWorkShiftData,
+    UpdateWorkShiftError,
+    UpdateWorkShiftResponse,
+    DeleteWorkShiftData,
+    DeleteWorkShiftError,
+    DeleteWorkShiftResponse,
+    GetWorkShiftsForUserData,
+    GetWorkShiftsForUserError,
+    GetWorkShiftsForUserResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -751,6 +872,32 @@ export const deleteCompetitionRegistration = <ThrowOnError extends boolean = fal
     })
 }
 
+export const updateCompetitionSetup = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionSetupData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionSetupResponse,
+        UpdateCompetitionSetupError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionSetup',
+    })
+}
+
+export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionSetupData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupResponse,
+        GetCompetitionSetupError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionSetup',
+    })
+}
+
 export const addDocuments = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddDocumentsData, ThrowOnError>,
 ) => {
@@ -1119,6 +1266,32 @@ export const getClubNames = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getRegistrationsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationsForEventResponse,
+        GetRegistrationsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration',
+    })
+}
+
+export const deleteEventRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteEventRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteEventRegistrationResponse,
+        DeleteEventRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/{eventRegistrationId}',
+    })
+}
+
 export const getEventRegistrationTemplate = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetEventRegistrationTemplateData, ThrowOnError>,
 ) => {
@@ -1142,6 +1315,19 @@ export const addEventRegistration = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/register',
+    })
+}
+
+export const getRegistrationResult = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationResultData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationResultResponse,
+        GetRegistrationResultError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationResult',
     })
 }
 
@@ -1378,5 +1564,436 @@ export const getParticipantRequirements = <ThrowOnError extends boolean = false>
     >({
         ...options,
         url: '/participantRequirement',
+    })
+}
+
+export const addCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddCompetitionSetupTemplateResponse,
+        AddCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate',
+    })
+}
+
+export const getCompetitionSetupTemplates = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetCompetitionSetupTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupTemplatesResponse,
+        GetCompetitionSetupTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate',
+    })
+}
+
+export const getCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupTemplateResponse,
+        GetCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const updateCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateCompetitionSetupTemplateResponse,
+        UpdateCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const deleteCompetitionSetupTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCompetitionSetupTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCompetitionSetupTemplateResponse,
+        DeleteCompetitionSetupTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const getDocumentTemplates = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetDocumentTemplatesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetDocumentTemplatesResponse,
+        GetDocumentTemplatesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplate',
+    })
+}
+
+export const addDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddDocumentTemplateResponse,
+        AddDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/documentTemplate',
+    })
+}
+
+export const getDocumentTemplateTypes = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetDocumentTemplateTypesResponse,
+        GetDocumentTemplateTypesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplateType',
+    })
+}
+
+export const assignDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignDocumentTemplateResponse,
+        AssignDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplateType/{documentType}/assignTemplate',
+    })
+}
+
+export const addTask = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddTaskData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddTaskResponse, AddTaskError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task',
+    })
+}
+
+export const getTasks = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTasksData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetTasksResponse, GetTasksError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task',
+    })
+}
+
+export const updateTask = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateTaskData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateTaskResponse, UpdateTaskError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task/{taskId}',
+    })
+}
+
+export const deleteTask = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteTaskData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<DeleteTaskResponse, DeleteTaskError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/task/{taskId}',
+    })
+}
+
+export const getOpenTasksForUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetOpenTasksForUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetOpenTasksForUserResponse,
+        GetOpenTasksForUserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/task',
+    })
+}
+
+export const getBankAccounts = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetBankAccountsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetBankAccountsResponse,
+        GetBankAccountsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount',
+    })
+}
+
+export const addBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddBankAccountResponse,
+        AddBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount',
+    })
+}
+
+export const updateBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateBankAccountResponse,
+        UpdateBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount/{bankAccountId}',
+    })
+}
+
+export const deleteBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteBankAccountResponse,
+        DeleteBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/bankAccount/{bankAccountId}',
+    })
+}
+
+export const getAssignedBankAccount = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetAssignedBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAssignedBankAccountResponse,
+        GetAssignedBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedBankAccount',
+    })
+}
+
+export const assignBankAccount = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignBankAccountData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        AssignBankAccountResponse,
+        AssignBankAccountError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedBankAccount',
+    })
+}
+
+export const produceInvoicesForEventRegistrations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ProduceInvoicesForEventRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ProduceInvoicesForEventRegistrationsResponse,
+        ProduceInvoicesForEventRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/produceInvoices',
+    })
+}
+
+export const getContacts = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetContactsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetContactsResponse, GetContactsError, ThrowOnError>({
+        ...options,
+        url: '/contact',
+    })
+}
+
+export const addContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddContactResponse, AddContactError, ThrowOnError>({
+        ...options,
+        url: '/contact',
+    })
+}
+
+export const updateContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<UpdateContactResponse, UpdateContactError, ThrowOnError>(
+        {
+            ...options,
+            url: '/contact/{contactId}',
+        },
+    )
+}
+
+export const deleteContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteContactResponse,
+        DeleteContactError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/contact/{contactId}',
+    })
+}
+
+export const getAssignedContact = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetAssignedContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAssignedContactResponse,
+        GetAssignedContactError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/assignedContact',
+    })
+}
+
+export const assignContact = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignContactData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<AssignContactResponse, AssignContactError, ThrowOnError>(
+        {
+            ...options,
+            url: '/assignedContact',
+        },
+    )
+}
+
+export const addWorkType = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddWorkTypeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddWorkTypeResponse, AddWorkTypeError, ThrowOnError>({
+        ...options,
+        url: '/worktype',
+    })
+}
+
+export const getWorkTypes = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetWorkTypesResponse, GetWorkTypesError, ThrowOnError>({
+        ...options,
+        url: '/worktype',
+    })
+}
+
+export const updateWorkType = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateWorkTypeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateWorkTypeResponse,
+        UpdateWorkTypeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/worktype/{workTypeId}',
+    })
+}
+
+export const deleteWorkType = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteWorkTypeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteWorkTypeResponse,
+        DeleteWorkTypeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/worktype/{workTypeId}',
+    })
+}
+
+export const addWorkShift = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddWorkShiftData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<AddWorkShiftResponse, AddWorkShiftError, ThrowOnError>({
+        ...options,
+        url: 'event/{eventId}/workshift',
+    })
+}
+
+export const getWorkShifts = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWorkShiftsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetWorkShiftsResponse, GetWorkShiftsError, ThrowOnError>(
+        {
+            ...options,
+            url: 'event/{eventId}/workshift',
+        },
+    )
+}
+
+export const updateWorkShift = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateWorkShiftData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateWorkShiftResponse,
+        UpdateWorkShiftError,
+        ThrowOnError
+    >({
+        ...options,
+        url: 'event/{eventId}/workshift/{workShiftId}',
+    })
+}
+
+export const deleteWorkShift = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteWorkShiftData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteWorkShiftResponse,
+        DeleteWorkShiftError,
+        ThrowOnError
+    >({
+        ...options,
+        url: 'event/{eventId}/workshift/{workShiftId}',
+    })
+}
+
+export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWorkShiftsForUserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWorkShiftsForUserResponse,
+        GetWorkShiftsForUserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/{userId}/workshift',
     })
 }

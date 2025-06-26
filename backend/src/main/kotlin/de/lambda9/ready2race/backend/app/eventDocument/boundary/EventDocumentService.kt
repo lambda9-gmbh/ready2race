@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventDocument.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentDataRepo
@@ -13,10 +14,12 @@ import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentReque
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
 import de.lambda9.ready2race.backend.app.eventDocumentType.control.EventDocumentTypeRepo
 import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentTypeError
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
@@ -33,8 +36,7 @@ object EventDocumentService {
         params: PaginationParameters<EventDocumentViewSort>,
     ): App<Nothing, ApiResponse.Page<EventDocumentDto, EventDocumentViewSort>> = KIO.comprehension {
         val total = !EventDocumentRepo.count(params.search).orDie()
-        val page = !EventDocumentRepo.
-        page(params).orDie()
+        val page = !EventDocumentRepo.page(params).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
@@ -46,7 +48,7 @@ object EventDocumentService {
 
     fun saveDocuments(
         eventId: UUID,
-        uploads: List<Pair<String, ByteArray>>,
+        uploads: List<FileUpload>,
         documentTypeId: UUID?,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
@@ -82,14 +84,24 @@ object EventDocumentService {
 
     fun downloadDocument(
         id: UUID,
-    ): App<EventDocumentError, ApiResponse.File> =
-        EventDocumentRepo.getDownload(id).orDie().onNullFail { EventDocumentError.NotFound }
-            .map {
-                ApiResponse.File(
-                    name = it.name!!,
-                    bytes = it.data!!,
-                )
-            }
+        scope: Privilege.Scope
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+
+        val document = !EventDocumentRepo.getDownload(id).orDie().onNullFail { EventDocumentError.NotFound }
+
+        if (scope == Privilege.Scope.OWN) {
+            !EventRepo.isOpenForRegistration(document.event!!, LocalDateTime.now()).orDie()
+                .onFalseFail { EventRegistrationError.RegistrationClosed }
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = document.name!!,
+                bytes = document.data!!,
+            )
+        )
+
+    }
 
     fun updateDocument(
         id: UUID,

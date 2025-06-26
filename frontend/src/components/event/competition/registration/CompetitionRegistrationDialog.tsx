@@ -5,6 +5,7 @@ import {
     CompetitionRegistrationNamedParticipantUpsertDto,
     CompetitionRegistrationTeamDto,
     CompetitionRegistrationTeamUpsertDto,
+    EventRegistrationNamedParticipantDto,
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CheckboxButtonGroup, useForm, useWatch} from 'react-hook-form-mui'
@@ -101,6 +102,28 @@ const CompetitionRegistrationDialog = (
         },
     )
 
+    const participants = useMemo(() => {
+        return participantsData?.data ?? []
+    }, [participantsData])
+
+    const getFilteredParticipants = useCallback(
+        (namedParticipant: EventRegistrationNamedParticipantDto) => {
+            return participants.filter(p => {
+                switch (p.gender) {
+                    case 'M':
+                        return namedParticipant.countMales > 0 || namedParticipant.countMixed > 0
+                    case 'F':
+                        return namedParticipant.countFemales > 0 || namedParticipant.countMixed > 0
+                    case 'D':
+                        return (
+                            namedParticipant.countNonBinary > 0 || namedParticipant.countMixed > 0
+                        )
+                }
+            })
+        },
+        [participants],
+    )
+
     const addAction = (formData: CompetitionRegistrationForm) => {
         return addCompetitionRegistration({
             path: {eventId: props.eventId, competitionId: props.competition.id},
@@ -165,11 +188,12 @@ const CompetitionRegistrationDialog = (
                                 label={t('club.participant.title')}
                                 loading={clubId != null && participantsPending}
                                 disabled={clubId == null}
-                                options={participantsData?.data ?? []}
+                                options={getFilteredParticipants(namedParticipant)}
                                 required={true}
+                                namedParticipantsPath={'namedParticipants'}
                                 transform={{
                                     input: value =>
-                                        participantsData?.data.filter(p =>
+                                        participants.filter(p =>
                                             value?.participantIds?.some(
                                                 (id: string) => id === p.id,
                                             ),
@@ -181,12 +205,10 @@ const CompetitionRegistrationDialog = (
                                         }
                                     },
                                 }}
-                                count={
-                                    namedParticipant.countMales +
-                                    namedParticipant.countFemales +
-                                    namedParticipant.countMixed +
-                                    namedParticipant.countNonBinary
-                                }
+                                countMales={namedParticipant.countMales}
+                                countFemales={namedParticipant.countFemales}
+                                countMixed={namedParticipant.countMixed}
+                                countNonBinary={namedParticipant.countNonBinary}
                             />
                         </Stack>
                     ),

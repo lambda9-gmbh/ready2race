@@ -44,7 +44,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
         },
         {
             field: 'published',
-            headerName: t('event.published'),
+            headerName: t('event.published.published'),
             minWidth: 110,
             sortable: false,
             requiredPrivilege: readEventGlobal,
@@ -55,7 +55,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
     return (
         <EntityTable
             {...props}
-            parentResource={'EVENT'}
+            resource={'EVENT'}
             publicRead={true}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
@@ -66,9 +66,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
                 to: '/event/$eventId',
                 params: {eventId: entity.id},
             })}
-            entityName={t('event.event')}
             deleteRequest={deleteRequest}
-            onDelete={() => {}}
         />
     )
 }

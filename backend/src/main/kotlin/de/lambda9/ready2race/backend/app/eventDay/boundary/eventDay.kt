@@ -5,8 +5,8 @@ import de.lambda9.ready2race.backend.app.eventDay.entity.AssignCompetitionsToDay
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDayRequest
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.calls.requests.*
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
 fun Route.eventDay() {
@@ -14,7 +14,7 @@ fun Route.eventDay() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
 
                 val body = !receiveKIO(EventDayRequest.example)
@@ -46,7 +46,7 @@ fun Route.eventDay() {
 
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val eventDayId = !pathParam("eventDayId", uuid)
 
                     val body = !receiveKIO(EventDayRequest.example)
@@ -56,7 +56,7 @@ fun Route.eventDay() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val eventDayId = !pathParam("eventDayId", uuid)
 
                     EventDayService.deleteEvent(eventDayId)
@@ -66,7 +66,7 @@ fun Route.eventDay() {
             put("/competitions") {
 
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val eventDayId = !pathParam("eventDayId", uuid)
 
                     val body = !receiveKIO(AssignCompetitionsToDayRequest.example)

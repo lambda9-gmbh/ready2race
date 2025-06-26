@@ -4,10 +4,12 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
-import de.lambda9.ready2race.backend.database.generated.tables.Participant
+import de.lambda9.ready2race.backend.database.generated.tables.ParticipantView
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT
+import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_VIEW
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -16,7 +18,7 @@ import java.util.*
 
 object ParticipantRepo {
 
-    private fun Participant.searchFields() = listOf(FIRSTNAME, LASTNAME, EXTERNAL_CLUB_NAME)
+    private fun ParticipantView.searchFields() = listOf(FIRSTNAME, LASTNAME, EXTERNAL_CLUB_NAME)
 
     fun create(record: ParticipantRecord) = PARTICIPANT.insertReturning(record) { PARTICIPANT.ID }
 
@@ -46,19 +48,22 @@ object ParticipantRepo {
     fun existsByIdAndClub(id: UUID, clubId: UUID) =
         PARTICIPANT.exists { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
 
+    fun findByIdAndClub(id: UUID, clubId: UUID) =
+        PARTICIPANT.findOneBy { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
+
     fun count(
         search: String?,
         clubId: UUID?,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope
     ): JIO<Int> = Jooq.query {
-        with(PARTICIPANT) {
+        with(PARTICIPANT_VIEW) {
             fetchCount(
                 this, search.metaSearch(searchFields())
                     .and(
-                        clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition()
+                        clubId?.let { PARTICIPANT_VIEW.CLUB.eq(it) } ?: DSL.trueCondition()
                     )
-                    .and(filterScope(scope, user.club))
+                    .and(filterScopeForView(scope, user.club))
             )
         }
     }
@@ -68,13 +73,13 @@ object ParticipantRepo {
         clubId: UUID?,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope
-    ): JIO<List<ParticipantRecord>> = Jooq.query {
-        with(PARTICIPANT) {
+    ): JIO<List<ParticipantViewRecord>> = Jooq.query {
+        with(PARTICIPANT_VIEW) {
             selectFrom(this)
                 .page(params, searchFields()) {
                     DSL.and(
-                        clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition(),
-                        filterScope(scope, user.club)
+                        clubId?.let { PARTICIPANT_VIEW.CLUB.eq(it) } ?: DSL.trueCondition(),
+                        filterScopeForView(scope, user.club)
                     )
                 }
                 .fetch()
@@ -86,14 +91,14 @@ object ParticipantRepo {
         clubId: UUID?,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope
-    ): JIO<ParticipantRecord?> = Jooq.query {
-        with(PARTICIPANT) {
+    ): JIO<ParticipantViewRecord?> = Jooq.query {
+        with(PARTICIPANT_VIEW) {
             selectFrom(this)
                 .where(ID.eq(id))
                 .and(
-                    clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition()
+                    clubId?.let { PARTICIPANT_VIEW.CLUB.eq(it) } ?: DSL.trueCondition()
                 )
-                .and(filterScope(scope, user.club))
+                .and(filterScopeForView(scope, user.club))
                 .fetchOne()
         }
     }
@@ -102,5 +107,10 @@ object ParticipantRepo {
         scope: Privilege.Scope,
         clubId: UUID?,
     ): Condition = if (scope == Privilege.Scope.OWN) PARTICIPANT.CLUB.eq(clubId) else DSL.trueCondition()
+
+    private fun filterScopeForView(
+        scope: Privilege.Scope,
+        clubId: UUID?,
+    ): Condition = if (scope == Privilege.Scope.OWN) PARTICIPANT_VIEW.CLUB.eq(clubId) else DSL.trueCondition()
 
 }

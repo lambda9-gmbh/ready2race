@@ -25,13 +25,13 @@ const LoginPage = () => {
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
-        const {data, error} = await userLogin({
+        const {data, error, response} = await userLogin({
             body: formData,
         })
 
         setSubmitting(false)
-        if (data !== undefined) {
-            login(data)
+        if (data !== undefined && response.ok) {
+            login(data, response.headers)
         } else if (error) {
             if (error.status.value === 429) {
                 feedback.error(t('user.login.error.tooManyRequests'))

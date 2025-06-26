@@ -3,10 +3,16 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.task.boundary.TaskService
+import de.lambda9.ready2race.backend.app.task.entity.TaskWithResponsibleUsersSort
+import de.lambda9.ready2race.backend.app.workShift.boundary.WorkShiftService
+import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftWithAssignedUsersSort
 import de.lambda9.ready2race.backend.calls.requests.*
-import de.lambda9.ready2race.backend.calls.requests.ParamParser.Companion.uuid
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.datetime
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
 import io.ktor.server.plugins.ratelimit.*
 import io.ktor.server.routing.*
@@ -16,12 +22,14 @@ fun Route.user() {
         get {
             call.respondComprehension {
                 val user = !authenticate(Privilege.ReadUserGlobal)
+                val noClub = !optionalQueryParam("noClub", boolean)
+
                 if (user.id == SYSTEM_USER) {
                     val params = !pagination<EveryAppUserWithRolesSort>()
-                    AppUserService.pageIncludingAdmins(params)
+                    AppUserService.pageIncludingAdmins(params, noClub)
                 } else {
                     val params = !pagination<AppUserWithRolesSort>()
-                    AppUserService.page(params)
+                    AppUserService.page(params, noClub)
                 }
             }
         }
@@ -51,6 +59,47 @@ fun Route.user() {
                     AppUserService.update(body, scope, user.id!!, id)
                 }
             }
+
+            route("/task") {
+                get {
+                    call.respondComprehension {
+                        val id = !pathParam("userId", uuid)
+                        val (user, scope) = !authenticate(
+                            Privilege.Action.READ,
+                            Privilege.Resource.EVENT
+                        )
+                        val params = !pagination<TaskWithResponsibleUsersSort>()
+
+                        if (scope == Privilege.Scope.OWN && id != user.id!!) {
+                            KIO.fail(AuthError.PrivilegeMissing)
+                        } else {
+                            TaskService.pageOpenForUser(params, id)
+                        }
+                    }
+                }
+            }
+
+            route("/workshift") {
+                get {
+                    call.respondComprehension {
+                        val id = !pathParam("userId", uuid)
+                        val (user, scope) = !authenticate(
+                            Privilege.Action.READ,
+                            Privilege.Resource.EVENT
+                        )
+                        val params = !pagination<WorkShiftWithAssignedUsersSort>()
+                        val timeFrom = !optionalQueryParam("timeFrom", datetime)
+                        val timeTo = !optionalQueryParam("timeTo", datetime)
+
+                        if (scope == Privilege.Scope.OWN && id != user.id!!) {
+                            KIO.fail(AuthError.PrivilegeMissing)
+                        } else {
+                            WorkShiftService.pageByUser(params, id, timeFrom, timeTo)
+                        }
+                    }
+                }
+            }
+
         }
 
         route("/registration") {

@@ -14,6 +14,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -25,8 +27,18 @@ object CompetitionRegistrationRepo {
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
 
+    // TODO: @What?: Why also competitionId? id is already unique
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
         COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }
+
+    fun allForEvent(eventId: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
+        select(COMPETITION_REGISTRATION)
+            .from(COMPETITION_REGISTRATION)
+            .join(EVENT_REGISTRATION)
+            .on(COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(EVENT_REGISTRATION.ID))
+            .where(EVENT_REGISTRATION.EVENT.eq(eventId))
+            .fetch { it.value1() }
+    }
 
     fun delete(
         competitionId: UUID,
@@ -36,6 +48,25 @@ object CompetitionRegistrationRepo {
 
     fun deleteByEventRegistration(eventRegistrationId: UUID) =
         COMPETITION_REGISTRATION.delete { COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId) }
+
+    fun getClub(id: UUID) = COMPETITION_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
+
+    fun getByCompetitionAndClub(competitionId: UUID, clubId: UUID) = COMPETITION_REGISTRATION.select { COMPETITION.eq(competitionId).and(CLUB.eq(clubId)) }
+
+    fun countForCompetitionAndClub(
+        competitionId: UUID,
+        clubId: UUID,
+    ): JIO<Int> = Jooq.query {
+        with(COMPETITION_REGISTRATION) {
+            fetchCount(
+                this,
+                DSL.and(
+                    COMPETITION.eq(competitionId),
+                    CLUB.eq(clubId)
+                )
+            )
+        }
+    }
 
     fun countForCompetition(
         competitionId: UUID,
@@ -150,6 +181,17 @@ object CompetitionRegistrationRepo {
         .on(PARTICIPANT_FOR_EVENT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
         .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.eq(NAMED_PARTICIPANT.ID))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+        .groupBy(
+            PARTICIPANT_FOR_EVENT.ID,
+            PARTICIPANT_FOR_EVENT.CLUB_ID,
+            PARTICIPANT_FOR_EVENT.CLUB_NAME,
+            PARTICIPANT_FOR_EVENT.FIRSTNAME,
+            PARTICIPANT_FOR_EVENT.LASTNAME,
+            PARTICIPANT_FOR_EVENT.YEAR,
+            PARTICIPANT_FOR_EVENT.GENDER,
+            PARTICIPANT_FOR_EVENT.EXTERNAL,
+            PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME
+        )
         .orderBy(PARTICIPANT_FOR_EVENT.FIRSTNAME, PARTICIPANT_FOR_EVENT.LASTNAME)
         .asMultiset("participants")
         .convertFrom {

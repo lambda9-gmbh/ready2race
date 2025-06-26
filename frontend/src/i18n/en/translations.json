@@ -9,10 +9,12 @@
     "delete": "Delete",
     "edit": "Edit",
     "selected": "Selected",
+    "manage" : "Manage",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
     },
+    "organisation": "Organisation",
     "form": {
       "autocomplete": {
         "noOptions": "No options",
@@ -33,12 +35,22 @@
             "integer": "Please enter an integer number.",
             "number": "Please enter a valid number."
           },
-          "range": "Please enter a number between {{min}} and {{max}}."
+          "value": {
+            "messageStart": "Please enter a number ",
+            "min": "above {{min}}.",
+            "max": "below {{max}}.",
+            "range": "between {{min}} and {{max}}."
+          },
+          "minOrUndefined": "Please enter a number above {{min}} or leave the field blank."
         }
       },
+      "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
-      "selectFile": "Select file"
+      "selectFile": "Select file",
+      "select": {
+        "none": "None"
+      }
     },
     "load": {
       "error": {
@@ -51,6 +63,7 @@
     },
     "ok": "Ok",
     "save": "Save",
+    "saveAndNew": "Save and new",
     "search": "Search",
     "back": "Back",
     "next": "Next",
@@ -58,6 +71,43 @@
     "remove": "Remove",
     "language": {
       "menu": "Select language"
+    }
+  },
+  "format": {
+    "date": "MM/dd/yyyy",
+    "datetime": "MM/dd/yyyy, hh:mm a"
+  },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Can be added to system-generated documents to customize the layout.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      },
+      "template": "Document template",
+      "templates": "Document templates",
+      "type": {
+        "INVOICE": "Invoice",
+        "REGISTRATION_REPORT": "Event registration result"
+      },
+      "none": "No template",
+      "name": "Filename",
+      "file": {
+        "choose": "Choose template",
+        "change": "Change template",
+        "missing": "Please choose a document."
+      },
+      "pagePadding": {
+        "top": "Page margin top",
+        "left": "Page margin left",
+        "right": "Page margin right",
+        "bottom": "Page margin bottom"
+      },
+      "assignments": {
+        "global": "Globally assigned templates",
+        "event": "Event assigned templates"
+      }
     }
   },
   "decimal": {
@@ -87,7 +137,9 @@
     "firstname": "Firstname",
     "lastname": "Lastname",
     "gender": "Gender",
-    "phone": "Phone"
+    "phone": "Phone",
+    "remark": "Remark",
+    "color" : "Color"
   },
   "navigation": {
     "titles": {
@@ -115,7 +167,8 @@
       "title": "Member",
       "year": "Year of birth",
       "external": "External",
-      "externalClub": "External club"
+      "externalClub": "External club",
+      "usedInRegistration": "In Registration"
     }
   },
   "event": {
@@ -125,7 +178,8 @@
     "description": "Description",
     "registerNow": "To Registration",
     "invoice": {
-      "prefix": "Invoice prefix"
+      "prefix": "Invoice prefix",
+      "paymentDueBy": "Payment due by"
     },
     "location": "Location",
     "upcoming": "Upcoming events",
@@ -137,7 +191,10 @@
       "to": "until",
       "unknown": "Not announced yet"
     },
-    "published": "Published",
+    "published": {
+      "published": "Published",
+      "not": "Not published"
+    },
     "eventDay": {
       "eventDay": "Day",
       "eventDays": "Days",
@@ -179,6 +236,12 @@
         "nonBinary": "Number of non-binary",
         "mixed": "Number of any"
       },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "nonBinary": "Non-binary",
+        "mixed": "Any"
+      },
       "namedParticipant": {
         "namedParticipant": "Participant Type",
         "namedParticipants": "Participant Types",
@@ -197,6 +260,7 @@
           }
         }
       },
+      "teamComposition": "Team composition",
       "fee": {
         "fee": "Fee",
         "fees": "Fees",
@@ -221,6 +285,104 @@
       "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      },
+      "setup": {
+        "setup": "Competition Setup",
+        "save": {
+          "save": "Save",
+          "error": "An error has occurred when saving the competition setup",
+          "success": "Competition setup successfully saved"
+        },
+        "reset": "Reset setup",
+        "round": {
+          "round": "Round",
+          "name": "Name",
+          "useDefaultSeeding": "Use default seeding for matchups",
+          "required": "Round must be held",
+          "finals": {
+            "long": {
+              "final": {
+                "round": "Finals",
+                "final": "Final",
+                "matchForThirdPlace": "Match for 3rd place"
+              },
+              "semifinal": "Semi-final",
+              "quarterfinal": "Quarter-final",
+              "roundOf16": "Round of 16",
+              "roundOf32": "Round of 32"
+            },
+            "short": {
+              "semifinal": "SF",
+              "quarterfinal": "QF",
+              "roundOf16": "R16",
+              "roundOf32": "R32"
+            }
+          },
+          "remove": "Remove round"
+        },
+        "match": {
+          "match": "Match",
+          "participants": "Matchup",
+          "name": "Name",
+          "executionOrder": "Order of execution",
+          "teams": {
+            "teams": "Number of teams",
+            "unlimited": "Unlimited"
+          },
+          "outcome": {
+            "outcome": "Seeding",
+            "outcomes": "Seedings",
+            "tooltip": "Resulting seedings of this match",
+            "result": "Result"
+          },
+          "remove": "Remove match",
+          "info": {
+            "roundOneFillMatches": "The matches are filled evenly with randomly selected teams."
+          }
+        },
+        "place": {
+          "place": "Place",
+          "places": "Overall placings",
+          "placesOption": {
+            "equal": "Equal (Place = {{place}})",
+            "ascending": "Ascending (Place = Seeding)",
+            "custom": "Custom"
+          }
+        },
+        "tournamentTree": {
+          "generate": "Generate",
+          "generateTree": "Generate tournament tree",
+          "participatingTeams": "Participating Teams",
+          "includeMatchForThirdPlace": "Include match for 3rd place",
+          "overwriteSetup": "Overwrite current setup",
+          "info": {
+            "noOverwrite": "The generated rounds will be added to the end of your current setup."
+          }
+        },
+        "template": {
+          "template": "Competition Setup Template",
+          "templates": "Competition Setup Templates",
+          "name": "Name",
+          "description": "Description",
+          "select": "Select template"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Offset start time",
+          "enable": "Enable start time offsets"
+        },
+        "validation": {
+          "duplicateParticipants": {
+            "one": "The team: {{participants}} is used several times.",
+            "multiple": "The teams: {{participants}} are used several times.",
+            "message": "Please select each team only for one matchup per round."
+          },
+          "duplicatePositions": {
+            "one": "In the order of execution, {{positions}} is used several times.",
+            "multiple": "In the order of execution, {{positions}} are used several times.",
+            "message": "Please select each value only once per round."
+          }
+        },
+        "tableHint": "Enable the quick creation of setups for different competitions."
       }
     },
     "participantRequirement": {
@@ -245,6 +407,13 @@
         "part3": "."
       }
     },
+    "action": {
+      "registrationsReport": {
+        "generate": "Generate registrations result",
+        "download": "Download registrations result"
+      },
+      "produceInvoices": "Produce invoices"
+    },
     "assign": {
       "save": {
         "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
@@ -266,6 +435,7 @@
         "documentType": "Document Type",
         "documentTypes": "Document Types",
         "name": "Name",
+        "description": "Description",
         "tableHint": "Enable the categorization of different documents for an event.",
         "required": {
           "forEvent": "Required for event",
@@ -310,7 +480,43 @@
     "participants": "Participants",
     "tabs": {
       "general": "General",
-      "settings": "Settings"
+      "registrations": "Registrations",
+      "settings": "Settings",
+      "actions": "Actions",
+      "organisation": "Organisation"
+    }
+  },
+  "task": {
+    "task": "Task",
+    "tasks": "Tasks",
+    "myTasks": "My open tasks",
+    "name" : "Title",
+    "dueDate": "Due date",
+    "state": "State",
+    "OPEN" : "Open",
+    "IN_PROGRESS" : "In Progress",
+    "DONE" : "Done",
+    "CANCELED" : "Canceled",
+    "responsibleUsers": "Responsible"
+  },
+  "work": {
+    "type": {
+      "type": "Work Type",
+      "types": "Work Types",
+      "tableHint": "Enable the planning of work shifts for an event.",
+      "noneAvailable": "No work types exist yet."
+    },
+    "shift" : {
+      "shift" : "Shift",
+      "shifts" : "Shifts",
+      "myShifts" : "My Shifts",
+      "plan": "Shift Schedule",
+      "timeFrom": "Start",
+      "timeTo": "End",
+      "minUser": "Min. Persons",
+      "maxUser": "Max. Persons",
+      "remark": "Remark",
+      "assignedUsers": "Assigned Persons"
     }
   },
   "participantRequirement": {
@@ -449,7 +655,43 @@
     "tabs": {
       "competitionTemplates": "Competition templates",
       "eventElements": "Event elements",
-      "competitionElements": "Competition elements"
+      "competitionElements": "Competition elements",
+      "globalSettings": "Global settings"
+    }
+  },
+  "contact": {
+    "name": "Name",
+    "zip": "Zip code",
+    "city": "City",
+    "street": "Street (with No.)",
+    "email": "Email",
+    "information": "Contact information",
+    "contacts": "Contacts information",
+    "global": "Globally assigned contact information",
+    "tableHint": {
+      "1": "Used as sender for invoicing.",
+      "2": "The assignments can be made in the ",
+      "3": "global settings",
+      "4": "."
+    }
+  },
+  "invoice": {
+    "bank": {
+      "accountData": {
+        "holder": "Holder",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bank": "Bank"
+      },
+      "account": "Bank account",
+      "accounts": "Bank accounts",
+      "global": "Globally assigned bank account",
+      "tableHint": {
+        "1": "Used as payee for invoicing.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      }
     }
   },
   "captcha": {

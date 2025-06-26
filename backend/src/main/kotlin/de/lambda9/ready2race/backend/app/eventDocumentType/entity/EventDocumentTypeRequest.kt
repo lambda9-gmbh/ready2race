@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.validation.validators.StringValidators.notB
 
 data class EventDocumentTypeRequest(
     val name: String,
+    val description: String?,
     val required: Boolean,
     val confirmationRequired: Boolean,
 ): Validatable {
@@ -16,6 +17,7 @@ data class EventDocumentTypeRequest(
     companion object {
         val example get() = EventDocumentTypeRequest(
             name = "Wettkampfregeln",
+            description = null,
             required = true,
             confirmationRequired = true,
         )

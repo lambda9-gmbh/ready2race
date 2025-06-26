@@ -1,4 +1,4 @@
-import {Box, Divider, Grid2, Stack} from '@mui/material'
+import {Box, Card, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventDayRoute, eventRoute} from '@routes'
@@ -7,7 +7,6 @@ import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssi
 import {AutocompleteOption} from '@utils/types.ts'
 import {competitionLabelName} from '@components/event/competition/common.ts'
 import {useState} from 'react'
-import EntityDetailsEntry from '@components/EntityDetailsEntry.tsx'
 import {getEventDay, getCompetitions} from '@api/sdk.gen.ts'
 
 const EventDayPage = () => {
@@ -74,37 +73,32 @@ const EventDayPage = () => {
         })) ?? []
 
     return (
-        <Grid2 container justifyContent="space-between" direction="row" spacing={2}>
-            <Box sx={{flex: 1, maxWidth: 600}}>
-                {(eventDayData && (
-                    <Stack spacing={2}>
-                        <EntityDetailsEntry
-                            content={
-                                eventDayData.date +
-                                (eventDayData.name ? ' | ' + eventDayData.name : '')
-                            }
-                            variant="h1"
-                        />
-                        <EntityDetailsEntry content={eventDayData.description} />
-                    </Stack>
-                )) ||
-                    (eventDayPending && <Throbber />)}
-            </Box>
-            <Divider orientation="vertical" />
-            <Box sx={{flex: 1, maxWidth: 400}}>
-                {(competitionsData && assignedCompetitionsData && (
-                    <CompetitionAndDayAssignment
-                        entityPathId={eventDayId}
-                        options={selection}
-                        assignedEntities={assignedCompetitions}
-                        assignEntityLabel={t('event.competition.competition')}
-                        competitionsToDay={true}
-                        onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
-                    />
-                )) ||
-                    ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}
-            </Box>
-        </Grid2>
+        <Box>
+            {(eventDayData && (
+                <Box sx={{display: 'flex', flexDirection: 'column', gap: 4}}>
+                    <Typography variant={'h1'}>
+                        {eventDayData.date + (eventDayData.name ? ' | ' + eventDayData.name : '')}
+                    </Typography>
+                    {eventDayData.description && (
+                        <Typography>{eventDayData.description}</Typography>
+                    )}
+                    <Card sx={{p: 2}}>
+                        {(competitionsData && assignedCompetitionsData && (
+                            <CompetitionAndDayAssignment
+                                entityPathId={eventDayId}
+                                options={selection}
+                                assignedEntities={assignedCompetitions}
+                                assignEntityLabel={t('event.competition.competition')}
+                                competitionsToDay={true}
+                                onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
+                            />
+                        )) ||
+                            ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}
+                    </Card>
+                </Box>
+            )) ||
+                (eventDayPending && <Throbber />)}
+        </Box>
     )
 }
 

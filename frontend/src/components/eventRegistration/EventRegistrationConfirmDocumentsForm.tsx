@@ -63,6 +63,9 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                                 required={true}
                                 horizontal={true}
                             />
+                            {type.description &&
+                                <Typography>{type.description}</Typography>
+                            }
                             {type.files.map(f => (
                                 <Stack direction={'row'} alignItems={'center'}>
                                     <Button
@@ -87,6 +90,9 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                     {additionalDocs.map(type => (
                         <Stack key={type.id}>
                             <Typography>{type.name}</Typography>
+                            {type.description &&
+                                <Typography>{type.description}</Typography>
+                            }
                             {type.files.map(f => (
                                 <Box key={f.id}>
                                     <Button

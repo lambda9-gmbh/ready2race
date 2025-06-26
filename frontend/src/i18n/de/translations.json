@@ -9,10 +9,12 @@
     "delete": "Löschen",
     "edit": "Bearbeiten",
     "selected": "Ausgewählt",
+    "manage": "Verwalten",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
     },
+    "organisation": "Organisation",
     "form": {
       "autocomplete": {
         "noOptions": "Keine Auswahl",
@@ -33,12 +35,22 @@
             "integer": "Bitte geben Sie eine ganze Zahl ein.",
             "number": "Bitte geben Sie eine gültige Zahl ein."
           },
-          "range": "Bitte wählen Sie eine Zahl zwischen {{min}} und {{max}}."
+          "value": {
+            "messageStart": "Bitte wählen Sie eine Zahl ",
+            "min": "über {{min}}.",
+            "max": "unter {{max}}.",
+            "range": "zwischen {{min}} und {{max}}."
+          },
+          "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
         }
       },
+      "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
-      "selectFile": "Datei auswählen"
+      "selectFile": "Datei auswählen",
+      "select": {
+        "none": "Keine"
+      }
     },
     "load": {
       "error": {
@@ -51,6 +63,7 @@
     },
     "ok": "Ok",
     "save": "Speichern",
+    "saveAndNew": "Speichern und Neu",
     "search": "Suchen",
     "back": "Zurück",
     "next": "Weiter",
@@ -58,6 +71,43 @@
     "remove": "Entfernen",
     "language": {
       "menu": "Sprache auswählen"
+    }
+  },
+  "format": {
+    "date": "dd.MM.yyyy",
+    "datetime": "dd.MM.yyyy, HH:mm"
+  },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
+        "2": "In den ",
+        "3": "globalen Einstellungen",
+        "4": " können die Zuweisungen vorgenommen werden."
+      },
+      "template": "Dokumentvorlage",
+      "templates": "Dokumentvorlagen",
+      "type": {
+        "INVOICE": "Rechnung",
+        "REGISTRATION_REPORT": "Meldeergebnis"
+      },
+      "none": "Keine Vorlage",
+      "name": "Name",
+      "file": {
+        "choose": "Vorlage auswählen",
+        "change": "Vorlage ändern",
+        "missing": "Bitte wählen Sie ein Dokument aus."
+      },
+      "pagePadding": {
+        "top": "Rand oben",
+        "left": "Rand links",
+        "right": "Rand rechts",
+        "bottom": "Rand unten"
+      },
+      "assignments": {
+        "global": "Global zugewiesene Vorlagen",
+        "event": "Für Veranstaltung zugewiesene Vorlagen"
+      }
     }
   },
   "decimal": {
@@ -87,7 +137,9 @@
     "firstname": "Vorname",
     "lastname": "Nachname",
     "gender": "Geschlecht",
-    "phone": "Telefon"
+    "phone": "Telefon",
+    "remark": "Anmerkung",
+    "color" : "Farbe"
   },
   "navigation": {
     "titles": {
@@ -115,7 +167,8 @@
       "title": "Mitglied",
       "year": "Geburtsjahr",
       "external": "Extern",
-      "externalClub": "Externer Verein"
+      "externalClub": "Externer Verein",
+      "usedInRegistration": "In Meldung"
     }
   },
   "event": {
@@ -125,7 +178,8 @@
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
     "invoice": {
-      "prefix": "Rechnungspräfix"
+      "prefix": "Rechnungspräfix",
+      "paymentDueBy": "Zahlungstermin Meldegebühren"
     },
     "location": "Ort",
     "upcoming": "Anstehende Veranstaltungen",
@@ -137,7 +191,10 @@
       "to": "bis",
       "unknown": "Noch nicht bekannt gegeben"
     },
-    "published": "Veröffentlicht",
+    "published": {
+      "published": "Veröffentlicht",
+      "not": "Nicht veröffentlicht"
+    },
     "eventDay": {
       "eventDay": "Tag",
       "eventDays": "Tage",
@@ -176,8 +233,14 @@
       "count": {
         "males": "Anzahl Männer",
         "females": "Anzahl Frauen",
-        "nonBinary": "Anzahl nichtbinäre Personen",
+        "nonBinary": "Anzahl nicht-binäre Personen",
         "mixed": "Anzahl Beliebige"
+      },
+      "gender": {
+        "male": "Männlich",
+        "female": "Weiblich",
+        "nonBinary": "Nicht-binär",
+        "mixed": "Beliebig"
       },
       "namedParticipant": {
         "namedParticipant": "Teilnehmertyp",
@@ -197,6 +260,7 @@
           }
         }
       },
+      "teamComposition": "Teamzusammensetzung",
       "fee": {
         "fee": "Gebühr",
         "fees": "Gebühren",
@@ -205,7 +269,7 @@
         "amount": "Menge",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
-        "tableHint": "Definiert mögliche Gebühren eines Wettkampfs.",
+        "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
@@ -221,6 +285,99 @@
       "assignedDays": "Wettkampftage",
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+      },
+      "setup": {
+        "setup": "Wettbewerbsablauf",
+        "save": {
+          "save": "Speichern",
+          "error": "Ein Fehler ist aufgetreten - Der Wettbewerbsablauf konnte nicht gespeichert werden",
+          "success": "Wettbewerbsablauf erfolgreich gespeichert"
+        },
+        "reset": "Ablauf zurücksetzen",
+        "round": {
+          "round": "Runde",
+          "name": "Name",
+          "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
+          "required": "Runde muss durchgeführt werden",
+          "finals": {
+            "long": {
+              "final": {
+                "round": "Finalrunde",
+                "final": "Finale",
+                "matchForThirdPlace": "Partie um Platz 3"
+              },
+              "semifinal": "Halbfinale",
+              "quarterfinal": "Viertelfinale",
+              "roundOf16": "Achtelfinale",
+              "roundOf32": "Sechzehntelfinale"
+            },
+            "short": {
+              "semifinal": "HF",
+              "quarterfinal": "VF",
+              "roundOf16": "AF",
+              "roundOf32": "SF"
+            }
+          },
+          "remove": "Runde entfernen"
+        },
+        "match": {
+          "match": "Partie",
+          "participants": "Matchup",
+          "name": "Name",
+          "executionOrder": "Durchführungsreihenfolge",
+          "teams": {
+            "teams": "Teamanzahl",
+            "unlimited": "Unbegrenzt"
+          },
+          "outcome": {
+            "outcome": "Setzung",
+            "outcomes": "Setzungen",
+            "tooltip": "Resultierende Setzungen dieser Partie",
+            "result": "Ergebnis"
+          },
+          "remove": "Partie entfernen",
+          "info": {
+            "roundOneFillMatches": "Die Partien werden gleichmäßig mit zufällig gewählten Teams befüllt."
+          }
+        },
+        "place": {
+          "place": "Platz",
+          "places": "Gesamtplatzierungen",
+          "placesOption": {
+            "equal": "Gleichgestellt (Platz = {{place}})",
+            "ascending": "Aufsteigend (Platz = Setzung)",
+            "custom": "Benutzerdefiniert"
+          }
+        },
+        "tournamentTree": {
+          "generate": "Generieren",
+          "generateTree": "Turnierbaum generieren",
+          "participatingTeams": "Teilnehmende Teams",
+          "includeMatchForThirdPlace": "Partie um Platz 3 erstellen",
+          "overwriteSetup": "Bisherigen Ablauf überschreiben",
+          "info": {
+            "noOverwrite": "Die generierten Runden werden an das Ende des bisherigen Ablaufs angehängt."
+          }
+        },
+        "template": {
+          "template": "Vorlage für Wettbewerbsablauf",
+          "templates": "Vorlagen für Wettbewerbsabläufe",
+          "name": "Name",
+          "description": "Beschreibung",
+          "select": "Vorlage auswählen"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Versetzte Startzeit",
+          "enable": "Versetzte Startzeiten erlauben"
+        },
+        "validation": {
+          "duplicateParticipants": {
+            "one": "Das Team: {{participants}} wird mehrfach verwendet.",
+            "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
+            "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
+          }
+        },
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
       }
     },
     "participantRequirement": {
@@ -245,6 +402,13 @@
         "part3": " erstellt oder bearbeitet werden."
       }
     },
+    "action": {
+      "registrationsReport": {
+        "generate": "Erzeuge Meldeergebnis",
+        "download": "Download Meldeergebnis"
+      },
+      "produceInvoices": "Rechnungen erstellen"
+    },
     "assign": {
       "save": {
         "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
@@ -266,6 +430,7 @@
         "documentType": "Dokumenttyp",
         "documentTypes": "Dokumenttypen",
         "name": "Name",
+        "description": "Beschreibung",
         "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
         "required": {
           "forEvent": "Erforderlich für Veranstaltung",
@@ -291,7 +456,7 @@
       "teamCompetition": "Teamwettkampf",
       "males": "Männer",
       "females": "Frauen",
-      "nonBinary": "Nichtbinäre Personen",
+      "nonBinary": "Nicht-binäre Personen",
       "mixed": "Beliebig",
       "summary": "Zusammenfassung",
       "schedule": "Programm",
@@ -310,7 +475,43 @@
     "participants": "Teilnehmende",
     "tabs": {
       "general": "Allgemein",
-      "settings": "Einstellungen"
+      "registrations": "Meldungen",
+      "settings": "Einstellungen",
+      "actions": "Aktionen",
+      "organisation": "Organisation"
+    }
+  },
+  "task": {
+    "task": "Aufgabe",
+    "tasks": "Aufgaben",
+    "myTasks": "Meine Aufgaben",
+    "name": "Titel",
+    "dueDate": "Fälligkeitsdatum",
+    "state": "Status",
+    "OPEN": "Offen",
+    "IN_PROGRESS": "In Bearbeitung",
+    "DONE": "Erledigt",
+    "CANCELED": "Abgebrochen",
+    "responsibleUsers": "Verantwortlich"
+  },
+  "work": {
+    "type": {
+      "type": "Arbeitsart",
+      "types": "Arbeitsarten",
+      "tableHint": "Ermöglichen das Planen von Schichten für eine Veranstaltung.",
+      "noneAvailable": "Es wurden noch keine Arbeitsarten angelegt."
+    },
+    "shift": {
+      "shift": "Schicht",
+      "shifts": "Schichten",
+      "myShifts": "Meine Schichten",
+      "plan": "Schichtplan",
+      "timeFrom": "Beginn",
+      "timeTo": "Ende",
+      "minUser": "Min. Personen",
+      "maxUser": "Max. Personen",
+      "remark": "Anmerkung",
+      "assignedUsers": "Eingeteilte Personen"
     }
   },
   "participantRequirement": {
@@ -449,7 +650,43 @@
     "tabs": {
       "competitionTemplates": "Vorlagen Wettkampf",
       "eventElements": "Komponenten Veranstaltung",
-      "competitionElements": "Komponenten Wettkampf"
+      "competitionElements": "Komponenten Wettkampf",
+      "globalSettings": "Globale Einstellungen"
+    }
+  },
+  "contact": {
+    "name": "Name",
+    "zip": "PLZ",
+    "city": "Ort",
+    "street": "Straße (mit Hausnummer)",
+    "email": "E-Mail",
+    "information": "Kontaktinformation",
+    "contacts": "Kontaktinformationen",
+    "global": "Global zugewiesene Kontaktinformation",
+    "tableHint": {
+      "1": "Werden für die Rechnungsstellung als Absender verwendet.",
+      "2": "In den ",
+      "3": "globalen Einstellungen",
+      "4": " können die Zuweisungen vorgenommen werden."
+    }
+  },
+  "invoice": {
+    "bank": {
+      "accountData": {
+        "holder": "Kontoinhaber",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bank": "Bank"
+      },
+      "account": "Bankverbindung",
+      "accounts": "Bankverbindungen",
+      "global": "Global zugewiesene Bankverbindung",
+      "tableHint": {
+        "1": "Werden für die Rechnungsstellung als Empfängerkonto verwendet.",
+        "2": "In den ",
+        "3": "globalen Einstellungen",
+        "4": " können die Zuweisungen vorgenommen werden."
+      }
     }
   },
   "captcha": {

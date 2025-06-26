@@ -16,7 +16,7 @@ import FormInputNumber from '../form/input/FormInputNumber.tsx'
 import {clubIndexRoute} from '@routes'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
-import {FormInputAutocompleteClub} from '@components/form/input/FormInputAutocompleteClub.tsx'
+import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
 
 type ParticipantForm = {
     firstname: string
@@ -99,7 +99,7 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                         },
                     ]}
                 />
-                <FormInputNumber name={'year'} label={t('club.participant.year')} />
+                <FormInputNumber required name={'year'} label={t('club.participant.year')} />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
                 <Stack direction="row" spacing={2} alignItems={'center'}>
                     <FormInputCheckbox
@@ -108,7 +108,7 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                         label={t('club.participant.external')}
                     />
                     <Box flex={1}>
-                        <FormInputAutocompleteClub
+                        <AutocompleteClub
                             disabled={!isExternal}
                             name={`externalClubName`}
                             label={t('club.club')}

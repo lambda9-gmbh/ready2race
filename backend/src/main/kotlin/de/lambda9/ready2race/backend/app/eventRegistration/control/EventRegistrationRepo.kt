@@ -20,6 +20,21 @@ object EventRegistrationRepo {
 
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
+    fun delete(id: UUID) = EVENT_REGISTRATION.delete { ID.eq(id) }
+
+    fun getIdsByEvent(
+        eventId: UUID
+    ): JIO<List<UUID>> = Jooq.query {
+        with(EVENT_REGISTRATION) {
+            select(ID)
+                .from(this)
+                .where(EVENT.eq(eventId))
+                .fetch {
+                    it.value1()
+                }
+        }
+    }
+
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
         EVENT_REGISTRATION.update(f) {
             EVENT_REGISTRATION.ID.eq(id)
@@ -46,8 +61,38 @@ object EventRegistrationRepo {
         }
     }
 
+    fun countForEvent(
+        eventId: UUID,
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            fetchCount(
+                this,
+                DSL.and(
+                    search.metaSearch(searchFields()),
+                    EVENT_ID.eq(eventId)
+                )
+            )
+        }
+    }
+
+    fun pageForEvent(
+        eventId: UUID,
+        params: PaginationParameters<EventRegistrationViewSort>
+    ): JIO<List<EventRegistrationsViewRecord>> = Jooq.query {
+        with(EVENT_REGISTRATIONS_VIEW) {
+            selectFrom(this)
+                .page(params, searchFields()) {
+                    EVENT_ID.eq(eventId)
+                }
+                .fetch()
+        }
+    }
+
     fun findByEventAndClub(eventId: UUID, clubId: UUID) =
         EVENT_REGISTRATION.findOneBy { EVENT_REGISTRATION.EVENT.eq(eventId).and(EVENT_REGISTRATION.CLUB.eq(clubId)) }
+
+    fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
     fun getEventRegistrationInfo(eventId: UUID): JIO<EventRegistrationInfoDto?> = Jooq.query {
 
@@ -142,6 +187,7 @@ object EventRegistrationRepo {
     ) = DSL.select(
         EVENT_DOCUMENT_TYPE.ID,
         EVENT_DOCUMENT_TYPE.NAME,
+        EVENT_DOCUMENT_TYPE.DESCRIPTION,
         EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED,
         documents
     ).from(EVENT_DOCUMENT_TYPE)
@@ -155,6 +201,7 @@ object EventRegistrationRepo {
                 EventRegistrationDocumentTypeDto(
                     it[EVENT_DOCUMENT_TYPE.ID]!!,
                     it[EVENT_DOCUMENT_TYPE.NAME]!!,
+                    it[EVENT_DOCUMENT_TYPE.DESCRIPTION],
                     it[EVENT_DOCUMENT_TYPE.CONFIRMATION_REQUIRED]!!,
                     it[documents]
                 )
@@ -185,7 +232,8 @@ object EventRegistrationRepo {
         alias: String
     ) = DSL.select(
         COMPETITION_VIEW.ID,
-        COMPETITION_VIEW.IDENTIFIER,
+        COMPETITION_VIEW.IDENTIFIER_PREFIX,
+        COMPETITION_VIEW.IDENTIFIER_SUFFIX,
         COMPETITION_VIEW.NAME,
         COMPETITION_VIEW.SHORT_NAME,
         COMPETITION_VIEW.DESCRIPTION,
@@ -203,7 +251,7 @@ object EventRegistrationRepo {
             it.map {
                 EventRegistrationCompetitionDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[COMPETITION_VIEW.IDENTIFIER]!!,
+                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + (it[COMPETITION_VIEW.IDENTIFIER_SUFFIX] ?: ""),
                     it[COMPETITION_VIEW.NAME]!!,
                     it[COMPETITION_VIEW.SHORT_NAME],
                     it[COMPETITION_VIEW.DESCRIPTION],
@@ -334,6 +382,7 @@ object EventRegistrationRepo {
             teams
         ).from(COMPETITION_VIEW)
             .where(COMPETITION_VIEW.TOTAL_COUNT.greaterThan(1))
+            .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
             .orderBy(COMPETITION_VIEW.NAME)
             .asMultiset("teamCompetitions")
             .convertFrom {
@@ -402,6 +451,7 @@ object EventRegistrationRepo {
         )
         .where(COMPETITION_VIEW.TOTAL_COUNT.eq(1))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
+        .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
         .asMultiset("singleCompetitions")
         .convertFrom {
             it!!.map {

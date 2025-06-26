@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {Fragment, useState} from 'react'
 import {Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography} from '@mui/material'
 import {ClockIcon} from '@mui/x-date-pickers'
 import {Assignment, Groups, Message} from '@mui/icons-material'
@@ -52,9 +52,9 @@ export function EventRegistrationsWidget() {
                     <React.Fragment>
                         <List>
                             {registrations?.data?.map((registration, index) => (
-                                <>
+                                <Fragment key={registration.id}>
                                     {index !== 0 && <Divider variant={'middle'} />}
-                                    <ListItem key={registration.id}>
+                                    <ListItem>
                                         <ListItemText
                                             primary={
                                                 <Stack
@@ -62,21 +62,21 @@ export function EventRegistrationsWidget() {
                                                     spacing={2}
                                                     alignItems={'center'}>
                                                     <Link
-                                                        to={'/event/$eventId'}
-                                                        params={{eventId: registration.eventId}}>
-                                                        <Button>
-                                                            <Typography color={'primary'}>
-                                                                {registration.eventName}
-                                                            </Typography>
-                                                        </Button>
-                                                    </Link>
-                                                    <Typography>-</Typography>
-                                                    <Link
                                                         to={'/club/$clubId'}
                                                         params={{clubId: registration.clubId}}>
                                                         <Button color={'primary'}>
                                                             <Typography>
                                                                 {registration.clubName}
+                                                            </Typography>
+                                                        </Button>
+                                                    </Link>
+                                                    <Typography>|</Typography>
+                                                    <Link
+                                                        to={'/event/$eventId'}
+                                                        params={{eventId: registration.eventId}}>
+                                                        <Button>
+                                                            <Typography color={'primary'}>
+                                                                {registration.eventName}
                                                             </Typography>
                                                         </Button>
                                                     </Link>
@@ -141,7 +141,7 @@ export function EventRegistrationsWidget() {
                                             }
                                         />
                                     </ListItem>
-                                </>
+                                </Fragment>
                             ))}
                         </List>
                         <EventRegistrationMessageDialog

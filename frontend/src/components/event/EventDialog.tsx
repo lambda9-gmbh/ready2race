@@ -10,6 +10,7 @@ import {useCallback} from 'react'
 import {EventDto, EventRequest} from '@api/types.gen.ts'
 import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import FormInputDate from "@components/form/input/FormInputDate.tsx";
 
 type EventForm = {
     name: string
@@ -19,6 +20,7 @@ type EventForm = {
     registrationAvailableTo: string
     invoicePrefix: string
     published: boolean
+    paymentDueBy: string
 }
 
 const addAction = (formData: EventForm) => {
@@ -45,6 +47,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         registrationAvailableTo: '',
         invoicePrefix: '',
         published: false,
+        paymentDueBy: '',
     }
 
     const formContext = useForm<EventForm>()
@@ -64,7 +67,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <FormInputText name={'name'} label={t('event.name')} required />
                 <FormInputText name={'description'} label={t('event.description')} />
                 <FormInputText name={'location'} label={t('event.location')} />
-                <FormInputCheckbox name={'published'} label={t('event.published')} />
+                <FormInputCheckbox name={'published'} label={t('event.published.published')} />
                 <FormInputDateTime
                     name={'registrationAvailableFrom'}
                     label={t('event.registrationAvailable.timespanFrom')}
@@ -74,6 +77,10 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     label={t('event.registrationAvailable.timespanTo')}
                 />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
+                <FormInputDate
+                    name={'paymentDueBy'}
+                    label={t('event.invoice.paymentDueBy')}
+                />
             </Stack>
         </EntityDialog>
     )
@@ -88,6 +95,7 @@ function mapFormToRequest(formData: EventForm): EventRequest {
         registrationAvailableTo: takeIfNotEmpty(formData.registrationAvailableTo),
         invoicePrefix: takeIfNotEmpty(formData.invoicePrefix),
         published: formData.published,
+        paymentDueBy: takeIfNotEmpty(formData.paymentDueBy)
     }
 }
 
@@ -100,6 +108,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         registrationAvailableTo: dto.registrationAvailableTo ?? '',
         invoicePrefix: dto.invoicePrefix ?? '',
         published: dto.published ?? false,
+        paymentDueBy: dto.paymentDueBy ?? '',
     }
 }
 

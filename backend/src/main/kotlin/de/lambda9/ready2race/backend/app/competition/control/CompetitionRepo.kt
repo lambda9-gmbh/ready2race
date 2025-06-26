@@ -18,13 +18,13 @@ import java.util.*
 object CompetitionRepo {
 
     private fun CompetitionView.searchFields() =
-        listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
+        listOf(NAME, SHORT_NAME, DSL.concat(IDENTIFIER_PREFIX, DSL.coalesce(IDENTIFIER_SUFFIX.cast(String::class.java), "") ), CATEGORY_NAME)
 
     private fun CompetitionForClubView.searchFields() =
-        listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
+        listOf(NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     private fun CompetitionPublicView.searchFields() =
-        listOf(ID, EVENT, NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
+        listOf(NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
 
     fun create(record: CompetitionRecord) = COMPETITION.insertReturning(record) { ID }
 
@@ -47,6 +47,7 @@ object CompetitionRepo {
                                 EVENT.REGISTRATION_AVAILABLE_TO.ge(at)
                             )
                         )
+                        .and(EVENT.PUBLISHED.isTrue)
                 )
         )
     }

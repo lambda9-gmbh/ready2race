@@ -10,9 +10,9 @@ enum class CompetitionRegistrationSort : Sortable {
     CREATED_AT,
     UPDATED_AT;
 
-    override fun toField(): Field<*> = when (this) {
-        CLUB_NAME -> CLUB.NAME
-        CREATED_AT -> COMPETITION_REGISTRATION.CREATED_AT
-        UPDATED_AT -> COMPETITION_REGISTRATION.UPDATED_AT
+    override fun toFields(): List<Field<*>> = when (this) {
+        CLUB_NAME -> listOf(CLUB.NAME)
+        CREATED_AT -> listOf(COMPETITION_REGISTRATION.CREATED_AT)
+        UPDATED_AT -> listOf(COMPETITION_REGISTRATION.UPDATED_AT)
     }
 }

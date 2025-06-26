@@ -14,6 +14,7 @@ fun EventDocumentTypeRequest.toRecord(userId: UUID): App<Nothing, EventDocumentT
             EventDocumentTypeRecord(
                 id = UUID.randomUUID(),
                 name = name,
+                description = description,
                 required = required,
                 confirmationRequired = confirmationRequired,
                 createdAt = now,
@@ -29,6 +30,7 @@ fun EventDocumentTypeRecord.toDto(): App<Nothing, EventDocumentTypeDto> =
         EventDocumentTypeDto(
             id = id,
             name = name,
+            description = description,
             required = required,
             confirmationRequired = confirmationRequired,
         )

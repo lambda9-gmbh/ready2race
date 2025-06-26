@@ -23,7 +23,7 @@ fun AppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
             firstname = firstname!!,
             lastname = lastname!!,
             email = email!!,
-            roles = it
+            roles = it,
         )
     }
 
@@ -34,7 +34,7 @@ fun EveryAppUserWithRolesRecord.appUserDto(): App<Nothing, AppUserDto> =
             firstname = firstname!!,
             lastname = lastname!!,
             email = email!!,
-            roles = it
+            roles = it,
         )
     }
 
@@ -106,9 +106,19 @@ fun AppUserInvitationWithRolesRecord.toAppUser(password: String): App<Nothing, A
         }
     }
 
+fun AppUserRecord.toNameDto(): App<Nothing, AppUserNameDto> =
+    KIO.ok(
+        AppUserNameDto(
+            id = id,
+            firstname = firstname,
+            lastname = lastname
+        )
+    )
+
 fun AppUserNameRecord.toDto(): App<Nothing, AppUserNameDto> =
     KIO.ok(
         AppUserNameDto(
+            id = id!!,
             firstname = firstname!!,
             lastname = lastname!!
         )

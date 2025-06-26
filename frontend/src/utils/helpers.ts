@@ -46,3 +46,13 @@ export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
 }
 
 export const adminId = '00000000-0000-0000-0000-000000000000'
+
+export const eventRegistrationPossible = (from?: string, to?: string) => {
+    return (
+        from !== undefined &&
+        new Date(from) < new Date() &&
+        (to === undefined || new Date(to) > new Date())
+    )
+}
+
+export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A => u.includes(s as A)

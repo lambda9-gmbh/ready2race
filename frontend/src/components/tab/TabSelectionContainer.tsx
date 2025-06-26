@@ -1,11 +1,11 @@
 import {PropsWithChildren} from "react";
 import {Box, Tabs} from "@mui/material";
 
-type Props = PropsWithChildren<{
-    activeTab: number
-    setActiveTab: (index: number) => void
+type Props<TabType extends string> = PropsWithChildren<{
+    activeTab: TabType
+    setActiveTab: (value: TabType) => void
 }>
-const TabSelectionContainer = ({children, ...props}: Props) => {
+const TabSelectionContainer = <TabType extends string,>({children, ...props}: Props<TabType>) => {
     return (
         <Box sx={{borderBottom: 1, borderColor: 'divider'}}>
         <Tabs value={props.activeTab} onChange={(_, v) => props.setActiveTab(v)}>

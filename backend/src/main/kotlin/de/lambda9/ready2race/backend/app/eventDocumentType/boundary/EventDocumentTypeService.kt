@@ -51,6 +51,7 @@ object EventDocumentTypeService {
     ): App<EventDocumentTypeError, ApiResponse.NoData> =
         EventDocumentTypeRepo.update(id) {
             name = request.name
+            description = request.description
             required = request.required
             confirmationRequired = request.confirmationRequired
             updatedAt = LocalDateTime.now()

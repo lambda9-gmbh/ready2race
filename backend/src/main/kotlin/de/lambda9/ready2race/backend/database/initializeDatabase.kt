@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
+import de.lambda9.ready2race.backend.app.sequence.control.SequenceRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
@@ -133,10 +134,6 @@ fun initializeDatabase(env: JEnv) {
             now, allPrivileges, CLUB_REPRESENTATIVE_ROLE, "Club representative", "Club representative role", listOf(
                 Privilege.ReadClubOwn,
                 Privilege.UpdateClubOwn,
-                Privilege.ReadParticipantOwn,
-                Privilege.CreateParticipantOwn,
-                Privilege.UpdateParticipantOwn,
-                Privilege.DeleteParticipantOwn,
                 Privilege.ReadEventOwn,
                 Privilege.ReadRegistrationOwn,
                 Privilege.CreateRegistrationOwn,
@@ -144,6 +141,10 @@ fun initializeDatabase(env: JEnv) {
                 Privilege.DeleteRegistrationOwn
             )
         )
+
+        // Add missing sequences
+
+        !SequenceRepo.addMissing()
 
         App.unit
     }
