@@ -293,8 +293,14 @@ export const clubIndexRoute = createRoute({
     getParentRoute: () => clubRoute,
     path: '/',
     component: () => <ClubPage />,
-    beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readClubOwn)
+    beforeLoad: ({context, location, params}) => {
+        checkAuthWith(
+            context,
+            location,
+            'READ',
+            'CLUB',
+            (user, scope) => scope === 'GLOBAL' || params.clubId === user.clubId
+        )
     },
 })
 
