@@ -11,7 +11,6 @@ import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
 import {
-    readClubOwn,
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
