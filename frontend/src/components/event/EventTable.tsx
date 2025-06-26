@@ -44,7 +44,7 @@ const EventTable = (props: BaseEntityTableProps<EventDto>) => {
         },
         {
             field: 'published',
-            headerName: t('event.published'),
+            headerName: t('event.published.published'),
             minWidth: 110,
             sortable: false,
             requiredPrivilege: readEventGlobal,

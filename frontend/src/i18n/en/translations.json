@@ -187,7 +187,10 @@
       "to": "until",
       "unknown": "Not announced yet"
     },
-    "published": "Published",
+    "published": {
+      "published": "Published",
+      "not": "Not published"
+    },
     "eventDay": {
       "eventDay": "Day",
       "eventDays": "Days",
