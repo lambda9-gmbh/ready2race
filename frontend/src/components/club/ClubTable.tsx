@@ -46,7 +46,7 @@ const ClubTable = (props: BaseEntityTableProps<ClubDto>) => {
     return (
         <EntityTable
             {...props}
-            parentResource={'CLUB'}
+            resource={'CLUB'}
             initialPagination={initialPagination}
             pageSizeOptions={pageSizeOptions}
             initialSort={initialSort}

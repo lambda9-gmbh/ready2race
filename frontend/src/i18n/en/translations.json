@@ -73,6 +73,10 @@
       "menu": "Select language"
     }
   },
+  "format": {
+    "date": "MM/dd/yyyy",
+    "datetime": "MM/dd/yyyy, h:mm a"
+  },
   "document": {
     "template": {
       "tableHint": {

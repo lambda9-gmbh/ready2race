@@ -15,7 +15,7 @@ fun Route.fee() {
     route("/fee") {
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
 
                 val body = !receiveKIO(FeeRequest.example)
                 FeeService.addFee(body, user.id!!)
@@ -24,7 +24,7 @@ fun Route.fee() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<FeeSort>()
                 FeeService.page(params)
             }
@@ -33,7 +33,7 @@ fun Route.fee() {
         route("/{feeId}"){
             put{
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val feeId = !pathParam("feeId", uuid)
 
                     val body = !receiveKIO(FeeRequest.example)
@@ -43,7 +43,7 @@ fun Route.fee() {
 
             delete{
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val feeId = !pathParam("feeId", uuid)
                     FeeService.deleteFee(feeId)
                 }

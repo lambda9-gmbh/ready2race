@@ -120,6 +120,7 @@ object EventRepo {
                                 REGISTRATION_AVAILABLE_TO.ge(at)
                             )
                         )
+                        .and(PUBLISHED.isTrue)
                 )
             )
         }

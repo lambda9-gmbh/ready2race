@@ -3,10 +3,10 @@ import {useEffect, useMemo, useState} from 'react'
 import {debounce} from '@mui/material'
 import {Search} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
-import {ClubSearchDto, getClubNames} from '../../../api'
+import {ClubSearchDto, getClubNames} from '@api/index.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 
-export const FormInputAutocompleteClub = (props: {
+export const AutocompleteClub = (props: {
     name: string
     label: string
     required?: boolean

@@ -15,7 +15,7 @@ fun Route.participantRequirement() {
     route("/participantRequirement") {
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
 
                 val body = !receiveKIO(ParticipantRequirementUpsertDto.example)
                 ParticipantRequirementService.addParticipantRequirement(body, user.id!!)
@@ -24,7 +24,7 @@ fun Route.participantRequirement() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<ParticipantRequirementSort>()
                 ParticipantRequirementService.page(params)
             }
@@ -33,7 +33,7 @@ fun Route.participantRequirement() {
         route("/{participantRequirementId}") {
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
 
                     val body = !receiveKIO(ParticipantRequirementUpsertDto.example)
@@ -47,7 +47,7 @@ fun Route.participantRequirement() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
                     ParticipantRequirementService.deleteParticipantRequirement(participantRequirementId)
                 }

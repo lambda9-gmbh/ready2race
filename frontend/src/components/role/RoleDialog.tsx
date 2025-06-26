@@ -56,7 +56,7 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
     }, [props.entity])
 
     const {data} = useFetch(
-        signal => getPrivileges({signal}),
+        signal => getPrivileges({signal}), // The backend checks for the privilege READUserGlobal (Might be unnecessary since the typescript files have the same privileges listed)
     )
 
     return (

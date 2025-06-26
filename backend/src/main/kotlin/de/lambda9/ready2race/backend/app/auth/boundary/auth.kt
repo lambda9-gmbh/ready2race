@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.auth.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.LoginRequest
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -41,7 +42,7 @@ fun Route.auth() {
 
     get("/privileges") {
         call.respondComprehension {
-            !authenticate()
+            !authenticate(Privilege.ReadUserGlobal)
             AuthService.getAllPrivileges()
         }
     }

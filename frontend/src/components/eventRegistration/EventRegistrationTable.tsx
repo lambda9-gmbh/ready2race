@@ -5,6 +5,7 @@ import {GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
 import {useTranslation} from "react-i18next";
 import {PaginationParameters} from "@utils/ApiUtils.ts";
 import {deleteEventRegistration, getRegistrationsForEvent} from "@api/sdk.gen.ts";
+import {format} from "date-fns";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -31,8 +32,7 @@ const EventRegistrationTable = ({eventId, ...props}: BaseEntityTableProps<EventR
         {
             field: 'createdAt',
             headerName: t('entity.createdAt'),
-            valueGetter: v => v ? new Date(v) : null,
-            type: 'dateTime',
+            valueGetter: v => v ? format(new Date(v), t('format.datetime')) : null,
             minWidth: 200,
             flex: 1
         },

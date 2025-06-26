@@ -31,7 +31,6 @@ fun Application.configureRouting() {
             role()
             event()
             club()
-            participant()
             namedParticipant()
             fee()
             participantRequirement()
