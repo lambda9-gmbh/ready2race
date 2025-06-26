@@ -5,7 +5,7 @@ import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {eventDayName} from '@components/event/common.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import Throbber from '@components/Throbber.tsx'
-import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
+import CompetitionAndDayAssignment from '@components/event/CompetitionAndDayAssignment.tsx'
 import {Fragment, useState} from 'react'
 import {getCompetition, getEvent, getEventDays} from '@api/sdk.gen.ts'
 import TabPanel from '@components/tab/TabPanel.tsx'
@@ -117,11 +117,7 @@ const CompetitionPage = () => {
         }
     }
 
-    const assignedEventDays =
-        assignedEventDaysData?.data.map(value => ({
-            id: value.id,
-            label: eventDayName(value.date, value.name),
-        })) ?? []
+    const assignedEventDays = assignedEventDaysData?.data.map(value => value.id) ?? []
 
     const {data: eventDaysData, pending: eventDaysPending} = useFetch(
         signal => getEventDays({signal, path: {eventId: eventId}}),

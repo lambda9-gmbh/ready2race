@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventDayRoute, eventRoute} from '@routes'
 import Throbber from '@components/Throbber.tsx'
-import CompetitionAndDayAssignment from '@components/event/competitionAndDayAssignment/CompetitionAndDayAssignment.tsx'
+import CompetitionAndDayAssignment from '@components/event/CompetitionAndDayAssignment.tsx'
 import {AutocompleteOption} from '@utils/types.ts'
 import {competitionLabelName} from '@components/event/competition/common.ts'
 import {useState} from 'react'
@@ -48,11 +48,7 @@ const EventDayPage = () => {
             deps: [eventId, eventDayId, reloadDataTrigger],
         },
     )
-    const assignedCompetitions =
-        assignedCompetitionsData?.data.map(value => ({
-            id: value.id,
-            label: competitionLabelName(value.properties.identifier, value.properties.name),
-        })) ?? []
+    const assignedCompetitions = assignedCompetitionsData?.data.map(value => value.id) ?? []
 
     const {data: competitionsData, pending: competitionsPending} = useFetch(
         signal => getCompetitions({signal, path: {eventId: eventId}}),
