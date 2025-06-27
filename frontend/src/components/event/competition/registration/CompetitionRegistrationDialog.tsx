@@ -33,7 +33,7 @@ type CompetitionRegistrationForm = {
 }
 
 const CompetitionRegistrationDialog = (
-    props: BaseEntityDialogProps<CompetitionRegistrationTeamDto> & {
+    {competition, eventId, ...props}: BaseEntityDialogProps<CompetitionRegistrationTeamDto> & {
         competition: CompetitionDto
         eventId: string
     },
@@ -56,7 +56,7 @@ const CompetitionRegistrationDialog = (
                 signal,
                 query: {
                     sort: JSON.stringify([{field: 'NAME', direction: 'ASC'}]),
-                    eventId: props.eventId,
+                    eventId,
                 },
             }),
         {
@@ -69,7 +69,7 @@ const CompetitionRegistrationDialog = (
                     )
                 }
             },
-            deps: [props.eventId],
+            deps: [eventId],
         },
     )
 
@@ -126,7 +126,7 @@ const CompetitionRegistrationDialog = (
 
     const addAction = (formData: CompetitionRegistrationForm) => {
         return addCompetitionRegistration({
-            path: {eventId: props.eventId, competitionId: props.competition.id},
+            path: {eventId, competitionId: competition.id},
             body: mapFormToRequest(formData),
         })
     }
@@ -137,8 +137,8 @@ const CompetitionRegistrationDialog = (
     ) => {
         return updateCompetitionRegistration({
             path: {
-                eventId: props.eventId,
-                competitionId: props.competition.id,
+                eventId,
+                competitionId: competition.id,
                 competitionRegistrationId: entity.id,
             },
             body: mapFormToRequest(formData),
@@ -152,8 +152,8 @@ const CompetitionRegistrationDialog = (
     }
 
     const optionalFees = useMemo(
-        () => props.competition.properties.fees?.filter(f => !f.required) ?? [],
-        [props.competition.id],
+        () => competition.properties.fees?.filter(f => !f.required) ?? [],
+        [competition.id],
     )
 
     const onOpen = useCallback(() => {
@@ -179,7 +179,7 @@ const CompetitionRegistrationDialog = (
                         options={clubs?.data ?? []}
                     />
                 )}
-                {props.competition.properties.namedParticipants.map(
+                {competition.properties.namedParticipants.map(
                     (namedParticipant, namedParticipantIndex) => (
                         <Stack key={`${namedParticipant.id}`} spacing={1}>
                             <TeamNamedParticipantLabel namedParticipant={namedParticipant} />
