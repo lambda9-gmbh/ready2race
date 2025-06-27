@@ -288,6 +288,9 @@
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
+      "registration": {
+        "noEventRegistration": "No registration has been made for this event."
+      },
       "setup": {
         "setup": "Competition Setup",
         "save": {

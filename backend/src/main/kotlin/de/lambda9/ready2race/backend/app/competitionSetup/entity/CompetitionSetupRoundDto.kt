@@ -76,9 +76,6 @@ data class CompetitionSetupRoundDto(
         )
     )
 
-    /*todo validations:
-        - placeOption can not be "custom" if a match in the round has undefined teams
-    */
 
     companion object {
         val example
