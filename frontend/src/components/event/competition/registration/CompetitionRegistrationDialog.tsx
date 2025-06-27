@@ -9,7 +9,7 @@ import {
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CheckboxButtonGroup, useForm, useWatch} from 'react-hook-form-mui'
-import {useCallback, useMemo} from 'react'
+import {useCallback, useMemo, useState} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -17,6 +17,7 @@ import {
     addCompetitionRegistration,
     getClubNames,
     getClubParticipants,
+    getCompetitionRegistrations,
     updateCompetitionRegistration,
 } from '@api/sdk.gen.ts'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
@@ -102,6 +103,16 @@ const CompetitionRegistrationDialog = (
         },
     )
 
+    const [reloadCompetitionRegistrations, setReloadCompetitionRegistrations] = useState(false)
+    const {data: competitionRegistrations} = useFetch(
+        signal =>
+            getCompetitionRegistrations({
+                signal,
+                path: {eventId: props.eventId, competitionId: props.competition.id},
+            }),
+        {deps: [props.eventId, props.competition.id, clubId, reloadCompetitionRegistrations]},
+    )
+
     const participants = useMemo(() => {
         return participantsData?.data ?? []
     }, [participantsData])
@@ -158,6 +169,7 @@ const CompetitionRegistrationDialog = (
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
+        setReloadCompetitionRegistrations(!reloadCompetitionRegistrations)
     }, [props.entity])
 
     return (
@@ -209,6 +221,19 @@ const CompetitionRegistrationDialog = (
                                 countFemales={namedParticipant.countFemales}
                                 countMixed={namedParticipant.countMixed}
                                 countNonBinary={namedParticipant.countNonBinary}
+                                disabledParticipants={competitionRegistrations?.data
+                                    .flatMap(cr =>
+                                        cr.namedParticipants.flatMap(np => np.participants),
+                                    )
+                                    .filter(
+                                        p =>
+                                            props.entity?.namedParticipants
+                                                .flatMap(np => np.participants)
+                                                .find(
+                                                    entityParticipant =>
+                                                        entityParticipant.id === p.id,
+                                                ) === undefined,
+                                    )}
                             />
                         </Stack>
                     ),
