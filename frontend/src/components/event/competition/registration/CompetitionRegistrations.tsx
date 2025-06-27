@@ -4,9 +4,8 @@ import {useEntityAdministration} from '@utils/hooks.ts'
 import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
 import {useTranslation} from 'react-i18next'
-import {useUser} from '@contexts/user/UserContext.ts'
+import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
 import {eventRoute} from '@routes'
-import {readRegistrationGlobal} from '@authorization/privileges.ts'
 import {Link} from '@tanstack/react-router'
 import {Box, Button, Typography} from '@mui/material'
 import {Forward} from '@mui/icons-material'
@@ -17,7 +16,7 @@ type Props = {
 }
 const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
     const {t} = useTranslation()
-    const user = useUser()
+    const user = useAuthenticatedUser()
 
     const {eventId} = eventRoute.useParams()
 
@@ -26,12 +25,8 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
         eventData?.registrationAvailableTo,
     )
 
-    const createRegistrationScope = user.loggedIn
-        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
-        : undefined
-    const updateRegistrationScope = user.loggedIn
-        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
-        : undefined
+    const createRegistrationScope = user.getPrivilegeScope('CREATE', 'REGISTRATION')
+    const updateRegistrationScope = user.getPrivilegeScope('CREATE', 'REGISTRATION')
 
     const competitionRegistrationTeamsProps =
         useEntityAdministration<CompetitionRegistrationTeamDto>(
@@ -49,8 +44,7 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
     console.log(competitionData.registrationCount)
 
     return (
-        (!user.checkPrivilege(readRegistrationGlobal) &&
-            (eventData?.registrationCount ?? 0 > 0) && (
+        (((eventData?.registrationCount ?? 0 > 0) || !user.clubId) && (
                 <>
                     <CompetitionRegistrationDialog
                         {...competitionRegistrationTeamsProps.dialog}
