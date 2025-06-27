@@ -11,14 +11,7 @@ export const DashboardWidget = (props: {
 }) => {
     return (
         <Grid2 size={{xs: props.size}}>
-            <Card
-                variant={'outlined'}
-                sx={{
-                    background:
-                        'linear-gradient(62deg, rgba(255,255,255,1) 48%, ' +
-                        (props.color || 'rgba(42,157,143,0.22)') +
-                        ' 100%)',
-                }}>
+            <Card>
                 <CardHeader action={props.headerAction} subheader={props.header} sx={{pb: 0}} />
                 <CardContent sx={{maxHeight: 300, overflowY: 'scroll'}}>
                     {props.content}

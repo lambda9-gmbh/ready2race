@@ -42,10 +42,9 @@ const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: P
                         sx={[
                             isActive &&
                                 (theme => ({
-                                    color: theme.palette.primary.contrastText,
-                                    backgroundColor: theme.palette.primary.main,
+                                    backgroundColor: theme.palette.primary.light,
                                     '&:hover': {
-                                        backgroundColor: theme.palette.primary.main,
+                                        backgroundColor: theme.palette.primary.light,
                                     },
                                 })),
                         ]}>
