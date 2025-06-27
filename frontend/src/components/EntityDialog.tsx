@@ -33,6 +33,7 @@ type ExtendedEntityDialogProps<
     onEditError?: (error: UpdateError) => void
     title?: string
     showSaveAndNew?: boolean
+    disableSave?: boolean
 }
 
 //todo: add semantic tabs
@@ -56,6 +57,7 @@ const EntityDialog = <
     children,
     title,
     showSaveAndNew,
+    disableSave,
     ...props
 }: PropsWithChildren<EntityDialogProps<Entity, Form, AddError, UpdateError>>) => {
     const {t} = useTranslation()
@@ -144,7 +146,11 @@ const EntityDialog = <
                             submitting={submitting}
                         />
                     )}
-                    <SubmitButton label={t('common.save')} submitting={submitting} />
+                    <SubmitButton
+                        disabled={disableSave}
+                        label={t('common.save')}
+                        submitting={submitting}
+                    />
                 </DialogActions>
             </FormContainer>
         </Dialog>

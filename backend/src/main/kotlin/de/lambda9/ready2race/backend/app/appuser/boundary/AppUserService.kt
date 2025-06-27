@@ -72,9 +72,10 @@ object AppUserService {
 
     fun page(
         params: PaginationParameters<AppUserWithRolesSort>,
+        noClub: Boolean?
     ): App<Nothing, ApiResponse.Page<AppUserDto, AppUserWithRolesSort>> = KIO.comprehension {
-        val total = !AppUserRepo.countWithRoles(params.search).orDie()
-        val page = !AppUserRepo.pageWithRoles(params).orDie()
+        val total = !AppUserRepo.countWithRoles(params.search, noClub).orDie()
+        val page = !AppUserRepo.pageWithRoles(params, noClub).orDie()
 
         page.traverse { it.appUserDto() }.map {
             ApiResponse.Page(
@@ -86,9 +87,10 @@ object AppUserService {
 
     fun pageIncludingAdmins(
         params: PaginationParameters<EveryAppUserWithRolesSort>,
+        noClub: Boolean?
     ): App<Nothing, ApiResponse.Page<AppUserDto, EveryAppUserWithRolesSort>> = KIO.comprehension {
-        val total = !AppUserRepo.countWithRolesIncludingAdmins(params.search).orDie()
-        val page = !AppUserRepo.pageWithRolesIncludingAdmins(params).orDie()
+        val total = !AppUserRepo.countWithRolesIncludingAdmins(params.search, noClub).orDie()
+        val page = !AppUserRepo.pageWithRolesIncludingAdmins(params, noClub).orDie()
 
         page.traverse { it.appUserDto() }.map {
             ApiResponse.Page(

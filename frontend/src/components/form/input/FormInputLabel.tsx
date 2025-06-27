@@ -1,4 +1,4 @@
-import {Box, Stack, Typography} from '@mui/material'
+import {Box, Typography} from '@mui/material'
 import {PropsWithChildren, ReactNode} from 'react'
 import {useTranslation} from 'react-i18next'
 

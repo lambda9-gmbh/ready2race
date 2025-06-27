@@ -8,14 +8,13 @@ import ClubDialog from '../../components/club/ClubDialog.tsx'
 const ClubsPage = () => {
     const {t} = useTranslation()
 
-    const administrationProps = useEntityAdministration<ClubDto>(t('club.club'))
+    const administrationProps = useEntityAdministration<ClubDto>(t('club.club'), {entityCreate: false})
 
     return (
         <Box>
             <ClubTable
                 {...administrationProps.table}
                 title={t('club.clubs')}
-                options={{entityCreate: false}}
             />
             <ClubDialog {...administrationProps.dialog} />
         </Box>

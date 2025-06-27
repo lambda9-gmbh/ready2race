@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -24,7 +25,7 @@ fun Route.event() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.CreateEventGlobal)
 
                 val body = !receiveKIO(EventRequest.example)
                 EventService.addEvent(body, user.id!!)
@@ -67,6 +68,7 @@ fun Route.event() {
             participantRequirementForEvent()
             participantForEvent()
             task()
+            workShift()
 
             get {
                 call.respondComprehension {
@@ -78,7 +80,7 @@ fun Route.event() {
 
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("eventId", uuid)
 
                     val body = !receiveKIO(EventRequest.example)
@@ -88,7 +90,7 @@ fun Route.event() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.DeleteEventGlobal)
                     val id = !pathParam("eventId", uuid)
                     EventService.deleteEvent(id)
                 }

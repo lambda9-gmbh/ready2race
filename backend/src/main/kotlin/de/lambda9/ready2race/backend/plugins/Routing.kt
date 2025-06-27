@@ -17,6 +17,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticip
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
 import de.lambda9.ready2race.backend.app.role.boundary.role
+import de.lambda9.ready2race.backend.app.workType.boundary.workType
 import io.ktor.server.application.*
 import io.ktor.server.plugins.swagger.*
 import io.ktor.server.routing.*
@@ -30,7 +31,6 @@ fun Application.configureRouting() {
             role()
             event()
             club()
-            participant()
             namedParticipant()
             fee()
             participantRequirement()
@@ -42,6 +42,7 @@ fun Application.configureRouting() {
             documentTemplate()
             bankAccount()
             contactInformation()
+            workType()
         }
     }
 }

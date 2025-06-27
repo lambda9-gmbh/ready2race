@@ -1,3 +1,4 @@
+/*
 import {Autocomplete, Box, Divider, IconButton, Stack, TextField, Typography} from '@mui/material'
 import {
     CompetitionSetupMatchOrGroupProps,
@@ -195,7 +196,7 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
                 ))}
             </Stack>
             <Box sx={{alignSelf: 'center', width: 1, display: 'flex', flexDirection: 'column'}}>
-                {/* Todo: Only Select, not Autocomplete */}
+                {/!* Todo: Only Select, not Autocomplete *!/}
                 <Autocomplete
                     options={[
                         {id: addAllMissingMatchupsKey, label: 'All'},
@@ -252,3 +253,4 @@ const CompetitionSetupGroup = ({formContext, roundIndex, fieldInfo, ...props}: P
 }
 
 export default CompetitionSetupGroup
+*/

@@ -25,7 +25,7 @@ fun Route.task() {
 
         post {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 val body = !receiveKIO(TaskUpsertDto.example)
                 TaskService.addTask(body, eventId, user.id!!)
@@ -35,7 +35,7 @@ fun Route.task() {
         route("/{taskId}") {
             put {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val taskId = !pathParam("taskId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     val body = !receiveKIO(TaskUpsertDto.example)
@@ -45,7 +45,7 @@ fun Route.task() {
 
             delete {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.DELETE, Privilege.Resource.EVENT)
+                    !authenticate(Privilege.UpdateEventGlobal)
                     val taskId = !pathParam("taskId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     TaskService.deleteTask(taskId, eventId)

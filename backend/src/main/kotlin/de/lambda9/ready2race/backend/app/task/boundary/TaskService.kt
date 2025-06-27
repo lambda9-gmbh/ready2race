@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.task.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.task.control.*
 import de.lambda9.ready2race.backend.app.task.entity.TaskDto
 import de.lambda9.ready2race.backend.app.task.entity.TaskError
@@ -12,6 +13,7 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noDat
 import de.lambda9.ready2race.backend.database.generated.enums.TaskState
 import de.lambda9.ready2race.backend.database.generated.tables.records.TaskHasResponsibleUserRecord
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -24,7 +26,10 @@ object TaskService {
         request: TaskUpsertDto,
         eventId: UUID,
         userId: UUID
-    ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+    ): App<TaskError, ApiResponse.Created> = KIO.comprehension {
+
+        !checkForClubRepresentatives(request)
+
         val record = !request.toRecord(eventId, userId)
         val created = !TaskRepo.create(record).orDie()
 
@@ -49,6 +54,8 @@ object TaskService {
         userId: UUID,
         eventId: UUID,
     ): App<TaskError, ApiResponse.NoData> = KIO.comprehension {
+
+        !checkForClubRepresentatives(request)
 
         !TaskRepo.update(taskId, eventId) {
             name = request.name
@@ -124,4 +131,14 @@ object TaskService {
             }
         }
 
+    private fun checkForClubRepresentatives(
+        request: TaskUpsertDto,
+    ): App<TaskError, Unit> = KIO.comprehension {
+        val users = !AppUserRepo.getManyById(request.responsibleUsers).orDie()
+        if (users.find { it.club != null } != null) {
+            KIO.fail(TaskError.AssignedAClubRepresentative)
+        } else {
+            unit
+        }
+    }
 }

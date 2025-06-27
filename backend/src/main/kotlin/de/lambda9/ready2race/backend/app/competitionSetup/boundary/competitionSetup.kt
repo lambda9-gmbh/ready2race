@@ -14,7 +14,7 @@ fun Route.competitionSetup(pathParamKey: String) {
     route("/competitionSetup") {
         put {
             call.respondComprehension {
-                val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                val user = !authenticate(Privilege.UpdateEventGlobal)
                 val key = !pathParam(pathParamKey, uuid)
 
                 val body = !receiveKIO(CompetitionSetupDto.example)
@@ -25,6 +25,7 @@ fun Route.competitionSetup(pathParamKey: String) {
 
         get {
             call.respondComprehension {
+                !authenticate(Privilege.ReadEventGlobal)
                 val key = !pathParam(pathParamKey, uuid)
 
                 CompetitionSetupService.getCompetitionSetup(key)

@@ -11,7 +11,7 @@ import {
 import CompetitionSetup from '@components/event/competition/setup/CompetitionSetup.tsx'
 import {useTranslation} from 'react-i18next'
 
-const CompetitionSetupPage = () => {
+const CompetitionSetupForEvent = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
@@ -69,4 +69,4 @@ const CompetitionSetupPage = () => {
     )
 }
 
-export default CompetitionSetupPage
+export default CompetitionSetupForEvent

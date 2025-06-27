@@ -186,7 +186,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                     )
                 }
                 gridProps={{getRowId: row => row.id}}
-                parentResource={'EVENT'}
+                parentResource={'REGISTRATION'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}
                 initialSort={initialSort}

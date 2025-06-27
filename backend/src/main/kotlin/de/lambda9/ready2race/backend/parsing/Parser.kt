@@ -1,16 +1,12 @@
 package de.lambda9.ready2race.backend.parsing
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import de.lambda9.ready2race.backend.calls.requests.RequestError
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
-import de.lambda9.ready2race.backend.config.ParseEnvException
-import de.lambda9.ready2race.backend.kio.unwrap
-import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.Task
-import java.util.UUID
+import java.time.LocalDateTime
+import java.util.*
 import kotlin.enums.enumEntries
-import kotlin.reflect.KClass
 
 fun interface Parser<A : Any> {
 
@@ -22,6 +18,7 @@ fun interface Parser<A : Any> {
 
         val int get() = Parser { it.toInt() }
         val uuid get() = Parser { UUID.fromString(it) }
+        val datetime get() = Parser { LocalDateTime.parse(it) }
         val boolean get() = Parser { it.toBooleanStrict() }
 
         inline fun <reified T : Any> json() = Parser { jsonMapper.readValue<T>(it) }

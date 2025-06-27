@@ -1,35 +1,35 @@
 import {
-    Autocomplete,
     Box,
     Button,
     Dialog,
     DialogActions,
-    TextField,
+    Divider,
+    List,
+    ListItem,
+    Stack,
     Typography,
 } from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
+import {FormContainer, MultiSelectElement, useForm} from 'react-hook-form-mui'
 import {AutocompleteOption} from '@utils/types.ts'
 import {eventRoute} from '@routes'
 import {useState} from 'react'
-import CompetitionAndDayAssignmentList from './CompetitionAndDayAssignmentList.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {assignCompetitionsToEventDay, assignDaysToCompetition} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
+import {Link} from '@tanstack/react-router'
+import InputIcon from '@mui/icons-material/Input'
 
-type AssignmentEntry = {
-    entry: AutocompleteOption
-}
 type AssignmentForm = {
-    selected: AssignmentEntry[]
+    selected: string[]
 }
 
 type Props = {
     entityPathId: string
     options: AutocompleteOption[]
-    assignedEntities: AutocompleteOption[]
+    assignedEntities: string[]
     assignEntityLabel: string
     competitionsToDay: boolean
     reloadData: () => void
@@ -42,17 +42,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     const {eventId} = eventRoute.useParams()
 
     const formContext = useForm<AssignmentForm>({
-        values: {selected: props.assignedEntities.map(value => ({entry: value}))},
-    })
-
-    const {
-        fields: entityFields,
-        append: appendEntity,
-        remove: removeEntity,
-    } = useFieldArray({
-        control: formContext.control,
-        name: 'selected',
-        keyName: 'fieldId',
+        values: {selected: props.assignedEntities},
     })
 
     const [submitting, setSubmitting] = useState(false)
@@ -78,21 +68,18 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
 
     const onSubmit = async (formData: AssignmentForm) => {
         setSubmitting(true)
+        console.log(formData)
         const {error} = competitionsToDay
             ? await assignCompetitionsToEventDay({
                   path: {eventId: eventId, eventDayId: props.entityPathId},
                   body: {
-                      competitions: formData.selected
-                          .map(value => value.entry?.id)
-                          .filter(value => value !== undefined),
+                      competitions: formData.selected,
                   },
               })
             : await assignDaysToCompetition({
                   path: {eventId: eventId, competitionId: props.entityPathId},
                   body: {
-                      days: formData.selected
-                          .map(value => value.entry?.id)
-                          .filter(value => value !== undefined),
+                      days: formData.selected,
                   },
               })
         setSubmitting(false)
@@ -106,15 +93,13 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
         props.reloadData()
     }
 
-    const filteredOptions = props.options.filter(
-        value => !entityFields.some(ar => ar.entry?.id === value?.id),
+    const assignedEntities = props.assignedEntities.map(entityId =>
+        props.options.find(opt => opt?.id === entityId),
     )
 
-    const [autocompleteContent, setAutocompleteContent] = useState<AutocompleteOption>(null)
-
     return (
-        <Box sx={{flex: 1, border: 1, borderRadius: 4, p: 4}}>
-            <Typography variant="h2">
+        <>
+            <Typography variant="h6">
                 {competitionsToDay
                     ? t('event.eventDay.assignedCompetitions')
                     : t('event.competition.assignedDays')}
@@ -124,10 +109,40 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                     {t('common.edit')}
                 </Button>
             )}
-            <CompetitionAndDayAssignmentList
-                assignedEntities={entityFields.map(value => value.entry)}
-                competitionsToDay={competitionsToDay}
-            />
+            <List>
+                {assignedEntities
+                    .filter(field => field !== null)
+                    .map(
+                        (field, index) =>
+                            field && (
+                                <ListItem key={field.id + index}>
+                                    <Stack
+                                        direction="row"
+                                        spacing={2}
+                                        sx={{mt: 1, alignItems: 'center'}}>
+                                        <Link
+                                            to={
+                                                competitionsToDay
+                                                    ? '/event/$eventId/competition/$competitionId'
+                                                    : '/event/$eventId/eventDay/$eventDayId'
+                                            }
+                                            params={
+                                                competitionsToDay
+                                                    ? {eventId: eventId, competitionId: field.id}
+                                                    : {eventId: eventId, eventDayId: field.id}
+                                            }
+                                            style={{alignItems: 'center', display: 'flex'}}>
+                                            <InputIcon />
+                                        </Link>
+                                        <Typography variant="body1">{field.label}</Typography>
+                                    </Stack>
+                                    {index < assignedEntities.length - 1 && (
+                                        <Divider orientation="horizontal" sx={{mt: 1}} />
+                                    )}
+                                </ListItem>
+                            ),
+                    )}
+            </List>
             <Dialog
                 open={dialogOpen}
                 onClose={closeDialog}
@@ -135,25 +150,13 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                 maxWidth={'xs'}
                 className="ready2race">
                 <Box sx={{mx: 4, my: 2}}>
-                    <Autocomplete
-                        value={autocompleteContent}
-                        options={filteredOptions}
-                        onChange={(_e, newValue) => {
-                            if (newValue) {
-                                appendEntity({entry: newValue})
-                                setAutocompleteContent(null)
-                            }
-                        }}
-                        renderInput={params => (
-                            <TextField {...params} placeholder={props.assignEntityLabel} />
-                        )}
-                        sx={{mt: 4}}
-                    />
                     <FormContainer formContext={formContext} onSuccess={onSubmit}>
-                        <CompetitionAndDayAssignmentList
-                            assignedEntities={entityFields.map(value => value.entry)}
-                            competitionsToDay={competitionsToDay}
-                            removeElement={removeEntity}
+                        <MultiSelectElement
+                            name={'selected'}
+                            options={[...props.options]}
+                            showCheckbox
+                            showChips
+                            formControlProps={{sx: {width: 1, mt: 4}}}
                         />
                         <Box sx={{mt: 2}}>
                             <DialogActions>
@@ -166,7 +169,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                     </FormContainer>
                 </Box>
             </Dialog>
-        </Box>
+        </>
     )
 }
 

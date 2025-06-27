@@ -286,11 +286,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                 </Stack>
                             </Box>
                             <Tooltip
-                                title={t('common.delete')}
-                                disableInteractive
-                                slots={{
-                                    transition: Zoom,
-                                }}>
+                                title={t('common.delete')}>
                                 <IconButton
                                     onClick={() => {
                                         removeNamedParticipant(index)
@@ -358,11 +354,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                 </Stack>
                             </Box>
                             <Tooltip
-                                title={t('common.delete')}
-                                disableInteractive
-                                slots={{
-                                    transition: Zoom,
-                                }}>
+                                title={t('common.delete')}>
                                 <IconButton
                                     onClick={() => {
                                         removeFee(index)

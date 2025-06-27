@@ -17,6 +17,7 @@ import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
 import org.jooq.impl.DSL
+import java.time.LocalDateTime
 import java.util.*
 
 object EventRepo {
@@ -106,6 +107,24 @@ object EventRepo {
                 .where(ID.eq(id))
                 .fetchOne()
                 ?.value1()
+        }
+    }
+
+    fun isOpenForRegistration(id: UUID, at: LocalDateTime): JIO<Boolean> = Jooq.query {
+        with(EVENT) {
+            fetchExists(
+                this.where(
+                    ID.eq(id)
+                        .and(REGISTRATION_AVAILABLE_FROM.le(at))
+                        .and(
+                            DSL.or(
+                                REGISTRATION_AVAILABLE_TO.isNull,
+                                REGISTRATION_AVAILABLE_TO.ge(at)
+                            )
+                        )
+                        .and(PUBLISHED.isTrue)
+                )
+            )
         }
     }
 

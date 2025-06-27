@@ -11,7 +11,6 @@ import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
 import {
-    readClubOwn,
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
@@ -20,8 +19,8 @@ import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
 import EventsPage from './pages/event/EventsPage.tsx'
-import EventPage from './pages/event/EventPage.tsx'
-import CompetitionPage from './pages/event/CompetitionPage.tsx'
+import EventPage, {EventTab} from './pages/event/EventPage.tsx'
+import CompetitionPage, {CompetitionTab} from './pages/event/CompetitionPage.tsx'
 import EventDayPage from './pages/event/EventDayPage.tsx'
 import RegistrationPage from './pages/user/RegistrationPage.tsx'
 import ResetPasswordPage from './pages/user/resetPassword/ResetPasswordPage.tsx'
@@ -30,11 +29,10 @@ import VerifyRegistrationPage from './pages/user/VerifyRegistrationPage.tsx'
 import ClubsPage from './pages/club/ClubsPage.tsx'
 import ClubPage from './pages/club/ClubPage.tsx'
 import EventRegistrationCreatePage from './pages/eventRegistration/EventRegistrationCreatePage.tsx'
-import ConfigurationPage from './pages/ConfigurationPage.tsx'
+import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx'
 import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import LandingPage from './pages/LandingPage.tsx'
-import CompetitionSetupPage from './pages/event/CompetitionSetupPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -80,13 +78,14 @@ type LoginSearch = {
     redirect?: string
 }
 
-type TabSearch = {
-    tabIndex?: number
+// TODO: @Type-Safety: page-specific instead of typed like this? because in Links it just builds a union containing all different TabTypes this way (which is still better than just 'string')
+type TabSearch<TabType extends string> = {
+    tab?: TabType
 }
 
-const validateTabSearch = (search: {tabIndex?: number}): TabSearch => {
+const validateTabSearch = <TabType extends string,>(search: TabSearch<TabType>): TabSearch<TabType> => {
     return {
-        tabIndex: search.tabIndex,
+        tab: search.tab,
     }
 }
 
@@ -208,7 +207,7 @@ export const configurationIndexRoute = createRoute({
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, updateEventGlobal)
     },
-    validateSearch: validateTabSearch,
+    validateSearch: validateTabSearch<ConfigurationTab>,
 })
 
 export const eventsRoute = createRoute({
@@ -231,7 +230,7 @@ export const eventIndexRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: '/',
     component: () => <EventPage />,
-    validateSearch: validateTabSearch,
+    validateSearch: validateTabSearch<EventTab>,
 })
 
 export const eventRegisterRoute = createRoute({
@@ -271,16 +270,7 @@ export const competitionIndexRoute = createRoute({
     getParentRoute: () => competitionRoute,
     path: '/',
     component: () => <CompetitionPage />,
-    validateSearch: validateTabSearch,
-})
-
-export const competitionSetupRoute = createRoute({
-    getParentRoute: () => competitionRoute,
-    path: 'competitionSetup',
-    component: () => <CompetitionSetupPage />,
-    beforeLoad: ({context, location}) => {
-        checkAuth(context, location)
-    },
+    validateSearch: validateTabSearch<CompetitionTab>,
 })
 
 export const clubRoute = createRoute({
@@ -292,8 +282,14 @@ export const clubIndexRoute = createRoute({
     getParentRoute: () => clubRoute,
     path: '/',
     component: () => <ClubPage />,
-    beforeLoad: ({context, location}) => {
-        checkAuth(context, location, readClubOwn)
+    beforeLoad: ({context, location, params}) => {
+        checkAuthWith(
+            context,
+            location,
+            'READ',
+            'CLUB',
+            (user, scope) => scope === 'GLOBAL' || params.clubId === user.clubId
+        )
     },
 })
 
@@ -323,7 +319,6 @@ const routeTree = rootRoute.addChildren([
             eventDayRoute.addChildren([eventDayIndexRoute]),
             competitionRoute.addChildren([
                 competitionIndexRoute,
-                competitionSetupRoute
             ]),
             eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),

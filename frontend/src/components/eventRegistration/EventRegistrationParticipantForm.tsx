@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import {useTranslation} from 'react-i18next'
 import {EventRegistrationParticipantUpsertDto, EventRegistrationUpsertDto} from '../../api'
 import {FormInputText} from '../form/input/FormInputText.tsx'
-import {FormInputAutocompleteClub} from '../form/input/FormInputAutocompleteClub.tsx'
+import {AutocompleteClub} from '../club/AutocompleteClub.tsx'
 import FormInputNumber from '../form/input/FormInputNumber.tsx'
 import {useEffect, useMemo, useState} from 'react'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
@@ -127,7 +127,7 @@ export const EventRegistrationParticipantForm = (props: {
                                     onChange={handleChange}
                                 />
                                 <Box flex={1}>
-                                    <FormInputAutocompleteClub
+                                    <AutocompleteClub
                                         name={`participants.${props.index}.externalClubName`}
                                         onChange={handleChange}
                                         disabled={!isExternal}

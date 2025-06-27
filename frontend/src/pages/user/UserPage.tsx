@@ -73,7 +73,7 @@ const UserPage = () => {
     }
 
     const {data} = useFetch(signal => getRoles({signal}), {
-        preCondition: () => user.checkPrivilege(updateUserGlobal),
+        preCondition: () => user.checkPrivilege(updateUserGlobal), // The backend checks for the privilege READUserGlobal
     })
 
     return (

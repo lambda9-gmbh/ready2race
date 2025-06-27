@@ -9,10 +9,12 @@
     "delete": "Delete",
     "edit": "Edit",
     "selected": "Selected",
+    "manage" : "Manage",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
     },
+    "organisation": "Organisation",
     "form": {
       "autocomplete": {
         "noOptions": "No options",
@@ -70,6 +72,10 @@
     "language": {
       "menu": "Select language"
     }
+  },
+  "format": {
+    "date": "MM/dd/yyyy",
+    "datetime": "MM/dd/yyyy, hh:mm a"
   },
   "document": {
     "template": {
@@ -132,7 +138,8 @@
     "lastname": "Lastname",
     "gender": "Gender",
     "phone": "Phone",
-    "remark": "Remark"
+    "remark": "Remark",
+    "color" : "Color"
   },
   "navigation": {
     "titles": {
@@ -160,7 +167,8 @@
       "title": "Member",
       "year": "Year of birth",
       "external": "External",
-      "externalClub": "External club"
+      "externalClub": "External club",
+      "usedInRegistration": "In Registration"
     }
   },
   "event": {
@@ -183,7 +191,10 @@
       "to": "until",
       "unknown": "Not announced yet"
     },
-    "published": "Published",
+    "published": {
+      "published": "Published",
+      "not": "Not published"
+    },
     "eventDay": {
       "eventDay": "Day",
       "eventDays": "Days",
@@ -225,6 +236,12 @@
         "nonBinary": "Number of non-binary",
         "mixed": "Number of any"
       },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "nonBinary": "Non-binary",
+        "mixed": "Any"
+      },
       "namedParticipant": {
         "namedParticipant": "Participant Type",
         "namedParticipants": "Participant Types",
@@ -243,6 +260,7 @@
           }
         }
       },
+      "teamComposition": "Team composition",
       "fee": {
         "fee": "Fee",
         "fees": "Fees",
@@ -462,6 +480,7 @@
     "participants": "Participants",
     "tabs": {
       "general": "General",
+      "registrations": "Registrations",
       "settings": "Settings",
       "actions": "Actions",
       "organisation": "Organisation"
@@ -479,6 +498,26 @@
     "DONE" : "Done",
     "CANCELED" : "Canceled",
     "responsibleUsers": "Responsible"
+  },
+  "work": {
+    "type": {
+      "type": "Work Type",
+      "types": "Work Types",
+      "tableHint": "Enable the planning of work shifts for an event.",
+      "noneAvailable": "No work types exist yet."
+    },
+    "shift" : {
+      "shift" : "Shift",
+      "shifts" : "Shifts",
+      "myShifts" : "My Shifts",
+      "plan": "Shift Schedule",
+      "timeFrom": "Start",
+      "timeTo": "End",
+      "minUser": "Min. Persons",
+      "maxUser": "Max. Persons",
+      "remark": "Remark",
+      "assignedUsers": "Assigned Persons"
+    }
   },
   "participantRequirement": {
     "participantRequirement": "Participant requirement",
