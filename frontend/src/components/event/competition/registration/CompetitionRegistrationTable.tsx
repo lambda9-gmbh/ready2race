@@ -12,6 +12,7 @@ import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {Grid2, Stack, Typography} from '@mui/material'
+import {format} from "date-fns";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -111,9 +112,8 @@ const CompetitionRegistrationTable = (
                 headerName: t('entity.updatedAt'),
                 minWidth: 100,
                 maxWidth: 200,
-                flex:1,
-                type: 'dateTime',
-                valueGetter: v => new Date(v),
+                flex: 1,
+                valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
             },
         ],
         [],

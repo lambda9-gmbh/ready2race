@@ -1,14 +1,14 @@
 import {BaseSyntheticEvent, PropsWithChildren, useEffect, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {FieldValues, FormContainer, UseFormReturn} from 'react-hook-form-mui'
-import {Button, Dialog, DialogActions, DialogContent, DialogProps, DialogTitle} from '@mui/material'
+import {Button, DialogActions, DialogContent, DialogProps, DialogTitle} from '@mui/material'
 import {RequestResult} from '@hey-api/client-fetch'
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import {SubmitButton} from './form/SubmitButton.tsx'
-import DialogCloseButton from './DialogCloseButton.tsx'
 import {GridValidRowModel} from '@mui/x-data-grid'
 import {ApiError} from '@api/types.gen.ts'
+import BaseDialog from "@components/BaseDialog.tsx";
 
 type EntityDialogProps<
     Entity extends GridValidRowModel,
@@ -119,21 +119,18 @@ const EntityDialog = <
     }, [dialogIsOpen, onOpen])
 
     return (
-        <Dialog
+        <BaseDialog
             {...props}
             open={dialogIsOpen}
-            scroll={'paper'}
-            fullWidth={true}
-            maxWidth={props.maxWidth ?? 'sm'}
-            className="ready2race">
+            onClose={handleClose}
+            maxWidth={props.maxWidth ?? 'sm'}>
+            <DialogTitle>
+                {title ?? t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
+            </DialogTitle>
             <FormContainer
                 FormProps={{style: {display: 'contents'}}}
                 formContext={formContext}
                 onSuccess={(data, event) => onSubmit(data, event)}>
-                <DialogTitle>
-                    {title ?? t(`entity.${entity ? 'edit' : 'add'}.action`, {entity: entityName})}
-                </DialogTitle>
-                <DialogCloseButton onClose={handleClose} />
                 <DialogContent dividers={true}>{children}</DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose} disabled={submitting}>
@@ -153,7 +150,7 @@ const EntityDialog = <
                     />
                 </DialogActions>
             </FormContainer>
-        </Dialog>
+        </BaseDialog>
     )
 }
 
