@@ -10,6 +10,7 @@
     "edit": "Bearbeiten",
     "selected": "Ausgewählt",
     "manage": "Verwalten",
+    "all" : "Alle",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."

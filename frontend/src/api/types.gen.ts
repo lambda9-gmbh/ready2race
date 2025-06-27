@@ -428,7 +428,7 @@ export type EventRegistrationCompetitionDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
-    competitionCategory: string
+    competitionCategory?: string
     namedParticipant?: Array<EventRegistrationNamedParticipantDto>
     fees?: Array<EventRegistrationFeeDto>
     days: Array<string>

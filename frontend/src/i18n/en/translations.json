@@ -10,6 +10,7 @@
     "edit": "Edit",
     "selected": "Selected",
     "manage" : "Manage",
+    "all" : "All",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
