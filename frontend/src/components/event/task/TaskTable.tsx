@@ -58,7 +58,7 @@ const TaskTable = (props: BaseEntityTableProps<TaskDto>) => {
         {
             field: 'dueDate',
             headerName: t('task.dueDate'),
-            valueGetter: v => v ? format(new Date(v), t('format.datetime')) : null,
+            valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
             minWidth: 200,
         },
         {
