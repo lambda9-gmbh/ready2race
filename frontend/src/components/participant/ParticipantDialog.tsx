@@ -4,7 +4,7 @@ import EntityDialog from '../EntityDialog.tsx'
 import {Box, Stack, Tooltip} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import {useForm} from 'react-hook-form-mui'
-import {ChangeEvent, useCallback, useState} from 'react'
+import {ChangeEvent, useCallback, useMemo, useState} from 'react'
 import {
     addClubParticipant,
     Gender,
@@ -70,6 +70,8 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
         setIsExternal(props.entity?.external ?? false)
     }, [props.entity])
 
+    const currentYear = useMemo(() => new Date().getFullYear(), [])
+
     return (
         <EntityDialog
             {...props}
@@ -100,7 +102,14 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                         },
                     ]}
                 />
-                <FormInputNumber required name={'year'} label={t('club.participant.year')} />
+                <FormInputNumber
+                    required
+                    name={'year'}
+                    label={t('club.participant.year')}
+                    integer
+                    min={currentYear - 120}
+                    max={currentYear}
+                />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
                 <Stack direction="row" spacing={2} alignItems={'center'}>
                     <FormInputCheckbox
