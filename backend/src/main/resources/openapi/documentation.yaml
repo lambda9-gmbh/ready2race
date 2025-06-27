@@ -4414,6 +4414,8 @@ components:
         paymentDueBy:
           type: string
           format: date
+        registrationCount:
+          type: number
 
     EventPublicDto:
       type: object

@@ -1,6 +1,6 @@
 import {Box, Card, List, ListItem, Stack, Tab, Typography, useTheme} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {eventDayName} from '@components/event/common.ts'
 import {AutocompleteOption} from '@utils/types.ts'
@@ -9,18 +9,15 @@ import CompetitionAndDayAssignment from '@components/event/CompetitionAndDayAssi
 import {Fragment, useState} from 'react'
 import {getCompetition, getEvent, getEventDays} from '@api/sdk.gen.ts'
 import TabPanel from '@components/tab/TabPanel.tsx'
-import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
-import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
-import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {eventRegistrationPossible} from '@utils/helpers.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import CompetitionSetupForEvent from '@components/event/competition/setup/CompetitionSetupForEvent.tsx'
 import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import CompetitionTeamCompositionEntry from '@components/event/competition/CompetitionTeamCompositionEntry.tsx'
+import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
 
 const COMPETITION_TABS = ['general', 'registrations', 'setup'] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
@@ -83,31 +80,6 @@ const CompetitionPage = () => {
             deps: [eventId, competitionId, reloadDataTrigger],
         },
     )
-
-    const registrationPossible = eventRegistrationPossible(
-        eventData?.registrationAvailableFrom,
-        eventData?.registrationAvailableTo,
-    )
-
-    const createRegistrationScope = user.loggedIn
-        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
-        : undefined
-    const updateRegistrationScope = user.loggedIn
-        ? user.getPrivilegeScope('CREATE', 'REGISTRATION')
-        : undefined
-
-    const competitionRegistrationTeamsProps =
-        useEntityAdministration<CompetitionRegistrationTeamDto>(
-            t('event.registration.registration'),
-            {
-                entityCreate:
-                    createRegistrationScope === 'GLOBAL' ||
-                    (createRegistrationScope === 'OWN' && registrationPossible),
-                entityUpdate:
-                    updateRegistrationScope === 'GLOBAL' ||
-                    (updateRegistrationScope === 'OWN' && registrationPossible),
-            },
-        )
 
     const a11yProps = (index: CompetitionTab) => {
         return {
@@ -303,13 +275,9 @@ const CompetitionPage = () => {
                     </TabPanel>
                     {user.loggedIn && (
                         <TabPanel index={'registrations'} activeTab={activeTab}>
-                            <CompetitionRegistrationDialog
-                                {...competitionRegistrationTeamsProps.dialog}
-                                competition={competitionData}
-                                eventId={eventId}
-                            />
-                            <CompetitionRegistrationTable
-                                {...competitionRegistrationTeamsProps.table}
+                            <CompetitionRegistrations
+                                eventData={eventData}
+                                competitionData={competitionData}
                             />
                         </TabPanel>
                     )}

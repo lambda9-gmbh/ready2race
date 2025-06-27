@@ -403,6 +403,7 @@ export type EventDto = {
     published?: boolean
     invoicesProduced?: string
     paymentDueBy?: string
+    registrationCount?: number
 }
 
 export type EventPublicDto = {

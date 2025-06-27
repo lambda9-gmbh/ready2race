@@ -16,6 +16,7 @@ fun Application.configureSerialization() {
             registerJavaTime()
             setSerializationInclusion(JsonInclude.Include.NON_NULL)
             enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
         }
     }
 }
