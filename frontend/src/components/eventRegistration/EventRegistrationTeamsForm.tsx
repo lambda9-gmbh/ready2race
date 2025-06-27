@@ -91,7 +91,7 @@ const TeamInput = (props: {
                         ),
                     )}
                 </Stack>
-                {(props.competition.fees?.length ?? 0) > 0 && (
+                {(props.competition.fees?.filter(f => !f.required)?.length ?? 0) > 0 && (
                     <CheckboxButtonGroup
                         label={t('event.registration.optionalFee')}
                         name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.optionalFees`}
