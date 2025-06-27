@@ -289,7 +289,7 @@
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
       "registration": {
-        "noEventRegistration": "No registration has been made for this event."
+        "noEventRegistration": "No registration from your club has been made for this event yet."
       },
       "setup": {
         "setup": "Competition Setup",
