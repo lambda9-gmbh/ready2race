@@ -7,7 +7,7 @@ import {
 } from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {Box, Button, Divider, IconButton, Stack, Tooltip, Typography, Zoom} from '@mui/material'
+import {Box, Button, Divider, IconButton, Stack, Tooltip, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
