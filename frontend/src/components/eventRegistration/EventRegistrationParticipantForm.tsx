@@ -1,5 +1,5 @@
 import {useFormContext, useWatch} from 'react-hook-form-mui'
-import {Box, IconButton, Paper, Stack, Typography} from '@mui/material'
+import {Box, IconButton, Paper, Stack, Tooltip, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {useTranslation} from 'react-i18next'
 import {EventRegistrationParticipantUpsertDto, EventRegistrationUpsertDto} from '../../api'
@@ -9,7 +9,7 @@ import FormInputNumber from '../form/input/FormInputNumber.tsx'
 import {useEffect, useMemo, useState} from 'react'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
-import {Edit} from '@mui/icons-material'
+import {Edit, HelpOutline} from '@mui/icons-material'
 import {grey} from '@mui/material/colors'
 
 export const EventRegistrationParticipantForm = (props: {
@@ -123,17 +123,26 @@ export const EventRegistrationParticipantForm = (props: {
                             <Stack direction="row" spacing={2} alignItems={'center'}>
                                 <FormInputCheckbox
                                     name={`participants.${props.index}.external`}
-                                    label={t('club.participant.external')}
+                                    label={
+                                        <Stack direction={'row'}>
+                                            {t('club.participant.external')}
+                                            <Tooltip title={t('club.participant.externalHint')}>
+                                                <HelpOutline fontSize={'small'} color={'info'} />
+                                            </Tooltip>
+                                        </Stack>
+                                    }
                                     onChange={handleChange}
                                 />
                                 <Box flex={1}>
-                                    <AutocompleteClub
-                                        name={`participants.${props.index}.externalClubName`}
-                                        onChange={handleChange}
-                                        disabled={!isExternal}
-                                        label={t('club.club')}
-                                        required
-                                    />
+                                    {isExternal && (
+                                        <AutocompleteClub
+                                            name={`participants.${props.index}.externalClubName`}
+                                            onChange={handleChange}
+                                            disabled={!isExternal}
+                                            label={t('club.participant.externalClub')}
+                                            required
+                                        />
+                                    )}
                                 </Box>
                             </Stack>
                         </Stack>

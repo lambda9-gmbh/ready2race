@@ -168,6 +168,7 @@
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club",
+      "externalHint": "Select this option if you want to register a member of another club.",
       "usedInRegistration": "In Registration"
     }
   },

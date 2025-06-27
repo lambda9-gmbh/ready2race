@@ -85,7 +85,6 @@ export const AutocompleteClub = (props: {
                 // @ts-ignore
                 freeSolo: true,
                 filterSelectedOptions: true,
-                autoSelect: true,
                 disabled: props.disabled,
             }}
         />

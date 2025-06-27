@@ -1,7 +1,7 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '../EntityDialog.tsx'
-import {Box, Stack} from '@mui/material'
+import {Box, Stack, Tooltip} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import {useForm} from 'react-hook-form-mui'
 import {ChangeEvent, useCallback, useState} from 'react'
@@ -17,6 +17,7 @@ import {clubIndexRoute} from '@routes'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
+import {HelpOutline} from '@mui/icons-material'
 
 type ParticipantForm = {
     firstname: string
@@ -105,15 +106,24 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                     <FormInputCheckbox
                         onChange={handleExternalChange}
                         name={`external`}
-                        label={t('club.participant.external')}
+                        label={
+                            <Stack direction={'row'}>
+                                {t('club.participant.external')}
+                                <Tooltip title={t('club.participant.externalHint')}>
+                                    <HelpOutline fontSize={'small'} color={'info'} />
+                                </Tooltip>
+                            </Stack>
+                        }
                     />
                     <Box flex={1}>
-                        <AutocompleteClub
-                            disabled={!isExternal}
-                            name={`externalClubName`}
-                            label={t('club.club')}
-                            required
-                        />
+                        {isExternal && (
+                            <AutocompleteClub
+                                disabled={!isExternal}
+                                name={`externalClubName`}
+                                label={t('club.participant.externalClub')}
+                                required
+                            />
+                        )}
                     </Box>
                 </Stack>
             </Stack>

@@ -168,6 +168,7 @@
       "year": "Geburtsjahr",
       "external": "Extern",
       "externalClub": "Externer Verein",
+      "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
       "usedInRegistration": "In Meldung"
     }
   },
@@ -468,7 +469,7 @@
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",
-        "subtitle": "Du bekommst eine Bestätigung per Mail."
+        "subtitle": "Sie bekommen eine Bestätigung per Mail."
       },
       "mostRecent": "Neuste Anmeldungen"
     },
