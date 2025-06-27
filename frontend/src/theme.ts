@@ -1,9 +1,7 @@
 import {createTheme, Theme, ThemeOptions} from '@mui/material'
 import {Locale} from './i18n/config.ts'
 
-const baseThemeOptions: ThemeOptions = {}
-
-const componentOverrides = (_theme: Theme): ThemeOptions => ({
+const baseThemeOptions: ThemeOptions = {
     palette: {
         mode: 'light',
         success: {
@@ -18,11 +16,12 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
         info: {
             main: '#6fb0d4',
         },
-        background: {
-            paper: '#fafafa',
-        },
         common:{
             black: '#1d1d1d'
+        },
+        primary: {
+            main: '#4d9f85',
+            light: '#ecfaf7',
         }
     },
     typography: {
@@ -46,7 +45,17 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
             fontSize: '1rem',
         },
     },
+}
+
+const componentOverrides = (_theme: Theme): ThemeOptions => ({
     components: {
+        MuiAppBar: {
+            styleOverrides: {
+                root: {
+                    background: _theme.palette.primary.light
+                }
+            },
+        },
         MuiButton: {
             styleOverrides: {
                 root: {

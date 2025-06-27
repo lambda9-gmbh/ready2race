@@ -118,7 +118,6 @@ export function ShiftWidget({userId}: {userId: string}) {
         <React.Fragment>
             <DashboardWidget
                 size={12}
-                color={'#9d2a2a38'}
                 header={`${t('work.shift.myShifts')} (${shifts?.pagination.total ?? 0})`}
                 content={
                     <React.Fragment>
