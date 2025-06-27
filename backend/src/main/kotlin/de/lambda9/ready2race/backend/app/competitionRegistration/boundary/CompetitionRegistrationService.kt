@@ -17,6 +17,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionReg
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -156,10 +157,10 @@ object CompetitionRegistrationService {
     ) = KIO.comprehension {
 
         val requirements =
-            !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionId(competitionId)
+            !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionAndNamedParticipantId(competitionId, namedParticipantDto.namedParticipantId)
                 .orDie()
                 .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
-
+        logger.info{requirements}
         val counts: MutableMap<Gender, Int> = mutableMapOf(
             Gender.M to 0,
             Gender.F to 0,
