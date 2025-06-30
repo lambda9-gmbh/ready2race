@@ -18,6 +18,7 @@ import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import CompetitionTeamCompositionEntry from '@components/event/competition/CompetitionTeamCompositionEntry.tsx'
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
+import {eventRegistrationPossible} from '@utils/helpers.ts'
 
 const COMPETITION_TABS = ['general', 'registrations', 'setup'] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
@@ -39,7 +40,7 @@ const CompetitionPage = () => {
         navigate({from: competitionIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const {data: eventData} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
+    const {data: eventData, pending: eventPending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
@@ -113,9 +114,17 @@ const CompetitionPage = () => {
             label: eventDayName(value.date, value.name),
         })) ?? []
 
+    const showRegistrationsTab =
+        (eventData?.registrationCount ?? 0) > 0 ||
+        (user.loggedIn && !user.clubId) ||
+        eventRegistrationPossible(
+            eventData?.registrationAvailableFrom,
+            eventData?.registrationAvailableTo,
+        )
+
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
-            {(competitionData && (
+            {(competitionData && eventData && (
                 <Stack spacing={2}>
                     <Typography variant={'h1'}>
                         {competitionData.properties.identifier +
@@ -124,7 +133,7 @@ const CompetitionPage = () => {
                     </Typography>
                     <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                         <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
-                        {user.loggedIn && (
+                        {user.loggedIn && showRegistrationsTab && (
                             <Tab
                                 label={t('event.registration.registrations')}
                                 {...a11yProps('registrations')}
@@ -273,7 +282,7 @@ const CompetitionPage = () => {
                             </Card>
                         </Box>
                     </TabPanel>
-                    {user.loggedIn && (
+                    {user.loggedIn && showRegistrationsTab && (
                         <TabPanel index={'registrations'} activeTab={activeTab}>
                             <CompetitionRegistrations
                                 eventData={eventData}
@@ -288,7 +297,7 @@ const CompetitionPage = () => {
                     )}
                 </Stack>
             )) ||
-                (competitionPending && <Throbber />)}
+                (competitionPending && eventPending && <Throbber />)}
         </Box>
     )
 }

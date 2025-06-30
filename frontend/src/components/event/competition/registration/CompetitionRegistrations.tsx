@@ -11,7 +11,7 @@ import {Box, Button, Typography} from '@mui/material'
 import {Forward} from '@mui/icons-material'
 
 type Props = {
-    eventData: EventDto | null
+    eventData: EventDto
     competitionData: CompetitionDto
 }
 const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
@@ -21,8 +21,8 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
     const {eventId} = eventRoute.useParams()
 
     const registrationPossible = eventRegistrationPossible(
-        eventData?.registrationAvailableFrom,
-        eventData?.registrationAvailableTo,
+        eventData.registrationAvailableFrom,
+        eventData.registrationAvailableTo,
     )
 
     const createRegistrationScope = user.getPrivilegeScope('CREATE', 'REGISTRATION')
@@ -41,37 +41,31 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
             },
         )
 
-    console.log(competitionData.registrationCount)
-
     return (
-        (((eventData?.registrationCount ?? 0 > 0) || !user.clubId) && (
-                <>
-                    <CompetitionRegistrationDialog
-                        {...competitionRegistrationTeamsProps.dialog}
-                        competition={competitionData}
-                        eventId={eventId}
-                    />
-                    <CompetitionRegistrationTable {...competitionRegistrationTeamsProps.table} />
-                </>
-            )) ||
-        (eventData && (
+        (((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (
             <>
-                {eventRegistrationPossible(
-                    eventData?.registrationAvailableFrom,
-                    eventData?.registrationAvailableTo,
-                ) && (
-                    <Box>
-                        <Typography sx={{mb: 1}}>
-                            {t('event.competition.registration.noEventRegistration')}
-                        </Typography>
-                        <Link to={'/event/$eventId/register'} params={{eventId: eventData?.id}}>
-                            <Button endIcon={<Forward />} variant={'contained'}>
-                                {t('event.registerNow')}
-                            </Button>
-                        </Link>
-                    </Box>
-                )}
+                <CompetitionRegistrationDialog
+                    {...competitionRegistrationTeamsProps.dialog}
+                    competition={competitionData}
+                    eventId={eventId}
+                />
+                <CompetitionRegistrationTable {...competitionRegistrationTeamsProps.table} />
             </>
+        )) ||
+        (eventRegistrationPossible(
+            eventData.registrationAvailableFrom,
+            eventData.registrationAvailableTo,
+        ) && (
+            <Box>
+                <Typography sx={{mb: 1}}>
+                    {t('event.competition.registration.noEventRegistration')}
+                </Typography>
+                <Link to={'/event/$eventId/register'} params={{eventId: eventData.id}}>
+                    <Button endIcon={<Forward />} variant={'contained'}>
+                        {t('event.registerNow')}
+                    </Button>
+                </Link>
+            </Box>
         ))
     )
 }
