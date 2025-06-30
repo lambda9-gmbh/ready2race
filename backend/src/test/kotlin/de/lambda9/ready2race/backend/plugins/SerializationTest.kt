@@ -51,7 +51,5 @@ class SerializationTest {
         }
 
         assertEquals(HttpStatusCode.BadRequest, response.status)
-
-        println(response.bodyAsText())
     }
 }

@@ -401,11 +401,11 @@ select e.id,
        e.location,
        e.registration_available_from,
        e.registration_available_to,
-       e.created_at,
-       count(c.id)  as competition_count,
-       min(ed.date) as event_from,
-       max(ed.date) as event_to,
-       count(e.id)  as registration_count
+       e.invoice_prefix,
+       e.published,
+       e.invoices_produced,
+       e.payment_due_by,
+       coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs
 from event e
          left join competition c on e.id = c.event
          left join event_day ed on e.id = ed.event

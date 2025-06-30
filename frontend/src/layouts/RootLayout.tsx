@@ -48,11 +48,11 @@ const RootLayout = () => {
     return (
         <Container maxWidth={'xl'}>
             <Paper elevation={24}>
-                <Box>
+                <Box sx={{background: t => t.palette.background.default}}>
                     <AppBar
+                        elevation={2}
                         sx={{
                             position: 'static',
-                            zIndex: theme => theme.zIndex.drawer + 1,
                         }}>
                         <Toolbar sx={{justifyContent: 'space-between'}}>
                             <IconButton onClick={() => setDrawerExpanded(prev => !prev)}>
@@ -104,7 +104,6 @@ const RootLayout = () => {
                                 icon={<Event />}
                                 to={'/event'}
                             />
-                            <Divider />
                             <SidebarItem
                                 text={t('navigation.titles.users')}
                                 icon={<People />}

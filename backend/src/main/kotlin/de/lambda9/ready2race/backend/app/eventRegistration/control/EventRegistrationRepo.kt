@@ -367,7 +367,7 @@ object EventRegistrationRepo {
                     hasChanged = false,
                     firstname = it[PARTICIPANT.FIRSTNAME]!!,
                     lastname = it[PARTICIPANT.LASTNAME]!!,
-                    year = it[PARTICIPANT.YEAR],
+                    year = it[PARTICIPANT.YEAR]!!,
                     gender = it[PARTICIPANT.GENDER]!!,
                     external = it[PARTICIPANT.EXTERNAL],
                     externalClubName = it[PARTICIPANT.EXTERNAL_CLUB_NAME],

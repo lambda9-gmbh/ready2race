@@ -10,6 +10,7 @@
     "edit": "Bearbeiten",
     "selected": "Ausgewählt",
     "manage": "Verwalten",
+    "all" : "Alle",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -168,6 +169,7 @@
       "year": "Geburtsjahr",
       "external": "Extern",
       "externalClub": "Externer Verein",
+      "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
       "usedInRegistration": "In Meldung"
     }
   },
@@ -285,6 +287,9 @@
       "assignedDays": "Wettkampftage",
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+      },
+      "registration": {
+        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
       },
       "setup": {
         "setup": "Wettbewerbsablauf",
@@ -468,7 +473,7 @@
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",
-        "subtitle": "Du bekommst eine Bestätigung per Mail."
+        "subtitle": "Sie bekommen eine Bestätigung per Mail."
       },
       "mostRecent": "Neuste Anmeldungen"
     },

@@ -1,10 +1,10 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '../EntityDialog.tsx'
-import {Box, Stack} from '@mui/material'
+import {Box, Stack, Tooltip} from '@mui/material'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import {useForm} from 'react-hook-form-mui'
-import {ChangeEvent, useCallback, useState} from 'react'
+import {ChangeEvent, useCallback, useMemo, useState} from 'react'
 import {
     addClubParticipant,
     Gender,
@@ -17,6 +17,7 @@ import {clubIndexRoute} from '@routes'
 import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
+import {HelpOutline} from '@mui/icons-material'
 
 type ParticipantForm = {
     firstname: string
@@ -69,6 +70,8 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
         setIsExternal(props.entity?.external ?? false)
     }, [props.entity])
 
+    const currentYear = useMemo(() => new Date().getFullYear(), [])
+
     return (
         <EntityDialog
             {...props}
@@ -99,21 +102,37 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                         },
                     ]}
                 />
-                <FormInputNumber required name={'year'} label={t('club.participant.year')} />
+                <FormInputNumber
+                    required
+                    name={'year'}
+                    label={t('club.participant.year')}
+                    integer
+                    min={currentYear - 120}
+                    max={currentYear}
+                />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
                 <Stack direction="row" spacing={2} alignItems={'center'}>
                     <FormInputCheckbox
                         onChange={handleExternalChange}
                         name={`external`}
-                        label={t('club.participant.external')}
+                        label={
+                            <Stack direction={'row'}>
+                                {t('club.participant.external')}
+                                <Tooltip title={t('club.participant.externalHint')}>
+                                    <HelpOutline fontSize={'small'} color={'info'} />
+                                </Tooltip>
+                            </Stack>
+                        }
                     />
                     <Box flex={1}>
-                        <AutocompleteClub
-                            disabled={!isExternal}
-                            name={`externalClubName`}
-                            label={t('club.club')}
-                            required
-                        />
+                        {isExternal && (
+                            <AutocompleteClub
+                                disabled={!isExternal}
+                                name={`externalClubName`}
+                                label={t('club.participant.externalClub')}
+                                required
+                            />
+                        )}
                     </Box>
                 </Stack>
             </Stack>

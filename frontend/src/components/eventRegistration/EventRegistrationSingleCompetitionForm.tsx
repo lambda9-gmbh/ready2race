@@ -1,5 +1,5 @@
 import {CheckboxButtonGroup, useFormContext, useWatch} from 'react-hook-form-mui'
-import {Checkbox, Divider, FormControlLabel, Paper, Stack, Typography} from '@mui/material'
+import {Checkbox, Chip, Divider, FormControlLabel, Paper, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {Person} from '@mui/icons-material'
 import {EventRegistrationCompetitionDto, EventRegistrationUpsertDto} from '../../api'
@@ -48,6 +48,9 @@ const EventSingleCompetitionField = (props: {
                 label={
                     <Stack direction={'row'} alignItems={'center'} spacing={1}>
                         <Typography>{props.option.name}</Typography>
+                        {props.option.competitionCategory && (
+                            <Chip variant={'outlined'} label={props.option.competitionCategory} />
+                        )}
                         <EventRegistrationPriceTooltip competition={props.option} />
                     </Stack>
                 }

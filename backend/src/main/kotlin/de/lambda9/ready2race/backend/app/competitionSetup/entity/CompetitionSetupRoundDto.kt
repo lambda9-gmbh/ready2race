@@ -8,9 +8,11 @@ import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNotValue
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.select
 
 data class CompetitionSetupRoundDto(
     val name: String,
@@ -62,12 +64,18 @@ data class CompetitionSetupRoundDto(
         ValidationResult.oneOf(
             this::placesOption validate isValue(CompetitionSetupPlacesOption.CUSTOM),
             this::places validate isNull
+        ),
+        ValidationResult.oneOf(
+            ValidationResult.allOf(
+                this::placesOption validate isValue(CompetitionSetupPlacesOption.CUSTOM),
+                this::matches validate collection(select(notNull, CompetitionSetupMatchDto::teams))
+            ),
+            ValidationResult.allOf(
+                this::placesOption validate isNotValue(CompetitionSetupPlacesOption.CUSTOM),
+            ),
         )
     )
 
-    /*todo validations:
-        - placeOption can not be "custom" if a match in the round has undefined teams
-    */
 
     companion object {
         val example

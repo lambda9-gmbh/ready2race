@@ -10,6 +10,7 @@
     "edit": "Edit",
     "selected": "Selected",
     "manage" : "Manage",
+    "all" : "All",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
@@ -168,6 +169,7 @@
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club",
+      "externalHint": "Select this option if you want to register a member of another club.",
       "usedInRegistration": "In Registration"
     }
   },
@@ -285,6 +287,9 @@
       "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      },
+      "registration": {
+        "noEventRegistration": "No registration from your club has been made for this event yet."
       },
       "setup": {
         "setup": "Competition Setup",

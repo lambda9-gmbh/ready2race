@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.validation.allOf
 import de.lambda9.ready2race.backend.validation.anyOf
 import de.lambda9.ready2race.backend.validation.oneOf
 import kotlin.reflect.KProperty0
+import kotlin.reflect.KProperty1
 
 fun interface Validator<T> {
     operator fun invoke(t: T): ValidationResult
@@ -66,5 +67,12 @@ fun interface Validator<T> {
         val collection get() = collection(selfValidator)
 
         fun <T>isValue(value: T) = simple<T>("is not $value") { it == value }
+        fun <T>isNotValue(value: T) = simple<T>("is $value") { it != value }
+
+        fun <P, T> select(validator: Validator<P>, field: KProperty1<T, P>) = Validator<T?> { obj ->
+            obj
+                ?.let { validator(field.get(it)) }
+                ?: ValidationResult.Valid
+        }
     }
 }

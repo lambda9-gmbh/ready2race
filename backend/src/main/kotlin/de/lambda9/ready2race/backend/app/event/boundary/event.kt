@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
-import de.lambda9.ready2race.backend.app.event.entity.EventSort
+import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
@@ -35,8 +35,8 @@ fun Route.event() {
         get {
             call.respondComprehension {
                 val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
-                val params = !pagination<EventSort>()
-                EventService.page(params, optionalUserAndScope?.second)
+                val params = !pagination<EventViewSort>()
+                EventService.page(params, optionalUserAndScope?.second, optionalUserAndScope?.first)
             }
 
         }
@@ -74,7 +74,7 @@ fun Route.event() {
                 call.respondComprehension {
                     val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val id = !pathParam("eventId", uuid)
-                    EventService.getEvent(id, optionalUserAndScope?.second)
+                    EventService.getEvent(id, optionalUserAndScope?.second, optionalUserAndScope?.first)
                 }
             }
 

@@ -362,6 +362,9 @@ const EntityTableInternal = <
                                 '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
                                     py: '22px',
                                 },
+                                '& .MuiDataGrid-columnHeader': {
+                                    backgroundColor: t => t.palette.primary.light
+                                },
                             }}
                             {...gridProps}
                         />
