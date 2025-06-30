@@ -160,7 +160,6 @@ object CompetitionRegistrationService {
             !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionAndNamedParticipantId(competitionId, namedParticipantDto.namedParticipantId)
                 .orDie()
                 .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
-        logger.info{requirements}
         val counts: MutableMap<Gender, Int> = mutableMapOf(
             Gender.M to 0,
             Gender.F to 0,
