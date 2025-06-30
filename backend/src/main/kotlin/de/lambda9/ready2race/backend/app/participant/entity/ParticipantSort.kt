@@ -10,7 +10,10 @@ enum class ParticipantSort : Sortable {
     LASTNAME,
     EXTERNAL,
     EXTERNAL_CLUB_NAME,
-    CREATED_AT;
+    CREATED_AT,
+    GENDER,
+    YEAR,
+    USED_IN_REGISTRATION;
 
     override fun toFields(): List<Field<*>> = when (this) {
         ID -> listOf(PARTICIPANT_VIEW.ID)
@@ -19,5 +22,8 @@ enum class ParticipantSort : Sortable {
         EXTERNAL -> listOf(PARTICIPANT_VIEW.EXTERNAL)
         EXTERNAL_CLUB_NAME -> listOf(PARTICIPANT_VIEW.EXTERNAL_CLUB_NAME)
         CREATED_AT -> listOf(PARTICIPANT_VIEW.CREATED_AT)
+        GENDER -> listOf(PARTICIPANT_VIEW.GENDER)
+        YEAR -> listOf(PARTICIPANT_VIEW.YEAR)
+        USED_IN_REGISTRATION -> listOf(PARTICIPANT_VIEW.USED_IN_REGISTRATION)
     }
 }

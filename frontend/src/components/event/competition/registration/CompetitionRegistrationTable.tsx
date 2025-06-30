@@ -63,6 +63,7 @@ const CompetitionRegistrationTable = (
                 headerName: t('club.participant.title'),
                 flex: 1,
                 minWidth: 120,
+                sortable: false,
                 renderCell: ({row}) => (
                     <Stack spacing={1}>
                         {row.namedParticipants.map(np => (
@@ -91,6 +92,7 @@ const CompetitionRegistrationTable = (
             {
                 field: 'optionalFees',
                 headerName: t('event.registration.optionalFee'),
+                sortable: false,
                 renderCell: ({row}) => (
                     <Stack>
                         {row.optionalFees.length >= 1
