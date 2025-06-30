@@ -16,11 +16,11 @@ object CompetitionPropertiesHasNamedParticipantRepo {
 
     fun deleteByCompetitionPropertiesId(competitionPropertiesId: UUID) = COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.delete { COMPETITION_PROPERTIES.eq(competitionPropertiesId) }
 
-    fun getByCompetitionId(competitionId: UUID) = Jooq.query {
+    fun getByCompetitionAndNamedParticipantId(competitionId: UUID, namedParticipantId: UUID) = Jooq.query {
         select(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.asterisk())
             .from(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT)
             .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.ID.eq(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.COMPETITION_PROPERTIES))
-            .where(COMPETITION_PROPERTIES.COMPETITION.eq(competitionId))
+            .where(COMPETITION_PROPERTIES.COMPETITION.eq(competitionId).and(COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.NAMED_PARTICIPANT.eq(namedParticipantId)))
             .fetchOneInto(CompetitionPropertiesHasNamedParticipantRecord::class.java)
     }
 
