@@ -1,13 +1,14 @@
-import SimpleFormLayout from "@components/SimpleFormLayout.tsx";
-import {useTranslation} from "react-i18next";
-import {useState} from "react";
-import {NewPassword, PasswordFormPart} from "@components/form/NewPassword.tsx";
-import {FormContainer, useForm} from "react-hook-form-mui";
-import {Box, Button, Stack, Typography} from "@mui/material";
-import {Link} from "@tanstack/react-router";
-import {SubmitButton} from "@components/form/SubmitButton.tsx";
-import {acceptUserInvitation} from "@api/sdk.gen.ts";
-import {invitationTokenRoute} from "@routes";
+import SimpleFormLayout from '@components/SimpleFormLayout.tsx'
+import {useTranslation} from 'react-i18next'
+import {useState} from 'react'
+import {NewPassword, PasswordFormPart} from '@components/form/NewPassword.tsx'
+import {FormContainer, useForm} from 'react-hook-form-mui'
+import {Box, Button, Stack, Typography} from '@mui/material'
+import {Link} from '@tanstack/react-router'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {acceptUserInvitation} from '@api/sdk.gen.ts'
+import {invitationTokenRoute} from '@routes'
+import RequestStatusResponse from '@components/user/RequestStatusResponse.tsx'
 
 type Form = PasswordFormPart
 
@@ -17,46 +18,45 @@ const defaultValues: Form = {
 }
 
 const AcceptInvitationPage = () => {
-
     const {t} = useTranslation()
 
     const {invitationToken} = invitationTokenRoute.useParams()
 
-    const [submitting, setSubmitting] = useState(false)
-    const [done, setDone] = useState(false)
-
     const formContext = useForm<Form>({values: defaultValues})
+
+    const [submitting, setSubmitting] = useState(false)
+    const [requestResult, setRequestResult] = useState<
+        'NotFound' | 'Unexpected' | 'Success' | null
+    >(null)
 
     const handleSubmit = async (formData: Form) => {
         setSubmitting(true)
 
-        const {error} = await acceptUserInvitation({
+        const result = await acceptUserInvitation({
             body: {
                 token: invitationToken,
-                password: formData.password
-            }
+                password: formData.password,
+            },
         })
 
         setSubmitting(false)
 
-        if (error === undefined) {
-            setDone(true)
+        if (result.error === undefined) {
+            setRequestResult('Success')
+        } else {
+            setRequestResult(result.error.status.value === 404 ? 'NotFound' : 'Unexpected')
         }
-
-        //todo: @Incomplete error-handling
     }
 
     return (
         <SimpleFormLayout maxWidth={500}>
-            {!done ? (
+            {requestResult === null ? (
                 <>
                     <Box sx={{mb: 4}}>
-                        <Typography variant="h1" textAlign="center" sx={{mb:4}}>
+                        <Typography variant="h1" textAlign="center" sx={{mb: 4}}>
                             {t('user.invitation.accept')}
                         </Typography>
-                        <Typography>
-                            {t('user.invitation.hint')}
-                        </Typography>
+                        <Typography>{t('user.invitation.hint')}</Typography>
                     </Box>
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
@@ -68,7 +68,7 @@ const AcceptInvitationPage = () => {
                         </Stack>
                     </FormContainer>
                 </>
-            ) : (
+            ) : requestResult === 'Success' ? (
                 <Box sx={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                     <Typography textAlign="center" sx={{mb: 4}}>
                         {t('user.invitation.userCreated.text')}
@@ -79,6 +79,17 @@ const AcceptInvitationPage = () => {
                         </Button>
                     </Link>
                 </Box>
+            ) : (
+                <RequestStatusResponse
+                    success={false}
+                    header={t('user.invitation.error.header')}
+                    showLoginNavigation>
+                    <Typography textAlign="center">
+                        {requestResult === 'NotFound'
+                            ? t('user.invitation.error.message.notFound')
+                            : t('user.invitation.error.message.unexpected')}
+                    </Typography>
+                </RequestStatusResponse>
             )}
         </SimpleFormLayout>
     )
