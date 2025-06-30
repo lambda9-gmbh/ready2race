@@ -1,6 +1,6 @@
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
-import {useEntityAdministration} from '@utils/hooks.ts'
+import {useEntityAdministration, useFetch} from '@utils/hooks.ts'
 import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
 import {useTranslation} from 'react-i18next'
@@ -9,6 +9,8 @@ import {eventRoute} from '@routes'
 import {Link} from '@tanstack/react-router'
 import {Box, Button, Typography} from '@mui/material'
 import {Forward} from '@mui/icons-material'
+import {useState} from 'react'
+import {getCompetitionRegistrations} from '@api/sdk.gen.ts'
 
 type Props = {
     eventData: EventDto
@@ -41,6 +43,18 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
             },
         )
 
+    const [reloadCompetitionRegistrations, setReloadCompetitionRegistrations] = useState(false)
+    const {data: competitionRegistrations} = useFetch(
+        signal =>
+            getCompetitionRegistrations({
+                signal,
+                path: {eventId: eventId, competitionId: competitionData.id},
+            }),
+        {
+            deps: [eventId, competitionData.id, user.clubId, reloadCompetitionRegistrations],
+        },
+    )
+
     return (
         (((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (
             <>
@@ -48,8 +62,17 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
                     {...competitionRegistrationTeamsProps.dialog}
                     competition={competitionData}
                     eventId={eventId}
+                    competitionRegistrations={competitionRegistrations?.data}
+                    reloadData={() =>
+                        setReloadCompetitionRegistrations(!reloadCompetitionRegistrations)
+                    }
                 />
-                <CompetitionRegistrationTable {...competitionRegistrationTeamsProps.table} />
+                <CompetitionRegistrationTable
+                    {...competitionRegistrationTeamsProps.table}
+                    reloadData={() =>
+                        setReloadCompetitionRegistrations(!reloadCompetitionRegistrations)
+                    }
+                />
             </>
         )) ||
         (eventRegistrationPossible(
