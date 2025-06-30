@@ -54,6 +54,7 @@ const TaskTable = (props: BaseEntityTableProps<TaskDto>) => {
             field: 'description',
             headerName: t('entity.description'),
             flex: 1,
+            sortable: false,
         },
         {
             field: 'dueDate',

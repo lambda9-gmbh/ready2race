@@ -6,10 +6,18 @@ import org.jooq.Field
 
 enum class ContactInformationSort : Sortable {
     ID,
-    NAME;
+    NAME,
+    ADDRESS_ZIP,
+    ADDRESS_CITY,
+    ADDRESS_STREET,
+    EMAIL;
 
     override fun toFields(): List<Field<*>> = when(this) {
-        ContactInformationSort.ID -> listOf(CONTACT_INFORMATION.ID)
-        ContactInformationSort.NAME -> listOf(CONTACT_INFORMATION.NAME)
+        ID -> listOf(CONTACT_INFORMATION.ID)
+        NAME -> listOf(CONTACT_INFORMATION.NAME)
+        ADDRESS_ZIP -> listOf(CONTACT_INFORMATION.ADDRESS_ZIP)
+        ADDRESS_CITY -> listOf(CONTACT_INFORMATION.ADDRESS_CITY)
+        ADDRESS_STREET -> listOf(CONTACT_INFORMATION.ADDRESS_STREET)
+        EMAIL -> listOf(CONTACT_INFORMATION.EMAIL)
     }
 }
