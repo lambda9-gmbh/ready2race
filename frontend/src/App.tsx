@@ -15,7 +15,6 @@ import {isLanguage, locales} from './i18n/config.ts'
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
-    credentials: 'include',
 })
 
 const language = (document.getElementById('ready2race-root')!.dataset.lng)
