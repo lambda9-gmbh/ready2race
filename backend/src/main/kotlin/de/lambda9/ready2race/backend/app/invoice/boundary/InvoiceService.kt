@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.invoice.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService.fullName
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.bankAccount.control.BankAccountRepo
 import de.lambda9.ready2race.backend.app.bankAccount.control.PayeeBankAccountRepo
 import de.lambda9.ready2race.backend.app.contactInformation.control.ContactInformationRepo
@@ -18,18 +20,24 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.invoice.control.EventRegistrationForInvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.EventRegistrationInvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceDocumentDataRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoicePositionRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.ProduceInvoiceForRegistrationRepo
+import de.lambda9.ready2race.backend.app.invoice.control.toDto
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceDto
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceError
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
 import de.lambda9.ready2race.backend.app.sequence.control.SequenceRepo
 import de.lambda9.ready2race.backend.app.sequence.entity.SequenceConsumer
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationInvoiceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceDocumentDataRecord
@@ -45,9 +53,11 @@ import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.andThenNotNull
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNull
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.jooq.transact
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Color
@@ -62,6 +72,52 @@ object InvoiceService {
     private val logger = KotlinLogging.logger {}
 
     private val retryAfterError = 5.minutes
+
+    fun pageForRegistration(
+        id: UUID,
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
+        val registrationRecord = !EventRegistrationRepo.getView(id).orDie().onNullFail {
+            EventRegistrationError.NotFound
+        }
+
+        !KIO.failOn(
+            scope == Privilege.Scope.OWN && registrationRecord.clubId != user.club
+        ) { AuthError.PrivilegeMissing }
+
+        val total = !InvoiceRepo.countForRegistration(id, params.search).orDie()
+        val page = !InvoiceRepo.pageForRegistration(id, params).orDie()
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total),
+            )
+        }
+
+    }
+
+    fun getDownload(
+        id: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+
+        // TODO: @Incomplete: not really incomplete but maybe a bug in the future, when there are different kinds of invoices
+
+        !InvoiceRepo.getForRegistration(id).orDie().onNullFail { InvoiceError.NotFound }
+            .failIf({
+                scope == Privilege.Scope.OWN && it.club != user.club
+            }) { AuthError.PrivilegeMissing }
+
+        InvoiceRepo.getDownload(id).orDie().onNullDie("existence checked before").map {
+            ApiResponse.File(
+                name = it.filename!!,
+                bytes = it.data!!
+            )
+        }
+    }
 
     fun createRegistrationInvoicesForEventJobs(
         eventId: UUID,

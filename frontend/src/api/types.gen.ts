@@ -601,6 +601,12 @@ export type InviteRequest = {
     callbackUrl: string
 }
 
+export type InvoiceDto = {
+    id: string
+    invoiceNumber: string
+    createdAt: string
+}
+
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
@@ -807,7 +813,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE'
 
 export type RoleDto = {
     id: string
@@ -2030,6 +2036,17 @@ export type GetRegistrationsForEventResponse = {
 
 export type GetRegistrationsForEventError = ApiError
 
+export type GetEventRegistrationData = {
+    path: {
+        eventId: string
+        eventRegistrationId: string
+    }
+}
+
+export type GetEventRegistrationResponse = EventRegistrationViewDto
+
+export type GetEventRegistrationError = ApiError
+
 export type DeleteEventRegistrationData = {
     path: {
         eventId: string
@@ -2040,6 +2057,38 @@ export type DeleteEventRegistrationData = {
 export type DeleteEventRegistrationResponse = void
 
 export type DeleteEventRegistrationError = BadRequestError | ApiError
+
+export type GetRegistrationInvoicesData = {
+    path: {
+        eventId: string
+        eventRegistrationId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRegistrationInvoicesResponse = {
+    data: Array<InvoiceDto>
+    pagination: Pagination
+}
+
+export type GetRegistrationInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventRegistrationTemplateData = {
     path: {
@@ -2082,6 +2131,27 @@ export type AddFeeData = {
 export type AddFeeResponse = string
 
 export type AddFeeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetFeesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
 
 export type GetFeesResponse = {
     data: Array<FeeDto>
@@ -2797,3 +2867,7 @@ export type GetWorkShiftsForUserResponse = {
 }
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadInvoiceResponse = Blob | File
+
+export type DownloadInvoiceError = BadRequestError | ApiError

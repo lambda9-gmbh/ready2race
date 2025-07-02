@@ -60,3 +60,14 @@ export const deleteRegistrationOwn: Privilege = {
     resource: 'REGISTRATION',
     scope: 'OWN',
 }
+
+export const readInvoiceGlobal: Privilege = {
+    action: 'READ',
+    resource: 'INVOICE',
+    scope: 'GLOBAL'
+}
+export const readInvoiceOwn: Privilege = {
+    action: 'READ',
+    resource: 'INVOICE',
+    scope: 'OWN'
+}

@@ -695,6 +695,11 @@
     }
   },
   "invoice": {
+    "invoice": "Invoice",
+    "invoices": "Invoices",
+    "download": "Download",
+    "downloadError": "An error occurred trying to download the invoice.",
+    "invoiceNumber": "Invoice number",
     "bank": {
       "accountData": {
         "holder": "Holder",

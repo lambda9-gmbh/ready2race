@@ -695,6 +695,11 @@
     }
   },
   "invoice": {
+    "invoice": "Rechnung",
+    "invoices": "Rechnungen",
+    "download": "Herunterladen",
+    "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
+    "invoiceNumber": "Rechnungsnummer",
     "bank": {
       "accountData": {
         "holder": "Kontoinhaber",

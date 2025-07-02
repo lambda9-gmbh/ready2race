@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationUpsertDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
+import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pagination
@@ -26,11 +28,30 @@ fun Route.eventRegistration() {
             }
         }
 
-        delete("/{eventRegistrationId}") {
-            call.respondComprehension {
-                !authenticate(Privilege.UpdateRegistrationGlobal)
-                val id = !pathParam("eventRegistrationId", uuid)
-                EventRegistrationService.deleteRegistration(id)
+        route("/{eventRegistrationId}") {
+            get {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
+                    val id = !pathParam("eventRegistrationId", uuid)
+                    EventRegistrationService.getRegistration(id, user, scope)
+                }
+            }
+
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateRegistrationGlobal)
+                    val id = !pathParam("eventRegistrationId", uuid)
+                    EventRegistrationService.deleteRegistration(id)
+                }
+            }
+
+            get("/invoices") {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
+                    val id = !pathParam("eventRegistrationId", uuid)
+                    val params = !pagination<InvoiceForEventRegistrationSort>()
+                    InvoiceService.pageForRegistration(id, params, user, scope)
+                }
             }
         }
     }

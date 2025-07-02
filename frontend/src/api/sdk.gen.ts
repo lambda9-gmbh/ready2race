@@ -229,9 +229,15 @@ import type {
     GetRegistrationsForEventData,
     GetRegistrationsForEventError,
     GetRegistrationsForEventResponse,
+    GetEventRegistrationData,
+    GetEventRegistrationError,
+    GetEventRegistrationResponse,
     DeleteEventRegistrationData,
     DeleteEventRegistrationError,
     DeleteEventRegistrationResponse,
+    GetRegistrationInvoicesData,
+    GetRegistrationInvoicesError,
+    GetRegistrationInvoicesResponse,
     GetEventRegistrationTemplateData,
     GetEventRegistrationTemplateError,
     GetEventRegistrationTemplateResponse,
@@ -244,6 +250,7 @@ import type {
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
+    GetFeesData,
     GetFeesError,
     GetFeesResponse,
     UpdateFeeData,
@@ -402,6 +409,8 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    DownloadInvoiceError,
+    DownloadInvoiceResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1279,6 +1288,19 @@ export const getRegistrationsForEvent = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getEventRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventRegistrationResponse,
+        GetEventRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/{eventRegistrationId}',
+    })
+}
+
 export const deleteEventRegistration = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<DeleteEventRegistrationData, ThrowOnError>,
 ) => {
@@ -1289,6 +1311,19 @@ export const deleteEventRegistration = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventRegistration/{eventRegistrationId}',
+    })
+}
+
+export const getRegistrationInvoices = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationInvoicesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationInvoicesResponse,
+        GetRegistrationInvoicesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/eventRegistration/{eventRegistrationId}/invoices',
     })
 }
 
@@ -1341,7 +1376,7 @@ export const addFee = <ThrowOnError extends boolean = false>(
 }
 
 export const getFees = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options?: OptionsLegacyParser<GetFeesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetFeesResponse, GetFeesError, ThrowOnError>({
         ...options,
@@ -1995,5 +2030,18 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/{userId}/workshift',
+    })
+}
+
+export const downloadInvoice = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadInvoiceResponse,
+        DownloadInvoiceError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/invoice/{invoiceId}',
     })
 }

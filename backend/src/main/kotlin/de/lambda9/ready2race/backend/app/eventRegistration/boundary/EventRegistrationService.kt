@@ -1,6 +1,8 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
@@ -446,6 +448,23 @@ object EventRegistrationService {
                 optionalFee
             )
         ).orDie()
+    }
+
+    fun getRegistration(
+        id: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope
+    ): App<ServiceError, ApiResponse.Dto<EventRegistrationViewDto>> = KIO.comprehension {
+
+        val record = !EventRegistrationRepo.getView(id).orDie().onNullFail {
+            EventRegistrationError.NotFound
+        }
+
+        !KIO.failOn(
+            scope == Privilege.Scope.OWN && record.clubId != user.club
+        ) { AuthError.PrivilegeMissing }
+
+        record.toDto().map { ApiResponse.Dto(it) }
     }
 
     fun deleteRegistration(

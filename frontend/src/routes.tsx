@@ -33,6 +33,7 @@ import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx
 import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import LandingPage from './pages/LandingPage.tsx'
+import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -250,6 +251,12 @@ export const eventRegisterIndexRoute = createRoute({
     },
 })
 
+export const eventRegistrationRoute = createRoute({
+    getParentRoute: () => eventRoute,
+    path: 'registration/$eventRegistrationId',
+    component: () => <EventRegistrationPage />,
+})
+
 export const eventDayRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: 'eventDay/$eventDayId',
@@ -316,6 +323,7 @@ const routeTree = rootRoute.addChildren([
         eventsIndexRoute,
         eventRoute.addChildren([
             eventIndexRoute,
+            eventRegistrationRoute,
             eventDayRoute.addChildren([eventDayIndexRoute]),
             competitionRoute.addChildren([
                 competitionIndexRoute,

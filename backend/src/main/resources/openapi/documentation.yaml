@@ -1979,6 +1979,23 @@ paths:
         schema:
           type: string
           format: uuid
+    get:
+      operationId: getEventRegistration
+      responses:
+        200:
+          description: Event registration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistrationViewDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
     delete:
       operationId: deleteEventRegistration
       responses:
@@ -1992,6 +2009,56 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventRegistration/{eventRegistrationId}/invoices:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: eventRegistrationId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getRegistrationInvoices
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Invoice list successfully retrieved for registration
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -2111,6 +2178,11 @@ paths:
           $ref: '#/components/responses/500'
     get:
       operationId: getFees
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       responses:
         200:
           description: Fee list successfully retrieved
@@ -3633,6 +3705,32 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /invoice/{invoiceId}:
+    get:
+      operationId: downloadInvoice
+      responses:
+        200:
+          description: File retrieved
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -3822,6 +3920,7 @@ components:
         - EVENT
         - CLUB
         - REGISTRATION
+        - INVOICE
 
     Scope:
       type: string
@@ -6161,3 +6260,19 @@ components:
       properties:
         assigned:
           $ref: '#/components/schemas/ContactInformationDto'
+
+    InvoiceDto:
+      type: object
+      required:
+        - id
+        - invoiceNumber
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoiceNumber:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

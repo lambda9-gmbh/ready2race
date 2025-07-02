@@ -8,16 +8,21 @@ import io.ktor.http.HttpStatusCode
 sealed interface InvoiceError : ServiceError {
 
     enum class Registration : InvoiceError {
-
         Ongoing,
         AlreadyProduced;
     }
+
+    data object NotFound : InvoiceError
 
     data object MissingAssignedPayeeBankAccount : InvoiceError
 
     data object MissingAssignedContactInformation : InvoiceError
 
     override fun respond(): ApiError = when (this) {
+        NotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            message = "Invoice not found",
+        )
         MissingAssignedPayeeBankAccount -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "No bank account assigned as payee information for this event or globally",

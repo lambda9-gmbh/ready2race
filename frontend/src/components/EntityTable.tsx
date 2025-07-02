@@ -11,7 +11,7 @@ import {
 } from '@mui/x-data-grid'
 import {ReactNode, useMemo, useRef, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
-import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityTableAction, PageResponse, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
@@ -20,7 +20,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Alert, Box, Button, Stack, TextField, Typography, useTheme} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {ApiError, Pagination, Privilege, Resource} from '@api/types.gen.ts'
+import {ApiError, Privilege, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
@@ -76,11 +76,6 @@ type ExtendedEntityTableProps<
               publicRead?: boolean
           }
     )
-
-type PageResponse<E> = {
-    data: E[]
-    pagination: Pagination
-}
 
 type Crud = {
     create: boolean

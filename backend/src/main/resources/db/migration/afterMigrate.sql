@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists invoice_download;
+drop view if exists invoice_for_event_registration;
 drop view if exists participant_view;
 drop view if exists work_shift_with_assigned_users;
 drop view if exists task_with_responsible_users;
@@ -605,3 +607,19 @@ create view participant_view as
 select p.*,
        exists(select * from competition_registration_named_participant where participant = p.id) as used_in_registration
 from participant p;
+
+create view invoice_for_event_registration as
+select i.*,
+       eri.event_registration,
+       er.club
+from invoice i
+         join event_registration_invoice eri on i.id = eri.invoice
+         join event_registration er on eri.event_registration = er.id
+;
+
+create view invoice_download as
+select i.id,
+       i.filename,
+       idd.data
+from invoice i
+         join invoice_document_data idd on i.id = idd.invoice;
