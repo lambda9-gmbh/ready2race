@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.competitionTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.boundary.CompetitionPropertiesService
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toRecord
@@ -87,6 +88,12 @@ object CompetitionTemplateService {
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !CompetitionPropertiesService.checkRequestReferences(request.properties)
+
+        !CompetitionRepo.updateByTemplate(templateId) {
+            template = null
+            updatedAt = LocalDateTime.now()
+            updatedBy = userId
+        }.orDie()
 
         !CompetitionTemplateRepo.update(templateId) {
             updatedBy = userId
