@@ -55,6 +55,7 @@ sealed class Privilege(
     data object DeleteRegistrationGlobal: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.GLOBAL)
     data object DeleteRegistrationOwn: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.OWN)
 
+    data object CreateInvoiceGlobal: Privilege(Action.CREATE, Resource.INVOICE, Scope.GLOBAL)
     data object ReadInvoiceGlobal: Privilege(Action.READ, Resource.INVOICE, Scope.GLOBAL)
     data object ReadInvoiceOwn: Privilege(Action.READ, Resource.INVOICE, Scope.OWN)
 

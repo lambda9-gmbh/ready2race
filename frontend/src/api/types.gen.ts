@@ -1323,6 +1323,37 @@ export type DeleteEventResponse = void
 
 export type DeleteEventError = BadRequestError | ApiError
 
+export type GetEventInvoicesData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetEventInvoicesResponse = {
+    data: Array<InvoiceDto>
+    pagination: Pagination
+}
+
+export type GetEventInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type AddEventDayData = {
     body: EventDayRequest
     path: {

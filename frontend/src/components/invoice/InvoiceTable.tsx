@@ -5,12 +5,12 @@ import {type GetRegistrationInvoicesError, InvoiceDto, Resource} from '@api/type
 import {useTranslation} from 'react-i18next'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {RequestResult} from '@hey-api/client-fetch'
-import { Download } from '@mui/icons-material'
+import {Download} from '@mui/icons-material'
 import {downloadInvoice} from '@api/sdk.gen.ts'
-import {useRef} from 'react'
+import {ReactNode, useRef} from 'react'
 import {Link} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
-import {format} from "date-fns";
+import {format} from 'date-fns'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -24,19 +24,19 @@ type Props = BaseEntityTableProps<InvoiceDto> & {
         signal: AbortSignal,
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<InvoiceDto>, GetRegistrationInvoicesError, false>
+    customTableActions?: ReactNode
 } & (
-    | {
-    resource: Resource
-    parentResource?: never
-}
-    | {
-    resource?: never
-    parentResource: Resource
-}
+        | {
+              resource: Resource
+              parentResource?: never
+          }
+        | {
+              resource?: never
+              parentResource: Resource
+          }
     )
 
 const InvoiceTable = (props: Props) => {
-
     const {t} = useTranslation()
     const feedback = useFeedback()
 
@@ -55,19 +55,19 @@ const InvoiceTable = (props: Props) => {
             minWidth: 150,
             flex: 0,
             sortable: false,
-            valueFormatter: v => v + ' €'
+            valueFormatter: v => v + ' €',
         },
         {
             field: 'createdAt',
             headerName: t('entity.createdAt'),
             minWidth: 150,
             flex: 0,
-            valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
-        }
+            valueGetter: (v: string) => (v ? format(new Date(v), t('format.datetime')) : null),
+        },
     ]
 
     const handleDownload = async (invoiceId: string) => {
-        const {data, error, response} = await downloadInvoice({path:{invoiceId}})
+        const {data, error, response} = await downloadInvoice({path: {invoiceId}})
         const anchor = downloadRef.current
 
         const disposition = response.headers.get('Content-Disposition')
@@ -90,7 +90,7 @@ const InvoiceTable = (props: Props) => {
             label={t('invoice.download')}
             onClick={() => handleDownload(entity.id)}
             showInMenu
-        />
+        />,
     ]
 
     return (

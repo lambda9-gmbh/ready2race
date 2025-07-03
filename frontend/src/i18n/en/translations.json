@@ -488,7 +488,8 @@
       "registrations": "Registrations",
       "settings": "Settings",
       "actions": "Actions",
-      "organisation": "Organisation"
+      "organisation": "Organisation",
+      "invoices": "Invoices"
     }
   },
   "task": {
@@ -702,7 +703,7 @@
     "invoiceNumber": "Invoice number",
     "amount": "Amount",
     "produce": {
-      "success": "Invoices will be produced and sent via email.",
+      "success": "Invoices will be produced and sent via email. This may take some minutes.",
       "error": {
         "NO_ASSIGNED_PAYEE_INFORMATION": "Please assign valid payee information.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Please assign valid contact information.",

@@ -488,7 +488,8 @@
       "registrations": "Meldungen",
       "settings": "Einstellungen",
       "actions": "Aktionen",
-      "organisation": "Organisation"
+      "organisation": "Organisation",
+      "invoices": "Rechnungen"
     }
   },
   "task": {
@@ -702,7 +703,7 @@
     "invoiceNumber": "Rechnungsnummer",
     "amount": "Rechnungsbetrag",
     "produce": {
-      "success": "Rechnungen werden erstellt und per E-Mail verschickt.",
+      "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
       "error": {
         "notFound": "",
         "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",

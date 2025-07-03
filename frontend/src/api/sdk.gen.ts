@@ -82,6 +82,9 @@ import type {
     DeleteEventData,
     DeleteEventError,
     DeleteEventResponse,
+    GetEventInvoicesData,
+    GetEventInvoicesError,
+    GetEventInvoicesResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -682,6 +685,19 @@ export const deleteEvent = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).delete<DeleteEventResponse, DeleteEventError, ThrowOnError>({
         ...options,
         url: '/event/{eventId}',
+    })
+}
+
+export const getEventInvoices = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventInvoicesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventInvoicesResponse,
+        GetEventInvoicesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/invoices',
     })
 }
 

@@ -13,13 +13,9 @@ import {
 } from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
-import {Trans, useTranslation} from 'react-i18next'
+import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {
-    getEvent,
-    getRegistrationResult,
-    produceInvoicesForEventRegistrations,
-} from '@api/sdk.gen.ts'
+import {getEvent, getRegistrationResult} from '@api/sdk.gen.ts'
 import {
     EventDocumentDto,
     EventRegistrationViewDto,
@@ -31,13 +27,14 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
-import {useMemo, useRef} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
     readEventGlobal,
+    readInvoiceGlobal,
     readRegistrationGlobal,
     readRegistrationOwn,
     readUserGlobal,
@@ -54,6 +51,7 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
+import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 
 const EVENT_TABS = [
     'general',
@@ -63,6 +61,7 @@ const EVENT_TABS = [
     'organization',
     'settings',
     'actions',
+    'invoices',
 ] as const
 export type EventTab = (typeof EVENT_TABS)[number]
 
@@ -83,13 +82,15 @@ const EventPage = () => {
 
     const {eventId} = eventRoute.useParams()
 
+    const [lastRequested, setLastRequested] = useState(Date.now())
+    const reload = () => setLastRequested(Date.now())
     const {data, pending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
             }
         },
-        deps: [eventId],
+        deps: [eventId, lastRequested],
     })
 
     const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
@@ -152,28 +153,6 @@ const EventPage = () => {
         }
     }
 
-    const handleProduceInvoices = async () => {
-        const {data, error} = await produceInvoicesForEventRegistrations({
-            path: {eventId},
-        })
-
-        if (error !== undefined) {
-            let reason = t('common.error.unexpected')
-            if (error.status.value === 409) {
-                switch (error.errorCode) {
-                    case 'NO_ASSIGNED_PAYEE_INFORMATION':
-                    case 'NO_ASSIGNED_CONTACT_INFORMATION':
-                    case 'INVOICES_ALREADY_PRODUCED':
-                    case 'EVENT_REGISTRATION_ONGOING':
-                        reason = t(`invoice.produce.error.${error.errorCode}`)
-                }
-            }
-            feedback.error(reason)
-        } else if (data !== undefined) {
-            feedback.success(t('invoice.produce.success'))
-        }
-    }
-
     const regAvailableFrom = data?.registrationAvailableFrom
         ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
         : undefined
@@ -232,6 +211,9 @@ const EventPage = () => {
                             )}
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.actions')} {...a11yProps('actions')} />
+                            )}
+                            {user.checkPrivilege(readInvoiceGlobal) && (
+                                <Tab label={t('event.tabs.invoices')} {...a11yProps('invoices')} />
                             )}
                         </TabSelectionContainer>
                         <TabPanel index={'general'} activeTab={activeTab}>
@@ -299,7 +281,10 @@ const EventPage = () => {
                                                         primary={
                                                             t('event.invoice.paymentDueBy') +
                                                             ': ' +
-                                                            format(new Date(data.paymentDueBy), t('format.datetime'))
+                                                            format(
+                                                                new Date(data.paymentDueBy),
+                                                                t('format.datetime'),
+                                                            )
                                                         }
                                                     />
                                                 </ListItem>
@@ -377,11 +362,20 @@ const EventPage = () => {
                                 <Button variant={'contained'} onClick={handleReportDownload}>
                                     {t('event.action.registrationsReport.download')}
                                 </Button>
-                                <Button variant={'contained'} onClick={handleProduceInvoices}>
-                                    <Trans i18nKey={'event.action.produceInvoices'} />
-                                </Button>
                             </Stack>
                         </TabPanel>
+                        <InvoicesTabPanel
+                            activeTab={activeTab}
+                            eventId={eventId}
+                            invoicesProducible={
+                                !data.invoicesProduced &&
+                                !eventRegistrationPossible(
+                                    data.registrationAvailableFrom,
+                                    data.registrationAvailableTo,
+                                )
+                            }
+                            reloadEvent={reload}
+                        />
                     </Stack>
                 ) : (
                     pending && <Throbber />

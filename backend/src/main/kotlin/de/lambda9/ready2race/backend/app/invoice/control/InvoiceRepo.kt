@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.UUID
 
 object InvoiceRepo {
@@ -27,6 +28,34 @@ object InvoiceRepo {
 
     fun getForRegistration(id: UUID) = INVOICE_FOR_EVENT_REGISTRATION.selectOne { ID.eq(id) }
 
+    fun countForEvent(
+        eventId: UUID,
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(INVOICE_FOR_EVENT_REGISTRATION) {
+            fetchCount(
+                this,
+                DSL.and(
+                    EVENT.eq(eventId),
+                    search.metaSearch(searchFields()),
+                )
+            )
+        }
+    }
+
+    fun pageForEvent(
+        eventId: UUID,
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+    ): JIO<List<InvoiceForEventRegistrationRecord>> = Jooq.query {
+        with(INVOICE_FOR_EVENT_REGISTRATION) {
+            selectFrom(this)
+                .page(params, searchFields()) {
+                    EVENT.eq(eventId)
+                }
+                .fetch()
+        }
+    }
+
     fun countForRegistration(
         registrationId: UUID,
         search: String?,
@@ -34,10 +63,14 @@ object InvoiceRepo {
         with(INVOICE_FOR_EVENT_REGISTRATION) {
             fetchCount(
                 this,
-                search.metaSearch(searchFields())
+                DSL.and(
+                    EVENT_REGISTRATION.eq(registrationId),
+                    search.metaSearch(searchFields()),
+                )
             )
         }
     }
+
     fun pageForRegistration(
         registrationId: UUID,
         params: PaginationParameters<InvoiceForEventRegistrationSort>,

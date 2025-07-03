@@ -615,12 +615,13 @@ select i.*,
        cast(nullif(substring(i.invoice_number from '\d*$'), '') as int)             as invoice_number_suffix,
        round(coalesce(sum(ip.unit_price * ip.quantity), 0), 2) as total_amount,
        eri.event_registration,
-       er.club
+       er.club,
+       er.event
 from invoice i
          join event_registration_invoice eri on i.id = eri.invoice
          join event_registration er on eri.event_registration = er.id
          left join invoice_position ip on i.id = ip.invoice
-group by i.id, eri.event_registration, er.club;
+group by i.id, eri.event_registration, er.id;
 
 create view invoice_download as
 select i.id,
