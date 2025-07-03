@@ -58,10 +58,16 @@ object CompetitionService {
                 }
             )
 
-            !CompetitionSetupService.createCompetitionSetup(userId, competitionPropertiesId)
+            !CompetitionSetupService.createCompetitionSetup(
+                userId,
+                competitionPropertiesId,
+                templateRecord.setupTemplateId,
+                true,
+            )
 
         } else {
             !CompetitionPropertiesService.checkRequestReferences(request.properties!!)
+            !CompetitionPropertiesService.checkCompetitionSetupTemplateExisting(request.properties.setupTemplate)
 
             val competitionPropertiesId =
                 !CompetitionPropertiesRepo.create(request.properties.toRecord(competitionId, null)).orDie()
@@ -71,7 +77,12 @@ object CompetitionService {
                 fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) }
             )
 
-            !CompetitionSetupService.createCompetitionSetup(userId, competitionPropertiesId)
+            !CompetitionSetupService.createCompetitionSetup(
+                userId,
+                competitionPropertiesId,
+                request.properties.setupTemplate,
+                true,
+            )
         }
 
         KIO.ok(ApiResponse.Created(competitionId))

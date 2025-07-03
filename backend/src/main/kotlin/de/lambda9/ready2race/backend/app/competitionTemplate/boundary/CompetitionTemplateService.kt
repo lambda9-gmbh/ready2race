@@ -7,7 +7,6 @@ import de.lambda9.ready2race.backend.app.competitionProperties.boundary.Competit
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toRecord
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toUpdateFunction
-import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.toDto
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateDto
@@ -35,6 +34,7 @@ object CompetitionTemplateService {
             LocalDateTime.now().let { now ->
                 CompetitionTemplateRecord(
                     id = UUID.randomUUID(),
+                    competitionSetupTemplate = request.properties.setupTemplate,
                     createdAt = now,
                     createdBy = userId,
                     updatedAt = now,
@@ -52,8 +52,6 @@ object CompetitionTemplateService {
             namedParticipants = request.properties.namedParticipants.map { it.toRecord(competitionPropertiesId) },
             fees = request.properties.fees.map { it.toRecord(competitionPropertiesId) }
         )
-
-        !CompetitionSetupService.createCompetitionSetup(userId, competitionPropertiesId)
 
         KIO.ok(ApiResponse.Created(competitionTemplateId))
     }
@@ -94,6 +92,7 @@ object CompetitionTemplateService {
         }.orDie()
 
         !CompetitionTemplateRepo.update(templateId) {
+            competitionSetupTemplate = request.properties.setupTemplate
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie().onNullFail { CompetitionTemplateError.NotFound }

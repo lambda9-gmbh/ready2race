@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.competitionProperties.control.Competiti
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesError
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequestDto
+import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.CompetitionSetupTemplateRepo
 import de.lambda9.ready2race.backend.app.fee.control.FeeRepo
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasFeeRecord
@@ -59,6 +60,15 @@ object CompetitionPropertiesService {
             CompetitionCategoryRepo.exists(competitionCategory).orDie()
                 .onFalseFail { CompetitionPropertiesError.CompetitionCategoryUnknown }
         }
+
+    fun checkCompetitionSetupTemplateExisting(
+        competitionSetupTemplateId: UUID?
+    ): App<CompetitionPropertiesError, Unit> = if (competitionSetupTemplateId == null) {
+        unit
+    } else {
+        CompetitionSetupTemplateRepo.exists(competitionSetupTemplateId).orDie()
+            .onFalseFail { CompetitionPropertiesError.CompetitionSetupTemplateUnknown }
+    }
 
     fun checkRequestReferences(
         request: CompetitionPropertiesRequestDto,

@@ -49,7 +49,7 @@ fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehens
                 name = name!!,
                 shortName = shortName,
                 description = description,
-                competitionCategory = if (categoryId !== null) {
+                competitionCategory = if (categoryId != null) {
                     CompetitionCategoryDto(
                         id = categoryId!!,
                         name = categoryName!!,
@@ -83,7 +83,7 @@ fun CompetitionForClubViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.com
                 name = name!!,
                 shortName = shortName,
                 description = description,
-                competitionCategory = if (categoryId !== null) {
+                competitionCategory = if (categoryId != null) {
                     CompetitionCategoryDto(
                         id = categoryId!!,
                         name = categoryName!!,
@@ -117,7 +117,7 @@ fun CompetitionPublicViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comp
                 name = name!!,
                 shortName = shortName,
                 description = description,
-                competitionCategory = if (categoryId !== null) {
+                competitionCategory = if (categoryId != null) {
                     CompetitionCategoryDto(
                         id = categoryId!!,
                         name = categoryName!!,

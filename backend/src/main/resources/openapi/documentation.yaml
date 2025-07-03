@@ -69,6 +69,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
 
@@ -2733,6 +2735,24 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /competitionSetupTemplate/overview:
+    get:
+      operationId: getCompetitionSetupTemplateOverview
+      responses:
+        200:
+          description: CompetitionSetupTemplateOverview successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
 
   /documentTemplate:
     get:
@@ -4674,6 +4694,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionRequestDto'
+        setupTemplate:
+          type: string
+          format: uuid
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -4992,6 +5015,20 @@ components:
           items:
             $ref: '#/components/schemas/CompetitionSetupRoundDto'
 
+    CompetitionSetupTemplateOverviewDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
 
     # competitionTemplate
 
@@ -5006,6 +5043,8 @@ components:
           format: uuid
         properties:
           $ref: '#/components/schemas/CompetitionPropertiesDto'
+        setupTemplate:
+          $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
 
 
     CompetitionTemplateRequest:

@@ -1,7 +1,7 @@
 import {Box, Button, Menu, MenuItem, Stack, Typography, useTheme} from '@mui/material'
 import {useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
-import {RefObject, useRef, useState, MouseEvent} from 'react'
+import {RefObject, useRef, useState, MouseEvent, Fragment} from 'react'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import CompetitionSetupTreeHelper from '@components/event/competition/setup/CompetitionSetupTreeHelper.tsx'
 import {
@@ -113,11 +113,12 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
 
     const watchTemplateFields = formContext.watch(['name', 'description'])
 
-    const resetForm = (rounds: Array<FormSetupRound>) => {
+    const resetForm = (rounds: Array<FormSetupRound>, setupTemplateId?: string) => {
         formContext.reset({
             name: watchTemplateFields[0],
             description: watchTemplateFields[1],
             rounds: rounds,
+            setupTemplateId: setupTemplateId,
         })
         setAllowRoundUpdates(false)
     }
@@ -204,40 +205,42 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     />
                 )}
             </Stack>
-            <Stack spacing={4}>
+            <Stack spacing={6}>
                 <AddRoundButton index={0} insertRound={insertRound} />
                 {roundsError && <Typography color={'error'}>{roundsError}</Typography>}
-                {roundFields.map((roundField, roundIndex) => (
-                    <Stack spacing={4} key={roundField.id}>
-                        <CompetitionSetupRound
-                            round={{index: roundIndex, id: roundField.id}}
-                            formContext={formContext}
-                            removeRound={removeRound}
-                            teamCounts={{
-                                prevRound: getTeamCountForRound(
-                                    roundIndex - 1,
-                                    formWatch[roundIndex - 1]?.isGroupRound ?? false,
-                                ),
-                                thisRound: getTeamCountForRound(
-                                    roundIndex,
-                                    formWatch[roundIndex]?.isGroupRound ?? false,
-                                ),
-                                nextRound: getTeamCountForRound(
-                                    roundIndex + 1,
-                                    formWatch[roundIndex + 1]?.isGroupRound ?? false,
-                                ),
-                            }}
-                            getRoundTeamCountWithoutThis={(ignoredIndex, isGroupRound) =>
-                                getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
-                            }
-                            allowRoundUpdates={{
-                                value: allowRoundUpdates,
-                                set: setAllowRoundUpdates,
-                            }}
-                        />
-                        <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />
-                    </Stack>
-                ))}
+                <Stack spacing={6}>
+                    {roundFields.map((roundField, roundIndex) => (
+                        <Fragment key={roundField.id}>
+                            <CompetitionSetupRound
+                                round={{index: roundIndex, id: roundField.id}}
+                                formContext={formContext}
+                                removeRound={removeRound}
+                                teamCounts={{
+                                    prevRound: getTeamCountForRound(
+                                        roundIndex - 1,
+                                        formWatch[roundIndex - 1]?.isGroupRound ?? false,
+                                    ),
+                                    thisRound: getTeamCountForRound(
+                                        roundIndex,
+                                        formWatch[roundIndex]?.isGroupRound ?? false,
+                                    ),
+                                    nextRound: getTeamCountForRound(
+                                        roundIndex + 1,
+                                        formWatch[roundIndex + 1]?.isGroupRound ?? false,
+                                    ),
+                                }}
+                                getRoundTeamCountWithoutThis={(ignoredIndex, isGroupRound) =>
+                                    getTeamCountForRound(roundIndex, isGroupRound, ignoredIndex)
+                                }
+                                allowRoundUpdates={{
+                                    value: allowRoundUpdates,
+                                    set: setAllowRoundUpdates,
+                                }}
+                            />
+                            <AddRoundButton index={roundIndex + 1} insertRound={insertRound} />
+                        </Fragment>
+                    ))}
+                </Stack>
             </Stack>
         </CompetitionSetupContainersWrapper>
     )

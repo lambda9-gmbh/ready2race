@@ -71,8 +71,8 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
 
     useEffect(() => {
         // This ignores watch calls that are called when opening the form - This way the template doesn't reset again directly after opening the form
-        const subscription = formContext.watch((_, foo) => {
-            if (foo.name !== 'namedParticipants' && foo.name !== 'fees' && foo.name !== undefined) {
+        const subscription = formContext.watch((_, reason) => {
+            if (reason.name !== 'namedParticipants' && reason.name !== 'fees' && reason.name !== undefined) {
                 resetTemplate()
             }
         })
@@ -83,7 +83,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
         const template = templatesData?.data.find(dto => dto?.id === templateId)
         if (template) {
             formContext.reset(
-                mapCompetitionPropertiesToCompetitionForm(template.properties, t('decimal.point')),
+                mapCompetitionPropertiesToCompetitionForm(template.properties, t('decimal.point'), props.entity ? undefined : template.setupTemplate ),
             )
         }
     }
@@ -134,6 +134,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                 <CompetitionPropertiesFormInputs
                     formContext={formContext}
                     fieldArrayModified={resetTemplate}
+                    hideCompetitionSetupTemplate={props.entity !== undefined}
                 />
             </Stack>
         </EntityDialog>

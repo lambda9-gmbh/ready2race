@@ -1,6 +1,10 @@
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {AutocompleteOption} from '@utils/types.ts'
-import {CompetitionPropertiesDto, CompetitionPropertiesRequestDto} from '@api/types.gen.ts'
+import {
+    CompetitionPropertiesDto,
+    CompetitionPropertiesRequestDto,
+    CompetitionSetupTemplateOverviewDto
+} from '@api/types.gen.ts'
 
 export type CompetitionForm = {
     identifier: string
@@ -20,6 +24,7 @@ export type CompetitionForm = {
         required: boolean
         amount: string
     }[]
+    setupTemplate: AutocompleteOption
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -30,6 +35,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     competitionCategory: null,
     namedParticipants: [],
     fees: [],
+    setupTemplate: null,
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
@@ -53,13 +59,16 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             required: value.required,
             amount: value.amount.replace(',', '.'),
         })),
+        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id)
     }
 }
 
 export function mapCompetitionPropertiesToCompetitionForm(
     dto: CompetitionPropertiesDto,
     decimalPoint: string,
+    setupTemplate?: CompetitionSetupTemplateOverviewDto
 ): CompetitionForm {
+    console.log(setupTemplate)
     return {
         identifier: dto.identifier,
         name: dto.name,
@@ -83,6 +92,10 @@ export function mapCompetitionPropertiesToCompetitionForm(
             required: value.required,
             amount: value.amount.replace('.', decimalPoint),
         })),
+        setupTemplate: setupTemplate ? {
+            id: setupTemplate.id,
+            label: setupTemplate.name,
+        } : null,
     }
 }
 
