@@ -152,7 +152,8 @@
       "users": "Benutzer",
       "config": "Konfigurationen",
       "clubs": "Vereine",
-      "myClub": "Mein Verein"
+      "myClub": "Mein Verein",
+      "invoices": "Rechnungen"
     }
   },
   "dashboard": {

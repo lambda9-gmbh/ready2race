@@ -20,6 +20,7 @@ import {
     Menu,
     MenuOpen,
     People,
+    Receipt,
     Settings,
     Work,
     Workspaces,
@@ -31,6 +32,7 @@ import {useTranslation} from 'react-i18next'
 import {
     readClubGlobal,
     readClubOwn,
+    readInvoiceGlobal,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
@@ -86,7 +88,6 @@ const RootLayout = () => {
                                 <SidebarItem
                                     text={t('navigation.titles.myClub')}
                                     icon={<Workspaces />}
-                                    authenticatedOnly
                                     privilege={readClubOwn}
                                     to={'/club/$clubId'}
                                     params={{clubId: user.clubId}}
@@ -95,7 +96,6 @@ const RootLayout = () => {
                             <SidebarItem
                                 text={t('navigation.titles.clubs')}
                                 icon={<Workspaces />}
-                                authenticatedOnly
                                 privilege={readClubGlobal}
                                 to={'/club'}
                             />
@@ -107,23 +107,26 @@ const RootLayout = () => {
                             <SidebarItem
                                 text={t('navigation.titles.users')}
                                 icon={<People />}
-                                authenticatedOnly
                                 privilege={readUserGlobal}
                                 to={'/user'}
                             />
                             <SidebarItem
                                 text={t('navigation.titles.roles')}
                                 icon={<Work />}
-                                authenticatedOnly
                                 privilege={readUserGlobal}
                                 to={'/role'}
                             />
                             <SidebarItem
                                 text={t('navigation.titles.config')}
                                 icon={<Settings />}
-                                authenticatedOnly
                                 privilege={updateEventGlobal}
                                 to={'/config'}
+                            />
+                            <SidebarItem
+                                text={t('navigation.titles.invoices')}
+                                icon={<Receipt />}
+                                privilege={readInvoiceGlobal}
+                                to={'/invoices'}
                             />
                         </Sidebar>
                         <Stack
@@ -132,7 +135,7 @@ const RootLayout = () => {
                                 boxSizing: 'border-box',
                                 flex: 1,
                                 minWidth: 0,
-                                justifyContent: 'space-between'
+                                justifyContent: 'space-between',
                             }}>
                             <Outlet />
                             {!user.loggedIn &&

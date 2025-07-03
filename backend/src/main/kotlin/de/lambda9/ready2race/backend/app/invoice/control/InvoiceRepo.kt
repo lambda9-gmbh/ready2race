@@ -11,7 +11,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.INVOIC
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -27,6 +26,27 @@ object InvoiceRepo {
     fun getDownload(id: UUID) = INVOICE_DOWNLOAD.selectOne { ID.eq(id) }
 
     fun getForRegistration(id: UUID) = INVOICE_FOR_EVENT_REGISTRATION.selectOne { ID.eq(id) }
+
+    fun count(
+        search: String?,
+    ): JIO<Int> = Jooq.query {
+        with(INVOICE_FOR_EVENT_REGISTRATION) {
+            fetchCount(
+                this,
+                search.metaSearch(searchFields()),
+            )
+        }
+    }
+
+    fun page(
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+    ): JIO<List<InvoiceForEventRegistrationRecord>> = Jooq.query {
+        with(INVOICE_FOR_EVENT_REGISTRATION) {
+            selectFrom(this)
+                .page(params, searchFields())
+                .fetch()
+        }
+    }
 
     fun countForEvent(
         eventId: UUID,

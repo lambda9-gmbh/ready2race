@@ -152,7 +152,8 @@
       "users": "Users",
       "config": "Configurations",
       "clubs": "Clubs",
-      "myClub": "My Club"
+      "myClub": "My Club",
+      "invoices": "Invoices"
     }
   },
   "dashboard": {

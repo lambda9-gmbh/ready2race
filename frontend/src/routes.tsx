@@ -11,6 +11,7 @@ import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
 import {
+    readInvoiceGlobal,
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
@@ -34,6 +35,7 @@ import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import LandingPage from './pages/LandingPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
+import InvoicesPage from './pages/AdministrationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -84,7 +86,9 @@ type TabSearch<TabType extends string> = {
     tab?: TabType
 }
 
-const validateTabSearch = <TabType extends string,>(search: TabSearch<TabType>): TabSearch<TabType> => {
+const validateTabSearch = <TabType extends string>(
+    search: TabSearch<TabType>,
+): TabSearch<TabType> => {
     return {
         tab: search.tab,
     }
@@ -295,7 +299,7 @@ export const clubIndexRoute = createRoute({
             location,
             'READ',
             'CLUB',
-            (user, scope) => scope === 'GLOBAL' || params.clubId === user.clubId
+            (user, scope) => scope === 'GLOBAL' || params.clubId === user.clubId,
         )
     },
 })
@@ -314,6 +318,15 @@ export const clubsIndexRoute = createRoute({
     },
 })
 
+export const invoicesRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: 'invoices',
+    component: () => <InvoicesPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readInvoiceGlobal)
+    },
+})
+
 const routeTree = rootRoute.addChildren([
     indexRoute,
     loginRoute,
@@ -325,9 +338,7 @@ const routeTree = rootRoute.addChildren([
             eventIndexRoute,
             eventRegistrationRoute,
             eventDayRoute.addChildren([eventDayIndexRoute]),
-            competitionRoute.addChildren([
-                competitionIndexRoute,
-            ]),
+            competitionRoute.addChildren([competitionIndexRoute]),
             eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),
     ]),
@@ -337,6 +348,7 @@ const routeTree = rootRoute.addChildren([
     registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
     resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
     clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
+    invoicesRoute,
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
@@ -344,7 +356,7 @@ const basepath = document.getElementById('ready2race-root')!.dataset.basepath
 export const router = createRouter({
     routeTree,
     context: undefined!,
-    basepath
+    basepath,
 })
 
 declare module '@tanstack/react-router' {

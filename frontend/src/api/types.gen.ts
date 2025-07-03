@@ -2907,6 +2907,13 @@ export type GetWorkShiftsForUserResponse = {
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type GetInvoicesResponse = {
+    data: Array<InvoiceDto>
+    pagination: Pagination
+}
+
+export type GetInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type DownloadInvoiceResponse = Blob | File
 
 export type DownloadInvoiceError = BadRequestError | ApiError

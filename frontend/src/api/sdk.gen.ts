@@ -412,6 +412,8 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    GetInvoicesError,
+    GetInvoicesResponse,
     DownloadInvoiceError,
     DownloadInvoiceResponse,
 } from './types.gen'
@@ -2046,6 +2048,15 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/{userId}/workshift',
+    })
+}
+
+export const getInvoices = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetInvoicesResponse, GetInvoicesError, ThrowOnError>({
+        ...options,
+        url: '/invoice',
     })
 }
 

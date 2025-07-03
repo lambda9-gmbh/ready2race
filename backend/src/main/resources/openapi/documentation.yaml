@@ -3745,6 +3745,39 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /invoice:
+    get:
+      operationId: getInvoices
+      responses:
+        200:
+          description: Invoices page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /invoice/{invoiceId}:
     get:
       operationId: downloadInvoice

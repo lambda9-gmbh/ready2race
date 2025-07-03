@@ -10,11 +10,11 @@ type Props = {
     icon: ReactElement
 } & (
     | {
-          authenticatedOnly: true
-          privilege?: Privilege
+          authenticatedOnly?: never
+          privilege: Privilege
       }
     | {
-          authenticatedOnly?: false
+          authenticatedOnly?: boolean
           privilege?: never
       }
 ) &
@@ -25,7 +25,7 @@ const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: P
     const user = useUser()
 
     if (!user.loggedIn) {
-        if (authenticatedOnly) {
+        if (authenticatedOnly || privilege) {
             return <></>
         }
     } else {

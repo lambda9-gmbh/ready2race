@@ -73,6 +73,20 @@ object InvoiceService {
 
     private val retryAfterError = 5.minutes
 
+    fun page(
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+    ): App<InvoiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
+
+        val total = !InvoiceRepo.count(params.search).orDie()
+        val page = !InvoiceRepo.page(params).orDie()
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total),
+            )
+        }
+    }
+
     fun pageForEvent(
         id: UUID,
         params: PaginationParameters<InvoiceForEventRegistrationSort>,
