@@ -2915,7 +2915,54 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-
+  /documentTemplate/{documentTemplateId}:
+    parameters:
+      - in: path
+        name: documentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully updates template
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocumentTemplate
+      responses:
+        204:
+          description: Template successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
   /documentTemplateType:
     get:
       operationId: getDocumentTemplateTypes

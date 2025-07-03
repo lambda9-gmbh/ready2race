@@ -23,6 +23,10 @@ object DocumentTemplateRepo {
 
     fun create(record: DocumentTemplateRecord) = DOCUMENT_TEMPLATE.insertReturning(record) { ID }
 
+    fun update(id: UUID, f: DocumentTemplateRecord.() -> Unit) = DOCUMENT_TEMPLATE.update(f) { ID.eq(id) }
+
+    fun delete(id: UUID) = DOCUMENT_TEMPLATE.delete { ID.eq(id) }
+
     fun getAssigned(documentType: DocumentType, eventId: UUID) = DOCUMENT_TEMPLATE_ASSIGNMENT.selectOne {
         DSL.and(
             DOCUMENT_TYPE.eq(documentType.name),

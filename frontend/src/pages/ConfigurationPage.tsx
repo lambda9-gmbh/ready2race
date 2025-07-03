@@ -46,8 +46,13 @@ import AssignContactInformation from '@components/contactInformation/AssignConta
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
 
-const CONFIGURATION_TABS = ['competition-templates', 'competition-elements', 'event-elements', 'global-settings'] as const
-export type ConfigurationTab = typeof CONFIGURATION_TABS[number]
+const CONFIGURATION_TABS = [
+    'competition-templates',
+    'competition-elements',
+    'event-elements',
+    'global-settings',
+] as const
+export type ConfigurationTab = (typeof CONFIGURATION_TABS)[number]
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
@@ -94,7 +99,6 @@ const ConfigurationPage = () => {
 
     const documentTemplateAdministrationProps = useEntityAdministration<DocumentTemplateDto>(
         t('document.template.template'),
-        {entityUpdate: false},
     )
 
     const workTypeAdministrationProps = useEntityAdministration<WorkTypeDto>(t('work.type.type'))
@@ -111,13 +115,22 @@ const ConfigurationPage = () => {
         <Stack spacing={4}>
             <Typography variant={'h1'}>{t('configuration.configuration')}</Typography>
             <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                <Tab label={t('configuration.tabs.competitionTemplates')} {...a11yProps('competition-templates')} />
-                <Tab label={t('configuration.tabs.competitionElements')} {...a11yProps('competition-elements')} />
+                <Tab
+                    label={t('configuration.tabs.competitionTemplates')}
+                    {...a11yProps('competition-templates')}
+                />
+                <Tab
+                    label={t('configuration.tabs.competitionElements')}
+                    {...a11yProps('competition-elements')}
+                />
                 <Tab
                     label={t('configuration.tabs.eventElements')}
                     {...a11yProps('event-elements')}
                 />
-                <Tab label={t('configuration.tabs.globalSettings')} {...a11yProps('global-settings')} />
+                <Tab
+                    label={t('configuration.tabs.globalSettings')}
+                    {...a11yProps('global-settings')}
+                />
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>
                 <CompetitionTemplateTable

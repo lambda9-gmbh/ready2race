@@ -15,6 +15,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentT
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentTemplateUsageRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.util.*
@@ -66,6 +68,19 @@ object DocumentTemplateService {
 
         noData
     }
+
+    fun updateTemplate(
+        id: UUID,
+        request: DocumentTemplateRequest,
+    ): App<DocumentTemplateError, ApiResponse.NoData> =
+        DocumentTemplateRepo.update(id) {
+            pagePaddingTop = request.pagePaddingTop
+            pagePaddingRight = request.pagePaddingRight
+            pagePaddingBottom = request.pagePaddingBottom
+            pagePaddingLeft = request.pagePaddingLeft
+        }.orDie()
+            .onNullFail { DocumentTemplateError.NotFound }
+            .map {ApiResponse.NoData }
 
     fun assignTemplate(
         docType: DocumentType,
@@ -123,4 +138,10 @@ object DocumentTemplateService {
             )
         }
     }
+
+    fun deleteTemplate(
+        id: UUID,
+    ): App<DocumentTemplateError, ApiResponse.NoData> =
+        DocumentTemplateRepo.delete(id).orDie().failIf({ it < 1}) { DocumentTemplateError.NotFound }
+            .map { ApiResponse.NoData }
 }

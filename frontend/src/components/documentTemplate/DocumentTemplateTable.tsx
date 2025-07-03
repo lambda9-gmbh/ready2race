@@ -1,10 +1,10 @@
-import {BaseEntityTableProps} from "@utils/types.ts";
-import {DocumentTemplateDto} from "@api/types.gen.ts";
-import {useTranslation} from "react-i18next";
-import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
-import EntityTable from "@components/EntityTable.tsx";
-import {PaginationParameters} from "@utils/ApiUtils.ts";
-import {getDocumentTemplates} from "@api/sdk.gen.ts";
+import {BaseEntityTableProps} from '@utils/types.ts'
+import {DocumentTemplateDto} from '@api/types.gen.ts'
+import {useTranslation} from 'react-i18next'
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import EntityTable from '@components/EntityTable.tsx'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {deleteDocumentTemplate, getDocumentTemplates} from '@api/sdk.gen.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -16,8 +16,11 @@ const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) =>
     getDocumentTemplates({
         signal,
-        query: {...paginationParameters}
+        query: {...paginationParameters},
     })
+
+const deleteRequest = (dto: DocumentTemplateDto) =>
+    deleteDocumentTemplate({path: {documentTemplateId: dto.id}})
 
 const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>) => {
     const {t} = useTranslation()
@@ -28,7 +31,7 @@ const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>)
             headerName: t('document.template.name'),
             minWidth: 200,
             flex: 1,
-        }
+        },
     ]
 
     return (
@@ -40,6 +43,7 @@ const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>)
             initialSort={initialSort}
             columns={columns}
             dataRequest={dataRequest}
+            deleteRequest={deleteRequest}
         />
     )
 }

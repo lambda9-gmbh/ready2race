@@ -2550,6 +2550,27 @@ export type AddDocumentTemplateResponse = void
 
 export type AddDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type UpdateDocumentTemplateData = {
+    body: DocumentTemplateRequest
+    path: {
+        documentTemplateId: string
+    }
+}
+
+export type UpdateDocumentTemplateResponse = void
+
+export type UpdateDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteDocumentTemplateData = {
+    path: {
+        documentTemplateId: string
+    }
+}
+
+export type DeleteDocumentTemplateResponse = void
+
+export type DeleteDocumentTemplateError = BadRequestError | ApiError
+
 export type GetDocumentTemplateTypesResponse = Array<DocumentTypeDto>
 
 export type GetDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError

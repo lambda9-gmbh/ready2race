@@ -327,6 +327,12 @@ import type {
     AddDocumentTemplateData,
     AddDocumentTemplateError,
     AddDocumentTemplateResponse,
+    UpdateDocumentTemplateData,
+    UpdateDocumentTemplateError,
+    UpdateDocumentTemplateResponse,
+    DeleteDocumentTemplateData,
+    DeleteDocumentTemplateError,
+    DeleteDocumentTemplateResponse,
     GetDocumentTemplateTypesError,
     GetDocumentTemplateTypesResponse,
     AssignDocumentTemplateData,
@@ -1713,6 +1719,32 @@ export const addDocumentTemplate = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/documentTemplate',
+    })
+}
+
+export const updateDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateDocumentTemplateResponse,
+        UpdateDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplate/{documentTemplateId}',
+    })
+}
+
+export const deleteDocumentTemplate = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteDocumentTemplateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteDocumentTemplateResponse,
+        DeleteDocumentTemplateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplate/{documentTemplateId}',
     })
 }
 
