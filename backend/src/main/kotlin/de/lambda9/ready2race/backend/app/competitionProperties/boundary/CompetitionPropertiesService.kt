@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionCategory.control.Competition
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesError
-import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequestDto
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.CompetitionSetupTemplateRepo
 import de.lambda9.ready2race.backend.app.fee.control.FeeRepo
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
@@ -71,7 +71,7 @@ object CompetitionPropertiesService {
     }
 
     fun checkRequestReferences(
-        request: CompetitionPropertiesRequestDto,
+        request: CompetitionPropertiesRequest,
     ): App<CompetitionPropertiesError, Unit> = KIO.comprehension {
 
         !checkNamedParticipantsExisting(request.namedParticipants.map { it.namedParticipant })

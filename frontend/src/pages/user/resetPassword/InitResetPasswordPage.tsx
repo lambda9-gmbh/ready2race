@@ -10,7 +10,7 @@ import ConfirmationMailSent from '@components/user/ConfirmationMailSent.tsx'
 import FormInputCaptcha from '@components/form/input/FormInputCaptcha.tsx'
 import {i18nLanguage, languageMapping} from '@utils/helpers.ts'
 import {CaptchaDto, TooManyRequestsError} from '@api/types.gen.ts'
-import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 
 type Form = {
     email: string
@@ -72,7 +72,8 @@ const InitResetPasswordPage = () => {
                 feedback.error(t('captcha.error.incorrect'))
             } else if (result.error.status.value === 422) {
                 feedback.error(t('user.resetPassword.error.invalid'))
-            } else if (result.error.status.value === 429) { // todo: It's possible to get RateLimits remaining from the response header before
+            } else if (result.error.status.value === 429) {
+                // todo: It's possible to get RateLimits remaining from the response header before
                 try {
                     const tooManyRequestsError = result.error as TooManyRequestsError // todo: better way than try catch?
                     feedback.error(
@@ -112,10 +113,10 @@ const InitResetPasswordPage = () => {
                                 </Alert>
                             )}
                             <SubmitButton
-                                label={t('user.resetPassword.init.submit')}
                                 disabled={!captcha.data || tooManyRequestsTimer > 0}
-                                submitting={submitting}
-                            />
+                                submitting={submitting}>
+                                {t('user.resetPassword.init.submit')}
+                            </SubmitButton>
                         </Stack>
                     </FormContainer>
                 </>

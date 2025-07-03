@@ -2,10 +2,10 @@ package de.lambda9.ready2race.backend.app.competition.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
-import de.lambda9.ready2race.backend.app.competition.entity.CompetitionRequest
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPropertiesSort
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
 import de.lambda9.ready2race.backend.app.competition.entity.*
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.competitionRegistration
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -20,7 +20,7 @@ fun Route.competition() {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
 
-                val body = !receiveKIO(CompetitionRequest.example)
+                val body = !receiveKIO(CompetitionPropertiesRequest.example)
                 CompetitionService.addCompetition(body, user.id!!, eventId)
             }
         }
@@ -65,7 +65,7 @@ fun Route.competition() {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionId = !pathParam("competitionId", uuid)
 
-                    val body = !receiveKIO(CompetitionRequest.example)
+                    val body = !receiveKIO(CompetitionPropertiesRequest.example)
                     CompetitionService.updateCompetition(body, user.id!!, competitionId)
                 }
             }

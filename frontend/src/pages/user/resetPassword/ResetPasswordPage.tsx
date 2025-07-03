@@ -60,10 +60,9 @@ const ResetPasswordPage = () => {
                                 formContext={formContext}
                                 passwordFieldLabel={t('user.resetPassword.newPassword')}
                             />
-                            <SubmitButton
-                                label={t('user.resetPassword.resetPassword')}
-                                submitting={submitting}
-                            />
+                            <SubmitButton submitting={submitting}>
+                                {t('user.resetPassword.resetPassword')}
+                            </SubmitButton>
                         </Stack>
                     </FormContainer>
                 </>

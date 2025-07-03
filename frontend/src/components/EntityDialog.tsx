@@ -8,7 +8,7 @@ import {useFeedback} from '@utils/hooks.ts'
 import {SubmitButton} from './form/SubmitButton.tsx'
 import {GridValidRowModel} from '@mui/x-data-grid'
 import {ApiError} from '@api/types.gen.ts'
-import BaseDialog from "@components/BaseDialog.tsx";
+import BaseDialog from '@components/BaseDialog.tsx'
 
 type EntityDialogProps<
     Entity extends GridValidRowModel,
@@ -137,17 +137,13 @@ const EntityDialog = <
                         {t('common.cancel')}
                     </Button>
                     {showSaveAndNew && entity == null && (
-                        <SubmitButton
-                            id={'saveAndNew'}
-                            label={t('common.saveAndNew')}
-                            submitting={submitting}
-                        />
+                        <SubmitButton id={'saveAndNew'} submitting={submitting}>
+                            {t('common.saveAndNew')}
+                        </SubmitButton>
                     )}
-                    <SubmitButton
-                        disabled={disableSave}
-                        label={t('common.save')}
-                        submitting={submitting}
-                    />
+                    <SubmitButton disabled={disableSave} submitting={submitting}>
+                        {t('common.save')}
+                    </SubmitButton>
                 </DialogActions>
             </FormContainer>
         </BaseDialog>

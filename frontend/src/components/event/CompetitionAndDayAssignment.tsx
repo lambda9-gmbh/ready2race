@@ -165,7 +165,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                         <Button onClick={closeDialog} disabled={submitting}>
                             {t('common.cancel')}
                         </Button>
-                        <SubmitButton label={t('common.save')} submitting={submitting} />
+                        <SubmitButton submitting={submitting} >{t('common.save')}</SubmitButton>
                     </DialogActions>
                 </FormContainer>
             </BaseDialog>
