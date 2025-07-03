@@ -10,6 +10,7 @@ import {downloadInvoice} from '@api/sdk.gen.ts'
 import {useRef} from 'react'
 import {Link} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
+import {format} from "date-fns";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -48,6 +49,21 @@ const InvoiceTable = (props: Props) => {
             minWidth: 150,
             flex: 1,
         },
+        {
+            field: 'totalAmount',
+            headerName: t('invoice.amount'),
+            minWidth: 150,
+            flex: 0,
+            sortable: false,
+            valueFormatter: v => v + ' €'
+        },
+        {
+            field: 'createdAt',
+            headerName: t('entity.createdAt'),
+            minWidth: 150,
+            flex: 0,
+            valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
+        }
     ]
 
     const handleDownload = async (invoiceId: string) => {

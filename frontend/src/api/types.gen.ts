@@ -347,7 +347,14 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
-export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE' | 'CANNOT_ASSIGN_ROLES'
+export type ErrorCode =
+    | 'CAPTCHA_WRONG'
+    | 'EMAIL_IN_USE'
+    | 'CANNOT_ASSIGN_ROLES'
+    | 'EVENT_REGISTRATION_ONGOING'
+    | 'INVOICES_ALREADY_PRODUCED'
+    | 'NO_ASSIGNED_PAYEE_INFORMATION'
+    | 'NO_ASSIGNED_CONTACT_INFORMATION'
 
 export type EventDayDto = {
     id: string
@@ -604,6 +611,7 @@ export type InviteRequest = {
 export type InvoiceDto = {
     id: string
     invoiceNumber: string
+    totalAmount: string
     createdAt: string
 }
 

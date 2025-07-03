@@ -700,6 +700,17 @@
     "download": "Herunterladen",
     "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
     "invoiceNumber": "Rechnungsnummer",
+    "amount": "Rechnungsbetrag",
+    "produce": {
+      "success": "Rechnungen werden erstellt und per E-Mail verschickt.",
+      "error": {
+        "notFound": "",
+        "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
+        "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
+        "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
+        "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
+      }
+    },
     "bank": {
       "accountData": {
         "holder": "Kontoinhaber",

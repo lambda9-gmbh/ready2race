@@ -9,6 +9,7 @@ fun InvoiceForEventRegistrationRecord.toDto(): App<Nothing, InvoiceDto> = KIO.ok
     InvoiceDto(
         id = id!!,
         invoiceNumber = invoiceNumber!!,
+        totalAmount = totalAmount!!,
         createdAt = createdAt!!,
     )
 )

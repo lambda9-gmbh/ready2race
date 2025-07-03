@@ -700,6 +700,16 @@
     "download": "Download",
     "downloadError": "An error occurred trying to download the invoice.",
     "invoiceNumber": "Invoice number",
+    "amount": "Amount",
+    "produce": {
+      "success": "Invoices will be produced and sent via email.",
+      "error": {
+        "NO_ASSIGNED_PAYEE_INFORMATION": "Please assign valid payee information.",
+        "NO_ASSIGNED_CONTACT_INFORMATION": "Please assign valid contact information.",
+        "INVOICES_ALREADY_PRODUCED": "Producing invoices was already started.",
+        "EVENT_REGISTRATION_ONGOING": "The registration period for this event is still ongoing."
+      }
+    },
     "bank": {
       "accountData": {
         "holder": "Holder",

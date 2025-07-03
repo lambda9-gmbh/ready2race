@@ -3940,6 +3940,10 @@ components:
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES
+        - EVENT_REGISTRATION_ONGOING
+        - INVOICES_ALREADY_PRODUCED
+        - NO_ASSIGNED_PAYEE_INFORMATION
+        - NO_ASSIGNED_CONTACT_INFORMATION
 
     Gender:
       type: string
@@ -6266,6 +6270,7 @@ components:
       required:
         - id
         - invoiceNumber
+        - totalAmount
         - createdAt
       properties:
         id:
@@ -6273,6 +6278,9 @@ components:
           format: uuid
         invoiceNumber:
           type: string
+        totalAmount:
+          type: string
+          format: decimal
         createdAt:
           type: string
           format: date-time

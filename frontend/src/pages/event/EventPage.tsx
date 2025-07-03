@@ -158,9 +158,19 @@ const EventPage = () => {
         })
 
         if (error !== undefined) {
-            feedback.error('[todo] could not produce invoices, cause: ...')
+            let reason = t('common.error.unexpected')
+            if (error.status.value === 409) {
+                switch (error.errorCode) {
+                    case 'NO_ASSIGNED_PAYEE_INFORMATION':
+                    case 'NO_ASSIGNED_CONTACT_INFORMATION':
+                    case 'INVOICES_ALREADY_PRODUCED':
+                    case 'EVENT_REGISTRATION_ONGOING':
+                        reason = t(`invoice.produce.error.${error.errorCode}`)
+                }
+            }
+            feedback.error(reason)
         } else if (data !== undefined) {
-            feedback.success('[todo] invoice producing jobs created')
+            feedback.success(t('invoice.produce.success'))
         }
     }
 
