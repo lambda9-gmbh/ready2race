@@ -91,8 +91,6 @@ object CompetitionTemplateService {
 
         !CompetitionRepo.updateByTemplate(templateId) {
             template = null
-            updatedAt = LocalDateTime.now()
-            updatedBy = userId
         }.orDie()
 
         !CompetitionTemplateRepo.update(templateId) {
