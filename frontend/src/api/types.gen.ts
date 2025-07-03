@@ -179,6 +179,7 @@ export type CompetitionPropertiesRequestDto = {
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
+    setupTemplate?: string
 }
 
 export type CompetitionRegistrationFeeDto = {
@@ -285,6 +286,12 @@ export type CompetitionSetupTemplateDto = {
     rounds: Array<CompetitionSetupRoundDto>
 }
 
+export type CompetitionSetupTemplateOverviewDto = {
+    id: string
+    name: string
+    description?: string
+}
+
 export type CompetitionSetupTemplateRequest = {
     name: string
     description?: string
@@ -294,6 +301,7 @@ export type CompetitionSetupTemplateRequest = {
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
+    setupTemplate?: CompetitionSetupTemplateOverviewDto
 }
 
 export type CompetitionTemplateRequest = {
@@ -2401,6 +2409,10 @@ export type DeleteCompetitionSetupTemplateData = {
 export type DeleteCompetitionSetupTemplateResponse = void
 
 export type DeleteCompetitionSetupTemplateError = BadRequestError | ApiError
+
+export type GetCompetitionSetupTemplateOverviewResponse = Array<CompetitionSetupTemplateOverviewDto>
+
+export type GetCompetitionSetupTemplateOverviewError = ApiError
 
 export type GetDocumentTemplatesData = {
     query?: {

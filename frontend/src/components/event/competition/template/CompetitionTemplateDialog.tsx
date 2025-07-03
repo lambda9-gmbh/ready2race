@@ -36,7 +36,7 @@ const CompetitionTemplateDialog = (props: BaseEntityDialogProps<CompetitionTempl
     const onOpen = useCallback(() => {
         formContext.reset(
             props.entity
-                ? mapCompetitionPropertiesToCompetitionForm(props.entity.properties, t('decimal.point'))
+                ? mapCompetitionPropertiesToCompetitionForm(props.entity.properties, t('decimal.point'), props.entity.setupTemplate)
                 : competitionFormDefaultValues,
         )
     }, [props.entity])

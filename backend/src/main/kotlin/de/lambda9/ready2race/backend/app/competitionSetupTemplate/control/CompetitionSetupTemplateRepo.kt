@@ -17,10 +17,12 @@ object CompetitionSetupTemplateRepo {
 
     fun create(record: CompetitionSetupTemplateRecord) = COMPETITION_SETUP_TEMPLATE.insertReturning(record) { ID }
 
-    fun update(id: UUID, f: CompetitionSetupTemplateRecord.() -> Unit) = COMPETITION_SETUP_TEMPLATE.update(f) { ID.eq(id) }
+    fun update(id: UUID, f: CompetitionSetupTemplateRecord.() -> Unit) =
+        COMPETITION_SETUP_TEMPLATE.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = COMPETITION_SETUP_TEMPLATE.delete { ID.eq(id) }
 
+    fun exists(id: UUID) = COMPETITION_SETUP_TEMPLATE.exists { ID.eq(id) }
 
     fun count(
         search: String?
@@ -40,13 +42,20 @@ object CompetitionSetupTemplateRepo {
         }
     }
 
-    fun getById(
+    fun get(
         id: UUID
     ): JIO<CompetitionSetupTemplateRecord?> = Jooq.query {
         with(COMPETITION_SETUP_TEMPLATE) {
             selectFrom(this)
                 .where(ID.eq(id))
                 .fetchOne()
+        }
+    }
+
+    fun get(): JIO<List<CompetitionSetupTemplateRecord>> = Jooq.query {
+        with(COMPETITION_SETUP_TEMPLATE) {
+            selectFrom(this)
+                .fetch()
         }
     }
 }

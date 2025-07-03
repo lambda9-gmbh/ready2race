@@ -8,6 +8,7 @@ import java.util.*
 
 sealed interface CompetitionPropertiesError : ServiceError {
     data object CompetitionCategoryUnknown : CompetitionPropertiesError
+    data object CompetitionSetupTemplateUnknown : CompetitionPropertiesError
 
     data class NamedParticipantsUnknown(val namedParticipants: List<UUID>) : CompetitionPropertiesError
 
@@ -17,6 +18,11 @@ sealed interface CompetitionPropertiesError : ServiceError {
         CompetitionCategoryUnknown -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Referenced competitionCategory unknown"
+        )
+
+        CompetitionSetupTemplateUnknown -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Referenced competitionSetupTemplate unknown"
         )
 
         is NamedParticipantsUnknown -> ApiError(

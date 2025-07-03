@@ -264,7 +264,10 @@ select ct.id,
        cc.name                                as category_name,
        cc.description                         as category_description,
        coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees
+       coalesce(fs.fees, '{}')                as fees,
+       cst.id                                 as setup_template_id,
+       cst.name                               as setup_template_name,
+       cst.description                        as setup_template_description
 from competition_template ct
          left join competition_properties cp on ct.id = cp.competition_template
          left join competition_category cc on cp.competition_category = cc.id
@@ -277,7 +280,8 @@ from competition_template ct
                            array_agg(ffcp)
                            filter (where ffcp.competition_properties is not null ) as fees
                     from fee_for_competition_properties ffcp
-                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
+         left join competition_setup_template cst on ct.competition_setup_template = cst.id;
 
 create view app_user_invitation_with_roles as
 select aui.id,

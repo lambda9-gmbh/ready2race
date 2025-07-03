@@ -1,10 +1,5 @@
 import {AutocompleteOption} from '@utils/types.ts'
-import {
-    ErrorOption,
-    FieldValues,
-    useFieldArray,
-    UseFormReturn,
-} from 'react-hook-form-mui'
+import {ErrorOption, FieldValues, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {Box, Button, Divider, IconButton, Stack, Tooltip, Typography} from '@mui/material'
@@ -12,7 +7,12 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {getNamedParticipants, getCompetitionCategories, getFees} from '@api/sdk.gen.ts'
+import {
+    getNamedParticipants,
+    getCompetitionCategories,
+    getFees,
+    getCompetitionSetupTemplateOverview,
+} from '@api/sdk.gen.ts'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
@@ -22,6 +22,7 @@ import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
     fieldArrayModified?: () => void
+    hideCompetitionSetupTemplate?: boolean
 }
 
 // todo: rework styling
@@ -84,6 +85,26 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
     )
     const categories: AutocompleteOption[] =
         categoriesData?.data.map(dto => ({
+            id: dto.id,
+            label: dto.name,
+        })) ?? []
+
+    const competitionSetupTemplatesResult =
+        props.hideCompetitionSetupTemplate !== true
+            ? useFetch(signal => getCompetitionSetupTemplateOverview({signal}), {
+                  onResponse: ({error}) => {
+                      if (error) {
+                          feedback.error(
+                              t('common.load.error.multiple.short', {
+                                  entity: t('event.competition.setup.template.templates'),
+                              }),
+                          )
+                      }
+                  },
+              })
+            : null
+    const setupTemplates: AutocompleteOption[] =
+        competitionSetupTemplatesResult?.data?.map(dto => ({
             id: dto.id,
             label: dto.name,
         })) ?? []
@@ -206,6 +227,17 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     getOptionKey: field => field.id,
                 }}
             />
+            {props.hideCompetitionSetupTemplate !== true && (
+                <FormInputAutocomplete
+                    name="setupTemplate"
+                    options={setupTemplates}
+                    label={t('event.competition.setup.template.template')}
+                    loading={competitionSetupTemplatesResult?.pending}
+                    autocompleteProps={{
+                        getOptionKey: field => field.id,
+                    }}
+                />
+            )}
             <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
                 {namedParticipantsError && (
@@ -292,8 +324,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                     </Stack>
                                 </Stack>
                             </Box>
-                            <Tooltip
-                                title={t('common.delete')}>
+                            <Tooltip title={t('common.delete')}>
                                 <IconButton
                                     onClick={() => {
                                         removeNamedParticipant(index)
@@ -360,8 +391,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                     />
                                 </Stack>
                             </Box>
-                            <Tooltip
-                                title={t('common.delete')}>
+                            <Tooltip title={t('common.delete')}>
                                 <IconButton
                                     onClick={() => {
                                         removeFee(index)

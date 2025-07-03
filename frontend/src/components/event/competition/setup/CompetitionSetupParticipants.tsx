@@ -22,7 +22,7 @@ const CompetitionSetupParticipants = ({
                     {getMatchupsString(controlledParticipantFields.map(v => v.seed))}
                 </Typography>
             ) : (
-                <Stack spacing={2} sx={{border: 1, borderColor: 'lightgrey', p: 1}}>
+                <Stack spacing={2}>
                     {controlledParticipantFields.map((participant, index) => (
                         <Stack
                             key={participant.id}
