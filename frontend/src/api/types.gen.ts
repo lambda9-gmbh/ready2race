@@ -2574,6 +2574,19 @@ export type DeleteDocumentTemplateResponse = void
 
 export type DeleteDocumentTemplateError = BadRequestError | ApiError
 
+export type DownloadDocumentTemplateSampleData = {
+    path: {
+        documentTemplateId: string
+    }
+    query: {
+        documentType: DocumentType
+    }
+}
+
+export type DownloadDocumentTemplateSampleResponse = Blob | File
+
+export type DownloadDocumentTemplateSampleError = BadRequestError | ApiError
+
 export type GetDocumentTemplateTypesResponse = Array<DocumentTypeDto>
 
 export type GetDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError

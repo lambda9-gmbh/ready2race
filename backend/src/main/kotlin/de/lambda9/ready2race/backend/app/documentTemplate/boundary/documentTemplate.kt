@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
@@ -92,6 +93,15 @@ fun Route.documentTemplate() {
                     !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("documentTemplateId", uuid)
                     DocumentTemplateService.deleteTemplate(id)
+                }
+            }
+
+            get("/preview") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("documentTemplateId", uuid)
+                    val type = !queryParam("documentType", enum<DocumentType>())
+                    DocumentTemplateService.getPreview(id, type)
                 }
             }
         }

@@ -133,8 +133,9 @@ const EventPage = () => {
         [data, user],
     )
 
+    // TODO @Duplication: see InvoiceTable download
     const handleReportDownload = async () => {
-        const {data, error} = await getRegistrationResult({
+        const {data, error, response} = await getRegistrationResult({
             path: {eventId},
             query: {
                 remake: true,
@@ -142,11 +143,14 @@ const EventPage = () => {
         })
         const anchor = downloadRef.current
 
+        const disposition = response.headers.get('Content-Disposition')
+        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
+
         if (error) {
             feedback.error(t('event.document.download.error'))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
-            anchor.download = 'registration-result.pdf' // TODO: read from content-disposition header
+            anchor.download = filename ?? 'registration_result.pdf'
             anchor.click()
             anchor.href = ''
             anchor.download = ''

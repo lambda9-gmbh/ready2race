@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.database
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
 import de.lambda9.ready2race.backend.calls.pagination.toOrderBy
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.*
@@ -71,6 +72,16 @@ fun <R : Record, T : TableImpl<R>> T.select(
     condition: T.() -> Condition = { DSL.trueCondition() }
 ): JIO<List<R>> = Jooq.query {
     fetch(this@select, condition())
+}
+
+fun <R : Record, T : TableImpl<R>, A> T.select(
+    selection: T.() -> TableField<R, A>,
+    condition: T.() -> Condition,
+): JIO<List<A>> = Jooq.query {
+    select(selection())
+        .from(this@select)
+        .where(condition())
+        .fetch { it.value1() }
 }
 
 fun <R : Record, T : TableImpl<R>> T.selectAny(

@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.DocumentTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_ASSIGNMENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_DATA
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_USAGE
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_TEMPLATE_USAGE
 import de.lambda9.tailwind.jooq.JIO
@@ -20,6 +21,8 @@ object DocumentTemplateRepo {
     private fun DocumentTemplate.searchFields() = listOf(NAME)
 
     fun exists(id: UUID) = DOCUMENT_TEMPLATE.exists { ID.eq(id) }
+
+    fun get(id: UUID) = DOCUMENT_TEMPLATE.selectOne { ID.eq(id) }
 
     fun create(record: DocumentTemplateRecord) = DOCUMENT_TEMPLATE.insertReturning(record) { ID }
 

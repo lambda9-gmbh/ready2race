@@ -108,6 +108,10 @@
       "assignments": {
         "global": "Globally assigned templates",
         "event": "Event assigned templates"
+      },
+      "preview": {
+        "show": "Preview sample",
+        "error": "Cannot load preview."
       }
     }
   },
@@ -705,6 +709,12 @@
     "invoiceNumber": "Invoice number",
     "amount": "Amount",
     "produce": {
+      "info": {
+        "paymentDueBy": {
+          "title": "Default deadline for payment",
+          "content": "If no invoice payment due date is defined for this event, a default value of 14 days from the invoice creation date will be used."
+        }
+      },
       "success": "Invoices will be produced and sent via email. This may take some minutes.",
       "error": {
         "NO_ASSIGNED_PAYEE_INFORMATION": "Please assign valid payee information.",

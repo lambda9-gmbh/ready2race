@@ -108,6 +108,10 @@
       "assignments": {
         "global": "Global zugewiesene Vorlagen",
         "event": "Für Veranstaltung zugewiesene Vorlagen"
+      },
+      "preview": {
+        "show": "Mustervorschau",
+        "error": "Fehler beim Laden der Vorschau"
       }
     }
   },
@@ -705,6 +709,12 @@
     "invoiceNumber": "Rechnungsnummer",
     "amount": "Rechnungsbetrag",
     "produce": {
+      "info": {
+        "paymentDueBy": {
+          "title": "Standard Zahlungsziel für Rechnungen",
+          "content": "Wenn für diese Veranstaltung kein Fälligkeitsdatum zur Begleichung der Rechnung definiert ist, wird ein Standardwert von 14 Tagen ab Erstellung der Rechnung verwendet."
+        }
+      },
       "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
       "error": {
         "notFound": "",

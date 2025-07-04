@@ -2983,6 +2983,43 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+  /documentTemplate/{documentTemplateId}/preview:
+    parameters:
+      - in: path
+        name: documentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: documentType
+        required: true
+        schema:
+          $ref: '#/components/schemas/DocumentType'
+    get:
+      operationId: downloadDocumentTemplateSample
+      responses:
+        200:
+          description: File retrieved
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /documentTemplateType:
     get:
       operationId: getDocumentTemplateTypes

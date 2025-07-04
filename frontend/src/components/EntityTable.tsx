@@ -181,10 +181,6 @@ const EntityTableInternal = <
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
 
-    const handleDeleteErrorGeneric = (_: DeleteError) => {
-        feedback.error(t('entity.delete.error', {entity: entityName}))
-    }
-
     const cols: GridColDef<Entity>[] = [
         ...(linkColumn
             ? [
@@ -245,7 +241,7 @@ const EntityTableInternal = <
                                       if (error) {
                                           onDeleteError
                                               ? onDeleteError(error)
-                                              : handleDeleteErrorGeneric(error)
+                                              : feedback.error(t('entity.delete.error', {entity: entityName}))
                                       } else {
                                           onDelete?.()
                                           feedback.success(

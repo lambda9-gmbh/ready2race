@@ -32,6 +32,7 @@ import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
@@ -529,15 +530,44 @@ object EventRegistrationService {
         val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.REGISTRATION_REPORT, eventId).orDie()
             .andThenNotNull { it.toPdfTemplate() }
 
-        val doc = document(pdfTemplate) {
+        val filename = "registration_result_${result.eventName!!.replace(" ", "-")}_${
+            LocalDateTime.now().format(
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME
+            )
+        }.pdf"
+
+        val bytes = buildPdf(
+            data = EventRegistrationResultData.fromPersisted(result),
+            template = pdfTemplate,
+        )
+
+        val documentRecord = EventRegistrationReportRecord(
+            event = eventId,
+            name = filename,
+            createdAt = LocalDateTime.now(),
+        )
+        val id = !EventRegistrationReportRepo.create(documentRecord).orDie()
+        val dataRecord = EventRegistrationReportDataRecord(
+            resultDocument = id,
+            data = bytes,
+        )
+        !EventRegistrationReportDataRepo.create(dataRecord).orDie()
+
+        ok(filename to bytes)
+    }
+
+    fun buildPdf(
+        data: EventRegistrationResultData,
+        template: PageTemplate?,
+    ): ByteArray {
+        val doc = document(template) {
             // TODO: Instead don't allow this action
-            if (result.competitions!!.isEmpty()) {
+            if (data.competitionRegistrations.isEmpty()) {
                 page {
                     text { "keine Wettkämpfe in dieser Veranstaltung" }
                 }
             }
-            result.competitions!!.sortedWith(lexiNumberComp { it?.identifier }).forEach { competition ->
-                competition!!
+            data.competitionRegistrations.sortedWith(lexiNumberComp { it.identifier }).forEach { competition ->
                 page {
                     block(
                         padding = Padding(0f, 0f, 0f, 20f)
@@ -566,7 +596,7 @@ object EventRegistrationService {
                                 cell {
                                     text(
                                         fontSize = 12f,
-                                    ) { competition.identifier!! }
+                                    ) { competition.identifier }
                                 }
                                 cell {
                                     competition.shortName?.let {
@@ -578,13 +608,13 @@ object EventRegistrationService {
                                 cell {
                                     text(
                                         fontSize = 12f,
-                                    ) { competition.name!! }
+                                    ) { competition.name }
                                 }
                             }
                         }
                     }
 
-                    if (competition.clubRegistrations!!.isEmpty()) {
+                    if (competition.clubRegistrations.isEmpty()) {
                         text(
                             fontStyle = FontStyle.BOLD,
                             fontSize = 11f,
@@ -593,17 +623,16 @@ object EventRegistrationService {
                             newLine = false,
                         ) { "Competition cancelled" }
                     } else {
-                        competition.clubRegistrations!!.forEach { club ->
-                            club!!.teams!!.forEach { team ->
-                                team!!
+                        competition.clubRegistrations.forEach { club ->
+                            club.teams.forEach { team ->
                                 block(
                                     padding = Padding(0f, 0f, 0f, 15f)
                                 ) {
 
                                     text(
                                         fontStyle = FontStyle.BOLD
-                                    ) { club.name!! }
-                                    team.teamName?.let {
+                                    ) { club.name }
+                                    team.name?.let {
                                         text(
                                             newLine = false,
                                         ) { " $it" }
@@ -614,31 +643,35 @@ object EventRegistrationService {
                                         withBorder = true,
                                     ) {
                                         column(0.15f)
+                                        column(0.05f)
                                         column(0.2f)
                                         column(0.2f)
                                         column(0.1f)
-                                        column(0.35f)
+                                        column(0.3f)
 
-                                        team.participants!!
-                                            .sortedBy { it!!.role }
+                                        team.participants
+                                            .sortedBy { it.role }
                                             .forEachIndexed { idx, member ->
                                                 row(
                                                     color = if (idx % 2 == 1) Color(230, 230, 230) else null,
                                                 ) {
                                                     cell {
-                                                        text { member!!.role!! }
+                                                        text { member.role }
                                                     }
                                                     cell {
-                                                        text { member!!.firstname!! }
+                                                        text { member.gender.name }
                                                     }
                                                     cell {
-                                                        text { member!!.lastname!! }
+                                                        text { member.firstname }
                                                     }
                                                     cell {
-                                                        text { member!!.year!!.toString() }
+                                                        text { member.lastname }
                                                     }
                                                     cell {
-                                                        text { member!!.externalClubName ?: club.name!! }
+                                                        text { member.year.toString() }
+                                                    }
+                                                    cell {
+                                                        text { member.externalClubName ?: club.name }
                                                     }
                                                 }
                                             }
@@ -655,27 +688,9 @@ object EventRegistrationService {
         doc.save(out)
         doc.close()
 
-        val filename = "registration_result_${result.eventName!!.replace(" ", "-")}_${
-            LocalDateTime.now().format(
-                DateTimeFormatter.ISO_LOCAL_DATE_TIME
-            )
-        }.pdf"
-
         val bytes = out.toByteArray()
         out.close()
 
-        val documentRecord = EventRegistrationReportRecord(
-            event = eventId,
-            name = filename,
-            createdAt = LocalDateTime.now(),
-        )
-        val id = !EventRegistrationReportRepo.create(documentRecord).orDie()
-        val dataRecord = EventRegistrationReportDataRecord(
-            resultDocument = id,
-            data = bytes,
-        )
-        !EventRegistrationReportDataRepo.create(dataRecord).orDie()
-
-        ok(filename to bytes)
+        return bytes
     }
 }

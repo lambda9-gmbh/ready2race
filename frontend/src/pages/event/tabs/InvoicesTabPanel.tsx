@@ -9,6 +9,7 @@ import {getEventInvoices, produceInvoicesForEventRegistrations} from '@api/sdk.g
 import {Button} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createInvoiceGlobal} from '@authorization/privileges.ts'
+import {useConfirmation} from "@contexts/confirmation/ConfirmationContext.ts";
 
 type Props = {
     activeTab: EventTab
@@ -21,33 +22,42 @@ const InvoicesTabPanel = ({activeTab, eventId, invoicesProducible, reloadEvent}:
     const {t} = useTranslation()
     const feedback = useFeedback()
     const {checkPrivilege} = useUser()
+    const {confirmAction} = useConfirmation()
 
     const invoiceAdministrationProps = useEntityAdministration<InvoiceDto>(t('invoice.invoice'), {
         entityCreate: false,
         entityUpdate: false,
     })
 
-    const handleProduceInvoices = async () => {
-        const {data, error} = await produceInvoicesForEventRegistrations({
-            path: {eventId},
-        })
-
-        if (error !== undefined) {
-            let reason = t('common.error.unexpected')
-            if (error.status.value === 409) {
-                switch (error.errorCode) {
-                    case 'NO_ASSIGNED_PAYEE_INFORMATION':
-                    case 'NO_ASSIGNED_CONTACT_INFORMATION':
-                    case 'INVOICES_ALREADY_PRODUCED':
-                    case 'EVENT_REGISTRATION_ONGOING':
-                        reason = t(`invoice.produce.error.${error.errorCode}`)
+    const handleProduceInvoices = () => {
+        confirmAction(
+            async () => {
+                const {data, error} = await produceInvoicesForEventRegistrations({
+                    path: {eventId},
+                })
+                if (error !== undefined) {
+                    let reason = t('common.error.unexpected')
+                    if (error.status.value === 409) {
+                        switch (error.errorCode) {
+                            case 'NO_ASSIGNED_PAYEE_INFORMATION':
+                            case 'NO_ASSIGNED_CONTACT_INFORMATION':
+                            case 'INVOICES_ALREADY_PRODUCED':
+                            case 'EVENT_REGISTRATION_ONGOING':
+                                reason = t(`invoice.produce.error.${error.errorCode}`)
+                        }
+                    }
+                    feedback.error(reason)
+                } else if (data !== undefined) {
+                    feedback.success(t('invoice.produce.success'))
+                    reloadEvent()
                 }
+            },
+            {
+                title: t('invoice.produce.info.paymentDueBy.title'),
+                content: t('invoice.produce.info.paymentDueBy.content'),
+                okText: t('event.action.produceInvoices')
             }
-            feedback.error(reason)
-        } else if (data !== undefined) {
-            feedback.success(t('invoice.produce.success'))
-            reloadEvent()
-        }
+        )
     }
 
     return (

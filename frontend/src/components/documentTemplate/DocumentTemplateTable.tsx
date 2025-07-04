@@ -1,10 +1,13 @@
-import {BaseEntityTableProps} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityTableAction} from '@utils/types.ts'
 import {DocumentTemplateDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import EntityTable from '@components/EntityTable.tsx'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {deleteDocumentTemplate, getDocumentTemplates} from '@api/sdk.gen.ts'
+import {Preview} from "@mui/icons-material";
+import {useState} from "react";
+import DocumentTemplatePreviewDialog from "@components/documentTemplate/DocumentTemplatePreviewDialog.tsx";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -24,6 +27,12 @@ const deleteRequest = (dto: DocumentTemplateDto) =>
 
 const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>) => {
     const {t} = useTranslation()
+    const [previewId, setPreviewId] = useState<string | null>(null)
+    const showPreview = previewId !== null
+
+    const handleClosePreview = () => {
+        setPreviewId(null)
+    }
 
     const columns: GridColDef<DocumentTemplateDto>[] = [
         {
@@ -34,17 +43,31 @@ const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>)
         },
     ]
 
-    return (
-        <EntityTable
-            {...props}
-            parentResource={'EVENT'}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            deleteRequest={deleteRequest}
+
+    const customEntityActions = (entity: DocumentTemplateDto): EntityTableAction[] => [
+        <GridActionsCellItem
+            icon={<Preview />}
+            label={t('document.template.preview.show')}
+            onClick={() => setPreviewId(entity.id)}
+            showInMenu
         />
+    ]
+
+    return (
+        <>
+            <EntityTable
+                {...props}
+                parentResource={'EVENT'}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                deleteRequest={deleteRequest}
+                customEntityActions={customEntityActions}
+            />
+            <DocumentTemplatePreviewDialog open={showPreview} onClose={handleClosePreview} documentTemplateId={previewId}/>
+        </>
     )
 }
 

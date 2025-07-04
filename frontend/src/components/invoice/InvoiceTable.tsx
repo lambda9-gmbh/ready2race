@@ -73,11 +73,11 @@ const InvoiceTable = (props: Props) => {
         const disposition = response.headers.get('Content-Disposition')
         const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
 
-        if (error || !filename) {
+        if (error) {
             feedback.error(t('invoice.downloadError'))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
-            anchor.download = filename
+            anchor.download = filename ?? 'invoice.pdf'
             anchor.click()
             anchor.href = ''
             anchor.download = ''

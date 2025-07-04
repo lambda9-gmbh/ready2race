@@ -335,6 +335,9 @@ import type {
     DeleteDocumentTemplateData,
     DeleteDocumentTemplateError,
     DeleteDocumentTemplateResponse,
+    DownloadDocumentTemplateSampleData,
+    DownloadDocumentTemplateSampleError,
+    DownloadDocumentTemplateSampleResponse,
     GetDocumentTemplateTypesError,
     GetDocumentTemplateTypesResponse,
     AssignDocumentTemplateData,
@@ -1763,6 +1766,19 @@ export const deleteDocumentTemplate = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const downloadDocumentTemplateSample = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadDocumentTemplateSampleData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadDocumentTemplateSampleResponse,
+        DownloadDocumentTemplateSampleError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/documentTemplate/{documentTemplateId}/preview',
+    })
+}
+
 export const getDocumentTemplateTypes = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
@@ -2044,7 +2060,7 @@ export const addWorkShift = <ThrowOnError extends boolean = false>(
 ) => {
     return (options?.client ?? client).post<AddWorkShiftResponse, AddWorkShiftError, ThrowOnError>({
         ...options,
-        url: 'event/{eventId}/workshift',
+        url: '/event/{eventId}/workshift',
     })
 }
 
@@ -2054,7 +2070,7 @@ export const getWorkShifts = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<GetWorkShiftsResponse, GetWorkShiftsError, ThrowOnError>(
         {
             ...options,
-            url: 'event/{eventId}/workshift',
+            url: '/event/{eventId}/workshift',
         },
     )
 }
@@ -2068,7 +2084,7 @@ export const updateWorkShift = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: 'event/{eventId}/workshift/{workShiftId}',
+        url: '/event/{eventId}/workshift/{workShiftId}',
     })
 }
 
@@ -2081,7 +2097,7 @@ export const deleteWorkShift = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: 'event/{eventId}/workshift/{workShiftId}',
+        url: '/event/{eventId}/workshift/{workShiftId}',
     })
 }
 
