@@ -1,8 +1,7 @@
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {
-    CompetitionPropertiesDto,
-    CompetitionPropertiesRequestDto,
+    CompetitionPropertiesDto, CompetitionPropertiesRequest,
     CompetitionSetupTemplateOverviewDto
 } from '@api/types.gen.ts'
 
@@ -40,7 +39,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
     formData: CompetitionForm,
-): CompetitionPropertiesRequestDto {
+): CompetitionPropertiesRequest {
     return {
         identifier: formData.identifier,
         name: formData.name,

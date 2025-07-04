@@ -2,7 +2,7 @@ import {AutocompleteOption} from '@utils/types.ts'
 import {ErrorOption, FieldValues, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {Box, Button, Divider, IconButton, Stack, Tooltip, Typography} from '@mui/material'
+import {Box, Button, Card, Divider, IconButton, Stack, Tooltip, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {CompetitionForm} from './common.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -21,7 +21,6 @@ import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
-    fieldArrayModified?: () => void
     hideCompetitionSetupTemplate?: boolean
 }
 
@@ -89,22 +88,21 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
             label: dto.name,
         })) ?? []
 
-    const competitionSetupTemplatesResult =
-        props.hideCompetitionSetupTemplate !== true
-            ? useFetch(signal => getCompetitionSetupTemplateOverview({signal}), {
-                  onResponse: ({error}) => {
-                      if (error) {
-                          feedback.error(
-                              t('common.load.error.multiple.short', {
-                                  entity: t('event.competition.setup.template.templates'),
-                              }),
-                          )
-                      }
-                  },
-              })
-            : null
+    const {data: competitionSetupTemplatesData, pending: competitionSetupTemplatesPending} =
+        useFetch(signal => getCompetitionSetupTemplateOverview({signal}), {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.setup.template.templates'),
+                        }),
+                    )
+                }
+            },
+            preCondition: () => props.hideCompetitionSetupTemplate !== true,
+        })
     const setupTemplates: AutocompleteOption[] =
-        competitionSetupTemplatesResult?.data?.map(dto => ({
+        competitionSetupTemplatesData?.map(dto => ({
             id: dto.id,
             label: dto.name,
         })) ?? []
@@ -232,7 +230,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     name="setupTemplate"
                     options={setupTemplates}
                     label={t('event.competition.setup.template.template')}
-                    loading={competitionSetupTemplatesResult?.pending}
+                    loading={competitionSetupTemplatesPending}
                     autocompleteProps={{
                         getOptionKey: field => field.id,
                     }}
@@ -250,11 +248,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             spacing={2}
                             alignItems={'center'}
                             key={field.fieldId}>
-                            <Box
+                            <Card
                                 sx={{
                                     p: 2,
-                                    border: 1,
-                                    borderRadius: 5,
                                     boxSizing: 'border-box',
                                     flex: 1,
                                 }}>
@@ -274,7 +270,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                             },
                                         }}
                                     />
-                                    <Stack direction="row" spacing={2}>
+                                    <Stack direction="row" spacing={2} sx={{alignItems: 'end'}}>
                                         <FormInputNumber
                                             name={'namedParticipants[' + index + '].countMales'}
                                             label={t('event.competition.count.males')}
@@ -298,7 +294,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                             }}
                                         />
                                     </Stack>
-                                    <Stack direction="row" spacing={2}>
+                                    <Stack direction="row" spacing={2} sx={{alignItems: 'end'}}>
                                         <FormInputNumber
                                             name={'namedParticipants[' + index + '].countNonBinary'}
                                             label={t('event.competition.count.nonBinary')}
@@ -323,12 +319,11 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         />
                                     </Stack>
                                 </Stack>
-                            </Box>
+                            </Card>
                             <Tooltip title={t('common.delete')}>
                                 <IconButton
                                     onClick={() => {
                                         removeNamedParticipant(index)
-                                        props.fieldArrayModified?.()
                                     }}>
                                     <DeleteIcon />
                                 </IconButton>
@@ -347,7 +342,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             countNonBinary: '0',
                             countMixed: '0',
                         })
-                        props.fieldArrayModified?.()
                     }}
                     sx={{width: 1}}>
                     {t('event.competition.namedParticipant.add')}
@@ -362,11 +356,9 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             spacing={2}
                             alignItems={'center'}
                             key={field.fieldId}>
-                            <Box
+                            <Card
                                 sx={{
                                     p: 2,
-                                    border: 1,
-                                    borderRadius: 5,
                                     boxSizing: 'border-box',
                                     flex: 1,
                                 }}>
@@ -390,12 +382,11 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         required
                                     />
                                 </Stack>
-                            </Box>
+                            </Card>
                             <Tooltip title={t('common.delete')}>
                                 <IconButton
                                     onClick={() => {
                                         removeFee(index)
-                                        props.fieldArrayModified?.()
                                     }}>
                                     <DeleteIcon />
                                 </IconButton>
@@ -412,7 +403,6 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             required: false,
                             amount: '0',
                         })
-                        props.fieldArrayModified?.()
                     }}
                     sx={{width: 1}}>
                     {t('event.competition.fee.add')}

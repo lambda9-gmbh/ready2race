@@ -1,15 +1,15 @@
 import {Button, ButtonProps, CircularProgress} from '@mui/material'
+import {PropsWithChildren} from 'react'
 
 type Props = ButtonProps & {
-    label: string
     pending: boolean
 }
 //todo: KERN: progress not for really short timespan?
-const LoadingButton = ({label, pending, ...rest}: Props) => {
+const LoadingButton = ({children, pending, ...props}: PropsWithChildren<Props>) => {
     return (
-        <Button {...rest} disabled={pending || rest.disabled} sx={{display: 'flex'}}>
+        <Button {...props} disabled={pending || props.disabled} sx={{display: 'flex'}}>
             {pending && <CircularProgress size={24} sx={{position: 'absolute'}} />}
-            {label}
+            {children}
         </Button>
     )
 }

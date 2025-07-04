@@ -7,7 +7,7 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
 import {FormSetupRound, getWeightings} from '@components/event/competition/setup/common.ts'
-import BaseDialog from "@components/BaseDialog.tsx";
+import BaseDialog from '@components/BaseDialog.tsx'
 
 type Form = {
     teams: number
@@ -265,12 +265,9 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                             <Button onClick={closeTournamentTreeDialog}>
                                 {t('common.cancel')}
                             </Button>
-                            <SubmitButton
-                                label={t(
-                                    'event.competition.setup.tournamentTree.generate',
-                                )}
-                                submitting={false}
-                            />
+                            <SubmitButton submitting={false}>
+                                {t('event.competition.setup.tournamentTree.generate')}
+                            </SubmitButton>
                         </DialogActions>
                     </FormContainer>
                 </BaseDialog>

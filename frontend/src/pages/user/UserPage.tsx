@@ -102,10 +102,10 @@ const UserPage = () => {
                                       </Box>
                                   )}
                             <SubmitButton
-                                label={t('common.save')}
                                 submitting={submitting}
-                                disabled={!formContext.formState.isDirty}
-                            />
+                                disabled={!formContext.formState.isDirty}>
+                                {t('common.save')}
+                            </SubmitButton>
                         </Stack>
                     </FormContainer>
                 )) ||

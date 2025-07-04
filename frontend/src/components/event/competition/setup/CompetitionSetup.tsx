@@ -1,7 +1,7 @@
-import {Box, Button, Menu, MenuItem, Stack, Typography, useTheme} from '@mui/material'
+import {Button, Stack, Typography, useTheme} from '@mui/material'
 import {useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import CompetitionSetupRound from '@components/event/competition/setup/CompetitionSetupRound.tsx'
-import {RefObject, useRef, useState, MouseEvent, Fragment} from 'react'
+import {RefObject, useRef, useState, Fragment} from 'react'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import CompetitionSetupTreeHelper from '@components/event/competition/setup/CompetitionSetupTreeHelper.tsx'
 import {
@@ -15,6 +15,7 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getCompetitionSetupTemplates} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CompetitionSetupTemplateDto} from '@api/types.gen.ts'
+import SelectionMenu from '@components/SelectionMenu.tsx'
 
 type Props = {
     formContext: UseFormReturn<CompetitionSetupForm>
@@ -123,17 +124,8 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
         setAllowRoundUpdates(false)
     }
 
-    const handleSelectTemplate = async (template: CompetitionSetupTemplateDto) => {
-        resetForm(mapCompetitionSetupTemplateDtoToForm(template).rounds)
-    }
-
-    const [templateMenuAnchorEl, setTemplateMenuAnchorEl] = useState<HTMLElement | null>(null)
-    const templateMenuOpen = Boolean(templateMenuAnchorEl)
-    const handleTemplateMenuClick = (event: MouseEvent<HTMLButtonElement>) => {
-        setTemplateMenuAnchorEl(event.currentTarget)
-    }
-    const handleTemplateMenuClose = () => {
-        setTemplateMenuAnchorEl(null)
+    const handleSelectTemplate = async (template?: CompetitionSetupTemplateDto) => {
+        if (template) resetForm(mapCompetitionSetupTemplateDtoToForm(template).rounds)
     }
 
     return (
@@ -153,42 +145,17 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                 <Button variant="outlined" onClick={() => resetForm([])}>
                     {t('event.competition.setup.reset')}
                 </Button>
-                <Box>
-                    <Button
-                        id="competition-setup-template-selection-button"
-                        variant="outlined"
-                        aria-controls={
-                            templateMenuOpen
-                                ? 'id="competition-setup-template-selection-menu"'
-                                : undefined
-                        }
-                        aria-haspopup={'true'}
-                        aria-expanded={templateMenuOpen ? 'true' : undefined}
-                        onClick={handleTemplateMenuClick}>
-                        {t('event.competition.setup.template.select')}
-                    </Button>
-                    <Menu
-                        id="competition-setup-template-selection-menu"
-                        anchorEl={templateMenuAnchorEl}
-                        open={templateMenuOpen}
-                        onClose={handleTemplateMenuClose}
-                        disableScrollLock={true}
-                        MenuListProps={{
-                            'aria-labelledby': 'competition-setup-template-selection-button',
-                        }}>
-                        {templatesData?.data?.map((template, templateIndex) => (
-                            <MenuItem
-                                key={templateIndex + template.id}
-                                onClick={() => {
-                                    handleSelectTemplate(template).then(_ => {})
-                                    handleTemplateMenuClose()
-                                }}
-                                value={template.id}>
-                                {template.name}
-                            </MenuItem>
-                        ))}
-                    </Menu>
-                </Box>
+                <SelectionMenu
+                    buttonContent={t('event.competition.setup.template.select')}
+                    onSelectItem={id =>
+                        handleSelectTemplate(templatesData?.data.find(dto => dto.id === id))
+                    }
+                    keyLabel={'competition-setup-template-selection'}
+                    items={templatesData?.data.map(template => ({
+                        id: template.id,
+                        label: template.name,
+                    }))}
+                />
                 <CompetitionSetupTreeHelper
                     resetSetupForm={(formDataRounds: Array<FormSetupRound>) => {
                         resetForm(formDataRounds)
@@ -199,10 +166,9 @@ const CompetitionSetup = ({formContext, ...props}: Props) => {
                     }
                 />
                 {props.handleFormSubmission && (
-                    <SubmitButton
-                        label={t('event.competition.setup.save.save')}
-                        submitting={props.submitting ?? false}
-                    />
+                    <SubmitButton submitting={props.submitting ?? false}>
+                        {t('event.competition.setup.save.save')}
+                    </SubmitButton>
                 )}
             </Stack>
             <Stack spacing={6}>
