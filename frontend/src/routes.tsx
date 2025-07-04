@@ -331,9 +331,12 @@ const routeTree = rootRoute.addChildren([
     clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
 ])
 
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 export const router = createRouter({
     routeTree,
     context: undefined!,
+    basepath
 })
 
 declare module '@tanstack/react-router' {

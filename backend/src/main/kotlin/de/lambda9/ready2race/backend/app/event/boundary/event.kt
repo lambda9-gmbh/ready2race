@@ -36,7 +36,7 @@ fun Route.event() {
             call.respondComprehension {
                 val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                 val params = !pagination<EventViewSort>()
-                EventService.page(params, optionalUserAndScope?.second)
+                EventService.page(params, optionalUserAndScope?.second, optionalUserAndScope?.first)
             }
 
         }
@@ -74,7 +74,7 @@ fun Route.event() {
                 call.respondComprehension {
                     val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val id = !pathParam("eventId", uuid)
-                    EventService.getEvent(id, optionalUserAndScope?.second)
+                    EventService.getEvent(id, optionalUserAndScope?.second, optionalUserAndScope?.first)
                 }
             }
 

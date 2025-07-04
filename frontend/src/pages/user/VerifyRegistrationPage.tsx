@@ -11,29 +11,45 @@ const VerifyRegistrationPage = () => {
     const {t} = useTranslation()
     const {registrationToken} = registrationTokenRoute.useParams()
 
-    const [verifying, setVerifying] = useState(false)
+    const [requestResult, setRequestResult] = useState<
+        'NotFound' | 'Unexpected' | 'Success' | null
+    >(null)
 
     useEffect(() => { // todo: should this be useFetch instead?
         ;(async () => {
-            setVerifying(true)
-            await verifyUserRegistration({
+            const result = await verifyUserRegistration({
                 body: {
                     token: registrationToken,
                 },
             })
-            setVerifying(false)
+
+            if (result.error) {
+                setRequestResult(result.error.status.value === 404 ? 'NotFound' : 'Unexpected')
+            } else {
+                setRequestResult('Success')
+            }
         })()
     }, [])
 
     return (
         <SimpleFormLayout maxWidth={400}>
-            {(verifying && <Throbber />) || (
+            {requestResult === null ? (
+                <Throbber />
+            ) : (
                 <RequestStatusResponse
-                    success={true}
-                    header={t('user.registration.email.verified.header')}
+                    success={requestResult === 'Success'}
+                    header={
+                        requestResult === 'Success'
+                            ? t('user.registration.email.verified.header')
+                            : t('user.registration.email.verificationError.header')
+                    }
                     showLoginNavigation>
                     <Typography textAlign="center">
-                        {t('user.registration.email.verified.message')}
+                        {requestResult === 'Success'
+                            ? t('user.registration.email.verified.message')
+                            : requestResult === 'NotFound'
+                              ? t('user.registration.email.verificationError.message.notFound')
+                              : t('user.registration.email.verificationError.message.unexpected')}
                     </Typography>
                 </RequestStatusResponse>
             )}

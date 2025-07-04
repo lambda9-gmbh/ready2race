@@ -51,7 +51,7 @@ object CompetitionRegistrationService {
             val total = !CompetitionRegistrationRepo.countForCompetition(competitionId, scope, user).orDie()
             val page = !CompetitionRegistrationRepo.pageForCompetition(competitionId, params, scope, user).orDie()
 
-            KIO.ok(
+            ok(
                 ApiResponse.Page(
                     data = page,
                     pagination = params.toPagination(total)
@@ -69,7 +69,7 @@ object CompetitionRegistrationService {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
 
-        val registrationId = !EventRegistrationRepo.findByEventAndClub(eventId, request.clubId!!).map { it?.id }.orDie()
+        val registrationId = !EventRegistrationRepo.findByEventAndClub(eventId, request.clubId).map { it?.id }.orDie()
             .onNullFail { CompetitionRegistrationError.EventRegistrationNotFound }
 
         val existingCount =
@@ -156,10 +156,9 @@ object CompetitionRegistrationService {
     ) = KIO.comprehension {
 
         val requirements =
-            !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionId(competitionId)
+            !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionAndNamedParticipantId(competitionId, namedParticipantDto.namedParticipantId)
                 .orDie()
                 .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
-
         val counts: MutableMap<Gender, Int> = mutableMapOf(
             Gender.M to 0,
             Gender.F to 0,

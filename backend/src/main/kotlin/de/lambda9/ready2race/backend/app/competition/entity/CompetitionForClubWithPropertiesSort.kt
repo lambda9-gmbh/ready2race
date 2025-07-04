@@ -3,8 +3,6 @@ package de.lambda9.ready2race.backend.app.competition.entity
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_FOR_CLUB_VIEW
 import org.jooq.Field
 
-//todo @Cleanup: unused enum?
-
 enum class CompetitionForClubWithPropertiesSort : CompetitionSortable {
     ID,
     EVENT,

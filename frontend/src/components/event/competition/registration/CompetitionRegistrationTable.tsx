@@ -11,7 +11,8 @@ import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
-import {Grid2, Stack, Typography} from '@mui/material'
+import {Stack, Typography} from '@mui/material'
+import {format} from 'date-fns'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -61,43 +62,37 @@ const CompetitionRegistrationTable = (
                 field: 'namedParticipants',
                 headerName: t('club.participant.title'),
                 flex: 1,
+                minWidth: 120,
+                sortable: false,
                 renderCell: ({row}) => (
-                    <Grid2 container spacing={1} key={`participants-${row.id}`}>
+                    <Stack spacing={1}>
                         {row.namedParticipants.map(np => (
                             <Fragment key={np.namedParticipantId}>
                                 {row.namedParticipants.length > 1 && (
-                                    <Grid2
-                                        container
-                                        direction={'row'}
-                                        spacing={2}
-                                        size={2}
-                                        key={`name-${np.namedParticipantId}`}>
-                                        <Typography variant={'subtitle2'}>
-                                            {np.namedParticipantName}:
-                                        </Typography>
-                                    </Grid2>
+                                    <Typography variant={'subtitle2'}>
+                                        {np.namedParticipantName}:
+                                    </Typography>
                                 )}
-                                <Grid2
-                                    container
+                                <Stack
                                     direction={'column'}
                                     spacing={0.5}
-                                    size={10}
-                                    key={`participants-${np.namedParticipantId}`}>
+                                    sx={{pl: row.namedParticipants.length > 1 ? 2 : undefined}}>
                                     {np.participants.map(p => (
                                         <Typography variant={'body2'} key={p.id}>
                                             {p.firstname} {p.lastname}{' '}
                                             {p.externalClubName && `(${p.externalClubName})`}
                                         </Typography>
                                     ))}
-                                </Grid2>
+                                </Stack>
                             </Fragment>
                         ))}
-                    </Grid2>
+                    </Stack>
                 ),
             },
             {
                 field: 'optionalFees',
                 headerName: t('event.registration.optionalFee'),
+                sortable: false,
                 renderCell: ({row}) => (
                     <Stack>
                         {row.optionalFees.length >= 1
@@ -110,10 +105,9 @@ const CompetitionRegistrationTable = (
                 field: 'updatedAt',
                 headerName: t('entity.updatedAt'),
                 minWidth: 100,
-                maxWidth: 200,
-                flex:1,
-                type: 'dateTime',
-                valueGetter: v => new Date(v),
+                maxWidth: 170,
+                flex: 1,
+                valueGetter: (v: string) => (v ? format(new Date(v), t('format.datetime')) : null),
             },
         ],
         [],

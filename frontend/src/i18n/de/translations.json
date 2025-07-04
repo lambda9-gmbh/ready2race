@@ -10,6 +10,7 @@
     "edit": "Bearbeiten",
     "selected": "Ausgewählt",
     "manage": "Verwalten",
+    "all" : "Alle",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -168,6 +169,7 @@
       "year": "Geburtsjahr",
       "external": "Extern",
       "externalClub": "Externer Verein",
+      "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
       "usedInRegistration": "In Meldung"
     }
   },
@@ -286,6 +288,9 @@
       "error": {
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       },
+      "registration": {
+        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
+      },
       "setup": {
         "setup": "Wettbewerbsablauf",
         "save": {
@@ -375,6 +380,11 @@
             "one": "Das Team: {{participants}} wird mehrfach verwendet.",
             "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
             "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
+          },
+          "duplicatePositions": {
+            "one": "In der Durchführungsreihenfolge wird {{positions}} mehrfach verwendet.",
+            "multiple": "In der Durchführungsreihenfolge werden {{positions}} mehrfach verwendet.",
+            "message": "Bitte fügen Sie jeden Wert nur je einer Partie pro Runde hinzu."
           }
         },
         "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
@@ -468,7 +478,7 @@
       "finish": "Anmeldung abschicken",
       "success": {
         "title": "Erfolgreich angemeldet!",
-        "subtitle": "Du bekommst eine Bestätigung per Mail."
+        "subtitle": "Sie bekommen eine Bestätigung per Mail."
       },
       "mostRecent": "Neuste Anmeldungen"
     },
@@ -582,6 +592,13 @@
       "userCreated": {
         "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
         "toLogin": "Zum Login"
+      },
+      "error": {
+        "header": "Es ist ein Fehler aufgetreten",
+        "message": {
+          "notFound": "Für diesen Link gibt es keine offene Einladung. Bitte überprüfen Sie, ob der Link korrekt ist.",
+          "unexpected": "Ihr Konto konnte nicht angelegt werden. Bitte versuchen Sie es später erneut."
+        }
       }
     },
     "registration": {
@@ -598,6 +615,13 @@
         "verified": {
           "header": "E-Mail bestätigt",
           "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
+        },
+        "verificationError": {
+          "header": "Es ist ein Fehler aufgetreten",
+          "message": {
+            "notFound": "Für diesen Link gibt es keine offene Registrierung. Bitte überprüfen Sie, ob der Link korrekt ist oder ob die E-Mail-Adresse bereits bestätigt wurde.",
+            "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
+          }
         }
       },
       "error": "Bei der Registrierung ist ein Fehler aufgetreten",

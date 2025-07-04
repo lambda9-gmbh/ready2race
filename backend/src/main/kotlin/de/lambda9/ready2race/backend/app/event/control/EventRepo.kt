@@ -43,7 +43,7 @@ object EventRepo {
             fetchCount(
                 this,
                 DSL.and(
-                    filterScope(scope),
+                    filterScopeView(scope),
                     search.metaSearch(searchFields())
                 )
 
@@ -58,7 +58,7 @@ object EventRepo {
         with(EVENT_VIEW) {
             selectFrom(this)
                 .page(params, searchFields()) {
-                    filterScope(scope)
+                    filterScopeView(scope)
                 }
                 .fetch()
         }
@@ -91,7 +91,7 @@ object EventRepo {
     ): JIO<EventViewRecord?> = Jooq.query {
         with(EVENT_VIEW) {
             selectFrom(this)
-                .where(ID.eq(id)).and(filterScope(scope))
+                .where(ID.eq(id)).and(filterScopeView(scope))
                 .fetchOne()
         }
     }
@@ -128,7 +128,7 @@ object EventRepo {
         }
     }
 
-    private fun filterScope(
+    private fun filterScopeView(
         scope: Privilege.Scope?,
     ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT_VIEW.PUBLISHED.eq(true) else DSL.trueCondition()
 }

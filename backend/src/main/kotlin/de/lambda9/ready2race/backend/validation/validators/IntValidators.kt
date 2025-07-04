@@ -5,4 +5,6 @@ object IntValidators : Validators<Int?>() {
         get() = simple("is negative") { it >= 0 }
 
     fun min(min: Int) = simple("is less than $min") { it >= min }
+    fun max(max: Int) = simple("is greater than $max") { it <= max }
+
 }

@@ -1,7 +1,8 @@
 import {useTranslation} from 'react-i18next'
 import {PropsWithChildren, useState} from 'react'
 import {Confirmation, ConfirmationContext, ConfirmationOptions} from './ConfirmationContext'
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material'
+import {Button, DialogActions, DialogContent, DialogTitle} from '@mui/material'
+import BaseDialog from "@components/BaseDialog.tsx";
 
 type ConfirmationState =
     | {
@@ -51,15 +52,14 @@ export const ConfirmationProvider = (props: PropsWithChildren<{}>) => {
     return (
         <ConfirmationContext.Provider value={confirmationValue}>
             {props.children}
-            <Dialog
-                className={'ready2race'}
+            <BaseDialog
                 open={confirmation.open}
-                maxWidth={'sm'}
-                fullWidth={true}>
+                onClose={handleCancel}
+                maxWidth={'sm'}>
                 <DialogTitle>
                     {confirmation.options?.title ?? t('common.confirmation.title')}
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent dividers>
                     {confirmation.options?.content ?? t('common.confirmation.content')}
                 </DialogContent>
                 <DialogActions>
@@ -70,7 +70,7 @@ export const ConfirmationProvider = (props: PropsWithChildren<{}>) => {
                         {confirmation.options?.okText ?? t('common.ok')}
                     </Button>
                 </DialogActions>
-            </Dialog>
+            </BaseDialog>
         </ConfirmationContext.Provider>
     )
 }

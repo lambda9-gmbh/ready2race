@@ -1,5 +1,5 @@
 import {FormEvent, PropsWithChildren, RefObject, useEffect, useState} from 'react'
-import {Alert, Box, Button, Dialog, DialogActions, Stack} from '@mui/material'
+import {Alert, Box, Button, DialogActions, DialogContent, DialogTitle, Stack} from '@mui/material'
 import {CheckboxElement, FormContainer, useForm} from 'react-hook-form-mui'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
@@ -7,6 +7,7 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {useTranslation} from 'react-i18next'
 import {createPortal} from 'react-dom'
 import {FormSetupRound, getWeightings} from '@components/event/competition/setup/common.ts'
+import BaseDialog from "@components/BaseDialog.tsx";
 
 type Form = {
     teams: number
@@ -204,16 +205,17 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                 {t('event.competition.setup.tournamentTree.generateTree')}
             </Button>
             <FormPortal>
-                <Dialog
+                <BaseDialog
                     open={tournamentTreeDialogOpen}
                     onClose={closeTournamentTreeDialog}
-                    fullWidth={true}
-                    maxWidth={'xs'}
-                    className="ready2race">
-                    <Box sx={{mx: 4, my: 2}}>
-                        <FormContainer
-                            formContext={formContext}
-                            handleSubmit={event => onSubmitWithoutPropagation(event)}>
+                    maxWidth={'xs'}>
+                    <DialogTitle>
+                        {t('event.competition.setup.tournamentTree.generateTree')}
+                    </DialogTitle>
+                    <FormContainer
+                        formContext={formContext}
+                        handleSubmit={event => onSubmitWithoutPropagation(event)}>
+                        <DialogContent dividers>
                             <Stack spacing={2}>
                                 <FormInputNumber
                                     name="teams"
@@ -257,23 +259,21 @@ const CompetitionSetupTreeHelper = ({resetSetupForm, currentFormData, portalCont
                                         </Alert>
                                     )}
                                 </Box>
-                                <Box>
-                                    <DialogActions>
-                                        <Button onClick={closeTournamentTreeDialog}>
-                                            {t('common.cancel')}
-                                        </Button>
-                                        <SubmitButton
-                                            label={t(
-                                                'event.competition.setup.tournamentTree.generate',
-                                            )}
-                                            submitting={false}
-                                        />
-                                    </DialogActions>
-                                </Box>
                             </Stack>
-                        </FormContainer>
-                    </Box>
-                </Dialog>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={closeTournamentTreeDialog}>
+                                {t('common.cancel')}
+                            </Button>
+                            <SubmitButton
+                                label={t(
+                                    'event.competition.setup.tournamentTree.generate',
+                                )}
+                                submitting={false}
+                            />
+                        </DialogActions>
+                    </FormContainer>
+                </BaseDialog>
             </FormPortal>
         </>
     )

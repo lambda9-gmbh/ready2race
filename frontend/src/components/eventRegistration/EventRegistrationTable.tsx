@@ -32,7 +32,7 @@ const EventRegistrationTable = ({eventId, ...props}: BaseEntityTableProps<EventR
         {
             field: 'createdAt',
             headerName: t('entity.createdAt'),
-            valueGetter: v => v ? format(new Date(v), t('format.datetime')) : null,
+            valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
             minWidth: 200,
             flex: 1
         },

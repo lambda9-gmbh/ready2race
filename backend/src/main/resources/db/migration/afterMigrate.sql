@@ -1,6 +1,5 @@
 set search_path to ready2race, pg_catalog, public;
 
-drop view if exists event_view;
 drop view if exists competition_setup_round_with_matches;
 drop view if exists competition_match_with_teams;
 drop view if exists competition_match_team_with_registrations;
@@ -18,6 +17,7 @@ drop view if exists registered_competition_team;
 drop view if exists registered_competition_team_participant;
 drop view if exists event_registration_report_download;
 drop view if exists event_registrations_view;
+drop view if exists event_view;
 drop view if exists event_public_view;
 drop view if exists participant_for_event;
 drop view if exists participant_id_for_event;
@@ -267,7 +267,10 @@ select ct.id,
        cc.name                                as category_name,
        cc.description                         as category_description,
        coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees
+       coalesce(fs.fees, '{}')                as fees,
+       cst.id                                 as setup_template_id,
+       cst.name                               as setup_template_name,
+       cst.description                        as setup_template_description
 from competition_template ct
          left join competition_properties cp on ct.id = cp.competition_template
          left join competition_category cc on cp.competition_category = cc.id
@@ -280,7 +283,8 @@ from competition_template ct
                            array_agg(ffcp)
                            filter (where ffcp.competition_properties is not null ) as fees
                     from fee_for_competition_properties ffcp
-                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
+         left join competition_setup_template cst on ct.competition_setup_template = cst.id;
 
 create view app_user_invitation_with_roles as
 select aui.id,
@@ -396,6 +400,27 @@ group by e.id, e.name, e.description, e.location, e.registration_available_from,
 having max(ed.date) is null
     or max(ed.date) >= current_date
 ;
+
+create view event_view as
+select e.id,
+       e.name,
+       e.description,
+       e.location,
+       e.registration_available_from,
+       e.registration_available_to,
+       e.invoice_prefix,
+       e.published,
+       e.invoices_produced,
+       e.payment_due_by,
+       coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
+       err.event is not null                                                            as registrations_finalized
+from event e
+         left join competition c on e.id = c.event
+         left join event_day ed on e.id = ed.event
+         left join event_registration er on e.id = er.event
+         left join event_registration_report err on e.id = err.event
+group by e.id, e.name, e.description, e.location, e.registration_available_from, e.registration_available_to,
+         e.created_at, err.event;
 
 create view event_registrations_view as
 select er.id,
@@ -628,20 +653,4 @@ from competition_setup_round sr
          left join competition_setup_match sm on sr.id = sm.competition_setup_round
          left join competition_match_with_teams mwt on sm.id = mwt.competition_setup_match
 group by sr.id
-;
-
-create view event_view as
-select e.id,
-       e.name,
-       e.description,
-       e.location,
-       e.registration_available_from,
-       e.registration_available_to,
-       e.invoice_prefix,
-       e.published,
-       e.invoices_produced,
-       e.payment_due_by,
-       err.event is not null as registrations_finalized
-from event e
-         left join event_registration_report err on e.id = err.event
 ;

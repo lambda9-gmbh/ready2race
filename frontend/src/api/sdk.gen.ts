@@ -253,15 +253,15 @@ import type {
     AddEventRegistrationData,
     AddEventRegistrationError,
     AddEventRegistrationResponse,
+    GetRegistrationResultData,
+    GetRegistrationResultError,
+    GetRegistrationResultResponse,
     FinalizeRegistrationsData,
     FinalizeRegistrationsError,
     FinalizeRegistrationsResponse,
     GetRegistrationsWithoutTeamNumberData,
     GetRegistrationsWithoutTeamNumberError,
     GetRegistrationsWithoutTeamNumberResponse,
-    GetRegistrationResultData,
-    GetRegistrationResultError,
-    GetRegistrationResultResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -332,6 +332,8 @@ import type {
     DeleteCompetitionSetupTemplateData,
     DeleteCompetitionSetupTemplateError,
     DeleteCompetitionSetupTemplateResponse,
+    GetCompetitionSetupTemplateOverviewError,
+    GetCompetitionSetupTemplateOverviewResponse,
     GetDocumentTemplatesData,
     GetDocumentTemplatesError,
     GetDocumentTemplatesResponse,
@@ -1404,6 +1406,19 @@ export const addEventRegistration = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getRegistrationResult = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationResultData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationResultResponse,
+        GetRegistrationResultError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationResult',
+    })
+}
+
 export const finalizeRegistrations = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<FinalizeRegistrationsData, ThrowOnError>,
 ) => {
@@ -1427,19 +1442,6 @@ export const getRegistrationsWithoutTeamNumber = <ThrowOnError extends boolean =
     >({
         ...options,
         url: '/event/{eventId}/missingTeamNumbers',
-    })
-}
-
-export const getRegistrationResult = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetRegistrationResultData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetRegistrationResultResponse,
-        GetRegistrationResultError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/registrationResult',
     })
 }
 
@@ -1741,6 +1743,19 @@ export const deleteCompetitionSetupTemplate = <ThrowOnError extends boolean = fa
     >({
         ...options,
         url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const getCompetitionSetupTemplateOverview = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupTemplateOverviewResponse,
+        GetCompetitionSetupTemplateOverviewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/overview',
     })
 }
 

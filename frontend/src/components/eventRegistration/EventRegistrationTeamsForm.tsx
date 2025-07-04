@@ -5,7 +5,7 @@ import {
     useFormContext,
     useWatch,
 } from 'react-hook-form-mui'
-import {Button, Divider, IconButton, Paper, Stack, Typography} from '@mui/material'
+import {Button, Chip, Divider, IconButton, Paper, Stack, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {GroupAdd} from '@mui/icons-material'
 import {v4 as uuid} from 'uuid'
@@ -91,7 +91,7 @@ const TeamInput = (props: {
                         ),
                     )}
                 </Stack>
-                {(props.competition.fees?.length ?? 0) > 0 && (
+                {(props.competition.fees?.filter(f => !f.required)?.length ?? 0) > 0 && (
                     <CheckboxButtonGroup
                         label={t('event.registration.optionalFee')}
                         name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.optionalFees`}
@@ -146,6 +146,9 @@ const EventRegistrationTeamsForm = (props: {
         <Stack padding={1}>
             <Stack direction={'row'} spacing={1} alignItems={'center'}>
                 <Typography>{`${props.competition.name} ${props.competition.identifier}`}</Typography>
+                {props.competition.competitionCategory && (
+                    <Chip variant={'outlined'} label={props.competition.competitionCategory} />
+                )}
                 <EventRegistrationPriceTooltip competition={props.competition} />
             </Stack>
             <Stack spacing={1} padding={1}>

@@ -54,5 +54,15 @@ fun Route.competitionSetupTemplate() {
                 }
             }
         }
+
+        route("/overview") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+
+                    CompetitionSetupTemplateService.getOverview()
+                }
+            }
+        }
     }
 }

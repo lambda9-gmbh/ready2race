@@ -37,13 +37,15 @@ const BankAccountTable = (props: BaseEntityTableProps<BankAccountDto>) => {
             field: 'iban',
             headerName: t('invoice.bank.accountData.iban'),
             minWidth: 200,
-            flex: 1
+            flex: 1,
+            sortable: false,
         },
         {
             field: 'bic',
             headerName: t('invoice.bank.accountData.bic'),
             minWidth: 200,
-            flex: 1
+            flex: 1,
+            sortable: false,
         },
         {
             field: 'bank',

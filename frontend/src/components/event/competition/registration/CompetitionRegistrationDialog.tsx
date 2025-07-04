@@ -9,7 +9,7 @@ import {
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CheckboxButtonGroup, useForm, useWatch} from 'react-hook-form-mui'
-import {useCallback, useMemo} from 'react'
+import {useCallback, useMemo, useState} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {Stack} from '@mui/material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -17,6 +17,7 @@ import {
     addCompetitionRegistration,
     getClubNames,
     getClubParticipants,
+    getCompetitionRegistrations,
     updateCompetitionRegistration,
 } from '@api/sdk.gen.ts'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
@@ -32,12 +33,14 @@ type CompetitionRegistrationForm = {
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
 }
 
-const CompetitionRegistrationDialog = (
-    props: BaseEntityDialogProps<CompetitionRegistrationTeamDto> & {
-        competition: CompetitionDto
-        eventId: string
-    },
-) => {
+const CompetitionRegistrationDialog = ({
+    competition,
+    eventId,
+    ...props
+}: BaseEntityDialogProps<CompetitionRegistrationTeamDto> & {
+    competition: CompetitionDto
+    eventId: string
+}) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
@@ -56,7 +59,7 @@ const CompetitionRegistrationDialog = (
                 signal,
                 query: {
                     sort: JSON.stringify([{field: 'NAME', direction: 'ASC'}]),
-                    eventId: props.eventId,
+                    eventId,
                 },
             }),
         {
@@ -69,7 +72,7 @@ const CompetitionRegistrationDialog = (
                     )
                 }
             },
-            deps: [props.eventId],
+            deps: [eventId],
         },
     )
 
@@ -102,6 +105,21 @@ const CompetitionRegistrationDialog = (
         },
     )
 
+    const [reloadCompetitionRegistrations, setReloadCompetitionRegistrations] = useState(false)
+    const {data: competitionRegistrations} = useFetch(
+        signal =>
+            getCompetitionRegistrations({
+                signal,
+                path: {eventId: eventId, competitionId: competition.id},
+            }),
+        {
+            onResponse: data => {
+                console.log(data)
+            },
+            deps: [eventId, competition.id, reloadCompetitionRegistrations],
+        },
+    )
+
     const participants = useMemo(() => {
         return participantsData?.data ?? []
     }, [participantsData])
@@ -126,7 +144,7 @@ const CompetitionRegistrationDialog = (
 
     const addAction = (formData: CompetitionRegistrationForm) => {
         return addCompetitionRegistration({
-            path: {eventId: props.eventId, competitionId: props.competition.id},
+            path: {eventId, competitionId: competition.id},
             body: mapFormToRequest(formData),
         })
     }
@@ -137,8 +155,8 @@ const CompetitionRegistrationDialog = (
     ) => {
         return updateCompetitionRegistration({
             path: {
-                eventId: props.eventId,
-                competitionId: props.competition.id,
+                eventId,
+                competitionId: competition.id,
                 competitionRegistrationId: entity.id,
             },
             body: mapFormToRequest(formData),
@@ -152,12 +170,13 @@ const CompetitionRegistrationDialog = (
     }
 
     const optionalFees = useMemo(
-        () => props.competition.properties.fees?.filter(f => !f.required) ?? [],
-        [props.competition.id],
+        () => competition.properties.fees?.filter(f => !f.required) ?? [],
+        [competition.id],
     )
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
+        setReloadCompetitionRegistrations(prev => !prev)
     }, [props.entity])
 
     return (
@@ -179,7 +198,7 @@ const CompetitionRegistrationDialog = (
                         options={clubs?.data ?? []}
                     />
                 )}
-                {props.competition.properties.namedParticipants.map(
+                {competition.properties.namedParticipants.map(
                     (namedParticipant, namedParticipantIndex) => (
                         <Stack key={`${namedParticipant.id}`} spacing={1}>
                             <TeamNamedParticipantLabel namedParticipant={namedParticipant} />
@@ -209,6 +228,19 @@ const CompetitionRegistrationDialog = (
                                 countFemales={namedParticipant.countFemales}
                                 countMixed={namedParticipant.countMixed}
                                 countNonBinary={namedParticipant.countNonBinary}
+                                disabledParticipants={competitionRegistrations?.data
+                                    ?.flatMap(cr =>
+                                        cr.namedParticipants.flatMap(np => np.participants),
+                                    )
+                                    .filter(
+                                        p =>
+                                            props.entity?.namedParticipants
+                                                .flatMap(np => np.participants)
+                                                .find(
+                                                    entityParticipant =>
+                                                        entityParticipant.id === p.id,
+                                                ) === undefined,
+                                    )}
                             />
                         </Stack>
                     ),

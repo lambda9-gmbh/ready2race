@@ -34,3 +34,11 @@ export const useUser = (): User => {
     }
     return user
 }
+
+export const useAuthenticatedUser = (): AuthenticatedUser => {
+    const user = useUser()
+    if (!user.loggedIn) {
+        throw Error('User is not authenticated')
+    }
+    return user
+}

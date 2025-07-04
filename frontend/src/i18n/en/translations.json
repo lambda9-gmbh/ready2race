@@ -10,6 +10,7 @@
     "edit": "Edit",
     "selected": "Selected",
     "manage" : "Manage",
+    "all" : "All",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
@@ -168,6 +169,7 @@
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club",
+      "externalHint": "Select this option if you want to register a member of another club.",
       "usedInRegistration": "In Registration"
     }
   },
@@ -285,6 +287,9 @@
       "assignedDays": "Competition days",
       "error": {
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      },
+      "registration": {
+        "noEventRegistration": "No registration from your club has been made for this event yet."
       },
       "setup": {
         "setup": "Competition Setup",
@@ -586,7 +591,14 @@
       "submitPassword": "Accept invitation",
       "userCreated": {
         "text": "Your account has been successfully created and you can log in now.",
-        "toLogin": "Goto Login"
+        "toLogin": "Go to Login"
+      },
+      "error": {
+        "header": "An error has occurred",
+        "message": {
+          "notFound": "There is no open invitation for this link. Please check that the link is correct.",
+          "unexpected": "Your could not be created. Please try again later."
+        }
       }
     },
     "registration": {
@@ -603,6 +615,13 @@
         "verified": {
           "header": "Email verified",
           "message": "Your email adress has been successfully verified. Your account is now activated."
+        },
+        "verificationError": {
+          "header": "An error has occurred",
+          "message": {
+            "notFound": "There is no open registration for this link. Please check that the link is correct or whether the e-mail address has already been confirmed.",
+            "unexpected": "Your e-mail address could not be confirmed. Please try again later."
+          }
         }
       },
       "error": "An error has occurred during registration",

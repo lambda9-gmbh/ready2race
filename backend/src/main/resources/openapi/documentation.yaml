@@ -69,6 +69,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
 
@@ -1261,7 +1263,6 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-
   /event/{eventId}/eventDocument:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2015,7 +2016,7 @@ paths:
           description: Filter for clubs, which registered for this event
           required: false
           schema:
-            type: string
+           type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -2155,6 +2156,44 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/registrationResult:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getRegistrationResult
+      parameters:
+        - in: query
+          name: remake
+          required: false
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: Report for event registrations successfully retrieved/generated
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/finalizeRegistrations:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2195,34 +2234,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CompetitionRegistrationsWithoutTeamNumberDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-
-  /event/{eventId}/registrationResult:
-    parameters:
-      - $ref: '#/components/parameters/eventId'
-    get:
-      operationId: getRegistrationResult
-      responses:
-        200:
-          description: Report for event registrations successfully retrieved/generated
-          headers:
-            Content-Disposition:
-              schema:
-                type: string
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
         400:
           $ref: '#/components/responses/400'
         401:
@@ -2856,6 +2867,24 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /competitionSetupTemplate/overview:
+    get:
+      operationId: getCompetitionSetupTemplateOverview
+      responses:
+        200:
+          description: CompetitionSetupTemplateOverview successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
 
   /documentTemplate:
     get:
@@ -3127,7 +3156,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-
+          
   /bankAccount:
     get:
       parameters:
@@ -4525,6 +4554,8 @@ components:
         paymentDueBy:
           type: string
           format: date
+        registrationCount:
+          type: number
         registrationsFinalized:
           type: boolean
 
@@ -4785,6 +4816,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionRequestDto'
+        setupTemplate:
+          type: string
+          format: uuid
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -5129,6 +5163,20 @@ components:
           items:
             $ref: '#/components/schemas/CompetitionSetupRoundDto'
 
+    CompetitionSetupTemplateOverviewDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
 
     # competitionTemplate
 
@@ -5143,6 +5191,8 @@ components:
           format: uuid
         properties:
           $ref: '#/components/schemas/CompetitionPropertiesDto'
+        setupTemplate:
+          $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
 
 
     CompetitionTemplateRequest:
@@ -5683,8 +5733,8 @@ components:
         name:
           type: string
       required:
-        - id
-        - name
+      - id
+      - name
 
     EventRegistrationCompetitionDto:
       type: object
@@ -5731,7 +5781,6 @@ components:
         - countFemales
         - countMixed
         - countNonBinary
-        - competitionCategory
         - days
 
     EventRegistrationNamedParticipantDto:
@@ -6185,7 +6234,7 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
-
+          
     BankAccountDto:
       type: object
       required:
@@ -6204,9 +6253,9 @@ components:
           type: string
         bic:
           type: string
-        bank:
+        bank: 
           type: string
-
+          
     BankAccountRequest:
       type: object
       required:

@@ -217,4 +217,7 @@ object CompetitionRepo {
         }
         competitions.filter { !found.contains(it) }
     }
+
+    fun updateByTemplate(templateId: UUID, f: CompetitionRecord.() -> Unit) = COMPETITION.updateMany(f) { TEMPLATE.eq(templateId) }
+
 }

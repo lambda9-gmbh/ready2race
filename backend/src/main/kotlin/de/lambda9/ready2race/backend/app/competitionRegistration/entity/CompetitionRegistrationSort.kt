@@ -7,11 +7,13 @@ import org.jooq.Field
 
 enum class CompetitionRegistrationSort : Sortable {
     CLUB_NAME,
+    NAME,
     CREATED_AT,
     UPDATED_AT;
 
     override fun toFields(): List<Field<*>> = when (this) {
         CLUB_NAME -> listOf(CLUB.NAME)
+        NAME -> listOf(COMPETITION_REGISTRATION.NAME)
         CREATED_AT -> listOf(COMPETITION_REGISTRATION.CREATED_AT)
         UPDATED_AT -> listOf(COMPETITION_REGISTRATION.UPDATED_AT)
     }

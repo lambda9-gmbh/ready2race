@@ -1,8 +1,6 @@
 import {
-    Box,
     Button,
-    Dialog,
-    DialogActions,
+    DialogActions, DialogContent, DialogTitle,
     Divider,
     List,
     ListItem,
@@ -21,6 +19,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import {Link} from '@tanstack/react-router'
 import InputIcon from '@mui/icons-material/Input'
+import BaseDialog from "@components/BaseDialog.tsx";
 
 type AssignmentForm = {
     selected: string[]
@@ -143,32 +142,33 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                             ),
                     )}
             </List>
-            <Dialog
+            <BaseDialog
                 open={dialogOpen}
                 onClose={closeDialog}
-                fullWidth={true}
-                maxWidth={'xs'}
-                className="ready2race">
-                <Box sx={{mx: 4, my: 2}}>
-                    <FormContainer formContext={formContext} onSuccess={onSubmit}>
+                maxWidth={'xs'}>
+                <DialogTitle>
+                    {competitionsToDay
+                        ? t('event.eventDay.assignedCompetitions')
+                        : t('event.competition.assignedDays')}
+                </DialogTitle>
+                <FormContainer formContext={formContext} onSuccess={onSubmit}>
+                    <DialogContent dividers>
                         <MultiSelectElement
                             name={'selected'}
                             options={[...props.options]}
                             showCheckbox
                             showChips
-                            formControlProps={{sx: {width: 1, mt: 4}}}
+                            formControlProps={{sx: {width: 1}}}
                         />
-                        <Box sx={{mt: 2}}>
-                            <DialogActions>
-                                <Button onClick={closeDialog} disabled={submitting}>
-                                    {t('common.cancel')}
-                                </Button>
-                                <SubmitButton label={t('common.save')} submitting={submitting} />
-                            </DialogActions>
-                        </Box>
-                    </FormContainer>
-                </Box>
-            </Dialog>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={closeDialog} disabled={submitting}>
+                            {t('common.cancel')}
+                        </Button>
+                        <SubmitButton label={t('common.save')} submitting={submitting} />
+                    </DialogActions>
+                </FormContainer>
+            </BaseDialog>
         </>
     )
 }

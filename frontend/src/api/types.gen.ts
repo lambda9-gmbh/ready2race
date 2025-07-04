@@ -214,6 +214,7 @@ export type CompetitionPropertiesRequestDto = {
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
+    setupTemplate?: string
 }
 
 export type CompetitionRegistrationFeeDto = {
@@ -335,6 +336,12 @@ export type CompetitionSetupTemplateDto = {
     rounds: Array<CompetitionSetupRoundDto>
 }
 
+export type CompetitionSetupTemplateOverviewDto = {
+    id: string
+    name: string
+    description?: string
+}
+
 export type CompetitionSetupTemplateRequest = {
     name: string
     description?: string
@@ -344,6 +351,7 @@ export type CompetitionSetupTemplateRequest = {
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
+    setupTemplate?: CompetitionSetupTemplateOverviewDto
 }
 
 export type CompetitionTemplateRequest = {
@@ -453,6 +461,7 @@ export type EventDto = {
     published?: boolean
     invoicesProduced?: string
     paymentDueBy?: string
+    registrationCount?: number
     registrationsFinalized: boolean
 }
 
@@ -479,7 +488,7 @@ export type EventRegistrationCompetitionDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
-    competitionCategory: string
+    competitionCategory?: string
     namedParticipant?: Array<EventRegistrationNamedParticipantDto>
     fees?: Array<EventRegistrationFeeDto>
     days: Array<string>
@@ -2190,6 +2199,19 @@ export type AddEventRegistrationResponse = string
 
 export type AddEventRegistrationError = BadRequestError | ApiError
 
+export type GetRegistrationResultData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        remake?: boolean
+    }
+}
+
+export type GetRegistrationResultResponse = Blob | File
+
+export type GetRegistrationResultError = BadRequestError | ApiError
+
 export type FinalizeRegistrationsData = {
     path: {
         eventId: string
@@ -2216,16 +2238,6 @@ export type GetRegistrationsWithoutTeamNumberResponse =
     Array<CompetitionRegistrationsWithoutTeamNumberDto>
 
 export type GetRegistrationsWithoutTeamNumberError = BadRequestError | ApiError
-
-export type GetRegistrationResultData = {
-    path: {
-        eventId: string
-    }
-}
-
-export type GetRegistrationResultResponse = Blob | File
-
-export type GetRegistrationResultError = BadRequestError | ApiError
 
 export type AddFeeData = {
     body: FeeRequest
@@ -2553,6 +2565,10 @@ export type DeleteCompetitionSetupTemplateData = {
 export type DeleteCompetitionSetupTemplateResponse = void
 
 export type DeleteCompetitionSetupTemplateError = BadRequestError | ApiError
+
+export type GetCompetitionSetupTemplateOverviewResponse = Array<CompetitionSetupTemplateOverviewDto>
+
+export type GetCompetitionSetupTemplateOverviewError = ApiError
 
 export type GetDocumentTemplatesData = {
     query?: {

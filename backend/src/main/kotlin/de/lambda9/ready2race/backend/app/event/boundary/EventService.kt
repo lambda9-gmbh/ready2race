@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.event.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -33,11 +34,12 @@ object EventService {
     fun page(
         params: PaginationParameters<EventViewSort>,
         scope: Privilege.Scope?,
+        user: AppUserWithPrivilegesRecord?
     ): App<Nothing, ApiResponse.Page<EventDto, EventViewSort>> = KIO.comprehension {
         val total = !EventRepo.count(params.search, scope).orDie()
         val page = !EventRepo.page(params, scope).orDie()
 
-        page.traverse { it.eventDto() }.map {
+        page.traverse { it.eventDto(scope, user?.club) }.map {
             ApiResponse.Page(
                 data = it,
                 pagination = params.toPagination(total)
@@ -61,10 +63,11 @@ object EventService {
 
     fun getEvent(
         id: UUID,
-        scope: Privilege.Scope?
+        scope: Privilege.Scope?,
+        user: AppUserWithPrivilegesRecord?
     ): App<EventError, ApiResponse.Dto<EventDto>> = KIO.comprehension {
         val event = !EventRepo.getScoped(id, scope).orDie().onNullFail { EventError.NotFound }
-        event.eventDto().map { ApiResponse.Dto(it) }
+        event.eventDto(scope, user?.club).map { ApiResponse.Dto(it) }
     }
 
     fun updateEvent(

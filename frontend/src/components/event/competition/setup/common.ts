@@ -15,6 +15,7 @@ export type CompetitionSetupForm = {
     name?: string
     description?: string
     rounds: Array<FormSetupRound>
+    setupTemplateId?: string
 }
 export type FormSetupRound = {
     name: string
@@ -152,6 +153,7 @@ export function mapCompetitionSetupTemplateDtoToForm(
         name: dto.name,
         description: dto.description ?? '',
         rounds: mapDtoRoundsToFormRounds(dto.rounds),
+        setupTemplateId: dto.id
     }
 }
 

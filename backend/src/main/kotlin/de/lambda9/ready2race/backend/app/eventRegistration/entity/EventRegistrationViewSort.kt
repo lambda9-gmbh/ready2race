@@ -5,11 +5,11 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_
 import org.jooq.Field
 
 enum class EventRegistrationViewSort : Sortable {
-    EVENT_NAME,
+    CLUB_NAME,
     CREATED_AT;
 
     override fun toFields(): List<Field<*>> = when (this) {
-        EVENT_NAME -> listOf(EVENT_REGISTRATIONS_VIEW.EVENT_NAME)
+        CLUB_NAME -> listOf(EVENT_REGISTRATIONS_VIEW.CLUB_NAME)
         CREATED_AT -> listOf(EVENT_REGISTRATIONS_VIEW.CREATED_AT)
     }
 }

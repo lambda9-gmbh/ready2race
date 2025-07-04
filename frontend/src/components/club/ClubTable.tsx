@@ -4,6 +4,7 @@ import {ClubDto, deleteClub, getClubs} from '../../api'
 import {useTranslation} from 'react-i18next'
 import EntityTable from '../EntityTable.tsx'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {format} from "date-fns";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -38,8 +39,7 @@ const ClubTable = (props: BaseEntityTableProps<ClubDto>) => {
             headerName: t('entity.createdAt'),
             flex: 1,
             sortable: true,
-            type: 'dateTime',
-            valueGetter: (_, c) => new Date(c.createdAt),
+            valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
         },
     ]
 

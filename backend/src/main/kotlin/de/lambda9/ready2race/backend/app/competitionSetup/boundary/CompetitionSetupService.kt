@@ -18,8 +18,11 @@ object CompetitionSetupService {
     fun createCompetitionSetup(
         userId: UUID,
         competitionPropertiesId: UUID,
+        setupTemplateId: UUID?,
+        createRounds: Boolean
     ): App<Nothing, UUID> = KIO.comprehension {
-        CompetitionSetupRepo.create(LocalDateTime.now().let { now ->
+
+        val setupId = !CompetitionSetupRepo.create(LocalDateTime.now().let { now ->
             CompetitionSetupRecord(
                 competitionProperties = competitionPropertiesId,
                 createdAt = now,
@@ -28,6 +31,13 @@ object CompetitionSetupService {
                 updatedBy = userId
             )
         }).orDie()
+
+        if (setupTemplateId != null && createRounds) {
+            val templateRounds = !getCompetitionSetupRoundsWithContent(setupTemplateId)
+            !updateCompetitionSetupRounds(templateRounds, competitionPropertiesId, null)
+        }
+
+        KIO.ok(setupId)
     }
 
     fun updateCompetitionSetupRounds(
