@@ -1,5 +1,7 @@
 import {useFieldArray} from 'react-hook-form-mui'
 import {
+    Box,
+    Card,
     Divider,
     Stack,
     Table,
@@ -49,26 +51,28 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
     const watchTeams = formContext.watch(`rounds.${roundIndex}.matches.${fieldInfo.index}.teams`)
 
     return (
-        <Stack
-            spacing={2}
+        <Card
             sx={{
-                border: 1,
-                borderColor: 'grey',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2,
                 p: 2,
                 boxSizing: 'border-box',
             }}>
             {watchParticipants.length > 0 && (
                 <>
-                    <Typography sx={{fontSize: '1.1rem'}}>
-                        {t('event.competition.setup.match.participants')}:
-                    </Typography>
-                    <CompetitionSetupParticipants
-                        fieldInfo={fieldInfo}
-                        roundIndex={roundIndex}
-                        controlledParticipantFields={controlledParticipantFields}
-                        useDefaultSeeding={props.useDefaultSeeding}
-                        updatePlaces={props.participantFunctions.updatePlaces}
-                    />
+                    <Box>
+                        <Typography sx={{fontSize: '1.1rem'}}>
+                            {t('event.competition.setup.match.participants')}:
+                        </Typography>
+                        <CompetitionSetupParticipants
+                            fieldInfo={fieldInfo}
+                            roundIndex={roundIndex}
+                            controlledParticipantFields={controlledParticipantFields}
+                            useDefaultSeeding={props.useDefaultSeeding}
+                            updatePlaces={props.participantFunctions.updatePlaces}
+                        />
+                    </Box>
                     <Divider />
                 </>
             )}
@@ -105,7 +109,9 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                         props.useDefaultSeeding,
                         props.participantFunctions,
                         props.teamCounts,
-                        () => {formContext.setValue(`rounds.${roundIndex}.placesOption`, 'EQUAL')}
+                        () => {
+                            formContext.setValue(`rounds.${roundIndex}.placesOption`, 'EQUAL')
+                        },
                     )
                 }}
                 rules={{
@@ -121,7 +127,9 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                 {t('event.competition.setup.match.outcome.outcomes')}:
             </Typography>
             <Stack direction={'row'} spacing={2}>
-                <Typography>{props.outcomes.join(', ') + (watchTeams === '' ? ", ..." : "")}</Typography>
+                <Typography>
+                    {props.outcomes.join(', ') + (watchTeams === '' ? ', ...' : '')}
+                </Typography>
                 <HtmlTooltip
                     title={
                         <Stack p={1}>
@@ -156,7 +164,7 @@ const CompetitionSetupMatch = ({formContext, roundIndex, fieldInfo, ...props}: P
                     <Info color={'info'} fontSize={'small'} />
                 </HtmlTooltip>
             </Stack>
-        </Stack>
+        </Card>
     )
 }
 

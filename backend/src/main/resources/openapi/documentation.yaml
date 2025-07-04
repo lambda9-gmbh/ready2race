@@ -69,6 +69,8 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
 
@@ -877,7 +879,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -967,7 +969,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         204:
           description: Competition successfully updated
@@ -1342,7 +1344,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionTemplateRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -1425,7 +1427,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionTemplateRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         204:
           description: CompetitionTemplate successfully updated
@@ -2845,6 +2847,24 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /competitionSetupTemplate/overview:
+    get:
+      operationId: getCompetitionSetupTemplateOverview
+      responses:
+        200:
+          description: CompetitionSetupTemplateOverview successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
 
   /documentTemplate:
     get:
@@ -3614,7 +3634,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  event/{eventId}/workshift:
+  /event/{eventId}/workshift:
     parameters:
       - name: eventId
         in: path
@@ -3687,7 +3707,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  event/{eventId}/workshift/{workShiftId}:
+  /event/{eventId}/workshift/{workShiftId}:
     parameters:
       - name: workShiftId
         in: path
@@ -4870,7 +4890,7 @@ components:
           format: decimal
 
 
-    CompetitionPropertiesRequestDto:
+    CompetitionPropertiesRequest:
       type: object
       required:
         - identifier
@@ -4897,6 +4917,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionRequestDto'
+        setupTemplate:
+          type: string
+          format: uuid
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -4962,14 +4985,6 @@ components:
           type: number
 
 
-    CompetitionRequest:
-      type: object
-      properties:
-        properties:
-          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
-        template:
-          type: string
-          format: uuid
 
 
     AssignDaysToCompetitionRequest:
@@ -5215,6 +5230,20 @@ components:
           items:
             $ref: '#/components/schemas/CompetitionSetupRoundDto'
 
+    CompetitionSetupTemplateOverviewDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
 
     # competitionTemplate
 
@@ -5229,15 +5258,9 @@ components:
           format: uuid
         properties:
           $ref: '#/components/schemas/CompetitionPropertiesDto'
+        setupTemplate:
+          $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
 
-
-    CompetitionTemplateRequest:
-      type: object
-      required:
-        - properties
-      properties:
-        properties:
-          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
 
 
     # competitionCategory

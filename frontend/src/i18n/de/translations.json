@@ -283,7 +283,8 @@
         "templates": "Wettkampf Vorlagen",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung."
+        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung.",
+        "select": "Vorlage auswählen"
       },
       "assignedDays": "Wettkampftage",
       "error": {

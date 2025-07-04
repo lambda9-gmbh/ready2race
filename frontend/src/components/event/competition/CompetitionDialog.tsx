@@ -1,11 +1,11 @@
-import {AutocompleteOption, BaseEntityDialogProps} from '@utils/types.ts'
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import EntityDialog from '@components/EntityDialog.tsx'
-import {Autocomplete, Box, Stack, TextField} from '@mui/material'
+import {Box, Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {eventIndexRoute} from '@routes'
 import {useForm} from 'react-hook-form-mui'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback} from 'react'
 import {
     mapCompetitionFormToCompetitionPropertiesRequest,
     mapCompetitionPropertiesToCompetitionForm,
@@ -14,10 +14,11 @@ import {
     competitionLabelName,
 } from './common.ts'
 import {CompetitionPropertiesFormInputs} from './CompetitionPropertiesFormInputs.tsx'
-import {CompetitionDto, CompetitionRequest} from '@api/types.gen.ts'
+import {CompetitionDto} from '@api/types.gen.ts'
 import {addCompetition, getCompetitionTemplates, updateCompetition} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createEventGlobal} from '@authorization/privileges.ts'
+import SelectionMenu from '@components/SelectionMenu.tsx'
 
 const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     const {t} = useTranslation()
@@ -29,21 +30,22 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     const addAction = (formData: CompetitionForm) => {
         return addCompetition({
             path: {eventId: eventId},
-            body: mapFormToRequest(formData, template?.id),
+            body: mapCompetitionFormToCompetitionPropertiesRequest(formData),
         })
     }
 
     const editAction = (formData: CompetitionForm, entity: CompetitionDto) => {
         return updateCompetition({
             path: {eventId: entity.event, competitionId: entity.id},
-            body: mapFormToRequest(formData, template?.id),
+            body: mapCompetitionFormToCompetitionPropertiesRequest(formData),
         })
     }
 
     const {data: templatesData, pending: templatesPending} = useFetch(
         signal => getCompetitionTemplates({signal}),
         {
-            preCondition: () => user.checkPrivilege(createEventGlobal),
+            preCondition: () =>
+                user.checkPrivilege(createEventGlobal) && props.entity === undefined,
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(
@@ -56,34 +58,18 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
         },
         // todo: consider if the templates, competitionCategories and namedParticipants are stale data and should be reloaded
     )
-    const templates: AutocompleteOption[] =
-        templatesData?.data.map(dto => ({
-            id: dto.id,
-            label: competitionLabelName(dto.properties.identifier, dto.properties.name),
-        })) ?? []
 
     const formContext = useForm<CompetitionForm>()
 
-    const [template, setTemplate] = useState<AutocompleteOption | null>(null)
-    const resetTemplate = () => {
-        setTemplate(null)
-    }
-
-    useEffect(() => {
-        // This ignores watch calls that are called when opening the form - This way the template doesn't reset again directly after opening the form
-        const subscription = formContext.watch((_, foo) => {
-            if (foo.name !== 'namedParticipants' && foo.name !== 'fees' && foo.name !== undefined) {
-                resetTemplate()
-            }
-        })
-        return () => subscription.unsubscribe()
-    }, [formContext.watch])
-
-    function fillFormWithTemplate(templateId: string) {
+    const fillFormWithTemplate = async (templateId: string) => {
         const template = templatesData?.data.find(dto => dto?.id === templateId)
         if (template) {
             formContext.reset(
-                mapCompetitionPropertiesToCompetitionForm(template.properties, t('decimal.point')),
+                mapCompetitionPropertiesToCompetitionForm(
+                    template.properties,
+                    t('decimal.point'),
+                    props.entity ? undefined : template.setupTemplate,
+                ),
             )
         }
     }
@@ -97,8 +83,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                   )
                 : competitionFormDefaultValues,
         )
-        setTemplate(templates.find(t => t?.id === props.entity?.template) ?? null)
-    }, [props.entity, templatesData])
+    }, [props.entity])
 
     return (
         <EntityDialog
@@ -112,45 +97,30 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                 // also in CompetitionTemplates
             }
             <Stack spacing={4}>
-                <Box sx={{pb: 4}}>
-                    <Autocomplete
-                        options={templates}
-                        renderInput={params => (
-                            <TextField
-                                {...params}
-                                label={t('event.competition.template.template')}
-                            />
-                        )}
-                        value={template}
-                        onChange={(_e, newValue: AutocompleteOption) => {
-                            setTemplate(newValue)
-                            if (newValue) {
-                                fillFormWithTemplate(newValue.id)
-                            }
-                        }}
-                        loading={templatesPending}
-                    />
-                </Box>
+                {props.entity === undefined && (
+                    <Box>
+                        <SelectionMenu
+                            buttonContent={t('event.competition.template.select')}
+                            onSelectItem={fillFormWithTemplate}
+                            keyLabel={'competition-template-selection'}
+                            items={templatesData?.data.map(template => ({
+                                id: template.id,
+                                label: competitionLabelName(
+                                    template.properties.identifier,
+                                    template.properties.name,
+                                ),
+                            }))}
+                            pending={templatesPending}
+                        />
+                    </Box>
+                )}
                 <CompetitionPropertiesFormInputs
                     formContext={formContext}
-                    fieldArrayModified={resetTemplate}
+                    hideCompetitionSetupTemplate={props.entity !== undefined}
                 />
             </Stack>
         </EntityDialog>
     )
-}
-
-function mapFormToRequest(
-    formData: CompetitionForm,
-    templateId: string | undefined,
-): CompetitionRequest {
-    return {
-        properties:
-            templateId === undefined
-                ? mapCompetitionFormToCompetitionPropertiesRequest(formData)
-                : undefined,
-        template: templateId,
-    }
 }
 
 export default CompetitionDialog

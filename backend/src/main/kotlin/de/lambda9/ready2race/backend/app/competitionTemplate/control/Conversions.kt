@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryDto
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toDto
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesDto
+import de.lambda9.ready2race.backend.app.competitionSetupTemplate.entity.CompetitionSetupTemplateOverviewDto
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateViewRecord
@@ -37,8 +38,15 @@ fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> 
                     )
                 } else null,
                 namedParticipants = namedParticipantDtos,
-                fees = feeDtos
+                fees = feeDtos,
             ),
+            setupTemplate = if (setupTemplateId != null) {
+                CompetitionSetupTemplateOverviewDto(
+                    id = setupTemplateId!!,
+                    name = setupTemplateName!!,
+                    description = setupTemplateDescription
+                )
+            } else null
         )
     )
 }
@@ -53,7 +61,7 @@ fun CompetitionTemplateViewRecord.applyCompetitionProperties(competitionId: UUID
             name = name!!,
             shortName = shortName,
             description = description,
-            competitionCategory = categoryId
+            competitionCategory = categoryId,
         ),
     )
 

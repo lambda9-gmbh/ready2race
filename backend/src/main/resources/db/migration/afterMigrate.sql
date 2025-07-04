@@ -140,7 +140,6 @@ from competition_properties_has_fee cphf
 create view competition_view as
 select c.id,
        c.event,
-       c.template,
        substring(cp.identifier for length(cp.identifier) -
                                    length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
        cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix,
@@ -174,14 +173,13 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          left join competition_registration cr on c.id = cr.competition
-group by c.id, c.event, c.template, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees
 ;
 
 create view competition_for_club_view as
 select c.id,
        c.event,
-       c.template,
        cp.identifier,
        cp.name,
        cp.short_name,
@@ -215,13 +213,12 @@ from competition c
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          cross join club cb
          left join competition_registration cr on c.id = cr.competition and cb.id = cr.club
-group by c.id, c.event, c.template, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees, cb.id;
 
 create view competition_public_view as
 select c.id,
        c.event,
-       c.template,
        cp.identifier,
        cp.name,
        cp.short_name,
@@ -253,7 +250,7 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
 where e.published is true
-group by c.id, c.event, c.template, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees;
 
 create view competition_template_view as
@@ -266,7 +263,10 @@ select ct.id,
        cc.name                                as category_name,
        cc.description                         as category_description,
        coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees
+       coalesce(fs.fees, '{}')                as fees,
+       cst.id                                 as setup_template_id,
+       cst.name                               as setup_template_name,
+       cst.description                        as setup_template_description
 from competition_template ct
          left join competition_properties cp on ct.id = cp.competition_template
          left join competition_category cc on cp.competition_category = cc.id
@@ -279,7 +279,8 @@ from competition_template ct
                            array_agg(ffcp)
                            filter (where ffcp.competition_properties is not null ) as fees
                     from fee_for_competition_properties ffcp
-                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties;
+                    group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
+         left join competition_setup_template cst on ct.competition_setup_template = cst.id;
 
 create view app_user_invitation_with_roles as
 select aui.id,

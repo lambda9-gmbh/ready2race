@@ -119,10 +119,9 @@ const RegistrationPage = () => {
                                 sx={{flex: 1}}
                             />
                             <FormInputCaptcha captchaProps={captcha} />
-                            <SubmitButton
-                                label={t('user.registration.register')}
-                                submitting={submitting}
-                            />
+                            <SubmitButton submitting={submitting}>
+                                {t('user.registration.register')}
+                            </SubmitButton>
                             <Divider />
                         </Stack>
                     </FormContainer>

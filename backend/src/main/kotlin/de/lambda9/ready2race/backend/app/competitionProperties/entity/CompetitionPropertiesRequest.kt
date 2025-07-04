@@ -10,14 +10,15 @@ import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.a
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
 import java.util.*
 
-data class CompetitionPropertiesRequestDto(
+data class CompetitionPropertiesRequest(
     val identifier: String,
     val name: String,
     val shortName: String?,
     val description: String?,
     val competitionCategory: UUID?,
     val namedParticipants: List<NamedParticipantForCompetitionRequestDto>,
-    val fees: List<FeeForCompetitionRequestDto>
+    val fees: List<FeeForCompetitionRequestDto>,
+    val setupTemplate: UUID?, // Only relevant for add/edit template and add competition
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -37,14 +38,15 @@ data class CompetitionPropertiesRequestDto(
 
     companion object {
         val example
-            get() = CompetitionPropertiesRequestDto(
+            get() = CompetitionPropertiesRequest(
                 identifier = "001",
                 name = "Name",
                 shortName = "N",
                 description = "Description of name",
                 competitionCategory = UUID.randomUUID(),
                 namedParticipants = listOf(NamedParticipantForCompetitionRequestDto.example),
-                fees = listOf(FeeForCompetitionRequestDto.example)
+                fees = listOf(FeeForCompetitionRequestDto.example),
+                setupTemplate = UUID.randomUUID(),
             )
     }
 }

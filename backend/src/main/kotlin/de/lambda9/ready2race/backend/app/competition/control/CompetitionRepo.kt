@@ -18,7 +18,12 @@ import java.util.*
 object CompetitionRepo {
 
     private fun CompetitionView.searchFields() =
-        listOf(NAME, SHORT_NAME, DSL.concat(IDENTIFIER_PREFIX, DSL.coalesce(IDENTIFIER_SUFFIX.cast(String::class.java), "") ), CATEGORY_NAME)
+        listOf(
+            NAME,
+            SHORT_NAME,
+            DSL.concat(IDENTIFIER_PREFIX, DSL.coalesce(IDENTIFIER_SUFFIX.cast(String::class.java), "")),
+            CATEGORY_NAME
+        )
 
     private fun CompetitionForClubView.searchFields() =
         listOf(NAME, SHORT_NAME, IDENTIFIER, CATEGORY_NAME)
@@ -217,4 +222,5 @@ object CompetitionRepo {
         }
         competitions.filter { !found.contains(it) }
     }
+
 }

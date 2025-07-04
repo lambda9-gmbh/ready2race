@@ -283,7 +283,8 @@
         "templates": "Competition Templates",
         "name": "Name",
         "description": "Description",
-        "tableHint": "Provide a quick way to create competitions for an event."
+        "tableHint": "Provide a quick way to create competitions for an event.",
+        "select": "Select template"
       },
       "assignedDays": "Competition days",
       "error": {

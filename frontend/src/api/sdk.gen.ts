@@ -321,6 +321,8 @@ import type {
     DeleteCompetitionSetupTemplateData,
     DeleteCompetitionSetupTemplateError,
     DeleteCompetitionSetupTemplateResponse,
+    GetCompetitionSetupTemplateOverviewError,
+    GetCompetitionSetupTemplateOverviewResponse,
     GetDocumentTemplatesData,
     GetDocumentTemplatesError,
     GetDocumentTemplatesResponse,
@@ -1688,6 +1690,19 @@ export const deleteCompetitionSetupTemplate = <ThrowOnError extends boolean = fa
     >({
         ...options,
         url: '/competitionSetupTemplate/{competitionSetupTemplateId}',
+    })
+}
+
+export const getCompetitionSetupTemplateOverview = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionSetupTemplateOverviewResponse,
+        GetCompetitionSetupTemplateOverviewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/competitionSetupTemplate/overview',
     })
 }
 

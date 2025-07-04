@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService.getCompetitionSetupRoundsWithContent
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.CompetitionSetupTemplateRepo
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.toDto
+import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.toOverviewDto
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -67,7 +68,7 @@ object CompetitionSetupTemplateService {
     fun getById(
         competitionSetupTemplateId: UUID,
     ): App<ServiceError, ApiResponse.Dto<CompetitionSetupTemplateDto>> = KIO.comprehension {
-        val record = !CompetitionSetupTemplateRepo.getById(competitionSetupTemplateId).orDie()
+        val record = !CompetitionSetupTemplateRepo.get(competitionSetupTemplateId).orDie()
             .onNullFail { CompetitionSetupTemplateError.NotFound }
 
         val roundDtos = !getCompetitionSetupRoundsWithContent(competitionSetupTemplateId)
@@ -102,5 +103,13 @@ object CompetitionSetupTemplateService {
         } else {
             noData
         }
+    }
+
+    fun getOverview(): App<Nothing, ApiResponse.ListDto<CompetitionSetupTemplateOverviewDto>> = KIO.comprehension {
+        val records = !CompetitionSetupTemplateRepo.get().orDie()
+
+        val dtos = !records.traverse { it.toOverviewDto() }
+
+        KIO.ok(ApiResponse.ListDto(dtos))
     }
 }

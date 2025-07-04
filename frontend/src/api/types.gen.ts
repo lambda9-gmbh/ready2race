@@ -171,7 +171,7 @@ export type CompetitionPropertiesDto = {
     fees: Array<FeeForCompetitionDto>
 }
 
-export type CompetitionPropertiesRequestDto = {
+export type CompetitionPropertiesRequest = {
     identifier: string
     name: string
     shortName?: string
@@ -179,6 +179,7 @@ export type CompetitionPropertiesRequestDto = {
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
+    setupTemplate?: string
 }
 
 export type CompetitionRegistrationFeeDto = {
@@ -223,11 +224,6 @@ export type CompetitionRegistrationTeamUpsertDto = {
 export type CompetitionRegistrationUpsertDto = {
     competitionId: string
     teams?: Array<CompetitionRegistrationTeamUpsertDto>
-}
-
-export type CompetitionRequest = {
-    properties?: CompetitionPropertiesRequestDto
-    template?: string
 }
 
 export type CompetitionSetupDto = {
@@ -285,6 +281,12 @@ export type CompetitionSetupTemplateDto = {
     rounds: Array<CompetitionSetupRoundDto>
 }
 
+export type CompetitionSetupTemplateOverviewDto = {
+    id: string
+    name: string
+    description?: string
+}
+
 export type CompetitionSetupTemplateRequest = {
     name: string
     description?: string
@@ -294,10 +296,7 @@ export type CompetitionSetupTemplateRequest = {
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
-}
-
-export type CompetitionTemplateRequest = {
-    properties: CompetitionPropertiesRequestDto
+    setupTemplate?: CompetitionSetupTemplateOverviewDto
 }
 
 export type ContactInformationDto = {
@@ -1450,7 +1449,7 @@ export type AssignCompetitionsToEventDayError =
     | UnprocessableEntityError
 
 export type AddCompetitionData = {
-    body: CompetitionRequest
+    body: CompetitionPropertiesRequest
     path: {
         eventId: string
     }
@@ -1507,7 +1506,7 @@ export type GetCompetitionResponse = CompetitionDto
 export type GetCompetitionError = BadRequestError | ApiError
 
 export type UpdateCompetitionData = {
-    body: CompetitionRequest
+    body: CompetitionPropertiesRequest
     path: {
         competitionId: string
         eventId: string
@@ -1717,7 +1716,7 @@ export type DeleteDocumentResponse = void
 export type DeleteDocumentError = BadRequestError | ApiError
 
 export type AddCompetitionTemplateData = {
-    body: CompetitionTemplateRequest
+    body: CompetitionPropertiesRequest
 }
 
 export type AddCompetitionTemplateResponse = string
@@ -1763,7 +1762,7 @@ export type GetCompetitionTemplateResponse = CompetitionTemplateDto
 export type GetCompetitionTemplateError = BadRequestError | ApiError
 
 export type UpdateCompetitionTemplateData = {
-    body: CompetitionTemplateRequest
+    body: CompetitionPropertiesRequest
     path: {
         competitionTemplateId: string
     }
@@ -2510,6 +2509,10 @@ export type DeleteCompetitionSetupTemplateData = {
 export type DeleteCompetitionSetupTemplateResponse = void
 
 export type DeleteCompetitionSetupTemplateError = BadRequestError | ApiError
+
+export type GetCompetitionSetupTemplateOverviewResponse = Array<CompetitionSetupTemplateOverviewDto>
+
+export type GetCompetitionSetupTemplateOverviewError = ApiError
 
 export type GetDocumentTemplatesData = {
     query?: {

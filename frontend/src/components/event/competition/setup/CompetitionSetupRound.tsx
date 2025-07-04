@@ -341,7 +341,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                             value: useStartTimeOffsetsValue = true,
                         },
                     }) => (
-                        <Stack spacing={2} sx={{border: 1, borderColor: 'blue', p: 2}}>
+                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, borderLeft: 1, borderColor: theme.palette.primary.main, pl: 4, py: 2}}>
                             <Box>
                                 <Button
                                     variant="outlined"
@@ -481,16 +481,15 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                             flexWrap: 'wrap',
                                             justifyContent: 'start',
                                             flex: 1,
-                                            gap: 2,
+                                            gap: 4,
                                         }}>
                                         {watchIsGroupRound === false ? (
                                             <>
                                                 {matchFields.map((match, matchIndex) => (
                                                     <Stack
                                                         key={match.id}
-                                                        direction="column"
                                                         spacing={1}
-                                                        sx={{maxWidth: 240}}>
+                                                        sx={{maxWidth: 220}}>
                                                         <CompetitionSetupMatch
                                                             {...getGroupOrMatchProps(
                                                                 false,
@@ -563,7 +562,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                                     spacing={2}
                                                     sx={{
                                                         justifySelf: 'flex-end',
-                                                        maxWidth: 262,
+                                                        maxWidth: 180,
                                                         m: 2,
                                                     }}>
                                                     <Typography variant={'h3'}>
@@ -655,7 +654,7 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                     )}
                                 />
                             </Box>
-                        </Stack>
+                        </Box>
                     )}
                 />
             )}
