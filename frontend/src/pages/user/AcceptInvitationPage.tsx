@@ -61,10 +61,9 @@ const AcceptInvitationPage = () => {
                     <FormContainer formContext={formContext} onSuccess={handleSubmit}>
                         <Stack spacing={4}>
                             <NewPassword formContext={formContext} />
-                            <SubmitButton
-                                label={t('user.invitation.submitPassword')}
-                                submitting={submitting}
-                            />
+                            <SubmitButton submitting={submitting}>
+                                {t('user.invitation.submitPassword')}
+                            </SubmitButton>
                         </Stack>
                     </FormContainer>
                 </>

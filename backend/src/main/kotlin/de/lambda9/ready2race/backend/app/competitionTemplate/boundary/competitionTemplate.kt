@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.app.competitionTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
-import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateRequest
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
@@ -18,7 +18,7 @@ fun Route.competitionTemplate() {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
 
-                val body = !receiveKIO(CompetitionTemplateRequest.example)
+                val body = !receiveKIO(CompetitionPropertiesRequest.example)
                 CompetitionTemplateService.addCompetitionTemplate(body, user.id!!)
             }
         }
@@ -44,7 +44,7 @@ fun Route.competitionTemplate() {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionTemplateId = !pathParam("competitionTemplateId", uuid)
 
-                    val body = !receiveKIO(CompetitionTemplateRequest.example)
+                    val body = !receiveKIO(CompetitionPropertiesRequest.example)
                     CompetitionTemplateService.updateCompetitionTemplate(competitionTemplateId, body, user.id!!)
                 }
             }

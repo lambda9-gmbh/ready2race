@@ -206,7 +206,7 @@ export type CompetitionPropertiesDto = {
     fees: Array<FeeForCompetitionDto>
 }
 
-export type CompetitionPropertiesRequestDto = {
+export type CompetitionPropertiesRequest = {
     identifier: string
     name: string
     shortName?: string
@@ -268,11 +268,6 @@ export type CompetitionRegistrationTeamUpsertDto = {
 export type CompetitionRegistrationUpsertDto = {
     competitionId: string
     teams?: Array<CompetitionRegistrationTeamUpsertDto>
-}
-
-export type CompetitionRequest = {
-    properties?: CompetitionPropertiesRequestDto
-    template?: string
 }
 
 export type CompetitionRoundDto = {
@@ -352,10 +347,6 @@ export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
     setupTemplate?: CompetitionSetupTemplateOverviewDto
-}
-
-export type CompetitionTemplateRequest = {
-    properties: CompetitionPropertiesRequestDto
 }
 
 export type ContactInformationDto = {
@@ -1483,7 +1474,7 @@ export type AssignCompetitionsToEventDayError =
     | UnprocessableEntityError
 
 export type AddCompetitionData = {
-    body: CompetitionRequest
+    body: CompetitionPropertiesRequest
     path: {
         eventId: string
     }
@@ -1540,7 +1531,7 @@ export type GetCompetitionResponse = CompetitionDto
 export type GetCompetitionError = BadRequestError | ApiError
 
 export type UpdateCompetitionData = {
-    body: CompetitionRequest
+    body: CompetitionPropertiesRequest
     path: {
         competitionId: string
         eventId: string
@@ -1809,7 +1800,7 @@ export type DeleteDocumentResponse = void
 export type DeleteDocumentError = BadRequestError | ApiError
 
 export type AddCompetitionTemplateData = {
-    body: CompetitionTemplateRequest
+    body: CompetitionPropertiesRequest
 }
 
 export type AddCompetitionTemplateResponse = string
@@ -1855,7 +1846,7 @@ export type GetCompetitionTemplateResponse = CompetitionTemplateDto
 export type GetCompetitionTemplateError = BadRequestError | ApiError
 
 export type UpdateCompetitionTemplateData = {
-    body: CompetitionTemplateRequest
+    body: CompetitionPropertiesRequest
     path: {
         competitionTemplateId: string
     }

@@ -10,7 +10,7 @@ import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.a
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
 import java.util.*
 
-data class CompetitionPropertiesRequestDto(
+data class CompetitionPropertiesRequest(
     val identifier: String,
     val name: String,
     val shortName: String?,
@@ -38,7 +38,7 @@ data class CompetitionPropertiesRequestDto(
 
     companion object {
         val example
-            get() = CompetitionPropertiesRequestDto(
+            get() = CompetitionPropertiesRequest(
                 identifier = "001",
                 name = "Name",
                 shortName = "N",

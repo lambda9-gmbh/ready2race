@@ -65,9 +65,9 @@ const LoginPage = () => {
                             </Link>
                         </Box>
                     </Box>
-                    <SubmitButton label={t('user.login.submit')} submitting={submitting} />
+                    <SubmitButton submitting={submitting}>{t('user.login.submit')}</SubmitButton>
                     <Divider />
-                    <Stack direction="row" spacing="5px" justifyContent="center">
+                    <Stack direction="row" spacing={1} justifyContent="center">
                         <Typography sx={{fontWeight: 'light'}}>
                             {t('user.login.signUp.message')}
                         </Typography>

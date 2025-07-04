@@ -218,8 +218,7 @@ const CompetitionExecution = () => {
             if (
                 currentRoundMatches &&
                 formData.selectedMatchDto !== null &&
-                currentRoundMatches.length >
-                    selectedMatchIndex(formData.selectedMatchDto) + 1
+                currentRoundMatches.length > selectedMatchIndex(formData.selectedMatchDto) + 1
             ) {
                 const nextMatch =
                     currentRoundMatches[selectedMatchIndex(formData.selectedMatchDto) + 1]
@@ -475,14 +474,16 @@ const CompetitionExecution = () => {
                                         {automaticQualifications(round).length > 0 && (
                                             <Box>
                                                 <Box sx={{my: 2}}>
-                                                <Typography variant={'h6'}>
-                                                    [todo] Automatic Qualifications:
-                                                </Typography>
-                                                <List>
-                                                    {automaticQualifications(round).map(team => (
-                                                        <ListItemText>{team}</ListItemText>
-                                                    ))}
-                                                </List>
+                                                    <Typography variant={'h6'}>
+                                                        [todo] Automatic Qualifications:
+                                                    </Typography>
+                                                    <List>
+                                                        {automaticQualifications(round).map(
+                                                            team => (
+                                                                <ListItemText>{team}</ListItemText>
+                                                            ),
+                                                        )}
+                                                    </List>
                                                 </Box>
                                             </Box>
                                         )}
@@ -530,9 +531,9 @@ const CompetitionExecution = () => {
                                                                             )
                                                                         }
                                                                         variant={'outlined'}
-                                                                        label={'Enter Results'}
-                                                                        pending={submitting}
-                                                                    />
+                                                                        pending={submitting}>
+                                                                        {'Enter Results'}
+                                                                    </LoadingButton>
                                                                 )}
                                                                 <LoadingButton
                                                                     onClick={() =>
@@ -541,9 +542,9 @@ const CompetitionExecution = () => {
                                                                         )
                                                                     }
                                                                     variant={'outlined'}
-                                                                    label={'Edit Match'}
-                                                                    pending={submitting}
-                                                                />
+                                                                    pending={submitting}>
+                                                                    {'Edit Match'}
+                                                                </LoadingButton>
                                                             </Stack>
                                                         </Stack>
                                                         <Divider sx={{my: 2}} />
@@ -598,11 +599,11 @@ const CompetitionExecution = () => {
                                         </Box>
                                         {roundIndex === 0 && (
                                             <LoadingButton
-                                                label={'[todo] Delete Round'}
                                                 pending={submitting}
                                                 onClick={deleteCurrentRound}
-                                                variant={'outlined'}
-                                            />
+                                                variant={'outlined'}>
+                                                {'[todo] Delete Round'}
+                                            </LoadingButton>
                                         )}
                                     </Stack>
                                     {roundIndex < progressDto.rounds.length && (
@@ -725,11 +726,11 @@ const CompetitionExecution = () => {
                                             />
                                             <Box sx={{mt: 4}}>
                                                 <LoadingButton
-                                                    label={'Randomize start numbers'}
                                                     pending={submitting}
                                                     onClick={onRandomizeStartNumbers}
-                                                    variant={'outlined'}
-                                                />
+                                                    variant={'outlined'}>
+                                                    {'Randomize start numbers'}
+                                                </LoadingButton>
 
                                                 <TableContainer>
                                                     <Table>

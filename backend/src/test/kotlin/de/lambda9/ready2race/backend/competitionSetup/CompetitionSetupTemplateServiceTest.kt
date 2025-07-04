@@ -1,12 +1,11 @@
 package de.lambda9.ready2race.backend.competitionSetup
 
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
-import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequestDto
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.CompetitionTemplateService
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
-import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateRequest
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
@@ -60,17 +59,15 @@ class CompetitionSetupTemplateServiceTest {
     @Test
     fun testUpdateCompetitionSetup() = testComprehension {
         val template = !CompetitionTemplateService.addCompetitionTemplate(
-            CompetitionTemplateRequest(
-                properties = CompetitionPropertiesRequestDto(
-                    identifier = "001",
-                    name = "Name",
-                    shortName = null,
-                    description = null,
-                    competitionCategory = null,
-                    namedParticipants = emptyList(),
-                    fees = emptyList(),
-                    setupTemplate = null
-                )
+            CompetitionPropertiesRequest(
+                identifier = "001",
+                name = "Name",
+                shortName = null,
+                description = null,
+                competitionCategory = null,
+                namedParticipants = emptyList(),
+                fees = emptyList(),
+                setupTemplate = null
             ),
             userId = SYSTEM_USER
         )

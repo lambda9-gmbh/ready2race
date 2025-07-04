@@ -839,7 +839,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -929,7 +929,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         204:
           description: Competition successfully updated
@@ -1417,7 +1417,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionTemplateRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -1500,7 +1500,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CompetitionTemplateRequest'
+              $ref: '#/components/schemas/CompetitionPropertiesRequest'
       responses:
         204:
           description: CompetitionTemplate successfully updated
@@ -3594,7 +3594,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  event/{eventId}/workshift:
+  /event/{eventId}/workshift:
     parameters:
       - name: eventId
         in: path
@@ -3667,7 +3667,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  event/{eventId}/workshift/{workShiftId}:
+  /event/{eventId}/workshift/{workShiftId}:
     parameters:
       - name: workShiftId
         in: path
@@ -4789,7 +4789,7 @@ components:
           format: decimal
 
 
-    CompetitionPropertiesRequestDto:
+    CompetitionPropertiesRequest:
       type: object
       required:
         - identifier
@@ -4884,14 +4884,6 @@ components:
           type: number
 
 
-    CompetitionRequest:
-      type: object
-      properties:
-        properties:
-          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
-        template:
-          type: string
-          format: uuid
 
 
     AssignDaysToCompetitionRequest:
@@ -5194,14 +5186,6 @@ components:
         setupTemplate:
           $ref: '#/components/schemas/CompetitionSetupTemplateOverviewDto'
 
-
-    CompetitionTemplateRequest:
-      type: object
-      required:
-        - properties
-      properties:
-        properties:
-          $ref: '#/components/schemas/CompetitionPropertiesRequestDto'
 
 
     # competitionCategory

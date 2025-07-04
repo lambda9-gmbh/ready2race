@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import java.util.*
 
-fun CompetitionPropertiesRequestDto.toRecord(competitionId: UUID?, competitionTemplateId: UUID?) = CompetitionPropertiesRecord(
+fun CompetitionPropertiesRequest.toRecord(competitionId: UUID?, competitionTemplateId: UUID?) = CompetitionPropertiesRecord(
     id = UUID.randomUUID(),
     competition = competitionId,
     competitionTemplate = competitionTemplateId,
@@ -56,28 +56,7 @@ fun FeeForCompetitionPropertiesRecord.toDto(): App<Nothing, FeeForCompetitionDto
     )
 )
 
-fun NamedParticipantForCompetitionPropertiesRecord.applyCompetitionPropertiesHasNamedParticipant(competitionPropertiesId: UUID, namedParticipantId: UUID): App<Nothing, CompetitionPropertiesHasNamedParticipantRecord> = KIO.ok(
-    CompetitionPropertiesHasNamedParticipantRecord(
-        competitionProperties = competitionPropertiesId,
-        namedParticipant = namedParticipantId,
-        countMales = countMales!!,
-        countFemales = countFemales!!,
-        countNonBinary = countNonBinary!!,
-        countMixed = countMixed!!
-    )
-)
-
-fun FeeForCompetitionPropertiesRecord.applyCompetitionPropertiesHasFee(competitionPropertiesId: UUID, feeId: UUID): App<Nothing, CompetitionPropertiesHasFeeRecord> = KIO.ok(
-    CompetitionPropertiesHasFeeRecord(
-        id = UUID.randomUUID(),
-        competitionProperties = competitionPropertiesId,
-        fee = feeId,
-        required = required!!,
-        amount = amount!!,
-    )
-)
-
-fun CompetitionPropertiesRequestDto.toUpdateFunction(): CompetitionPropertiesRecord.() -> Unit = let {
+fun CompetitionPropertiesRequest.toUpdateFunction(): CompetitionPropertiesRecord.() -> Unit = let {
     {
         identifier = it.identifier
         name = it.name
