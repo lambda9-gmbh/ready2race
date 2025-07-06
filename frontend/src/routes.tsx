@@ -33,6 +33,8 @@ import ConfigurationPage, {ConfigurationTab} from './pages/ConfigurationPage.tsx
 import AcceptInvitationPage from './pages/user/AcceptInvitationPage.tsx'
 import Dashboard from './pages/Dashboard.tsx'
 import LandingPage from './pages/LandingPage.tsx'
+import AppLayout from './layouts/AppLayout.tsx'
+import QrScannerPage from './pages/app/QrScannerPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -59,12 +61,26 @@ const checkAuthWith = (
     }
 }
 
+const checkAuthApp = (context: User, location: ParsedLocation, privilege?: Privilege) => {
+    if (!context.loggedIn) {
+        throw redirect({to: '/app', search: {redirect: location.href}})
+    }
+    if (privilege && !context.checkPrivilege(privilege)) {
+        throw redirect({to: '/login'})
+    }
+}
+
 export const rootRoute = createRootRouteWithContext<User>()({
+})
+
+export const mainLayoutRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    id: 'main-layout',
     component: () => <RootLayout />,
 })
 
 export const indexRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: '/',
     component: () => <LandingPage />,
     beforeLoad: ({context}) => {
@@ -90,7 +106,7 @@ const validateTabSearch = <TabType extends string,>(search: TabSearch<TabType>):
 }
 
 export const loginRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'login',
     component: () => <LoginPage />,
     validateSearch: ({redirect}: {redirect?: string} & SearchSchemaInput): LoginSearch => ({
@@ -99,13 +115,13 @@ export const loginRoute = createRoute({
 })
 
 export const invitationTokenRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'invitation/$invitationToken',
     component: () => <AcceptInvitationPage />,
 })
 
 export const registrationRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'registration',
 })
 
@@ -122,7 +138,7 @@ export const registrationTokenRoute = createRoute({
 })
 
 export const resetPasswordRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'resetPassword',
 })
 
@@ -139,7 +155,7 @@ export const resetPasswordTokenRoute = createRoute({
 })
 
 export const dashboardRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'dashboard',
     component: () => <Dashboard />,
     beforeLoad: ({context, location}) => {
@@ -148,7 +164,7 @@ export const dashboardRoute = createRoute({
 })
 
 export const usersRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'user',
 })
 
@@ -182,7 +198,7 @@ export const userIndexRoute = createRoute({
 })
 
 export const rolesRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'role',
 })
 
@@ -196,7 +212,7 @@ export const rolesIndexRoute = createRoute({
 })
 
 export const configurationRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'config',
 })
 
@@ -211,7 +227,7 @@ export const configurationIndexRoute = createRoute({
 })
 
 export const eventsRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'event',
 })
 
@@ -294,7 +310,7 @@ export const clubIndexRoute = createRoute({
 })
 
 export const clubsRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'club',
 })
 
@@ -307,28 +323,49 @@ export const clubsIndexRoute = createRoute({
     },
 })
 
+// /app Route mit eigenem Layout
+export const appRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/app',
+    component: () => <AppLayout />,
+})
+
+export const appScanRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: '/scanner',
+    component: QrScannerPage,
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
+})
+
 const routeTree = rootRoute.addChildren([
-    indexRoute,
-    loginRoute,
-    dashboardRoute,
-    configurationRoute.addChildren([configurationIndexRoute]),
-    eventsRoute.addChildren([
-        eventsIndexRoute,
-        eventRoute.addChildren([
-            eventIndexRoute,
-            eventDayRoute.addChildren([eventDayIndexRoute]),
-            competitionRoute.addChildren([
-                competitionIndexRoute,
+    mainLayoutRoute.addChildren([
+        indexRoute,
+        loginRoute,
+        dashboardRoute,
+        configurationRoute.addChildren([configurationIndexRoute]),
+        eventsRoute.addChildren([
+            eventsIndexRoute,
+            eventRoute.addChildren([
+                eventIndexRoute,
+                eventDayRoute.addChildren([eventDayIndexRoute]),
+                competitionRoute.addChildren([
+                    competitionIndexRoute,
+                ]),
+                eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
             ]),
-            eventRegisterRoute.addChildren([eventRegisterIndexRoute]),
         ]),
+        usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
+        rolesRoute.addChildren([rolesIndexRoute]),
+        invitationTokenRoute,
+        registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
+        resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
+        clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
     ]),
-    usersRoute.addChildren([usersIndexRoute, userRoute.addChildren([userIndexRoute])]),
-    rolesRoute.addChildren([rolesIndexRoute]),
-    invitationTokenRoute,
-    registrationRoute.addChildren([registrationIndexRoute, registrationTokenRoute]),
-    resetPasswordRoute.addChildren([resetPasswordIndexRoute, resetPasswordTokenRoute]),
-    clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
+    appRoute.addChildren([
+        appScanRoute,
+    ]),
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath

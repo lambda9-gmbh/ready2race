@@ -71,6 +71,16 @@ object AppUserRepo {
         }
     }
 
+    fun getOneByQrCodeId(
+        qrCodeId: String,
+    ): JIO<AppUserWithRolesRecord?> = Jooq.query {
+        with(APP_USER_WITH_ROLES) {
+            selectFrom(this)
+                .where(QR_CODE_ID.eq(qrCodeId))
+                .fetchOne()
+        }
+    }
+
     fun countWithRoles(
         search: String?,
         noClub: Boolean?

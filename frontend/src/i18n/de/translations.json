@@ -170,7 +170,8 @@
       "external": "Extern",
       "externalClub": "Externer Verein",
       "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
-      "usedInRegistration": "In Meldung"
+      "usedInRegistration": "In Meldung",
+      "qrCodeId": "Qr Code Wert"
     }
   },
   "event": {
@@ -548,6 +549,7 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
+    "qrCodeId": "Qr Code Wert",
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",

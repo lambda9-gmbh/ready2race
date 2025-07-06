@@ -402,6 +402,15 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    CheckQrCodeData,
+    CheckQrCodeError,
+    CheckQrCodeResponse,
+    UpdateQrCodeAppuserData,
+    UpdateQrCodeAppuserError,
+    UpdateQrCodeAppuserResponse,
+    UpdateQrCodeParticipantData,
+    UpdateQrCodeParticipantError,
+    UpdateQrCodeParticipantResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1995,5 +2004,40 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/user/{userId}/workshift',
+    })
+}
+
+export const checkQrCode = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckQrCodeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<CheckQrCodeResponse, CheckQrCodeError, ThrowOnError>({
+        ...options,
+        url: '/app/{qrCodeId}',
+    })
+}
+
+export const updateQrCodeAppuser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateQrCodeAppuserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateQrCodeAppuserResponse,
+        UpdateQrCodeAppuserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/appuser',
+    })
+}
+
+export const updateQrCodeParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateQrCodeParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateQrCodeParticipantResponse,
+        UpdateQrCodeParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/participant',
     })
 }

@@ -14,8 +14,8 @@ import de.lambda9.ready2race.backend.app.event.boundary.event
 import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumentType
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
-import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
+import de.lambda9.ready2race.backend.app.qrCodeApp.boundary.qrCodeApp
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import de.lambda9.ready2race.backend.app.workType.boundary.workType
 import io.ktor.server.application.*
@@ -43,6 +43,7 @@ fun Application.configureRouting() {
             bankAccount()
             contactInformation()
             workType()
+            qrCodeApp()
         }
     }
 }

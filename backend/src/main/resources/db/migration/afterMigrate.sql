@@ -69,7 +69,8 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles
+       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles,
+       au.qr_code_id
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
          left join role_with_privileges rwp on auhr.role = rwp.id
@@ -82,7 +83,8 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       au.roles
+       au.roles,
+       au.qr_code_id
 from every_app_user_with_roles au
 where not exists(select *
                  from app_user_has_role auhr2
@@ -362,7 +364,8 @@ select er.event                                                                 
        p.gender,
        p.external,
        p.external_club_name,
-       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
+       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
+       p.qr_code_id
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration

@@ -41,6 +41,13 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
             minWidth: 200,
             flex: 1,
         },
+        {
+            field: 'qrCodeId',
+            headerName: t('user.qrCodeId'),
+            minWidth: 200,
+            sortable: false,
+            flex: 1,
+        },
     ]
 
     return (

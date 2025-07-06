@@ -170,7 +170,8 @@
       "external": "External",
       "externalClub": "External club",
       "externalHint": "Select this option if you want to register a member of another club.",
-      "usedInRegistration": "In Registration"
+      "usedInRegistration": "In Registration",
+      "qrCodeId": "Qr Code Value"
     }
   },
   "event": {
@@ -548,6 +549,7 @@
     },
     "firstname": "Firstname",
     "lastname": "Lastname",
+    "qrCodeId": "Qr Code Value",
     "password": {
       "password": "Password",
       "confirm": "Passwort bestätigen",

@@ -103,6 +103,16 @@ object ParticipantRepo {
         }
     }
 
+    fun getParticipantByQrCodeId(
+        qrCodeId: String
+    ): JIO<List<ParticipantViewRecord>> = Jooq.query {
+        with(PARTICIPANT_VIEW) {
+            selectFrom(this)
+                .where(QR_CODE_ID.eq(qrCodeId))
+                .fetch()
+        }
+    }
+
     private fun filterScope(
         scope: Privilege.Scope,
         clubId: UUID?,

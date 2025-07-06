@@ -127,6 +127,13 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                         ' - '
                     ),
             },
+            {
+                field: 'qrCodeId',
+                headerName: t('club.participant.qrCodeId'),
+                minWidth: 150,
+                sortable: false,
+                flex: 1,
+            },
         ],
         [requirementsData?.data.length],
     )
