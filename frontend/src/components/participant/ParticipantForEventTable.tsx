@@ -1,5 +1,5 @@
 import {useTranslation} from 'react-i18next'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {eventIndexRoute} from '@routes'
 import {
     getActiveParticipantRequirementsForEvent,
@@ -10,31 +10,38 @@ import {
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
-import {Cancel, CheckCircle, Info, VerifiedUser} from '@mui/icons-material'
+import {Cancel, CheckCircle, Delete, Edit, Info, VerifiedUser} from '@mui/icons-material'
 import SplitButton, {SplitButtonOption} from '@components/SplitButton.tsx'
-import {Fragment, useMemo} from 'react'
+import {Fragment, useMemo, useState} from 'react'
 import {useEntityAdministration, useFetch} from '@utils/hooks.ts'
 import ParticipantRequirementApproveManuallyForEventDialog, {
     ParticipantRequirementApproveManuallyForEventForm,
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
-import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
+import ParticipantRequirementCheckForEventUploadFileDialog
+    from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Stack, Typography} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import {deleteQrCode} from '../../api/sdk.gen'
+import {QrCodeEditDialog} from "@components/participant/QrCodeEditDialog.tsx";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
     pageSize: 10,
 }
-const pageSizeOptions: (number | {value: number; label: string})[] = [10]
+const pageSizeOptions: (number | { value: number; label: string })[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEventDto>) => {
     const {t} = useTranslation()
     const user = useUser()
-
     const {eventId} = eventIndexRoute.useParams()
+    const {confirmAction} = useConfirmation()
+
+    const [editDialogOpen, setEditDialogOpen] = useState(false)
+    const [editQrParticipant, setEditQrParticipant] = useState<ParticipantForEventDto | null>(null)
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getParticipantsForEvent({
@@ -93,7 +100,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 headerName: t('event.participantRequirement.approved'),
                 maxWidth: 180,
                 minWidth: 100,
-                flex:1,
+                flex: 1,
                 sortable: false,
                 renderCell: ({row}) =>
                     (requirementsData?.data.length ?? 0) > 0 ? (
@@ -111,21 +118,28 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                                 {row.participantRequirementsChecked?.some(
                                                     c => c.id === r.id,
                                                 ) ? (
-                                                    <CheckCircle color={'success'} />
+                                                    <CheckCircle color={'success'}/>
                                                 ) : (
-                                                    <Cancel color={'error'} />
+                                                    <Cancel color={'error'}/>
                                                 )}
                                                 <Typography>{r.name}</Typography>
                                             </Stack>
                                         ))}
                                     </Stack>
                                 }>
-                                <Info color={'info'} fontSize={'small'} />
+                                <Info color={'info'} fontSize={'small'}/>
                             </HtmlTooltip>
                         </Stack>
                     ) : (
                         ' - '
                     ),
+            },
+            {
+                field: 'qrCodeId',
+                headerName: t('club.participant.qrCodeId'),
+                minWidth: 150,
+                sortable: false,
+                flex: 1,
             },
         ],
         [requirementsData?.data.length],
@@ -158,8 +172,59 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
         [requirementsData?.data],
     )
 
+    const handleEditQr = (participant: ParticipantForEventDto) => {
+        setEditQrParticipant(participant)
+        setEditDialogOpen(true)
+    }
+    const handleEditQrCancel = () => {
+        setEditDialogOpen(false)
+        setEditQrParticipant(null)
+    }
+    const handleEditQrOpen = () => {
+    }
+    const handleEditQrReload = () => {
+        setEditDialogOpen(false)
+        setEditQrParticipant(null)
+        props.reloadData()
+    }
+
+    const handleDeleteQr = (participant: ParticipantForEventDto) => {
+        confirmAction(async () => {
+            await deleteQrCode({
+                path: {qrCodeId: participant.qrCodeId!},
+            })
+            props.reloadData()
+        }, {
+            content: t('club.participant.qrCodeDeleteConfirm'),
+            okText: t('common.delete'),
+        })
+    }
+
+    const customEntityActions = (entity: ParticipantForEventDto) => [
+        <GridActionsCellItem
+            icon={<Edit/>}
+            label={t('club.participant.qrCodeEdit')}
+            onClick={() => handleEditQr(entity)}
+            showInMenu
+        />,
+        <GridActionsCellItem
+            icon={<Delete/>}
+            label={t('club.participant.qrCodeDelete')}
+            onClick={() => handleDeleteQr(entity)}
+            showInMenu
+        />,
+    ]
+
     return (
         <Fragment>
+            <QrCodeEditDialog
+                dialogIsOpen={editDialogOpen}
+                closeDialog={handleEditQrCancel}
+                reloadData={handleEditQrReload}
+                entity={editQrParticipant}
+                onOpen={handleEditQrOpen}
+                eventId={eventId}
+            />
             <ParticipantRequirementApproveManuallyForEventDialog
                 {...participantRequirementApproveManuallyForEventProps.dialog}
                 reloadData={props.reloadData}
@@ -174,7 +239,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                     user.checkPrivilege(updateEventGlobal) && (
                         <SplitButton
                             main={{
-                                icon: <VerifiedUser />,
+                                icon: <VerifiedUser/>,
                                 label: t('event.participantRequirement.checkUpload'),
                                 onClick: () =>
                                     participantRequirementCheckForEventConfigProps.table.openDialog(
@@ -185,6 +250,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                         />
                     )
                 }
+                customEntityActions={customEntityActions}
                 gridProps={{getRowId: row => row.id}}
                 parentResource={'REGISTRATION'}
                 initialPagination={initialPagination}

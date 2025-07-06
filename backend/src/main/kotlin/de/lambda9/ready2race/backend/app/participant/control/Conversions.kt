@@ -45,7 +45,7 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
         externalClubName = externalClubName,
         usedInRegistration = usedInRegistration!!,
         createdAt = createdAt!!,
-        updatedAt = updatedAt!!
+        updatedAt = updatedAt!!,
     )
 )
 
@@ -66,6 +66,7 @@ fun ParticipantForEventRecord.toDto(): App<Nothing, ParticipantForEventDto> =
                     it?.id!!,
                     it.name
                 )
-            }
+            },
+            qrCodeId = qrCodeId,
         )
     )

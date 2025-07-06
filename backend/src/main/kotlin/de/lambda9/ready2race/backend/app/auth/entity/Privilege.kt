@@ -19,6 +19,7 @@ sealed class Privilege(
         CLUB,
         REGISTRATION,
         INVOICE,
+        APP,
     }
 
     enum class Scope(val level: Int) {
@@ -54,6 +55,8 @@ sealed class Privilege(
     data object UpdateRegistrationOwn: Privilege(Action.UPDATE, Resource.REGISTRATION, Scope.OWN)
     data object DeleteRegistrationGlobal: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.GLOBAL)
     data object DeleteRegistrationOwn: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.OWN)
+    data object ReadAppGlobal: Privilege(Action.READ, Resource.APP, Scope.GLOBAL)
+    data object UpdateAppGlobal: Privilege(Action.UPDATE, Resource.APP, Scope.GLOBAL)
 
     data object CreateInvoiceGlobal: Privilege(Action.CREATE, Resource.INVOICE, Scope.GLOBAL)
     data object ReadInvoiceGlobal: Privilege(Action.READ, Resource.INVOICE, Scope.GLOBAL)

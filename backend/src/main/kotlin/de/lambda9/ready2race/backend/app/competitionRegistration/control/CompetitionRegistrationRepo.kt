@@ -214,7 +214,8 @@ object CompetitionRegistrationRepo {
                     gender = it[PARTICIPANT_FOR_EVENT.GENDER]!!,
                     external = it[PARTICIPANT_FOR_EVENT.EXTERNAL],
                     externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
-                    participantRequirementsChecked = emptyList()
+                    participantRequirementsChecked = emptyList(),
+                    qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID]
                 )
             }
         }

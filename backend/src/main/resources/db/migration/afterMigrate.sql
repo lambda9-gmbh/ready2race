@@ -78,11 +78,13 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles
+       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles,
+       qc.qr_code_id
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
          left join role_with_privileges rwp on auhr.role = rwp.id
-group by au.id;
+         left join qr_codes qc on qc.app_user = au.id
+    group by au.id, qc.id;
 
 -- refactor this and similar views to use where-clause in API instead
 create view app_user_with_roles as
@@ -91,7 +93,8 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       au.roles
+       au.roles,
+       au.qr_code_id
 from every_app_user_with_roles au
 where not exists(select *
                  from app_user_has_role auhr2
@@ -372,7 +375,8 @@ select er.event                                                                 
        p.gender,
        p.external,
        p.external_club_name,
-       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
+       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
+       qc.qr_code_id
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration
@@ -380,7 +384,8 @@ from event_registration er
          join participant p on crnp.participant = p.id
          left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
          left join participant_requirement pr on phrfe.participant_requirement = pr.id
-group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name
+         left join qr_codes qc on qc.participant = p.id
+group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name, qc.id
 order by c.name, p.firstname, p.lastname;
 
 create view event_public_view as
