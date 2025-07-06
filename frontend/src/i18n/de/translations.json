@@ -170,7 +170,12 @@
       "external": "Extern",
       "externalClub": "Externer Verein",
       "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
-      "usedInRegistration": "In Meldung"
+      "usedInRegistration": "In Meldung",
+      "qrCodeId": "Qr Code Wert",
+      "qrCodeEdit": "QR Code Wert bearbeiten",
+      "qrCodeDelete": "QR Code Wert löschen",
+      "qrCodeDeleteConfirm": "Möchten Sie den QR Code wirklich löschen?",
+      "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein."
     }
   },
   "event": {
@@ -548,6 +553,7 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
+    "qrCodeId": "Qr Code Wert",
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -724,5 +730,38 @@
       "notFound": "Der CAPTCHA ist veraltet"
     },
     "loading": "Lade CAPTCHA..."
+  },
+  "qrAssign": {
+    "title": "QR-Code zuweisen",
+    "participant": "Teilnehmer",
+    "user": "Benutzer",
+    "clubs": "Vereine",
+    "participants": "Teilnehmer",
+    "users": "Benutzer",
+    "noData": "Keine Daten"
+  },
+  "qrAppuser": {
+    "title": "QR-Appuser",
+    "user": "User",
+    "underConstruction": "Seite im Aufbau",
+    "removeAssignment": "Qr Code Zuweisung aufheben",
+    "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
+    "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
+    "deleteError": "Fehler beim Löschen"
+  },
+  "qrParticipant": {
+    "title": "Teilnehmer QR",
+    "enterArea": "Betritt Wettkampfbereich",
+    "leaveArea": "Verlässt Wettkampfbereich",
+    "removeAssignment": "Qr Code Zuweisung aufheben",
+    "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
+    "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
+    "deleteError": "Fehler beim Löschen"
+  },
+  "qrScanner": {
+    "title": "QR-Scanner"
+  },
+  "qrEvents": {
+    "title": "QR-Events"
   }
 }

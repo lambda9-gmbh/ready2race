@@ -18,6 +18,7 @@ sealed class Privilege(
         EVENT,
         CLUB,
         REGISTRATION,
+        APP
     }
 
     enum class Scope(val level: Int) {
@@ -53,6 +54,8 @@ sealed class Privilege(
     data object UpdateRegistrationOwn: Privilege(Action.UPDATE, Resource.REGISTRATION, Scope.OWN)
     data object DeleteRegistrationGlobal: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.GLOBAL)
     data object DeleteRegistrationOwn: Privilege(Action.DELETE, Resource.REGISTRATION, Scope.OWN)
+    data object ReadAppGlobal: Privilege(Action.READ, Resource.APP, Scope.GLOBAL)
+    data object UpdateAppGlobal: Privilege(Action.UPDATE, Resource.APP, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

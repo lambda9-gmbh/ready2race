@@ -1901,7 +1901,7 @@ paths:
           description: Filter for clubs, which registered for this event
           required: false
           schema:
-           type: string
+            type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -3012,7 +3012,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-          
+
   /bankAccount:
     get:
       parameters:
@@ -3633,6 +3633,102 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /app/{qrCodeId}:
+    parameters:
+      - name: qrCodeId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: checkQrCode
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/QrCodeParticipantResponse'
+                  - $ref: '#/components/schemas/QrCodeAppuserResponse'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteQrCode
+      responses:
+        204:
+          description: QR-Code successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /app/appuser:
+    put:
+      operationId: updateQrCodeAppuser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrCodeAppuserUpdate'
+      responses:
+        204:
+          description: QR-Code successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /app/participant:
+    put:
+      operationId: updateQrCodeParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrCodeParticipantUpdate'
+      responses:
+        204:
+          description: QR-Code successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -4143,6 +4239,7 @@ components:
         - firstname
         - lastname
         - roles
+        - qrCodeId
       properties:
         id:
           type: string
@@ -4157,6 +4254,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleDto'
+        qrCodeId:
+          type: string
 
     UpdateAppUserRequest:
       type: object
@@ -5423,6 +5522,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantRequirementReducedDto'
+        qrCodeId:
+          type: string
 
     # participant
 
@@ -5546,8 +5647,8 @@ components:
         name:
           type: string
       required:
-      - id
-      - name
+        - id
+        - name
 
     EventRegistrationCompetitionDto:
       type: object
@@ -6047,7 +6148,7 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
-          
+
     BankAccountDto:
       type: object
       required:
@@ -6066,9 +6167,9 @@ components:
           type: string
         bic:
           type: string
-        bank: 
+        bank:
           type: string
-          
+
     BankAccountRequest:
       type: object
       required:
@@ -6161,3 +6262,54 @@ components:
       properties:
         assigned:
           $ref: '#/components/schemas/ContactInformationDto'
+
+    QrCodeParticipantResponse:
+      type: object
+      required: [ firstname, lastname, uuid, qrCodeId ]
+      properties:
+        firstname: { type: string }
+        lastname: { type: string }
+        id: { type: string, format: uuid }
+        qrCodeId: { type: string }
+        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+
+    QrCodeAppuserResponse:
+      type: object
+      required: [ firstname, lastname, uuid, qrCodeId ]
+      properties:
+        firstname: { type: string }
+        lastname: { type: string }
+        id: { type: string, format: uuid }
+        qrCodeId: { type: string }
+        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+
+    QrCodeAppuserUpdate:
+      type: object
+      required: [ id, qrCodeId, eventId ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        qrCodeId:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+
+
+    QrCodeParticipantUpdate:
+      type: object
+      required: [ id, qrCodeId, eventId ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        qrCodeId:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+
+    QrCodeDtoType:
+      type: string
+      enum: [Participant, User]

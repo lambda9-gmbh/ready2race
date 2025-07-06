@@ -170,7 +170,12 @@
       "external": "External",
       "externalClub": "External club",
       "externalHint": "Select this option if you want to register a member of another club.",
-      "usedInRegistration": "In Registration"
+      "usedInRegistration": "In Registration",
+      "qrCodeId": "Qr Code Value",
+      "qrCodeEdit": "Edit QR Code value",
+      "qrCodeDelete": "Delete QR Code value",
+      "qrCodeDeleteConfirm": "Do you really want to delete the QR Code?",
+      "qrCodeEditDescription": "Please enter the new QR Code value."
     }
   },
   "event": {
@@ -548,6 +553,7 @@
     },
     "firstname": "Firstname",
     "lastname": "Lastname",
+    "qrCodeId": "Qr Code Value",
     "password": {
       "password": "Password",
       "confirm": "Passwort bestätigen",
@@ -724,5 +730,38 @@
       "notFound": "The CAPTCHA is outdated"
     },
     "loading": "Loading CAPTCHA..."
+  },
+  "qrAssign": {
+    "title": "Assign QR Code",
+    "participant": "Participant",
+    "user": "User",
+    "clubs": "Clubs",
+    "participants": "Participants",
+    "users": "Users",
+    "noData": "No data"
+  },
+  "qrAppuser": {
+    "title": "QR Appuser",
+    "user": "User",
+    "underConstruction": "Site under construction",
+    "removeAssignment": "Remove QR code assignment",
+    "removeAssignmentTitle": "Remove QR code assignment",
+    "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
+    "deleteError": "Error while deleting"
+  },
+  "qrParticipant": {
+    "title": "Participant QR",
+    "enterArea": "Enter competition area",
+    "leaveArea": "Leave competition area",
+    "removeAssignment": "Remove QR code assignment",
+    "removeAssignmentTitle": "Remove QR code assignment",
+    "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
+    "deleteError": "Error while deleting"
+  },
+  "qrScanner": {
+    "title": "QR Scanner"
+  },
+  "qrEvents": {
+    "title": "QR Events"
   }
 }

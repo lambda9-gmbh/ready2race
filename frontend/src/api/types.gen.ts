@@ -22,6 +22,7 @@ export type AppUserDto = {
     firstname: string
     lastname: string
     roles: Array<RoleDto>
+    qrCodeId: string
 }
 
 export type AppUserInvitationDto = {
@@ -719,6 +720,7 @@ export type ParticipantForEventDto = {
     external?: boolean | null
     externalClubName?: string | null
     participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
+    qrCodeId?: string
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -795,6 +797,36 @@ export type PrivilegeDto = {
     action: Action
     resource: Resource
     scope: Scope
+}
+
+export type QrCodeAppuserResponse = {
+    firstname: string
+    lastname: string
+    id?: string
+    qrCodeId: string
+    type?: QrCodeDtoType
+}
+
+export type QrCodeAppuserUpdate = {
+    id: string
+    qrCodeId: string
+    eventId: string
+}
+
+export type QrCodeDtoType = 'Participant' | 'User'
+
+export type QrCodeParticipantResponse = {
+    firstname: string
+    lastname: string
+    id?: string
+    qrCodeId: string
+    type?: QrCodeDtoType
+}
+
+export type QrCodeParticipantUpdate = {
+    id: string
+    qrCodeId: string
+    eventId: string
 }
 
 export type RegisterRequest = {
@@ -2797,3 +2829,39 @@ export type GetWorkShiftsForUserResponse = {
 }
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type CheckQrCodeData = {
+    path: {
+        qrCodeId: string
+    }
+}
+
+export type CheckQrCodeResponse = QrCodeParticipantResponse | QrCodeAppuserResponse
+
+export type CheckQrCodeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteQrCodeData = {
+    path: {
+        qrCodeId: string
+    }
+}
+
+export type DeleteQrCodeResponse = void
+
+export type DeleteQrCodeError = BadRequestError | ApiError
+
+export type UpdateQrCodeAppuserData = {
+    body: QrCodeAppuserUpdate
+}
+
+export type UpdateQrCodeAppuserResponse = void
+
+export type UpdateQrCodeAppuserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateQrCodeParticipantData = {
+    body: QrCodeParticipantUpdate
+}
+
+export type UpdateQrCodeParticipantResponse = void
+
+export type UpdateQrCodeParticipantError = BadRequestError | ApiError | UnprocessableEntityError

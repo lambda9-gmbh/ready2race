@@ -1,4 +1,5 @@
 .idea
 *.iml
 
-deployTest.sh
+deploy*.sh
+/.cursor/
