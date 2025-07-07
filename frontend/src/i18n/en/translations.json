@@ -110,6 +110,8 @@
         "event": "Event assigned templates"
       },
       "preview": {
+        "title": "Template preview",
+        "type": "Document type",
         "show": "Preview sample",
         "error": "Cannot load preview."
       }

@@ -110,6 +110,8 @@
         "event": "Für Veranstaltung zugewiesene Vorlagen"
       },
       "preview": {
+        "title": "Mustervorschau",
+        "type": "Dokumenttyp",
         "show": "Mustervorschau",
         "error": "Fehler beim Laden der Vorschau"
       }

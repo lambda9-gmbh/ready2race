@@ -1,10 +1,11 @@
-import {Button, DialogActions, DialogContent, DialogTitle, Link, MenuItem, Select} from '@mui/material'
+import {Box, Button, DialogActions, DialogContent, DialogTitle, MenuItem, Select, Stack} from '@mui/material'
 import BaseDialog from '@components/BaseDialog.tsx';
-import {useTranslation} from "react-i18next";
+import {Trans, useTranslation} from "react-i18next";
 import {DocumentType} from "@api/types.gen.ts";
-import {useRef, useState} from "react";
+import {useState} from "react";
 import {downloadDocumentTemplateSample} from "@api/sdk.gen.ts";
 import {useFeedback} from "@utils/hooks.ts";
+import FormInputLabel from "@components/form/input/FormInputLabel.tsx";
 
 type Props = {
     open: boolean
@@ -17,35 +18,26 @@ const DocumentTemplatePreviewDialog = (props: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const downloadRef = useRef<HTMLAnchorElement>(null)
-
     const [selectedType, setSelectedType] = useState<DocumentType | ''>('')
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
     const handleClose = () => {
         props.onClose()
         setSelectedType('')
+        setPreviewUrl(null)
     }
 
 
     // TODO: implement preview instead of loading in new tab
     const handleChange = async (type: DocumentType) => {
         setSelectedType(type)
-        // ...
 
-        const {data, error, response} = await downloadDocumentTemplateSample({path: {documentTemplateId: props.documentTemplateId!}, query: {documentType: type}})
-
-        const anchor = downloadRef.current
-        const disposition = response.headers.get('Content-Disposition')
-        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
+        const {data, error} = await downloadDocumentTemplateSample({path: {documentTemplateId: props.documentTemplateId!}, query: {documentType: type}})
 
         if (error) {
             feedback.error(t('document.template.preview.error'))
-        } else if (data !== undefined && anchor) {
-            anchor.href = URL.createObjectURL(data)
-            anchor.download = filename ?? 'sample.pdf'
-            anchor.click()
-            anchor.href = ''
-            anchor.download = ''
+        } else if (data !== undefined) {
+            setPreviewUrl(URL.createObjectURL(data))
         }
     }
 
@@ -53,27 +45,45 @@ const DocumentTemplatePreviewDialog = (props: Props) => {
         <BaseDialog
             open={props.open}
             onClose={handleClose}
-            maxWidth={false}
+            fullScreen
         >
             <DialogTitle>
-                [todo] - Template Preview
+                <Trans i18nKey={'document.template.preview.title'} />
             </DialogTitle>
             <DialogContent>
-                <Link ref={downloadRef} display={'none'} target={'_blank'}></Link>
-                <Select
-                    value={selectedType}
-                    onChange={e => {
-                        const value = e.target.value as DocumentType
-                        handleChange(value)
-                    }}
-                >
-                    <MenuItem value={'INVOICE'}>
-                        Invoice
-                    </MenuItem>
-                    <MenuItem value={'REGISTRATION_REPORT'}>
-                        Registration report
-                    </MenuItem>
-                </Select>
+                <Stack spacing={4} sx={{height: 1}}>
+                    <FormInputLabel label={t('document.template.preview.type')} required horizontal>
+                        <Select
+                            sx={{flex: 1}}
+                            value={selectedType}
+                            onChange={e => {
+                                const value = e.target.value as DocumentType
+                                handleChange(value)
+                            }}
+                        >
+                            <MenuItem value={'INVOICE'}>
+                                <Trans i18nKey={'document.template.type.INVOICE'}/>
+                            </MenuItem>
+                            <MenuItem value={'REGISTRATION_REPORT'}>
+                                <Trans i18nKey={'document.template.type.REGISTRATION_REPORT'}/>
+                            </MenuItem>
+                        </Select>
+                    </FormInputLabel>
+                    {previewUrl &&
+                        <Box sx={{
+                            position: 'relative',
+                            flex: 1
+                        }}>
+                            <Box component={'iframe'} src={previewUrl} sx={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: 1,
+                                height: 1,
+                            }}/>
+                        </Box>
+                    }
+                </Stack>
             </DialogContent>
             <DialogActions>
                 <Button onClick={handleClose}>
