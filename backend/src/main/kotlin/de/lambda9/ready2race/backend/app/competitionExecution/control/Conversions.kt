@@ -94,8 +94,8 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) =
                     CompetitionTeamParticipantDto(
                         participantId = p.participantId,
                         namedParticipantName = p.namedParticipantName,
-                        firstname = p.firstName,
-                        lastname = p.lastName,
+                        firstName = p.firstName,
+                        lastName = p.lastName,
                         year = p.year,
                         gender = p.gender,
                         external = p.external,

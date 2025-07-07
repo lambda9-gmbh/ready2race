@@ -1263,6 +1263,31 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/places:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionPlaces
+      responses:
+        200:
+          description: Competition places successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionTeamPlaceDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6480,3 +6505,78 @@ components:
           format: uuid
         place:
           type: integer
+
+    CompetitionTeamPlaceDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - teamNumber
+        - clubId
+        - clubName
+        - namedParticipants
+        - place
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        teamNumber:
+          type: integer
+        teamName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionTeamNamedParticipantDto'
+        place:
+          type: integer
+
+    CompetitionTeamNamedParticipantDto:
+      type: object
+      required:
+        - namedParticipantId
+        - namedParticipantName
+        - participants
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipanName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionTeamParticipantDto'
+
+    CompetitionTeamParticipantDto:
+      type: object
+      required:
+        - participantId
+        - namedParticipantName
+        - firstName
+        - lastName
+        - year
+        - gender
+        - external
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string

@@ -73,12 +73,13 @@ fun Route.competitionExecution() {
             get {
                 call.respondComprehension {
                     val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val eventId = !pathParam("eventId", uuid)
                     val competitionId = !pathParam("competitionId", uuid)
 
                     CompetitionExecutionService.getCompetitionPlaces(
+                        eventId,
                         competitionId,
-                        optionalUserAndScope?.second,
-                        optionalUserAndScope?.first
+                        optionalUserAndScope?.second
                     )
                 }
             }

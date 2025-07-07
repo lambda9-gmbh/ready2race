@@ -343,6 +343,33 @@ export type CompetitionSetupTemplateRequest = {
     rounds: Array<CompetitionSetupRoundDto>
 }
 
+export type CompetitionTeamNamedParticipantDto = {
+    namedParticipantId: string
+    namedParticipanName?: string
+    participants: Array<CompetitionTeamParticipantDto>
+}
+
+export type CompetitionTeamParticipantDto = {
+    participantId: string
+    namedParticipantName: string
+    firstName: string
+    lastName: string
+    year: number
+    gender: Gender
+    external: boolean
+    externalClubName?: string
+}
+
+export type CompetitionTeamPlaceDto = {
+    competitionRegistrationId: string
+    teamNumber: number
+    teamName?: string
+    clubId: string
+    clubName: string
+    namedParticipants: Array<CompetitionTeamNamedParticipantDto>
+    place: number
+}
+
 export type CompetitionTemplateDto = {
     id: string
     properties: CompetitionPropertiesDto
@@ -1718,6 +1745,17 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionPlacesData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionPlacesResponse = Array<CompetitionTeamPlaceDto>
+
+export type GetCompetitionPlacesError = BadRequestError | ApiError
 
 export type AddDocumentsData = {
     body: {

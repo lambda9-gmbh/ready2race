@@ -9,8 +9,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "selected": "Selected",
-    "manage" : "Manage",
-    "all" : "All",
+    "manage": "Manage",
+    "all": "All",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
@@ -65,6 +65,7 @@
     "ok": "Ok",
     "save": "Save",
     "saveAndNew": "Save and new",
+    "saveAndNext": "Save and next",
     "search": "Search",
     "back": "Back",
     "next": "Next",
@@ -140,7 +141,7 @@
     "gender": "Gender",
     "phone": "Phone",
     "remark": "Remark",
-    "color" : "Color"
+    "color": "Color"
   },
   "navigation": {
     "titles": {
@@ -389,6 +390,87 @@
           }
         },
         "tableHint": "Enable the quick creation of setups for different competitions."
+      },
+      "execution": {
+        "tabTitle": "Live",
+        "progress": {
+          "error": "The matches of the competition could not be loaded."
+        },
+        "nextRound": {
+          "create": "Create next round",
+          "error": "Next round could not be created.",
+          "success": "Next round created",
+          "reasons": {
+            "noRoundsInSetup": "There are no rounds defined in the competition setup.",
+            "noSetupMatches": "There are no matches defined for the next round in the competition setup",
+            "noRegistrations": "There are no registrations for this competition.",
+            "registrationsNotFinalized": {
+              "textStart": "The registrations for this event are not finalized. The registrations can be finalized ",
+              "link": "here",
+              "textEnd": "."
+            },
+            "notEnoughTeamSpace": "There are more registrations for this competition than there are teams defined in the competition setup. Please make sure that there are enough teams or matches defined for the first round of the competition setup.",
+            "notAllPlacesSet": "Match results are missing. Please enter all places in the match results."
+          }
+        },
+        "deleteRound": {
+          "delete": "Delete round",
+          "confirmation": {
+            "content": "Are you sure you want to delete the latest round?"
+          },
+          "error": "An error has occurred when deleting the round",
+          "success": "Round successfully deleted"
+        },
+        "teamsWithBye": "Teams with a bye",
+        "match": {
+          "startTime": "Start time",
+          "startTimeOffset": "Start time offset",
+          "startNumber": "Start number",
+          "team": "Team",
+          "place": "Place"
+        },
+        "results": {
+          "enter": "Enter results",
+          "title": {
+            "named": "Results for {{matchName}}",
+            "unnamed": "Match results"
+          },
+          "validation": {
+            "duplicates": {
+              "single": "The place: {{places}} is used several times.",
+              "multiple": "The places: {{places}} are used several times.",
+              "message": "Please select each place only once per match."
+            }
+          },
+          "submit": {
+            "error": "An error has occurred when entering the results",
+            "success": "Results successfully saved"
+          }
+        },
+        "matchData": {
+          "edit": "Edit match",
+          "title": {
+            "named": "Match data for {{matchName}}",
+            "unnamed": "Match data"
+          },
+          "randomizeStartNumbers": "Randomize start numbers",
+          "validation": {
+            "duplicates": {
+              "single": "The start number: {{startNumbers}} is used several times.",
+              "multiple": "The start numbers: {{startNumbers}} are used several times.",
+              "message": "Please select each number only once per match."
+            }
+          },
+          "submit": {
+            "error": "An error has occurred when editing the match data",
+            "success": "Match data successfully updated"
+          }
+        }
+      },
+      "places": {
+        "places": "Places",
+        "tabTitle": "Places",
+        "noPlaces": "There are no places for this competition yet."
       }
     },
     "participantRequirement": {
@@ -415,10 +497,24 @@
     },
     "action": {
       "registrationsReport": {
-        "generate": "Generate registrations result",
         "download": "Download registrations result"
       },
-      "produceInvoices": "Produce invoices"
+      "produceInvoices": "Produce invoices",
+      "finalizeRegistrations": {
+        "finalize": "Finalize registrations",
+        "newRegistrations": {
+          "altertTitle": "There are new registrations",
+          "hint": "Since the last finalization, new registrations were made. These new registrations will not participate in the competitions until the registrations are refinalized."
+        },
+        "refinalize": "Refinalize",
+        "refinalizeRegistrations": "Refinalize Registrations",
+        "keepTeamNumbers": {
+          "keep": "Keep set team numbers",
+          "hint": "When keeping the start numbers, new teams/participants will receive new random start numbers. These will be higher than the currently highest of the competition. When not kept, all the start numbers will be reshuffled."
+        },
+        "reshuffle": "This will reshuffle all start numbers",
+        "success": "Registrations finalized"
+      }
     },
     "assign": {
       "save": {
@@ -496,13 +592,13 @@
     "task": "Task",
     "tasks": "Tasks",
     "myTasks": "My open tasks",
-    "name" : "Title",
+    "name": "Title",
     "dueDate": "Due date",
     "state": "State",
-    "OPEN" : "Open",
-    "IN_PROGRESS" : "In Progress",
-    "DONE" : "Done",
-    "CANCELED" : "Canceled",
+    "OPEN": "Open",
+    "IN_PROGRESS": "In Progress",
+    "DONE": "Done",
+    "CANCELED": "Canceled",
     "responsibleUsers": "Responsible"
   },
   "work": {
@@ -512,10 +608,10 @@
       "tableHint": "Enable the planning of work shifts for an event.",
       "noneAvailable": "No work types exist yet."
     },
-    "shift" : {
-      "shift" : "Shift",
-      "shifts" : "Shifts",
-      "myShifts" : "My Shifts",
+    "shift": {
+      "shift": "Shift",
+      "shifts": "Shifts",
+      "myShifts": "My Shifts",
       "plan": "Shift Schedule",
       "timeFrom": "Start",
       "timeTo": "End",

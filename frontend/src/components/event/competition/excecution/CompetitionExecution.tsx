@@ -45,6 +45,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
+import InlineLink from '@components/InlineLink.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -91,7 +92,7 @@ const CompetitionExecution = () => {
         {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error('[todo] Error when fetching progress')
+                    feedback.error(t('event.competition.execution.progress.error'))
                 }
             },
             deps: [eventId, competitionId, reloadData],
@@ -108,9 +109,9 @@ const CompetitionExecution = () => {
         })
         setSubmitting(false)
         if (error) {
-            feedback.error(`[todo] Error: ${error.errorCode}`)
+            feedback.error(t('event.competition.execution.nextRound.error'))
         } else {
-            feedback.success('[todo] New round created')
+            feedback.success(t('event.competition.execution.nextRound.success'))
         }
         setReloadData(!reloadData)
     }
@@ -149,7 +150,14 @@ const CompetitionExecution = () => {
 
                 if (duplicatePlaces.length > 0) {
                     setTeamResultsError(
-                        `[todo] Places: ${duplicatePlaces.join(', ')} are used several times. Every place has to be unique.`,
+                        t(
+                            duplicatePlaces.length === 1
+                                ? 'event.competition.execution.results.validation.duplicates.single'
+                                : 'event.competition.execution.results.validation.duplicates.multiple',
+                            {places: duplicatePlaces.join(', ')},
+                        ) +
+                            ' ' +
+                            t('event.competition.execution.results.validation.duplicates.message'),
                     )
                     return 'duplicates'
                 }
@@ -206,9 +214,9 @@ const CompetitionExecution = () => {
                 },
             })
             if (error) {
-                feedback.error(t('common.error.unexpected'))
+                feedback.error(t('event.competition.execution.results.submit.error'))
             } else {
-                feedback.success('[todo] Results successfully saved')
+                feedback.success(t('event.competition.execution.results.submit.success'))
             }
             setSubmitting(false)
         }
@@ -256,7 +264,16 @@ const CompetitionExecution = () => {
 
                 if (duplicateStartNumbers.length > 0) {
                     setTeamEditMatchError(
-                        `[todo] Start numbers: ${duplicateStartNumbers.join(', ')} are used several times. Every place has to be unique.`,
+                        t(
+                            duplicateStartNumbers.length === 1
+                                ? 'event.competition.execution.matchData.validation.duplicates.single'
+                                : 'event.competition.execution.matchData.validation.duplicates.multiple',
+                            {startNumbers: duplicateStartNumbers.join(', ')},
+                        ) +
+                            ' ' +
+                            t(
+                                'event.competition.execution.matchData.validation.duplicates.message',
+                            ),
                     )
                     return 'duplicates'
                 }
@@ -312,9 +329,9 @@ const CompetitionExecution = () => {
                 },
             })
             if (error) {
-                feedback.error(t('common.error.unexpected'))
+                feedback.error(t('event.competition.execution.matchData.submit.error'))
             } else {
-                feedback.success('[todo] Match data successfully saved')
+                feedback.error(t('event.competition.execution.matchData.submit.success'))
             }
             setSubmitting(false)
         }
@@ -364,15 +381,15 @@ const CompetitionExecution = () => {
                 })
                 setSubmitting(false)
                 if (error) {
-                    feedback.error(t('common.error.unexpected'))
+                    feedback.error(t('event.competition.execution.deleteRound.error'))
                 } else {
-                    feedback.success('[todo] Round successfully deleted')
+                    feedback.success(t('event.competition.execution.deleteRound.success'))
                 }
                 setReloadData(!reloadData)
             },
             {
                 title: t('common.confirmation.title'),
-                content: '[todo] Are you sure you want to delete the latest round?',
+                content: t('event.competition.execution.deleteRound.confirmation.content'),
                 okText: t('common.delete'),
             },
         )
@@ -382,19 +399,34 @@ const CompetitionExecution = () => {
         progressDto?.canNotCreateRoundReasons.find(r => r === 'ALL_ROUNDS_CREATED') !== undefined
 
     const getReasonText = (reason: CompetitionExecutionCanNotCreateRoundReason) => {
-        if (reason === 'NO_ROUNDS_IN_SETUP') {
-            return '[todo] There are no rounds defined in the competition setup.'
-        } else if (reason === 'NO_SETUP_MATCHES') {
-            return '[todo] There are no matches defined for the next round in the competition setup'
-        } else if (reason === 'NO_REGISTRATIONS') {
-            return '[todo] There are no registrations for this competition.'
-        } else if (reason === 'REGISTRATIONS_NOT_FINALIZED') {
-            return '[todo] The registrations for this event are not finalized. '
-        } // todo: link to event actions tab
-        else if (reason === 'NOT_ENOUGH_TEAM_SPACE') {
-            return '[todo] There are more registrations than teams defined in the competition setup. Please make sure that there are enough teams or matches defined for the first round of the competition setup.'
-        } else if (reason === 'NOT_ALL_PLACES_SET') {
-            return '[todo] Match results are missing.'
+        if (reason === 'REGISTRATIONS_NOT_FINALIZED') {
+            return (
+                <>
+                    {t(
+                        'event.competition.execution.nextRound.reasons.registrationsNotFinalized.textStart',
+                    )}
+                    <InlineLink to={'/event/$eventId'} search={{tab: 'actions'}}>
+                        {t(
+                            'event.competition.execution.nextRound.reasons.registrationsNotFinalized.link',
+                        )}
+                    </InlineLink>
+                    {t(
+                        'event.competition.execution.nextRound.reasons.registrationsNotFinalized.textEnd',
+                    )}
+                </>
+            )
+        } else {
+            return reason === 'NO_ROUNDS_IN_SETUP'
+                ? t('event.competition.execution.nextRound.reasons.noRoundsInSetup')
+                : reason === 'NO_SETUP_MATCHES'
+                  ? t('event.competition.execution.nextRound.reasons.noSetupMatches')
+                  : reason === 'NO_REGISTRATIONS'
+                    ? t('event.competition.execution.nextRound.reasons.noRegistrations')
+                    : reason === 'NOT_ENOUGH_TEAM_SPACE'
+                      ? t('event.competition.execution.nextRound.reasons.notEnoughTeamSpace')
+                      : reason === 'NOT_ALL_PLACES_SET'
+                        ? t('event.competition.execution.nextRound.reasons.notAllPlacesSet')
+                        : ''
         }
     }
 
@@ -422,7 +454,7 @@ const CompetitionExecution = () => {
                                 }
                                 variant={'contained'}
                                 onClick={handleCreateNextRound}>
-                                Create next round
+                                {t('event.competition.execution.nextRound.create')}
                             </Button>
                             {progressDto.canNotCreateRoundReasons.length > 0 && (
                                 <HtmlTooltip
@@ -475,7 +507,10 @@ const CompetitionExecution = () => {
                                             <Box>
                                                 <Box sx={{my: 2}}>
                                                     <Typography variant={'h6'}>
-                                                        [todo] Automatic Qualifications:
+                                                        {t(
+                                                            'event.competition.execution.teamsWithBye',
+                                                        )}
+                                                        :
                                                     </Typography>
                                                     <List>
                                                         {automaticQualifications(round).map(
@@ -501,26 +536,27 @@ const CompetitionExecution = () => {
                                                                     flexDirection: 'column',
                                                                 },
                                                             }}>
-                                                            <Box>
+                                                            <Stack spacing={1}>
                                                                 {match.name && (
                                                                     <Typography variant={'h3'}>
                                                                         {match.name}
                                                                     </Typography>
                                                                 )}
                                                                 <Typography>
-                                                                    Weighting: {match.weighting}
-                                                                </Typography>
-                                                                <Typography>
-                                                                    Start time:{' '}
+                                                                    {t(
+                                                                        'event.competition.execution.match.startTime',
+                                                                    ) + ': '}
                                                                     {match.startTime ?? '-'}
                                                                 </Typography>
                                                                 {match.startTimeOffset && (
                                                                     <Typography>
-                                                                        Start time offset:{' '}
+                                                                        {t(
+                                                                            'event.competition.execution.match.startTimeOffset',
+                                                                        ) + ': '}
                                                                         {match.startTimeOffset}
                                                                     </Typography>
                                                                 )}
-                                                            </Box>
+                                                            </Stack>
                                                             <Stack direction={'column'} spacing={1}>
                                                                 {roundIndex === 0 && (
                                                                     <LoadingButton
@@ -532,7 +568,9 @@ const CompetitionExecution = () => {
                                                                         }
                                                                         variant={'outlined'}
                                                                         pending={submitting}>
-                                                                        {'Enter Results'}
+                                                                        {t(
+                                                                            'event.competition.execution.results.enter',
+                                                                        )}
                                                                     </LoadingButton>
                                                                 )}
                                                                 <LoadingButton
@@ -543,7 +581,9 @@ const CompetitionExecution = () => {
                                                                     }
                                                                     variant={'outlined'}
                                                                     pending={submitting}>
-                                                                    {'Edit Match'}
+                                                                    {t(
+                                                                        'event.competition.execution.matchData.edit',
+                                                                    )}
                                                                 </LoadingButton>
                                                             </Stack>
                                                         </Stack>
@@ -553,13 +593,19 @@ const CompetitionExecution = () => {
                                                                 <TableHead>
                                                                     <TableRow>
                                                                         <TableCell width="25%">
-                                                                            Start number
+                                                                            {t(
+                                                                                'event.competition.execution.match.startNumber',
+                                                                            )}
                                                                         </TableCell>
                                                                         <TableCell width="50%">
-                                                                            Team
+                                                                            {t(
+                                                                                'event.competition.execution.match.team',
+                                                                            )}
                                                                         </TableCell>
                                                                         <TableCell width="25%">
-                                                                            Place
+                                                                            {t(
+                                                                                'event.competition.execution.match.place',
+                                                                            )}
                                                                         </TableCell>
                                                                     </TableRow>
                                                                 </TableHead>
@@ -602,7 +648,9 @@ const CompetitionExecution = () => {
                                                 pending={submitting}
                                                 onClick={deleteCurrentRound}
                                                 variant={'outlined'}>
-                                                {'[todo] Delete Round'}
+                                                {t(
+                                                    'event.competition.execution.deleteRound.delete',
+                                                )}
                                             </LoadingButton>
                                         )}
                                     </Stack>
@@ -627,67 +675,80 @@ const CompetitionExecution = () => {
                                 formContext={resultsFormContext}
                                 onSuccess={onSubmitResults}>
                                 {selectedResultsMatch && currentRoundMatches && (
-                                    <>
-                                        <CompetitionExecutionMatchDialog
-                                            enterResults={true}
-                                            title={
-                                                selectedResultsMatch.name
-                                                    ? `Results for "${selectedResultsMatch.name}"`
-                                                    : 'Match results'
-                                            }
-                                            selectedMatchDto={selectedResultsMatch}
-                                            fieldArrayError={teamResultsError}
-                                            submitting={submitting}
-                                            closeDialog={closeResultsDialog}
-                                            saveAndNext={
-                                                currentRoundMatches.length >
-                                                selectedMatchIndex(selectedResultsMatch) + 1
-                                            }>
-                                            <TableContainer>
-                                                <Table>
-                                                    <TableHead>
-                                                        <TableRow>
+                                    <CompetitionExecutionMatchDialog
+                                        enterResults={true}
+                                        title={
+                                            selectedResultsMatch.name
+                                                ? t(
+                                                      'event.competition.execution.results.title.named',
+                                                      {matchName: selectedResultsMatch.name},
+                                                  )
+                                                : t(
+                                                      'event.competition.execution.results.title.unnamed',
+                                                  )
+                                        }
+                                        selectedMatchDto={selectedResultsMatch}
+                                        fieldArrayError={teamResultsError}
+                                        submitting={submitting}
+                                        closeDialog={closeResultsDialog}
+                                        saveAndNext={
+                                            currentRoundMatches.length >
+                                            selectedMatchIndex(selectedResultsMatch) + 1
+                                        }>
+                                        <TableContainer>
+                                            <Table>
+                                                <TableHead>
+                                                    <TableRow>
+                                                        <TableCell width="25%">
+                                                            {t(
+                                                                'event.competition.execution.match.startNumber',
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell width="50%">
+                                                            {t(
+                                                                'event.competition.execution.match.team',
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell width="25%">
+                                                            {t(
+                                                                'event.competition.execution.match.place',
+                                                            )}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {resultFields.map((value, fieldIndex) => (
+                                                        <TableRow key={value.id}>
                                                             <TableCell width="25%">
-                                                                Start number
+                                                                {
+                                                                    selectedResultsMatch.teams[
+                                                                        fieldIndex
+                                                                    ].startNumber
+                                                                }
                                                             </TableCell>
-                                                            <TableCell width="50%">Team</TableCell>
-                                                            <TableCell width="25%">Place</TableCell>
+                                                            <TableCell width="50%">
+                                                                {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
+                                                                    (selectedResultsMatch.teams[
+                                                                        fieldIndex
+                                                                    ].name
+                                                                        ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
+                                                                        : '')}
+                                                            </TableCell>
+                                                            <TableCell width="25%">
+                                                                <FormInputNumber
+                                                                    name={`teamResults[${fieldIndex}.place`}
+                                                                    required
+                                                                    min={1}
+                                                                    max={resultFields.length}
+                                                                    integer
+                                                                />
+                                                            </TableCell>
                                                         </TableRow>
-                                                    </TableHead>
-                                                    <TableBody>
-                                                        {resultFields.map((value, fieldIndex) => (
-                                                            <TableRow key={value.id}>
-                                                                <TableCell width="25%">
-                                                                    {
-                                                                        selectedResultsMatch.teams[
-                                                                            fieldIndex
-                                                                        ].startNumber
-                                                                    }
-                                                                </TableCell>
-                                                                <TableCell width="50%">
-                                                                    {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
-                                                                        (selectedResultsMatch.teams[
-                                                                            fieldIndex
-                                                                        ].name
-                                                                            ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
-                                                                            : '')}
-                                                                </TableCell>
-                                                                <TableCell width="25%">
-                                                                    <FormInputNumber
-                                                                        name={`teamResults[${fieldIndex}.place`}
-                                                                        required
-                                                                        min={1}
-                                                                        max={resultFields.length}
-                                                                        integer
-                                                                    />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                        </CompetitionExecutionMatchDialog>
-                                    </>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    </CompetitionExecutionMatchDialog>
                                 )}
                             </FormContainer>
                         </Box>
@@ -703,80 +764,87 @@ const CompetitionExecution = () => {
                                 formContext={editMatchFormContext}
                                 onSuccess={onSubmitEditMatch}>
                                 {selectedEditMatch && currentRoundMatches && (
-                                    <>
-                                        <CompetitionExecutionMatchDialog
-                                            enterResults={false}
-                                            title={
-                                                selectedEditMatch.name
-                                                    ? `Match data for "${selectedEditMatch.name}"`
-                                                    : 'Match data'
-                                            }
-                                            selectedMatchDto={selectedEditMatch}
-                                            fieldArrayError={teamEditMatchError}
-                                            submitting={submitting}
-                                            closeDialog={closeEditMatchDialog}
-                                            saveAndNext={
-                                                currentRoundMatches.length >
-                                                selectedMatchIndex(selectedEditMatch) + 1
-                                            }>
-                                            <FormInputDateTime
-                                                name={'startTime'}
-                                                label={'[todo] Start time'}
-                                                timeSteps={{minutes: 1}}
-                                            />
-                                            <Box sx={{mt: 4}}>
-                                                <LoadingButton
-                                                    pending={submitting}
-                                                    onClick={onRandomizeStartNumbers}
-                                                    variant={'outlined'}>
-                                                    {'Randomize start numbers'}
-                                                </LoadingButton>
-
-                                                <TableContainer>
-                                                    <Table>
-                                                        <TableHead>
-                                                            <TableRow>
-                                                                <TableCell width="25%">
-                                                                    Start number
-                                                                </TableCell>
-                                                                <TableCell width="75%">
-                                                                    Team
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        </TableHead>
-                                                        <TableBody>
-                                                            {editMatchFields.map(
-                                                                (value, fieldIndex) => (
-                                                                    <TableRow key={value.id}>
-                                                                        <TableCell width="25%">
-                                                                            <FormInputNumber
-                                                                                name={`teams[${fieldIndex}.startNumber`}
-                                                                                required
-                                                                                min={1}
-                                                                                max={
-                                                                                    editMatchFields.length
-                                                                                }
-                                                                                integer
-                                                                            />
-                                                                        </TableCell>
-                                                                        <TableCell width="75%">
-                                                                            {`${selectedEditMatch.teams[fieldIndex].clubName}` +
-                                                                                (selectedEditMatch
-                                                                                    .teams[
-                                                                                    fieldIndex
-                                                                                ].name
-                                                                                    ? ` - ${selectedEditMatch.teams[fieldIndex].name}`
-                                                                                    : '')}
-                                                                        </TableCell>
-                                                                    </TableRow>
-                                                                ),
-                                                            )}
-                                                        </TableBody>
-                                                    </Table>
-                                                </TableContainer>
-                                            </Box>
-                                        </CompetitionExecutionMatchDialog>
-                                    </>
+                                    <CompetitionExecutionMatchDialog
+                                        enterResults={false}
+                                        title={
+                                            selectedEditMatch.name
+                                                ? t(
+                                                      'event.competition.execution.matchData.title.named',
+                                                      {matchName: selectedEditMatch.name},
+                                                  )
+                                                : t(
+                                                      'event.competition.execution.matchData.title.unnamed',
+                                                  )
+                                        }
+                                        selectedMatchDto={selectedEditMatch}
+                                        fieldArrayError={teamEditMatchError}
+                                        submitting={submitting}
+                                        closeDialog={closeEditMatchDialog}
+                                        saveAndNext={
+                                            currentRoundMatches.length >
+                                            selectedMatchIndex(selectedEditMatch) + 1
+                                        }>
+                                        <FormInputDateTime
+                                            name={'startTime'}
+                                            label={t('event.competition.execution.match.startTime')}
+                                            timeSteps={{minutes: 1}}
+                                        />
+                                        <Box sx={{mt: 4}}>
+                                            <LoadingButton
+                                                pending={submitting}
+                                                onClick={onRandomizeStartNumbers}
+                                                variant={'outlined'}>
+                                                {t(
+                                                    'event.competition.execution.matchData.randomizeStartNumbers',
+                                                )}
+                                            </LoadingButton>
+                                            <TableContainer>
+                                                <Table>
+                                                    <TableHead>
+                                                        <TableRow>
+                                                            <TableCell width="25%">
+                                                                {t(
+                                                                    'event.competition.execution.match.startNumber',
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell width="75%">
+                                                                {t(
+                                                                    'event.competition.execution.match.team',
+                                                                )}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {editMatchFields.map(
+                                                            (value, fieldIndex) => (
+                                                                <TableRow key={value.id}>
+                                                                    <TableCell width="25%">
+                                                                        <FormInputNumber
+                                                                            name={`teams[${fieldIndex}.startNumber`}
+                                                                            required
+                                                                            min={1}
+                                                                            max={
+                                                                                editMatchFields.length
+                                                                            }
+                                                                            integer
+                                                                        />
+                                                                    </TableCell>
+                                                                    <TableCell width="75%">
+                                                                        {`${selectedEditMatch.teams[fieldIndex].clubName}` +
+                                                                            (selectedEditMatch
+                                                                                .teams[fieldIndex]
+                                                                                .name
+                                                                                ? ` - ${selectedEditMatch.teams[fieldIndex].name}`
+                                                                                : '')}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ),
+                                                        )}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        </Box>
+                                    </CompetitionExecutionMatchDialog>
                                 )}
                             </FormContainer>
                         </Box>

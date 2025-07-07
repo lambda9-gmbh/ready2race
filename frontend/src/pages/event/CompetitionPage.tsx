@@ -20,8 +20,9 @@ import CompetitionTeamCompositionEntry from '@components/event/competition/Compe
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
+import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 
-const COMPETITION_TABS = ['general', 'registrations', 'setup', 'execution'] as const
+const COMPETITION_TABS = ['general', 'registrations', 'setup', 'execution', 'places'] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
 
 const CompetitionPage = () => {
@@ -41,14 +42,17 @@ const CompetitionPage = () => {
         navigate({from: competitionIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const {data: eventData, pending: eventPending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
-        onResponse: ({error}) => {
-            if (error) {
-                feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-            }
+    const {data: eventData, pending: eventPending} = useFetch(
+        signal => getEvent({signal, path: {eventId: eventId}}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+                }
+            },
+            deps: [eventId],
         },
-        deps: [eventId],
-    })
+    )
 
     const [reloadData, setReloadData] = useState(false)
 
@@ -147,8 +151,15 @@ const CompetitionPage = () => {
                             />
                         )}
                         {user.checkPrivilege(updateEventGlobal) && (
-                            <Tab label={'[todo] Live'} {...a11yProps('execution')} />
+                            <Tab
+                                label={t('event.competition.execution.tabTitle')}
+                                {...a11yProps('execution')}
+                            />
                         )}
+                        <Tab
+                            label={t('event.competition.places.tabTitle')}
+                            {...a11yProps('places')}
+                        />
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>
                         {(competitionData.properties.description ||
@@ -295,15 +306,18 @@ const CompetitionPage = () => {
                         </TabPanel>
                     )}
                     {user.checkPrivilege(updateEventGlobal) && (
-                        <>
-                            <TabPanel index={'setup'} activeTab={activeTab}>
-                                <CompetitionSetupForEvent />
-                            </TabPanel>
-                            <TabPanel index={'execution'} activeTab={activeTab}>
-                                <CompetitionExecution />
-                            </TabPanel>
-                        </>
+                        <TabPanel index={'setup'} activeTab={activeTab}>
+                            <CompetitionSetupForEvent />
+                        </TabPanel>
                     )}
+                    {user.checkPrivilege(updateEventGlobal) && (
+                        <TabPanel index={'execution'} activeTab={activeTab}>
+                            <CompetitionExecution />
+                        </TabPanel>
+                    )}
+                    <TabPanel index={'places'} activeTab={activeTab}>
+                        <CompetitionPlaces />
+                    </TabPanel>
                 </Stack>
             )) ||
                 (competitionPending && eventPending && <Throbber />)}

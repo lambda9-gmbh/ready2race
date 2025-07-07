@@ -6,8 +6,8 @@ import java.util.UUID
 data class CompetitionTeamParticipantDto(
     val participantId: UUID,
     val namedParticipantName: String,
-    val firstname: String,
-    val lastname: String,
+    val firstName: String,
+    val lastName: String,
     val year: Int?,
     val gender: Gender,
     val external: Boolean?,

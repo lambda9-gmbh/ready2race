@@ -56,9 +56,9 @@ const EventActions = ({registrationsFinalized}: Props) => {
             },
         })
         if (error) {
-            feedback.error('[todo] Error when finalizing Registrations')
+            feedback.error(t('common.error.unexpected'))
         } else {
-            feedback.success('Registrations finalized')
+            feedback.success(t('event.action.finalizeRegistrations.success'))
             setFinalized(Date.now())
         }
     }
@@ -87,7 +87,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
         useFetch(signal => getRegistrationsWithoutTeamNumber({signal, path: {eventId}}), {
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error('[todo] Error when loading competition registrations')
+                    feedback.error(t('common.error.unexpected'))
                 }
             },
             deps: [eventId, finalized],
@@ -121,7 +121,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                         <Button
                             variant={'contained'}
                             onClick={() => handleFinalizeRegistrations(false)}>
-                            {'[todo] Finalize Registrations'}
+                            {t('event.action.finalizeRegistrations.finalize')}
                         </Button>
                     ) : (
                         <>
@@ -129,7 +129,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                 <Alert severity={'warning'}>
                                     <Box sx={{display: 'flex', gap: 1}}>
                                         <AlertTitle>
-                                            {'[todo] There are new registrations'}
+                                            {t('event.action.finalizeRegistrations.newRegistrations.altertTitle')}
                                         </AlertTitle>
                                         <HtmlTooltip
                                             placement={'bottom'}
@@ -139,10 +139,10 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                         <TableHead>
                                                             <TableRow>
                                                                 <TableCell>
-                                                                    {'[todo] Competition'}
+                                                                    {t('event.competition.competition')}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    {'[todo] Registration'}
+                                                                    {t('event.registration.registration')}
                                                                 </TableCell>
                                                             </TableRow>
                                                         </TableHead>
@@ -182,9 +182,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                             <Info color={'info'} fontSize={'small'} />
                                         </HtmlTooltip>
                                     </Box>
-                                    [todo] Since the last finalization, new registrations were made.
-                                    These new registrations will not participate in the competitions
-                                    until the registrations are refinalized.
+                                    {t('event.action.finalizeRegistrations.newRegistrations.hint')}
                                 </Alert>
                             )}
                             <Box sx={{display: 'flex', gap: 2}}>
@@ -199,7 +197,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                     variant={'outlined'}
                                     onClick={() => setDialogIsOpen(true)}
                                     startIcon={<ReplayIcon />}>
-                                    {'[todo] Refinalize Registrations'}
+                                    {t('event.action.finalizeRegistrations.refinalizeRegistrations')}
                                 </Button>
                             </Box>
                             <Dialog
@@ -210,7 +208,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                     {registrationsWithoutTeamNumber.length > 0 ? (
                                         <>
                                             <FormInputLabel
-                                                label={'[todo] Keep set team numbers'}
+                                                label={t('event.action.finalizeRegistrations.keepTeamNumbers.keep')}
                                                 required={true}
                                                 horizontal
                                                 reverse>
@@ -220,11 +218,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                 />
                                             </FormInputLabel>
                                             <Alert severity={'info'}>
-                                                [todo] When keeping the start numbers, new
-                                                teams/participants will receive new random start
-                                                numbers. These will be higher than the currently
-                                                highest of the competition. If not, all the start
-                                                numbers will be reshuffled.
+                                                {t('event.action.finalizeRegistrations.keepTeamNumbers.hint')}
                                             </Alert>
                                             <Button
                                                 variant={'contained'}
@@ -234,13 +228,14 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                     )
                                                     setDialogIsOpen(false)
                                                 }}>
-                                                {'[todo] Refinalize'}
+                                                {t('event.action.finalizeRegistrations.refinalize')}
+                                                {/* todo cancel button */}
                                             </Button>
                                         </>
                                     ) : (
                                         <>
                                             <Alert severity={'info'}>
-                                                [todo] This will reshuffle all start numbers
+                                                {t('event.action.finalizeRegistrations.reshuffle')}
                                             </Alert>
                                             <Button
                                                 variant={'contained'}
@@ -248,7 +243,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                     void handleFinalizeRegistrations(false)
                                                     setDialogIsOpen(false)
                                                 }}>
-                                                {'[todo] Refinalize'}
+                                                {t('event.action.finalizeRegistrations.refinalize')}
                                             </Button>
                                             {/* todo cancel button */}
                                         </>

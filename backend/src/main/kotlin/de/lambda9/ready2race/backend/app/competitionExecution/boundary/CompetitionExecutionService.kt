@@ -16,7 +16,8 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
-import de.lambda9.ready2race.backend.calls.requests.logger
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
@@ -412,9 +413,6 @@ object CompetitionExecutionService {
         val currentRoundHighestTeamCount =
             getHighestTeamCount(currentRoundTeams, maxTeamsNeeded)
 
-        logger.info { "currentRoundHighestTeamCount $currentRoundHighestTeamCount" }
-
-        logger.info { "currentRoundTeams $currentRoundTeams" } // todo: This is [null, null]
 
         val currentRoundSeedings = currentRoundTeams.map { mutableListOf<Int>() }
 
@@ -434,8 +432,6 @@ object CompetitionExecutionService {
             } else {
                 for (s in currentRoundTeams.size - 1 downTo 0) addToList(s)
             }
-
-            logger.info { "currentRoundSeedings $currentRoundSeedings" }
         }
 
         return currentRoundSeedings
@@ -459,10 +455,12 @@ object CompetitionExecutionService {
     }
 
     fun getCompetitionPlaces(
+        eventId: UUID,
         competitionId: UUID,
         scope: Privilege.Scope?,
-        user: AppUserWithPrivilegesRecord?
-    ): App<CompetitionSetupError, ApiResponse.ListDto<CompetitionTeamPlaceDto>> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.ListDto<CompetitionTeamPlaceDto>> = KIO.comprehension {
+
+        !EventRepo.getScoped(eventId, scope).orDie().onNullFail { EventError.NotFound }
 
         val setupRoundRecords = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
         val setupRounds = sortRounds(setupRoundRecords)

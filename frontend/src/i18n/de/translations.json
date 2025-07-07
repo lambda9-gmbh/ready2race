@@ -65,6 +65,7 @@
     "ok": "Ok",
     "save": "Speichern",
     "saveAndNew": "Speichern und Neu",
+    "saveAndNext": "Speichern und weiter",
     "search": "Suchen",
     "back": "Zurück",
     "next": "Weiter",
@@ -268,7 +269,7 @@
         "fees": "Gebühren",
         "name": "Name",
         "description": "Beschreibung",
-        "amount": "Menge",
+        "amount": "Betrag",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
         "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
@@ -389,6 +390,87 @@
           }
         },
         "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
+      },
+      "execution": {
+        "tabTitle": "Durchführung",
+        "progress": {
+          "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
+        },
+        "nextRound": {
+          "create": "Erstelle nächste Runde",
+          "error": "Nächste Runde konnte nicht erstellt werden",
+          "success": "Nächste Runde erstellt",
+          "reasons": {
+            "noRoundsInSetup": "In dem Wettbewerbsablauf sind keine Runden festgelegt.",
+            "noSetupMatches": "In der nächsten Runde des Wettbewerbsablaufs sind keine Partien festgelegt.",
+            "noRegistrations": "Es gibt keine Meldungen für diesen Wettbewerb.",
+            "registrationsNotFinalized": {
+              "textStart": "Die Meldungen für diese Veranstaltung sind noch nicht finalisiert. Die Meldungen können ",
+              "link": "hier",
+              "textEnd": " finalisiert werden."
+            },
+            "notEnoughTeamSpace": "Es gibt mehr Meldungen für diesen Wettbewerb als Teams in dem Wettbewerbsablauf definiert sind. Bitte vergewissern Sie sich, dass genügend Teams oder Partien für die erste Runde des Wettbewerbs definiert sind.",
+            "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
+          }
+        },
+        "deleteRound": {
+          "delete": "Runde löschen",
+          "confirmation": {
+            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
+          },
+          "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
+          "success": "Runde erfolgreich gelöscht"
+        },
+        "teamsWithBye": "Teams mit Freilos",
+        "match": {
+          "startTime": "Startzeit",
+          "startTimeOffset": "Versetzte Startzeit",
+          "startNumber": "Startnummer",
+          "team": "Team",
+          "place": "Platz"
+        },
+        "results": {
+          "enter": "Ergebnis eintragen",
+          "title": {
+            "named": "Ergebnis für {{matchName}}",
+            "unnamed": "Partie Ergebnis"
+          },
+          "validation": {
+            "duplicates": {
+              "single": "Der Platz: {{places}} wird mehrfach verwendet.",
+              "multiple": "Die Plätze: {{places}} werden mehrfach verwendet.",
+              "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
+            }
+          },
+          "submit": {
+            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "success": "Ergebnis gespeichert"
+          }
+        },
+        "matchData": {
+          "edit": "Partie bearbeiten",
+          "title": {
+            "named": "Details für {{matchName}}",
+            "unnamed": "Details für Partie"
+          },
+          "randomizeStartNumbers": "Startnummern zufällig vergeben",
+          "validation": {
+            "duplicates": {
+              "single": "Die Startnummer: {{startNumbers}} wird mehrfach verwendet.",
+              "multiple": "Die Startnummern: {{startNumbers}} werden mehrfach verwendet.",
+              "message": "Bitte wählen Sie einzigartige Startnummern pro Partie."
+            }
+          },
+          "submit": {
+            "error": "Beim speichern der Details ist ein Fehler aufgetreten",
+            "success": "Partie gespeichert"
+          }
+        }
+      },
+      "places": {
+        "places": "Platzierungen",
+        "tabTitle": "Platzierungen",
+        "noPlaces": "Für diesen Wettbewerb gibt es noch keine Platzierungen."
       }
     },
     "participantRequirement": {
@@ -415,10 +497,24 @@
     },
     "action": {
       "registrationsReport": {
-        "generate": "Erzeuge Meldeergebnis",
         "download": "Download Meldeergebnis"
       },
-      "produceInvoices": "Rechnungen erstellen"
+      "produceInvoices": "Rechnungen erstellen",
+      "finalizeRegistrations": {
+        "finalize": "Meldungen finalisieren",
+        "newRegistrations": {
+          "altertTitle": "Es gibt neue Meldungen",
+          "hint": "Seit der letzten Finalisierung wurden neue Meldungen abgegeben. Die neu gemeldeten Teilnehmer nehmen nicht an den Wettkämpfen teil, bis die Meldungen erneut finalisiert wurden."
+        },
+        "refinalize": "Refinalisieren",
+        "refinalizeRegistrations": "Meldungen refinalisieren",
+        "keepTeamNumbers": {
+          "keep": "Gesetzte Startnummern beibehalten",
+          "hint": "Bei Beibehaltung der Startnummern erhalten nur die neuen Teams/Teilnehmer zufällige Startnummern. Diese werden höher sein als die derzeit höchste des Wettbewerbs. Wenn sie nicht beibehalten werden, werden alle Startnummern neu gemischt."
+        },
+        "reshuffle": "Dies würfelt alle Startnummern neu aus",
+        "success": "Meldungen finalisiert"
+      }
     },
     "assign": {
       "save": {
