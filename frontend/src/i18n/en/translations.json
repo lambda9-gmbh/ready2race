@@ -1,5 +1,6 @@
 {
   "common": {
+    "no": "No",
     "cancel": "Cancel",
     "close": "Close",
     "confirmation": {
@@ -710,6 +711,10 @@
     "downloadError": "An error occurred trying to download the invoice.",
     "invoiceNumber": "Invoice number",
     "amount": "Amount",
+    "paid": "Paid",
+    "action": {
+      "paid": "Confirm receipt of payment"
+    },
     "produce": {
       "info": {
         "paymentDueBy": {

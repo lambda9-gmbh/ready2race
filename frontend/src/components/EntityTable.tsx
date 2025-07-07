@@ -11,7 +11,7 @@ import {
 } from '@mui/x-data-grid'
 import {ReactNode, useMemo, useRef, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
-import {BaseEntityTableProps, EntityTableAction, PageResponse, PartialRequired} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityAction, PageResponse, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
@@ -46,7 +46,7 @@ type ExtendedEntityTableProps<
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, GetError, false>
     customTableActions?: ReactNode
-    customEntityActions?: (entity: Entity) => EntityTableAction[]
+    customEntityActions?: (entity: Entity, checkPrivilege: (privilege: Privilege) => boolean) => EntityAction[]
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
@@ -203,21 +203,14 @@ const EntityTableInternal = <
             : []),
         ...columns.filter(
             c =>
-                !c.requiredPrivilege || (user.loggedIn && user.checkPrivilege(c.requiredPrivilege)),
+                !c.requiredPrivilege || (user.checkPrivilege(c.requiredPrivilege)),
         ),
         {
             field: 'actions',
             type: 'actions' as 'actions',
             getActions: (params: GridRowParams<Entity>) => [
-                ...customEntityActions(params.row)
-                    .map(action => {
-                        const {privilege} = action.props
-                        delete action.props.privilege
-                        return !privilege || (user.loggedIn && user.checkPrivilege(privilege))
-                            ? action
-                            : null
-                    })
-                    .filter(action => action !== null),
+                ...customEntityActions(params.row, user.checkPrivilege)
+                    .filter(action => !!action),
                 ...(crud.update && options.entityUpdate
                     ? [
                           <GridActionsCellItem

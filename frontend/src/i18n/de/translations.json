@@ -1,5 +1,6 @@
 {
   "common": {
+    "no": "Nein",
     "cancel": "Abbrechen",
     "close": "Schließen",
     "confirmation": {
@@ -710,6 +711,10 @@
     "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
     "invoiceNumber": "Rechnungsnummer",
     "amount": "Rechnungsbetrag",
+    "paid": "Bezahlt",
+    "action": {
+      "paid": "Zahlungseingang bestätigen"
+    },
     "produce": {
       "info": {
         "paymentDueBy": {

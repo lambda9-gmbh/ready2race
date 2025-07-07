@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 
 fun Route.invoice() {
@@ -23,11 +24,21 @@ fun Route.invoice() {
             }
         }
 
-        get("/{invoiceId}") {
-            call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
-                val id = !pathParam("invoiceId", uuid)
-                InvoiceService.getDownload(id, user, scope)
+        route("/{invoiceId}") {
+            get {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
+                    val id = !pathParam("invoiceId", uuid)
+                    InvoiceService.getDownload(id, user, scope)
+                }
+            }
+
+            put {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateInvoiceGlobal)
+                    val id = !pathParam("invoiceId", uuid)
+                    InvoiceService.setPaid(id)
+                }
             }
         }
 

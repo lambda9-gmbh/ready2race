@@ -58,6 +58,7 @@ sealed class Privilege(
     data object CreateInvoiceGlobal: Privilege(Action.CREATE, Resource.INVOICE, Scope.GLOBAL)
     data object ReadInvoiceGlobal: Privilege(Action.READ, Resource.INVOICE, Scope.GLOBAL)
     data object ReadInvoiceOwn: Privilege(Action.READ, Resource.INVOICE, Scope.OWN)
+    data object UpdateInvoiceGlobal: Privilege(Action.UPDATE, Resource.INVOICE, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

@@ -612,6 +612,7 @@ export type InvoiceDto = {
     invoiceNumber: string
     totalAmount: string
     createdAt: string
+    paidAt?: string
 }
 
 export type LoginDto = {
@@ -2954,3 +2955,7 @@ export type GetInvoicesError = BadRequestError | ApiError | UnprocessableEntityE
 export type DownloadInvoiceResponse = Blob | File
 
 export type DownloadInvoiceError = BadRequestError | ApiError
+
+export type SetInvoicePaidResponse = void
+
+export type SetInvoicePaidError = BadRequestError | ApiError

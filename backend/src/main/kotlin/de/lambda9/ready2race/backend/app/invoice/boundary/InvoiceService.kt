@@ -150,6 +150,15 @@ object InvoiceService {
         }
     }
 
+    fun setPaid(
+        id: UUID
+    ): App<InvoiceError, ApiResponse.NoData> =
+        InvoiceRepo.update(id) {
+            paidAt = LocalDateTime.now()
+        }.orDie()
+            .onNullFail { InvoiceError.NotFound }
+            .map { ApiResponse.NoData }
+
     fun createRegistrationInvoicesForEventJobs(
         eventId: UUID,
         userId: UUID,

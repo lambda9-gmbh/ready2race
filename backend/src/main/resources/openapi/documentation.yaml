@@ -3907,7 +3907,21 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-
+    put:
+      operationId: setInvoicePaid
+      responses:
+        204:
+          description: Payment status set to paid
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 components:
 
   parameters:
@@ -6462,5 +6476,8 @@ components:
           type: string
           format: decimal
         createdAt:
+          type: string
+          format: date-time
+        paidAt:
           type: string
           format: date-time

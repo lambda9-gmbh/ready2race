@@ -9,4 +9,5 @@ data class InvoiceDto(
     val invoiceNumber: String,
     val totalAmount: BigDecimal,
     val createdAt: LocalDateTime,
+    val paidAt: LocalDateTime?,
 )

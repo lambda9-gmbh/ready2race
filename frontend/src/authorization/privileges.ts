@@ -75,3 +75,8 @@ export const readInvoiceOwn: Privilege = {
     resource: 'INVOICE',
     scope: 'OWN'
 }
+export const updateInvoiceGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'INVOICE',
+    scope: 'GLOBAL'
+}

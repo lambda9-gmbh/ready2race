@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.database.selectOne
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -22,6 +23,8 @@ object InvoiceRepo {
     fun InvoiceForEventRegistration.searchFields() = listOf(INVOICE_NUMBER)
 
     fun create(record: InvoiceRecord) = INVOICE.insertReturning(record) { ID }
+
+    fun update(id: UUID, f: InvoiceRecord.() -> Unit) = INVOICE.update(f) { ID.eq(id) }
 
     fun getDownload(id: UUID) = INVOICE_DOWNLOAD.selectOne { ID.eq(id) }
 

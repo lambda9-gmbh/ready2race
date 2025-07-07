@@ -1,16 +1,17 @@
 import EntityTable, {ExtendedGridColDef} from '@components/EntityTable.tsx'
 import {GridActionsCellItem, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {BaseEntityTableProps, EntityTableAction, PageResponse} from '@utils/types.ts'
-import {type GetRegistrationInvoicesError, InvoiceDto, Resource} from '@api/types.gen.ts'
+import {BaseEntityTableProps, EntityAction, PageResponse} from '@utils/types.ts'
+import {type GetRegistrationInvoicesError, InvoiceDto, Privilege, Resource} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {RequestResult} from '@hey-api/client-fetch'
-import {Download} from '@mui/icons-material'
-import {downloadInvoice} from '@api/sdk.gen.ts'
+import {Check, Close, Download, Payment} from '@mui/icons-material'
+import {downloadInvoice, setInvoicePaid} from '@api/sdk.gen.ts'
 import {ReactNode, useRef} from 'react'
-import {Link} from '@mui/material'
+import {Link, Tooltip} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
+import {updateInvoiceGlobal} from "@authorization/privileges.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -64,6 +65,20 @@ const InvoiceTable = (props: Props) => {
             flex: 0,
             valueGetter: (v: string) => (v ? format(new Date(v), t('format.datetime')) : null),
         },
+        {
+            field: 'paidAt',
+            headerName: t('invoice.paid'),
+            flex: 0,
+            renderCell: ({value}) => (
+                <Tooltip title={value ? format(new Date(value), t('format.datetime')) : t('common.no')}>
+                    { value === undefined ? (
+                        <Close />
+                    ) : (
+                        <Check />
+                    )}
+                </Tooltip>
+            )
+        },
     ]
 
     const handleDownload = async (invoiceId: string) => {
@@ -84,13 +99,29 @@ const InvoiceTable = (props: Props) => {
         }
     }
 
-    const customEntityActions = (entity: InvoiceDto): EntityTableAction[] => [
+    const handlePaid = async (invoiceId: string) => {
+        const {error} = await setInvoicePaid({path: {invoiceId}})
+
+        if (error) {
+            feedback.error(t('common.error.unexpected'))
+        }
+        props.reloadData()
+    }
+
+    const customEntityActions = (entity: InvoiceDto, checkPrivilege: (privilege: Privilege) => boolean): EntityAction[] => [
         <GridActionsCellItem
             icon={<Download />}
             label={t('invoice.download')}
             onClick={() => handleDownload(entity.id)}
             showInMenu
         />,
+        checkPrivilege(updateInvoiceGlobal) && !entity.paidAt &&
+        <GridActionsCellItem
+            icon={<Payment />}
+            label={t('invoice.action.paid')}
+            onClick={() => handlePaid(entity.id)}
+            showInMenu
+        />
     ]
 
     return (
