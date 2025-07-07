@@ -73,10 +73,10 @@ fun Route.event() {
 
             get("/invoices") {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadInvoiceGlobal)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
                     val id = !pathParam("eventId", uuid)
                     val params = !pagination<InvoiceForEventRegistrationSort>()
-                    InvoiceService.pageForEvent(id, params)
+                    InvoiceService.pageForEvent(id, params, user, scope)
                 }
             }
 

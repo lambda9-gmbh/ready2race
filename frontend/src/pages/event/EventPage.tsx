@@ -34,7 +34,6 @@ import ParticipantForEventTable from '@components/participant/ParticipantForEven
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
     readEventGlobal,
-    readInvoiceGlobal,
     readRegistrationGlobal,
     readRegistrationOwn,
     readUserGlobal,
@@ -216,7 +215,7 @@ const EventPage = () => {
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.actions')} {...a11yProps('actions')} />
                             )}
-                            {user.checkPrivilege(readInvoiceGlobal) && (
+                            {user.getPrivilegeScope('READ', 'INVOICE') && (
                                 <Tab label={t('event.tabs.invoices')} {...a11yProps('invoices')} />
                             )}
                         </TabSelectionContainer>

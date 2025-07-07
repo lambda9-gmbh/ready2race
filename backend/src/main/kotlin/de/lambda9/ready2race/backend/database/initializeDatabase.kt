@@ -138,7 +138,8 @@ fun initializeDatabase(env: JEnv) {
                 Privilege.ReadRegistrationOwn,
                 Privilege.CreateRegistrationOwn,
                 Privilege.UpdateRegistrationOwn,
-                Privilege.DeleteRegistrationOwn
+                Privilege.DeleteRegistrationOwn,
+                Privilege.ReadInvoiceOwn,
             )
         )
 

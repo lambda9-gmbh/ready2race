@@ -92,10 +92,12 @@ object InvoiceService {
     fun pageForEvent(
         id: UUID,
         params: PaginationParameters<InvoiceForEventRegistrationSort>,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
     ): App<InvoiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
 
-        val total = !InvoiceRepo.countForEvent(id, params.search).orDie()
-        val page = !InvoiceRepo.pageForEvent(id, params).orDie()
+        val total = !InvoiceRepo.countForEvent(id, params.search, user, scope).orDie()
+        val page = !InvoiceRepo.pageForEvent(id, params, user, scope).orDie()
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
                 data = it,
