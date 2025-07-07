@@ -2,7 +2,7 @@ set search_path to ready2race, pg_catalog, public;
 
 drop view if exists competition_setup_round_with_matches;
 drop view if exists competition_match_with_teams;
-drop view if exists competition_match_team_with_registrations;
+drop view if exists competition_match_team_with_registration;
 drop view if exists participant_view;
 drop view if exists work_shift_with_assigned_users;
 drop view if exists task_with_responsible_users;
@@ -446,11 +446,14 @@ from event_registration_report err
 
 create view registered_competition_team_participant as
 select crnp.competition_registration as team_id,
+       np.id                         as role_id,
        np.name                       as role,
+       p.id as participant_id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
+       p.external,
        p.external_club_name
 from competition_registration_named_participant crnp
          join named_participant np on crnp.named_participant = np.id
@@ -612,19 +615,23 @@ select p.*,
        exists(select * from competition_registration_named_participant where participant = p.id) as used_in_registration
 from participant p;
 
-create view competition_match_team_with_registrations as
+create view competition_match_team_with_registration as
 select cmt.id,
        cmt.competition_match,
        cmt.start_number,
        cmt.place,
        cmt.competition_registration,
-       cr.club as club_id,
-       c.name  as club_name,
-       cr.name as registration_name,
-       cr.team_number
+       cr.club                                                                 as club_id,
+       c.name                                                                  as club_name,
+       cr.name                                                                 as registration_name,
+       cr.team_number,
+       coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants
 from competition_match_team cmt
          left join competition_registration cr on cr.id = cmt.competition_registration
          left join club c on c.id = cr.club
+         left join registered_competition_team_participant rctp on cr.id = rctp.team_id
+group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
+         cr.name, cr.team_number
 ;
 
 create view competition_match_with_teams as
@@ -632,21 +639,23 @@ select cm.competition_setup_match,
        cm.start_time,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams
 from competition_match cm
-         left join competition_match_team_with_registrations cmtwr
+         left join competition_match_team_with_registration cmtwr
                    on cm.competition_setup_match = cmtwr.competition_match
 group by cm.competition_setup_match
 ;
 
 create view competition_setup_round_with_matches as
-select sr.id                                                                                 as setup_round_id,
+select sr.id                                                                                   as setup_round_id,
        sr.competition_setup,
        sr.next_round,
-       sr.name                                                                                  setup_round_name,
+       sr.name                                                                                    setup_round_name,
        sr.required,
        sr.places_option,
-       coalesce(array_agg(sm) filter (where sm.id is not null), '{}')                        as setup_matches,
-       coalesce(array_agg(mwt) filter (where mwt.competition_setup_match is not null), '{}') as matches
+       coalesce(array_agg(distinct csp) filter ( where csp.competition_setup_round is not null ), '{}') as places,
+       coalesce(array_agg(distinct sm) filter (where sm.id is not null), '{}')                          as setup_matches,
+       coalesce(array_agg(distinct mwt) filter (where mwt.competition_setup_match is not null), '{}')   as matches
 from competition_setup_round sr
+         left join competition_setup_place csp on sr.id = csp.competition_setup_round
          left join competition_setup_match sm on sr.id = sm.competition_setup_round
          left join competition_match_with_teams mwt on sm.id = mwt.competition_setup_match
 group by sr.id

@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend.app.competitionSetup.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionSetupRoundWithMatches
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchTeamWithRegistration
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
@@ -11,6 +14,7 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.*
 
@@ -153,7 +157,7 @@ object CompetitionSetupService {
         key: UUID,
     ): App<Nothing, List<CompetitionSetupRoundDto>> = KIO.comprehension {
         // There has to be one of the two keys
-        val roundRecords = !CompetitionSetupRoundRepo.get(key).orDie()
+        val roundRecords = !CompetitionSetupRoundRepo.getBySetupId(key).orDie()
 
         val matchRecords = !CompetitionSetupMatchRepo.get(roundRecords.map { it.id }).orDie()
 
@@ -247,10 +251,12 @@ object CompetitionSetupService {
 
     fun getSetupRoundsWithMatches(
         key: UUID,
-    ): App<CompetitionSetupError, List<CompetitionSetupRoundWithMatchesRecord>> = KIO.comprehension {
+    ): App<CompetitionSetupError, List<CompetitionSetupRoundWithMatches>> = KIO.comprehension {
         val setupId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(key).orDie()
             .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
 
-        CompetitionSetupRoundRepo.getWithMatchesBySetup(setupId).orDie()
+        val records = !CompetitionSetupRoundRepo.getWithMatchesBySetup(setupId).orDie()
+
+        records.traverse { it.toCompetitionSetupRoundWithMatches() }
     }
 }

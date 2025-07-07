@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.optionalAuthenticate
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -14,15 +15,15 @@ fun Route.competitionExecution() {
     route("/competitionExecution") {
         get {
             call.respondComprehension {
-                !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                !authenticate(Privilege.ReadEventGlobal)
                 val competitionId = !pathParam("competitionId", uuid)
 
                 CompetitionExecutionService.getProgress(competitionId)
             }
         }
-        delete{
+        delete {
             call.respondComprehension {
-                !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                !authenticate(Privilege.UpdateEventGlobal)
                 val competitionId = !pathParam("competitionId", uuid)
 
                 CompetitionExecutionService.deleteCurrentRound(competitionId)
@@ -31,7 +32,7 @@ fun Route.competitionExecution() {
         route("/createNextRound") {
             post {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionId = !pathParam("competitionId", uuid)
 
                     CompetitionExecutionService.createNewRound(competitionId, user.id!!)
@@ -42,7 +43,7 @@ fun Route.competitionExecution() {
             route("/data") {
                 put {
                     call.respondComprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                         val body = !receiveKIO(UpdateCompetitionMatchRequest.example)
@@ -53,17 +54,35 @@ fun Route.competitionExecution() {
             route("/results") {
                 put {
                     call.respondComprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
                         val competitionId = !pathParam("competitionId", uuid)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                         val body = !receiveKIO(UpdateCompetitionMatchResultRequest.example)
-                        CompetitionExecutionService.updateMatchResult(competitionId, competitionMatchId, user.id!!, body)
+                        CompetitionExecutionService.updateMatchResult(
+                            competitionId,
+                            competitionMatchId,
+                            user.id!!,
+                            body
+                        )
                     }
                 }
             }
         }
+        route("/places") {
+            get {
+                call.respondComprehension {
+                    val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
 
+                    CompetitionExecutionService.getCompetitionPlaces(
+                        competitionId,
+                        optionalUserAndScope?.second,
+                        optionalUserAndScope?.first
+                    )
+                }
+            }
+        }
     }
 
 }

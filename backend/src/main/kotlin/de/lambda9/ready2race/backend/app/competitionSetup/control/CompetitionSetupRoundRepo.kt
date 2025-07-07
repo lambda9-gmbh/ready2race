@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND_WITH_MATCHES
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -17,7 +18,9 @@ object CompetitionSetupRoundRepo {
         COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key))
     }
 
-    fun get(key: UUID): JIO<List<CompetitionSetupRoundRecord>> = Jooq.query {
+    fun get(id: UUID) = COMPETITION_SETUP_ROUND.selectOne { ID.eq(id) }
+
+    fun getBySetupId(key: UUID): JIO<List<CompetitionSetupRoundRecord>> = Jooq.query {
         with(COMPETITION_SETUP_ROUND) {
             selectFrom(this)
                 .where(COMPETITION_SETUP.eq(key).or(COMPETITION_SETUP_TEMPLATE.eq(key)))

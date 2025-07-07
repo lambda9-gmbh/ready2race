@@ -32,12 +32,11 @@ const CompetitionExecutionMatchDialog = ({selectedMatchDto, submitting, ...props
                     {t('common.cancel')}
                 </Button>
                 {props.saveAndNext && (
-                    <SubmitButton
-                        id={'saveAndNext'}
-                        label={'[todo] Save and next'}
-                        submitting={submitting}></SubmitButton>
+                    <SubmitButton id={'saveAndNext'} submitting={submitting}>
+                        {'[todo] Save and next'}
+                    </SubmitButton>
                 )}
-                <SubmitButton label={t('common.save')} submitting={submitting} />
+                <SubmitButton submitting={submitting}>{t('common.save')}</SubmitButton>
             </DialogActions>
         </>
     )
