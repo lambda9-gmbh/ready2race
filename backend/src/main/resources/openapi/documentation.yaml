@@ -3649,7 +3649,9 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/QrCodeParticipantResponse'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/QrCodeParticipantResponse'
                   - $ref: '#/components/schemas/QrCodeAppuserResponse'
         400:
           $ref: '#/components/responses/400'
@@ -6257,6 +6259,7 @@ components:
         lastname: { type: string }
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
+        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
 
     QrCodeAppuserResponse:
       type: object
@@ -6266,6 +6269,7 @@ components:
         lastname: { type: string }
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
+        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
 
     QrCodeAppuserUpdate:
       type: object
@@ -6286,3 +6290,7 @@ components:
           format: uuid
         qrCodeId:
           type: string
+
+    QrCodeDtoType:
+      type: string
+      enum: [Participant, User]

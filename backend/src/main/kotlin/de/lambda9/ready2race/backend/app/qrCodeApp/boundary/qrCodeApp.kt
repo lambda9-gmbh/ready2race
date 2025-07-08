@@ -29,7 +29,7 @@ fun Route.qrCodeApp() {
             }
         }
 
-        get {
+        get("/{qrCodeId}") {
             call.respondComprehension {
                 val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.APP)
                 val qrCodeId = !pathParam("qrCodeId")

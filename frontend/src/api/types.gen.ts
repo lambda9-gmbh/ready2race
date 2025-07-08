@@ -804,6 +804,7 @@ export type QrCodeAppuserResponse = {
     lastname: string
     id?: string
     qrCodeId: string
+    type?: QrCodeDtoType
 }
 
 export type QrCodeAppuserUpdate = {
@@ -811,11 +812,14 @@ export type QrCodeAppuserUpdate = {
     qrCodeId: string
 }
 
+export type QrCodeDtoType = 'Participant' | 'User'
+
 export type QrCodeParticipantResponse = {
     firstname: string
     lastname: string
     id?: string
     qrCodeId: string
+    type?: QrCodeDtoType
 }
 
 export type QrCodeParticipantUpdate = {
@@ -2830,7 +2834,7 @@ export type CheckQrCodeData = {
     }
 }
 
-export type CheckQrCodeResponse = QrCodeParticipantResponse | QrCodeAppuserResponse
+export type CheckQrCodeResponse = Array<QrCodeParticipantResponse> | QrCodeAppuserResponse
 
 export type CheckQrCodeError = BadRequestError | ApiError | UnprocessableEntityError
 

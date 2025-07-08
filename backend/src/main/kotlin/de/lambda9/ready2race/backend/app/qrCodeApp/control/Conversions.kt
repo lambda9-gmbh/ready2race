@@ -11,7 +11,8 @@ fun ParticipantViewRecord.toQrCodeDto(): App<Nothing, QrCodeDto.QrCodeParticipan
         firstname = firstname!!,
         lastname = lastname!!,
         id = id!!,
-        qrCodeId = qrCodeId!!
+        qrCodeId = qrCodeId!!,
+        type = QrCodeDto.QrCodeDtoType.Participant
     )
 )
 
@@ -20,6 +21,7 @@ fun AppUserWithRolesRecord.toQrCodeAppuser(): App<Nothing, QrCodeDto.QrCodeAppus
         firstname = firstname!!,
         lastname = lastname!!,
         id = id!!,
-        qrCodeId = qrCodeId!!
+        qrCodeId = qrCodeId!!,
+        type = QrCodeDto.QrCodeDtoType.User
     )
 )

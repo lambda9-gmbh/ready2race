@@ -10,11 +10,7 @@ import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
-import {
-    readUserGlobal,
-    updateEventGlobal,
-    updateUserGlobal,
-} from './authorization/privileges.ts'
+import {readUserGlobal, updateEventGlobal, updateUserGlobal,} from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
@@ -35,6 +31,10 @@ import Dashboard from './pages/Dashboard.tsx'
 import LandingPage from './pages/LandingPage.tsx'
 import AppLayout from './layouts/AppLayout.tsx'
 import QrScannerPage from './pages/app/QrScannerPage.tsx'
+import QrEventsPage from "./pages/app/QrEventsPage.tsx";
+import QrAppuserPage from "./pages/app/QrAppuserPage.tsx";
+import QrParticipantPage from "./pages/app/QrParticipantPage.tsx";
+import QrAssignPage from "./pages/app/QrAssignPage.tsx";
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -62,27 +62,26 @@ const checkAuthWith = (
 }
 
 const checkAuthApp = (context: User, location: ParsedLocation, privilege?: Privilege) => {
-    if (!context.loggedIn) {
+    /*if (!context.loggedIn) {
         throw redirect({to: '/app', search: {redirect: location.href}})
     }
     if (privilege && !context.checkPrivilege(privilege)) {
         throw redirect({to: '/login'})
-    }
+    }*/
 }
 
-export const rootRoute = createRootRouteWithContext<User>()({
-})
+export const rootRoute = createRootRouteWithContext<User>()({})
 
 export const mainLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     id: 'main-layout',
-    component: () => <RootLayout />,
+    component: () => <RootLayout/>,
 })
 
 export const indexRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: '/',
-    component: () => <LandingPage />,
+    component: () => <LandingPage/>,
     beforeLoad: ({context}) => {
         if (context.loggedIn) {
             throw redirect({to: '/dashboard'})
@@ -99,7 +98,7 @@ type TabSearch<TabType extends string> = {
     tab?: TabType
 }
 
-const validateTabSearch = <TabType extends string,>(search: TabSearch<TabType>): TabSearch<TabType> => {
+const validateTabSearch = <TabType extends string, >(search: TabSearch<TabType>): TabSearch<TabType> => {
     return {
         tab: search.tab,
     }
@@ -108,8 +107,8 @@ const validateTabSearch = <TabType extends string,>(search: TabSearch<TabType>):
 export const loginRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: 'login',
-    component: () => <LoginPage />,
-    validateSearch: ({redirect}: {redirect?: string} & SearchSchemaInput): LoginSearch => ({
+    component: () => <LoginPage/>,
+    validateSearch: ({redirect}: { redirect?: string } & SearchSchemaInput): LoginSearch => ({
         redirect,
     }),
 })
@@ -117,7 +116,7 @@ export const loginRoute = createRoute({
 export const invitationTokenRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: 'invitation/$invitationToken',
-    component: () => <AcceptInvitationPage />,
+    component: () => <AcceptInvitationPage/>,
 })
 
 export const registrationRoute = createRoute({
@@ -128,13 +127,13 @@ export const registrationRoute = createRoute({
 export const registrationIndexRoute = createRoute({
     getParentRoute: () => registrationRoute,
     path: '/',
-    component: () => <RegistrationPage />,
+    component: () => <RegistrationPage/>,
 })
 
 export const registrationTokenRoute = createRoute({
     getParentRoute: () => registrationRoute,
     path: '$registrationToken',
-    component: () => <VerifyRegistrationPage />,
+    component: () => <VerifyRegistrationPage/>,
 })
 
 export const resetPasswordRoute = createRoute({
@@ -145,19 +144,19 @@ export const resetPasswordRoute = createRoute({
 export const resetPasswordIndexRoute = createRoute({
     getParentRoute: () => resetPasswordRoute,
     path: '/',
-    component: () => <InitResetPasswordPage />,
+    component: () => <InitResetPasswordPage/>,
 })
 
 export const resetPasswordTokenRoute = createRoute({
     getParentRoute: () => resetPasswordRoute,
     path: '$passwordResetToken',
-    component: () => <ResetPasswordPage />,
+    component: () => <ResetPasswordPage/>,
 })
 
 export const dashboardRoute = createRoute({
     getParentRoute: () => mainLayoutRoute,
     path: 'dashboard',
-    component: () => <Dashboard />,
+    component: () => <Dashboard/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
@@ -171,7 +170,7 @@ export const usersRoute = createRoute({
 export const usersIndexRoute = createRoute({
     getParentRoute: () => usersRoute,
     path: '/',
-    component: () => <UsersPage />,
+    component: () => <UsersPage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, readUserGlobal)
     },
@@ -185,7 +184,7 @@ export const userRoute = createRoute({
 export const userIndexRoute = createRoute({
     getParentRoute: () => userRoute,
     path: '/',
-    component: () => <UserPage />,
+    component: () => <UserPage/>,
     beforeLoad: ({context, location, params}) => {
         checkAuthWith(
             context,
@@ -205,7 +204,7 @@ export const rolesRoute = createRoute({
 export const rolesIndexRoute = createRoute({
     getParentRoute: () => rolesRoute,
     path: '/',
-    component: () => <RolesPage />,
+    component: () => <RolesPage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, updateUserGlobal)
     },
@@ -219,11 +218,22 @@ export const configurationRoute = createRoute({
 export const configurationIndexRoute = createRoute({
     getParentRoute: () => configurationRoute,
     path: '/',
-    component: () => <ConfigurationPage />,
+    component: () => <ConfigurationPage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location, updateEventGlobal)
     },
     validateSearch: validateTabSearch<ConfigurationTab>,
+})
+
+export const qrEventRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: '$eventId',
+})
+
+export const qrEventsIndexRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: '/',
+    component: () => <QrEventsPage/>,
 })
 
 export const eventsRoute = createRoute({
@@ -234,7 +244,7 @@ export const eventsRoute = createRoute({
 export const eventsIndexRoute = createRoute({
     getParentRoute: () => eventsRoute,
     path: '/',
-    component: () => <EventsPage />,
+    component: () => <EventsPage/>,
 })
 
 export const eventRoute = createRoute({
@@ -245,7 +255,7 @@ export const eventRoute = createRoute({
 export const eventIndexRoute = createRoute({
     getParentRoute: () => eventRoute,
     path: '/',
-    component: () => <EventPage />,
+    component: () => <EventPage/>,
     validateSearch: validateTabSearch<EventTab>,
 })
 
@@ -257,7 +267,7 @@ export const eventRegisterRoute = createRoute({
 export const eventRegisterIndexRoute = createRoute({
     getParentRoute: () => eventRegisterRoute,
     path: '/',
-    component: () => <EventRegistrationCreatePage />,
+    component: () => <EventRegistrationCreatePage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
         if (context.loggedIn && context.clubId == undefined) {
@@ -274,7 +284,7 @@ export const eventDayRoute = createRoute({
 export const eventDayIndexRoute = createRoute({
     getParentRoute: () => eventDayRoute,
     path: '/',
-    component: () => <EventDayPage />,
+    component: () => <EventDayPage/>,
 })
 
 export const competitionRoute = createRoute({
@@ -285,7 +295,7 @@ export const competitionRoute = createRoute({
 export const competitionIndexRoute = createRoute({
     getParentRoute: () => competitionRoute,
     path: '/',
-    component: () => <CompetitionPage />,
+    component: () => <CompetitionPage/>,
     validateSearch: validateTabSearch<CompetitionTab>,
 })
 
@@ -297,7 +307,7 @@ export const clubRoute = createRoute({
 export const clubIndexRoute = createRoute({
     getParentRoute: () => clubRoute,
     path: '/',
-    component: () => <ClubPage />,
+    component: () => <ClubPage/>,
     beforeLoad: ({context, location, params}) => {
         checkAuthWith(
             context,
@@ -317,23 +327,49 @@ export const clubsRoute = createRoute({
 export const clubsIndexRoute = createRoute({
     getParentRoute: () => clubsRoute,
     path: '/',
-    component: () => <ClubsPage />,
+    component: () => <ClubsPage/>,
     beforeLoad: ({context, location}) => {
         checkAuth(context, location)
     },
 })
 
-// /app Route mit eigenem Layout
 export const appRoute = createRoute({
     getParentRoute: () => rootRoute,
-    path: '/app',
-    component: () => <AppLayout />,
+    path: 'app',
+    component: () => <AppLayout/>,
 })
 
-export const appScanRoute = createRoute({
-    getParentRoute: () => appRoute,
-    path: '/scanner',
-    component: QrScannerPage,
+export const qrScanRoute = createRoute({
+    getParentRoute: () => qrEventRoute,
+    path: 'scanner',
+    component: () => <QrScannerPage/>,
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
+})
+
+export const qrUserRoute = createRoute({
+    getParentRoute: () => qrEventRoute,
+    path: 'user',
+    component: () => <QrAppuserPage/>,
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
+})
+
+export const qrParticipantRoute = createRoute({
+    getParentRoute: () => qrEventRoute,
+    path: 'participant',
+    component: () => <QrParticipantPage/>,
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
+})
+
+export const qrAssignRoute = createRoute({
+    getParentRoute: () => qrEventRoute,
+    path: 'assign',
+    component: () => <QrAssignPage/>,
     beforeLoad: ({context, location}) => {
         checkAuthApp(context, location)
     }
@@ -364,7 +400,13 @@ const routeTree = rootRoute.addChildren([
         clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
     ]),
     appRoute.addChildren([
-        appScanRoute,
+        qrEventsIndexRoute,
+        qrEventRoute.addChildren([
+            qrScanRoute,
+            qrUserRoute,
+            qrParticipantRoute,
+            qrAssignRoute
+        ])
     ]),
 ])
 

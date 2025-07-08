@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 
 object QrCodeAppService {
 
@@ -25,8 +26,8 @@ object QrCodeAppService {
         val appUser = !AppUserRepo.getOneByQrCodeId(qrCodeId).orDie()
 
         when {
-            participant.isNotEmpty() -> KIO.ok(participant.map { it.toQrCodeDto() }).map { ApiResponse.ListDto(it) }
-            appUser != null -> KIO.ok(appUser.toQrCodeAppuser()).map { ApiResponse.Dto(it) }
+            participant.isNotEmpty() -> participant.traverse { it.toQrCodeDto() }.map { ApiResponse.ListDto(it) }
+            appUser != null -> appUser.toQrCodeAppuser().map { ApiResponse.Dto(it)}
             else -> KIO.ok(ApiResponse.NoData)
         }
     }
@@ -35,7 +36,7 @@ object QrCodeAppService {
         participant: QrCodeUpdateDto.QrCodeParticipantUpdate,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope
-    ) = KIO.comprehension {
+    ): App<ServiceError, ApiResponse> = KIO.comprehension {
         ParticipantRepo.update(participant.id, null, user, scope) {
             qrCodeId = participant.qrCodeId
         }.orDie()
@@ -45,12 +46,16 @@ object QrCodeAppService {
 
     fun updateQrCode(
         participant: QrCodeUpdateDto.QrCodeAppuserUpdate,
-    ) = KIO.comprehension {
+    ): App<ServiceError, ApiResponse> = KIO.comprehension {
         AppUserRepo.update(participant.id) {
             qrCodeId = participant.qrCodeId
         }.orDie()
             .onNullFail { AppUserError.NotFound }
             .map { ApiResponse.NoData }
     }
+
+    /*fun getEntitiesWithoutQrCodeId(): App<ServiceError, ApiResponse> = KIO.comprehension {
+
+    }*/
 
 }

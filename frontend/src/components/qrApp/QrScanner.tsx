@@ -1,17 +1,22 @@
 import {useCallback, useEffect, useState} from "react";
 import {IDetectedBarcode, Scanner} from "@yudiel/react-qr-scanner";
-import {Stack, Typography} from "@mui/material";
+import {Button, Stack, Typography} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import {useFetch} from "@utils/hooks.ts";
+import {useFeedback, useFetch} from "@utils/hooks.ts";
 import {checkQrCode} from '@api/sdk.gen.ts'
 import {CheckQrCodeResponse} from "@api/types.gen.ts";
+import {useTranslation} from "react-i18next";
 
 const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
 
-const QrScanner = () => {
+const QrScanner = (props: {
+    callback: (qrCodeId: string, response: CheckQrCodeResponse | null) => void
+}) => {
+    const feedback = useFeedback()
+    const {t} = useTranslation()
     const [uuid, setUuid] = useState<string | null>(null);
     const [cameraId, setCameraId] = useState<string | undefined>(undefined);
     const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -32,28 +37,39 @@ const QrScanner = () => {
     }, []);
 
     const handleScan = useCallback((codes: IDetectedBarcode[]) => {
+        console.log("found xy codes", codes.toString())
         if (Array.isArray(codes) && codes.length > 0) {
             const code = codes[0].rawValue;
             const match = code.match(uuidRegex);
             if (match) {
                 let qrCodeId = match[1];
                 setUuid(qrCodeId);
-                const data: CheckQrCodeResponse = useFetch(signal => checkQrCode(signal, qrCodeId),
-                    {
-                        onResponse: ({error}) => {
-                            if (error) {
-                                feedback.error(
-                                    t('common.load.error.single', {
-                                        entity: t('task.task'),
-                                    }),
-                                )
-                                console.log(error)
-                            }
-                        },
-                    })
             }
         }
     }, []);
+
+    useFetch(signal => checkQrCode({signal, path: {qrCodeId: uuid!!}}),
+        {
+            onResponse: ({error, data}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.single', {
+                            entity: t('task.task'),
+                        }),
+                    )
+                    console.log(error)
+                } else {
+                    if (Object.keys(data).length == 0) {
+                        props.callback(uuid!!, null)
+                    } else {
+                        props.callback(uuid!!, data)
+                    }
+                }
+            },
+            deps: [uuid],
+            preCondition: () => uuid !== null
+        })
+
 
     return (
         <Stack spacing={2} direction={"column"} alignItems={"center"} justifyContent={"center"}>
@@ -80,6 +96,8 @@ const QrScanner = () => {
                     </Select>
                 </FormControl>
             )}
+
+            <Button onClick={() => setUuid("b294a2e0-039d-4ede-bd84-c61a47dd9c04")}>Dev (Test)</Button>
         </Stack>
     );
 };
