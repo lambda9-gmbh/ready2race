@@ -64,7 +64,10 @@ const QrAssignPage = () => {
     }
 
     return (
-        <Stack>
+        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
+            <Typography variant="h2" fontSize="2rem" textAlign="center">
+                QR-Code zuweisen
+            </Typography>
             <Typography>{qr.qrCodeId}</Typography>
             <ToggleButtonGroup value={userTyp} exclusive onChange={onChange}>
                 <ToggleButton value={"Participant"}>Participant</ToggleButton>
@@ -83,17 +86,21 @@ const QrAssignPage = () => {
                 <Typography>Participants</Typography>
                 {participants?.data.map(participant =>
                         <Button onClick={() => selectParticipant(participant.id)}
-                                key={participant.id}>{participant.firstname} {participant.lastname}</Button>) ??
+                                key={participant.id} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
+                            {participant.firstname} {participant.lastname}
+                        </Button>) ??
                     <Typography>No Data</Typography>}
             </Stack>}
             {users && userTyp === "User" && <Stack>
                 <Typography>User</Typography>
                 {users?.data.map(user => <Button onClick={() => selectUser(user.id)}
-                                                 key={user.id}>{user.firstname} {user.lastname}</Button>) ??
+                                                 key={user.id} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
+                    {user.firstname} {user.lastname}
+                </Button>) ??
                     <Typography>No Data</Typography>}
             </Stack>}
 
-            <Button onClick={() => qr.reset(eventId)}>Zurück</Button>
+            <Button onClick={() => qr.reset(eventId)} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>Zurück</Button>
 
         </Stack>
     )

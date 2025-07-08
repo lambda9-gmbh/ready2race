@@ -62,12 +62,13 @@ const checkAuthWith = (
 }
 
 const checkAuthApp = (context: User, location: ParsedLocation, privilege?: Privilege) => {
-    /*if (!context.loggedIn) {
-        throw redirect({to: '/app', search: {redirect: location.href}})
+    if (!context.loggedIn) {
+        //throw redirect({to: '/app', search: {redirect: location.href}})
     }
     if (privilege && !context.checkPrivilege(privilege)) {
-        throw redirect({to: '/login'})
-    }*/
+        location
+        //throw redirect({to: '/login'})
+    }
 }
 
 export const rootRoute = createRootRouteWithContext<User>()({})

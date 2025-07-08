@@ -34,6 +34,10 @@ const QrScanner = (props: {
                 setCameraId(videoDevices[0].deviceId);
             }
         });
+
+        return () => {
+            setCameraId(undefined)
+        }
     }, []);
 
     const handleScan = useCallback((codes: IDetectedBarcode[]) => {
@@ -47,6 +51,10 @@ const QrScanner = (props: {
             }
         }
     }, []);
+
+    const handleError = useCallback(((error: unknown) => {
+        console.log(error)
+    }), [])
 
     useFetch(signal => checkQrCode({signal, path: {qrCodeId: uuid!!}}),
         {
@@ -75,9 +83,11 @@ const QrScanner = (props: {
         <Stack spacing={2} direction={"column"} alignItems={"center"} justifyContent={"center"}>
             <Typography variant={"h2"} textAlign={"center"}>QR-Code scannen</Typography>
             <Scanner
+                onError={handleError}
                 onScan={handleScan}
                 constraints={cameraId ? {deviceId: {exact: cameraId}} : undefined}
                 styles={{container: {width: '100%'}}}
+                paused={ cameraId === undefined }
             />
             {devices.length > 1 && (
                 <FormControl fullWidth sx={{mt: 2}}>

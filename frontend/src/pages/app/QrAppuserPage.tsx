@@ -14,7 +14,10 @@ const QrAppuserPage = () => {
     }, [qr])
 
     return (
-        <Stack>
+        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
+            <Typography variant="h2" fontSize="2rem" textAlign="center">
+                QR-Appuser
+            </Typography>
             <Typography>User: {qr.qrCodeId}</Typography>
             <Alert severity={"error"} variant={"filled"}>Site under construction</Alert>
             <Button onClick={() => qr.reset(eventId)}>Zurück</Button>

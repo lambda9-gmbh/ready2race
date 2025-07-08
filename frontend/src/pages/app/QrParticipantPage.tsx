@@ -15,10 +15,12 @@ const QrParticipantPage = () => {
     }, [qr])
 
     return (
-        <Stack>
-            <Typography textAlign={"center"}>Participant</Typography>
+        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
+            <Typography variant="h2" fontSize="2rem" textAlign="center">
+                Teilnehmer QR
+            </Typography>
             <Typography>{qr.qrCodeId}</Typography>
-            <ButtonGroup disableElevation variant={"contained"} orientation={"vertical"}>
+            <ButtonGroup disableElevation variant={"contained"} orientation={"vertical"} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
                 <Button>Betritt Wettkampfbereich</Button>
                 <Button>Verlässt Wettkampfbereich</Button>
             </ButtonGroup>

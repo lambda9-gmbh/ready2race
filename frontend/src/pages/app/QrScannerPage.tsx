@@ -1,9 +1,9 @@
-import {Button, Stack} from "@mui/material";
-import QrScanner from "@components/qrApp/QrScanner.tsx";
+import {Button, Stack, Typography} from "@mui/material";
 import {CheckQrCodeResponse} from "@api/types.gen.ts";
 import {qrEventRoute, router} from "@routes";
 import {UseQr} from "@contexts/qr/QrContext.ts";
 import {useEffect} from "react";
+import QrNimiqScanner from "@components/qrApp/QrNimiqScanner.tsx";
 
 const QrScannerPage = () => {
     const navigate = router.navigate
@@ -31,8 +31,11 @@ const QrScannerPage = () => {
     }, [qr])
 
     return (
-        <Stack>
-            <QrScanner callback={handleScannerResult}></QrScanner>
+        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
+            <Typography variant="h2" fontSize="2rem" textAlign="center">
+                QR-Scanner
+            </Typography>
+            <QrNimiqScanner callback={handleScannerResult}></QrNimiqScanner>
             <Button onClick={() => navigate({to: "/app"})}>Zurück</Button>
         </Stack>
     )
