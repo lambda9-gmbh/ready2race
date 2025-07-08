@@ -16,7 +16,7 @@ const EventDayPage = () => {
     const {eventId} = eventRoute.useParams()
     const {eventDayId} = eventDayRoute.useParams()
 
-    const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
+    const [reloadData, setReloadData] = useState(false)
 
     const {data: eventDayData, pending: eventDayPending} = useFetch(
         signal => getEventDay({signal, path: {eventId: eventId, eventDayId: eventDayId}}),
@@ -45,7 +45,7 @@ const EventDayPage = () => {
                     )
                 }
             },
-            deps: [eventId, eventDayId, reloadDataTrigger],
+            deps: [eventId, eventDayId, reloadData],
         },
     )
     const assignedCompetitions = assignedCompetitionsData?.data.map(value => value.id) ?? []
@@ -62,7 +62,7 @@ const EventDayPage = () => {
                     )
                 }
             },
-            deps: [eventId, reloadDataTrigger],
+            deps: [eventId, reloadData],
         },
     )
 
@@ -90,7 +90,7 @@ const EventDayPage = () => {
                                 assignedEntities={assignedCompetitions}
                                 assignEntityLabel={t('event.competition.competition')}
                                 competitionsToDay={true}
-                                onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
+                                reloadData={() => setReloadData(!reloadData)}
                             />
                         )) ||
                             ((competitionsPending || assignedCompetitionsPending) && <Throbber />)}

@@ -161,6 +161,41 @@ export type CompetitionDto = {
     registrationCount?: number
 }
 
+export type CompetitionExecutionCanNotCreateRoundReason =
+    | 'ALL_ROUNDS_CREATED'
+    | 'NO_ROUNDS_IN_SETUP'
+    | 'NO_SETUP_MATCHES'
+    | 'NO_REGISTRATIONS'
+    | 'REGISTRATIONS_NOT_FINALIZED'
+    | 'NOT_ENOUGH_TEAM_SPACE'
+    | 'NOT_ALL_PLACES_SET'
+
+export type CompetitionExecutionProgressDto = {
+    rounds: Array<CompetitionRoundDto>
+    canNotCreateRoundReasons: Array<CompetitionExecutionCanNotCreateRoundReason>
+    lastRoundFinished: boolean
+}
+
+export type CompetitionMatchDto = {
+    id: string
+    name?: string
+    teams: Array<CompetitionMatchTeamDto>
+    weighting: number
+    executionOrder: number
+    startTime?: string
+    startTimeOffset?: number
+}
+
+export type CompetitionMatchTeamDto = {
+    registrationId: string
+    teamNumber: number
+    clubId: string
+    clubName: string
+    name?: string
+    startNumber: number
+    place?: number
+}
+
 export type CompetitionPropertiesDto = {
     identifier: string
     name: string
@@ -203,6 +238,15 @@ export type CompetitionRegistrationSingleUpsertDto = {
     optionalFees?: Array<string>
 }
 
+export type CompetitionRegistrationsWithoutTeamNumberDto = {
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    registrationId: string
+    registrationClub: string
+    registrationName?: string
+}
+
 export type CompetitionRegistrationTeamDto = {
     id: string
     name: string
@@ -224,6 +268,12 @@ export type CompetitionRegistrationTeamUpsertDto = {
 export type CompetitionRegistrationUpsertDto = {
     competitionId: string
     teams?: Array<CompetitionRegistrationTeamUpsertDto>
+}
+
+export type CompetitionRoundDto = {
+    name: string
+    matches: Array<CompetitionMatchDto>
+    required: boolean
 }
 
 export type CompetitionSetupDto = {
@@ -291,6 +341,33 @@ export type CompetitionSetupTemplateRequest = {
     name: string
     description?: string
     rounds: Array<CompetitionSetupRoundDto>
+}
+
+export type CompetitionTeamNamedParticipantDto = {
+    namedParticipantId: string
+    namedParticipanName?: string
+    participants: Array<CompetitionTeamParticipantDto>
+}
+
+export type CompetitionTeamParticipantDto = {
+    participantId: string
+    namedParticipantName: string
+    firstName: string
+    lastName: string
+    year: number
+    gender: Gender
+    external: boolean
+    externalClubName?: string
+}
+
+export type CompetitionTeamPlaceDto = {
+    competitionRegistrationId: string
+    teamNumber: number
+    teamName?: string
+    clubId: string
+    clubName: string
+    namedParticipants: Array<CompetitionTeamNamedParticipantDto>
+    place: number
 }
 
 export type CompetitionTemplateDto = {
@@ -410,6 +487,7 @@ export type EventDto = {
     invoicesProduced?: string
     paymentDueBy?: string
     registrationCount?: number
+    registrationsFinalized: boolean
 }
 
 export type EventPublicDto = {
@@ -883,6 +961,25 @@ export type UpdateAppUserRequest = {
     firstname: string
     lastname: string
     roles: Array<string>
+}
+
+export type UpdateCompetitionMatchRequest = {
+    startTime?: string
+    teams: Array<UpdateCompetitionMatchTeamRequest>
+}
+
+export type UpdateCompetitionMatchResultRequest = {
+    teamResults: Array<UpdateCompetitionMatchTeamResultRequest>
+}
+
+export type UpdateCompetitionMatchTeamRequest = {
+    registrationId: string
+    startNumber: number
+}
+
+export type UpdateCompetitionMatchTeamResultRequest = {
+    registrationId: string
+    place: number
 }
 
 export type VerifyRegistrationRequest = {
@@ -1636,6 +1733,76 @@ export type GetCompetitionSetupResponse = CompetitionSetupDto
 
 export type GetCompetitionSetupError = BadRequestError | ApiError
 
+export type GetCompetitionExecutionProgressData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionExecutionProgressResponse = CompetitionExecutionProgressDto
+
+export type GetCompetitionExecutionProgressError = BadRequestError | ApiError
+
+export type DeleteCurrentCompetitionExecutionRoundData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type DeleteCurrentCompetitionExecutionRoundResponse = void
+
+export type DeleteCurrentCompetitionExecutionRoundError = BadRequestError | ApiError
+
+export type CreateNextCompetitionRoundData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type CreateNextCompetitionRoundResponse = void
+
+export type CreateNextCompetitionRoundError = BadRequestError | ApiError
+
+export type UpdateMatchDataData = {
+    body: UpdateCompetitionMatchRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchDataResponse = void
+
+export type UpdateMatchDataError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateMatchResultsData = {
+    body: UpdateCompetitionMatchResultRequest
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UpdateMatchResultsResponse = void
+
+export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetCompetitionPlacesData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type GetCompetitionPlacesResponse = Array<CompetitionTeamPlaceDto>
+
+export type GetCompetitionPlacesError = BadRequestError | ApiError
+
 export type AddDocumentsData = {
     body: {
         documentType?: string
@@ -2162,6 +2329,33 @@ export type GetRegistrationResultData = {
 export type GetRegistrationResultResponse = Blob | File
 
 export type GetRegistrationResultError = BadRequestError | ApiError
+
+export type FinalizeRegistrationsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Whether already set team numbers should be kept
+         */
+        keepNumbers?: boolean
+    }
+}
+
+export type FinalizeRegistrationsResponse = void
+
+export type FinalizeRegistrationsError = BadRequestError | ApiError
+
+export type GetRegistrationsWithoutTeamNumberData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRegistrationsWithoutTeamNumberResponse =
+    Array<CompetitionRegistrationsWithoutTeamNumberDto>
+
+export type GetRegistrationsWithoutTeamNumberError = BadRequestError | ApiError
 
 export type AddFeeData = {
     body: FeeRequest

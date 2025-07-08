@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.competition.entity.CompetitionWithPrope
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.competitionSetup
 import de.lambda9.ready2race.backend.app.competition.entity.*
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.competitionExecution
 import de.lambda9.ready2race.backend.app.competitionRegistration.boundary.competitionRegistration
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -90,6 +91,7 @@ fun Route.competition() {
 
             competitionRegistration()
             competitionSetup("competitionId")
+            competitionExecution()
         }
     }
 }

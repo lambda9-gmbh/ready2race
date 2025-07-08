@@ -73,12 +73,28 @@ fun Route.eventRegistration() {
         }
     }
 
+    post("/finalizeRegistrations") {
+        call.respondComprehension {
+            val user = !authenticate(Privilege.UpdateRegistrationGlobal)
+            val eventId = !pathParam("eventId", uuid)
+            val keepNumbers = !optionalQueryParam("keepNumbers", boolean).onNullDefault { true }
+            EventRegistrationService.finalizeRegistrations(user.id!!, eventId, keepNumbers)
+        }
+    }
+
+    get("/missingTeamNumbers"){
+        call.respondComprehension {
+            !authenticate(Privilege.ReadRegistrationGlobal)
+            val eventId = !pathParam("eventId", uuid)
+            EventRegistrationService.getRegistrationsWithoutTeamNumber(eventId)
+        }
+    }
+
     get("/registrationResult") {
         call.respondComprehension {
             !authenticate(Privilege.ReadRegistrationGlobal)
             val eventId = !pathParam("eventId", uuid)
-            val remake = !optionalQueryParam("remake", boolean).onNullDefault { false }
-            EventRegistrationService.downloadResult(eventId, remake)
+            EventRegistrationService.downloadResult(eventId)
         }
     }
 }

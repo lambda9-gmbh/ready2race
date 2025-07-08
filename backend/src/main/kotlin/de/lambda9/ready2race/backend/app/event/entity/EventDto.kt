@@ -16,4 +16,5 @@ data class EventDto(
     val invoicesProduced: LocalDateTime?,
     val paymentDueBy: LocalDate?,
     val registrationCount: Int?,
+    val registrationsFinalized: Boolean,
 )

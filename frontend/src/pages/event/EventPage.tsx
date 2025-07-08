@@ -4,7 +4,6 @@ import {
     Card,
     List,
     ListItem,
-    Link as MuiLink,
     Stack,
     Tab,
     Typography,
@@ -15,7 +14,7 @@ import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {getEvent, getRegistrationResult} from '@api/sdk.gen.ts'
+import {getEvent} from '@api/sdk.gen.ts'
 import {
     EventDocumentDto,
     EventRegistrationViewDto,
@@ -27,7 +26,7 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
-import {useMemo, useRef, useState} from 'react'
+import {useMemo, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
@@ -50,6 +49,7 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
+import EventActions from "@components/event/EventActions.tsx";
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 
 const EVENT_TABS = [
@@ -76,8 +76,6 @@ const EventPage = () => {
     const switchTab = (tab: EventTab) => {
         navigate({from: eventIndexRoute.fullPath, search: {tab}}).then()
     }
-
-    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const {eventId} = eventRoute.useParams()
 
@@ -132,30 +130,6 @@ const EventPage = () => {
         [data, user],
     )
 
-    // TODO @Duplication: see InvoiceTable download
-    const handleReportDownload = async () => {
-        const {data, error, response} = await getRegistrationResult({
-            path: {eventId},
-            query: {
-                remake: true,
-            },
-        })
-        const anchor = downloadRef.current
-
-        const disposition = response.headers.get('Content-Disposition')
-        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
-
-        if (error) {
-            feedback.error(t('event.document.download.error'))
-        } else if (data !== undefined && anchor) {
-            anchor.href = URL.createObjectURL(data)
-            anchor.download = filename ?? 'registration_result.pdf'
-            anchor.click()
-            anchor.href = ''
-            anchor.download = ''
-        }
-    }
-
     const regAvailableFrom = data?.registrationAvailableFrom
         ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
         : undefined
@@ -165,7 +139,6 @@ const EventPage = () => {
 
     return (
         <Box>
-            <MuiLink ref={downloadRef} display={'none'}></MuiLink>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
                 {data ? (
                     <Stack spacing={4}>
@@ -361,11 +334,7 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'actions'} activeTab={activeTab}>
-                            <Stack spacing={4}>
-                                <Button variant={'contained'} onClick={handleReportDownload}>
-                                    {t('event.action.registrationsReport.download')}
-                                </Button>
-                            </Stack>
+                            <EventActions registrationsFinalized={data.registrationsFinalized}/>
                         </TabPanel>
                         <InvoicesTabPanel
                             activeTab={activeTab}

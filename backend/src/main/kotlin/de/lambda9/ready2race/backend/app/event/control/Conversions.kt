@@ -52,7 +52,8 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
             }
         } else {
             null
-        }
+        },
+        registrationsFinalized = registrationsFinalized!!,
     )
 )
 

@@ -56,3 +56,17 @@ export const eventRegistrationPossible = (from?: string, to?: string) => {
 }
 
 export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A => u.includes(s as A)
+
+export const shuffle = <T>(list: T[]) => {
+    const newList: T[] = {...list}
+    let currentIndex = list.length
+
+    while (currentIndex != 0) {
+        let randomIndex = Math.floor(Math.random() * currentIndex)
+        currentIndex--
+        const currentValue = newList[currentIndex]
+        newList[currentIndex] = newList[randomIndex]
+        newList[randomIndex] = currentValue
+    }
+    return newList
+}

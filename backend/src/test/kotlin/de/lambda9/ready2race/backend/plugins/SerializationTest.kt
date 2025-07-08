@@ -8,7 +8,6 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.testing.testApplicationComprehension
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType

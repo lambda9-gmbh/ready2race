@@ -1180,14 +1180,157 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/eventDocument:
+  /event/{eventId}/competition/{competitionId}/competitionExecution:
     parameters:
-      - name: eventId
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionExecutionProgress
+      responses:
+        200:
+          description: Competition execution progress successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionExecutionProgressDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteCurrentCompetitionExecutionRound
+      responses:
+        204:
+          description: Current competition execution round successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/createNextRound:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    post:
+      operationId: createNextCompetitionRound
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
         in: path
         required: true
         schema:
           type: string
           format: uuid
+    put:
+      operationId: updateMatchData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompetitionMatchRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchResults
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompetitionMatchResultRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/places:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionPlaces
+      responses:
+        200:
+          description: Competition places successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionTeamPlaceDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/eventDocument:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addDocuments
       requestBody:
@@ -1262,12 +1405,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument/{eventDocumentId}:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
       - name: eventDocumentId
         in: path
         required: true
@@ -2106,11 +2244,7 @@ paths:
 
   /event/{eventId}/registrationTemplate:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getEventRegistrationTemplate
       responses:
@@ -2131,11 +2265,7 @@ paths:
 
   /event/{eventId}/register:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addEventRegistration
       requestBody:
@@ -2185,6 +2315,57 @@ paths:
               schema:
                 type: string
                 format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/finalizeRegistrations:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: query
+        name: keepNumbers
+        description: Whether already set team numbers should be kept
+        required: false
+        schema:
+          type: boolean
+    post:
+      operationId: finalizeRegistrations
+      responses:
+        204:
+          description: Registrations successfully finalized
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+
+  /event/{eventId}/missingTeamNumbers:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRegistrationsWithoutTeamNumber
+      responses:
+        200:
+          description: List of registrations with missing team numbers successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompetitionRegistrationsWithoutTeamNumberDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -2406,12 +2587,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getParticipantRequirementsForEvent
       responses:
@@ -2476,12 +2652,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/approve:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: approveParticipantRequirementsForEvent
       requestBody:
@@ -2507,12 +2678,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participantRequirement/active:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getActiveParticipantRequirementsForEvent
       responses:
@@ -2546,12 +2712,7 @@ paths:
 
   /event/{eventId}/participantRequirement/{participantRequirementId}:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
       - name: participantRequirementId
         in: path
         required: true
@@ -2590,11 +2751,7 @@ paths:
           $ref: '#/components/responses/500'
   /event/{eventId}/participant:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     get:
       operationId: getParticipantsForEvent
       parameters:
@@ -3076,11 +3233,7 @@ paths:
 
   /event/{eventId}/task:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addTask
       requestBody:
@@ -3140,11 +3293,7 @@ paths:
         schema:
           type: string
           format: uuid
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
+      - $ref: '#/components/parameters/eventId'
     put:
       operationId: updateTask
       requestBody:
@@ -3389,12 +3538,7 @@ paths:
 
   /event/{eventId}/produceInvoices:
     parameters:
-      - in: path
-        name: eventId
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: produceInvoicesForEventRegistrations
       responses:
@@ -4682,6 +4826,7 @@ components:
       required:
         - id
         - name
+        - registrationsFinalized
       properties:
         id:
           type: string
@@ -4710,6 +4855,8 @@ components:
           format: date
         registrationCount:
           type: number
+        registrationsFinalized:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -5114,6 +5261,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantForEventDto'
+
+
+    CompetitionRegistrationsWithoutTeamNumberDto:
+      type: object
+      required:
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - registrationId
+        - registrationClub
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        registrationId:
+          type: string
+          format: uuid
+        registrationClub:
+          type: string
+        registrationName:
+          type: string
+
 
 
     # competitionSetup
@@ -6458,6 +6631,229 @@ components:
       properties:
         assigned:
           $ref: '#/components/schemas/ContactInformationDto'
+
+
+
+    CompetitionExecutionProgressDto:
+      type: object
+      required:
+        - rounds
+        - canNotCreateRoundReasons
+        - lastRoundFinished
+      properties:
+        rounds:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRoundDto'
+        canNotCreateRoundReasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionExecutionCanNotCreateRoundReason'
+        lastRoundFinished:
+          type: boolean
+
+    CompetitionExecutionCanNotCreateRoundReason:
+      type: string
+      enum:
+        - ALL_ROUNDS_CREATED
+        - NO_ROUNDS_IN_SETUP
+        - NO_SETUP_MATCHES
+        - NO_REGISTRATIONS
+        - REGISTRATIONS_NOT_FINALIZED
+        - NOT_ENOUGH_TEAM_SPACE
+        - NOT_ALL_PLACES_SET
+
+    CompetitionRoundDto:
+      type: object
+      required:
+        - name
+        - matches
+        - required
+      properties:
+        name:
+          type: string
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionMatchDto'
+        required:
+          type: boolean
+
+    CompetitionMatchDto:
+      type: object
+      required:
+        - id
+        - teams
+        - weighting
+        - executionOrder
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionMatchTeamDto'
+        weighting:
+          type: integer
+        executionOrder:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        startTimeOffset:
+          type: integer
+
+    CompetitionMatchTeamDto:
+      type: object
+      required:
+        - registrationId
+        - teamNumber
+        - clubId
+        - clubName
+        - startNumber
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        teamNumber:
+          type: integer
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        name:
+          type: string
+        startNumber:
+          type: integer
+        place:
+          type: integer
+
+
+    UpdateCompetitionMatchRequest:
+      type: object
+      required:
+        - teams
+      properties:
+        startTime:
+          type: string
+          format: date-time
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    UpdateCompetitionMatchTeamRequest:
+      type: object
+      required:
+        - registrationId
+        - startNumber
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        startNumber:
+          type: integer
+
+    UpdateCompetitionMatchResultRequest:
+      type: object
+      required:
+        - teamResults
+      properties:
+        teamResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateCompetitionMatchTeamResultRequest'
+
+    UpdateCompetitionMatchTeamResultRequest:
+      type: object
+      required:
+        - registrationId
+        - place
+      properties:
+        registrationId:
+          type: string
+          format: uuid
+        place:
+          type: integer
+
+    CompetitionTeamPlaceDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - teamNumber
+        - clubId
+        - clubName
+        - namedParticipants
+        - place
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        teamNumber:
+          type: integer
+        teamName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionTeamNamedParticipantDto'
+        place:
+          type: integer
+
+    CompetitionTeamNamedParticipantDto:
+      type: object
+      required:
+        - namedParticipantId
+        - namedParticipantName
+        - participants
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipanName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionTeamParticipantDto'
+
+    CompetitionTeamParticipantDto:
+      type: object
+      required:
+        - participantId
+        - namedParticipantName
+        - firstName
+        - lastName
+        - year
+        - gender
+        - external
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string
 
     InvoiceDto:
       type: object
