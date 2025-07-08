@@ -31,7 +31,7 @@ type Props = {
     assignedEntities: string[]
     assignEntityLabel: string
     competitionsToDay: boolean
-    onSuccess: () => void
+    reloadData: () => void
 }
 const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
     const {t} = useTranslation()
@@ -87,9 +87,9 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
             feedback.error(t('event.assign.save.error', entityNames))
         } else {
             closeDialog()
-            props.onSuccess()
             feedback.success(t('event.assign.save.success', entityNames))
         }
+        props.reloadData()
     }
 
     const assignedEntities = props.assignedEntities.map(entityId =>

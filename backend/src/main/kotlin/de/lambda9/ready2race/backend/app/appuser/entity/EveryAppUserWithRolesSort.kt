@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend.app.appuser.entity
 
-import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort.EMAIL
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVERY_APP_USER_WITH_ROLES

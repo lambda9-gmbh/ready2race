@@ -136,6 +136,24 @@ import type {
     GetCompetitionSetupData,
     GetCompetitionSetupError,
     GetCompetitionSetupResponse,
+    GetCompetitionExecutionProgressData,
+    GetCompetitionExecutionProgressError,
+    GetCompetitionExecutionProgressResponse,
+    DeleteCurrentCompetitionExecutionRoundData,
+    DeleteCurrentCompetitionExecutionRoundError,
+    DeleteCurrentCompetitionExecutionRoundResponse,
+    CreateNextCompetitionRoundData,
+    CreateNextCompetitionRoundError,
+    CreateNextCompetitionRoundResponse,
+    UpdateMatchDataData,
+    UpdateMatchDataError,
+    UpdateMatchDataResponse,
+    UpdateMatchResultsData,
+    UpdateMatchResultsError,
+    UpdateMatchResultsResponse,
+    GetCompetitionPlacesData,
+    GetCompetitionPlacesError,
+    GetCompetitionPlacesResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -241,6 +259,12 @@ import type {
     GetRegistrationResultData,
     GetRegistrationResultError,
     GetRegistrationResultResponse,
+    FinalizeRegistrationsData,
+    FinalizeRegistrationsError,
+    FinalizeRegistrationsResponse,
+    GetRegistrationsWithoutTeamNumberData,
+    GetRegistrationsWithoutTeamNumberError,
+    GetRegistrationsWithoutTeamNumberResponse,
     AddFeeData,
     AddFeeError,
     AddFeeResponse,
@@ -900,6 +924,84 @@ export const getCompetitionSetup = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getCompetitionExecutionProgress = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionExecutionProgressData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionExecutionProgressResponse,
+        GetCompetitionExecutionProgressError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution',
+    })
+}
+
+export const deleteCurrentCompetitionExecutionRound = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteCurrentCompetitionExecutionRoundData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteCurrentCompetitionExecutionRoundResponse,
+        DeleteCurrentCompetitionExecutionRoundError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution',
+    })
+}
+
+export const createNextCompetitionRound = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateNextCompetitionRoundData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateNextCompetitionRoundResponse,
+        CreateNextCompetitionRoundError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/createNextRound',
+    })
+}
+
+export const updateMatchData = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchDataData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchDataResponse,
+        UpdateMatchDataError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data',
+    })
+}
+
+export const updateMatchResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchResultsResponse,
+        UpdateMatchResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results',
+    })
+}
+
+export const getCompetitionPlaces = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionPlacesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionPlacesResponse,
+        GetCompetitionPlacesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/places',
+    })
+}
+
 export const addDocuments = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddDocumentsData, ThrowOnError>,
 ) => {
@@ -1330,6 +1432,32 @@ export const getRegistrationResult = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/registrationResult',
+    })
+}
+
+export const finalizeRegistrations = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<FinalizeRegistrationsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        FinalizeRegistrationsResponse,
+        FinalizeRegistrationsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/finalizeRegistrations',
+    })
+}
+
+export const getRegistrationsWithoutTeamNumber = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationsWithoutTeamNumberData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationsWithoutTeamNumberResponse,
+        GetRegistrationsWithoutTeamNumberError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/missingTeamNumbers',
     })
 }
 
@@ -1959,7 +2087,7 @@ export const addWorkShift = <ThrowOnError extends boolean = false>(
 ) => {
     return (options?.client ?? client).post<AddWorkShiftResponse, AddWorkShiftError, ThrowOnError>({
         ...options,
-        url: 'event/{eventId}/workshift',
+        url: '/event/{eventId}/workshift',
     })
 }
 
@@ -1969,7 +2097,7 @@ export const getWorkShifts = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).get<GetWorkShiftsResponse, GetWorkShiftsError, ThrowOnError>(
         {
             ...options,
-            url: 'event/{eventId}/workshift',
+            url: '/event/{eventId}/workshift',
         },
     )
 }
@@ -1983,7 +2111,7 @@ export const updateWorkShift = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: 'event/{eventId}/workshift/{workShiftId}',
+        url: '/event/{eventId}/workshift/{workShiftId}',
     })
 }
 
@@ -1996,7 +2124,7 @@ export const deleteWorkShift = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: 'event/{eventId}/workshift/{workShiftId}',
+        url: '/event/{eventId}/workshift/{workShiftId}',
     })
 }
 

@@ -82,6 +82,14 @@ object CompetitionRegistrationRepo {
         }
     }
 
+    fun getByCompetitionId(id: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
+        with(COMPETITION_REGISTRATION){
+            selectFrom(this)
+                .where(COMPETITION.eq(id))
+                .fetch()
+        }
+    }
+
     fun pageForCompetition(
         competitionId: UUID,
         params: PaginationParameters<CompetitionRegistrationSort>,

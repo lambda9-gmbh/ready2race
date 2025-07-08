@@ -20,7 +20,7 @@ const CompetitionSetupForEvent = () => {
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
 
-    const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
+    const [reloadData, setReloadData] = useState(false)
 
     const formContext = useForm<CompetitionSetupForm>()
 
@@ -39,7 +39,7 @@ const CompetitionSetupForEvent = () => {
                     )
                 }
             },
-            deps: [eventId, competitionId, reloadDataTrigger],
+            deps: [eventId, competitionId, reloadData],
         },
     )
 
@@ -55,8 +55,8 @@ const CompetitionSetupForEvent = () => {
             feedback.error(t('event.competition.setup.save.error'))
         } else {
             feedback.success(t('event.competition.setup.save.success'))
-            setReloadDataTrigger(!reloadDataTrigger)
         }
+        setReloadData(!reloadData)
     }
 
     return (

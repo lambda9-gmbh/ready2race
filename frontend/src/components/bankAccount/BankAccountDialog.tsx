@@ -43,6 +43,8 @@ const BankAccountDialog = (props: BaseEntityDialogProps<BankAccountDto>) => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
 
+    // todo: Validation (Same as Backend Validations - f.e. string length)
+
     return (
         <EntityDialog
             {...props}

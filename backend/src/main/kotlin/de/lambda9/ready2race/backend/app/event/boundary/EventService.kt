@@ -8,7 +8,6 @@ import de.lambda9.ready2race.backend.app.event.control.eventPublicDto
 import de.lambda9.ready2race.backend.app.event.control.toRecord
 import de.lambda9.ready2race.backend.app.event.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord

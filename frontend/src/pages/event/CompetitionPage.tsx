@@ -19,8 +19,10 @@ import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import CompetitionTeamCompositionEntry from '@components/event/competition/CompetitionTeamCompositionEntry.tsx'
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
+import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
+import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 
-const COMPETITION_TABS = ['general', 'registrations', 'setup'] as const
+const COMPETITION_TABS = ['general', 'registrations', 'setup', 'execution', 'places'] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
 
 const CompetitionPage = () => {
@@ -40,16 +42,19 @@ const CompetitionPage = () => {
         navigate({from: competitionIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const {data: eventData, pending: eventPending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
-        onResponse: ({error}) => {
-            if (error) {
-                feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-            }
+    const {data: eventData, pending: eventPending} = useFetch(
+        signal => getEvent({signal, path: {eventId: eventId}}),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+                }
+            },
+            deps: [eventId],
         },
-        deps: [eventId],
-    })
+    )
 
-    const [reloadDataTrigger, setReloadDataTrigger] = useState(false)
+    const [reloadData, setReloadData] = useState(false)
 
     const {data: competitionData, pending: competitionPending} = useFetch(
         signal => getCompetition({signal, path: {eventId: eventId, competitionId: competitionId}}),
@@ -61,7 +66,7 @@ const CompetitionPage = () => {
                     )
                 }
             },
-            deps: [eventId, competitionId, reloadDataTrigger],
+            deps: [eventId, competitionId, reloadData],
         },
     )
 
@@ -78,7 +83,7 @@ const CompetitionPage = () => {
                     )
                 }
             },
-            deps: [eventId, competitionId, reloadDataTrigger],
+            deps: [eventId, competitionId, reloadData],
         },
     )
 
@@ -104,7 +109,7 @@ const CompetitionPage = () => {
                     )
                 }
             },
-            deps: [eventId, reloadDataTrigger],
+            deps: [eventId, reloadData],
         },
     )
 
@@ -145,6 +150,16 @@ const CompetitionPage = () => {
                                 {...a11yProps('setup')}
                             />
                         )}
+                        {user.checkPrivilege(updateEventGlobal) && (
+                            <Tab
+                                label={t('event.competition.execution.tabTitle')}
+                                {...a11yProps('execution')}
+                            />
+                        )}
+                        <Tab
+                            label={t('event.competition.places.tabTitle')}
+                            {...a11yProps('places')}
+                        />
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>
                         {(competitionData.properties.description ||
@@ -273,7 +288,7 @@ const CompetitionPage = () => {
                                         assignedEntities={assignedEventDays}
                                         assignEntityLabel={t('event.eventDay.eventDay')}
                                         competitionsToDay={false}
-                                        onSuccess={() => setReloadDataTrigger(!reloadDataTrigger)}
+                                        reloadData={() => setReloadData(!reloadData)}
                                     />
                                 )) ||
                                     ((eventDaysPending || assignedEventDaysPending) && (
@@ -295,6 +310,14 @@ const CompetitionPage = () => {
                             <CompetitionSetupForEvent />
                         </TabPanel>
                     )}
+                    {user.checkPrivilege(updateEventGlobal) && (
+                        <TabPanel index={'execution'} activeTab={activeTab}>
+                            <CompetitionExecution />
+                        </TabPanel>
+                    )}
+                    <TabPanel index={'places'} activeTab={activeTab}>
+                        <CompetitionPlaces />
+                    </TabPanel>
                 </Stack>
             )) ||
                 (competitionPending && eventPending && <Throbber />)}

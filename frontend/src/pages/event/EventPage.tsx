@@ -14,12 +14,16 @@ import {
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
 import {Trans, useTranslation} from 'react-i18next'
+import CompetitionTable from '@components/event/competition/CompetitionTable.tsx'
+import CompetitionDialog from '@components/event/competition/CompetitionDialog.tsx'
 import Throbber from '@components/Throbber.tsx'
 import {
     getEvent,
     getRegistrationResult,
     produceInvoicesForEventRegistrations,
 } from '@api/sdk.gen.ts'
+import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
+import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
 import {
     EventDocumentDto,
     EventRegistrationViewDto,
@@ -31,7 +35,7 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
-import {useMemo, useRef} from 'react'
+import {useMemo} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
@@ -54,6 +58,7 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
+import EventActions from "@components/event/EventActions.tsx";
 
 const EVENT_TABS = [
     'general',
@@ -78,8 +83,6 @@ const EventPage = () => {
     const switchTab = (tab: EventTab) => {
         navigate({from: eventIndexRoute.fullPath, search: {tab}}).then()
     }
-
-    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const {eventId} = eventRoute.useParams()
 
@@ -132,37 +135,6 @@ const EventPage = () => {
         [data, user],
     )
 
-    const handleReportDownload = async () => {
-        const {data, error} = await getRegistrationResult({
-            path: {eventId},
-            query: {
-                remake: true,
-            },
-        })
-        const anchor = downloadRef.current
-
-        if (error) {
-            feedback.error(t('event.document.download.error'))
-        } else if (data !== undefined && anchor) {
-            anchor.href = URL.createObjectURL(data)
-            anchor.download = 'registration-result.pdf' // TODO: read from content-disposition header
-            anchor.click()
-            anchor.href = ''
-            anchor.download = ''
-        }
-    }
-
-    const handleProduceInvoices = async () => {
-        const {data, error} = await produceInvoicesForEventRegistrations({
-            path: {eventId},
-        })
-
-        if (error !== undefined) {
-            feedback.error('[todo] could not produce invoices, cause: ...')
-        } else if (data !== undefined) {
-            feedback.success('[todo] invoice producing jobs created')
-        }
-    }
 
     const regAvailableFrom = data?.registrationAvailableFrom
         ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
@@ -173,7 +145,6 @@ const EventPage = () => {
 
     return (
         <Box>
-            <MuiLink ref={downloadRef} display={'none'}></MuiLink>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
                 {data ? (
                     <Stack spacing={4}>
@@ -363,14 +334,7 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'actions'} activeTab={activeTab}>
-                            <Stack spacing={4}>
-                                <Button variant={'contained'} onClick={handleReportDownload}>
-                                    {t('event.action.registrationsReport.download')}
-                                </Button>
-                                <Button variant={'contained'} onClick={handleProduceInvoices}>
-                                    <Trans i18nKey={'event.action.produceInvoices'} />
-                                </Button>
-                            </Stack>
+                            <EventActions registrationsFinalized={data.registrationsFinalized}/>
                         </TabPanel>
                     </Stack>
                 ) : (

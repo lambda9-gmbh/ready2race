@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.competitionSetup.control
 
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.tailwind.core.KIO
+import java.time.LocalDateTime
 import java.util.*
 
 fun CompetitionSetupRoundDto.toRecord(
@@ -89,6 +91,19 @@ fun CompetitionSetupMatchRecord.toDto(participants: List<Int>) = CompetitionSetu
     participants = participants,
     executionOrder = executionOrder,
     startTimeOffset = startTimeOffset
+)
+
+fun CompetitionSetupMatchRecord.applyCompetitionMatch(userId: UUID, startTime: LocalDateTime?) = KIO.ok(
+    LocalDateTime.now().let { now ->
+        CompetitionMatchRecord(
+            competitionSetupMatch = id,
+            startTime = startTime,
+            createdAt = now,
+            createdBy = userId,
+            updatedAt = now,
+            updatedBy = userId,
+        )
+    }
 )
 
 fun CompetitionSetupPlaceDto.toRecord(competitionSetupRoundId: UUID) = CompetitionSetupPlaceRecord(
