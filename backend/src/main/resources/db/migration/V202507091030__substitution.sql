@@ -2,6 +2,7 @@ set search_path to ready2race, pg_catalog, public;
 
 create table substitution
 (
+    id                       uuid primary key,
     competition_registration uuid references competition_registration,
     competition_setup_round  uuid references competition_setup_round on delete cascade,
     participant_out          uuid references participant,
