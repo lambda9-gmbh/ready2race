@@ -274,6 +274,7 @@ export type CompetitionRoundDto = {
     name: string
     matches: Array<CompetitionMatchDto>
     required: boolean
+    substitutions: Array<SubstitutionDto>
 }
 
 export type CompetitionSetupDto = {
@@ -900,6 +901,37 @@ export type RoleRequest = {
 }
 
 export type Scope = 'OWN' | 'GLOBAL'
+
+export type SubstitutionDto = {
+    id: string
+    reason?: string
+    setupRoundId: string
+    setupRoundName: string
+    competitionRegistrationId: string
+    competitionRegistrationName: string
+    clubId: string
+    clubName: string
+    participantOut: SubstitutionParticipantDto
+    participantIn: SubstitutionParticipantDto
+}
+
+export type SubstitutionParticipantDto = {
+    id: string
+    firstName: string
+    lastName: string
+    year: number
+    gender: Gender
+    external?: boolean
+    externalClubName?: string
+}
+
+export type SubstitutionRequest = {
+    competitionRegistrationId: string
+    competitionSetupRound: string
+    participantOut: string
+    participantIn: string
+    reason?: string
+}
 
 export type TaskDto = {
     id: string
@@ -1756,6 +1788,43 @@ export type GetCompetitionPlacesData = {
 export type GetCompetitionPlacesResponse = Array<CompetitionTeamPlaceDto>
 
 export type GetCompetitionPlacesError = BadRequestError | ApiError
+
+export type AddSubstitutionData = {
+    body: SubstitutionRequest
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type AddSubstitutionResponse = string
+
+export type AddSubstitutionError = BadRequestError | ApiError
+
+export type UpdateSubstitutionData = {
+    body: SubstitutionRequest
+    path: {
+        competitionId: string
+        eventId: string
+        substitutionId: string
+    }
+}
+
+export type UpdateSubstitutionResponse = void
+
+export type UpdateSubstitutionError = BadRequestError | ApiError
+
+export type DeleteSubstitutionData = {
+    path: {
+        competitionId: string
+        eventId: string
+        substitutionId: string
+    }
+}
+
+export type DeleteSubstitutionResponse = void
+
+export type DeleteSubstitutionError = BadRequestError | ApiError
 
 export type AddDocumentsData = {
     body: {

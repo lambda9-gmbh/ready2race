@@ -154,6 +154,15 @@ import type {
     GetCompetitionPlacesData,
     GetCompetitionPlacesError,
     GetCompetitionPlacesResponse,
+    AddSubstitutionData,
+    AddSubstitutionError,
+    AddSubstitutionResponse,
+    UpdateSubstitutionData,
+    UpdateSubstitutionError,
+    UpdateSubstitutionResponse,
+    DeleteSubstitutionData,
+    DeleteSubstitutionError,
+    DeleteSubstitutionResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -999,6 +1008,45 @@ export const getCompetitionPlaces = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/places',
+    })
+}
+
+export const addSubstitution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddSubstitutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddSubstitutionResponse,
+        AddSubstitutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution',
+    })
+}
+
+export const updateSubstitution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateSubstitutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateSubstitutionResponse,
+        UpdateSubstitutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
+    })
+}
+
+export const deleteSubstitution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteSubstitutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteSubstitutionResponse,
+        DeleteSubstitutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
     })
 }
 

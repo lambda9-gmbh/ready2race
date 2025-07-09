@@ -1288,6 +1288,75 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    post:
+      operationId: addSubstitution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: substitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateSubstitution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionRequest'
+      responses:
+        204:
+          description: Competition places successfully retrieved
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteSubstitution
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2041,7 +2110,7 @@ paths:
           description: Filter for clubs, which registered for this event
           required: false
           schema:
-           type: string
+            type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -3181,7 +3250,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-          
+
   /bankAccount:
     get:
       parameters:
@@ -5742,8 +5811,8 @@ components:
         name:
           type: string
       required:
-      - id
-      - name
+        - id
+        - name
 
     EventRegistrationCompetitionDto:
       type: object
@@ -6243,7 +6312,7 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
-          
+
     BankAccountDto:
       type: object
       required:
@@ -6262,9 +6331,9 @@ components:
           type: string
         bic:
           type: string
-        bank: 
+        bank:
           type: string
-          
+
     BankAccountRequest:
       type: object
       required:
@@ -6395,6 +6464,7 @@ components:
         - name
         - matches
         - required
+        - substitutions
       properties:
         name:
           type: string
@@ -6404,6 +6474,10 @@ components:
             $ref: '#/components/schemas/CompetitionMatchDto'
         required:
           type: boolean
+        substitutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubstitutionDto'
 
     CompetitionMatchDto:
       type: object
@@ -6579,4 +6653,90 @@ components:
         external:
           type: boolean
         externalClubName:
+          type: string
+
+    SubstitutionDto:
+      type: object
+      required:
+        - id
+        - setupRoundId
+        - setupRoundName
+        - competitionRegistrationId
+        - competitionRegistrationName
+        - clubId
+        - clubName
+        - participantOut
+        - participantIn
+      properties:
+        id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        setupRoundId:
+          type: string
+          format: uuid
+        setupRoundName:
+          type: string
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        participantOut:
+          $ref: '#/components/schemas/SubstitutionParticipantDto'
+        participantIn:
+          $ref: '#/components/schemas/SubstitutionParticipantDto'
+
+    SubstitutionParticipantDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - year
+        - gender
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    SubstitutionRequest:
+      type: object
+      required:
+        - competitionRegistrationId
+        - competitionSetupRound
+        - participantOut
+        - participantIn
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionSetupRound:
+          type: string
+          format: uuid
+        participantOut:
+          type: string
+          format: uuid
+        participantIn:
+          type: string
+          format: uuid
+        reason:
           type: string

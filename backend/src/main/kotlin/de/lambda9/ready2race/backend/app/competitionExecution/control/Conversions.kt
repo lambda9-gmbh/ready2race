@@ -1,7 +1,10 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
+import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
 
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
@@ -29,8 +32,19 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                     startTimeOffset = match.second.startTimeOffset,
                 )
             },
-        required = required
+        required = required,
+        substitutions = substitutions
     )
+)
+
+private fun ParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
+    id = id,
+    firstName = firstname,
+    lastName = lastname,
+    year = year,
+    gender = gender,
+    external = external,
+    externalClubName = externalClubName,
 )
 
 fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() = KIO.ok(
@@ -75,9 +89,24 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                     )
                 }
             )
+        },
+        substitutions = substitutions!!.filterNotNull().map { sub ->
+            SubstitutionDto(
+                id = sub.id!!,
+                reason = sub.reason,
+                setupRoundId = sub.competitionSetupRoundId!!,
+                setupRoundName = sub.competitionSetupRoundName!!,
+                competitionRegistrationId = sub.competitionRegistrationId!!,
+                competitionRegistrationName = sub.competitionRegistrationName!!,
+                clubId = sub.clubId!!,
+                clubName = sub.clubName!!,
+                participantOut = sub.participantOut!!.toSubstituteParticipantDto(),
+                participantIn = sub.participantIn!!.toSubstituteParticipantDto(),
+            )
         }
     )
 )
+
 
 fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) = KIO.ok(
     CompetitionTeamPlaceDto(
