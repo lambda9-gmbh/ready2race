@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.invoice.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService.fullName
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.bankAccount.control.BankAccountRepo
 import de.lambda9.ready2race.backend.app.bankAccount.control.PayeeBankAccountRepo
 import de.lambda9.ready2race.backend.app.contactInformation.control.ContactInformationRepo
@@ -18,18 +20,25 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.invoice.control.EventRegistrationForInvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.EventRegistrationInvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceDocumentDataRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoicePositionRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.ProduceInvoiceForRegistrationRepo
+import de.lambda9.ready2race.backend.app.invoice.control.toDto
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceData
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceDto
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceError
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
 import de.lambda9.ready2race.backend.app.sequence.control.SequenceRepo
 import de.lambda9.ready2race.backend.app.sequence.entity.SequenceConsumer
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationInvoiceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceDocumentDataRecord
@@ -41,13 +50,16 @@ import de.lambda9.ready2race.backend.hrDate
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.andThenNotNull
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNull
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.jooq.transact
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.awt.Color
@@ -62,6 +74,93 @@ object InvoiceService {
     private val logger = KotlinLogging.logger {}
 
     private val retryAfterError = 5.minutes
+
+    fun page(
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+    ): App<InvoiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
+
+        val total = !InvoiceRepo.count(params.search).orDie()
+        val page = !InvoiceRepo.page(params).orDie()
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total),
+            )
+        }
+    }
+
+    fun pageForEvent(
+        id: UUID,
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<InvoiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
+
+        val total = !InvoiceRepo.countForEvent(id, params.search, user, scope).orDie()
+        val page = !InvoiceRepo.pageForEvent(id, params, user, scope).orDie()
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total),
+            )
+        }
+    }
+
+    fun pageForRegistration(
+        id: UUID,
+        params: PaginationParameters<InvoiceForEventRegistrationSort>,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
+
+        !EventRegistrationRepo.getClub(id).orDie().onNullFail {
+            EventRegistrationError.NotFound
+        }
+            .failIf({
+                scope == Privilege.Scope.OWN && it != user.club
+            }) { AuthError.PrivilegeMissing }
+
+        val total = !InvoiceRepo.countForRegistration(id, params.search).orDie()
+        val page = !InvoiceRepo.pageForRegistration(id, params).orDie()
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total),
+            )
+        }
+
+    }
+
+    fun getDownload(
+        id: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+
+        // TODO: @Incomplete: not really incomplete but maybe a bug in the future, when there are different kinds of invoices
+
+        !InvoiceRepo.getClubForRegistration(id).orDie().onNullFail { InvoiceError.NotFound }
+            .failIf({
+                scope == Privilege.Scope.OWN && it != user.club
+            }) { AuthError.PrivilegeMissing }
+
+        InvoiceRepo.getDownload(id).orDie().onNullDie("existence checked before").map {
+            ApiResponse.File(
+                name = it.filename!!,
+                bytes = it.data!!
+            )
+        }
+    }
+
+    fun setPaid(
+        id: UUID,
+        paid: Boolean,
+    ): App<InvoiceError, ApiResponse.NoData> =
+        InvoiceRepo.update(id) {
+            paidAt = if (paid) paidAt ?: LocalDateTime.now() else null
+        }.orDie()
+            .onNullFail { InvoiceError.NotFound }
+            .map { ApiResponse.NoData }
 
     fun createRegistrationInvoicesForEventJobs(
         eventId: UUID,
@@ -79,11 +178,13 @@ object InvoiceService {
             event.invoicesProduced != null
         ) { InvoiceError.Registration.AlreadyProduced }
 
-        val bankAccount = !PayeeBankAccountRepo.getByEvent(eventId).orDie()
+        val payeeBankAccount = !PayeeBankAccountRepo.getByEvent(eventId).orDie()
             .onNull {
                 PayeeBankAccountRepo.getByEvent(null).orDie()
             }
             .onNullFail { InvoiceError.MissingAssignedPayeeBankAccount }
+
+        val bankAccount = !BankAccountRepo.get(payeeBankAccount.bankAccount).orDie().onNullDie("foreign key constraint")
 
         val contactUsage = !ContactInformationUsageRepo.getByEvent(eventId).orDie()
             .onNull {
@@ -91,14 +192,23 @@ object InvoiceService {
             }
             .onNullFail { InvoiceError.MissingAssignedContactInformation }
 
+        val contact = !ContactInformationRepo.get(contactUsage.contactInformation).orDie().onNullDie("foreign key constraint")
+
         val registrations = !EventRegistrationRepo.getIdsByEvent(eventId).orDie()
 
         !ProduceInvoiceForRegistrationRepo.create(
             registrations.map {
                 ProduceInvoiceForRegistrationRecord(
                     eventRegistration = it,
-                    contact = contactUsage.contactInformation,
-                    payee = bankAccount.bankAccount,
+                    contactName = contact.name,
+                    contactEmail = contact.email,
+                    contactAddressZip = contact.addressZip,
+                    contactAddressCity = contact.addressCity,
+                    contactAddressStreet = contact.addressStreet,
+                    payeeHolder = bankAccount.holder,
+                    payeeIban = bankAccount.iban,
+                    payeeBic = bankAccount.bic,
+                    payeeBank = bankAccount.bank,
                     createdAt = LocalDateTime.now(),
                     createdBy = userId,
                 )
@@ -127,31 +237,31 @@ object InvoiceService {
 
             KIO.fail(ProduceInvoiceError.MissingRecipient(registration.id!!))
         } else {
-            val payee = !BankAccountRepo.get(job.payee).orDie().onNullDie("foreign key constraint")
-            val contact = !ContactInformationRepo.get(job.contact).orDie().onNullDie("foreign key constraint")
             val event = !EventRepo.get(registration.event!!).orDie().onNullDie("foreign key constraint")
 
             KIO.comprehension {
                 val seq = !SequenceRepo.getAndIncrement(SequenceConsumer.INVOICE).orDie()
 
-                val filename = "foo.pdf"
+                val invoiceNumber = (event.invoicePrefix ?: "") + seq.toString()
+
+                val filename = "invoice_$invoiceNumber.pdf"
 
                 val invoice = InvoiceRecord(
                     id = UUID.randomUUID(),
-                    invoiceNumber = (event.invoicePrefix ?: "") + seq.toString(),
+                    invoiceNumber = invoiceNumber,
                     filename = filename,
                     billedToName = recipient.fullName(),
                     billedToOrganization = registration.clubName,
-                    paymentDueBy = event.paymentDueBy ?: LocalDate.now().plusDays(14), // TODO @Evaluate 14 days default?
-                    payeeHolder = payee.holder,
-                    payeeIban = payee.iban,
-                    payeeBic = payee.bic,
-                    payeeBank = payee.bank,
-                    contactName = contact.name,
-                    contactZip = contact.addressZip,
-                    contactCity = contact.addressCity,
-                    contactStreet = contact.addressStreet,
-                    contactEmail = contact.email,
+                    paymentDueBy = event.paymentDueBy ?: LocalDate.now().plusDays(14),
+                    payeeHolder = job.payeeHolder,
+                    payeeIban = job.payeeIban,
+                    payeeBic = job.payeeBic,
+                    payeeBank = job.payeeBank,
+                    contactName = job.contactName,
+                    contactZip = job.contactAddressZip,
+                    contactCity = job.contactAddressCity,
+                    contactStreet = job.contactAddressStreet,
+                    contactEmail = job.contactEmail,
                     createdAt = LocalDateTime.now(),
                     createdBy = job.createdBy
                 )
@@ -228,9 +338,24 @@ object InvoiceService {
         val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.INVOICE, event.id).orDie()
             .andThenNotNull { it.toPdfTemplate() }
 
-        val totalAmount = positions.sumOf { pos -> pos.unitPrice * pos.quantity }
+        val bytes = buildPdf(
+            data = InvoiceData.fromPersisted(
+                event,
+                invoice,
+                positions,
+            ),
+            template = pdfTemplate,
+        )
 
-        val doc = document(pdfTemplate) {
+        KIO.ok(bytes)
+    }
+
+    fun buildPdf(
+        data: InvoiceData,
+        template: PageTemplate?,
+    ): ByteArray {
+        val totalAmount = data.positions.sumOf { pos -> pos.unitPrice * pos.quantity }
+        val doc = document(template) {
             page {
                 table {
                     column(0.6f)
@@ -243,31 +368,31 @@ object InvoiceService {
                             ) {
                                 text(
                                     fontSize = 6f
-                                ) { "${invoice.contactName} – ${invoice.contactStreet} – ${invoice.contactZip} ${invoice.contactCity}" }
+                                ) { "${data.contact.name} – ${data.contact.street} – ${data.contact.zip} ${data.contact.city}" }
                             }
                         }
                         cell {
                             text(
                                 fontSize = 15f,
                                 fontStyle = FontStyle.BOLD,
-                            ) { invoice.contactName }
+                            ) { data.contact.name }
                         }
                     }
 
                     row {
                         cell {
-                            invoice.billedToOrganization?.let {
+                            data.billedToOrga?.let {
                                 text { it }
                             }
-                            text { invoice.billedToName }
+                            text { data.billedToName }
                         }
 
                         cell {
-                            text { invoice.contactStreet }
-                            text { "${invoice.contactZip} ${invoice.contactCity}" }
-                            text { invoice.contactEmail }
+                            text { data.contact.street }
+                            text { "${data.contact.zip} ${data.contact.city}" }
+                            text { data.contact.email }
                             text { "" }
-                            text { invoice.createdAt.hrDate() }
+                            text { data.createdAt.hrDate() }
                         }
                     }
                 }
@@ -278,7 +403,7 @@ object InvoiceService {
                     text(
                         fontSize = 13f,
                         fontStyle = FontStyle.BOLD,
-                    ) { event.name }
+                    ) { data.eventName }
                 }
 
                 block(
@@ -287,7 +412,7 @@ object InvoiceService {
                     text(
                         fontSize = 11f,
                         fontStyle = FontStyle.BOLD,
-                    ) { "Rechnungsnummer: ${invoice.invoiceNumber}" }
+                    ) { "Rechnungsnummer: ${data.invoiceNumber}" }
                 }
 
                 block(
@@ -295,10 +420,10 @@ object InvoiceService {
                 ) {
                     text { "Sehr geehrte Damen und Herren," }
                     text { "" }
-                    text { "vielen Dank für die Meldung zu ${event.name}." }
+                    text { "vielen Dank für die Meldung zu ${data.eventName}." }
                     text { "" }
                     text { "Für die Meldung wird ein Gesamtbetrag von $totalAmount € fällig." }
-                    text { "Wir bitten um Überweisung des entsprechenden Betrags auf das nachfolgende Konto bis zum ${invoice.paymentDueBy.hr()}. Eine Aufschlüsselung der einzelnen Position finden Sie weiter unten." }
+                    text { "Wir bitten um Überweisung des entsprechenden Betrags auf das nachfolgende Konto bis zum ${data.paymentDueBy.hr()}. Eine Aufschlüsselung der einzelnen Position finden Sie weiter unten." }
                     text { "" }
                     text { "" }
 
@@ -311,7 +436,7 @@ object InvoiceService {
                                 text { "Verwendungszweck:" }
                             }
                             cell {
-                                text { invoice.invoiceNumber }
+                                text { data.invoiceNumber }
                             }
                         }
 
@@ -326,7 +451,7 @@ object InvoiceService {
                                 text { "Empfänger:" }
                             }
                             cell {
-                                text { invoice.payeeHolder }
+                                text { data.payee.holder }
                             }
                         }
 
@@ -335,7 +460,7 @@ object InvoiceService {
                                 text { "IBAN:" }
                             }
                             cell {
-                                text { invoice.payeeIban }
+                                text { data.payee.iban }
                             }
                         }
 
@@ -344,7 +469,7 @@ object InvoiceService {
                                 text { "BIC:" }
                             }
                             cell {
-                                text { invoice.payeeBic }
+                                text { data.payee.bic }
                             }
                         }
 
@@ -353,7 +478,7 @@ object InvoiceService {
                                 text { "Bank:" }
                             }
                             cell {
-                                text { invoice.payeeBank }
+                                text { data.payee.bank }
                             }
                         }
                     }
@@ -395,7 +520,7 @@ object InvoiceService {
                             }
                         }
 
-                        positions.map { position ->
+                        data.positions.map { position ->
 
                             row {
                                 cell {
@@ -423,9 +548,10 @@ object InvoiceService {
 
         val bytes = ByteArrayOutputStream().use {
             doc.save(it)
+            doc.close()
             it.toByteArray()
         }
 
-        KIO.ok(bytes)
+        return bytes
     }
 }

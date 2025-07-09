@@ -13,12 +13,11 @@ import {
     TableHead,
     TableRow,
 } from '@mui/material'
-import {Trans, useTranslation} from 'react-i18next'
+import {useTranslation} from 'react-i18next'
 import {
     finalizeRegistrations,
     getRegistrationResult,
     getRegistrationsWithoutTeamNumber,
-    produceInvoicesForEventRegistrations,
 } from '@api/sdk.gen.ts'
 import {useRef, useState} from 'react'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -29,7 +28,6 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import Throbber from '@components/Throbber.tsx'
 import ReplayIcon from '@mui/icons-material/Replay'
 import DownloadIcon from '@mui/icons-material/Download'
-import ReceiptIcon from '@mui/icons-material/Receipt'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Info} from '@mui/icons-material'
 
@@ -98,18 +96,6 @@ const EventActions = ({registrationsFinalized}: Props) => {
     const [keepTeamNumbersSelected, setKeepTeamNumbersSelected] = useState(true)
     const handleKeepNumbersChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setKeepTeamNumbersSelected(event.target.checked)
-    }
-
-    const handleProduceInvoices = async () => {
-        const {data, error} = await produceInvoicesForEventRegistrations({
-            path: {eventId},
-        })
-
-        if (error !== undefined) {
-            feedback.error('[todo] could not produce invoices, cause: ...') // todo: if 409: Provide Bank Account and Contact Information
-        } else if (data !== undefined) {
-            feedback.success('[todo] invoice producing jobs created')
-        }
     }
 
     return (
@@ -255,12 +241,6 @@ const EventActions = ({registrationsFinalized}: Props) => {
                 ) : (
                     pendingRegistrationsWithoutTeamNumber && <Throbber />
                 )}
-                <Button
-                    variant={'contained'}
-                    onClick={handleProduceInvoices}
-                    startIcon={<ReceiptIcon />}>
-                    <Trans i18nKey={'event.action.produceInvoices'} />
-                </Button>
             </Stack>
         </>
     )

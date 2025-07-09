@@ -6,7 +6,7 @@ import {
     removeParticipantRequirementForEvent,
 } from '@api/sdk.gen.ts'
 import {ParticipantRequirementForEventDto} from '@api/types.gen.ts'
-import {BaseEntityTableProps, EntityTableAction} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityTable from '@components/EntityTable.tsx'
 import {eventIndexRoute} from '@routes'
@@ -98,7 +98,7 @@ const ParticipantRequirementForEventTable = (
 
     const customEntityActions = (
         entity: ParticipantRequirementForEventDto,
-    ): EntityTableAction[] => [
+    ): EntityAction[] => [
         entity.active ? (
             <GridActionsCellItem
                 icon={<Cancel />}

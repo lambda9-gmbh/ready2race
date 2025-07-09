@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists invoice_download;
+drop view if exists invoice_for_event_registration;
 drop view if exists competition_setup_round_with_matches;
 drop view if exists competition_match_with_teams;
 drop view if exists competition_match_team_with_registration;
@@ -660,3 +662,25 @@ from competition_setup_round sr
          left join competition_match_with_teams mwt on sm.id = mwt.competition_setup_match
 group by sr.id
 ;
+
+create view invoice_for_event_registration as
+select i.*,
+       substring(i.invoice_number for length(i.invoice_number) -
+                                   length(substring(i.invoice_number from '\d*$'))) as invoice_number_prefix,
+       cast(nullif(substring(i.invoice_number from '\d*$'), '') as int)             as invoice_number_suffix,
+       round(coalesce(sum(ip.unit_price * ip.quantity), 0), 2) as total_amount,
+       eri.event_registration,
+       er.club,
+       er.event
+from invoice i
+         join event_registration_invoice eri on i.id = eri.invoice
+         join event_registration er on eri.event_registration = er.id
+         left join invoice_position ip on i.id = ip.invoice
+group by i.id, eri.event_registration, er.id;
+
+create view invoice_download as
+select i.id,
+       i.filename,
+       idd.data
+from invoice i
+         join invoice_document_data idd on i.id = idd.invoice;

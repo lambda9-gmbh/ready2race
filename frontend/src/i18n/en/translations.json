@@ -1,5 +1,6 @@
 {
   "common": {
+    "no": "No",
     "cancel": "Cancel",
     "close": "Close",
     "confirmation": {
@@ -109,6 +110,12 @@
       "assignments": {
         "global": "Globally assigned templates",
         "event": "Event assigned templates"
+      },
+      "preview": {
+        "title": "Template preview",
+        "type": "Document type",
+        "show": "Preview sample",
+        "error": "Cannot load preview."
       }
     }
   },
@@ -153,7 +160,8 @@
       "users": "Users",
       "config": "Configurations",
       "clubs": "Clubs",
-      "myClub": "My Club"
+      "myClub": "My Club",
+      "invoices": "Invoices"
     }
   },
   "dashboard": {
@@ -585,7 +593,8 @@
       "registrations": "Registrations",
       "settings": "Settings",
       "actions": "Actions",
-      "organisation": "Organisation"
+      "organisation": "Organisation",
+      "invoices": "Invoices"
     }
   },
   "task": {
@@ -792,6 +801,41 @@
     }
   },
   "invoice": {
+    "invoice": "Invoice",
+    "invoices": "Invoices",
+    "download": "Download",
+    "downloadError": "An error occurred trying to download the invoice.",
+    "invoiceNumber": "Invoice number",
+    "amount": "Amount",
+    "paid": "Paid",
+    "tableHint": {
+      "1": "Invoices can be produced here once for all registrations of a event.",
+      "2": "You can provide payee bank account information and sender contact information ",
+      "3": "here",
+      "4": ".",
+      "5": "You have to assign payee and sender in ",
+      "6": "global settings",
+      "7": " before producing any invoices."
+    },
+    "action": {
+      "setPaid": "Confirm receipt of payment",
+      "setNotPaid": "Cancel payment receipt"
+    },
+    "produce": {
+      "info": {
+        "paymentDueBy": {
+          "title": "Default deadline for payment",
+          "content": "If no invoice payment due date is defined for this event, a default value of 14 days from the invoice creation date will be used."
+        }
+      },
+      "success": "Invoices will be produced and sent via email. This may take some minutes.",
+      "error": {
+        "NO_ASSIGNED_PAYEE_INFORMATION": "Please assign valid payee information.",
+        "NO_ASSIGNED_CONTACT_INFORMATION": "Please assign valid contact information.",
+        "INVOICES_ALREADY_PRODUCED": "Producing invoices was already started.",
+        "EVENT_REGISTRATION_ONGOING": "The registration period for this event is still ongoing."
+      }
+    },
     "bank": {
       "accountData": {
         "holder": "Holder",

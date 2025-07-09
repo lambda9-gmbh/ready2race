@@ -1,5 +1,5 @@
 import EntityTable from '@components/EntityTable.tsx'
-import {BaseEntityTableProps, EntityTableAction} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {EventDocumentDto} from '@api/types.gen.ts'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
@@ -78,7 +78,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
         }
     }
 
-    const customEntityActions = (entity: EventDocumentDto): EntityTableAction[] => [
+    const customEntityActions = (entity: EventDocumentDto): EntityAction[] => [
         <GridActionsCellItem
             icon={<Download />}
             label={t('event.document.download.download')}

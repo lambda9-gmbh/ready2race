@@ -4,7 +4,6 @@ import {
     Card,
     List,
     ListItem,
-    Link as MuiLink,
     Stack,
     Tab,
     Typography,
@@ -13,17 +12,9 @@ import {
 } from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
-import {Trans, useTranslation} from 'react-i18next'
-import CompetitionTable from '@components/event/competition/CompetitionTable.tsx'
-import CompetitionDialog from '@components/event/competition/CompetitionDialog.tsx'
+import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {
-    getEvent,
-    getRegistrationResult,
-    produceInvoicesForEventRegistrations,
-} from '@api/sdk.gen.ts'
-import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
-import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
+import {getEvent} from '@api/sdk.gen.ts'
 import {
     EventDocumentDto,
     EventRegistrationViewDto,
@@ -35,7 +26,7 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
-import {useMemo} from 'react'
+import {useMemo, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
@@ -59,6 +50,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
 import EventActions from "@components/event/EventActions.tsx";
+import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 
 const EVENT_TABS = [
     'general',
@@ -68,6 +60,7 @@ const EVENT_TABS = [
     'organization',
     'settings',
     'actions',
+    'invoices',
 ] as const
 export type EventTab = (typeof EVENT_TABS)[number]
 
@@ -86,13 +79,15 @@ const EventPage = () => {
 
     const {eventId} = eventRoute.useParams()
 
+    const [lastRequested, setLastRequested] = useState(Date.now())
+    const reload = () => setLastRequested(Date.now())
     const {data, pending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('event.event')}))
             }
         },
-        deps: [eventId],
+        deps: [eventId, lastRequested],
     })
 
     const documentAdministrationProps = useEntityAdministration<EventDocumentDto>(
@@ -134,7 +129,6 @@ const EventPage = () => {
             ),
         [data, user],
     )
-
 
     const regAvailableFrom = data?.registrationAvailableFrom
         ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
@@ -193,6 +187,9 @@ const EventPage = () => {
                             )}
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.actions')} {...a11yProps('actions')} />
+                            )}
+                            {user.getPrivilegeScope('READ', 'INVOICE') && (
+                                <Tab label={t('event.tabs.invoices')} {...a11yProps('invoices')} />
                             )}
                         </TabSelectionContainer>
                         <TabPanel index={'general'} activeTab={activeTab}>
@@ -260,7 +257,10 @@ const EventPage = () => {
                                                         primary={
                                                             t('event.invoice.paymentDueBy') +
                                                             ': ' +
-                                                            format(new Date(data.paymentDueBy), t('format.datetime'))
+                                                            format(
+                                                                new Date(data.paymentDueBy),
+                                                                t('format.datetime'),
+                                                            )
                                                         }
                                                     />
                                                 </ListItem>
@@ -336,6 +336,11 @@ const EventPage = () => {
                         <TabPanel index={'actions'} activeTab={activeTab}>
                             <EventActions registrationsFinalized={data.registrationsFinalized}/>
                         </TabPanel>
+                        <InvoicesTabPanel
+                            activeTab={activeTab}
+                            event={data}
+                            reloadEvent={reload}
+                        />
                     </Stack>
                 ) : (
                     pending && <Throbber />

@@ -11,7 +11,7 @@ import {
 } from '@mui/x-data-grid'
 import {ReactNode, useMemo, useRef, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
-import {BaseEntityTableProps, EntityTableAction, PartialRequired} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityAction, PageResponse, PartialRequired} from '@utils/types.ts'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
@@ -20,7 +20,7 @@ import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Alert, Box, Button, Stack, TextField, Typography, useTheme} from '@mui/material'
 import {Add, Delete, Edit, Input} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {ApiError, Pagination, Privilege, Resource} from '@api/types.gen.ts'
+import {ApiError, Privilege, Resource} from '@api/types.gen.ts'
 
 type EntityTableProps<
     Entity extends GridValidRowModel,
@@ -46,7 +46,7 @@ type ExtendedEntityTableProps<
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, GetError, false>
     customTableActions?: ReactNode
-    customEntityActions?: (entity: Entity) => EntityTableAction[]
+    customEntityActions?: (entity: Entity, checkPrivilege: (privilege: Privilege) => boolean) => EntityAction[]
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
@@ -76,11 +76,6 @@ type ExtendedEntityTableProps<
               publicRead?: boolean
           }
     )
-
-type PageResponse<E> = {
-    data: E[]
-    pagination: Pagination
-}
 
 type Crud = {
     create: boolean
@@ -186,10 +181,6 @@ const EntityTableInternal = <
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
 
-    const handleDeleteErrorGeneric = (_: DeleteError) => {
-        feedback.error(t('entity.delete.error', {entity: entityName}))
-    }
-
     const cols: GridColDef<Entity>[] = [
         ...(linkColumn
             ? [
@@ -212,21 +203,14 @@ const EntityTableInternal = <
             : []),
         ...columns.filter(
             c =>
-                !c.requiredPrivilege || (user.loggedIn && user.checkPrivilege(c.requiredPrivilege)),
+                !c.requiredPrivilege || (user.checkPrivilege(c.requiredPrivilege)),
         ),
         {
             field: 'actions',
             type: 'actions' as 'actions',
             getActions: (params: GridRowParams<Entity>) => [
-                ...customEntityActions(params.row)
-                    .map(action => {
-                        const {privilege} = action.props
-                        delete action.props.privilege
-                        return !privilege || (user.loggedIn && user.checkPrivilege(privilege))
-                            ? action
-                            : null
-                    })
-                    .filter(action => action !== null),
+                ...customEntityActions(params.row, user.checkPrivilege)
+                    .filter(action => !!action),
                 ...(crud.update && options.entityUpdate
                     ? [
                           <GridActionsCellItem
@@ -250,7 +234,7 @@ const EntityTableInternal = <
                                       if (error) {
                                           onDeleteError
                                               ? onDeleteError(error)
-                                              : handleDeleteErrorGeneric(error)
+                                              : feedback.error(t('entity.delete.error', {entity: entityName}))
                                       } else {
                                           onDelete?.()
                                           feedback.success(

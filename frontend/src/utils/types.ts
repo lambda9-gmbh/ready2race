@@ -1,9 +1,14 @@
-import {GridActionsCellItemProps} from '@mui/x-data-grid'
-import {Privilege} from '@api/types.gen.ts'
+import {Pagination} from '@api/types.gen.ts'
 import {ReactElement, ReactNode} from 'react'
 import {UseEntityAdministrationOptions} from './hooks.ts'
+import {GridActionsCellItemProps} from "@mui/x-data-grid";
 
 export type PartialRequired<T, K extends keyof T = keyof T> = Omit<T, K> & Required<Pick<T, K>>
+
+export type PageResponse<E> = {
+    data: E[]
+    pagination: Pagination
+}
 
 export type BaseEntityTableProps<E> = {
     entityName: string
@@ -16,11 +21,7 @@ export type BaseEntityTableProps<E> = {
     hints?: ReactNode[]
 }
 
-export type EntityTableAction = ReactElement<
-    GridActionsCellItemProps & {
-        privilege?: Privilege
-    }
->
+export type EntityAction = ReactElement<GridActionsCellItemProps> | false | undefined
 
 export type BaseEntityDialogProps<E> = {
     entityName: string
@@ -30,4 +31,4 @@ export type BaseEntityDialogProps<E> = {
     entity?: E
 }
 
-export type AutocompleteOption = {id: string; label: string} | null
+export type AutocompleteOption = { id: string; label: string } | null

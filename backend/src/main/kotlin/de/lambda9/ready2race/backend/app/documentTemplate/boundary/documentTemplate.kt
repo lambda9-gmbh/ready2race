@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.documentTemplate.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import de.lambda9.ready2race.backend.app.auth.boundary.auth
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.AssignDocumentTemplateRequest
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateRequest
@@ -9,6 +10,9 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.ready2race.backend.pdf.checkValidPdf
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -69,8 +73,38 @@ fun Route.documentTemplate() {
                         RequestError.File.Multiple
                     }
                 }
+                !KIO.failOn(!checkValidPdf(uploads.first().bytes)) { RequestError.File.UnsupportedType }
                 val req = !KIO.failOnNull(templateRequest) { RequestError.BodyMissing(DocumentTemplateRequest.example) }
                 DocumentTemplateService.addTemplate(uploads.first(), req)
+            }
+        }
+
+        route("/{documentTemplateId}") {
+
+            put {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("documentTemplateId", uuid)
+                    val payload = !receiveKIO(DocumentTemplateRequest.example)
+                    DocumentTemplateService.updateTemplate(id, payload)
+                }
+            }
+
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val id = !pathParam("documentTemplateId", uuid)
+                    DocumentTemplateService.deleteTemplate(id)
+                }
+            }
+
+            get("/preview") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val id = !pathParam("documentTemplateId", uuid)
+                    val type = !queryParam("documentType", enum<DocumentType>())
+                    DocumentTemplateService.getPreview(id, type)
+                }
             }
         }
     }

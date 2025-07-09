@@ -18,6 +18,7 @@ const SelectFileButton = ({multiple, accept, onSelected, children, ...props}: Pr
             {children}
             <input
                 type={'file'}
+                accept={accept}
                 multiple={multiple}
                 onChange={e => {
                     const files = e.target.files

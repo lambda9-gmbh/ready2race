@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistr
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistration
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
@@ -70,6 +71,15 @@ fun Route.event() {
             task()
             workShift()
 
+            get("/invoices") {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
+                    val id = !pathParam("eventId", uuid)
+                    val params = !pagination<InvoiceForEventRegistrationSort>()
+                    InvoiceService.pageForEvent(id, params, user, scope)
+                }
+            }
+
             get {
                 call.respondComprehension {
                     val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
@@ -98,7 +108,7 @@ fun Route.event() {
 
             post("/produceInvoices") {
                 call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val user = !authenticate(Privilege.CreateInvoiceGlobal)
                     val id = !pathParam("eventId", uuid)
                     InvoiceService.createRegistrationInvoicesForEventJobs(id, user.id!!)
                 }

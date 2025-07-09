@@ -86,8 +86,7 @@ const FileSelection = () => {
                 multiple
                 onSelected={files => {
                     Array.from(files).forEach(file => append({file}))
-                }}
-                accept={'application/pdf'}>
+                }}>
                 {t('event.document.add.add')}
             </SelectFileButton>
         </Box>

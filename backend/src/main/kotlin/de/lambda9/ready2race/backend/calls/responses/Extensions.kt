@@ -17,6 +17,7 @@ import io.ktor.server.response.*
 import jakarta.activation.MimetypesFileTypeMap
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.net.URLConnection
 
 private val logger = KotlinLogging.logger {}
 
@@ -100,7 +101,7 @@ suspend fun ApplicationCall.respondKIO(
                     //  probably missing mimes.types
 
                     val contentType = try {
-                        ContentType.parse(MimetypesFileTypeMap().getContentType(apiResponse.name))
+                        ContentType.parse(URLConnection.guessContentTypeFromName(apiResponse.name))
                     } catch(e: BadContentTypeFormatException) {
                         logger.warn(e) { "Could not parse content-type from Document/File ${apiResponse.name}" }
                         ContentType.Application.OctetStream
