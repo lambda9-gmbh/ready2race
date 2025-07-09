@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.ready2race.backend.pdf.checkValidPdf
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -72,6 +73,7 @@ fun Route.documentTemplate() {
                         RequestError.File.Multiple
                     }
                 }
+                !KIO.failOn(!checkValidPdf(uploads.first().bytes)) { RequestError.File.UnsupportedType }
                 val req = !KIO.failOnNull(templateRequest) { RequestError.BodyMissing(DocumentTemplateRequest.example) }
                 DocumentTemplateService.addTemplate(uploads.first(), req)
             }

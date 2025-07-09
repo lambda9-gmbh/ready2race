@@ -21,6 +21,7 @@ sealed interface RequestError : ToApiError {
     sealed interface File : RequestError {
         data object Missing : File
         data object Multiple : File
+        data object UnsupportedType : File
     }
 
     data class Other(val cause: Throwable) : RequestError
@@ -98,6 +99,12 @@ sealed interface RequestError : ToApiError {
             ApiError(
                 status = HttpStatusCode.BadRequest,
                 message = "Expected one file, got multiple"
+            )
+
+        File.UnsupportedType ->
+            ApiError(
+                status = HttpStatusCode.BadRequest,
+                message = "Unsupported file type"
             )
 
         is Other ->

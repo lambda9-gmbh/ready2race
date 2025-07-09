@@ -27,8 +27,6 @@ const DocumentTemplatePreviewDialog = (props: Props) => {
         setPreviewUrl(null)
     }
 
-
-    // TODO: implement preview instead of loading in new tab
     const handleChange = async (type: DocumentType) => {
         setSelectedType(type)
 
