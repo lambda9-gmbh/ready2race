@@ -178,11 +178,13 @@ object InvoiceService {
             event.invoicesProduced != null
         ) { InvoiceError.Registration.AlreadyProduced }
 
-        val bankAccount = !PayeeBankAccountRepo.getByEvent(eventId).orDie()
+        val payeeBankAccount = !PayeeBankAccountRepo.getByEvent(eventId).orDie()
             .onNull {
                 PayeeBankAccountRepo.getByEvent(null).orDie()
             }
             .onNullFail { InvoiceError.MissingAssignedPayeeBankAccount }
+
+        val bankAccount = !BankAccountRepo.get(payeeBankAccount.bankAccount).orDie().onNullDie("foreign key constraint")
 
         val contactUsage = !ContactInformationUsageRepo.getByEvent(eventId).orDie()
             .onNull {
@@ -190,14 +192,23 @@ object InvoiceService {
             }
             .onNullFail { InvoiceError.MissingAssignedContactInformation }
 
+        val contact = !ContactInformationRepo.get(contactUsage.contactInformation).orDie().onNullDie("foreign key constraint")
+
         val registrations = !EventRegistrationRepo.getIdsByEvent(eventId).orDie()
 
         !ProduceInvoiceForRegistrationRepo.create(
             registrations.map {
                 ProduceInvoiceForRegistrationRecord(
                     eventRegistration = it,
-                    contact = contactUsage.contactInformation,
-                    payee = bankAccount.bankAccount,
+                    contactName = contact.name,
+                    contactEmail = contact.email,
+                    contactAddressZip = contact.addressZip,
+                    contactAddressCity = contact.addressCity,
+                    contactAddressStreet = contact.addressStreet,
+                    payeeHolder = bankAccount.holder,
+                    payeeIban = bankAccount.iban,
+                    payeeBic = bankAccount.bic,
+                    payeeBank = bankAccount.bank,
                     createdAt = LocalDateTime.now(),
                     createdBy = userId,
                 )
@@ -226,8 +237,6 @@ object InvoiceService {
 
             KIO.fail(ProduceInvoiceError.MissingRecipient(registration.id!!))
         } else {
-            val payee = !BankAccountRepo.get(job.payee).orDie().onNullDie("foreign key constraint")
-            val contact = !ContactInformationRepo.get(job.contact).orDie().onNullDie("foreign key constraint")
             val event = !EventRepo.get(registration.event!!).orDie().onNullDie("foreign key constraint")
 
             KIO.comprehension {
@@ -244,15 +253,15 @@ object InvoiceService {
                     billedToName = recipient.fullName(),
                     billedToOrganization = registration.clubName,
                     paymentDueBy = event.paymentDueBy ?: LocalDate.now().plusDays(14),
-                    payeeHolder = payee.holder,
-                    payeeIban = payee.iban,
-                    payeeBic = payee.bic,
-                    payeeBank = payee.bank,
-                    contactName = contact.name,
-                    contactZip = contact.addressZip,
-                    contactCity = contact.addressCity,
-                    contactStreet = contact.addressStreet,
-                    contactEmail = contact.email,
+                    payeeHolder = job.payeeHolder,
+                    payeeIban = job.payeeIban,
+                    payeeBic = job.payeeBic,
+                    payeeBank = job.payeeBank,
+                    contactName = job.contactName,
+                    contactZip = job.contactAddressZip,
+                    contactCity = job.contactAddressCity,
+                    contactStreet = job.contactAddressStreet,
+                    contactEmail = job.contactEmail,
                     createdAt = LocalDateTime.now(),
                     createdBy = job.createdBy
                 )
