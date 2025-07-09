@@ -338,14 +338,7 @@ const EventPage = () => {
                         </TabPanel>
                         <InvoicesTabPanel
                             activeTab={activeTab}
-                            eventId={eventId}
-                            invoicesProducible={
-                                !data.invoicesProduced &&
-                                !eventRegistrationPossible(
-                                    data.registrationAvailableFrom,
-                                    data.registrationAvailableTo,
-                                )
-                            }
+                            event={data}
                             reloadEvent={reload}
                         />
                     </Stack>

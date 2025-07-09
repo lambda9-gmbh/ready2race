@@ -808,6 +808,15 @@
     "invoiceNumber": "Rechnungsnummer",
     "amount": "Rechnungsbetrag",
     "paid": "Bezahlt",
+    "tableHint": {
+      "1": "Rechnungen können hier einmalig für alle Meldungen eines Events erstellt werden.",
+      "2": "Konten für Zahlungsempfänger und Absenderdaten können ",
+      "3": "hier",
+      "4": " definiert werden.",
+      "5": "Vor dem Erstellen von Rechnungen müssen in den ",
+      "6": "globalen Einstellungen",
+      "7": " die zu verwendenden Daten zugewiesen werden."
+    },
     "action": {
       "setPaid": "Zahlungseingang feststellen",
       "setNotPaid": "Zahlungseingang zurücknehmen"

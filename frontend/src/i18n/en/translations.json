@@ -808,6 +808,15 @@
     "invoiceNumber": "Invoice number",
     "amount": "Amount",
     "paid": "Paid",
+    "tableHint": {
+      "1": "Invoices can be produced here once for all registrations of a event.",
+      "2": "You can provide payee bank account information and sender contact information ",
+      "3": "here",
+      "4": ".",
+      "5": "You have to assign payee and sender in ",
+      "6": "global settings",
+      "7": " before producing any invoices."
+    },
     "action": {
       "setPaid": "Confirm receipt of payment",
       "setNotPaid": "Cancel payment receipt"

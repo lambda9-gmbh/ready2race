@@ -1,8 +1,8 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {DocumentTemplateDto, DocumentTemplateRequest} from '@api/types.gen.ts'
-import {useForm} from 'react-hook-form-mui'
+import {useFieldArray, useForm} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
-import {useCallback} from 'react'
+import {useCallback, useState} from 'react'
 import EntityDialog from '@components/EntityDialog.tsx'
 import {addDocumentTemplate, updateDocumentTemplate} from '@api/sdk.gen.ts'
 import {InputAdornment, Stack, Typography} from '@mui/material'
@@ -57,25 +57,35 @@ const editAction = (formData: Form, entity: DocumentTemplateDto) =>
     })
 
 const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto>) => {
-    const formContext = useForm<Form>({
-        resolver: values =>
-            values.files.length === 1 || props.entity
-                ? {values, errors: {}}
-                : {
-                      values: {},
-                      errors: {
-                          files: {type: 'required', message: t('document.template.file.missing')},
-                      },
-                  },
-    })
+    const formContext = useForm<Form>()
     const {t} = useTranslation()
+
+    const [fileError, setFileError] = useState<string | null>(null)
 
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapEntityToForm(props.entity) : defaultValues)
+        setFileError(null)
     }, [props.entity])
 
-    const chosenFile = formContext.watch('files')?.[0]?.file?.name
-    const noFileError = formContext.formState.errors.files?.message
+
+    const {fields, append, update} = useFieldArray({
+        control: formContext.control,
+        name: 'files',
+        keyName: 'fieldId',
+        rules: {
+            validate: values => {
+                if (values.length !== 1 && !props.entity) {
+                    setFileError(t('document.template.file.missing'))
+                    return 'empty'
+                } else {
+                    setFileError(null)
+                    return undefined
+                }
+            }
+        }
+    })
+
+    const filename = fields[0]?.file?.name
 
     return (
         <EntityDialog
@@ -87,18 +97,22 @@ const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto
             <Stack spacing={2}>
                 {!props.entity && (
                     <>
-                        <Typography>{chosenFile}</Typography>
+                        <Typography>{filename}</Typography>
                         <SelectFileButton
                             variant={'text'}
                             onSelected={file => {
-                                formContext.setValue('files', [{file}])
+                                if (fields.length < 1) {
+                                    append({file})
+                                } else {
+                                    update(0, {file})
+                                }
                             }}
                             accept={'application/pdf'}>
-                            {chosenFile
+                            {filename
                                 ? t('document.template.file.change')
                                 : t('document.template.file.choose')}
                         </SelectFileButton>
-                        {noFileError && <Typography color={'error'}>{noFileError}</Typography>}
+                        {fileError && <Typography color={'error'}>{fileError}</Typography>}
                     </>
                 )}
                 <FormInputNumber
