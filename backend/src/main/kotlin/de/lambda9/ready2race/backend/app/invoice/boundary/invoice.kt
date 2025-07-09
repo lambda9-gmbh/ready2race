@@ -2,9 +2,11 @@ package de.lambda9.ready2race.backend.app.invoice.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceUpdateRequestDto
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
+import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.Route
@@ -37,7 +39,8 @@ fun Route.invoice() {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateInvoiceGlobal)
                     val id = !pathParam("invoiceId", uuid)
-                    InvoiceService.setPaid(id)
+                    val payload = !receiveKIO(InvoiceUpdateRequestDto.example)
+                    InvoiceService.setPaid(id, payload.paid)
                 }
             }
         }

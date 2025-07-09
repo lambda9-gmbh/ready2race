@@ -17,7 +17,6 @@ const AdministrationPage = () => {
         <InvoiceTable
             {...invoiceAdministrationProps.table}
             title={t('invoice.invoices')}
-            resource={'INVOICE'}
             dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
                 getInvoices({signal, query: {...params}})
             }

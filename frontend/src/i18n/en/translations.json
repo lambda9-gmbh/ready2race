@@ -809,7 +809,8 @@
     "amount": "Amount",
     "paid": "Paid",
     "action": {
-      "paid": "Confirm receipt of payment"
+      "setPaid": "Confirm receipt of payment",
+      "setNotPaid": "Cancel payment receipt"
     },
     "produce": {
       "info": {

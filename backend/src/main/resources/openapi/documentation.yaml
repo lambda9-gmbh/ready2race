@@ -4053,6 +4053,12 @@ paths:
           $ref: '#/components/responses/500'
     put:
       operationId: setInvoicePaid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceUpdateRequestDto'
       responses:
         204:
           description: Payment status set to paid
@@ -6877,3 +6883,11 @@ components:
         paidAt:
           type: string
           format: date-time
+
+    InvoiceUpdateRequestDto:
+      type: object
+      required:
+        - paid
+      properties:
+        paid:
+          type: boolean

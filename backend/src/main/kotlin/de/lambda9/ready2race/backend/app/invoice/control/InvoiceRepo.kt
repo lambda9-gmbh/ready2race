@@ -31,7 +31,7 @@ object InvoiceRepo {
 
     fun getDownload(id: UUID) = INVOICE_DOWNLOAD.selectOne { ID.eq(id) }
 
-    fun getForRegistration(id: UUID) = INVOICE_FOR_EVENT_REGISTRATION.selectOne { ID.eq(id) }
+    fun getClubForRegistration(id: UUID) = INVOICE_FOR_EVENT_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
 
     fun count(
         search: String?,

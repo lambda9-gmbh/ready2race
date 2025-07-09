@@ -1,11 +1,11 @@
 import EntityTable, {ExtendedGridColDef} from '@components/EntityTable.tsx'
 import {GridActionsCellItem, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {BaseEntityTableProps, EntityAction, PageResponse} from '@utils/types.ts'
-import {type GetRegistrationInvoicesError, InvoiceDto, Privilege, Resource} from '@api/types.gen.ts'
+import {type GetRegistrationInvoicesError, InvoiceDto, Privilege} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {RequestResult} from '@hey-api/client-fetch'
-import {Check, Close, Download, Payment} from '@mui/icons-material'
+import {Check, Close, CreditCardOff, Download, Payment} from '@mui/icons-material'
 import {downloadInvoice, setInvoicePaid} from '@api/sdk.gen.ts'
 import {ReactNode, useRef} from 'react'
 import {Link, Tooltip} from '@mui/material'
@@ -26,16 +26,7 @@ type Props = BaseEntityTableProps<InvoiceDto> & {
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<InvoiceDto>, GetRegistrationInvoicesError, false>
     customTableActions?: ReactNode
-} & (
-        | {
-              resource: Resource
-              parentResource?: never
-          }
-        | {
-              resource?: never
-              parentResource: Resource
-          }
-    )
+}
 
 const InvoiceTable = (props: Props) => {
     const {t} = useTranslation()
@@ -99,8 +90,8 @@ const InvoiceTable = (props: Props) => {
         }
     }
 
-    const handlePaid = async (invoiceId: string) => {
-        const {error} = await setInvoicePaid({path: {invoiceId}})
+    const handlePaid = async (invoiceId: string, paid: boolean) => {
+        const {error} = await setInvoicePaid({path: {invoiceId}, body: {paid}})
 
         if (error) {
             feedback.error(t('common.error.unexpected'))
@@ -115,13 +106,24 @@ const InvoiceTable = (props: Props) => {
             onClick={() => handleDownload(entity.id)}
             showInMenu
         />,
-        checkPrivilege(updateInvoiceGlobal) && !entity.paidAt &&
-        <GridActionsCellItem
-            icon={<Payment />}
-            label={t('invoice.action.paid')}
-            onClick={() => handlePaid(entity.id)}
-            showInMenu
-        />
+        checkPrivilege(updateInvoiceGlobal) && (
+            !entity.paidAt ? (
+                <GridActionsCellItem
+                    icon={<Payment />}
+                    label={t('invoice.action.setPaid')}
+                    onClick={() => handlePaid(entity.id, true)}
+                    showInMenu
+                />
+            ) : (
+                <GridActionsCellItem
+                    icon={<CreditCardOff />}
+                    label={t('invoice.action.setNotPaid')}
+                    onClick={() => handlePaid(entity.id, false)}
+                    showInMenu
+                />
+            )
+        )
+
     ]
 
     return (
@@ -129,6 +131,7 @@ const InvoiceTable = (props: Props) => {
             <Link ref={downloadRef} display={'none'}></Link>
             <EntityTable
                 {...props}
+                resource={'INVOICE'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}
                 initialSort={initialSort}

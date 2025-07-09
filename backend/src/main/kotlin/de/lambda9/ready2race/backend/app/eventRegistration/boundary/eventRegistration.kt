@@ -47,7 +47,7 @@ fun Route.eventRegistration() {
 
             get("/invoices") {
                 call.respondComprehension {
-                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
                     val id = !pathParam("eventRegistrationId", uuid)
                     val params = !pagination<InvoiceForEventRegistrationSort>()
                     InvoiceService.pageForRegistration(id, params, user, scope)

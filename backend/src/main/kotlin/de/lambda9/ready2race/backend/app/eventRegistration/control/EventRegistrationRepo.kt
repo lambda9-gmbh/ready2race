@@ -20,6 +20,8 @@ object EventRegistrationRepo {
 
     fun getView(id: UUID) = EVENT_REGISTRATIONS_VIEW.selectOne { ID.eq(id) }
 
+    fun getClub(id: UUID) = EVENT_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
+
     fun create(record: EventRegistrationRecord) = EVENT_REGISTRATION.insertReturning(record) { ID }
 
     fun delete(id: UUID) = EVENT_REGISTRATION.delete { ID.eq(id) }

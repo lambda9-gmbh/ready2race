@@ -809,7 +809,8 @@
     "amount": "Rechnungsbetrag",
     "paid": "Bezahlt",
     "action": {
-      "paid": "Zahlungseingang bestätigen"
+      "setPaid": "Zahlungseingang feststellen",
+      "setNotPaid": "Zahlungseingang zurücknehmen"
     },
     "produce": {
       "info": {

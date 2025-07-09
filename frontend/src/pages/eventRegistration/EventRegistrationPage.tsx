@@ -32,7 +32,6 @@ const EventRegistrationPage = () => {
                 <InvoiceTable
                     {...invoiceAdministrationProps.table}
                     title={t('invoice.invoices')}
-                    parentResource={'REGISTRATION'}
                     dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
                         getRegistrationInvoices({
                             signal,

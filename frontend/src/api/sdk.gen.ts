@@ -451,6 +451,7 @@ import type {
     GetInvoicesResponse,
     DownloadInvoiceError,
     DownloadInvoiceResponse,
+    SetInvoicePaidData,
     SetInvoicePaidError,
     SetInvoicePaidResponse,
 } from './types.gen'
@@ -2267,7 +2268,7 @@ export const downloadInvoice = <ThrowOnError extends boolean = false>(
 }
 
 export const setInvoicePaid = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options: OptionsLegacyParser<SetInvoicePaidData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).put<
         SetInvoicePaidResponse,

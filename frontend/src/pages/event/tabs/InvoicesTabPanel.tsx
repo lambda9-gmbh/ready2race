@@ -65,7 +65,6 @@ const InvoicesTabPanel = ({activeTab, eventId, invoicesProducible, reloadEvent}:
             <InvoiceTable
                 {...invoiceAdministrationProps.table}
                 title={t('invoice.invoices')}
-                resource={'INVOICE'}
                 dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
                     getEventInvoices({
                         signal,

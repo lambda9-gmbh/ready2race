@@ -693,6 +693,10 @@ export type InvoiceDto = {
     paidAt?: string
 }
 
+export type InvoiceUpdateRequestDto = {
+    paid: boolean
+}
+
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
@@ -3149,6 +3153,10 @@ export type GetInvoicesError = BadRequestError | ApiError | UnprocessableEntityE
 export type DownloadInvoiceResponse = Blob | File
 
 export type DownloadInvoiceError = BadRequestError | ApiError
+
+export type SetInvoicePaidData = {
+    body: InvoiceUpdateRequestDto
+}
 
 export type SetInvoicePaidResponse = void
 

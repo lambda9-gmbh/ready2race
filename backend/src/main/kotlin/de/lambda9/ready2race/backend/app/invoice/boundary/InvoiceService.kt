@@ -112,13 +112,13 @@ object InvoiceService {
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope,
     ): App<ServiceError, ApiResponse.Page<InvoiceDto, InvoiceForEventRegistrationSort>> = KIO.comprehension {
-        val registrationRecord = !EventRegistrationRepo.getView(id).orDie().onNullFail {
+
+        !EventRegistrationRepo.getClub(id).orDie().onNullFail {
             EventRegistrationError.NotFound
         }
-
-        !KIO.failOn(
-            scope == Privilege.Scope.OWN && registrationRecord.clubId != user.club
-        ) { AuthError.PrivilegeMissing }
+            .failIf({
+                scope == Privilege.Scope.OWN && it != user.club
+            }) { AuthError.PrivilegeMissing }
 
         val total = !InvoiceRepo.countForRegistration(id, params.search).orDie()
         val page = !InvoiceRepo.pageForRegistration(id, params).orDie()
@@ -139,9 +139,9 @@ object InvoiceService {
 
         // TODO: @Incomplete: not really incomplete but maybe a bug in the future, when there are different kinds of invoices
 
-        !InvoiceRepo.getForRegistration(id).orDie().onNullFail { InvoiceError.NotFound }
+        !InvoiceRepo.getClubForRegistration(id).orDie().onNullFail { InvoiceError.NotFound }
             .failIf({
-                scope == Privilege.Scope.OWN && it.club != user.club
+                scope == Privilege.Scope.OWN && it != user.club
             }) { AuthError.PrivilegeMissing }
 
         InvoiceRepo.getDownload(id).orDie().onNullDie("existence checked before").map {
@@ -153,10 +153,11 @@ object InvoiceService {
     }
 
     fun setPaid(
-        id: UUID
+        id: UUID,
+        paid: Boolean,
     ): App<InvoiceError, ApiResponse.NoData> =
         InvoiceRepo.update(id) {
-            paidAt = LocalDateTime.now()
+            paidAt = if (paid) paidAt ?: LocalDateTime.now() else null
         }.orDie()
             .onNullFail { InvoiceError.NotFound }
             .map { ApiResponse.NoData }
