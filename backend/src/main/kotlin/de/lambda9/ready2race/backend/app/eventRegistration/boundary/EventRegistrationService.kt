@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.eventRegistration.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
-import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
