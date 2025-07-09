@@ -23,7 +23,7 @@ description:
       - Wettkampfmanagement
       - Veranstaltungsanmeldungen
 legal:
-  license: MIT
+  license: GPLv3
   mainCopyrightOwner: lambda9 GmbH
 maintenance:
   type: contract
