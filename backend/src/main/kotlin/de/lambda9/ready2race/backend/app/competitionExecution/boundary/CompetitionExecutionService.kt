@@ -23,6 +23,7 @@ import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.FontStyle
@@ -31,10 +32,14 @@ import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.*
+import org.jooq.impl.DSL
+import org.jooq.tools.csv.CSVParser
+import org.jooq.tools.csv.CSVReader
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
 
@@ -564,6 +569,7 @@ object CompetitionExecutionService {
         )
     }
 
+    // TODO: Add missing start time for match, also per team, if configured with offsets
     fun buildPdf(
         data: CompetitionMatchData,
         template: PageTemplate?,
@@ -712,6 +718,31 @@ object CompetitionExecutionService {
         data: CompetitionMatchData,
     ): ByteArray {
 
-        TODO()
+        val bytes = ByteArrayOutputStream().use { out ->
+            CSV.write(
+                out,
+                data.teams
+            ) {
+                if (data.teams.first().participants.size == 1) {
+                    column("First name") { participants.first().firstname }
+                    column("Last name") { participants.first().lastname }
+                    column("Gender") { participants.first().gender.name }
+                } else {
+                    column("Name") { participants.joinToString(",") { p -> p.lastname }}
+                    column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
+                }
+                column("Team name") { clubName }
+                column("Team name 2") { teamName ?: "" }
+                column("Category") { data.competition.category ?: "" }
+                column("Bib") { startNumber.toString() }
+                if (data.startTimeOffset != null) {
+                    column("Start time") { idx -> (idx * data.startTimeOffset).milliseconds.toIsoString() }
+                }
+            }
+
+            out.toByteArray()
+        }
+
+        return bytes
     }
 }

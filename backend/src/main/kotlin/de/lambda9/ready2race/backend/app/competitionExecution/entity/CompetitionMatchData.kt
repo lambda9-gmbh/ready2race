@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 
 data class CompetitionMatchData(
     val startTime: LocalDateTime,
+    val startTimeOffset: Long?,
     val competition: CompetitionData,
     val teams: List<CompetitionMatchTeam>,
 ) {
@@ -13,6 +14,7 @@ data class CompetitionMatchData(
         val identifier: String,
         val name: String,
         val shortName: String?,
+        val category: String?,
     )
 
     data class CompetitionMatchTeam(

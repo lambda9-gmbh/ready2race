@@ -294,10 +294,12 @@ object DocumentTemplateService {
             DocumentType.START_LIST -> CompetitionExecutionService.buildPdf(
                 CompetitionMatchData(
                     startTime = LocalDateTime.now().plusHours(1),
+                    startTimeOffset = null,
                     competition = CompetitionMatchData.CompetitionData(
                         identifier = "2",
                         name = "Beispielwettkampf",
                         shortName = "BspW 1",
+                        category = null,
                     ),
                     teams = listOf(
                         CompetitionMatchData.CompetitionMatchTeam(
