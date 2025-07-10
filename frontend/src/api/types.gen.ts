@@ -707,7 +707,6 @@ export type ParticipantDto = {
     usedInRegistration: boolean
     createdAt: string
     updatedAt: string
-    qrCodeId: string
 }
 
 export type ParticipantForEventDto = {
@@ -721,6 +720,7 @@ export type ParticipantForEventDto = {
     external?: boolean | null
     externalClubName?: string | null
     participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
+    qrCodeId?: string
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -810,6 +810,7 @@ export type QrCodeAppuserResponse = {
 export type QrCodeAppuserUpdate = {
     id: string
     qrCodeId: string
+    eventId: string
 }
 
 export type QrCodeDtoType = 'Participant' | 'User'
@@ -825,6 +826,7 @@ export type QrCodeParticipantResponse = {
 export type QrCodeParticipantUpdate = {
     id: string
     qrCodeId: string
+    eventId: string
 }
 
 export type RegisterRequest = {
@@ -2834,9 +2836,19 @@ export type CheckQrCodeData = {
     }
 }
 
-export type CheckQrCodeResponse = Array<QrCodeParticipantResponse> | QrCodeAppuserResponse
+export type CheckQrCodeResponse = QrCodeParticipantResponse | QrCodeAppuserResponse
 
 export type CheckQrCodeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteQrCodeData = {
+    path: {
+        qrCodeId: string
+    }
+}
+
+export type DeleteQrCodeResponse = void
+
+export type DeleteQrCodeError = BadRequestError | ApiError
 
 export type UpdateQrCodeAppuserData = {
     body: QrCodeAppuserUpdate

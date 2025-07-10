@@ -47,6 +47,7 @@ const QrAssignPage = () => {
         await updateQrCodeParticipant({
             body: {
                 qrCodeId: qr.qrCodeId,
+                eventId: eventId,
                 id: id
             }
         })
@@ -57,6 +58,7 @@ const QrAssignPage = () => {
         await updateQrCodeAppuser({
             body: {
                 qrCodeId: qr.qrCodeId,
+                eventId: eventId,
                 id: id
             }
         })

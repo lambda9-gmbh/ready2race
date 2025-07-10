@@ -3649,9 +3649,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - type: array
-                    items:
-                      $ref: '#/components/schemas/QrCodeParticipantResponse'
+                  - $ref: '#/components/schemas/QrCodeParticipantResponse'
                   - $ref: '#/components/schemas/QrCodeAppuserResponse'
         400:
           $ref: '#/components/responses/400'
@@ -3663,6 +3661,21 @@ paths:
           $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteQrCode
+      responses:
+        204:
+          description: QR-Code successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
 
@@ -5441,7 +5454,6 @@ components:
         - usedInRegistration
         - createdAt
         - updatedAt
-        - qrCodeId
       properties:
         id:
           type: string
@@ -5472,8 +5484,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-        qrCodeId:
-          type: string
 
     ParticipantForEventDto:
       type: object
@@ -5512,6 +5522,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantRequirementReducedDto'
+        qrCodeId:
+          type: string
 
     # participant
 
@@ -6273,23 +6285,30 @@ components:
 
     QrCodeAppuserUpdate:
       type: object
-      required: [ id, qrCodeId ]
+      required: [ id, qrCodeId, eventId ]
       properties:
         id:
           type: string
           format: uuid
         qrCodeId:
           type: string
+        eventId:
+          type: string
+          format: uuid
+
 
     QrCodeParticipantUpdate:
       type: object
-      required: [ id, qrCodeId ]
+      required: [ id, qrCodeId, eventId ]
       properties:
         id:
           type: string
           format: uuid
         qrCodeId:
           type: string
+        eventId:
+          type: string
+          format: uuid
 
     QrCodeDtoType:
       type: string

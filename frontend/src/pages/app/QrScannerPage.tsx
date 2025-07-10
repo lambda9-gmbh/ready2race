@@ -20,7 +20,7 @@ const QrScannerPage = () => {
 
             if (response === null) {
                 navigate({to: "/app/$eventId/assign", params: {eventId: eventId}})
-            } else if (Array.isArray(response)) {
+            } else if (response.type == "Participant") {
                 navigate({to: "/app/$eventId/participant", params: {eventId: eventId}})
             } else if (response.type == "User") {
                 navigate({to: "/app/$eventId/user", params: {eventId: eventId}})

@@ -10,6 +10,7 @@ sealed class QrCodeUpdateDto() : Validatable {
     data class QrCodeAppuserUpdate(
         val id: UUID,
         val qrCodeId: String,
+        val eventId: UUID,
     ) : QrCodeUpdateDto() {
         override fun validate(): ValidationResult = ValidationResult.allOf(
             this::qrCodeId validate notBlank
@@ -19,7 +20,8 @@ sealed class QrCodeUpdateDto() : Validatable {
             val example
                 get() = QrCodeAppuserUpdate(
                     id = UUID.randomUUID(),
-                    qrCodeId = UUID.randomUUID().toString()
+                    qrCodeId = UUID.randomUUID().toString(),
+                    eventId = UUID.randomUUID(),
                 )
         }
     }
@@ -27,6 +29,7 @@ sealed class QrCodeUpdateDto() : Validatable {
     data class QrCodeParticipantUpdate(
         val id: UUID,
         val qrCodeId: String,
+        val eventId: UUID,
     ) : QrCodeUpdateDto() {
         override fun validate(): ValidationResult = ValidationResult.allOf(
             this::qrCodeId validate notBlank
@@ -36,7 +39,8 @@ sealed class QrCodeUpdateDto() : Validatable {
             val example
                 get() = QrCodeParticipantUpdate(
                     id = UUID.randomUUID(),
-                    qrCodeId = UUID.randomUUID().toString()
+                    qrCodeId = UUID.randomUUID().toString(),
+                    eventId = UUID.randomUUID(),
                 )
         }
     }

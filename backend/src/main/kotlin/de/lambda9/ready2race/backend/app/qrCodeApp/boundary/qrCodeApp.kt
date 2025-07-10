@@ -29,27 +29,37 @@ fun Route.qrCodeApp() {
             }
         }
 
-        get("/{qrCodeId}") {
-            call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.APP)
-                val qrCodeId = !pathParam("qrCodeId")
-                QrCodeAppService.pruefeQrCode(qrCodeId)
-            }
-        }
-
-        put("/appuser"){
+        put("/appuser") {
             call.respondComprehension {
                 val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP)
                 val payload = !receiveKIO(QrCodeUpdateDto.QrCodeAppuserUpdate.example)
-                QrCodeAppService.updateQrCode(payload)
+                QrCodeAppService.updateQrCode(payload, user)
             }
         }
 
-        put("/participant"){
+        put("/participant") {
             call.respondComprehension {
                 val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP)
                 val payload = !receiveKIO(QrCodeUpdateDto.QrCodeParticipantUpdate.example)
                 QrCodeAppService.updateQrCode(payload, user, scope)
+            }
+        }
+
+        route("/{qrCodeId}") {
+            get {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.APP)
+                    val qrCodeId = !pathParam("qrCodeId")
+                    QrCodeAppService.pruefeQrCode(qrCodeId)
+                }
+            }
+
+            delete {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP)
+                    val qrCodeId = !pathParam("qrCodeId")
+                    QrCodeAppService.deleteQrCode(qrCodeId)
+                }
             }
         }
     }

@@ -6,22 +6,21 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
 import de.lambda9.tailwind.core.KIO
 
-fun ParticipantViewRecord.toQrCodeDto(): App<Nothing, QrCodeDto.QrCodeParticipantResponseDto> = KIO.ok(
+fun ParticipantViewRecord.toQrCodeDto(qrCodeId: String): QrCodeDto.QrCodeParticipantResponseDto =
     QrCodeDto.QrCodeParticipantResponseDto(
         firstname = firstname!!,
         lastname = lastname!!,
         id = id!!,
-        qrCodeId = qrCodeId!!,
-        type = QrCodeDto.QrCodeDtoType.Participant
+        type = QrCodeDto.QrCodeDtoType.Participant,
+        qrCodeId = qrCodeId
     )
-)
 
-fun AppUserWithRolesRecord.toQrCodeAppuser(): App<Nothing, QrCodeDto.QrCodeAppuserResponseDto> = KIO.ok(
+
+fun AppUserWithRolesRecord.toQrCodeAppuser(qrCodeId: String): QrCodeDto.QrCodeAppuserResponseDto =
     QrCodeDto.QrCodeAppuserResponseDto(
         firstname = firstname!!,
         lastname = lastname!!,
         id = id!!,
-        qrCodeId = qrCodeId!!,
-        type = QrCodeDto.QrCodeDtoType.User
+        type = QrCodeDto.QrCodeDtoType.User,
+        qrCodeId = qrCodeId
     )
-)

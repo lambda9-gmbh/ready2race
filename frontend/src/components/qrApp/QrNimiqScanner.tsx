@@ -30,17 +30,29 @@ const QrNimiqScanner = (props: {
     useEffect(() => {
         QrScanner.listCameras(true).then((cams: { id: string, label: string }[]) => {
             setDevices(cams);
-            const backCam = cams.find((d) => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
-            if (backCam) {
-                setCameraId(backCam.id);
-            } else if (cams.length > 0) {
-                setCameraId(cams[0].id);
+            const storedCameraId = localStorage.getItem('qr_camera_id');
+            const validCamera = cams.find(cam => cam.id === storedCameraId);
+            if (validCamera) {
+                setCameraId(validCamera.id);
+            } else {
+                const backCam = cams.find((d) => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('rear'));
+                if (backCam) {
+                    setCameraId(backCam.id);
+                } else if (cams.length > 0) {
+                    setCameraId(cams[0].id);
+                }
             }
         });
         return () => {
             setCameraId(undefined)
         }
     }, []);
+
+    useEffect(() => {
+        if (cameraId) {
+            localStorage.setItem('qr_camera_id', cameraId);
+        }
+    }, [cameraId]);
 
     useEffect(() => {
         if (!videoRef.current || !cameraId) return;

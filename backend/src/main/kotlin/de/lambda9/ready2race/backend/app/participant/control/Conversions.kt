@@ -46,7 +46,6 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
         usedInRegistration = usedInRegistration!!,
         createdAt = createdAt!!,
         updatedAt = updatedAt!!,
-        qrCodeId = qrCodeId,
     )
 )
 

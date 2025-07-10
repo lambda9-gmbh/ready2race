@@ -405,6 +405,9 @@ import type {
     CheckQrCodeData,
     CheckQrCodeError,
     CheckQrCodeResponse,
+    DeleteQrCodeData,
+    DeleteQrCodeError,
+    DeleteQrCodeResponse,
     UpdateQrCodeAppuserData,
     UpdateQrCodeAppuserError,
     UpdateQrCodeAppuserResponse,
@@ -2011,6 +2014,19 @@ export const checkQrCode = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<CheckQrCodeData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<CheckQrCodeResponse, CheckQrCodeError, ThrowOnError>({
+        ...options,
+        url: '/app/{qrCodeId}',
+    })
+}
+
+export const deleteQrCode = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteQrCodeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteQrCodeResponse,
+        DeleteQrCodeError,
+        ThrowOnError
+    >({
         ...options,
         url: '/app/{qrCodeId}',
     })
