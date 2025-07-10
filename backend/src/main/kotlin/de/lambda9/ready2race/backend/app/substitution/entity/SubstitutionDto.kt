@@ -5,6 +5,7 @@ import java.util.UUID
 data class SubstitutionDto(
     val id: UUID,
     val reason: String?,
+    val orderForRound: Long,
     val setupRoundId: UUID,
     val setupRoundName: String,
     val competitionRegistrationId: UUID,

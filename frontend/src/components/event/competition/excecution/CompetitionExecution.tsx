@@ -293,12 +293,13 @@ const CompetitionExecution = () => {
     }
 
     const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
-    const openEditMatchDialog = (matchIndex: number) => {
-        if (currentRoundMatches) {
+    const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
+        const selectedMatch = progressDto?.rounds[roundIndex]?.matches[matchIndex]
+        if (selectedMatch) {
             setEditMatchDialogOpen(true)
             editMatchFormContext.reset({
-                selectedMatchDto: currentRoundMatches[matchIndex],
-                teams: mapTeamDtoToFormTeamData(currentRoundMatches[matchIndex].teams),
+                selectedMatchDto: selectedMatch,
+                teams: mapTeamDtoToFormTeamData(selectedMatch.teams),
             })
         }
     }
@@ -554,7 +555,7 @@ const CompetitionExecution = () => {
                                                     )}
                                                     <LoadingButton
                                                         onClick={() =>
-                                                            openEditMatchDialog(matchIndex)
+                                                            openEditMatchDialog(roundIndex, matchIndex)
                                                         }
                                                         variant={'outlined'}
                                                         pending={submitting}>

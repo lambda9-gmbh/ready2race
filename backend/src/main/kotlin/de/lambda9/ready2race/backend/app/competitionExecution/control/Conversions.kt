@@ -5,10 +5,12 @@ import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamParticipantRecord
 import de.lambda9.tailwind.core.KIO
 
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
     CompetitionRoundDto(
+        setupRoundId = setupRoundId,
         name = setupRoundName,
         matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
             .map { match ->
@@ -37,12 +39,26 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
     )
 )
 
-private fun ParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
-    id = id,
-    firstName = firstname,
-    lastName = lastname,
-    year = year,
-    gender = gender,
+fun RegisteredCompetitionTeamParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
+    id = participantId!!,
+    firstName = firstname!!,
+    lastName = lastname!!,
+    year = year!!,
+    gender = gender!!,
+    external = external,
+    externalClubName = externalClubName,
+)
+
+
+fun RegisteredCompetitionTeamParticipantRecord.toCompetitionMatchTeamParticipant() = CompetitionMatchTeamParticipant(
+    competitionRegistrationId = teamId!!,
+    namedParticipantId = roleId!!,
+    namedParticipantName = role!!,
+    participantId = participantId!!,
+    firstName = firstname!!,
+    lastName = lastname!!,
+    year = year!!,
+    gender = gender!!,
     external = external,
     externalClubName = externalClubName,
 )
@@ -82,7 +98,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                                 lastName = p.lastname!!,
                                 year = p.year!!,
                                 gender = p.gender!!,
-                                external = p.external!!,
+                                external = p.external,
                                 externalClubName = p.externalClubName,
                             )
                         }
@@ -94,6 +110,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
             SubstitutionDto(
                 id = sub.id!!,
                 reason = sub.reason,
+                orderForRound = sub.orderForRound!!,
                 setupRoundId = sub.competitionSetupRoundId!!,
                 setupRoundName = sub.competitionSetupRoundName!!,
                 competitionRegistrationId = sub.competitionRegistrationId!!,

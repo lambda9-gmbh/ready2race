@@ -7,7 +7,7 @@ import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun SubstitutionRequest.toRecord(userId: UUID): App<Nothing, SubstitutionRecord> = KIO.ok(
+fun SubstitutionRequest.toRecord(userId: UUID, orderForRound: Long): App<Nothing, SubstitutionRecord> = KIO.ok(
     LocalDateTime.now().let { now ->
         SubstitutionRecord(
             id = UUID.randomUUID(),
@@ -16,6 +16,7 @@ fun SubstitutionRequest.toRecord(userId: UUID): App<Nothing, SubstitutionRecord>
             participantOut = participantOut,
             participantIn = participantIn,
             reason = reason,
+            orderForRound = orderForRound,
             createdAt = now,
             createdBy = userId,
             updatedAt = now,

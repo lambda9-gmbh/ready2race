@@ -1,9 +1,9 @@
 import {Box, Button, Typography} from '@mui/material'
 import {CompetitionRoundDto} from "@api/types.gen.ts";
-import {addSubstitution} from "@api/sdk.gen.ts";
 import {competitionRoute, eventRoute} from "@routes";
 import {useTranslation} from "react-i18next";
 import {useFeedback} from "@utils/hooks.ts";
+import {addSubstitution} from "@api/sdk.gen.ts";
 
 type Props = {
     roundDto: CompetitionRoundDto
@@ -22,8 +22,9 @@ const Substitutions = ({roundDto, ...props}: Props) => {
                 competitionId: competitionId,
             },
             body: {
-                // todo: add roundId to dto
-                competitionSetupRound: roundDto.
+                competitionRegistrationId: roundDto.matches[0].teams[0].registrationId,
+                competitionSetupRound: roundDto.setupRoundId,
+                participantOut: roundDto.matches[0].teams[0].
             }
         })
 

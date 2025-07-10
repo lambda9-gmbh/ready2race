@@ -649,6 +649,7 @@ group by cm.competition_setup_match
 create view substitution_view as
 select s.id,
        s.reason,
+       s.order_for_round,
        csr.id   as competition_setup_round_id,
        csr.name as competition_setup_round_name,
        cr.id    as competition_registration_id,
@@ -661,8 +662,8 @@ from substitution s
          left join competition_setup_round csr on s.competition_setup_round = csr.id
          left join competition_registration cr on cr.id = s.competition_registration
          left join club c on c.id = cr.club
-         join participant p_out on s.participant_out = p_out.id
-         join participant p_in on s.participant_out = p_in.id
+         join registered_competition_team_participant p_out on s.participant_out = p_out.participant_id
+         join registered_competition_team_participant p_in on s.participant_out = p_in.participant_id
 ;
 
 create view competition_setup_round_with_matches as

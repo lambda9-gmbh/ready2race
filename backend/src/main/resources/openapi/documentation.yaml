@@ -1321,27 +1321,6 @@ paths:
         schema:
           type: string
           format: uuid
-    put:
-      operationId: updateSubstitution
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SubstitutionRequest'
-      responses:
-        204:
-          description: Competition places successfully retrieved
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
     delete:
       operationId: deleteSubstitution
       responses:
@@ -6461,11 +6440,15 @@ components:
     CompetitionRoundDto:
       type: object
       required:
+        - setupRoundId
         - name
         - matches
         - required
         - substitutions
       properties:
+        setupRoundId:
+          type: string
+          format: uuid
         name:
           type: string
         matches:
@@ -6659,6 +6642,7 @@ components:
       type: object
       required:
         - id
+        - orderForRound
         - setupRoundId
         - setupRoundName
         - competitionRegistrationId
@@ -6673,6 +6657,9 @@ components:
           format: uuid
         reason:
           type: string
+        orderForRound:
+          type: integer
+          format: int64
         setupRoundId:
           type: string
           format: uuid

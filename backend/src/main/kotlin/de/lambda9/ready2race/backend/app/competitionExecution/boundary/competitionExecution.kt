@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
+import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.optionalAuthenticate
@@ -86,7 +87,12 @@ fun Route.competitionExecution() {
             }
         }
 
-        substitution()
+        route("/{competitionSetupRoundId}") {
+
+            substitution()
+
+        }
+
     }
 
 }

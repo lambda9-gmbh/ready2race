@@ -157,9 +157,6 @@ import type {
     AddSubstitutionData,
     AddSubstitutionError,
     AddSubstitutionResponse,
-    UpdateSubstitutionData,
-    UpdateSubstitutionError,
-    UpdateSubstitutionResponse,
     DeleteSubstitutionData,
     DeleteSubstitutionError,
     DeleteSubstitutionResponse,
@@ -1021,19 +1018,6 @@ export const addSubstitution = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution',
-    })
-}
-
-export const updateSubstitution = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<UpdateSubstitutionData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).put<
-        UpdateSubstitutionResponse,
-        UpdateSubstitutionError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
     })
 }
 

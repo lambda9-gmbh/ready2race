@@ -271,6 +271,7 @@ export type CompetitionRegistrationUpsertDto = {
 }
 
 export type CompetitionRoundDto = {
+    setupRoundId: string
     name: string
     matches: Array<CompetitionMatchDto>
     required: boolean
@@ -905,6 +906,7 @@ export type Scope = 'OWN' | 'GLOBAL'
 export type SubstitutionDto = {
     id: string
     reason?: string
+    orderForRound: number
     setupRoundId: string
     setupRoundName: string
     competitionRegistrationId: string
@@ -1800,19 +1802,6 @@ export type AddSubstitutionData = {
 export type AddSubstitutionResponse = string
 
 export type AddSubstitutionError = BadRequestError | ApiError
-
-export type UpdateSubstitutionData = {
-    body: SubstitutionRequest
-    path: {
-        competitionId: string
-        eventId: string
-        substitutionId: string
-    }
-}
-
-export type UpdateSubstitutionResponse = void
-
-export type UpdateSubstitutionError = BadRequestError | ApiError
 
 export type DeleteSubstitutionData = {
     path: {
