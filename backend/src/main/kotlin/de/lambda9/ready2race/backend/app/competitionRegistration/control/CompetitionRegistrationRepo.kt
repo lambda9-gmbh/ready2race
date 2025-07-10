@@ -50,6 +50,7 @@ object CompetitionRegistrationRepo {
         COMPETITION_REGISTRATION.delete { COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId) }
 
     fun getClub(id: UUID) = COMPETITION_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
+    fun getEvent(id: UUID) = COMPETITION_REGISTRATION.selectOne({ EVENT_REGISTRATION }) { ID.eq(id) }
 
     fun getByCompetitionAndClub(competitionId: UUID, clubId: UUID) = COMPETITION_REGISTRATION.select { COMPETITION.eq(competitionId).and(CLUB.eq(clubId)) }
 

@@ -16,13 +16,23 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
+import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
+import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.kio.onNullDie
+import de.lambda9.ready2race.backend.pdf.FontStyle
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.PageTemplate
+import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.*
+import java.awt.Color
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -526,5 +536,182 @@ object CompetitionExecutionService {
             .traverse { it.first.toCompetitionTeamPlaceDto(it.second) }
 
         KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    fun downloadStartlist(
+        matchId: UUID,
+    ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
+
+        val match = !CompetitionMatchRepo.getWithTeams(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+            .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound } // TODO: @Cleanup: is this check needed?
+
+        val eventId = !CompetitionRegistrationRepo.getEvent(match.teams!!.first()!!.competitionRegistration!!).orDie()
+            .onNullDie("not null constraint")
+
+        val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, eventId).orDie()
+            .andThenNotNull { it.toPdfTemplate() }
+
+        val bytes = buildPdf(
+            TODO(),
+            pdfTemplate,
+        )
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "todo-naming-file.pdf",
+                bytes = bytes,
+            )
+        )
+    }
+
+    fun buildPdf(
+        data: CompetitionMatchData,
+        template: PageTemplate?,
+    ): ByteArray {
+        val doc = document(template) {
+            page {
+                block(
+                    padding = Padding(bottom = 30f),
+                ) {
+                    text(
+                        fontStyle = FontStyle.BOLD,
+                        fontSize = 14f,
+                    ) {
+                        "Wettkampf / "
+                    }
+                    text(
+                        fontSize = 12f,
+                        newLine = false,
+                    ) {
+                        "Competition"
+                    }
+
+                    table(
+                        padding = Padding(5f, 10f, 0f, 0f)
+                    ) {
+                        column(0.1f)
+                        column(0.25f)
+                        column(0.65f)
+
+                        row {
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { data.competition.identifier }
+                            }
+                            cell {
+                                data.competition.shortName?.let {
+                                    text(
+                                        fontSize = 12f,
+                                    ) { it }
+                                }
+                            }
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { data.competition.name }
+                            }
+                        }
+                    }
+                }
+
+                data.teams.forEach { team ->
+                    block(
+                        padding = Padding(0f, 0f, 0f, 25f)
+                    ) {
+
+                        block(
+                            padding = Padding(bottom = 5f),
+                        ) {
+                            text(
+                                fontStyle = FontStyle.BOLD,
+                                fontSize = 11f,
+                            ) {
+                                "Startnummer / "
+                            }
+                            text(
+                                fontSize = 9f,
+                                newLine = false,
+                            ) {
+                                "Start number"
+                            }
+
+                            text(
+                                newLine = false,
+                                fontStyle = FontStyle.BOLD,
+                                fontSize = 12f,
+                            ) { "  ${team.startNumber}" }
+                        }
+
+                        block(
+                            padding = Padding(left = 5f),
+                        ) {
+                            text(
+                                fontStyle = FontStyle.BOLD
+                            ) { team.clubName }
+                            team.teamName?.let {
+                                text(
+                                    newLine = false,
+                                ) { " $it" }
+                            }
+                        }
+
+                        table(
+                            padding = Padding(5f, 0f, 0f, 0f),
+                            withBorder = true,
+                        ) {
+                            column(0.15f)
+                            column(0.05f)
+                            column(0.2f)
+                            column(0.2f)
+                            column(0.1f)
+                            column(0.3f)
+
+                            team.participants
+                                .sortedBy { it.role }
+                                .forEachIndexed { idx, member ->
+                                    row(
+                                        color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                    ) {
+                                        cell {
+                                            text { member.role }
+                                        }
+                                        cell {
+                                            text { member.gender.name }
+                                        }
+                                        cell {
+                                            text { member.firstname }
+                                        }
+                                        cell {
+                                            text { member.lastname }
+                                        }
+                                        cell {
+                                            text { member.year.toString() }
+                                        }
+                                        cell {
+                                            text { member.externalClubName ?: team.clubName }
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        }
+
+        val bytes = ByteArrayOutputStream().use {
+            doc.save(it)
+            doc.close()
+            it.toByteArray()
+        }
+
+        return bytes
+    }
+
+    fun buildCsv(
+        data: CompetitionMatchData,
+    ): ByteArray {
+
+        TODO()
     }
 }

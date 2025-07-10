@@ -92,7 +92,8 @@
       "templates": "Document templates",
       "type": {
         "INVOICE": "Invoice",
-        "REGISTRATION_REPORT": "Event registration result"
+        "REGISTRATION_REPORT": "Event registration result",
+        "START_LIST": "Match start list"
       },
       "none": "No template",
       "name": "Filename",

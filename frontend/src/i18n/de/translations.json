@@ -92,7 +92,8 @@
       "templates": "Dokumentvorlagen",
       "type": {
         "INVOICE": "Rechnung",
-        "REGISTRATION_REPORT": "Meldeergebnis"
+        "REGISTRATION_REPORT": "Meldeergebnis",
+        "START_LIST": "Startliste"
       },
       "none": "Keine Vorlage",
       "name": "Name",

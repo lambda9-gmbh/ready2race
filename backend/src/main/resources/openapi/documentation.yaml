@@ -6241,6 +6241,7 @@ components:
       enum:
         - 'INVOICE'
         - 'REGISTRATION_REPORT'
+        - 'START_LIST'
 
     DocumentTemplateDto:
       type: object

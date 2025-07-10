@@ -409,7 +409,7 @@ export type DocumentTemplateRequest = {
     pagePaddingBottom?: number
 }
 
-export type DocumentType = 'INVOICE' | 'REGISTRATION_REPORT'
+export type DocumentType = 'INVOICE' | 'REGISTRATION_REPORT' | 'START_LIST'
 
 export type DocumentTypeDto = {
     type: DocumentType

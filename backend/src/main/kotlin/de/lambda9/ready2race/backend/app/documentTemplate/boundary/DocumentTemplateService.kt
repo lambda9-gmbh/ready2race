@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.documentTemplate.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchData
 import de.lambda9.ready2race.backend.app.documentTemplate.control.*
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.*
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
@@ -247,6 +249,7 @@ object DocumentTemplateService {
                 ),
                 template,
             )
+
             DocumentType.INVOICE -> InvoiceService.buildPdf(
                 InvoiceData(
                     eventName = "Beispielveranstaltung",
@@ -282,6 +285,80 @@ object DocumentTemplateService {
                             description = "S - Einzelrennen",
                             quantity = BigDecimal("1"),
                             unitPrice = BigDecimal("30"),
+                        ),
+                    )
+                ),
+                template,
+            )
+
+            DocumentType.START_LIST -> CompetitionExecutionService.buildPdf(
+                CompetitionMatchData(
+                    startTime = LocalDateTime.now().plusHours(1),
+                    competition = CompetitionMatchData.CompetitionData(
+                        identifier = "2",
+                        name = "Beispielwettkampf",
+                        shortName = "BspW 1",
+                    ),
+                    teams = listOf(
+                        CompetitionMatchData.CompetitionMatchTeam(
+                            startNumber = 1,
+                            clubName = "Sportclub Musterhausen",
+                            teamName = "#1",
+                            participants = listOf(
+                                CompetitionMatchData.CompetitionMatchParticipant(
+                                    role = "Teilnehmer",
+                                    firstname = "Max",
+                                    lastname = "Mustermann",
+                                    year = 1970,
+                                    gender = Gender.M,
+                                    externalClubName = null
+                                )
+                            )
+                        ),
+                        CompetitionMatchData.CompetitionMatchTeam(
+                            startNumber = 2,
+                            clubName = "Sportclub Musterhausen",
+                            teamName = "#2",
+                            participants = listOf(
+                                CompetitionMatchData.CompetitionMatchParticipant(
+                                    role = "Teilnehmer",
+                                    firstname = "Marcus",
+                                    lastname = "König",
+                                    year = 1980,
+                                    gender = Gender.M,
+                                    externalClubName = null
+                                )
+                            )
+                        ),
+                        CompetitionMatchData.CompetitionMatchTeam(
+                            startNumber = 3,
+                            clubName = "Neustadt 101",
+                            teamName = null,
+                            participants = listOf(
+                                CompetitionMatchData.CompetitionMatchParticipant(
+                                    role = "Teilnehmer",
+                                    firstname = "Hänno",
+                                    lastname = "Klausen",
+                                    year = 1992,
+                                    gender = Gender.M,
+                                    externalClubName = null
+                                )
+                            )
+                        ),
+                        CompetitionMatchData.CompetitionMatchTeam(
+                            startNumber = 4,
+                            clubName = "Sportfreunde e.V.",
+                            teamName = null,
+                            participants = listOf(
+                                CompetitionMatchData.CompetitionMatchParticipant(
+                                    role = "Teilnehmer",
+                                    firstname = "John",
+                                    lastname = "Doe",
+                                    year = 1990,
+                                    gender = Gender.M,
+                                    externalClubName = null
+                                )
+                            )
                         ),
                     )
                 ),
