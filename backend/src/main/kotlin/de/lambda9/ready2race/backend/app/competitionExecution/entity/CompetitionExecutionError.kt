@@ -16,7 +16,8 @@ enum class CompetitionExecutionError : ServiceError {
     NotAllPlacesSet,
     TeamsNotMatching,
     RoundNotFound,
-    MatchResultsLocked;
+    MatchResultsLocked,
+    StartTimeNotSet;
 
     override fun respond(): ApiError = when (this) {
         MatchNotFound -> ApiError(
@@ -77,6 +78,11 @@ enum class CompetitionExecutionError : ServiceError {
         MatchResultsLocked -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Match results locked. Only results of the latest round can be edited.",
+        )
+
+        StartTimeNotSet -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "StartTime not set",
         )
     }
 }

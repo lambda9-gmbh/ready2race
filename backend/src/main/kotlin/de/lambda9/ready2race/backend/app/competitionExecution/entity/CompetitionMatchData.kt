@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchWithTeamsRecord
 import java.time.LocalDateTime
 
 data class CompetitionMatchData(
@@ -32,4 +33,42 @@ data class CompetitionMatchData(
         val gender: Gender,
         val externalClubName: String?,
     )
+
+    companion object {
+
+        //TODO: @Incomplete: need substitution changes
+
+        /**
+         * This expects startTime to be set and not be null.
+         */
+        fun fromPersisted(
+            persisted: CompetitionMatchWithTeamsRecord
+        ): CompetitionMatchData = CompetitionMatchData(
+            startTime = persisted.startTime!!,
+            startTimeOffset = null, // TODO: @Incomplete: properties missing from view
+            competition = CompetitionData(
+                identifier = "ph",
+                name = "placehodler",
+                shortName = "[ph]",
+                category = null,
+            ),
+            teams = persisted.teams!!.sortedBy { it!!.startNumber }.map { team ->
+                CompetitionMatchTeam(
+                    startNumber = team!!.startNumber!!,
+                    clubName = team.clubName!!,
+                    teamName = team.registrationName,
+                    participants = team.participants!!.map { p ->
+                        CompetitionMatchParticipant(
+                            role = p!!.role!!,
+                            firstname = p.firstname!!,
+                            lastname = p.lastname!!,
+                            year = p.year!!,
+                            gender = p.gender!!,
+                            externalClubName = p.externalClubName,
+                        )
+                    }
+                )
+            }
+        )
+    }
 }

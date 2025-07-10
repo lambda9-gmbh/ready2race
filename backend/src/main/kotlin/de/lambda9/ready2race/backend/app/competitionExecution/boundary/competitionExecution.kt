@@ -1,13 +1,12 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.optionalAuthenticate
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
@@ -66,6 +65,14 @@ fun Route.competitionExecution() {
                             body
                         )
                     }
+                }
+            }
+            get("/startList") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val competitionMatchId = !pathParam("competitionMatchId", uuid)
+                    val type = !queryParam("fileType", enum<StartListFileType>())
+                    CompetitionExecutionService.downloadStartlist(competitionMatchId, type)
                 }
             }
         }

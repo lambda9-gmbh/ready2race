@@ -920,6 +920,8 @@ export type RoleRequest = {
 
 export type Scope = 'OWN' | 'GLOBAL'
 
+export type StartListFileType = 'PDF' | 'CSV'
+
 export type TaskDto = {
     id: string
     event: string
@@ -1795,6 +1797,21 @@ export type UpdateMatchResultsData = {
 export type UpdateMatchResultsResponse = void
 
 export type UpdateMatchResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadStartListData = {
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+    query: {
+        fileType: StartListFileType
+    }
+}
+
+export type DownloadStartListResponse = Blob | File
+
+export type DownloadStartListError = BadRequestError | ApiError
 
 export type GetCompetitionPlacesData = {
     path: {

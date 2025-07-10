@@ -545,25 +545,30 @@ object CompetitionExecutionService {
 
     fun downloadStartlist(
         matchId: UUID,
+        type: StartListFileType,
     ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
 
         val match = !CompetitionMatchRepo.getWithTeams(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
             .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound } // TODO: @Cleanup: is this check needed?
+            .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
         val eventId = !CompetitionRegistrationRepo.getEvent(match.teams!!.first()!!.competitionRegistration!!).orDie()
             .onNullDie("not null constraint")
 
-        val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, eventId).orDie()
-            .andThenNotNull { it.toPdfTemplate() }
+        val data = CompetitionMatchData.fromPersisted(match)
 
-        val bytes = buildPdf(
-            TODO(),
-            pdfTemplate,
-        )
+        val (bytes, extension) = when (type) {
+            StartListFileType.PDF -> {
+                val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, eventId).orDie()
+                    .andThenNotNull { it.toPdfTemplate() }
+                buildPdf(data, pdfTemplate) to "pdf"
+            }
+            StartListFileType.CSV -> buildCsv(data) to "csv"
+        }
 
         KIO.ok(
             ApiResponse.File(
-                name = "todo-naming-file.pdf",
+                name = "todo-naming-file.$extension",
                 bytes = bytes,
             )
         )
