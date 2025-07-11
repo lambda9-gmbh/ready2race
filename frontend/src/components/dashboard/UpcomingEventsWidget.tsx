@@ -1,5 +1,5 @@
 import React, {Fragment} from 'react'
-import {Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography} from '@mui/material'
+import {Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography, useTheme} from '@mui/material'
 import {ClockIcon} from '@mui/x-date-pickers'
 import {useTranslation} from 'react-i18next'
 import {DashboardWidget} from '@components/dashboard/DashboardWidget.tsx'
@@ -12,6 +12,7 @@ import {eventRegistrationPossible} from '@utils/helpers.ts'
 export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
     const feedback = useFeedback()
     const {t} = useTranslation()
+    const theme = useTheme()
 
     const {data: events} = useFetch(
         signal =>
@@ -48,7 +49,15 @@ export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
                                 <Fragment key={`event-${event.id}`}>
                                     {index !== 0 && <Divider variant={'middle'} />}
                                     <ListItem>
-                                        <Box sx={{display: 'flex'}}>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                width: 1,
+                                                [theme.breakpoints.down('md')]: {
+                                                    flexDirection: 'column',
+                                                },
+                                            }}>
                                             <ListItemText
                                                 sx={{flex: 1}}
                                                 disableTypography={true}
