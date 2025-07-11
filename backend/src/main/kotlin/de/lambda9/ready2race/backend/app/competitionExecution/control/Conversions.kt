@@ -1,11 +1,16 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
+import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamParticipantRecord
 import de.lambda9.tailwind.core.KIO
 
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
     CompetitionRoundDto(
+        setupRoundId = setupRoundId,
         name = setupRoundName,
         matches = matches.map { match -> match to setupMatches.first { setupMatch -> setupMatch.id == match.competitionSetupMatch } }
             .map { match ->
@@ -29,8 +34,19 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                     startTimeOffset = match.second.startTimeOffset,
                 )
             },
-        required = required
+        required = required,
+        substitutions = substitutions
     )
+)
+
+fun ParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
+    id = id,
+    firstName = firstname,
+    lastName = lastname,
+    year = year,
+    gender = gender,
+    external = external,
+    externalClubName = externalClubName,
 )
 
 fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() = KIO.ok(
@@ -68,16 +84,32 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                                 lastName = p.lastname!!,
                                 year = p.year!!,
                                 gender = p.gender!!,
-                                external = p.external!!,
+                                external = p.external,
                                 externalClubName = p.externalClubName,
                             )
                         }
                     )
                 }
             )
+        },
+        substitutions = substitutions!!.filterNotNull().map { sub ->
+            SubstitutionDto(
+                id = sub.id!!,
+                reason = sub.reason,
+                orderForRound = sub.orderForRound!!,
+                setupRoundId = sub.competitionSetupRoundId!!,
+                setupRoundName = sub.competitionSetupRoundName!!,
+                competitionRegistrationId = sub.competitionRegistrationId!!,
+                competitionRegistrationName = sub.competitionRegistrationName!!,
+                clubId = sub.clubId!!,
+                clubName = sub.clubName!!,
+                participantOut = sub.participantOut!!.toSubstituteParticipantDto(),
+                participantIn = sub.participantIn!!.toSubstituteParticipantDto(),
+            )
         }
     )
 )
+
 
 fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) = KIO.ok(
     CompetitionTeamPlaceDto(

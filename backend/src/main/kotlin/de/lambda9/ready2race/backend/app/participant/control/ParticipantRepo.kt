@@ -51,6 +51,10 @@ object ParticipantRepo {
     fun findByIdAndClub(id: UUID, clubId: UUID) =
         PARTICIPANT.findOneBy { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
 
+    fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
+
+    fun getByClubId(clubId: UUID): JIO<List<ParticipantRecord>> = PARTICIPANT.select { CLUB.eq(clubId) }
+
     fun count(
         search: String?,
         clubId: UUID?,

@@ -35,4 +35,6 @@ object CompetitionSetupRoundRepo {
                 .fetch()
         }
     }
+
+    fun getWithMatches(id: UUID) = COMPETITION_SETUP_ROUND_WITH_MATCHES.selectOne { SETUP_ROUND_ID.eq(id) }
 }

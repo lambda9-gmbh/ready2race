@@ -271,9 +271,11 @@ export type CompetitionRegistrationUpsertDto = {
 }
 
 export type CompetitionRoundDto = {
+    setupRoundId: string
     name: string
     matches: Array<CompetitionMatchDto>
     required: boolean
+    substitutions: Array<SubstitutionDto>
 }
 
 export type CompetitionSetupDto = {
@@ -817,6 +819,20 @@ export type ParticipantForEventDto = {
     participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
 }
 
+export type ParticipantForExecutionDto = {
+    id: string
+    namedParticipantId: string
+    namedParticipantName: string
+    firstName: string
+    lastName: string
+    clubId: string
+    clubName: string
+    competitionRegistrationId: string
+    competitionRegistrationName?: string
+    external?: boolean
+    externalClubName?: string
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -880,6 +896,19 @@ export type PasswordResetRequest = {
     password: string
 }
 
+export type PossibleSubstitutionParticipantDto = {
+    id: string
+    firstName: string
+    lastName: string
+    external?: boolean
+    externalClubName?: string
+}
+
+export type PossibleSubstitutionsForParticipantDto = {
+    currentlyParticipating: Array<PossibleSubstitutionParticipantDto>
+    notCurrentlyParticipating: Array<PossibleSubstitutionParticipantDto>
+}
+
 export type Privilege = {
     action: Action
     resource: Resource
@@ -919,6 +948,38 @@ export type RoleRequest = {
 }
 
 export type Scope = 'OWN' | 'GLOBAL'
+
+export type SubstitutionDto = {
+    id: string
+    reason?: string
+    orderForRound: number
+    setupRoundId: string
+    setupRoundName: string
+    competitionRegistrationId: string
+    competitionRegistrationName: string
+    clubId: string
+    clubName: string
+    participantOut: SubstitutionParticipantDto
+    participantIn: SubstitutionParticipantDto
+}
+
+export type SubstitutionParticipantDto = {
+    id: string
+    firstName: string
+    lastName: string
+    year: number
+    gender: Gender
+    external?: boolean
+    externalClubName?: string
+}
+
+export type SubstitutionRequest = {
+    competitionRegistrationId: string
+    competitionSetupRound: string
+    participantOut: string
+    participantIn: string
+    reason?: string
+}
 
 export type TaskDto = {
     id: string
@@ -1806,6 +1867,57 @@ export type GetCompetitionPlacesData = {
 export type GetCompetitionPlacesResponse = Array<CompetitionTeamPlaceDto>
 
 export type GetCompetitionPlacesError = BadRequestError | ApiError
+
+export type AddSubstitutionData = {
+    body: SubstitutionRequest
+    path: {
+        competitionId: string
+        eventId: string
+    }
+}
+
+export type AddSubstitutionResponse = string
+
+export type AddSubstitutionError = BadRequestError | ApiError
+
+export type DeleteSubstitutionData = {
+    path: {
+        competitionId: string
+        eventId: string
+        substitutionId: string
+    }
+}
+
+export type DeleteSubstitutionResponse = void
+
+export type DeleteSubstitutionError = BadRequestError | ApiError
+
+export type GetPossibleSubOutsData = {
+    path: {
+        competitionId: string
+        competitionSetupRoundId: string
+        eventId: string
+    }
+}
+
+export type GetPossibleSubOutsResponse = Array<ParticipantForExecutionDto>
+
+export type GetPossibleSubOutsError = BadRequestError | ApiError
+
+export type GetPossibleSubInsData = {
+    path: {
+        competitionId: string
+        competitionSetupRoundId: string
+        eventId: string
+    }
+    query: {
+        participantId: string
+    }
+}
+
+export type GetPossibleSubInsResponse = PossibleSubstitutionsForParticipantDto
+
+export type GetPossibleSubInsError = BadRequestError | ApiError
 
 export type AddDocumentsData = {
     body: {
