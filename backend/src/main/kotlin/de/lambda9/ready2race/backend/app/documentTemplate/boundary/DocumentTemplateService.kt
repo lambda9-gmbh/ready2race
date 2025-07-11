@@ -6,17 +6,34 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.*
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.*
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationResultData
+import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
+import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceData
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateUsageRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentTemplateUsageRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationResultViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.InvoicePositionRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
+import de.lambda9.ready2race.backend.kio.onNullDie
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 object DocumentTemplateService {
@@ -49,6 +66,237 @@ object DocumentTemplateService {
         }
     }
 
+    fun getPreview(
+        id: UUID,
+        type: DocumentType,
+    ): App<DocumentTemplateError, ApiResponse.File> = KIO.comprehension {
+
+        val templateBytes = !DocumentTemplateDataRepo.getData(id).orDie().onNullFail { DocumentTemplateError.NotFound }
+        val templateRecord = !DocumentTemplateRepo.get(id).orDie().onNullDie("foreign key constraint")
+
+        val template = PageTemplate(
+            bytes = templateBytes,
+            pagepadding = Padding.fromMillimetersOrDefault(
+                top = templateRecord.pagePaddingTop?.toFloat(),
+                left = templateRecord.pagePaddingLeft?.toFloat(),
+                bottom = templateRecord.pagePaddingBottom?.toFloat(),
+                right = templateRecord.pagePaddingRight?.toFloat(),
+            )
+        )
+
+        when (type) {
+            DocumentType.REGISTRATION_REPORT -> EventRegistrationService.buildPdf(
+                EventRegistrationResultData(
+                    competitionRegistrations = listOf(
+                        EventRegistrationResultData.CompetitionRegistrationData(
+                            identifier = "S",
+                            name = "Einzelrennen",
+                            shortName = "Solo",
+                            clubRegistrations = listOf(
+                                EventRegistrationResultData.ClubRegistrationData(
+                                    name = "Ruderclub",
+                                    teams = listOf(
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = "#1",
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Max",
+                                                    lastname = "Mustermann",
+                                                    year = 1990,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                )
+                                            )
+                                        ),
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = "#2",
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Marcus",
+                                                    lastname = "Mustermann",
+                                                    year = 2000,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                )
+                                            )
+                                        ),
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = "#3",
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Manfred",
+                                                    lastname = "Mustermann",
+                                                    year = 1970,
+                                                    gender = Gender.M,
+                                                    externalClubName = "1. RC"
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
+                                EventRegistrationResultData.ClubRegistrationData(
+                                    name = "Rudern",
+                                    teams = listOf(
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = null,
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Sebastian",
+                                                    lastname = "Jensen",
+                                                    year = 1994,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        EventRegistrationResultData.CompetitionRegistrationData(
+                            identifier = "D",
+                            name = "Teamrennen",
+                            shortName = "Duo",
+                            clubRegistrations = listOf(
+                                EventRegistrationResultData.ClubRegistrationData(
+                                    name = "Ruderclub",
+                                    teams = listOf(
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = "#1",
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Max",
+                                                    lastname = "Mustermann",
+                                                    year = 1990,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                ),
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Marcus",
+                                                    lastname = "Mustermann",
+                                                    year = 2000,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                )
+                                            )
+                                        ),
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = "#2",
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Manfred",
+                                                    lastname = "Mustermann",
+                                                    year = 1970,
+                                                    gender = Gender.M,
+                                                    externalClubName = "1. RC"
+                                                ),
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Bettina",
+                                                    lastname = "Mustermann",
+                                                    year = 1974,
+                                                    gender = Gender.F,
+                                                    externalClubName = null
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
+                                EventRegistrationResultData.ClubRegistrationData(
+                                    name = "Rudern",
+                                    teams = listOf(
+                                        EventRegistrationResultData.TeamRegistrationData(
+                                            name = null,
+                                            participants = listOf(
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Sebastian",
+                                                    lastname = "Jensen",
+                                                    year = 1994,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                ),
+                                                EventRegistrationResultData.ParticipantRegistrationData(
+                                                    role = "Teilnehmer",
+                                                    firstname = "Harald",
+                                                    lastname = "Jensen",
+                                                    year = 1979,
+                                                    gender = Gender.M,
+                                                    externalClubName = null
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        EventRegistrationResultData.CompetitionRegistrationData(
+                            identifier = "N",
+                            name = "KeinRennen",
+                            shortName = "No",
+                            clubRegistrations = emptyList(),
+                        )
+                    )
+                ),
+                template,
+            )
+            DocumentType.INVOICE -> InvoiceService.buildPdf(
+                InvoiceData(
+                    eventName = "Beispielveranstaltung",
+                    invoiceNumber = "BSP-11",
+                    contact = InvoiceData.InvoiceContactData(
+                        name = "Ruderklub",
+                        street = "Musterstraße 42",
+                        zip = "12345",
+                        city = "Musterhausen",
+                        email = "info@rk-example.com",
+                    ),
+                    payee = InvoiceData.InvoicePayeeData(
+                        holder = "Ruderklub Schatzmeister",
+                        iban = "DE12123412341234123412",
+                        bic = "ABCDEFGH",
+                        bank = "Musterbank",
+                    ),
+                    billedToOrga = "1. RC",
+                    billedToName = "Karsten Holz",
+                    paymentDueBy = LocalDate.now().plusWeeks(2),
+                    createdAt = LocalDateTime.now(),
+                    positions = listOf(
+                        InvoiceData.InvoicePositionData(
+                            position = 1,
+                            item = "Meldegebühr",
+                            description = "S - Einzelrennen",
+                            quantity = BigDecimal("3"),
+                            unitPrice = BigDecimal("50"),
+                        ),
+                        InvoiceData.InvoicePositionData(
+                            position = 2,
+                            item = "Bootsausleih",
+                            description = "S - Einzelrennen",
+                            quantity = BigDecimal("1"),
+                            unitPrice = BigDecimal("30"),
+                        ),
+                    )
+                ),
+                template,
+            )
+        }.let {
+            KIO.ok(
+                ApiResponse.File(
+                    name = "sample.pdf",
+                    bytes = it,
+                )
+            )
+        }
+    }
+
     fun addTemplate(
         upload: FileUpload,
         request: DocumentTemplateRequest,
@@ -66,6 +314,19 @@ object DocumentTemplateService {
 
         noData
     }
+
+    fun updateTemplate(
+        id: UUID,
+        request: DocumentTemplateRequest,
+    ): App<DocumentTemplateError, ApiResponse.NoData> =
+        DocumentTemplateRepo.update(id) {
+            pagePaddingTop = request.pagePaddingTop
+            pagePaddingRight = request.pagePaddingRight
+            pagePaddingBottom = request.pagePaddingBottom
+            pagePaddingLeft = request.pagePaddingLeft
+        }.orDie()
+            .onNullFail { DocumentTemplateError.NotFound }
+            .map {ApiResponse.NoData }
 
     fun assignTemplate(
         docType: DocumentType,
@@ -123,4 +384,10 @@ object DocumentTemplateService {
             )
         }
     }
+
+    fun deleteTemplate(
+        id: UUID,
+    ): App<DocumentTemplateError, ApiResponse.NoData> =
+        DocumentTemplateRepo.delete(id).orDie().failIf({ it < 1}) { DocumentTemplateError.NotFound }
+            .map { ApiResponse.NoData }
 }

@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.DocumentTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_ASSIGNMENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_DATA
 import de.lambda9.ready2race.backend.database.generated.tables.references.DOCUMENT_TEMPLATE_USAGE
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_TEMPLATE_USAGE
 import de.lambda9.tailwind.jooq.JIO
@@ -21,7 +22,13 @@ object DocumentTemplateRepo {
 
     fun exists(id: UUID) = DOCUMENT_TEMPLATE.exists { ID.eq(id) }
 
+    fun get(id: UUID) = DOCUMENT_TEMPLATE.selectOne { ID.eq(id) }
+
     fun create(record: DocumentTemplateRecord) = DOCUMENT_TEMPLATE.insertReturning(record) { ID }
+
+    fun update(id: UUID, f: DocumentTemplateRecord.() -> Unit) = DOCUMENT_TEMPLATE.update(f) { ID.eq(id) }
+
+    fun delete(id: UUID) = DOCUMENT_TEMPLATE.delete { ID.eq(id) }
 
     fun getAssigned(documentType: DocumentType, eventId: UUID) = DOCUMENT_TEMPLATE_ASSIGNMENT.selectOne {
         DSL.and(

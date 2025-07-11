@@ -53,6 +53,10 @@ const EventRegistrationTable = ({eventId, ...props}: BaseEntityTableProps<EventR
             columns={columns}
             dataRequest={dataRequest}
             deleteRequest={deleteRequest}
+            linkColumn={entity => ({
+                to: '/event/$eventId/registration/$eventRegistrationId',
+                params: {eventId: entity.eventId, eventRegistrationId: entity.id},
+            })}
         />
     )
 }

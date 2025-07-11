@@ -214,7 +214,7 @@ object CompetitionExecutionService {
         val sortedRounds: MutableList<CompetitionSetupRoundWithMatches> = mutableListOf()
         fun addRoundToSortedList(r: CompetitionSetupRoundWithMatches?) {
             if (r != null) {
-                sortedRounds.addFirst(r)
+                sortedRounds.add(0, r)
 
                 addRoundToSortedList(setupRounds.firstOrNull { it.nextRound == r.setupRoundId })
             }

@@ -425,7 +425,14 @@ export type Duplicate = {
 
 export type EmailLanguage = 'DE' | 'EN'
 
-export type ErrorCode = 'CAPTCHA_WRONG' | 'EMAIL_IN_USE' | 'CANNOT_ASSIGN_ROLES'
+export type ErrorCode =
+    | 'CAPTCHA_WRONG'
+    | 'EMAIL_IN_USE'
+    | 'CANNOT_ASSIGN_ROLES'
+    | 'EVENT_REGISTRATION_ONGOING'
+    | 'INVOICES_ALREADY_PRODUCED'
+    | 'NO_ASSIGNED_PAYEE_INFORMATION'
+    | 'NO_ASSIGNED_CONTACT_INFORMATION'
 
 export type EventDayDto = {
     id: string
@@ -680,6 +687,18 @@ export type InviteRequest = {
     callbackUrl: string
 }
 
+export type InvoiceDto = {
+    id: string
+    invoiceNumber: string
+    totalAmount: string
+    createdAt: string
+    paidAt?: string
+}
+
+export type InvoiceUpdateRequestDto = {
+    paid: boolean
+}
+
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
@@ -886,7 +905,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE'
 
 export type RoleDto = {
     id: string
@@ -1438,6 +1457,37 @@ export type DeleteEventData = {
 export type DeleteEventResponse = void
 
 export type DeleteEventError = BadRequestError | ApiError
+
+export type GetEventInvoicesData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetEventInvoicesResponse = {
+    data: Array<InvoiceDto>
+    pagination: Pagination
+}
+
+export type GetEventInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddEventDayData = {
     body: EventDayRequest
@@ -2254,6 +2304,17 @@ export type GetRegistrationsForEventResponse = {
 
 export type GetRegistrationsForEventError = ApiError
 
+export type GetEventRegistrationData = {
+    path: {
+        eventId: string
+        eventRegistrationId: string
+    }
+}
+
+export type GetEventRegistrationResponse = EventRegistrationViewDto
+
+export type GetEventRegistrationError = ApiError
+
 export type DeleteEventRegistrationData = {
     path: {
         eventId: string
@@ -2264,6 +2325,38 @@ export type DeleteEventRegistrationData = {
 export type DeleteEventRegistrationResponse = void
 
 export type DeleteEventRegistrationError = BadRequestError | ApiError
+
+export type GetRegistrationInvoicesData = {
+    path: {
+        eventId: string
+        eventRegistrationId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRegistrationInvoicesResponse = {
+    data: Array<InvoiceDto>
+    pagination: Pagination
+}
+
+export type GetRegistrationInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetEventRegistrationTemplateData = {
     path: {
@@ -2333,6 +2426,27 @@ export type AddFeeData = {
 export type AddFeeResponse = string
 
 export type AddFeeError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetFeesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
 
 export type GetFeesResponse = {
     data: Array<FeeDto>
@@ -2696,6 +2810,40 @@ export type AddDocumentTemplateResponse = void
 
 export type AddDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type UpdateDocumentTemplateData = {
+    body: DocumentTemplateRequest
+    path: {
+        documentTemplateId: string
+    }
+}
+
+export type UpdateDocumentTemplateResponse = void
+
+export type UpdateDocumentTemplateError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteDocumentTemplateData = {
+    path: {
+        documentTemplateId: string
+    }
+}
+
+export type DeleteDocumentTemplateResponse = void
+
+export type DeleteDocumentTemplateError = BadRequestError | ApiError
+
+export type DownloadDocumentTemplateSampleData = {
+    path: {
+        documentTemplateId: string
+    }
+    query: {
+        documentType: DocumentType
+    }
+}
+
+export type DownloadDocumentTemplateSampleResponse = Blob | File
+
+export type DownloadDocumentTemplateSampleError = BadRequestError | ApiError
+
 export type GetDocumentTemplateTypesResponse = Array<DocumentTypeDto>
 
 export type GetDocumentTemplateTypesError = BadRequestError | ApiError | UnprocessableEntityError
@@ -3052,3 +3200,22 @@ export type GetWorkShiftsForUserResponse = {
 }
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetInvoicesResponse = {
+    data: Array<InvoiceDto>
+    pagination: Pagination
+}
+
+export type GetInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DownloadInvoiceResponse = Blob | File
+
+export type DownloadInvoiceError = BadRequestError | ApiError
+
+export type SetInvoicePaidData = {
+    body: InvoiceUpdateRequestDto
+}
+
+export type SetInvoicePaidResponse = void
+
+export type SetInvoicePaidError = BadRequestError | ApiError

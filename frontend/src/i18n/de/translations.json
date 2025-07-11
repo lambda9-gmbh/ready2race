@@ -1,5 +1,6 @@
 {
   "common": {
+    "no": "Nein",
     "cancel": "Abbrechen",
     "close": "Schließen",
     "confirmation": {
@@ -109,6 +110,12 @@
       "assignments": {
         "global": "Global zugewiesene Vorlagen",
         "event": "Für Veranstaltung zugewiesene Vorlagen"
+      },
+      "preview": {
+        "title": "Mustervorschau",
+        "type": "Dokumenttyp",
+        "show": "Mustervorschau",
+        "error": "Fehler beim Laden der Vorschau"
       }
     }
   },
@@ -153,7 +160,8 @@
       "users": "Benutzer",
       "config": "Konfigurationen",
       "clubs": "Vereine",
-      "myClub": "Mein Verein"
+      "myClub": "Mein Verein",
+      "invoices": "Rechnungen"
     }
   },
   "dashboard": {
@@ -585,7 +593,8 @@
       "registrations": "Meldungen",
       "settings": "Einstellungen",
       "actions": "Aktionen",
-      "organisation": "Organisation"
+      "organisation": "Organisation",
+      "invoices": "Rechnungen"
     }
   },
   "task": {
@@ -792,6 +801,42 @@
     }
   },
   "invoice": {
+    "invoice": "Rechnung",
+    "invoices": "Rechnungen",
+    "download": "Herunterladen",
+    "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
+    "invoiceNumber": "Rechnungsnummer",
+    "amount": "Rechnungsbetrag",
+    "paid": "Bezahlt",
+    "tableHint": {
+      "1": "Rechnungen können hier einmalig für alle Meldungen eines Events erstellt werden.",
+      "2": "Konten für Zahlungsempfänger und Absenderdaten können ",
+      "3": "hier",
+      "4": " definiert werden.",
+      "5": "Vor dem Erstellen von Rechnungen müssen in den ",
+      "6": "globalen Einstellungen",
+      "7": " die zu verwendenden Daten zugewiesen werden."
+    },
+    "action": {
+      "setPaid": "Zahlungseingang feststellen",
+      "setNotPaid": "Zahlungseingang zurücknehmen"
+    },
+    "produce": {
+      "info": {
+        "paymentDueBy": {
+          "title": "Standard Zahlungsziel für Rechnungen",
+          "content": "Wenn für diese Veranstaltung kein Fälligkeitsdatum zur Begleichung der Rechnung definiert ist, wird ein Standardwert von 14 Tagen ab Erstellung der Rechnung verwendet."
+        }
+      },
+      "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
+      "error": {
+        "notFound": "",
+        "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
+        "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
+        "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
+        "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
+      }
+    },
     "bank": {
       "accountData": {
         "holder": "Kontoinhaber",

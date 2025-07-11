@@ -1,7 +1,5 @@
 package de.lambda9.ready2race.backend.pdf
 
-import org.apache.pdfbox.pdmodel.common.PDRectangle
-
 data class Padding(
     val top: Float = 0F,
     val left: Float = 0F,
@@ -25,6 +23,18 @@ data class Padding(
     }
 
     companion object {
+
+        fun fromMillimetersOrDefault(
+            top: Float? = null,
+            left: Float? = null,
+            right: Float? = null,
+            bottom: Float? = null,
+        ): Padding = Padding(
+            top = top?.let { it * POINTS_PER_MM } ?: defaultPagePadding.top,
+            left = left?.let { it * POINTS_PER_MM } ?: defaultPagePadding.left,
+            right = right?.let { it * POINTS_PER_MM } ?: defaultPagePadding.right,
+            bottom = bottom?.let { it * POINTS_PER_MM } ?: defaultPagePadding.bottom,
+        )
 
         val defaultPagePadding
             get() = Padding(

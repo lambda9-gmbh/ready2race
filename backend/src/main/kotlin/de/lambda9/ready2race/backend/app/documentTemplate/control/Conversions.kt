@@ -14,11 +14,11 @@ import java.util.UUID
 fun DocumentTemplateAssignmentRecord.toPdfTemplate(): App<Nothing, PageTemplate> = KIO.ok(
     PageTemplate(
         bytes = data!!,
-        pagepadding = Padding(
-            top = pagePaddingTop?.toFloat()?.let { it * POINTS_PER_MM } ?: Padding.defaultPagePadding.top,
-            left = pagePaddingLeft?.toFloat()?.let { it * POINTS_PER_MM } ?: Padding.defaultPagePadding.left,
-            right = pagePaddingRight?.toFloat()?.let { it * POINTS_PER_MM } ?: Padding.defaultPagePadding.right,
-            bottom = pagePaddingBottom?.toFloat()?.let { it * POINTS_PER_MM } ?: Padding.defaultPagePadding.bottom,
+        pagepadding = Padding.fromMillimetersOrDefault(
+            top = pagePaddingTop?.toFloat(),
+            left = pagePaddingLeft?.toFloat(),
+            right = pagePaddingRight?.toFloat(),
+            bottom = pagePaddingBottom?.toFloat(),
         ),
     )
 )

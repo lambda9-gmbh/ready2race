@@ -671,6 +671,46 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/invoices:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventInvoices
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Invoices page for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDay:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2167,6 +2207,23 @@ paths:
         schema:
           type: string
           format: uuid
+    get:
+      operationId: getEventRegistration
+      responses:
+        200:
+          description: Event registration successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventRegistrationViewDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
     delete:
       operationId: deleteEventRegistration
       responses:
@@ -2180,6 +2237,56 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/eventRegistration/{eventRegistrationId}/invoices:
+    parameters:
+      - in: path
+        name: eventId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: eventRegistrationId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getRegistrationInvoices
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Invoice list successfully retrieved for registration
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -2342,6 +2449,11 @@ paths:
           $ref: '#/components/responses/500'
     get:
       operationId: getFees
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       responses:
         200:
           description: Fee list successfully retrieved
@@ -3028,7 +3140,91 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-
+  /documentTemplate/{documentTemplateId}:
+    parameters:
+      - in: path
+        name: documentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateDocumentTemplate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DocumentTemplateRequest'
+      responses:
+        204:
+          description: Successfully updates template
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteDocumentTemplate
+      responses:
+        204:
+          description: Template successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /documentTemplate/{documentTemplateId}/preview:
+    parameters:
+      - in: path
+        name: documentTemplateId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: documentType
+        required: true
+        schema:
+          $ref: '#/components/schemas/DocumentType'
+    get:
+      operationId: downloadDocumentTemplateSample
+      responses:
+        200:
+          description: File retrieved
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /documentTemplateType:
     get:
       operationId: getDocumentTemplateTypes
@@ -3845,6 +4041,85 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /invoice:
+    get:
+      operationId: getInvoices
+      responses:
+        200:
+          description: Invoices page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InvoiceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /invoice/{invoiceId}:
+    get:
+      operationId: downloadInvoice
+      responses:
+        200:
+          description: File retrieved
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+          content:
+            '*/*':
+              schema:
+                type: string
+                format: binary
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    put:
+      operationId: setInvoicePaid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceUpdateRequestDto'
+      responses:
+        204:
+          description: Payment status set to paid
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 components:
 
   parameters:
@@ -4034,6 +4309,7 @@ components:
         - EVENT
         - CLUB
         - REGISTRATION
+        - INVOICE
 
     Scope:
       type: string
@@ -4053,6 +4329,10 @@ components:
         - CAPTCHA_WRONG
         - EMAIL_IN_USE
         - CANNOT_ASSIGN_ROLES
+        - EVENT_REGISTRATION_ONGOING
+        - INVOICES_ALREADY_PRODUCED
+        - NO_ASSIGNED_PAYEE_INFORMATION
+        - NO_ASSIGNED_CONTACT_INFORMATION
 
     Gender:
       type: string
@@ -6727,3 +7007,34 @@ components:
           format: uuid
         reason:
           type: string
+
+    InvoiceDto:
+      type: object
+      required:
+        - id
+        - invoiceNumber
+        - totalAmount
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        invoiceNumber:
+          type: string
+        totalAmount:
+          type: string
+          format: decimal
+        createdAt:
+          type: string
+          format: date-time
+        paidAt:
+          type: string
+          format: date-time
+
+    InvoiceUpdateRequestDto:
+      type: object
+      required:
+        - paid
+      properties:
+        paid:
+          type: boolean
