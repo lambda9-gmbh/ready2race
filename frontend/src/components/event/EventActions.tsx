@@ -118,7 +118,9 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                 <Alert severity={'warning'}>
                                     <Box sx={{display: 'flex', gap: 1}}>
                                         <AlertTitle>
-                                            {t('event.action.finalizeRegistrations.newRegistrations.altertTitle')}
+                                            {t(
+                                                'event.action.finalizeRegistrations.newRegistrations.altertTitle',
+                                            )}
                                         </AlertTitle>
                                         <HtmlTooltip
                                             placement={'bottom'}
@@ -128,10 +130,14 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                         <TableHead>
                                                             <TableRow>
                                                                 <TableCell>
-                                                                    {t('event.competition.competition')}
+                                                                    {t(
+                                                                        'event.competition.competition',
+                                                                    )}
                                                                 </TableCell>
                                                                 <TableCell>
-                                                                    {t('event.registration.registration')}
+                                                                    {t(
+                                                                        'event.registration.registration',
+                                                                    )}
                                                                 </TableCell>
                                                             </TableRow>
                                                         </TableHead>
@@ -186,7 +192,9 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                     variant={'outlined'}
                                     onClick={() => setDialogIsOpen(true)}
                                     startIcon={<ReplayIcon />}>
-                                    {t('event.action.finalizeRegistrations.refinalizeRegistrations')}
+                                    {t(
+                                        'event.action.finalizeRegistrations.refinalizeRegistrations',
+                                    )}
                                 </Button>
                             </Box>
                             <Dialog
@@ -197,7 +205,9 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                     {registrationsWithoutTeamNumber.length > 0 ? (
                                         <>
                                             <FormInputLabel
-                                                label={t('event.action.finalizeRegistrations.keepTeamNumbers.keep')}
+                                                label={t(
+                                                    'event.action.finalizeRegistrations.keepTeamNumbers.keep',
+                                                )}
                                                 required={true}
                                                 horizontal
                                                 reverse>
@@ -207,7 +217,9 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                 />
                                             </FormInputLabel>
                                             <Alert severity={'info'}>
-                                                {t('event.action.finalizeRegistrations.keepTeamNumbers.hint')}
+                                                {t(
+                                                    'event.action.finalizeRegistrations.keepTeamNumbers.hint',
+                                                )}
                                             </Alert>
                                             <Button
                                                 variant={'contained'}

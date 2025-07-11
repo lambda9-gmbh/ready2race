@@ -22,6 +22,8 @@ object ParticipantRepo {
 
     fun create(record: ParticipantRecord) = PARTICIPANT.insertReturning(record) { PARTICIPANT.ID }
 
+    fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
+
     fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
 
     fun update(
@@ -50,8 +52,6 @@ object ParticipantRepo {
 
     fun findByIdAndClub(id: UUID, clubId: UUID) =
         PARTICIPANT.findOneBy { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
-
-    fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
 
     fun getByClubId(clubId: UUID): JIO<List<ParticipantRecord>> = PARTICIPANT.select { CLUB.eq(clubId) }
 

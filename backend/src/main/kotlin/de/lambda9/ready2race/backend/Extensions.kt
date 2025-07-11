@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend
 
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.*
@@ -38,7 +39,10 @@ fun Duration.afterNow(): LocalDateTime =
     LocalDateTime.now().plusSeconds(this.inWholeSeconds)
 
 fun LocalDate.hr(locale: Locale? = null) = format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).localizedBy(locale ?: Locale.GERMANY))
+fun LocalTime.hr(locale: Locale? = null) = format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM).localizedBy(locale ?: Locale.GERMANY))
+fun LocalDateTime.hr(locale: Locale? = null) = format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).localizedBy(locale ?: Locale.GERMANY))
 fun LocalDateTime.hrDate(locale: Locale? = null) = toLocalDate().hr(locale)
+fun LocalDateTime.hrTime(locale: Locale? = null) = toLocalTime().hr(locale)
 
 fun <A: Any?> lexiNumberComp(stringSelector: (A) -> String?) = Comparator<A> { a, b ->
     val identA = a?.let(stringSelector)

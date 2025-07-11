@@ -92,7 +92,8 @@
       "templates": "Dokumentvorlagen",
       "type": {
         "INVOICE": "Rechnung",
-        "REGISTRATION_REPORT": "Meldeergebnis"
+        "REGISTRATION_REPORT": "Meldeergebnis",
+        "START_LIST": "Startliste"
       },
       "none": "Keine Vorlage",
       "name": "Name",
@@ -472,6 +473,16 @@
           "submit": {
             "error": "Beim speichern der Details ist ein Fehler aufgetreten",
             "success": "Partie gespeichert"
+          }
+        },
+        "startList": {
+          "download": "Startliste herunterladen",
+          "type": {
+            "PDF": "als PDF",
+            "CSV": "als CSV"
+          },
+          "error": {
+            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
           }
         }
       },

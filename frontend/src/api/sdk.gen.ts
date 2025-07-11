@@ -154,6 +154,9 @@ import type {
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
+    DownloadStartListData,
+    DownloadStartListError,
+    DownloadStartListResponse,
     GetCompetitionPlacesData,
     GetCompetitionPlacesError,
     GetCompetitionPlacesResponse,
@@ -1037,6 +1040,19 @@ export const updateMatchResults = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results',
+    })
+}
+
+export const downloadStartList = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadStartListData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadStartListResponse,
+        DownloadStartListError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/startList',
     })
 }
 

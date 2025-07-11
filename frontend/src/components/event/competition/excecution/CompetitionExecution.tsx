@@ -1,6 +1,7 @@
 import {
     createNextCompetitionRound,
     deleteCurrentCompetitionExecutionRound,
+    downloadStartList,
     getCompetitionExecutionProgress,
     updateMatchData,
     updateMatchResults,
@@ -11,6 +12,7 @@ import {
     Card,
     Dialog,
     Divider,
+    Link,
     List,
     ListItemText,
     Stack,
@@ -26,7 +28,7 @@ import {
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, useState} from 'react'
+import {BaseSyntheticEvent, useRef, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
@@ -37,6 +39,7 @@ import {
     CompetitionMatchDto,
     CompetitionMatchTeamDto,
     CompetitionRoundDto,
+    StartListFileType,
 } from '@api/types.gen.ts'
 import CompetitionExecutionMatchDialog from '@components/event/competition/excecution/CompetitionExecutionMatchDialog.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
@@ -47,6 +50,7 @@ import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
 import Substitutions from '@components/event/competition/excecution/Substitutions.tsx'
+import SelectionMenu from "@components/SelectionMenu.tsx";
 
 type EditMatchTeam = {
     registrationId: string
@@ -71,6 +75,8 @@ const CompetitionExecution = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const {confirmAction} = useConfirmation()
 
@@ -333,7 +339,7 @@ const CompetitionExecution = () => {
             if (error) {
                 feedback.error(t('event.competition.execution.matchData.submit.error'))
             } else {
-                feedback.error(t('event.competition.execution.matchData.submit.success'))
+                feedback.success(t('event.competition.execution.matchData.submit.success'))
             }
             setSubmitting(false)
         }
@@ -441,8 +447,45 @@ const CompetitionExecution = () => {
             )
     }
 
+    const handleDownloadStartList = async (
+        competitionMatchId: string,
+        fileType: StartListFileType,
+    ) => {
+        const {data, error, response} = await downloadStartList({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+            query: {
+                fileType,
+            },
+        })
+        const anchor = downloadRef.current
+
+        const disposition = response.headers.get('Content-Disposition')
+        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
+
+        if (error) {
+            if (error.status.value === 409) {
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else if (data !== undefined && anchor) {
+            // need Blob constructor for text/csv
+            anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
+            anchor.download =
+                filename ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     return progressDto ? (
         <Box>
+            <Link ref={downloadRef} display={'none'}></Link>
             {!allRoundsCreated && (
                 <Box sx={{my: 4, display: 'flex', alignItems: 'center'}}>
                     <Button
@@ -568,6 +611,33 @@ const CompetitionExecution = () => {
                                                             'event.competition.execution.matchData.edit',
                                                         )}
                                                     </LoadingButton>
+                                                    <SelectionMenu
+                                                        anchor={{
+                                                            button: {
+                                                                vertical: 'bottom',
+                                                                horizontal: 'right',
+                                                            },
+                                                            menu: {
+                                                                vertical: 'top',
+                                                                horizontal: 'right',
+                                                            }
+                                                        }}
+                                                        buttonContent={t('event.competition.execution.startList.download')}
+                                                        keyLabel={'competition-execution-startlist-download'}
+                                                        onSelectItem={(fileType: string) =>
+                                                            handleDownloadStartList(match.id, fileType as StartListFileType)
+                                                        }
+                                                        items={[
+                                                            {
+                                                                id: 'PDF',
+                                                                label: t('event.competition.execution.startList.type.PDF')
+                                                            },
+                                                            {
+                                                                id: 'CSV',
+                                                                label: t('event.competition.execution.startList.type.CSV')
+                                                            }
+                                                        ] satisfies {id: StartListFileType, label: string}[]}
+                                                    />
                                                 </Stack>
                                             </Stack>
                                             <Divider sx={{my: 2}} />

@@ -97,9 +97,6 @@ suspend fun ApplicationCall.respondKIO(
 
                 is ApiResponse.File -> {
 
-                    // todo: @fix @incomplete: getContentType() always returns octet-stream,
-                    //  probably missing mimes.types
-
                     val contentType = try {
                         ContentType.parse(URLConnection.guessContentTypeFromName(apiResponse.name))
                     } catch(e: BadContentTypeFormatException) {

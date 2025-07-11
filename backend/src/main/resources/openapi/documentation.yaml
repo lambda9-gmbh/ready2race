@@ -1303,6 +1303,38 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/startList:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      parameters:
+        - name: fileType
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/StartListFileType'
+      operationId: downloadStartList
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/competitionExecution/places:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -1530,16 +1562,7 @@ paths:
       operationId: downloadDocument
       responses:
         200:
-          description: File retrieved
-          headers:
-            Content-Disposition:
-              schema:
-                type: string
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
+          $ref: '#/components/responses/file'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -2419,16 +2442,7 @@ paths:
             type: boolean
       responses:
         200:
-          description: Report for event registrations successfully retrieved/generated
-          headers:
-            Content-Disposition:
-              schema:
-                type: string
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
+          $ref: '#/components/responses/file'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -3271,16 +3285,7 @@ paths:
       operationId: downloadDocumentTemplateSample
       responses:
         200:
-          description: File retrieved
-          headers:
-            Content-Disposition:
-              schema:
-                type: string
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
+          $ref: '#/components/responses/file'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -4145,16 +4150,7 @@ paths:
       operationId: downloadInvoice
       responses:
         200:
-          description: File retrieved
-          headers:
-            Content-Disposition:
-              schema:
-                type: string
-          content:
-            '*/*':
-              schema:
-                type: string
-                format: binary
+          $ref: '#/components/responses/file'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -4280,6 +4276,18 @@ components:
 
 
   responses:
+
+    file:
+      description: File retrieved
+      headers:
+        Content-Disposition:
+          schema:
+            type: string
+      content:
+        '*/*':
+          schema:
+            type: string
+            format: binary
 
     201:
       description: Entity successfully created, returns the id
@@ -6355,6 +6363,7 @@ components:
       enum:
         - 'INVOICE'
         - 'REGISTRATION_REPORT'
+        - 'START_LIST'
 
     DocumentTemplateDto:
       type: object
@@ -7177,3 +7186,9 @@ components:
       properties:
         paid:
           type: boolean
+
+    StartListFileType:
+      type: string
+      enum:
+        - PDF
+        - CSV

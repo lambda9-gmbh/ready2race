@@ -1,6 +1,11 @@
-import {Menu, MenuItem} from '@mui/material'
+import {Menu, MenuItem, PopoverOrigin} from '@mui/material'
 import {MouseEvent, ReactNode, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
+
+type Anchor = {
+    button: PopoverOrigin,
+    menu: PopoverOrigin,
+}
 
 type Props = {
     buttonContent?: ReactNode
@@ -8,8 +13,9 @@ type Props = {
     keyLabel: string
     onSelectItem: (id: string) => Promise<void>
     pending?: boolean
+    anchor?: Anchor
 }
-const SelectionMenu = ({items, keyLabel, ...props}: Props) => {
+const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
     const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null)
     const menuOpen = Boolean(menuAnchorEl)
     const handleMenuClick = (event: MouseEvent<HTMLButtonElement>) => {
@@ -39,7 +45,9 @@ const SelectionMenu = ({items, keyLabel, ...props}: Props) => {
                 disableScrollLock={true}
                 MenuListProps={{
                     'aria-labelledby': `${keyLabel}-button`,
-                }}>
+                }}
+                anchorOrigin={anchor?.button}
+                transformOrigin={anchor?.menu}>
                 {items?.map((item, idx) => (
                     <MenuItem
                         key={idx + item.id}

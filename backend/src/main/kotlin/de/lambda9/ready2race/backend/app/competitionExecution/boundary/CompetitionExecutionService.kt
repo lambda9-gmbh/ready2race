@@ -16,15 +16,33 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
+import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
+import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
+import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.hr
+import de.lambda9.ready2race.backend.hrDate
+import de.lambda9.ready2race.backend.hrTime
+import de.lambda9.ready2race.backend.kio.onNullDie
+import de.lambda9.ready2race.backend.pdf.FontStyle
+import de.lambda9.ready2race.backend.pdf.Padding
+import de.lambda9.ready2race.backend.pdf.PageTemplate
+import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.*
+import org.jooq.impl.DSL
+import org.jooq.tools.csv.CSVParser
+import org.jooq.tools.csv.CSVReader
+import java.awt.Color
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
 
@@ -526,5 +544,238 @@ object CompetitionExecutionService {
             .traverse { it.first.toCompetitionTeamPlaceDto(it.second) }
 
         KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    fun downloadStartlist(
+        matchId: UUID,
+        type: StartListFileType,
+    ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
+
+        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+            .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
+            .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
+
+        val data = !CompetitionMatchData.fromPersisted(match)
+
+        val (bytes, extension) = when (type) {
+            StartListFileType.PDF -> {
+                val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, match.event!!).orDie()
+                    .andThenNotNull { it.toPdfTemplate() }
+                buildPdf(data, pdfTemplate) to "pdf"
+            }
+            StartListFileType.CSV -> buildCsv(data) to "csv"
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = "startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
+                bytes = bytes,
+            )
+        )
+    }
+
+    fun buildPdf(
+        data: CompetitionMatchData,
+        template: PageTemplate?,
+    ): ByteArray {
+        val doc = document(template) {
+            page {
+                block(
+                    padding = Padding(bottom = 25f),
+                ) {
+                    text(
+                        fontStyle = FontStyle.BOLD,
+                        fontSize = 14f,
+                    ) {
+                        "Wettkampf / "
+                    }
+                    text(
+                        fontSize = 12f,
+                        newLine = false,
+                    ) {
+                        "Competition"
+                    }
+
+                    table(
+                        padding = Padding(5f, 10f, 0f, 0f)
+                    ) {
+                        column(0.1f)
+                        column(0.25f)
+                        column(0.65f)
+
+                        row {
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { data.competition.identifier }
+                            }
+                            cell {
+                                data.competition.shortName?.let {
+                                    text(
+                                        fontSize = 12f,
+                                    ) { it }
+                                }
+                            }
+                            cell {
+                                text(
+                                    fontSize = 12f,
+                                ) { data.competition.name }
+                            }
+                        }
+                    }
+
+                    block(
+                        padding = Padding(top = 10f, left = 10f),
+                    ) {
+                        text(
+                            fontStyle = FontStyle.BOLD,
+                            fontSize = 11f,
+                        ) {
+                            "Startzeit / "
+                        }
+                        text(
+                            fontSize = 9f,
+                            newLine = false,
+                        ) {
+                            "Start time"
+                        }
+                        text(
+                            newLine = false,
+                        ) { "  ${data.startTime.hr()}" }
+                        if (data.startTimeOffset != null) {
+                            text(
+                                newLine = false,
+                            ) { " (versetzte Starts)" }
+                        }
+                    }
+
+                }
+
+                data.teams.forEachIndexed { index, team ->
+                    block(
+                        padding = Padding(0f, 0f, 0f, 25f)
+                    ) {
+
+                        block(
+                            padding = Padding(bottom = 5f),
+                        ) {
+                            text(
+                                fontStyle = FontStyle.BOLD,
+                                fontSize = 11f,
+                            ) {
+                                "Startnummer / "
+                            }
+                            text(
+                                fontSize = 9f,
+                                newLine = false,
+                            ) {
+                                "Start number"
+                            }
+
+                            text(
+                                newLine = false,
+                                fontStyle = FontStyle.BOLD,
+                                fontSize = 12f,
+                            ) { "  ${team.startNumber}" }
+                        }
+
+                        block(
+                            padding = Padding(left = 5f),
+                        ) {
+                            text(
+                                fontStyle = FontStyle.BOLD
+                            ) { team.clubName }
+                            team.teamName?.let {
+                                text(
+                                    newLine = false,
+                                ) { " $it" }
+                            }
+                            if (data.startTimeOffset != null) {
+                                text { "startet ${data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds).hrTime()}" }
+                            }
+                        }
+
+                        table(
+                            padding = Padding(5f, 0f, 0f, 0f),
+                            withBorder = true,
+                        ) {
+                            column(0.15f)
+                            column(0.05f)
+                            column(0.2f)
+                            column(0.2f)
+                            column(0.1f)
+                            column(0.3f)
+
+                            team.participants
+                                .sortedBy { it.role }
+                                .forEachIndexed { idx, member ->
+                                    row(
+                                        color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                    ) {
+                                        cell {
+                                            text { member.role }
+                                        }
+                                        cell {
+                                            text { member.gender.name }
+                                        }
+                                        cell {
+                                            text { member.firstname }
+                                        }
+                                        cell {
+                                            text { member.lastname }
+                                        }
+                                        cell {
+                                            text { member.year.toString() }
+                                        }
+                                        cell {
+                                            text { member.externalClubName ?: team.clubName }
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                }
+            }
+        }
+
+        val bytes = ByteArrayOutputStream().use {
+            doc.save(it)
+            doc.close()
+            it.toByteArray()
+        }
+
+        return bytes
+    }
+
+    fun buildCsv(
+        data: CompetitionMatchData,
+    ): ByteArray {
+
+        val bytes = ByteArrayOutputStream().use { out ->
+            CSV.write(
+                out,
+                data.teams
+            ) {
+                if (data.teams.first().participants.size == 1) {
+                    column("First name") { participants.first().firstname }
+                    column("Last name") { participants.first().lastname }
+                    column("Gender") { participants.first().gender.name }
+                } else {
+                    column("Name") { participants.joinToString(",") { p -> p.lastname }}
+                    column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
+                }
+                column("Team name") { clubName }
+                column("Team name 2") { teamName ?: "" }
+                column("Category") { data.competition.category ?: "" }
+                column("Bib") { startNumber.toString() }
+                if (data.startTimeOffset != null) {
+                    column("Start time") { idx -> (idx * data.startTimeOffset).milliseconds.toIsoString() }
+                }
+            }
+
+            out.toByteArray()
+        }
+
+        return bytes
     }
 }
