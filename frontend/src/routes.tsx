@@ -35,6 +35,7 @@ import QrEventsPage from "./pages/app/QrEventsPage.tsx";
 import QrAppuserPage from "./pages/app/QrAppuserPage.tsx";
 import QrParticipantPage from "./pages/app/QrParticipantPage.tsx";
 import QrAssignPage from "./pages/app/QrAssignPage.tsx";
+import AppLoginPage from './pages/app/AppLoginPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -63,11 +64,10 @@ const checkAuthWith = (
 
 const checkAuthApp = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
-        //throw redirect({to: '/app', search: {redirect: location.href}})
+        throw redirect({to: '/app/login', search: {redirect: location.href}})
     }
     if (privilege && !context.checkPrivilege(privilege)) {
-        location
-        //throw redirect({to: '/login'})
+        //throw redirect({to: '/app/login'})
     }
 }
 
@@ -229,12 +229,18 @@ export const configurationIndexRoute = createRoute({
 export const qrEventRoute = createRoute({
     getParentRoute: () => appRoute,
     path: '$eventId',
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
 })
 
 export const qrEventsIndexRoute = createRoute({
     getParentRoute: () => appRoute,
     path: '/',
     component: () => <QrEventsPage/>,
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
 })
 
 export const eventsRoute = createRoute({
@@ -376,6 +382,13 @@ export const qrAssignRoute = createRoute({
     }
 })
 
+export const appLoginRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'login',
+    component: () => <AppLoginPage/>,
+    validateSearch: ({redirect}: { redirect?: string } & SearchSchemaInput) => ({ redirect }),
+})
+
 const routeTree = rootRoute.addChildren([
     mainLayoutRoute.addChildren([
         indexRoute,
@@ -401,6 +414,7 @@ const routeTree = rootRoute.addChildren([
         clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
     ]),
     appRoute.addChildren([
+        appLoginRoute,
         qrEventsIndexRoute,
         qrEventRoute.addChildren([
             qrScanRoute,
