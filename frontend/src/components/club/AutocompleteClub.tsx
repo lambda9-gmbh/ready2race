@@ -82,6 +82,7 @@ export const AutocompleteClub = (props: {
             }}
             autocompleteProps={{
                 size: 'small',
+                autoSelect: true,
                 // @ts-ignore
                 freeSolo: true,
                 filterSelectedOptions: true,
