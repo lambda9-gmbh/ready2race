@@ -466,9 +466,9 @@ const CompetitionExecution = () => {
 
         if (error) {
             if (error.status.value === 409) {
-                feedback.error('[todo] Für dieses Match wurde noch keine startzeit gesetzt.')
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
             } else {
-                feedback.error(t('event.document.download.error'))
+                feedback.error(t('common.error.unexpected'))
             }
         } else if (data !== undefined && anchor) {
             // need Blob constructor for text/csv
@@ -628,7 +628,6 @@ const CompetitionExecution = () => {
                                                                         'event.competition.execution.matchData.edit',
                                                                     )}
                                                                 </LoadingButton>
-                                                                {/*TODO: @Incomplete combine types into submenu*/}
                                                                 <SelectionMenu
                                                                     anchor={{
                                                                         button: {

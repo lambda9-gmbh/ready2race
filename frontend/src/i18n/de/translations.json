@@ -480,6 +480,9 @@
           "type": {
             "PDF": "als PDF",
             "CSV": "als CSV"
+          },
+          "error": {
+            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
           }
         }
       },

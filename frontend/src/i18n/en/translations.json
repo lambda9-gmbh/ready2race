@@ -480,6 +480,9 @@
           "type": {
             "PDF": "as PDF",
             "CSV": "as CSV"
+          },
+          "error": {
+            "missingStartTime": "The start time for this match is not set."
           }
         }
       },

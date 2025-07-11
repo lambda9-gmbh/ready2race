@@ -22,6 +22,8 @@ object ParticipantRepo {
 
     fun create(record: ParticipantRecord) = PARTICIPANT.insertReturning(record) { PARTICIPANT.ID }
 
+    fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
+
     fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
 
     fun update(

@@ -551,18 +551,15 @@ object CompetitionExecutionService {
         type: StartListFileType,
     ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
 
-        val match = !CompetitionMatchRepo.getWithTeams(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
             .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
             .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
-        val eventId = !CompetitionRegistrationRepo.getEvent(match.teams!!.first()!!.competitionRegistration!!).orDie()
-            .onNullDie("not null constraint")
-
-        val data = CompetitionMatchData.fromPersisted(match)
+        val data = !CompetitionMatchData.fromPersisted(match)
 
         val (bytes, extension) = when (type) {
             StartListFileType.PDF -> {
-                val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, eventId).orDie()
+                val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, match.event!!).orDie()
                     .andThenNotNull { it.toPdfTemplate() }
                 buildPdf(data, pdfTemplate) to "pdf"
             }

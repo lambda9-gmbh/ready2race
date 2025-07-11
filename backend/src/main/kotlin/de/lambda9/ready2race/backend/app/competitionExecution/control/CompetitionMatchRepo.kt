@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_WITH_TEAMS
+import de.lambda9.ready2race.backend.database.generated.tables.references.STARTLIST_VIEW
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
@@ -17,5 +18,5 @@ object CompetitionMatchRepo {
 
     fun delete(ids: List<UUID>) = COMPETITION_MATCH.delete { COMPETITION_SETUP_MATCH.`in`(ids) }
 
-    fun getWithTeams(id: UUID) = COMPETITION_MATCH_WITH_TEAMS.selectOne { COMPETITION_SETUP_MATCH.eq(id) }
+    fun getForStartList(id: UUID) = STARTLIST_VIEW.selectOne { ID.eq(id) }
 }

@@ -1,8 +1,17 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
+import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchWithTeamsRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistTeamRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistViewRecord
+import de.lambda9.ready2race.backend.kio.onNullDie
+import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
+import java.util.UUID
+import kotlin.String
 
 data class CompetitionMatchData(
     val matchName: String?,
@@ -39,42 +48,83 @@ data class CompetitionMatchData(
 
     companion object {
 
-        //TODO: @Incomplete: need substitution changes
-
         /**
          * This expects startTime to be set and not be null.
          */
         fun fromPersisted(
-            persisted: CompetitionMatchWithTeamsRecord
-        ): CompetitionMatchData = CompetitionMatchData(
-            matchName = null, //missing
-            roundName = "ph_round", //missing
-            order = 0, // missing
-            startTime = persisted.startTime!!,
-            startTimeOffset = 60000, // TODO: @Incomplete: properties missing from view
-            competition = CompetitionData(
-                identifier = "ph",
-                name = "placehodler",
-                shortName = "[ph]",
-                category = null,
-            ),
-            teams = persisted.teams!!.sortedBy { it!!.startNumber }.map { team ->
-                CompetitionMatchTeam(
-                    startNumber = team!!.startNumber!!,
-                    clubName = team.clubName!!,
-                    teamName = team.registrationName,
-                    participants = team.participants!!.map { p ->
-                        CompetitionMatchParticipant(
-                            role = p!!.role!!,
-                            firstname = p.firstname!!,
-                            lastname = p.lastname!!,
-                            year = p.year!!,
-                            gender = p.gender!!,
-                            externalClubName = p.externalClubName,
-                        )
+            persisted: StartlistViewRecord,
+        ): App<Nothing, CompetitionMatchData> = persisted.teams!!.toList().traverse {
+            it!!.toData()
+        }.map { teams ->
+            CompetitionMatchData(
+                matchName = persisted.name,
+                roundName = persisted.roundName!!,
+                order = persisted.executionOrder!!,
+                startTime = persisted.startTime!!,
+                startTimeOffset = persisted.startTimeOffset,
+                competition = CompetitionData(
+                identifier = persisted.competitionIdentifier!!,
+                name = persisted.competitionName!!,
+                shortName = persisted.competitionShortName,
+                category = persisted.competitionCategory,
+                ),
+                teams = teams.sortedBy { it.startNumber }
+            )
+        }
+
+        private fun StartlistTeamRecord.toData(): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
+
+            val orderedSubs = substitutions!!.sortedBy { it!!.orderForRound }
+
+            val (addParticipants, removeParticipants) = orderedSubs.fold(mutableMapOf<UUID, String>() to mutableListOf<UUID>()) { acc, s ->
+                acc.apply {
+                    first.remove(s!!.participantOut!!)
+                    if (participants!!.none {it!!.participantId == s.participantIn}) {
+                        first.put(s.participantIn!!, s.role!!)
                     }
+                    second.remove(s.participantIn!!)
+                    if (participants!!.any {it!!.participantId == s.participantOut}) {
+                        second.add(s.participantOut!!)
+                    }
+                }
+            }
+
+            val remainingParticipants = participants!!.filter { p ->
+                removeParticipants.none { it == p!!.participantId }
+            }.map { p ->
+                CompetitionMatchParticipant(
+                    role = p!!.role!!,
+                    firstname = p.firstname!!,
+                    lastname = p.lastname!!,
+                    year = p.year!!,
+                    gender = p.gender!!,
+                    externalClubName = p.externalClubName,
                 )
             }
-        )
+
+            val newParticipants = !addParticipants.toList().traverse { (id, role) ->
+                ParticipantRepo.get(id).orDie().onNullDie("foreign key constraint").map { p ->
+                    CompetitionMatchParticipant(
+                        role = role,
+                        firstname = p.firstname,
+                        lastname = p.lastname,
+                        year = p.year,
+                        gender = p.gender,
+                        externalClubName = p.externalClubName,
+                    )
+                }
+            }
+
+            val result = remainingParticipants + newParticipants
+
+            KIO.ok(
+                CompetitionMatchTeam(
+                    startNumber = startNumber!!,
+                    clubName = clubName!!,
+                    teamName = teamName,
+                    participants = result,
+                )
+            )
+        }
     }
 }
