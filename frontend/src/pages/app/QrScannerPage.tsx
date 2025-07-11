@@ -4,8 +4,10 @@ import {qrEventRoute, router} from "@routes";
 import {UseQr} from "@contexts/qr/QrContext.ts";
 import {useEffect} from "react";
 import QrNimiqScanner from "@components/qrApp/QrNimiqScanner.tsx";
+import {useTranslation} from "react-i18next";
 
 const QrScannerPage = () => {
+    const { t } = useTranslation();
     const navigate = router.navigate
     const {eventId} = qrEventRoute.useParams()
     const qr = UseQr()
@@ -33,10 +35,10 @@ const QrScannerPage = () => {
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" fontSize="2rem" textAlign="center">
-                QR-Scanner
+                {t('qrScanner.title')}
             </Typography>
             <QrNimiqScanner callback={handleScannerResult}></QrNimiqScanner>
-            <Button onClick={() => navigate({to: "/app"})}>Zurück</Button>
+            <Button onClick={() => navigate({to: "/app"})}>{t('common.back')}</Button>
         </Stack>
     )
 };

@@ -4,8 +4,10 @@ import {UseReceivedQr} from "@contexts/qr/QrContext.ts";
 import {useEffect, useState} from "react";
 import {qrEventRoute} from "@routes";
 import {deleteQrCode} from "@api/sdk.gen.ts";
+import {useTranslation} from "react-i18next";
 
 const QrParticipantPage = () => {
+    const { t } = useTranslation();
     const qr = UseReceivedQr()
     const {eventId} = qrEventRoute.useParams()
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,7 +28,7 @@ const QrParticipantPage = () => {
             setDialogOpen(false);
             qr.reset(eventId);
         } catch (e: any) {
-            setError(e?.message || "Fehler beim Löschen");
+            setError(e?.message || t('qrParticipant.deleteError'));
         } finally {
             setLoading(false);
         }
@@ -35,32 +37,32 @@ const QrParticipantPage = () => {
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" fontSize="2rem" textAlign="center">
-                Teilnehmer QR
+                {t('qrParticipant.title')}
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
             <ButtonGroup disableElevation variant={"contained"} orientation={"vertical"} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
-                <Button>Betritt Wettkampfbereich</Button>
-                <Button>Verlässt Wettkampfbereich</Button>
+                <Button>{t('qrParticipant.enterArea')}</Button>
+                <Button>{t('qrParticipant.leaveArea')}</Button>
             </ButtonGroup>
-            <Button onClick={() => qr.reset(eventId)}>Zurück</Button>
+            <Button onClick={() => qr.reset(eventId)}>{t('common.back')}</Button>
             <Button
                 color="error"
                 variant="contained"
                 fullWidth
                 onClick={() => setDialogOpen(true)}
             >
-                Qr Code Zuweisung aufheben
+                {t('qrParticipant.removeAssignment')}
             </Button>
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-                <DialogTitle>QR-Code-Zuweisung aufheben</DialogTitle>
+                <DialogTitle>{t('qrParticipant.removeAssignmentTitle')}</DialogTitle>
                 <DialogContent>
-                    <Typography>Möchten Sie die QR-Code-Zuweisung wirklich aufheben?</Typography>
+                    <Typography>{t('qrParticipant.removeAssignmentConfirm')}</Typography>
                     {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={() => setDialogOpen(false)} disabled={loading}>Abbrechen</Button>
+                    <Button onClick={() => setDialogOpen(false)} disabled={loading}>{t('common.cancel')}</Button>
                     <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
-                        Löschen
+                        {t('common.delete')}
                     </Button>
                 </DialogActions>
             </Dialog>

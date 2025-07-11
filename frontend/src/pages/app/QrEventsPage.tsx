@@ -2,8 +2,10 @@ import {Button, Stack, Typography} from "@mui/material";
 import {useFetch} from "@utils/hooks.ts";
 import {getEvents} from "@api/sdk.gen.ts";
 import {router} from "@routes";
+import {useTranslation} from "react-i18next";
 
 const QrEventsPage = () => {
+    const { t } = useTranslation();
     const navigate = router.navigate
 
     const {data} = useFetch(signal => getEvents({signal}))
@@ -11,7 +13,7 @@ const QrEventsPage = () => {
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" fontSize="2rem" textAlign="center">
-                QR-Events
+                {t('qrEvents.title')}
             </Typography>
             {data?.data?.map(event =>
                 <Button

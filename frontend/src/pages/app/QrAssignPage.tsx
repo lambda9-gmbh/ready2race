@@ -10,9 +10,11 @@ import {
     updateQrCodeParticipant
 } from "@api/sdk.gen.ts";
 import {qrEventRoute} from "@routes";
+import {useTranslation} from "react-i18next";
 
 type UserTyp = "User" | "Participant"
 const QrAssignPage = () => {
+    const { t } = useTranslation();
     const qr = UseReceivedQr()
     const [userTyp, setUserTyp] = useState<UserTyp>("User")
     const [club, setClub] = useState<string>()
@@ -68,41 +70,41 @@ const QrAssignPage = () => {
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" fontSize="2rem" textAlign="center">
-                QR-Code zuweisen
+                {t('qrAssign.title')}
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
             <ToggleButtonGroup value={userTyp} exclusive onChange={onChange}>
-                <ToggleButton value={"Participant"}>Participant</ToggleButton>
-                <ToggleButton value={"User"}>User</ToggleButton>
+                <ToggleButton value={"Participant"}>{t('qrAssign.participant')}</ToggleButton>
+                <ToggleButton value={"User"}>{t('qrAssign.user')}</ToggleButton>
             </ToggleButtonGroup>
             {clubs && userTyp === "Participant" && <Stack>
-                <Typography>Clubs</Typography>
+                <Typography>{t('qrAssign.clubs')}</Typography>
                 <ToggleButtonGroup exclusive orientation={"vertical"} value={club}
                                    onChange={(_, club: string) => setClub(club)}>
                     {clubs?.data.map(club => <ToggleButton value={club.id}
                                                            key={club.id}>{club.name}</ToggleButton>) ??
-                        <Typography>No Data</Typography>}
+                        <Typography>{t('qrAssign.noData')}</Typography>}
                 </ToggleButtonGroup>
             </Stack>}
             {participants && userTyp === "Participant" && <Stack>
-                <Typography>Participants</Typography>
+                <Typography>{t('qrAssign.participants')}</Typography>
                 {participants?.data.map(participant =>
                         <Button onClick={() => selectParticipant(participant.id)}
                                 key={participant.id} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
                             {participant.firstname} {participant.lastname}
                         </Button>) ??
-                    <Typography>No Data</Typography>}
+                    <Typography>{t('qrAssign.noData')}</Typography>}
             </Stack>}
             {users && userTyp === "User" && <Stack>
-                <Typography>User</Typography>
+                <Typography>{t('qrAssign.users')}</Typography>
                 {users?.data.map(user => <Button onClick={() => selectUser(user.id)}
                                                  key={user.id} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
                     {user.firstname} {user.lastname}
                 </Button>) ??
-                    <Typography>No Data</Typography>}
+                    <Typography>{t('qrAssign.noData')}</Typography>}
             </Stack>}
 
-            <Button onClick={() => qr.reset(eventId)} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>Zurück</Button>
+            <Button onClick={() => qr.reset(eventId)} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>{t('common.back')}</Button>
 
         </Stack>
     )

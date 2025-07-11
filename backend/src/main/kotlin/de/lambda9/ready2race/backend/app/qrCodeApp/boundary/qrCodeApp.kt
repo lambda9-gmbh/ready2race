@@ -33,7 +33,7 @@ fun Route.qrCodeApp() {
             call.respondComprehension {
                 val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP)
                 val payload = !receiveKIO(QrCodeUpdateDto.QrCodeAppuserUpdate.example)
-                QrCodeAppService.updateQrCode(payload, user)
+                QrCodeAppService.updateQrCode(payload, user, scope)
             }
         }
 
@@ -50,7 +50,7 @@ fun Route.qrCodeApp() {
                 call.respondComprehension {
                     val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.APP)
                     val qrCodeId = !pathParam("qrCodeId")
-                    QrCodeAppService.pruefeQrCode(qrCodeId)
+                    QrCodeAppService.loadQrCode(qrCodeId)
                 }
             }
 
