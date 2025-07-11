@@ -12,7 +12,7 @@ const QrEventsPage = () => {
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" fontSize="2rem" textAlign="center">
+            <Typography variant="h2" textAlign="center">
                 {t('qrEvents.title')}
             </Typography>
             {data?.data?.map(event =>
@@ -22,7 +22,6 @@ const QrEventsPage = () => {
                         to: "/app/$eventId/scanner",
                         params: {eventId: event.id}
                     })}
-                    sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }}
                     fullWidth
                 >
                     {event.name}

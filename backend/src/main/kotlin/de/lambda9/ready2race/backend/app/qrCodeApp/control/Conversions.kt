@@ -31,8 +31,8 @@ fun QrCodeUpdateDto.toRecord(userId: UUID): QrCodesRecord = when (this) {
     is QrCodeUpdateDto.QrCodeAppuserUpdate -> QrCodesRecord(
         id = UUID.randomUUID(),
         qrCodeId = this.qrCodeId,
-        participant = this.id,
-        appUser = null,
+        participant = null,
+        appUser = this.id,
         event = this.eventId,
         createdAt = LocalDateTime.now(),
         createdBy = userId

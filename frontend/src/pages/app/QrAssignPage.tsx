@@ -69,7 +69,7 @@ const QrAssignPage = () => {
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" fontSize="2rem" textAlign="center">
+            <Typography variant="h2" textAlign="center">
                 {t('qrAssign.title')}
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
@@ -90,7 +90,7 @@ const QrAssignPage = () => {
                 <Typography>{t('qrAssign.participants')}</Typography>
                 {participants?.data.map(participant =>
                         <Button onClick={() => selectParticipant(participant.id)}
-                                key={participant.id} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
+                                key={participant.id} fullWidth>
                             {participant.firstname} {participant.lastname}
                         </Button>) ??
                     <Typography>{t('qrAssign.noData')}</Typography>}
@@ -98,13 +98,13 @@ const QrAssignPage = () => {
             {users && userTyp === "User" && <Stack>
                 <Typography>{t('qrAssign.users')}</Typography>
                 {users?.data.map(user => <Button onClick={() => selectUser(user.id)}
-                                                 key={user.id} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
+                                                 key={user.id} fullWidth>
                     {user.firstname} {user.lastname}
                 </Button>) ??
                     <Typography>{t('qrAssign.noData')}</Typography>}
             </Stack>}
 
-            <Button onClick={() => qr.reset(eventId)} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>{t('common.back')}</Button>
+            <Button onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
 
         </Stack>
     )

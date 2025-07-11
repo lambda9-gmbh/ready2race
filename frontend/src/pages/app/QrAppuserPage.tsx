@@ -35,7 +35,7 @@ const QrAppuserPage = () => {
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" fontSize="2rem" textAlign="center">
+            <Typography variant="h2" textAlign="center">
                 {t('qrAppuser.title')}
             </Typography>
             <Typography>{t('qrAppuser.user')}: {qr.qrCodeId}</Typography>

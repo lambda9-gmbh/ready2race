@@ -18,7 +18,7 @@ const AppLoginPage = () => {
 
     const handleSubmit = async (formData: LoginRequest) => {
         setSubmitting(true)
-        const {data, error, response} = await userLogin({ body: formData })
+        const {data, response} = await userLogin({ body: formData })
         setSubmitting(false)
         if (data !== undefined && response.ok) {
             login(data, response.headers)
@@ -31,9 +31,12 @@ const AppLoginPage = () => {
     }
 
     return (
-        <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: t => t.palette.background.default }}>
-            <Box sx={{ width: '100%', maxWidth: 340, p: 3, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 2 }}>
-                <Typography variant="h2" textAlign="center" sx={{ fontSize: '2rem', mb: 3 }}>
+        <Box className="app-login-box">
+            <Box className="app-login-inner">
+                <Typography
+                    variant="h2"
+                    textAlign="center"
+                >
                     {t('user.login.login')}
                 </Typography>
                 <FormContainer formContext={formContext} onSuccess={handleSubmit}>
@@ -52,7 +55,14 @@ const AppLoginPage = () => {
                             fullWidth
                             {...formContext.register('password', { required: true })}
                         />
-                        <Button type="submit" variant="contained" color="primary" fullWidth size="large" disabled={submitting}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            size="large"
+                            disabled={submitting}
+                        >
                             {t('user.login.submit')}
                         </Button>
                     </Stack>

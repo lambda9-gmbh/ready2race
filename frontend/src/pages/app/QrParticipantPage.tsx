@@ -36,11 +36,11 @@ const QrParticipantPage = () => {
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" fontSize="2rem" textAlign="center">
+            <Typography variant="h2" textAlign="center">
                 {t('qrParticipant.title')}
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
-            <ButtonGroup disableElevation variant={"contained"} orientation={"vertical"} sx={{ minHeight: 60, fontSize: '1.2rem', py: 2, borderRadius: 2 }} fullWidth>
+            <ButtonGroup disableElevation variant={"contained"} orientation={"vertical"} fullWidth>
                 <Button>{t('qrParticipant.enterArea')}</Button>
                 <Button>{t('qrParticipant.leaveArea')}</Button>
             </ButtonGroup>
