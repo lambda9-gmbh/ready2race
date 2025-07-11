@@ -4,6 +4,8 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
+import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
+import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
@@ -91,6 +93,8 @@ fun Route.competitionExecution() {
                 }
             }
         }
+
+        substitution()
     }
 
 }

@@ -6,6 +6,7 @@ drop view if exists startlist_substitution;
 drop view if exists invoice_download;
 drop view if exists invoice_for_event_registration;
 drop view if exists competition_setup_round_with_matches;
+drop view if exists substitution_view;
 drop view if exists competition_match_with_teams;
 drop view if exists competition_match_team_with_registration;
 drop view if exists participant_view;
@@ -453,7 +454,7 @@ create view registered_competition_team_participant as
 select crnp.competition_registration as team_id,
        np.id                         as role_id,
        np.name                       as role,
-       p.id as participant_id,
+       p.id                          as participant_id,
        p.firstname,
        p.lastname,
        p.year,
@@ -649,20 +650,46 @@ from competition_match cm
 group by cm.competition_setup_match
 ;
 
+create view substitution_view as
+select s.id,
+       s.reason,
+       s.order_for_round,
+       np.id    as named_participant_id,
+       np.name  as named_participant_name,
+       csr.id   as competition_setup_round_id,
+       csr.name as competition_setup_round_name,
+       cr.id    as competition_registration_id,
+       cr.name  as competition_registration_name,
+       c.id     as club_id,
+       c.name   as club_name,
+       p_out    as participant_out,
+       p_in     as participant_in
+from substitution s
+         left join named_participant np on s.named_participant = np.id
+         left join competition_setup_round csr on s.competition_setup_round = csr.id
+         left join competition_registration cr on cr.id = s.competition_registration
+         left join club c on c.id = cr.club
+         join participant p_out on s.participant_out = p_out.id
+         join participant p_in on s.participant_in = p_in.id
+;
+
 create view competition_setup_round_with_matches as
-select sr.id                                                                                   as setup_round_id,
+select sr.id                                                                                            as setup_round_id,
        sr.competition_setup,
        sr.next_round,
-       sr.name                                                                                    setup_round_name,
+       sr.name                                                                                          as setup_round_name,
        sr.required,
        sr.places_option,
        coalesce(array_agg(distinct csp) filter ( where csp.competition_setup_round is not null ), '{}') as places,
-       coalesce(array_agg(distinct sm) filter (where sm.id is not null), '{}')                          as setup_matches,
-       coalesce(array_agg(distinct mwt) filter (where mwt.competition_setup_match is not null), '{}')   as matches
+       coalesce(array_agg(distinct sm) filter (where sm.id is not null),
+                '{}')                                                                                   as setup_matches,
+       coalesce(array_agg(distinct mwt) filter (where mwt.competition_setup_match is not null), '{}')   as matches,
+       coalesce(array_agg(distinct sv) filter ( where sv.id is not null ), '{}')                        as substitutions
 from competition_setup_round sr
          left join competition_setup_place csp on sr.id = csp.competition_setup_round
          left join competition_setup_match sm on sr.id = sm.competition_setup_round
          left join competition_match_with_teams mwt on sm.id = mwt.competition_setup_match
+         left join substitution_view sv on sr.id = sv.competition_setup_round_id
 group by sr.id
 ;
 

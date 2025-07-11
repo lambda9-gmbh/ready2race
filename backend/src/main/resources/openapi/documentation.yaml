@@ -1360,6 +1360,120 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    post:
+      operationId: addSubstitution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubstitutionRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: substitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: deleteSubstitution
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionSetupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPossibleSubOuts
+      responses:
+        200:
+          description: Participants that can be subbed out successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantForExecutionDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionSetupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: participantId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPossibleSubIns
+      responses:
+        200:
+          description: Participants that can be subbed in for a specific participant successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PossibleSubstitutionsForParticipantDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -2104,7 +2218,7 @@ paths:
           description: Filter for clubs, which registered for this event
           required: false
           schema:
-           type: string
+            type: string
       responses:
         200:
           description: Club page successfully retrieved
@@ -3382,7 +3496,7 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-          
+
   /bankAccount:
     get:
       parameters:
@@ -6030,8 +6144,8 @@ components:
         name:
           type: string
       required:
-      - id
-      - name
+        - id
+        - name
 
     EventRegistrationCompetitionDto:
       type: object
@@ -6532,7 +6646,7 @@ components:
           $ref: '#/components/schemas/DocumentType'
         assignedTemplate:
           $ref: '#/components/schemas/AssignedTemplateId'
-          
+
     BankAccountDto:
       type: object
       required:
@@ -6551,9 +6665,9 @@ components:
           type: string
         bic:
           type: string
-        bank: 
+        bank:
           type: string
-          
+
     BankAccountRequest:
       type: object
       required:
@@ -6681,10 +6795,15 @@ components:
     CompetitionRoundDto:
       type: object
       required:
+        - setupRoundId
         - name
         - matches
         - required
+        - substitutions
       properties:
+        setupRoundId:
+          type: string
+          format: uuid
         name:
           type: string
         matches:
@@ -6693,6 +6812,10 @@ components:
             $ref: '#/components/schemas/CompetitionMatchDto'
         required:
           type: boolean
+        substitutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubstitutionDto'
 
     CompetitionMatchDto:
       type: object
@@ -6868,6 +6991,169 @@ components:
         external:
           type: boolean
         externalClubName:
+          type: string
+
+    SubstitutionDto:
+      type: object
+      required:
+        - id
+        - orderForRound
+        - setupRoundId
+        - setupRoundName
+        - competitionRegistrationId
+        - competitionRegistrationName
+        - clubId
+        - clubName
+        - participantOut
+        - participantIn
+      properties:
+        id:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        orderForRound:
+          type: integer
+          format: int64
+        setupRoundId:
+          type: string
+          format: uuid
+        setupRoundName:
+          type: string
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        participantOut:
+          $ref: '#/components/schemas/SubstitutionParticipantDto'
+        participantIn:
+          $ref: '#/components/schemas/SubstitutionParticipantDto'
+
+    SubstitutionParticipantDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - year
+        - gender
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    ParticipantForExecutionDto:
+      type: object
+      required:
+        - id
+        - namedParticipantId
+        - namedParticipantName
+        - firstName
+        - lastName
+        - clubId
+        - clubName
+        - competitionRegistrationId
+      properties:
+        id:
+          type: string
+          format: uuid
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    PossibleSubstitutionParticipantDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    PossibleSubstitutionsForParticipantDto:
+      type: object
+      required:
+        - currentlyParticipating
+        - notCurrentlyParticipating
+      properties:
+        currentlyParticipating:
+          type: array
+          items:
+            $ref: '#/components/schemas/PossibleSubstitutionParticipantDto'
+        notCurrentlyParticipating:
+          type: array
+          items:
+            $ref: '#/components/schemas/PossibleSubstitutionParticipantDto'
+
+    SubstitutionRequest:
+      type: object
+      required:
+        - competitionRegistrationId
+        - competitionSetupRound
+        - participantOut
+        - participantIn
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionSetupRound:
+          type: string
+          format: uuid
+        participantOut:
+          type: string
+          format: uuid
+        participantIn:
+          type: string
+          format: uuid
+        reason:
           type: string
 
     InvoiceDto:

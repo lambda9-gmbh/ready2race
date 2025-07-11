@@ -160,6 +160,18 @@ import type {
     GetCompetitionPlacesData,
     GetCompetitionPlacesError,
     GetCompetitionPlacesResponse,
+    AddSubstitutionData,
+    AddSubstitutionError,
+    AddSubstitutionResponse,
+    DeleteSubstitutionData,
+    DeleteSubstitutionError,
+    DeleteSubstitutionResponse,
+    GetPossibleSubOutsData,
+    GetPossibleSubOutsError,
+    GetPossibleSubOutsResponse,
+    GetPossibleSubInsData,
+    GetPossibleSubInsError,
+    GetPossibleSubInsResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -1054,6 +1066,58 @@ export const getCompetitionPlaces = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/places',
+    })
+}
+
+export const addSubstitution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddSubstitutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddSubstitutionResponse,
+        AddSubstitutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution',
+    })
+}
+
+export const deleteSubstitution = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteSubstitutionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteSubstitutionResponse,
+        DeleteSubstitutionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
+    })
+}
+
+export const getPossibleSubOuts = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPossibleSubOutsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPossibleSubOutsResponse,
+        GetPossibleSubOutsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts',
+    })
+}
+
+export const getPossibleSubIns = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPossibleSubInsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPossibleSubInsResponse,
+        GetPossibleSubInsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns',
     })
 }
 

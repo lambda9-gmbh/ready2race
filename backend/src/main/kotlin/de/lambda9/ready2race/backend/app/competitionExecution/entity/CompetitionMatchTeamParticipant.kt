@@ -12,6 +12,6 @@ data class CompetitionMatchTeamParticipant(
     val lastName: String,
     val year: Int,
     val gender: Gender,
-    val external: Boolean,
+    val external: Boolean?,
     val externalClubName: String?
 )

@@ -1,5 +1,5 @@
 import React, {Fragment} from 'react'
-import {Button, Divider, List, ListItem, ListItemText, Stack, Typography} from '@mui/material'
+import {Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography, useTheme} from '@mui/material'
 import {ClockIcon} from '@mui/x-date-pickers'
 import {useTranslation} from 'react-i18next'
 import {DashboardWidget} from '@components/dashboard/DashboardWidget.tsx'
@@ -12,6 +12,7 @@ import {eventRegistrationPossible} from '@utils/helpers.ts'
 export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
     const feedback = useFeedback()
     const {t} = useTranslation()
+    const theme = useTheme()
 
     const {data: events} = useFetch(
         signal =>
@@ -46,158 +47,180 @@ export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
                         <List>
                             {events?.data?.map((event, index) => (
                                 <Fragment key={`event-${event.id}`}>
-                                    {index !== 0 && (
-                                        <Divider key={`divider-${event.id}`} variant={'middle'} />
-                                    )}
-                                    <ListItem
-                                        key={event.id}
-                                        secondaryAction={
-                                            !props.hideRegistration &&
-                                            eventRegistrationPossible(
-                                                event.registrationAvailableFrom,
-                                                event.registrationAvailableTo,
-                                            ) && (
-                                                <Link
-                                                    to={'/event/$eventId/register'}
-                                                    params={{eventId: event.id}}>
-                                                    <Button
-                                                        endIcon={<Forward />}
-                                                        variant={'contained'}>
-                                                        {t('event.registerNow')}
-                                                    </Button>
-                                                </Link>
-                                            )
-                                        }>
-                                        <ListItemText
-                                            disableTypography={true}
-                                            primary={
-                                                <Stack>
-                                                    <Stack
-                                                        direction={'row'}
-                                                        spacing={2}
-                                                        alignItems={'center'}>
-                                                        <Link
-                                                            to={'/event/$eventId'}
-                                                            params={{eventId: event.id}}>
-                                                            <Button>
-                                                                <Typography
-                                                                    color={'primary'}
-                                                                    variant={'h6'}>
-                                                                    {event.name}
-                                                                </Typography>
-                                                            </Button>
-                                                        </Link>
+                                    {index !== 0 && <Divider variant={'middle'} />}
+                                    <ListItem>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                width: 1,
+                                                [theme.breakpoints.down('md')]: {
+                                                    flexDirection: 'column',
+                                                },
+                                            }}>
+                                            <ListItemText
+                                                sx={{flex: 1}}
+                                                disableTypography={true}
+                                                primary={
+                                                    <Stack>
                                                         <Stack
-                                                            direction="row"
-                                                            divider={
-                                                                <Divider
-                                                                    orientation="vertical"
-                                                                    flexItem
-                                                                />
-                                                            }
-                                                            spacing={2}>
-                                                            {event.eventFrom != null && (
-                                                                <Stack
-                                                                    direction="row"
-                                                                    spacing={0.5}>
-                                                                    <Event
-                                                                        fontSize={'small'}
-                                                                        sx={{
-                                                                            color: 'text.secondary',
-                                                                        }}
-                                                                    />
+                                                            direction={'row'}
+                                                            spacing={2}
+                                                            alignItems={'center'}>
+                                                            <Link
+                                                                to={'/event/$eventId'}
+                                                                params={{eventId: event.id}}>
+                                                                <Button>
                                                                     <Typography
-                                                                        color={'text.secondary'}>
-                                                                        {new Date(
-                                                                            event.eventFrom,
-                                                                        ).toLocaleDateString()}
-                                                                        {event.eventTo !==
-                                                                            event.eventFrom &&
-                                                                            ` - ${new Date(
-                                                                                event.eventTo!!,
-                                                                            ).toLocaleDateString()}`}
+                                                                        color={'primary'}
+                                                                        variant={'h6'}>
+                                                                        {event.name}
                                                                     </Typography>
-                                                                </Stack>
-                                                            )}
-                                                            {event.location && (
-                                                                <Stack
-                                                                    direction="row"
-                                                                    spacing={0.5}>
-                                                                    <LocationOn
-                                                                        fontSize={'small'}
-                                                                        sx={{
-                                                                            color: 'text.secondary',
-                                                                        }}
+                                                                </Button>
+                                                            </Link>
+                                                            <Stack
+                                                                direction="row"
+                                                                divider={
+                                                                    <Divider
+                                                                        orientation="vertical"
+                                                                        flexItem
                                                                     />
-                                                                    <Typography
-                                                                        color={'text.secondary'}>
-                                                                        {event.location}
-                                                                    </Typography>
-                                                                </Stack>
-                                                            )}
-                                                            <Typography color={'text.secondary'}>
-                                                                {event.competitionCount}{' '}
-                                                                {t(
-                                                                    'event.competition.competitions',
+                                                                }
+                                                                spacing={2}>
+                                                                {event.eventFrom != null && (
+                                                                    <Stack
+                                                                        direction="row"
+                                                                        spacing={0.5}>
+                                                                        <Event
+                                                                            fontSize={'small'}
+                                                                            sx={{
+                                                                                color: 'text.secondary',
+                                                                            }}
+                                                                        />
+                                                                        <Typography
+                                                                            color={
+                                                                                'text.secondary'
+                                                                            }>
+                                                                            {new Date(
+                                                                                event.eventFrom,
+                                                                            ).toLocaleDateString()}
+                                                                            {event.eventTo !==
+                                                                                event.eventFrom &&
+                                                                                ` - ${new Date(
+                                                                                    event.eventTo!!,
+                                                                                ).toLocaleDateString()}`}
+                                                                        </Typography>
+                                                                    </Stack>
                                                                 )}
-                                                            </Typography>
+                                                                {event.location && (
+                                                                    <Stack
+                                                                        direction="row"
+                                                                        spacing={0.5}>
+                                                                        <LocationOn
+                                                                            fontSize={'small'}
+                                                                            sx={{
+                                                                                color: 'text.secondary',
+                                                                            }}
+                                                                        />
+                                                                        <Typography
+                                                                            color={
+                                                                                'text.secondary'
+                                                                            }>
+                                                                            {event.location}
+                                                                        </Typography>
+                                                                    </Stack>
+                                                                )}
+                                                                <Typography
+                                                                    color={'text.secondary'}>
+                                                                    {event.competitionCount}{' '}
+                                                                    {t(
+                                                                        'event.competition.competitions',
+                                                                    )}
+                                                                </Typography>
+                                                            </Stack>
                                                         </Stack>
+                                                        {event.description && (
+                                                            <Stack p={1}>
+                                                                <Typography fontWeight={'light'}>
+                                                                    {event.description}
+                                                                </Typography>
+                                                            </Stack>
+                                                        )}
                                                     </Stack>
-                                                    {event.description && (
-                                                        <Stack p={1}>
-                                                            <Typography fontWeight={'light'}>
-                                                                {event.description}
-                                                            </Typography>
-                                                        </Stack>
-                                                    )}
-                                                </Stack>
-                                            }
-                                            secondary={
-                                                <Stack
-                                                    fontSize={'1em'}
-                                                    direction={'row'}
-                                                    alignItems={'center'}
-                                                    p={1}
-                                                    spacing={1}>
-                                                    <ClockIcon fontSize={'small'} />
-                                                    <Typography
-                                                        variant={'body2'}
-                                                        color={'text.secondary'}>
-                                                        {t('event.registrationAvailable.timespan')}:
-                                                    </Typography>
-                                                    {event.registrationAvailableFrom != null && (
+                                                }
+                                                secondary={
+                                                    <Stack
+                                                        fontSize={'1em'}
+                                                        direction={'row'}
+                                                        alignItems={'center'}
+                                                        p={1}
+                                                        spacing={1}>
+                                                        <ClockIcon fontSize={'small'} />
                                                         <Typography
                                                             variant={'body2'}
                                                             color={'text.secondary'}>
-                                                            {t('event.registrationAvailable.from')}{' '}
-                                                            {new Date(
-                                                                event.registrationAvailableFrom,
-                                                            ).toLocaleString()}
+                                                            {t(
+                                                                'event.registrationAvailable.timespan',
+                                                            )}
+                                                            :
                                                         </Typography>
-                                                    )}
-                                                    {event.registrationAvailableTo != null && (
-                                                        <Typography
-                                                            variant={'body2'}
-                                                            color={'text.secondary'}>
-                                                            {t('event.registrationAvailable.to')}{' '}
-                                                            {new Date(
-                                                                event.registrationAvailableTo,
-                                                            ).toLocaleString()}
-                                                        </Typography>
-                                                    )}
-                                                    {event.registrationAvailableFrom == null &&
-                                                        event.registrationAvailableTo == null && (
+                                                        {event.registrationAvailableFrom !=
+                                                            null && (
                                                             <Typography
                                                                 variant={'body2'}
                                                                 color={'text.secondary'}>
                                                                 {t(
-                                                                    'event.registrationAvailable.unknown',
-                                                                )}
+                                                                    'event.registrationAvailable.from',
+                                                                )}{' '}
+                                                                {new Date(
+                                                                    event.registrationAvailableFrom,
+                                                                ).toLocaleString()}
                                                             </Typography>
                                                         )}
-                                                </Stack>
-                                            }
-                                        />
+                                                        {event.registrationAvailableTo != null && (
+                                                            <Typography
+                                                                variant={'body2'}
+                                                                color={'text.secondary'}>
+                                                                {t(
+                                                                    'event.registrationAvailable.to',
+                                                                )}{' '}
+                                                                {new Date(
+                                                                    event.registrationAvailableTo,
+                                                                ).toLocaleString()}
+                                                            </Typography>
+                                                        )}
+                                                        {event.registrationAvailableFrom == null &&
+                                                            event.registrationAvailableTo ==
+                                                                null && (
+                                                                <Typography
+                                                                    variant={'body2'}
+                                                                    color={'text.secondary'}>
+                                                                    {t(
+                                                                        'event.registrationAvailable.unknown',
+                                                                    )}
+                                                                </Typography>
+                                                            )}
+                                                    </Stack>
+                                                }
+                                            />
+                                            {!props.hideRegistration &&
+                                                eventRegistrationPossible(
+                                                    event.registrationAvailableFrom,
+                                                    event.registrationAvailableTo,
+                                                ) && (
+                                                    <Box sx={{alignSelf: 'center'}}>
+                                                        <Link
+                                                            to={'/event/$eventId/register'}
+                                                            params={{eventId: event.id}}>
+                                                            <Button
+                                                                endIcon={<Forward />}
+                                                                variant={'contained'}>
+                                                                {t('event.registerNow')}
+                                                            </Button>
+                                                        </Link>
+                                                    </Box>
+                                                )}
+                                        </Box>
                                     </ListItem>
                                 </Fragment>
                             ))}

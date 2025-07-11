@@ -13,7 +13,7 @@ data class CompetitionSetupMatchDto(
     val name: String?,
     val participants: List<Int>,
     val executionOrder: Int,
-    val startTimeOffset: Long?,
+    val startTimeOffset: Long?, // as milliseconds
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::weighting validate min(1),
