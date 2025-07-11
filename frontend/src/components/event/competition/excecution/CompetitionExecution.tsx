@@ -49,7 +49,6 @@ import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
-import Substitutions from '@components/event/competition/excecution/Substitutions.tsx'
 import SelectionMenu from "@components/SelectionMenu.tsx";
 
 type EditMatchTeam = {
