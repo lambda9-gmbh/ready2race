@@ -5,6 +5,9 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import java.time.LocalDateTime
 
 data class CompetitionMatchData(
+    val matchName: String?,
+    val roundName: String,
+    val order: Int,
     val startTime: LocalDateTime,
     val startTimeOffset: Long?,
     val competition: CompetitionData,
@@ -44,8 +47,11 @@ data class CompetitionMatchData(
         fun fromPersisted(
             persisted: CompetitionMatchWithTeamsRecord
         ): CompetitionMatchData = CompetitionMatchData(
+            matchName = null, //missing
+            roundName = "ph_round", //missing
+            order = 0, // missing
             startTime = persisted.startTime!!,
-            startTimeOffset = null, // TODO: @Incomplete: properties missing from view
+            startTimeOffset = 60000, // TODO: @Incomplete: properties missing from view
             competition = CompetitionData(
                 identifier = "ph",
                 name = "placehodler",

@@ -25,6 +25,9 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.hr
+import de.lambda9.ready2race.backend.hrDate
+import de.lambda9.ready2race.backend.hrTime
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -549,7 +552,7 @@ object CompetitionExecutionService {
     ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
 
         val match = !CompetitionMatchRepo.getWithTeams(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
-            .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound } // TODO: @Cleanup: is this check needed?
+            .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
             .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
         val eventId = !CompetitionRegistrationRepo.getEvent(match.teams!!.first()!!.competitionRegistration!!).orDie()
@@ -568,13 +571,12 @@ object CompetitionExecutionService {
 
         KIO.ok(
             ApiResponse.File(
-                name = "todo-naming-file.$extension",
+                name = "startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
                 bytes = bytes,
             )
         )
     }
 
-    // TODO: Add missing start time for match, also per team, if configured with offsets
     fun buildPdf(
         data: CompetitionMatchData,
         template: PageTemplate?,
@@ -582,7 +584,7 @@ object CompetitionExecutionService {
         val doc = document(template) {
             page {
                 block(
-                    padding = Padding(bottom = 30f),
+                    padding = Padding(bottom = 25f),
                 ) {
                     text(
                         fontStyle = FontStyle.BOLD,
@@ -624,9 +626,35 @@ object CompetitionExecutionService {
                             }
                         }
                     }
+
+                    block(
+                        padding = Padding(top = 10f, left = 10f),
+                    ) {
+                        text(
+                            fontStyle = FontStyle.BOLD,
+                            fontSize = 11f,
+                        ) {
+                            "Startzeit / "
+                        }
+                        text(
+                            fontSize = 9f,
+                            newLine = false,
+                        ) {
+                            "Start time"
+                        }
+                        text(
+                            newLine = false,
+                        ) { "  ${data.startTime.hr()}" }
+                        if (data.startTimeOffset != null) {
+                            text(
+                                newLine = false,
+                            ) { " (versetzte Starts)" }
+                        }
+                    }
+
                 }
 
-                data.teams.forEach { team ->
+                data.teams.forEachIndexed { index, team ->
                     block(
                         padding = Padding(0f, 0f, 0f, 25f)
                     ) {
@@ -664,6 +692,9 @@ object CompetitionExecutionService {
                                 text(
                                     newLine = false,
                                 ) { " $it" }
+                            }
+                            if (data.startTimeOffset != null) {
+                                text { "startet ${data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds).hrTime()}" }
                             }
                         }
 

@@ -474,6 +474,13 @@
             "error": "Beim speichern der Details ist ein Fehler aufgetreten",
             "success": "Partie gespeichert"
           }
+        },
+        "startList": {
+          "download": "Startliste herunterladen",
+          "type": {
+            "PDF": "als PDF",
+            "CSV": "als CSV"
+          }
         }
       },
       "places": {

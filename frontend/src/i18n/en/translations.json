@@ -474,6 +474,13 @@
             "error": "An error has occurred when editing the match data",
             "success": "Match data successfully updated"
           }
+        },
+        "startList": {
+          "download": "Download start list",
+          "type": {
+            "PDF": "as PDF",
+            "CSV": "as CSV"
+          }
         }
       },
       "places": {

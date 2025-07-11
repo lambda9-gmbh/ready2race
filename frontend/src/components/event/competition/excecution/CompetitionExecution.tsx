@@ -49,6 +49,7 @@ import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
+import SelectionMenu from "@components/SelectionMenu.tsx";
 
 type EditMatchTeam = {
     registrationId: string
@@ -628,24 +629,33 @@ const CompetitionExecution = () => {
                                                                     )}
                                                                 </LoadingButton>
                                                                 {/*TODO: @Incomplete combine types into submenu*/}
-                                                                <Button
-                                                                    onClick={() =>
-                                                                        handleDownloadStartList(
-                                                                            match.id,
-                                                                            'PDF',
-                                                                        )
-                                                                    }>
-                                                                    Download StartListe (PDF)
-                                                                </Button>
-                                                                <Button
-                                                                    onClick={() =>
-                                                                        handleDownloadStartList(
-                                                                            match.id,
-                                                                            'CSV',
-                                                                        )
-                                                                    }>
-                                                                    Download StartListe (CSV)
-                                                                </Button>
+                                                                <SelectionMenu
+                                                                    anchor={{
+                                                                        button: {
+                                                                            vertical: 'bottom',
+                                                                            horizontal: 'right',
+                                                                        },
+                                                                        menu: {
+                                                                            vertical: 'top',
+                                                                            horizontal: 'right',
+                                                                        }
+                                                                    }}
+                                                                    buttonContent={t('event.competition.execution.startList.download')}
+                                                                    keyLabel={'competition-execution-startlist-download'}
+                                                                    onSelectItem={(fileType: string) =>
+                                                                        handleDownloadStartList(match.id, fileType as StartListFileType)
+                                                                    }
+                                                                    items={[
+                                                                        {
+                                                                            id: 'PDF',
+                                                                            label: t('event.competition.execution.startList.type.PDF')
+                                                                        },
+                                                                        {
+                                                                            id: 'CSV',
+                                                                            label: t('event.competition.execution.startList.type.CSV')
+                                                                        }
+                                                                    ] satisfies {id: StartListFileType, label: string}[]}
+                                                                />
                                                             </Stack>
                                                         </Stack>
                                                         <Divider sx={{my: 2}} />

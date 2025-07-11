@@ -293,6 +293,9 @@ object DocumentTemplateService {
 
             DocumentType.START_LIST -> CompetitionExecutionService.buildPdf(
                 CompetitionMatchData(
+                    matchName = "Vorrunde 1",
+                    roundName = "Vorrunden",
+                    order = 0,
                     startTime = LocalDateTime.now().plusHours(1),
                     startTimeOffset = null,
                     competition = CompetitionMatchData.CompetitionData(
