@@ -163,6 +163,12 @@ import type {
     DeleteSubstitutionData,
     DeleteSubstitutionError,
     DeleteSubstitutionResponse,
+    GetPossibleSubOutsData,
+    GetPossibleSubOutsError,
+    GetPossibleSubOutsResponse,
+    GetPossibleSubInsData,
+    GetPossibleSubInsError,
+    GetPossibleSubInsResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -1070,6 +1076,32 @@ export const deleteSubstitution = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
+    })
+}
+
+export const getPossibleSubOuts = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPossibleSubOutsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPossibleSubOutsResponse,
+        GetPossibleSubOutsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts',
+    })
+}
+
+export const getPossibleSubIns = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetPossibleSubInsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetPossibleSubInsResponse,
+        GetPossibleSubInsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns',
     })
 }
 

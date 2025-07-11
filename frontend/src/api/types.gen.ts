@@ -819,6 +819,20 @@ export type ParticipantForEventDto = {
     participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
 }
 
+export type ParticipantForExecutionDto = {
+    id: string
+    namedParticipantId: string
+    namedParticipantName: string
+    firstName: string
+    lastName: string
+    clubId: string
+    clubName: string
+    competitionRegistrationId: string
+    competitionRegistrationName?: string
+    external?: boolean
+    externalClubName?: string
+}
+
 export type ParticipantRequirementCheckForEventConfigDto = {
     requirementId: string
     separator?: string
@@ -880,6 +894,19 @@ export type PasswordResetInitRequest = {
 
 export type PasswordResetRequest = {
     password: string
+}
+
+export type PossibleSubstitutionParticipantDto = {
+    id: string
+    firstName: string
+    lastName: string
+    external?: boolean
+    externalClubName?: string
+}
+
+export type PossibleSubstitutionsForParticipantDto = {
+    currentlyParticipating: Array<PossibleSubstitutionParticipantDto>
+    notCurrentlyParticipating: Array<PossibleSubstitutionParticipantDto>
 }
 
 export type Privilege = {
@@ -1864,6 +1891,33 @@ export type DeleteSubstitutionData = {
 export type DeleteSubstitutionResponse = void
 
 export type DeleteSubstitutionError = BadRequestError | ApiError
+
+export type GetPossibleSubOutsData = {
+    path: {
+        competitionId: string
+        competitionSetupRoundId: string
+        eventId: string
+    }
+}
+
+export type GetPossibleSubOutsResponse = Array<ParticipantForExecutionDto>
+
+export type GetPossibleSubOutsError = BadRequestError | ApiError
+
+export type GetPossibleSubInsData = {
+    path: {
+        competitionId: string
+        competitionSetupRoundId: string
+        eventId: string
+    }
+    query: {
+        participantId: string
+    }
+}
+
+export type GetPossibleSubInsResponse = PossibleSubstitutionsForParticipantDto
+
+export type GetPossibleSubInsError = BadRequestError | ApiError
 
 export type AddDocumentsData = {
     body: {

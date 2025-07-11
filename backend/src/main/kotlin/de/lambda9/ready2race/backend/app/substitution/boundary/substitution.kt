@@ -32,26 +32,31 @@ fun Route.substitution() {
                 }
             }
         }
+        route("{competitionSetupRoundId}") {
 
-        route("/possibleSubOuts") {
-            get {
-                call.respondComprehension {
-                    !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
-                    val competitionSetupRoundId = !pathParam("competitionSetupRoundId", uuid)
+            route("/possibleSubOuts") {
+                get {
+                    call.respondComprehension {
+                        !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
+                        val competitionSetupRoundId = !pathParam("competitionSetupRoundId", uuid)
 
-                    SubstitutionService.getParticipantsCurrentlyParticipatingInRound(competitionSetupRoundId)
+                        SubstitutionService.getParticipantsCurrentlyParticipatingInRound(competitionSetupRoundId)
+                    }
                 }
             }
-        }
 
-        route("/possibleSubIns") {
-            get {
-                call.respondComprehension {
-                    !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
-                    val competitionSetupRoundId = !pathParam("competitionSetupRoundId", uuid)
-                    val participantId = !queryParam("participantId", uuid)
+            route("/possibleSubIns") {
+                get {
+                    call.respondComprehension {
+                        !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
+                        val competitionSetupRoundId = !pathParam("competitionSetupRoundId", uuid)
+                        val participantId = !queryParam("participantId", uuid)
 
-                    SubstitutionService.getPossibleSubstitutionsForParticipant(competitionSetupRoundId, participantId)
+                        SubstitutionService.getPossibleSubstitutionsForParticipant(
+                            competitionSetupRoundId,
+                            participantId
+                        )
+                    }
                 }
             }
         }

@@ -46,6 +46,7 @@ import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
+import Substitutions from '@components/event/competition/excecution/Substitutions.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -507,6 +508,7 @@ const CompetitionExecution = () => {
                                         </Box>
                                     </Box>
                                 )}
+                                {/*{roundIndex === 0 && <Substitutions reloadRoundDto={() => setReloadData(!reloadData)} roundDto={round} />}*/}
                                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                                     {matchesFiltered(round.matches).map((match, matchIndex) => (
                                         <Card key={match.id} sx={{p: 2, minWidth: 400, flex: 1}}>
@@ -555,7 +557,10 @@ const CompetitionExecution = () => {
                                                     )}
                                                     <LoadingButton
                                                         onClick={() =>
-                                                            openEditMatchDialog(roundIndex, matchIndex)
+                                                            openEditMatchDialog(
+                                                                roundIndex,
+                                                                matchIndex,
+                                                            )
                                                         }
                                                         variant={'outlined'}
                                                         pending={submitting}>
@@ -600,8 +605,9 @@ const CompetitionExecution = () => {
                                                                     </TableCell>
                                                                     <TableCell width="50%">
                                                                         {team.clubName +
-                                                                            (team.name &&
-                                                                                ` ${team.name}`)}
+                                                                            (team.name
+                                                                                ? ` ${team.name}`
+                                                                                : '')}
                                                                     </TableCell>
                                                                     <TableCell width="25%">
                                                                         {team.place}

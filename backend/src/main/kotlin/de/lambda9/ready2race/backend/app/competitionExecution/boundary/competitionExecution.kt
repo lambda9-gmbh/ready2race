@@ -87,12 +87,7 @@ fun Route.competitionExecution() {
             }
         }
 
-        route("/{competitionSetupRoundId}") {
-
-            substitution()
-
-        }
-
+        substitution()
     }
 
 }

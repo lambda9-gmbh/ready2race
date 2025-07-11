@@ -62,7 +62,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
     }
 
     const handleReportDownload = async () => {
-        const {data, error} = await getRegistrationResult({
+        const {data, error, response} = await getRegistrationResult({
             path: {eventId},
             query: {
                 remake: true,
@@ -70,11 +70,14 @@ const EventActions = ({registrationsFinalized}: Props) => {
         })
         const anchor = downloadRef.current
 
+        const disposition = response.headers.get('Content-Disposition')
+        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
+
         if (error) {
             feedback.error(t('event.document.download.error'))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
-            anchor.download = 'registration-result.pdf' // TODO: read from content-disposition header
+            anchor.download = filename ?? 'registration-result.pdf'
             anchor.click()
             anchor.href = ''
             anchor.download = ''

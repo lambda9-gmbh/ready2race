@@ -90,19 +90,6 @@ fun Route.competition() {
                 }
             }
 
-
-            route("participants"){
-                get{
-                    call.respondComprehension {
-                        !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
-                        val competitionId = !pathParam("competitionId", uuid)
-                        val competitionSetupRoundId = !queryParam("competitionSetupRoundId", uuid)
-
-                        ParticipantService
-                    }
-                }
-            }
-
             competitionRegistration()
             competitionSetup("competitionId")
             competitionExecution()

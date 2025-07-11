@@ -39,26 +39,12 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
     )
 )
 
-fun RegisteredCompetitionTeamParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
-    id = participantId!!,
-    firstName = firstname!!,
-    lastName = lastname!!,
-    year = year!!,
-    gender = gender!!,
-    external = external,
-    externalClubName = externalClubName,
-)
-
-
-fun RegisteredCompetitionTeamParticipantRecord.toCompetitionMatchTeamParticipant() = CompetitionMatchTeamParticipant(
-    competitionRegistrationId = teamId!!,
-    namedParticipantId = roleId!!,
-    namedParticipantName = role!!,
-    participantId = participantId!!,
-    firstName = firstname!!,
-    lastName = lastname!!,
-    year = year!!,
-    gender = gender!!,
+fun ParticipantRecord.toSubstituteParticipantDto() = SubstitutionParticipantDto(
+    id = id,
+    firstName = firstname,
+    lastName = lastname,
+    year = year,
+    gender = gender,
     external = external,
     externalClubName = externalClubName,
 )

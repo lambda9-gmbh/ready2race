@@ -1376,6 +1376,72 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionSetupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPossibleSubOuts
+      responses:
+        200:
+          description: Participants that can be subbed out successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantForExecutionDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionSetupRoundId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: participantId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getPossibleSubIns
+      responses:
+        200:
+          description: Participants that can be subbed in for a specific participant successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PossibleSubstitutionsForParticipantDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6984,6 +7050,79 @@ components:
           type: boolean
         externalClubName:
           type: string
+
+    ParticipantForExecutionDto:
+      type: object
+      required:
+        - id
+        - namedParticipantId
+        - namedParticipantName
+        - firstName
+        - lastName
+        - clubId
+        - clubName
+        - competitionRegistrationId
+      properties:
+        id:
+          type: string
+          format: uuid
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    PossibleSubstitutionParticipantDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    PossibleSubstitutionsForParticipantDto:
+      type: object
+      required:
+        - currentlyParticipating
+        - notCurrentlyParticipating
+      properties:
+        currentlyParticipating:
+          type: array
+          items:
+            $ref: '#/components/schemas/PossibleSubstitutionParticipantDto'
+        notCurrentlyParticipating:
+          type: array
+          items:
+            $ref: '#/components/schemas/PossibleSubstitutionParticipantDto'
 
     SubstitutionRequest:
       type: object
