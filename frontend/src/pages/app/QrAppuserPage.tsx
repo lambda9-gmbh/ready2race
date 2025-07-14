@@ -1,31 +1,34 @@
-import {Alert, Button, Stack, Typography, Dialog, DialogTitle, DialogContent, DialogActions} from "@mui/material";
-import {UseReceivedQr} from "@contexts/qr/QrContext.ts";
-import {qrEventRoute} from "@routes";
+import {Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography} from "@mui/material";
 import {useEffect, useState} from "react";
+import {qrEventRoute, router} from "@routes";
 import {deleteQrCode} from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
-import {useApp} from '@contexts/app/AppContext';
+import {useAppSession} from '@contexts/app/AppSessionContext';
 
 const QrAppuserPage = () => {
-    const { t } = useTranslation();
-    const qr = UseReceivedQr()
+    const {t} = useTranslation();
+    const {qr, appFunction} = useAppSession();
     const {eventId} = qrEventRoute.useParams()
     const [dialogOpen, setDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { appFunction } = useApp();
+    const navigate = router.navigate
 
     useEffect(() => {
+        if (!appFunction) {
+            navigate({to: "/app/function"})
+            return;
+        }
         if (!qr.received) {
             qr.reset(eventId)
         }
-    }, [qr])
+    }, [qr, appFunction, eventId])
 
     const handleDelete = async () => {
         setLoading(true);
         setError(null);
         try {
-            await deleteQrCode({ path: { qrCodeId: qr.qrCodeId } });
+            await deleteQrCode({path: {qrCodeId: qr.qrCodeId!!}});
             setDialogOpen(false);
             qr.reset(eventId);
         } catch (e: any) {
@@ -35,7 +38,7 @@ const QrAppuserPage = () => {
         }
     };
 
-    const allowed = appFunction === 'APP_QR_MANAGEMENT' || appFunction === 'APP_COMPETITION_CHECK';
+    const allowed = appFunction === 'APP_QR_MANAGEMENT' || appFunction === 'APP_COMPETITION_CHECK' || appFunction === 'APP_EVENT_REQUIREMENT';
     const canRemove = appFunction === 'APP_QR_MANAGEMENT';
 
     return (
@@ -63,7 +66,7 @@ const QrAppuserPage = () => {
                 <DialogTitle>{t('qrAppuser.removeAssignmentTitle')}</DialogTitle>
                 <DialogContent>
                     <Typography>{t('qrAppuser.removeAssignmentConfirm')}</Typography>
-                    {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+                    {error && <Alert severity="error" sx={{mt: 2}}>{error}</Alert>}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setDialogOpen(false)} disabled={loading}>{t('common.cancel')}</Button>
