@@ -415,7 +415,8 @@
         "part1": "Bedingungen können ",
         "part2Link": "hier",
         "part3": " erstellt oder bearbeitet werden."
-      }
+      },
+      "checkInApp": "Per App prüfbar"
     },
     "action": {
       "registrationsReport": {
@@ -536,7 +537,8 @@
     "activate": "Für Veranstaltung aktivieren",
     "remove": "Von Veranstaltung entfernen",
     "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
-    "tableHint": "Können bei Veranstaltungen aktiviert werden."
+    "tableHint": "Können bei Veranstaltungen aktiviert werden.",
+    "checkInApp": "Per App prüfbar"
   },
   "user": {
     "user": "Benutzer",

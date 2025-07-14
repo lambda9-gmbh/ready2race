@@ -63,6 +63,13 @@ const ParticipantRequirementForEventTable = (
             sortable: false,
             renderCell: ({value}) => (value ? <Check /> : <></>),
         },
+        {
+            field: 'checkInApp',
+            headerName: t('participantRequirement.checkInApp'),
+            flex: 1,
+            sortable: false,
+            renderCell: ({value}) => (value ? <Check /> : <></>),
+        },
     ]
 
     const handleActivationChange = (entity: ParticipantRequirementForEventDto) => {

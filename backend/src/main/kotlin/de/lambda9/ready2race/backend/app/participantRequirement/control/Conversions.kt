@@ -18,6 +18,7 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): App<Nothing, Partici
                 name = name,
                 description = description,
                 optional = optional ?: false,
+                checkInApp = checkInApp ?: false,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -32,6 +33,7 @@ fun ParticipantRequirementRecord.toDto(): App<Nothing, ParticipantRequirementDto
         name = name,
         description = description,
         optional = optional,
+        checkInApp = checkInApp ?: false,
     )
 )
 
@@ -41,6 +43,7 @@ fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequir
         name = name!!,
         description = description,
         optional = optional!!,
-        active = active!!
+        active = active!!,
+        checkInApp = checkInApp!!,
     )
 )

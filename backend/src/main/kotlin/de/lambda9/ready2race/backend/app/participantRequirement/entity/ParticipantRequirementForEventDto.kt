@@ -8,4 +8,5 @@ data class ParticipantRequirementForEventDto(
     val description: String?,
     val optional: Boolean,
     val active: Boolean,
+    val checkInApp: Boolean,
 )

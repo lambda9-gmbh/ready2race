@@ -50,6 +50,13 @@ const ParticipantRequirementTable = (props: BaseEntityTableProps<ParticipantRequ
             sortable: false,
             renderCell: ({value}) => (value ? <Check /> : <></>),
         },
+        {
+            field: 'checkInApp',
+            headerName: t('participantRequirement.checkInApp'),
+            flex: 1,
+            sortable: false,
+            renderCell: ({value}) => (value ? <Check /> : <></>),
+        },
     ]
 
     const onDeleteError = (error: DeleteNamedParticipantError) => {

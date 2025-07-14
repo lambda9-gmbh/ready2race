@@ -415,7 +415,8 @@
         "part1": "Requirements can be created or edited ",
         "part2Link": "here",
         "part3": "."
-      }
+      },
+      "checkInApp": "Checkable in app"
     },
     "action": {
       "registrationsReport": {
@@ -536,7 +537,8 @@
     "activate": "Activate for event",
     "remove": "Remove from event",
     "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
-    "tableHint": "Can be enabled for events."
+    "tableHint": "Can be enabled for events.",
+    "checkInApp": "Checkable in app"
   },
   "user": {
     "user": "User",
