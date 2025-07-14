@@ -11,7 +11,7 @@ const QrEventsPage = () => {
     const {data} = useFetch(signal => getEvents({signal}))
 
     return (
-        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
+        <Stack spacing={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" textAlign="center">
                 {t('qrEvents.title')}
             </Typography>
