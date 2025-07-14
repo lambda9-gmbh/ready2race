@@ -3,12 +3,31 @@ import {useFetch} from "@utils/hooks.ts";
 import {getEvents} from "@api/sdk.gen.ts";
 import {router} from "@routes";
 import {useTranslation} from "react-i18next";
+import {useApp} from '@contexts/app/AppContext';
+import {useUser} from '@contexts/user/UserContext';
+import {useEffect} from 'react';
 
 const QrEventsPage = () => {
     const { t } = useTranslation();
     const navigate = router.navigate
-
     const {data} = useFetch(signal => getEvents({signal}))
+    const { appFunction, setAppFunction } = useApp();
+    const user = useUser();
+
+    useEffect(() => {
+        // Prüfe, welche App-Funktionen der User hat
+        const rights: string[] = [];
+        if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_QR_MANAGEMENT', scope: 'GLOBAL' })) rights.push('APP_QR_MANAGEMENT');
+        if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_COMPETITION_CHECK', scope: 'GLOBAL' })) rights.push('APP_COMPETITION_CHECK');
+        if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_EVENT_REQUIREMENT', scope: 'GLOBAL' })) rights.push('APP_EVENT_REQUIREMENT');
+        if (rights.length === 0) {
+            navigate({to: '/app/forbidden'});
+        } else if (rights.length > 1 && !appFunction) {
+            navigate({to: '/app/function'});
+        } else if (rights.length === 1 && !appFunction) {
+            setAppFunction(rights[0] as any);
+        }
+    }, [user, appFunction, setAppFunction, navigate]);
 
     return (
         <Stack spacing={2} alignItems="center" justifyContent="center">

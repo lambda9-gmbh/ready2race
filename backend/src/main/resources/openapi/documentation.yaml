@@ -3918,6 +3918,9 @@ components:
         - EVENT
         - CLUB
         - REGISTRATION
+        - APP_EVENT_REQUIREMENT
+        - APP_QR_MANAGEMENT
+        - APP_COMPETITION_CHECK
 
     Scope:
       type: string
