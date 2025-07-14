@@ -21,6 +21,7 @@ import {
 } from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
+import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
 
 const QrParticipantPage = () => {
     const {t} = useTranslation();
@@ -82,10 +83,14 @@ const QrParticipantPage = () => {
         setPending(false);
     };
 
-    const allowed = appFunction === 'APP_COMPETITION_CHECK' || appFunction === 'APP_QR_MANAGEMENT' || appFunction === 'APP_EVENT_REQUIREMENT';
-    const canCheck = appFunction === 'APP_COMPETITION_CHECK';
-    const canRemove = appFunction === 'APP_QR_MANAGEMENT';
-    const canEditRequirements = appFunction === 'APP_EVENT_REQUIREMENT';
+    const allowed = appFunction !== null && [
+        updateAppCompetitionCheckGlobal.resource,
+        updateAppQrManagementGlobal.resource,
+        updateAppEventRequirementGlobal.resource
+    ].includes(appFunction);
+    const canCheck = appFunction === updateAppCompetitionCheckGlobal.resource;
+    const canRemove = appFunction === updateAppQrManagementGlobal.resource;
+    const canEditRequirements = appFunction === updateAppEventRequirementGlobal.resource;
 
     const handleDelete = async () => {
         setLoading(true);
