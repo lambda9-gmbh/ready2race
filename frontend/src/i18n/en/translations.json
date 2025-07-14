@@ -767,6 +767,7 @@
     "title": "QR Scanner"
   },
   "qrEvents": {
-    "title": "QR Events"
+    "title": "QR Events",
+    "switchApp": "Switch app"
   }
 }
