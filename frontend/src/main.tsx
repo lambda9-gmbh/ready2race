@@ -8,17 +8,14 @@ import '@fontsource/roboto/400.css'
 import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import './index.scss'
-import QrProvider from "@contexts/qr/QrProvider.tsx";
-import { AppProvider } from './contexts/app/AppContext';
+import { AppSessionProvider } from './contexts/app/AppSessionContext';
 
 createRoot(getRootElement()).render(
     <StrictMode>
         <UserProvider>
-            <AppProvider>
-                <QrProvider>
-                    <App/>
-                </QrProvider>
-            </AppProvider>
+            <AppSessionProvider>
+                <App/>
+            </AppSessionProvider>
         </UserProvider>
     </StrictMode>,
 )

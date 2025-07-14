@@ -3,7 +3,7 @@ import {useFetch} from "@utils/hooks.ts";
 import {getEvents} from "@api/sdk.gen.ts";
 import {router} from "@routes";
 import {useTranslation} from "react-i18next";
-import {useApp} from '@contexts/app/AppContext';
+import {useAppSession} from '@contexts/app/AppSessionContext';
 import {useUser} from '@contexts/user/UserContext';
 import {useEffect} from 'react';
 
@@ -11,10 +11,14 @@ const QrEventsPage = () => {
     const { t } = useTranslation();
     const navigate = router.navigate
     const {data} = useFetch(signal => getEvents({signal}))
-    const { appFunction, setAppFunction } = useApp();
+    const { appFunction, setAppFunction } = useAppSession();
     const user = useUser();
 
     useEffect(() => {
+        if (!appFunction) {
+            navigate({to: '/app/function'});
+            return;
+        }
         // Prüfe, welche App-Funktionen der User hat
         const rights: string[] = [];
         if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_QR_MANAGEMENT', scope: 'GLOBAL' })) rights.push('APP_QR_MANAGEMENT');

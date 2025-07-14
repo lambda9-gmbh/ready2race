@@ -1,22 +1,22 @@
 import {Button, Stack, Typography} from "@mui/material";
 import {CheckQrCodeResponse} from "@api/types.gen.ts";
 import {qrEventRoute, router} from "@routes";
-import {UseQr} from "@contexts/qr/QrContext.ts";
 import {useEffect} from "react";
 import QrNimiqScanner from "@components/qrApp/QrNimiqScanner.tsx";
 import {useTranslation} from "react-i18next";
+import {useAppSession} from '@contexts/app/AppSessionContext';
 
 const QrScannerPage = () => {
     const { t } = useTranslation();
     const navigate = router.navigate
     const {eventId} = qrEventRoute.useParams()
-    const qr = UseQr()
-
-    function handleScannerResult(qrCodeId: string, response: CheckQrCodeResponse | null) {
-        qr.update({...qr, qrCodeId: qrCodeId, response: response, received: true})
-    }
+    const { qr, appFunction } = useAppSession();
 
     useEffect(() => {
+        if (!appFunction) {
+            navigate({to: '/app/function'});
+            return;
+        }
         if (qr.received) {
             const response = qr.response
 
@@ -30,7 +30,11 @@ const QrScannerPage = () => {
                 console.log("Diese Meldung wollen wir nicht sehen")
             }
         }
-    }, [qr])
+    }, [qr, appFunction, navigate])
+
+    function handleScannerResult(qrCodeId: string, response: CheckQrCodeResponse | null) {
+        qr.update({...qr, qrCodeId: qrCodeId, response: response, received: true})
+    }
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
