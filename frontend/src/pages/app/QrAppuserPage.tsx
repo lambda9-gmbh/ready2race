@@ -4,6 +4,7 @@ import {qrEventRoute} from "@routes";
 import {useEffect, useState} from "react";
 import {deleteQrCode} from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
+import {useApp} from '@contexts/app/AppContext';
 
 const QrAppuserPage = () => {
     const { t } = useTranslation();
@@ -12,6 +13,7 @@ const QrAppuserPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { appFunction } = useApp();
 
     useEffect(() => {
         if (!qr.received) {
@@ -33,22 +35,30 @@ const QrAppuserPage = () => {
         }
     };
 
+    const allowed = appFunction === 'APP_QR_MANAGEMENT' || appFunction === 'APP_COMPETITION_CHECK';
+    const canRemove = appFunction === 'APP_QR_MANAGEMENT';
+
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" textAlign="center">
                 {t('qrAppuser.title')}
             </Typography>
             <Typography>{t('qrAppuser.user')}: {qr.qrCodeId}</Typography>
-            <Alert severity={"error"} variant={"filled"}>{t('qrAppuser.underConstruction')}</Alert>
+            {!allowed && (
+                <Alert severity="warning">Du hast für diesen QR-Code-Typ keine Berechtigung.</Alert>
+            )}
+            {allowed && <Alert severity={"error"} variant={"filled"}>{t('qrAppuser.underConstruction')}</Alert>}
             <Button onClick={() => qr.reset(eventId)}>{t('common.back')}</Button>
-            <Button
-                color="error"
-                variant="contained"
-                fullWidth
-                onClick={() => setDialogOpen(true)}
-            >
-                {t('qrAppuser.removeAssignment')}
-            </Button>
+            {canRemove && (
+                <Button
+                    color="error"
+                    variant="contained"
+                    fullWidth
+                    onClick={() => setDialogOpen(true)}
+                >
+                    {t('qrAppuser.removeAssignment')}
+                </Button>
+            )}
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
                 <DialogTitle>{t('qrAppuser.removeAssignmentTitle')}</DialogTitle>
                 <DialogContent>

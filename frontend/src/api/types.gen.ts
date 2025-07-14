@@ -851,7 +851,14 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION'
+export type Resource =
+    | 'USER'
+    | 'EVENT'
+    | 'CLUB'
+    | 'REGISTRATION'
+    | 'APP_EVENT_REQUIREMENT'
+    | 'APP_QR_MANAGEMENT'
+    | 'APP_COMPETITION_CHECK'
 
 export type RoleDto = {
     id: string

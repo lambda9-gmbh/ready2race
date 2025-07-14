@@ -9,13 +9,16 @@ import '@fontsource/roboto/500.css'
 import '@fontsource/roboto/700.css'
 import './index.scss'
 import QrProvider from "@contexts/qr/QrProvider.tsx";
+import { AppProvider } from './contexts/app/AppContext';
 
 createRoot(getRootElement()).render(
     <StrictMode>
         <UserProvider>
-            <QrProvider>
-                <App/>
-            </QrProvider>
+            <AppProvider>
+                <QrProvider>
+                    <App/>
+                </QrProvider>
+            </AppProvider>
         </UserProvider>
     </StrictMode>,
 )

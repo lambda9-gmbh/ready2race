@@ -36,6 +36,8 @@ import QrAppuserPage from "./pages/app/QrAppuserPage.tsx";
 import QrParticipantPage from "./pages/app/QrParticipantPage.tsx";
 import QrAssignPage from "./pages/app/QrAssignPage.tsx";
 import AppLoginPage from './pages/app/AppLoginPage.tsx'
+import ForbiddenPage from './pages/app/ForbiddenPage.tsx'
+import AppFunctionSelectPage from './pages/app/AppFunctionSelectPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -389,6 +391,18 @@ export const appLoginRoute = createRoute({
     validateSearch: ({redirect}: { redirect?: string } & SearchSchemaInput) => ({ redirect }),
 })
 
+export const appForbiddenRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'forbidden',
+    component: () => <ForbiddenPage/>,
+});
+
+export const appFunctionSelectRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'function',
+    component: () => <AppFunctionSelectPage/>,
+});
+
 const routeTree = rootRoute.addChildren([
     mainLayoutRoute.addChildren([
         indexRoute,
@@ -421,7 +435,9 @@ const routeTree = rootRoute.addChildren([
             qrUserRoute,
             qrParticipantRoute,
             qrAssignRoute
-        ])
+        ]),
+        appForbiddenRoute,
+        appFunctionSelectRoute,
     ]),
 ])
 
