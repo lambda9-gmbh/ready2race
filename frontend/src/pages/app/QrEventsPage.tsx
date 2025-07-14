@@ -1,4 +1,4 @@
-import {Button, Stack, Typography} from "@mui/material";
+import {Button, Divider, Stack, Typography} from "@mui/material";
 import {useFetch} from "@utils/hooks.ts";
 import {getEvents} from "@api/sdk.gen.ts";
 import {router} from "@routes";
@@ -34,6 +34,8 @@ const QrEventsPage = () => {
         }
     }, [user, appFunction, setAppFunction, navigate]);
 
+    const switchAppLabel = (t('qrEvents.switchApp'));
+
     return (
         <Stack spacing={2} alignItems="center" justifyContent="center">
             <Typography variant="h2" textAlign="center">
@@ -51,6 +53,10 @@ const QrEventsPage = () => {
                     {event.name}
                 </Button>
             )}
+            <Divider variant={"fullWidth"} orientation={"horizontal"}></Divider>
+            <Button onClick={() => navigate({to: '/app/function'})} variant="outlined">
+                {switchAppLabel}
+            </Button>
         </Stack>
     )
 }
