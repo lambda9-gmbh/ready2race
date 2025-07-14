@@ -905,13 +905,16 @@
     "deleteError": "Fehler beim Löschen"
   },
   "qrParticipant": {
-    "title": "Teilnehmer QR",
-    "enterArea": "Betritt Wettkampfbereich",
-    "leaveArea": "Verlässt Wettkampfbereich",
-    "removeAssignment": "Qr Code Zuweisung aufheben",
-    "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
-    "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
-    "deleteError": "Fehler beim Löschen"
+    "title": "Teilnehmer-QR-Code",
+    "noRight": "Du hast für diesen QR-Code-Typ keine Berechtigung.",
+    "loading": "Lade...",
+    "noRequirements": "Keine Requirements mit CheckInApp vorhanden.",
+    "enterArea": "Eintritt Wettkampfbereich",
+    "leaveArea": "Austritt Wettkampfbereich",
+    "removeAssignment": "QR-Code-Zuordnung entfernen",
+    "removeAssignmentTitle": "Zuordnung entfernen",
+    "removeAssignmentConfirm": "Möchtest du die Zuordnung wirklich entfernen?",
+    "deleteError": "Fehler beim Löschen des QR-Codes."
   },
   "qrScanner": {
     "title": "QR-Scanner"

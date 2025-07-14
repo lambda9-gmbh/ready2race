@@ -36,6 +36,8 @@ import QrAppuserPage from "./pages/app/QrAppuserPage.tsx";
 import QrParticipantPage from "./pages/app/QrParticipantPage.tsx";
 import QrAssignPage from "./pages/app/QrAssignPage.tsx";
 import AppLoginPage from './pages/app/AppLoginPage.tsx'
+import ForbiddenPage from './pages/app/ForbiddenPage.tsx'
+import AppFunctionSelectPage from './pages/app/AppFunctionSelectPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
 import InvoicesPage from './pages/AdministrationPage.tsx'
 
@@ -398,6 +400,18 @@ export const appLoginRoute = createRoute({
     validateSearch: ({redirect}: { redirect?: string } & SearchSchemaInput) => ({ redirect }),
 })
 
+export const appForbiddenRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'forbidden',
+    component: () => <ForbiddenPage/>,
+});
+
+export const appFunctionSelectRoute = createRoute({
+    getParentRoute: () => appRoute,
+    path: 'function',
+    component: () => <AppFunctionSelectPage/>,
+});
+
 export const invoicesRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'invoices',
@@ -439,7 +453,9 @@ const routeTree = rootRoute.addChildren([
             qrUserRoute,
             qrParticipantRoute,
             qrAssignRoute
-        ])
+        ]),
+        appForbiddenRoute,
+        appFunctionSelectRoute,
     ]),
 ])
 

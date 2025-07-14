@@ -904,13 +904,16 @@
     "deleteError": "Error while deleting"
   },
   "qrParticipant": {
-    "title": "Participant QR",
+    "title": "Participant QR Code",
+    "noRight": "You are not authorized for this QR code type.",
+    "loading": "Loading...",
+    "noRequirements": "No requirements with CheckInApp available.",
     "enterArea": "Enter competition area",
     "leaveArea": "Leave competition area",
     "removeAssignment": "Remove QR code assignment",
-    "removeAssignmentTitle": "Remove QR code assignment",
-    "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
-    "deleteError": "Error while deleting"
+    "removeAssignmentTitle": "Remove assignment",
+    "removeAssignmentConfirm": "Do you really want to remove the assignment?",
+    "deleteError": "Error while deleting the QR code."
   },
   "qrScanner": {
     "title": "QR Scanner"
