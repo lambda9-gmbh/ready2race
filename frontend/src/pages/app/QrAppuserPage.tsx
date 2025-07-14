@@ -4,6 +4,7 @@ import {qrEventRoute, router} from "@routes";
 import {deleteQrCode} from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
+import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
 
 const QrAppuserPage = () => {
     const {t} = useTranslation();
@@ -38,8 +39,12 @@ const QrAppuserPage = () => {
         }
     };
 
-    const allowed = appFunction === 'APP_QR_MANAGEMENT' || appFunction === 'APP_COMPETITION_CHECK' || appFunction === 'APP_EVENT_REQUIREMENT';
-    const canRemove = appFunction === 'APP_QR_MANAGEMENT';
+    const allowed = [
+        updateAppQrManagementGlobal,
+        updateAppCompetitionCheckGlobal,
+        updateAppEventRequirementGlobal
+    ].some(priv => appFunction === priv.resource);
+    const canRemove = appFunction === updateAppQrManagementGlobal.resource;
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
