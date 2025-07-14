@@ -9,6 +9,7 @@ import {useFeedback, useFetch} from "@utils/hooks.ts";
 import {checkQrCode} from '@api/sdk.gen.ts'
 import {CheckQrCodeResponse} from "@api/types.gen.ts";
 import {useTranslation} from "react-i18next";
+import Skeleton from "@mui/material/Skeleton";
 
 const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
 
@@ -82,13 +83,17 @@ const QrScanner = (props: {
     return (
         <Stack spacing={2} direction={"column"} alignItems={"center"} justifyContent={"center"}>
             <Typography variant={"h2"} textAlign={"center"}>QR-Code scannen</Typography>
-            <Scanner
-                onError={handleError}
-                onScan={handleScan}
-                constraints={cameraId ? {deviceId: {exact: cameraId}} : undefined}
-                styles={{container: {width: '100%'}}}
-                paused={ cameraId === undefined }
-            />
+            {cameraId === undefined ? (
+                <Skeleton variant="rectangular" width={320} height={240} sx={{ borderRadius: 2, maxWidth: '100%' }} />
+            ) : (
+                <Scanner
+                    onError={handleError}
+                    onScan={handleScan}
+                    constraints={cameraId ? {deviceId: {exact: cameraId}} : undefined}
+                    styles={{container: {width: '100%'}}}
+                    paused={ cameraId === undefined }
+                />
+            )}
             {devices.length > 1 && (
                 <FormControl fullWidth sx={{mt: 2}}>
                     <InputLabel id="camera-select-label">Kamera</InputLabel>
