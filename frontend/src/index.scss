@@ -97,6 +97,82 @@
     word-break: break-word;
     box-sizing: border-box;
   }
+
+  .MuiDialog-paper {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 !important;
+    border-radius: 1.2rem !important;
+    padding: 1.5rem 0.5rem !important;
+  }
+
+  .MuiDialogTitle-root,
+  .MuiDialogContent-root,
+  .MuiDialogActions-root {
+    font-size: 1.5rem;
+    padding-left: 1.2rem !important;
+    padding-right: 1.2rem !important;
+  }
+
+  .MuiDialogTitle-root {
+    font-size: 2rem;
+    font-weight: 700;
+    padding-top: 1.2rem !important;
+    padding-bottom: 0.8rem !important;
+  }
+
+  .MuiDialogContent-root {
+    font-size: 1.4rem;
+    padding-bottom: 1.2rem !important;
+  }
+
+  .MuiDialogActions-root {
+    padding-bottom: 1.2rem !important;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .MuiButton-root {
+      font-size: 1.5rem;
+      min-height: 3rem;
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .MuiDialog-paper {
+      width: 99vw !important;
+      max-width: 99vw !important;
+      min-width: unset !important;
+      margin: 0 !important;
+      padding: 1rem 0.2rem !important;
+    }
+    .MuiDialogTitle-root,
+    .MuiDialogContent-root,
+    .MuiDialogActions-root {
+      font-size: 1.2rem;
+      padding-left: 0.5rem !important;
+      padding-right: 0.5rem !important;
+    }
+    .MuiDialogTitle-root {
+      font-size: 1.5rem;
+      padding-top: 0.7rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+    .MuiDialogContent-root {
+      font-size: 1.1rem;
+      padding-bottom: 0.7rem !important;
+    }
+    .MuiDialogActions-root {
+      padding-bottom: 0.7rem !important;
+      gap: 0.7rem;
+
+      .MuiButton-root {
+        font-size: 1.2rem;
+        min-height: 2.5rem;
+      }
+    }
+  }
 }
 
 @media (min-width: 600px) {
