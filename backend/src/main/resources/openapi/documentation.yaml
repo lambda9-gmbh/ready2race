@@ -5802,6 +5802,7 @@ components:
         - id
         - name
         - optional
+        - checkInApp
       properties:
         id:
           type: string
@@ -5812,6 +5813,9 @@ components:
           type: string
         optional:
           type: boolean
+        checkInApp:
+          type: boolean
+          description: "Per App prüfbar"
 
     ParticipantRequirementReducedDto:
       type: object
@@ -5832,6 +5836,7 @@ components:
         - name
         - optional
         - active
+        - checkInApp
       properties:
         id:
           type: string
@@ -5844,6 +5849,9 @@ components:
           type: boolean
         active:
           type: boolean
+        checkInApp:
+          type: boolean
+          description: "Per App prüfbar"
 
     ParticipantRequirementUpsertDto:
       type: object
@@ -5856,6 +5864,9 @@ components:
           type: string
         optional:
           type: boolean
+        checkInApp:
+          type: boolean
+          description: "Per App prüfbar"
 
     ParticipantRequirementCheckForEventConfigDto:
       type: object

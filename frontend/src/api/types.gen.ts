@@ -857,6 +857,10 @@ export type ParticipantRequirementDto = {
     name: string
     description?: string
     optional: boolean
+    /**
+     * Per App prüfbar
+     */
+    checkInApp: boolean
 }
 
 export type ParticipantRequirementForEventDto = {
@@ -865,6 +869,10 @@ export type ParticipantRequirementForEventDto = {
     description?: string
     optional: boolean
     active: boolean
+    /**
+     * Per App prüfbar
+     */
+    checkInApp: boolean
 }
 
 export type ParticipantRequirementReducedDto = {
@@ -876,6 +884,10 @@ export type ParticipantRequirementUpsertDto = {
     name: string
     description?: string
     optional?: boolean
+    /**
+     * Per App prüfbar
+     */
+    checkInApp?: boolean
 }
 
 export type ParticipantUpsertDto = {
