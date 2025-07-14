@@ -1,5 +1,4 @@
 import {Button, Stack, ToggleButton, ToggleButtonGroup, Typography, Alert} from "@mui/material";
-import {UseReceivedQr} from "@contexts/qr/QrContext.ts";
 import React, {useEffect, useState} from "react";
 import {useFetch} from "@utils/hooks.ts";
 import {
@@ -11,22 +10,25 @@ import {
 } from "@api/sdk.gen.ts";
 import {qrEventRoute} from "@routes";
 import {useTranslation} from "react-i18next";
-import {useApp} from '@contexts/app/AppContext';
+import {useAppSession} from '@contexts/app/AppSessionContext';
 
 type UserTyp = "User" | "Participant"
 const QrAssignPage = () => {
     const { t } = useTranslation();
-    const qr = UseReceivedQr()
+    const { qr, appFunction } = useAppSession();
     const [userTyp, setUserTyp] = useState<UserTyp>("User")
     const [club, setClub] = useState<string>()
     const {eventId} = qrEventRoute.useParams()
-    const { appFunction } = useApp();
 
     useEffect(() => {
+        if (!appFunction) {
+            window.location.href = '/app/function';
+            return;
+        }
         if (!qr.received) {
             qr.reset(eventId)
         }
-    }, [qr])
+    }, [qr, appFunction, eventId])
 
     const onChange = (_: React.MouseEvent<HTMLElement>, nextView: UserTyp) => {
         setUserTyp(nextView)
@@ -50,7 +52,7 @@ const QrAssignPage = () => {
     const selectParticipant = async (id: string) => {
         await updateQrCodeParticipant({
             body: {
-                qrCodeId: qr.qrCodeId,
+                qrCodeId: qr.qrCodeId!!,
                 eventId: eventId,
                 id: id
             }
@@ -61,7 +63,7 @@ const QrAssignPage = () => {
     const selectUser = async (id: string) => {
         await updateQrCodeAppuser({
             body: {
-                qrCodeId: qr.qrCodeId,
+                qrCodeId: qr.qrCodeId!!,
                 eventId: eventId,
                 id: id
             }
@@ -69,7 +71,6 @@ const QrAssignPage = () => {
         qr.reset(eventId)
     }
 
-    // Nur Nutzer mit APP_QR_MANAGEMENT dürfen zuordnen
     const canAssign = appFunction === 'APP_QR_MANAGEMENT';
 
     return (
