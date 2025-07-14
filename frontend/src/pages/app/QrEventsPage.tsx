@@ -6,6 +6,7 @@ import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
 import {useUser} from '@contexts/user/UserContext';
 import {useEffect} from 'react';
+import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
 
 const QrEventsPage = () => {
     const { t } = useTranslation();
@@ -21,9 +22,9 @@ const QrEventsPage = () => {
         }
         // Prüfe, welche App-Funktionen der User hat
         const rights: string[] = [];
-        if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_QR_MANAGEMENT', scope: 'GLOBAL' })) rights.push('APP_QR_MANAGEMENT');
-        if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_COMPETITION_CHECK', scope: 'GLOBAL' })) rights.push('APP_COMPETITION_CHECK');
-        if (user.checkPrivilege({ action: 'UPDATE', resource: 'APP_EVENT_REQUIREMENT', scope: 'GLOBAL' })) rights.push('APP_EVENT_REQUIREMENT');
+        if (user.checkPrivilege(updateAppQrManagementGlobal)) rights.push('APP_QR_MANAGEMENT');
+        if (user.checkPrivilege(updateAppCompetitionCheckGlobal)) rights.push('APP_COMPETITION_CHECK');
+        if (user.checkPrivilege(updateAppEventRequirementGlobal)) rights.push('APP_EVENT_REQUIREMENT');
         if (rights.length === 0) {
             navigate({to: '/app/forbidden'});
         } else if (rights.length > 1 && !appFunction) {

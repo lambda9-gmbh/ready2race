@@ -20,6 +20,10 @@ export const updateClubGlobal: Privilege = {action: 'UPDATE', resource: 'CLUB', 
 export const updateClubOwn: Privilege = {action: 'UPDATE', resource: 'CLUB', scope: 'OWN'}
 export const deleteClubGlobal: Privilege = {action: 'DELETE', resource: 'CLUB', scope: 'GLOBAL'}
 
+export const updateAppQrManagementGlobal: Privilege = {action: 'UPDATE', resource: 'APP_QR_MANAGEMENT', scope: 'GLOBAL'}
+export const updateAppCompetitionCheckGlobal: Privilege = {action: 'UPDATE', resource: 'APP_COMPETITION_CHECK', scope: 'GLOBAL'}
+export const updateAppEventRequirementGlobal: Privilege = {action: 'UPDATE', resource: 'APP_EVENT_REQUIREMENT', scope: 'GLOBAL'}
+
 export const createRegistrationGlobal: Privilege = {
     action: 'CREATE',
     resource: 'REGISTRATION',

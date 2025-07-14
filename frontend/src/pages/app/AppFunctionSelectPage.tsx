@@ -3,6 +3,7 @@ import {useUser} from '@contexts/user/UserContext';
 import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx';
 import {useEffect, useState} from 'react';
 import {router} from "@routes";
+import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
 
 const APP_FUNCTIONS: { fn: AppFunction; label: string }[] = [
     {fn: 'APP_QR_MANAGEMENT', label: 'QR-Code Verwaltung'},
@@ -19,21 +20,9 @@ const AppFunctionSelectPage = () => {
     useEffect(() => {
         // Prüfe, welche App-Funktionen der User hat
         const rights: AppFunction[] = [];
-        if (user.checkPrivilege({
-            action: 'UPDATE',
-            resource: 'APP_QR_MANAGEMENT',
-            scope: 'GLOBAL'
-        })) rights.push('APP_QR_MANAGEMENT');
-        if (user.checkPrivilege({
-            action: 'UPDATE',
-            resource: 'APP_COMPETITION_CHECK',
-            scope: 'GLOBAL'
-        })) rights.push('APP_COMPETITION_CHECK');
-        if (user.checkPrivilege({
-            action: 'UPDATE',
-            resource: 'APP_EVENT_REQUIREMENT',
-            scope: 'GLOBAL'
-        })) rights.push('APP_EVENT_REQUIREMENT');
+        if (user.checkPrivilege(updateAppQrManagementGlobal)) rights.push('APP_QR_MANAGEMENT');
+        if (user.checkPrivilege(updateAppCompetitionCheckGlobal)) rights.push('APP_COMPETITION_CHECK');
+        if (user.checkPrivilege(updateAppEventRequirementGlobal)) rights.push('APP_EVENT_REQUIREMENT');
         setAvailable(rights);
         // Wenn der User nur ein Recht hat, direkt weiterleiten
         if (rights.length === 1) {
