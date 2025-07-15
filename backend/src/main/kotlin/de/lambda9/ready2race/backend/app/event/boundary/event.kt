@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.event.boundary
 
+import de.lambda9.ready2race.backend.app.appUserWithQrCode.boundary.appUserWithQrCode
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
@@ -69,6 +70,7 @@ fun Route.event() {
             participantForEvent()
             task()
             workShift()
+            appUserWithQrCode()
 
             get {
                 call.respondComprehension {

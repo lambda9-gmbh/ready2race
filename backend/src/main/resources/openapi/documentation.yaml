@@ -3171,6 +3171,67 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/appUserWithQrCode:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/search'
+    get:
+      operationId: getAppUsersWithQrCodeForEvent
+      responses:
+        200:
+          description: App users with QR codes successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppUserWithQrCodeDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/appUserWithQrCode/qrCode/{qrCodeId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: qrCodeId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      operationId: deleteQrCodeForEvent
+      responses:
+        204:
+          description: QR code successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/produceInvoices:
     parameters:
       - in: path
@@ -4276,6 +4337,46 @@ components:
           items:
             type: string
             format: uuid
+
+    AppUserWithQrCodeDto:
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - email
+        - roles
+        - qrCodeId
+        - eventId
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        club:
+          type: string
+          format: uuid
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleDto'
+        qrCodeId:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
 
     AppUserRegistrationDto:
       type: object
