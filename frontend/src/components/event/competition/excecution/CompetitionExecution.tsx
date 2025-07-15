@@ -85,6 +85,7 @@ const CompetitionExecution = () => {
                 if (error) {
                     feedback.error(t('event.competition.execution.progress.error'))
                 }
+                handleAccordionExpandedChange()
             },
             deps: [eventId, competitionId, reloadData],
         },
@@ -326,7 +327,7 @@ const CompetitionExecution = () => {
             if (error) {
                 feedback.error(t('event.competition.execution.matchData.submit.error'))
             } else {
-                feedback.error(t('event.competition.execution.matchData.submit.success'))
+                feedback.success(t('event.competition.execution.matchData.submit.success'))
             }
             setSubmitting(false)
         }
@@ -399,7 +400,29 @@ const CompetitionExecution = () => {
         }
     }
 
-    return progressDto ? (
+    const [accordionsOpen, setAccordionsOpen] = useState<boolean[][]>([])
+    const handleAccordionExpandedChange = (expandedProps?: {
+        roundIndex: number
+        accordionIndex: number
+        isExpanded: boolean
+    }) => {
+        setAccordionsOpen(
+            sortedRounds?.map((_, idx) => [
+                expandedProps &&
+                expandedProps.accordionIndex === 0 &&
+                expandedProps.roundIndex === idx
+                    ? expandedProps.isExpanded
+                    : (accordionsOpen[idx]?.[0] ?? false),
+                expandedProps &&
+                expandedProps.accordionIndex === 1 &&
+                expandedProps.roundIndex === idx
+                    ? expandedProps.isExpanded
+                    : (accordionsOpen[idx]?.[1] ?? false),
+            ]) ?? [],
+        )
+    }
+
+    return progressDto && sortedRounds ? (
         <Box>
             {!allRoundsCreated && (
                 <Box sx={{my: 4, display: 'flex', alignItems: 'center'}}>
@@ -439,23 +462,23 @@ const CompetitionExecution = () => {
                 </Box>
             )}
             <Box>
-                {progressDto.rounds
-                    .map((r, idx) => ({roundIndex: idx, round: r}))
-                    .sort((a, b) => b.roundIndex - a.roundIndex)
-                    .map(r => r.round)
-                    .map((round, roundIndex) => (
-                        <CompetitionExecutionRound
-                            key={round.setupRoundId}
-                            round={round}
-                            roundIndex={roundIndex}
-                            filteredMatches={matchesFiltered(round.matches)}
-                            reloadRoundDto={() => setReloadData(!reloadData)}
-                            setSubmitting={setSubmitting}
-                            submitting={submitting}
-                            openResultsDialog={openResultsDialog}
-                            openEditMatchDialog={openEditMatchDialog}
-                        />
-                    ))}
+                {sortedRounds.map((round, roundIndex) => (
+                    <CompetitionExecutionRound
+                        key={round.setupRoundId}
+                        round={round}
+                        roundIndex={roundIndex}
+                        filteredMatches={matchesFiltered(round.matches)}
+                        reloadRoundDto={() => setReloadData(!reloadData)}
+                        setSubmitting={setSubmitting}
+                        submitting={submitting}
+                        openResultsDialog={openResultsDialog}
+                        openEditMatchDialog={openEditMatchDialog}
+                        accordionsExpanded={accordionsOpen[roundIndex]}
+                        handleAccordionExpandedChange={(accordionIndex, isExpanded) =>
+                            handleAccordionExpandedChange({roundIndex, accordionIndex, isExpanded})
+                        }
+                    />
+                ))}
             </Box>
             <Dialog
                 open={resultsDialogOpen}

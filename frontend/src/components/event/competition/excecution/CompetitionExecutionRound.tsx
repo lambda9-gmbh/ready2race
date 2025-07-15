@@ -21,7 +21,7 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Fragment, SyntheticEvent, useState} from 'react'
+import {Fragment, SyntheticEvent} from 'react'
 import {deleteCurrentCompetitionExecutionRound} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -35,6 +35,8 @@ type Props = {
     submitting: boolean
     openResultsDialog: (matchIndex: number) => void
     openEditMatchDialog: (roundIndex: number, matchIndex: number) => void
+    accordionsExpanded: boolean[] | undefined
+    handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
 }
 const CompetitionExecutionRound = ({
     round,
@@ -78,14 +80,10 @@ const CompetitionExecutionRound = ({
         )
     }
 
-    const [accordionsExpanded, setAccordionsExpanded] = useState<boolean[]>([false, true])
     const handleAccordionExpandedChange =
         (accordionIndex: number) => (_: SyntheticEvent, isExpanded: boolean) => {
-            setAccordionsExpanded(
-                accordionsExpanded.map((val, idx) => (idx === accordionIndex ? isExpanded : val)),
-            )
+            props.handleAccordionExpandedChange(accordionIndex, isExpanded)
         }
-
 
     return (
         <Fragment>
@@ -98,7 +96,7 @@ const CompetitionExecutionRound = ({
                 <Box sx={{pb: 4}}>
                     {round.matches.filter(match => match.teams.length === 1).length > 0 && (
                         <Accordion
-                            expanded={accordionsExpanded[0]}
+                            expanded={props.accordionsExpanded?.[0] ?? false}
                             onChange={handleAccordionExpandedChange(0)}>
                             <AccordionSummary
                                 expandIcon={<ExpandMoreIcon />}
@@ -147,7 +145,7 @@ const CompetitionExecutionRound = ({
                         </Accordion>
                     )}
                     <Accordion
-                        expanded={accordionsExpanded[1]}
+                        expanded={props.accordionsExpanded?.[1] ?? false}
                         onChange={handleAccordionExpandedChange(1)}>
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
