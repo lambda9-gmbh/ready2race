@@ -1,48 +1,56 @@
-publiccodeYmlVersion: 0.4
+# This repository adheres to the publiccode.yml standard by including this
+# metadata file that makes public software easily discoverable.
+# More info at https://github.com/italia/publiccode.yml
+
+publiccodeYmlVersion: '0.2'
 name: Ready2Race
-url: https://github.com/lambda9-gmbh/ready2race
+url: 'https://github.com/lambda9-gmbh/ready2race'
 platforms:
   - web
 categories:
   - event-management
 developmentStatus: development
-softwareType:
-  - standalone/web
-description:
-  de:
-    genericName: Veranstaltungsmanager
-    shortDescription: >
-      Ready2Race ist eine PopUp-Lösung zur Planung und Durchführung von Wettkampfevents.
-    longDescription: >
-      Ready2Race ist eine webbasierte PopUp-Lösung für Vereine zur Verwaltung von Wettkämpfen.
-      Es können Veranstaltungen mit Wettkämpfen angelegt und veröffentlicht werden, zu welchen
-      Wettkampfteams durch Vereine gemeldet werden können. Ready2Race begleitet auch die Durchführung
-      der Wettkämpfe mit vorab definierten Wettkampfmodi. In den verschiedenen Phasen können automatisch
-      Dokumente erstellt und exportiert werden, z.B. Zusammenfassung der Anmeldungen, Rechnungen für Meldegebühren,
-      oder Startlisten für einzelne Partien. Es können weiterhin Aufgaben an Helfer verteilt werden. Mit Ready2Race soll
-      die Digitalisierung in Vereinen vorangetrieben werden und die Arbeit in solche Veranstaltungen vereinfachen und
-      den zeitlichen Aufwand verringern.
-    features:
-      - Wettkampfmanagement
-      - Veranstaltungsanmeldungen
-legal:
-  license: GPL-3.0-only
-  mainCopyrightOwner: lambda9 GmbH
-maintenance:
-  type: contract
-  contractors:
-    - name: lambda9 GmbH
-      email: info@lambda9.de
-      website: lambda9.de
-      until: 2025-08-31
-localisation:
-  localisationReady: true
-  availableLanguages:
-    - de
-    - en
+softwareType: standalone/web
 dependsOn:
   open:
     - name: Postgresql
       version: 17
     - name: Java Runtime Environment
       version: 17
+releaseDate: '2025-07-01'
+maintenance:
+  type: contract
+  contractors:
+    - name: lambda9 GmbH
+      email: info@lambda9.de
+      website: lambda9.de
+      until: 2025-08-31T00:00:00.000Z
+legal:
+  license: GPL-3.0-only
+  mainCopyrightOwner: lambda9 GmbH
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - de
+    - en
+description:
+  de:
+    genericName: Veranstaltungsmanager
+    shortDescription: >
+      Ready2Race ist eine PopUp-Lösung zur Planung und Durchführung von
+      Wettkampfevents.
+    longDescription: >
+      Ready2Race ist eine webbasierte PopUp-Lösung für Vereine zur Verwaltung
+      von Wettkämpfen. Es können Veranstaltungen mit Wettkämpfen angelegt und
+      veröffentlicht werden, zu welchen Wettkampfteams durch Vereine gemeldet
+      werden können. Ready2Race begleitet auch die Durchführung der Wettkämpfe
+      mit vorab definierten Wettkampfmodi. In den verschiedenen Phasen können
+      automatisch Dokumente erstellt und exportiert werden, z.B. Zusammenfassung
+      der Anmeldungen, Rechnungen für Meldegebühren, oder Startlisten für
+      einzelne Partien. Es können weiterhin Aufgaben an Helfer verteilt werden.
+      Mit Ready2Race soll die Digitalisierung in Vereinen vorangetrieben werden
+      und die Arbeit in solche Veranstaltungen vereinfachen und den zeitlichen
+      Aufwand verringern.
+    features:
+      - Wettkampfmanagement
+      - Veranstaltungsanmeldungen
