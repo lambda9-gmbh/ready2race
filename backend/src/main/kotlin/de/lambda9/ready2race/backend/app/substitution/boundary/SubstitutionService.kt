@@ -49,8 +49,13 @@ object SubstitutionService {
             return@comprehension KIO.fail(SubstitutionError.ParticipantOutNotAvailableForSubstitution)
         }
 
-
         val maxOrderForRound = possibleSubsData.substitutions.maxOfOrNull { it.orderForRound!! }
+
+
+        // todo: Get ParticipantRequirements for pOut
+        // todo: Check if all of them are listed in request.
+        // todo: SubstitutionHasParticipantRequirementRepo.insert(request.participantRequirements)
+
 
 
         // Sub and swap?
@@ -62,6 +67,10 @@ object SubstitutionService {
 
         if (subInCurrentlyParticipating != null) {
             // Swap
+
+            // todo: Get ParticipantRequirements for subInCurrentlyParticipating
+            // todo: Check if all of them are listed in request.
+            // todo: SubstitutionHasParticipantRequirementRepo.insert(request.swappedParticipantRequirements)
 
             val swapRecord1 = !request.toRecord(
                 userId,
