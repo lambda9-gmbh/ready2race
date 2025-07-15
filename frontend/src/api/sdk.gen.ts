@@ -355,6 +355,12 @@ import type {
     AssignBankAccountData,
     AssignBankAccountError,
     AssignBankAccountResponse,
+    GetAppUsersWithQrCodeForEventData,
+    GetAppUsersWithQrCodeForEventError,
+    GetAppUsersWithQrCodeForEventResponse,
+    DeleteQrCodeForEventData,
+    DeleteQrCodeForEventError,
+    DeleteQrCodeForEventResponse,
     ProduceInvoicesForEventRegistrationsData,
     ProduceInvoicesForEventRegistrationsError,
     ProduceInvoicesForEventRegistrationsResponse,
@@ -1825,6 +1831,32 @@ export const assignBankAccount = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/assignedBankAccount',
+    })
+}
+
+export const getAppUsersWithQrCodeForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetAppUsersWithQrCodeForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAppUsersWithQrCodeForEventResponse,
+        GetAppUsersWithQrCodeForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/appUserWithQrCode',
+    })
+}
+
+export const deleteQrCodeForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteQrCodeForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteQrCodeForEventResponse,
+        DeleteQrCodeForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/appUserWithQrCode/qrCode/{qrCodeId}',
     })
 }
 

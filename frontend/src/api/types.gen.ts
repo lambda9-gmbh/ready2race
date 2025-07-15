@@ -55,6 +55,19 @@ export type AppUserRegistrationDto = {
     assignedEmail?: AssignedEmailDto
 }
 
+export type AppUserWithQrCodeDto = {
+    id: string
+    firstname: string
+    lastname: string
+    email: string
+    club?: string
+    roles: Array<RoleDto>
+    qrCodeId: string
+    eventId: string
+    createdAt: string
+    createdBy?: string
+}
+
 export type AssignBankAccountRequest = {
     bankAccount?: string
     event?: string
@@ -2659,6 +2672,48 @@ export type AssignBankAccountData = {
 export type AssignBankAccountResponse = void
 
 export type AssignBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetAppUsersWithQrCodeForEventData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetAppUsersWithQrCodeForEventResponse = {
+    data: Array<AppUserWithQrCodeDto>
+    pagination: Pagination
+}
+
+export type GetAppUsersWithQrCodeForEventError = BadRequestError | ApiError
+
+export type DeleteQrCodeForEventData = {
+    path: {
+        eventId: string
+        qrCodeId: string
+    }
+}
+
+export type DeleteQrCodeForEventResponse = void
+
+export type DeleteQrCodeForEventError = BadRequestError | ApiError
 
 export type ProduceInvoicesForEventRegistrationsData = {
     path: {
