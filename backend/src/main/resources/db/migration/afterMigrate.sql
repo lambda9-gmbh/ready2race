@@ -40,6 +40,7 @@ drop view if exists fee_for_competition;
 drop view if exists fee_for_competition_properties;
 drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
+drop view if exists app_user_with_qr_code_for_event;
 drop view if exists app_user_with_roles;
 drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
@@ -100,6 +101,21 @@ where not exists(select *
                  from app_user_has_role auhr2
                  where auhr2.role = '00000000-0000-0000-0000-000000000000'
                    and auhr2.app_user = au.id)
+;
+
+create view app_user_with_qr_code_for_event as
+select au.id,
+       au.firstname,
+       au.lastname,
+       au.email,
+       au.club,
+       au.roles,
+       qc.qr_code_id,
+       qc.event as event_id,
+       qc.created_at,
+       qc.created_by
+from every_app_user_with_roles au
+         left join qr_codes qc on qc.app_user = au.id
 ;
 
 create view app_user_with_privileges as

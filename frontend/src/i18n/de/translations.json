@@ -895,6 +895,13 @@
     "users": "Benutzer",
     "noData": "Keine Daten"
   },
+  "qrCode": {
+    "qrCodeId": "QR-Code-Wert",
+    "appUsersWithQrCode": "Benutzer mit QR-Codes",
+    "edit": "QR-Code bearbeiten",
+    "delete": "QR-Code löschen",
+    "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?"
+  },
   "qrAppuser": {
     "title": "QR-Appuser",
     "user": "User",

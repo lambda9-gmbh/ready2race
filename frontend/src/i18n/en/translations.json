@@ -894,6 +894,13 @@
     "users": "Users",
     "noData": "No data"
   },
+  "qrCode": {
+    "qrCodeId": "QR Code Value",
+    "appUsersWithQrCode": "Users with QR Codes",
+    "edit": "Edit QR Code",
+    "delete": "Delete QR Code",
+    "deleteConfirm": "Do you really want to delete the QR code?"
+  },
   "qrAppuser": {
     "title": "QR Appuser",
     "user": "User",
