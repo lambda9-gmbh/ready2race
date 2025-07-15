@@ -921,5 +921,15 @@
   "qrEvents": {
     "title": "QR Events",
     "switchApp": "Switch app"
+  },
+  "app": {
+    "functionSelect": {
+      "title": "Please select your function in the app",
+      "functions": {
+        "qrManagement": "QR Code Management",
+        "competitionCheck": "Competition Check",
+        "eventRequirement": "Event Requirements"
+      }
+    }
   }
 }
