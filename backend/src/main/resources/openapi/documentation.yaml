@@ -1341,8 +1341,8 @@ paths:
             schema:
               $ref: '#/components/schemas/SubstitutionRequest'
       responses:
-        201:
-          $ref: '#/components/responses/201'
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1351,16 +1351,6 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}:
-    parameters:
-      - $ref: '#/components/parameters/eventId'
-      - $ref: '#/components/parameters/competitionId'
-      - name: substitutionId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
     delete:
       operationId: deleteSubstitution
       responses:
@@ -1376,16 +1366,10 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts:
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubOuts:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
-      - name: competitionSetupRoundId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
     get:
       operationId: getPossibleSubOuts
       responses:
@@ -1407,18 +1391,12 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns:
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubIns/{participantId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
-      - name: competitionSetupRoundId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: participantId
-        in: query
+        in: path
         required: true
         schema:
           type: string
@@ -6995,6 +6973,8 @@ components:
         - competitionRegistrationName
         - clubId
         - clubName
+        - namedParticipantId
+        - namedParticipantName
         - participantOut
         - participantIn
       properties:
@@ -7021,10 +7001,18 @@ components:
           format: uuid
         clubName:
           type: string
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
         participantOut:
           $ref: '#/components/schemas/SubstitutionParticipantDto'
         participantIn:
           $ref: '#/components/schemas/SubstitutionParticipantDto'
+        swapSubstitution:
+          type: string
+          format: uuid
 
     SubstitutionParticipantDto:
       type: object
@@ -7108,6 +7096,17 @@ components:
           type: boolean
         externalClubName:
           type: string
+        registrationId:
+          type: string
+          format: uuid
+        registrationName:
+          type: string
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+
 
     PossibleSubstitutionsForParticipantDto:
       type: object
@@ -7127,17 +7126,9 @@ components:
     SubstitutionRequest:
       type: object
       required:
-        - competitionRegistrationId
-        - competitionSetupRound
         - participantOut
         - participantIn
       properties:
-        competitionRegistrationId:
-          type: string
-          format: uuid
-        competitionSetupRound:
-          type: string
-          format: uuid
         participantOut:
           type: string
           format: uuid

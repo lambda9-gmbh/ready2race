@@ -8,4 +8,8 @@ data class PossibleSubstitutionParticipantDto(
     val lastName: String,
     val external: Boolean?,
     val externalClubName: String?,
+    val registrationId: UUID?,
+    val registrationName: String?,
+    val namedParticipantId: UUID?,
+    val namedParticipantName: String?,
 )

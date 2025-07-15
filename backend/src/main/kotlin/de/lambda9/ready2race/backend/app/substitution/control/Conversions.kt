@@ -11,16 +11,19 @@ import java.util.UUID
 
 fun SubstitutionRequest.toRecord(
     userId: UUID,
+    competitionRegistrationId: UUID,
+    competitionSetupRound: UUID,
     orderForRound: Long,
-    namedParticipant: UUID
+    namedParticipant: UUID,
+    swapPInWithPOut: Boolean,
 ): App<Nothing, SubstitutionRecord> = KIO.ok(
     LocalDateTime.now().let { now ->
         SubstitutionRecord(
             id = UUID.randomUUID(),
             competitionRegistration = competitionRegistrationId,
             competitionSetupRound = competitionSetupRound,
-            participantOut = participantOut,
-            participantIn = participantIn,
+            participantOut = if(swapPInWithPOut) {participantIn} else {participantOut},
+            participantIn = if(swapPInWithPOut) {participantOut} else {participantIn},
             reason = reason,
             namedParticipant = namedParticipant,
             orderForRound = orderForRound,
@@ -74,7 +77,11 @@ fun ParticipantRecord.toPossibleSubstitutionParticipantDto() = KIO.ok(
         firstName = firstname,
         lastName = lastname,
         external = external,
-        externalClubName = externalClubName
+        externalClubName = externalClubName,
+        registrationId = null,
+        registrationName = null,
+        namedParticipantId = null,
+        namedParticipantName = null,
     )
 )
 
@@ -84,6 +91,10 @@ fun ParticipantForExecutionDto.toPossibleSubstitutionParticipantDto() = KIO.ok(
         firstName = firstName,
         lastName = lastName,
         external = external,
-        externalClubName = externalClubName
+        externalClubName = externalClubName,
+        registrationId = competitionRegistrationId,
+        registrationName = competitionRegistrationName,
+        namedParticipantId = namedParticipantId,
+        namedParticipantName = namedParticipantName,
     )
 )

@@ -16,47 +16,44 @@ fun Route.substitution() {
         post {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
+                val competitionId = !pathParam("competitionId", uuid)
 
                 val body = !receiveKIO(SubstitutionRequest.example)
-                SubstitutionService.addSubstitution(user.id!!, body)
+                SubstitutionService.addSubstitution(user.id!!, competitionId, body)
             }
         }
 
-        route("/{substitutionId}") {
-            delete {
+        delete {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateEventGlobal)
+                val competitionId = !pathParam("competitionId", uuid)
+
+                SubstitutionService.deleteLastSubstitution(competitionId)
+            }
+
+        }
+
+        route("/possibleSubOuts") {
+            get {
                 call.respondComprehension {
-                    !authenticate(Privilege.UpdateEventGlobal)
-                    val substitutionId = !pathParam("substitutionId", uuid)
+                    !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
+                    val competitionId = !pathParam("competitionId", uuid)
 
-                    SubstitutionService.deleteSubstitution(substitutionId)
+                    SubstitutionService.getParticipantsCurrentlyParticipatingInRound(competitionId)
                 }
             }
         }
-        route("{competitionSetupRoundId}") {
+        route("/possibleSubIns/{participantId}") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val participantId = !pathParam("participantId", uuid)
 
-            route("/possibleSubOuts") {
-                get {
-                    call.respondComprehension {
-                        !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
-                        val competitionSetupRoundId = !pathParam("competitionSetupRoundId", uuid)
-
-                        SubstitutionService.getParticipantsCurrentlyParticipatingInRound(competitionSetupRoundId)
-                    }
-                }
-            }
-
-            route("/possibleSubIns") {
-                get {
-                    call.respondComprehension {
-                        !authenticate(Privilege.ReadRegistrationGlobal) // todo: other privilege
-                        val competitionSetupRoundId = !pathParam("competitionSetupRoundId", uuid)
-                        val participantId = !queryParam("participantId", uuid)
-
-                        SubstitutionService.getPossibleSubstitutionsForParticipant(
-                            competitionSetupRoundId,
-                            participantId
-                        )
-                    }
+                    SubstitutionService.getPossibleSubstitutionsForParticipant(
+                        competitionId,
+                        participantId
+                    )
                 }
             }
         }

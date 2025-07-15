@@ -902,6 +902,10 @@ export type PossibleSubstitutionParticipantDto = {
     lastName: string
     external?: boolean
     externalClubName?: string
+    registrationId?: string
+    registrationName?: string
+    namedParticipantId?: string
+    namedParticipantName?: string
 }
 
 export type PossibleSubstitutionsForParticipantDto = {
@@ -959,8 +963,11 @@ export type SubstitutionDto = {
     competitionRegistrationName: string
     clubId: string
     clubName: string
+    namedParticipantId: string
+    namedParticipantName: string
     participantOut: SubstitutionParticipantDto
     participantIn: SubstitutionParticipantDto
+    swapSubstitution?: string
 }
 
 export type SubstitutionParticipantDto = {
@@ -974,8 +981,6 @@ export type SubstitutionParticipantDto = {
 }
 
 export type SubstitutionRequest = {
-    competitionRegistrationId: string
-    competitionSetupRound: string
     participantOut: string
     participantIn: string
     reason?: string
@@ -1876,7 +1881,7 @@ export type AddSubstitutionData = {
     }
 }
 
-export type AddSubstitutionResponse = string
+export type AddSubstitutionResponse = void
 
 export type AddSubstitutionError = BadRequestError | ApiError
 
@@ -1884,7 +1889,6 @@ export type DeleteSubstitutionData = {
     path: {
         competitionId: string
         eventId: string
-        substitutionId: string
     }
 }
 
@@ -1895,7 +1899,6 @@ export type DeleteSubstitutionError = BadRequestError | ApiError
 export type GetPossibleSubOutsData = {
     path: {
         competitionId: string
-        competitionSetupRoundId: string
         eventId: string
     }
 }
@@ -1907,10 +1910,7 @@ export type GetPossibleSubOutsError = BadRequestError | ApiError
 export type GetPossibleSubInsData = {
     path: {
         competitionId: string
-        competitionSetupRoundId: string
         eventId: string
-    }
-    query: {
         participantId: string
     }
 }

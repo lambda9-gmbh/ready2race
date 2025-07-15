@@ -17,10 +17,9 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
                 path: {
                     eventId,
                     competitionId,
-                    competitionSetupRoundId: setupRoundId,
+                    participantId: selectedParticipantOut!,
                 },
                 query: {
-                    participantId: selectedParticipantOut!,
                 },
             }),
         {
@@ -28,8 +27,6 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
             deps: [eventId, competitionId, setupRoundId, selectedParticipantOut],
         },
     )
-
-    console.log('Sub In Options', subInsData)
 
     return subInsData ? (
         <FormInputSelect

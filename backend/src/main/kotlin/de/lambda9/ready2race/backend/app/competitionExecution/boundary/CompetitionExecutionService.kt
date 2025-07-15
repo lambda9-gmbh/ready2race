@@ -18,11 +18,13 @@ import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetu
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.*
+import org.jooq.impl.QOM.Round
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -39,6 +41,7 @@ object CompetitionExecutionService {
             val (currentRound, nextRound) = getCurrentAndNextRound(setupRounds)
 
             if (currentRound == null) {
+                // First Round
 
                 val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
 
@@ -88,6 +91,7 @@ object CompetitionExecutionService {
                 }
 
             } else {
+                // Following Round
 
                 !checkRoundCreation(true, setupRounds, currentRound, nextRound, null)
 
@@ -154,6 +158,11 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+
+
+                // Carry over all substitutions to the new round
+                !SubstitutionRepo.copySubstitutionsToNewRound(currentRound.setupRoundId, nextRound.setupRoundId).orDie()
+
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -386,7 +395,7 @@ object CompetitionExecutionService {
     }
 
 
-    private fun getCurrentAndNextRound(
+    fun getCurrentAndNextRound(
         rounds: List<CompetitionSetupRoundWithMatches>
     ): Pair<CompetitionSetupRoundWithMatches?, CompetitionSetupRoundWithMatches?> {
         val finalRound = rounds.find { it.nextRound == null }

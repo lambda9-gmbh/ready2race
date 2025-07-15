@@ -1075,7 +1075,7 @@ export const deleteSubstitution = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution',
     })
 }
 
@@ -1088,7 +1088,7 @@ export const getPossibleSubOuts = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubOuts',
     })
 }
 
@@ -1101,7 +1101,7 @@ export const getPossibleSubIns = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubIns/{participantId}',
     })
 }
 
