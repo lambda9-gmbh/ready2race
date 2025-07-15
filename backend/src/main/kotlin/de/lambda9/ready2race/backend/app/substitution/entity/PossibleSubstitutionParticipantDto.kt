@@ -12,6 +12,5 @@ data class PossibleSubstitutionParticipantDto(
     val registrationId: UUID?,
     val registrationName: String?,
     val namedParticipantId: UUID?,
-    val namedParticipantName: String?,
-    val participantRequirements: List<ParticipantRequirementDto>
+    val namedParticipantName: String?
 )
