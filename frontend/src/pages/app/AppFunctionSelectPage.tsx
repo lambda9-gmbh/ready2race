@@ -4,14 +4,16 @@ import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx';
 import {useEffect, useState} from 'react';
 import {router} from "@routes";
 import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
+import { useTranslation } from 'react-i18next';
 
-const APP_FUNCTIONS: { fn: AppFunction; label: string }[] = [
-    {fn: 'APP_QR_MANAGEMENT', label: 'QR-Code Verwaltung'},
-    {fn: 'APP_COMPETITION_CHECK', label: 'Wettkampf Check'},
-    {fn: 'APP_EVENT_REQUIREMENT', label: 'Event Requirements'},
-];
+const APP_FUNCTIONS = [
+    {fn: 'APP_QR_MANAGEMENT' as AppFunction, labelKey: 'app.functionSelect.functions.qrManagement' as const},
+    {fn: 'APP_COMPETITION_CHECK' as AppFunction, labelKey: 'app.functionSelect.functions.competitionCheck' as const},
+    {fn: 'APP_EVENT_REQUIREMENT' as AppFunction, labelKey: 'app.functionSelect.functions.eventRequirement' as const},
+] as const;
 
 const AppFunctionSelectPage = () => {
+    const { t } = useTranslation();
     const user = useUser();
     const {setAppFunction} = useAppSession();
     const navigate = router.navigate
@@ -45,11 +47,11 @@ const AppFunctionSelectPage = () => {
     return (
         <Stack spacing={2} alignItems="center" justifyContent="center" p={4}>
             <Typography variant="h4" textAlign="center">
-                Bitte wähle deine Funktion in der App
+                {t('app.functionSelect.title')}
             </Typography>
             {APP_FUNCTIONS.filter(f => available.includes(f.fn)).map(f => (
                 <Button key={f.fn} variant="contained" fullWidth onClick={() => handleSelect(f.fn)}>
-                    {f.label}
+                    {t(f.labelKey)}
                 </Button>
             ))}
         </Stack>

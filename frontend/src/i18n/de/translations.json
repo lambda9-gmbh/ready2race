@@ -769,5 +769,15 @@
   "qrEvents": {
     "title": "QR-Events",
     "switchApp": "App wechseln"
+  },
+  "app": {
+    "functionSelect": {
+      "title": "Bitte wähle deine Funktion in der App",
+      "functions": {
+        "qrManagement": "QR-Code Verwaltung",
+        "competitionCheck": "Wettkampf-Check",
+        "eventRequirement": "Event Requirements"
+      }
+    }
   }
 }
