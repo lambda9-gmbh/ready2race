@@ -72,7 +72,9 @@
     "remove": "Entfernen",
     "language": {
       "menu": "Sprache auswählen"
-    }
+    },
+    "actions": "Aktionen",
+    "noClub": "Kein Verein"
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -166,6 +168,10 @@
     "participants": "Mitglieder",
     "participant": {
       "title": "Mitglied",
+      "name": "Name",
+      "yearOfBirth": "Geburtsjahr",
+      "gender": "Geschlecht",
+      "role": "Rolle",
       "year": "Geburtsjahr",
       "external": "Extern",
       "externalClub": "Externer Verein",
@@ -769,6 +775,29 @@
     "removeAssignmentTitle": "Zuordnung entfernen",
     "removeAssignmentConfirm": "Möchtest du die Zuordnung wirklich entfernen?",
     "deleteError": "Fehler beim Löschen des QR-Codes."
+  },
+  "team": {
+    "teams": "Teams",
+    "name": "Teamname",
+    "statusText": "Status",
+    "status": {
+      "in": "Drin",
+      "out": "Draußen"
+    },
+    "lastScan": "Letzter Scan",
+    "checkInText": "Team einchecken",
+    "checkOutText": "Team auschecken",
+    "checkIn": {
+      "success": "Team erfolgreich eingecheckt",
+      "error": "Fehler beim Einchecken des Teams"
+    },
+    "checkOut": {
+      "success": "Team erfolgreich ausgecheckt",
+      "error": "Fehler beim Auschecken des Teams"
+    },
+    "participants": "Teilnehmer",
+    "participantCount": "{{count}} Teilnehmer",
+    "noTeamsFound": "Keine Teams gefunden"
   },
   "qrScanner": {
     "title": "QR-Scanner"

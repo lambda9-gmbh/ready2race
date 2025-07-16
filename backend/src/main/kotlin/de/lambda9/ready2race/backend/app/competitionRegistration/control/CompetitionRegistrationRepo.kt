@@ -27,6 +27,8 @@ object CompetitionRegistrationRepo {
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
 
+    fun findById(id: UUID) = COMPETITION_REGISTRATION.findOneBy { ID.eq(id) }
+
     // TODO: @What?: Why also competitionId? id is already unique
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
         COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }

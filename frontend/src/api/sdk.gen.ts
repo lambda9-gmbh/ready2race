@@ -420,6 +420,21 @@ import type {
     UpdateQrCodeParticipantData,
     UpdateQrCodeParticipantError,
     UpdateQrCodeParticipantResponse,
+    CheckInTeamData,
+    CheckInTeamError,
+    CheckInTeamResponse,
+    CheckOutTeamData,
+    CheckOutTeamError,
+    CheckOutTeamResponse,
+    GetTeamStatusData,
+    GetTeamStatusError,
+    GetTeamStatusResponse,
+    GetTeamsByParticipantQrCodeData,
+    GetTeamsByParticipantQrCodeError,
+    GetTeamsByParticipantQrCodeResponse,
+    GetEventTeamsData,
+    GetEventTeamsError,
+    GetEventTeamsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2088,4 +2103,57 @@ export const updateQrCodeParticipant = <ThrowOnError extends boolean = false>(
         ...options,
         url: '/app/participant',
     })
+}
+
+export const checkInTeam = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckInTeamData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<CheckInTeamResponse, CheckInTeamError, ThrowOnError>({
+        ...options,
+        url: '/app/team/{teamId}/check-in',
+    })
+}
+
+export const checkOutTeam = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckOutTeamData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<CheckOutTeamResponse, CheckOutTeamError, ThrowOnError>({
+        ...options,
+        url: '/app/team/{teamId}/check-out',
+    })
+}
+
+export const getTeamStatus = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTeamStatusData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetTeamStatusResponse, GetTeamStatusError, ThrowOnError>(
+        {
+            ...options,
+            url: '/app/team/{teamId}/status',
+        },
+    )
+}
+
+export const getTeamsByParticipantQrCode = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTeamsByParticipantQrCodeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetTeamsByParticipantQrCodeResponse,
+        GetTeamsByParticipantQrCodeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/participant/{qrCode}/teams',
+    })
+}
+
+export const getEventTeams = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventTeamsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetEventTeamsResponse, GetEventTeamsError, ThrowOnError>(
+        {
+            ...options,
+            url: '/event/{eventId}/teams',
+        },
+    )
 }
