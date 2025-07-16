@@ -484,6 +484,28 @@
           "error": {
             "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
           }
+        },
+        "substitution": {
+          "substitutions": "Ummeldungen",
+          "inFor": "ersetzt durch",
+          "participant": "Teilnehmer",
+          "substituteFor":{
+            "substituteFor": "Ersetzen durch",
+            "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
+            "notCurrentlyParticipating": "Frei verfügbar",
+            "team": "Team"
+          },
+          "reason": "Begründung",
+          "add": {
+            "add": "Ummeldungen hinzufügen",
+            "error": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten",
+            "success": "Ummeldungen erfolgreich hinzugefügt"
+          },
+          "delete": {
+            "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
+            "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
+            "success": "Ummeldungen erfolgreich gelöscht"
+          }
         }
       },
       "places": {

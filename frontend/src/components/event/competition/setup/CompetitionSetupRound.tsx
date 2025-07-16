@@ -608,7 +608,8 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                                         sx={{
                                             display: 'flex',
                                             flexWrap: 'wrap',
-                                            justifyContent: 'space-between',
+                                            justifyContent: 'start',
+                                            gap: 4,
                                             flex: 1,
                                         }}>
                                         {watchIsGroupRound === false ? (

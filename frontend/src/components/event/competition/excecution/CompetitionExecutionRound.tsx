@@ -76,7 +76,6 @@ const CompetitionExecutionRound = ({
                 props.reloadRoundDto()
             },
             {
-                title: t('common.confirmation.title'),
                 content: t('event.competition.execution.deleteRound.confirmation.content'),
                 okText: t('common.delete'),
             },
@@ -192,7 +191,7 @@ const CompetitionExecutionRound = ({
                             expandIcon={<ExpandMoreIcon />}
                             aria-controls={`round-${roundIndex}-${round.name}-panel-substitutions-content`}
                             id={`round-${roundIndex}-${round.name}-panel-substitutions-header`}>
-                            <Typography component="span">{'[todo] Substitutions'}</Typography>
+                            <Typography component="span">{t('event.competition.execution.substitution.substitutions')}</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                             <Substitutions
