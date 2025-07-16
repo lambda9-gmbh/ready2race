@@ -72,7 +72,9 @@
     "remove": "Remove",
     "language": {
       "menu": "Select language"
-    }
+    },
+    "actions": "Actions",
+    "noClub": "No club"
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -166,6 +168,10 @@
     "participants": "Members",
     "participant": {
       "title": "Member",
+      "name": "Name",
+      "yearOfBirth": "Year of birth",
+      "gender": "Gender",
+      "role": "Role",
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club",
@@ -769,6 +775,29 @@
     "removeAssignmentTitle": "Remove assignment",
     "removeAssignmentConfirm": "Do you really want to remove the assignment?",
     "deleteError": "Error while deleting the QR code."
+  },
+  "team": {
+    "teams": "Teams",
+    "name": "Team name",
+    "statusText": "Status",
+    "status": {
+      "in": "In",
+      "out": "Out"
+    },
+    "lastScan": "Last scan",
+    "checkInText": "Check in team",
+    "checkOutText": "Check out team",
+    "checkIn": {
+      "success": "Team checked in successfully",
+      "error": "Error checking in team"
+    },
+    "checkOut": {
+      "success": "Team checked out successfully",
+      "error": "Error checking out team"
+    },
+    "participants": "Participants",
+    "participantCount": "{{count}} participants",
+    "noTeamsFound": "No teams found"
   },
   "qrScanner": {
     "title": "QR Scanner"

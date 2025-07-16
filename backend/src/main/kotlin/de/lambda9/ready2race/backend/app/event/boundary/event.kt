@@ -15,6 +15,8 @@ import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.teamTracking.boundary.TeamTrackingService
+import de.lambda9.ready2race.backend.app.teamTracking.entity.TeamStatusWithParticipantsSort
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -103,6 +105,15 @@ fun Route.event() {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("eventId", uuid)
                     InvoiceService.createRegistrationInvoicesForEventJobs(id, user.id!!)
+                }
+            }
+
+            get("/teams") {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
+                    val id = !pathParam("eventId", uuid)
+                    val params = !pagination<TeamStatusWithParticipantsSort>()
+                    TeamTrackingService.getTeamsWithParticipantsAndStatusPaginated(id, params)
                 }
             }
         }
