@@ -8,8 +8,8 @@ data class SubstitutionRequest(
     val participantOut: UUID,
     val participantIn: UUID,
     val reason: String?,
-    val participantRequirements: List<SubstitutionHasParticipantRequirementRequest>,
-    val swappedParticipantRequirements: List<SubstitutionHasParticipantRequirementRequest>?
+    //val participantRequirements: List<SubstitutionHasParticipantRequirementRequest>,
+    //val swappedParticipantRequirements: List<SubstitutionHasParticipantRequirementRequest>?
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid // todo: validate
 
@@ -19,8 +19,8 @@ data class SubstitutionRequest(
                 participantOut = UUID.randomUUID(),
                 participantIn = UUID.randomUUID(),
                 reason = "Reason for the substitution",
-                participantRequirements = listOf(SubstitutionHasParticipantRequirementRequest.example),
-                swappedParticipantRequirements = listOf(SubstitutionHasParticipantRequirementRequest.example)
+                //participantRequirements = listOf(SubstitutionHasParticipantRequirementRequest.example),
+                //swappedParticipantRequirements = listOf(SubstitutionHasParticipantRequirementRequest.example)
             )
     }
 }

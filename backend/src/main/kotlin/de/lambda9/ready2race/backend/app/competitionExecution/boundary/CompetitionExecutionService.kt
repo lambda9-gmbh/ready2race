@@ -403,6 +403,8 @@ object CompetitionExecutionService {
         val currentRound = getCurrentAndNextRound(setupRounds).first
             ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
 
+        !SubstitutionRepo.deleteBySetupRoundId(currentRound.setupRoundId).orDie()
+
         val deleted = !CompetitionMatchRepo.delete(currentRound.matches.map { it.competitionSetupMatch }).orDie()
 
         if (deleted < 1) {

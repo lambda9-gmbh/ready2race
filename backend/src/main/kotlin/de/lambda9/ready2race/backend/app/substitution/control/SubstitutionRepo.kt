@@ -23,6 +23,8 @@ object SubstitutionRepo {
 
     fun delete(ids: List<UUID>) = SUBSTITUTION.delete { ID.`in`(ids) }
 
+    fun deleteBySetupRoundId(setupRoundId: UUID) = SUBSTITUTION.delete { COMPETITION_SETUP_ROUND.eq(setupRoundId) }
+
     fun getViewByRound(setupRoundId: UUID) = SUBSTITUTION_VIEW.select { COMPETITION_SETUP_ROUND_ID.eq(setupRoundId) }
 
     fun copySubstitutionsToNewRound(oldSetupRound: UUID, newSetupRound: UUID): JIO<Int> = Jooq.query {

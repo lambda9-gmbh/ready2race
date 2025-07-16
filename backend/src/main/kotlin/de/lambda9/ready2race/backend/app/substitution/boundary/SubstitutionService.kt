@@ -11,14 +11,16 @@ import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetu
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
-import de.lambda9.ready2race.backend.app.substitution.control.toParticipantParticipatingInRoundDto
+import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.control.toPossibleSubstitutionParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.control.toRecord
 import de.lambda9.ready2race.backend.app.substitution.entity.*
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.onNullDo
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -55,7 +57,6 @@ object SubstitutionService {
         // todo: Get ParticipantRequirements for pOut
         // todo: Check if all of them are listed in request.
         // todo: SubstitutionHasParticipantRequirementRepo.insert(request.participantRequirements)
-
 
 
         // Sub and swap?
@@ -139,6 +140,17 @@ object SubstitutionService {
             subbedOutRegistrationParticipants.find { subbedOutP ->
                 subbedOutP.id == regP.id
             } == null
+        }.map { rP ->
+            // Almost identical with mapping in getPossibleSubstitutionsHelper
+            // Assign new values to registration and namedParticipant if the registered participant is subbed in (could be in another team/registration)
+            val sortedSubInsWithRP = substitutions.sortedBy { it.orderForRound }.filter { s ->
+                s.participantIn!!.id == rP.id
+            }
+            if (sortedSubInsWithRP.isNotEmpty()) {
+                !sortedSubInsWithRP.last().toParticipantForExecutionDto(rP)
+            } else {
+                rP
+            }
         }
 
         val subbedInParticipants = !getSubbedInParticipants(substitutions)
@@ -189,8 +201,21 @@ object SubstitutionService {
             .filter { it.id != participantId }
             .map { !it.toPossibleSubstitutionParticipantDto() }
 
-        val (psRegisteredParticipating, psRegisteredNotParticipating) = clubMembersRegistered.partition { p ->
+        val (psRegisteredPart, psRegisteredNotParticipating) = clubMembersRegistered.partition { p ->
             subbedOutRegistrationParticipants.find { it.id == p.id } == null
+        }
+
+        // Almost identical with mapping in getParticipantsCurrentlyParticipatingHelper
+        // Assign new values to registration and namedParticipant if the registered participant is subbed in (could be in another team/registration)
+        val psRegisteredParticipating = psRegisteredPart.map { rP ->
+            val sortedSubInsWithRP = substitutions.sortedBy { it.orderForRound }.filter { s ->
+                s.participantIn!!.id == rP.id
+            }
+            if (sortedSubInsWithRP.isNotEmpty()) {
+                !sortedSubInsWithRP.last().toPossibleSubstitutionParticipantDto(rP)
+            } else {
+                rP
+            }
         }
 
 
@@ -236,7 +261,7 @@ object SubstitutionService {
             val participants = setupRoundRecord.matches!!.filterNotNull().flatMap { match ->
                 match.teams!!.filterNotNull().flatMap { team ->
                     team.participants!!.filterNotNull().map { participant ->
-                        !participant.toParticipantParticipatingInRoundDto(team)
+                        !participant.toParticipantForExecutionDto(team)
                     }
                 }
 
@@ -272,25 +297,28 @@ object SubstitutionService {
     private fun getSubbedInParticipants(
         substitutions: List<SubstitutionViewRecord>
     ): App<Nothing, List<ParticipantForExecutionDto>> = KIO.comprehension {
-
-        val subIns = substitutions.filter { sub ->
-
-            val subsWithParticipant = substitutions.filter {
-                sub.participantIn!!.id == it.participantOut!!.id || sub.participantIn!!.id == it.participantIn!!.id
-            }.sortedBy { it.orderForRound }
-
-            if (subsWithParticipant.isNotEmpty()) {
-                subsWithParticipant.last().participantIn == sub.participantIn || getSwapSubstitution(
-                    sub,
-                    subsWithParticipant
-                ) != null
-            } else false
+        val sortedSubs = substitutions.sortedBy { it.orderForRound }
+        val uniqueSubIns = sortedSubs.filter { subIn -> // These are the last times that the subIn was subbedIn (highest orderForRound)
+            sortedSubs.none { (it.participantIn!!.id == subIn.participantIn!!.id) && it.orderForRound!! > subIn.orderForRound!! }
         }
-        subIns.traverse { sub ->
-            sub.toParticipantParticipatingInRoundDto(
-                sub.participantIn!!
-            )
-        }
+        KIO.ok(
+            uniqueSubIns.filter { subIn ->
+                val subInId = subIn.participantIn!!.id
+                val subsWithParticipantIn = sortedSubs.filter {
+                    subInId == it.participantOut!!.id || subInId == it.participantIn!!.id
+                }
+                if (subsWithParticipantIn.isNotEmpty()) {
+                    // Either the last substitution of this subIn was being subbedIn (and not out) OR the last substitution of this subIn was a swap
+                    (subsWithParticipantIn.last().id == subIn.id)
+                        || (getSwapSubstitution(subsWithParticipantIn.last(), subsWithParticipantIn) != null)
+                } else false
+
+            }.map { sub ->
+                !sub.toParticipantForExecutionDto(
+                    sub.participantIn!!
+                )
+            }
+        )
     }
 
     // If the substitution is part of a swap - get the other substitution
