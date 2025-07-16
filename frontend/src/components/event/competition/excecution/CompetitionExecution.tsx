@@ -461,7 +461,7 @@ const CompetitionExecution = () => {
                     )}
                 </Box>
             )}
-            <Box>
+            <Stack spacing={6}>
                 {sortedRounds.map((round, roundIndex) => (
                     <CompetitionExecutionRound
                         key={round.setupRoundId}
@@ -479,7 +479,7 @@ const CompetitionExecution = () => {
                         }
                     />
                 ))}
-            </Box>
+            </Stack>
             <Dialog
                 open={resultsDialogOpen}
                 fullWidth

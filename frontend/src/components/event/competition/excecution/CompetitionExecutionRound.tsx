@@ -5,7 +5,8 @@ import {
     AccordionSummary,
     Box,
     Card,
-    Divider, Link,
+    Divider,
+    Link,
     Stack,
     Table,
     TableBody,
@@ -25,7 +26,8 @@ import {Fragment, SyntheticEvent, useRef} from 'react'
 import {deleteCurrentCompetitionExecutionRound, downloadStartList} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
-import SelectionMenu from "@components/SelectionMenu.tsx";
+import SelectionMenu from '@components/SelectionMenu.tsx'
+import {format} from 'date-fns'
 
 type Props = {
     round: CompetitionRoundDto
@@ -87,7 +89,6 @@ const CompetitionExecutionRound = ({
             props.handleAccordionExpandedChange(accordionIndex, isExpanded)
         }
 
-
     const handleDownloadStartList = async (
         competitionMatchId: string,
         fileType: StartListFileType,
@@ -127,13 +128,19 @@ const CompetitionExecutionRound = ({
     return (
         <Fragment>
             <Link ref={downloadRef} display={'none'}></Link>
-            {roundIndex !== 0 && <Divider variant={'middle'} sx={{my: 8}} />}
-            <Stack spacing={2}>
+            <Stack
+                spacing={2}
+                sx={{
+                    borderLeft: 1,
+                    borderColor: theme.palette.primary.main,
+                    pl: 4,
+                    py: 2,
+                }}>
                 <Typography variant={'h2'}>{round.name}</Typography>
                 {round.required && (
                     <Typography>{t('event.competition.setup.round.required')}</Typography>
                 )}
-                <Box sx={{pb: 4}}>
+                <Box>
                     {round.matches.filter(match => match.teams.length === 1).length > 0 && (
                         <Accordion
                             expanded={props.accordionsExpanded?.[0] ?? false}
@@ -174,7 +181,7 @@ const CompetitionExecutionRound = ({
                                                             {match.weighting}
                                                         </TableCell>
                                                         <TableCell width="80%">
-                                                            {`${match.teams[0].clubName} (${match.teams[0].name} ${match.teams[0].name}`}
+                                                            {`${match.teams[0].clubName} ${match.teams[0].name}`}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -191,7 +198,9 @@ const CompetitionExecutionRound = ({
                             expandIcon={<ExpandMoreIcon />}
                             aria-controls={`round-${roundIndex}-${round.name}-panel-substitutions-content`}
                             id={`round-${roundIndex}-${round.name}-panel-substitutions-header`}>
-                            <Typography component="span">{t('event.competition.execution.substitution.substitutions')}</Typography>
+                            <Typography component="span">
+                                {t('event.competition.execution.substitution.substitutions')}
+                            </Typography>
                         </AccordionSummary>
                         <AccordionDetails>
                             <Substitutions
@@ -201,6 +210,9 @@ const CompetitionExecutionRound = ({
                             />
                         </AccordionDetails>
                     </Accordion>
+                </Box>
+                <Box sx={{py: 2}}>
+                    <Divider variant={'middle'} />
                 </Box>
                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                     {filteredMatches.map((match, matchIndex) => (
@@ -219,14 +231,19 @@ const CompetitionExecutionRound = ({
                                     )}
                                     <Typography>
                                         {t('event.competition.execution.match.startTime') + ': '}
-                                        {match.startTime ?? '-'}
+                                        {match.startTime
+                                            ? format(
+                                                  new Date(match.startTime),
+                                                  t('format.datetime'),
+                                              )
+                                            : '-'}
                                     </Typography>
                                     {match.startTimeOffset && (
                                         <Typography>
                                             {t(
                                                 'event.competition.execution.match.startTimeOffset',
                                             ) + ': '}
-                                            {match.startTimeOffset}
+                                            {match.startTimeOffset} {t('common.form.seconds')}
                                         </Typography>
                                     )}
                                 </Stack>
@@ -258,23 +275,34 @@ const CompetitionExecutionRound = ({
                                             menu: {
                                                 vertical: 'top',
                                                 horizontal: 'right',
-                                            }
+                                            },
                                         }}
-                                        buttonContent={t('event.competition.execution.startList.download')}
+                                        buttonContent={t(
+                                            'event.competition.execution.startList.download',
+                                        )}
                                         keyLabel={'competition-execution-startlist-download'}
                                         onSelectItem={(fileType: string) =>
-                                            handleDownloadStartList(match.id, fileType as StartListFileType)
+                                            handleDownloadStartList(
+                                                match.id,
+                                                fileType as StartListFileType,
+                                            )
                                         }
-                                        items={[
-                                            {
-                                                id: 'PDF',
-                                                label: t('event.competition.execution.startList.type.PDF')
-                                            },
-                                            {
-                                                id: 'CSV',
-                                                label: t('event.competition.execution.startList.type.CSV')
-                                            }
-                                        ] satisfies {id: StartListFileType, label: string}[]}
+                                        items={
+                                            [
+                                                {
+                                                    id: 'PDF',
+                                                    label: t(
+                                                        'event.competition.execution.startList.type.PDF',
+                                                    ),
+                                                },
+                                                {
+                                                    id: 'CSV',
+                                                    label: t(
+                                                        'event.competition.execution.startList.type.CSV',
+                                                    ),
+                                                },
+                                            ] satisfies {id: StartListFileType; label: string}[]
+                                        }
                                     />
                                 </Stack>
                             </Stack>
