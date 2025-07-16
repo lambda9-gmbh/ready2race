@@ -1,11 +1,11 @@
-import {CompetitionMatchDto, CompetitionRoundDto} from '@api/types.gen.ts'
+import {CompetitionMatchDto, CompetitionRoundDto, StartListFileType} from '@api/types.gen.ts'
 import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
     Box,
     Card,
-    Divider,
+    Divider, Link,
     Stack,
     Table,
     TableBody,
@@ -21,10 +21,11 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Fragment, SyntheticEvent} from 'react'
-import {deleteCurrentCompetitionExecutionRound} from '@api/sdk.gen.ts'
+import {Fragment, SyntheticEvent, useRef} from 'react'
+import {deleteCurrentCompetitionExecutionRound, downloadStartList} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
+import SelectionMenu from "@components/SelectionMenu.tsx";
 
 type Props = {
     round: CompetitionRoundDto
@@ -53,6 +54,8 @@ const CompetitionExecutionRound = ({
     const {competitionId} = competitionRoute.useParams()
 
     const {confirmAction} = useConfirmation()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const deleteCurrentRound = async () => {
         confirmAction(
@@ -85,8 +88,46 @@ const CompetitionExecutionRound = ({
             props.handleAccordionExpandedChange(accordionIndex, isExpanded)
         }
 
+
+    const handleDownloadStartList = async (
+        competitionMatchId: string,
+        fileType: StartListFileType,
+    ) => {
+        const {data, error, response} = await downloadStartList({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+            query: {
+                fileType,
+            },
+        })
+        const anchor = downloadRef.current
+
+        const disposition = response.headers.get('Content-Disposition')
+        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
+
+        if (error) {
+            if (error.status.value === 409) {
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else if (data !== undefined && anchor) {
+            // need Blob constructor for text/csv
+            anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
+            anchor.download =
+                filename ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     return (
         <Fragment>
+            <Link ref={downloadRef} display={'none'}></Link>
             {roundIndex !== 0 && <Divider variant={'middle'} sx={{my: 8}} />}
             <Stack spacing={2}>
                 <Typography variant={'h2'}>{round.name}</Typography>
@@ -208,6 +249,34 @@ const CompetitionExecutionRound = ({
                                         pending={submitting}>
                                         {t('event.competition.execution.matchData.edit')}
                                     </LoadingButton>
+
+                                    <SelectionMenu
+                                        anchor={{
+                                            button: {
+                                                vertical: 'bottom',
+                                                horizontal: 'right',
+                                            },
+                                            menu: {
+                                                vertical: 'top',
+                                                horizontal: 'right',
+                                            }
+                                        }}
+                                        buttonContent={t('event.competition.execution.startList.download')}
+                                        keyLabel={'competition-execution-startlist-download'}
+                                        onSelectItem={(fileType: string) =>
+                                            handleDownloadStartList(match.id, fileType as StartListFileType)
+                                        }
+                                        items={[
+                                            {
+                                                id: 'PDF',
+                                                label: t('event.competition.execution.startList.type.PDF')
+                                            },
+                                            {
+                                                id: 'CSV',
+                                                label: t('event.competition.execution.startList.type.CSV')
+                                            }
+                                        ] satisfies {id: StartListFileType, label: string}[]}
+                                    />
                                 </Stack>
                             </Stack>
                             <Divider sx={{my: 2}} />

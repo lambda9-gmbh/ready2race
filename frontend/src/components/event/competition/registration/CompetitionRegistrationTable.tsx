@@ -4,7 +4,6 @@ import {competitionRoute, eventRoute} from '@routes'
 import {
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
-    EventDto,
     getCompetitionRegistrations,
 } from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
@@ -37,7 +36,7 @@ const CompetitionRegistrationTable = (
         })
     }
 
-    const deleteRequest = (dto: EventDto) =>
+    const deleteRequest = (dto: CompetitionRegistrationTeamDto) =>
         deleteCompetitionRegistration({
             path: {
                 eventId: eventId,
