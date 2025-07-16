@@ -43,7 +43,7 @@ export const AppUserQrCodeEditDialog = ({
 
     return (
         <EntityDialog
-            entityName={t('club.appUser.title')}
+            entityName={t('qrAppuser.title')}
             dialogIsOpen={dialogIsOpen}
             closeDialog={closeDialog}
             reloadData={reloadData}
@@ -51,16 +51,16 @@ export const AppUserQrCodeEditDialog = ({
             formContext={formContext}
             onOpen={onOpen}
             editAction={editAction}
-            title={t('club.appUser.qrCodeEdit')}
+            title={t('qrCode.edit')}
             disableSave={false}
         >
             <TextFieldElement
                 name="qrCodeId"
-                label={t('club.appUser.qrCodeId')}
+                label={t('user.qrCodeId')}
                 fullWidth
             />
             <Typography variant="body2" sx={{mt: 2}}>
-                {t('club.appUser.qrCodeEditDescription')}
+                {t('club.participant.qrCodeEditDescription')}
             </Typography>
         </EntityDialog>
     )
