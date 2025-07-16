@@ -4339,6 +4339,180 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  # Team Tracking endpoints
+  /app/team/{teamId}/check-in:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: checkInTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventId
+              properties:
+                eventId:
+                  type: string
+                  format: uuid
+      responses:
+        200:
+          description: Team check-in result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamTrackingScanDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /app/team/{teamId}/check-out:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: checkOutTeam
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventId
+              properties:
+                eventId:
+                  type: string
+                  format: uuid
+      responses:
+        200:
+          description: Team check-out result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamTrackingScanDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /app/team/{teamId}/status:
+    parameters:
+      - name: teamId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getTeamStatus
+      responses:
+        200:
+          description: Team status with participants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+
+  /app/participant/{qrCode}/teams:
+    parameters:
+      - name: qrCode
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: eventId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getTeamsByParticipantQrCode
+      responses:
+        200:
+          description: Teams associated with participant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/teams:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/search'
+    get:
+      operationId: getEventTeams
+      responses:
+        200:
+          description: All teams for event with their status
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -7459,3 +7633,119 @@ components:
     QrCodeDtoType:
       type: string
       enum: [Participant, User]
+
+    # Team Tracking schemas
+
+    TeamScanType:
+      type: string
+      enum:
+        - ENTRY
+        - EXIT
+
+    TeamTrackingScanDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - eventId
+        - scanType
+        - success
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        scanType:
+          $ref: '#/components/schemas/TeamScanType'
+        success:
+          type: boolean
+        message:
+          type: string
+        teamName:
+          type: string
+        currentStatus:
+          $ref: '#/components/schemas/TeamStatusDto'
+
+    TeamStatusDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - teamName
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+        currentStatus:
+          $ref: '#/components/schemas/TeamScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+        scannedBy:
+          type: string
+          format: uuid
+
+    TeamStatusWithParticipantsDto:
+      type: object
+      required:
+        - id
+        - competitionRegistrationId
+        - eventRegistrationId
+        - competitionId
+        - teamName
+        - participants
+      properties:
+        id:
+          type: string
+          format: uuid
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        eventRegistrationId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamParticipantDto'
+        currentStatus:
+          $ref: '#/components/schemas/TeamScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+        scannedBy:
+          type: string
+          format: uuid
+
+    TeamParticipantDto:
+      type: object
+      required:
+        - participantId
+        - firstname
+        - lastname
+        - year
+        - gender
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        role:
+          type: string

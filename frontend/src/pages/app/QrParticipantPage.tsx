@@ -1,7 +1,13 @@
 import {
     Alert,
+    Box,
     Button,
+    Card,
+    CardActions,
+    CardContent,
     Checkbox,
+    Chip,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -10,18 +16,27 @@ import {
     Stack,
     Typography
 } from "@mui/material";
-import ButtonGroup from "@mui/material/ButtonGroup";
 import {useEffect, useState} from "react";
 import {qrEventRoute, router} from "@routes";
 import {
     approveParticipantRequirementsForEvent,
+    checkInTeam,
+    checkOutTeam,
     deleteQrCode,
     getParticipantRequirementsForEvent,
-    getParticipantsForEvent
+    getParticipantsForEvent,
+    getTeamsByParticipantQrCode
 } from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
-import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
+import {
+    updateAppCompetitionCheckGlobal,
+    updateAppEventRequirementGlobal,
+    updateAppQrManagementGlobal
+} from '@authorization/privileges';
+import {ParticipantRequirementForEventDto, TeamStatusWithParticipantsDto} from '@api/types.gen.ts';
+import {Login, Logout} from '@mui/icons-material';
+import {useFeedback} from '@utils/hooks.ts';
 
 const QrParticipantPage = () => {
     const {t} = useTranslation();
@@ -30,10 +45,14 @@ const QrParticipantPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [requirements, setRequirements] = useState<any[]>([]);
+    const [requirements, setRequirements] = useState<ParticipantRequirementForEventDto[]>([]);
     const [checkedRequirements, setCheckedRequirements] = useState<string[]>([]);
     const [pending, setPending] = useState(false);
+    const [teams, setTeams] = useState<TeamStatusWithParticipantsDto[]>([]);
+    const [loadingTeams, setLoadingTeams] = useState(false);
+    const [teamActionLoading, setTeamActionLoading] = useState<Set<string>>(new Set());
     const navigate = router.navigate
+    const feedback = useFeedback();
 
     useEffect(() => {
         if (!appFunction) {
@@ -53,16 +72,37 @@ const QrParticipantPage = () => {
                     getParticipantRequirementsForEvent({path: {eventId, participantId: qr.response?.id}}),
                     getParticipantsForEvent({path: {eventId}})
                 ]);
-                setRequirements((reqData?.data || []).filter((r: any) => r.checkInApp));
-                const participant = (partData?.data || []).find((p: any) => p.id === qr.response?.id);
+                setRequirements((reqData?.data || []).filter((r) => r.checkInApp));
+                const participant = (partData?.data || []).find((p) => p.id === qr.response?.id);
                 setCheckedRequirements(Array.isArray(participant?.participantRequirementsChecked)
-                    ? participant.participantRequirementsChecked.map((r: any) => r.id).filter((id: string | undefined): id is string => !!id)
+                    ? participant.participantRequirementsChecked.map((r) => r.id).filter((id: string | undefined): id is string => !!id)
                     : []);
                 setPending(false);
             }
         };
         load();
     }, [appFunction, qr.response?.id, eventId]);
+
+    useEffect(() => {
+        const loadTeams = async () => {
+            if (appFunction === 'APP_COMPETITION_CHECK' && qr.qrCodeId && eventId) {
+                setLoadingTeams(true);
+                try {
+                    const {data} = await getTeamsByParticipantQrCode({
+                        path: {qrCode: qr.qrCodeId},
+                        query: {eventId}
+                    });
+                    setTeams(data || []);
+                } catch (error) {
+                    console.error('Error loading teams:', error);
+                    setTeams([]);
+                } finally {
+                    setLoadingTeams(false);
+                }
+            }
+        };
+        loadTeams();
+    }, [appFunction, qr.qrCodeId, eventId]);
 
     const handleRequirementChange = async (requirementId: string, checked: boolean) => {
         if (!qr.response?.id) return;
@@ -76,9 +116,9 @@ const QrParticipantPage = () => {
         });
         // Nach Änderung neu laden
         const {data: partData} = await getParticipantsForEvent({path: {eventId}});
-        const participant = (partData?.data || []).find((p: any) => p.id === qr.response?.id);
+        const participant = (partData?.data || []).find((p) => p.id === qr.response?.id);
         setCheckedRequirements(Array.isArray(participant?.participantRequirementsChecked)
-            ? participant.participantRequirementsChecked.map((r: any) => r.id).filter((id: string | undefined): id is string => !!id)
+            ? participant.participantRequirementsChecked.map((r) => r.id).filter((id: string | undefined): id is string => !!id)
             : []);
         setPending(false);
     };
@@ -96,13 +136,69 @@ const QrParticipantPage = () => {
         setLoading(true);
         setError(null);
         try {
-            await deleteQrCode({path: {qrCodeId: qr.qrCodeId!!}});
+            await deleteQrCode({path: {qrCodeId: qr.qrCodeId!}});
             setDialogOpen(false);
             qr.reset(eventId);
-        } catch (e: any) {
-            setError(e?.message || t('qrParticipant.deleteError'));
+        } catch (e) {
+            setError((e as Error)?.message || t('qrParticipant.deleteError'));
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleTeamCheckIn = async (team: TeamStatusWithParticipantsDto) => {
+        setTeamActionLoading(prev => new Set(prev).add(team.competitionRegistrationId));
+        try {
+            const result = await checkInTeam({
+                path: {teamId: team.competitionRegistrationId},
+                body: {eventId}
+            });
+
+            if (result.data) {
+                feedback.success(t('team.checkIn.success'));
+                // Reload teams to get updated status
+                const {data} = await getTeamsByParticipantQrCode({
+                    path: {qrCode: qr.qrCodeId!},
+                    query: {eventId}
+                });
+                setTeams(data || []);
+            }
+        } catch {
+            feedback.error(t('team.checkIn.error'));
+        } finally {
+            setTeamActionLoading(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(team.competitionRegistrationId);
+                return newSet;
+            });
+        }
+    };
+
+    const handleTeamCheckOut = async (team: TeamStatusWithParticipantsDto) => {
+        setTeamActionLoading(prev => new Set(prev).add(team.competitionRegistrationId));
+        try {
+            const result = await checkOutTeam({
+                path: {teamId: team.competitionRegistrationId},
+                body: {eventId}
+            });
+
+            if (result.data) {
+                feedback.success(t('team.checkOut.success'));
+                // Reload teams to get updated status
+                const {data} = await getTeamsByParticipantQrCode({
+                    path: {qrCode: qr.qrCodeId!},
+                    query: {eventId}
+                });
+                setTeams(data || []);
+            }
+        } catch {
+            feedback.error(t('team.checkOut.error'));
+        } finally {
+            setTeamActionLoading(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(team.competitionRegistrationId);
+                return newSet;
+            });
         }
     };
 
@@ -116,10 +212,64 @@ const QrParticipantPage = () => {
                 <Alert severity="warning">{t('qrParticipant.noRight') as string}</Alert>
             )}
             {canCheck && (
-                <ButtonGroup disableElevation variant={"contained"} orientation={"vertical"} fullWidth>
-                    <Button>{t('qrParticipant.enterArea')}</Button>
-                    <Button>{t('qrParticipant.leaveArea')}</Button>
-                </ButtonGroup>
+                <Stack spacing={2} sx={{width: '100%', maxWidth: 600}}>
+                    <Typography variant="h6">{t('team.teams')}</Typography>
+                    {loadingTeams ? (
+                        <Box display="flex" justifyContent="center" p={2}>
+                            <CircularProgress/>
+                        </Box>
+                    ) : teams.length === 0 ? (
+                        <Alert severity="info">{t('team.noTeamsFound')}</Alert>
+                    ) : (
+                        teams.map((team) => (
+                            <Card key={team.competitionRegistrationId} variant="outlined">
+                                <CardContent>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                        <Box>
+                                            <Typography variant="h6">{team.teamName}</Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {team.clubName ?? t('common.noClub')}
+                                            </Typography>
+                                        </Box>
+                                        <Chip
+                                            label={team.currentStatus === 'ENTRY' ? t('team.status.in') : t('team.status.out')}
+                                            color={team.currentStatus === 'ENTRY' ? 'success' : 'default'}
+                                            size="small"
+                                        />
+                                    </Stack>
+                                    {team.lastScanAt && (
+                                        <Typography variant="caption" color="text.secondary" sx={{mt: 1}}>
+                                            {t('team.lastScan')}: {new Date(team.lastScanAt).toLocaleString()}
+                                        </Typography>
+                                    )}
+                                </CardContent>
+                                <CardActions>
+                                    {team.currentStatus === 'ENTRY' ? (
+                                        <Button
+                                            startIcon={<Logout/>}
+                                            onClick={() => handleTeamCheckOut(team)}
+                                            disabled={teamActionLoading.has(team.competitionRegistrationId)}
+                                            variant="outlined"
+                                            fullWidth
+                                        >
+                                            {t('team.checkOutText')}
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            startIcon={<Login/>}
+                                            onClick={() => handleTeamCheckIn(team)}
+                                            disabled={teamActionLoading.has(team.competitionRegistrationId)}
+                                            variant="contained"
+                                            fullWidth
+                                        >
+                                            {t('team.checkInText')}
+                                        </Button>
+                                    )}
+                                </CardActions>
+                            </Card>
+                        ))
+                    )}
+                </Stack>
             )}
             {canEditRequirements && (
                 <Stack spacing={1}>

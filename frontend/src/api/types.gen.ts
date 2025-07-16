@@ -1073,6 +1073,48 @@ export type TaskUpsertDto = {
     responsibleUsers: Array<string>
 }
 
+export type TeamParticipantDto = {
+    participantId: string
+    firstname: string
+    lastname: string
+    year: number
+    gender: Gender
+    role?: string
+}
+
+export type TeamScanType = 'ENTRY' | 'EXIT'
+
+export type TeamStatusDto = {
+    competitionRegistrationId: string
+    teamName: string
+    currentStatus?: TeamScanType
+    lastScanAt?: string
+    scannedBy?: string
+}
+
+export type TeamStatusWithParticipantsDto = {
+    id: string
+    competitionRegistrationId: string
+    eventRegistrationId: string
+    competitionId: string
+    clubName?: string
+    teamName: string
+    participants: Array<TeamParticipantDto>
+    currentStatus?: TeamScanType
+    lastScanAt?: string
+    scannedBy?: string
+}
+
+export type TeamTrackingScanDto = {
+    competitionRegistrationId: string
+    eventId: string
+    scanType: TeamScanType
+    success: boolean
+    message?: string
+    teamName?: string
+    currentStatus?: TeamStatusDto
+}
+
 export type TooManyRequestsError = ApiError & {
     details: {
         retryAfter: number
@@ -3433,3 +3475,83 @@ export type UpdateQrCodeParticipantData = {
 export type UpdateQrCodeParticipantResponse = void
 
 export type UpdateQrCodeParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type CheckInTeamData = {
+    body: {
+        eventId: string
+    }
+    path: {
+        teamId: string
+    }
+}
+
+export type CheckInTeamResponse = TeamTrackingScanDto
+
+export type CheckInTeamError = BadRequestError | ApiError
+
+export type CheckOutTeamData = {
+    body: {
+        eventId: string
+    }
+    path: {
+        teamId: string
+    }
+}
+
+export type CheckOutTeamResponse = TeamTrackingScanDto
+
+export type CheckOutTeamError = BadRequestError | ApiError
+
+export type GetTeamStatusData = {
+    path: {
+        teamId: string
+    }
+}
+
+export type GetTeamStatusResponse = TeamStatusWithParticipantsDto
+
+export type GetTeamStatusError = BadRequestError | ApiError
+
+export type GetTeamsByParticipantQrCodeData = {
+    path: {
+        qrCode: string
+    }
+    query: {
+        eventId: string
+    }
+}
+
+export type GetTeamsByParticipantQrCodeResponse = Array<TeamStatusWithParticipantsDto>
+
+export type GetTeamsByParticipantQrCodeError = BadRequestError | ApiError
+
+export type GetEventTeamsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetEventTeamsResponse = {
+    data: Array<TeamStatusWithParticipantsDto>
+    pagination: Pagination
+}
+
+export type GetEventTeamsError = BadRequestError | ApiError

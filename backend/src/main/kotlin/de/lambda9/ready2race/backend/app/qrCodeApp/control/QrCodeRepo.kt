@@ -16,6 +16,12 @@ object QrCodeRepo {
     fun update(qrCodeId: String, f: QrCodesRecord.() -> Unit) = QR_CODES.update(f) { QR_CODE_ID.eq(qrCodeId) }
     fun delete(qrCodeId: String) = QR_CODES.delete { QR_CODE_ID.eq(qrCodeId) }
     fun create(record: QrCodesRecord) = QR_CODES.insertReturning(record) { ID }
+    
+    fun findByCode(qrCodeId: String): JIO<QrCodesRecord?> = Jooq.query {
+        selectFrom(QR_CODES)
+            .where(QR_CODES.QR_CODE_ID.eq(qrCodeId))
+            .fetchOne()
+    }
 
     fun getUserOrParticipantByQrCodeId(
         qrCodeId: String

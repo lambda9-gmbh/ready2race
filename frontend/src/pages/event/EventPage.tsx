@@ -50,21 +50,20 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
 import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
-import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
+import {AppUserWithQrCodeDto, TeamStatusWithParticipantsDto} from '@api/types.gen.ts'
+import TeamTable from '@components/team/TeamTable.tsx'
 import EventActions from "@components/event/EventActions.tsx";
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 
-const EVENT_TABS = [
-    'general',
-    'competitions',
-    'participants',
-    'registrations',
-    'organization',
-    'settings',
-    'actions',
-    'invoices',
-] as const
-export type EventTab = (typeof EVENT_TABS)[number]
+export type EventTab =
+    | 'general'
+    | 'competitions'
+    | 'participants'
+    | 'registrations'
+    | 'organization'
+    | 'settings'
+    | 'actions'
+    | 'invoices'
 
 const EventPage = () => {
     const {t} = useTranslation()
@@ -115,6 +114,11 @@ const EventPage = () => {
 
     const appUserWithQrCodeProps = useEntityAdministration<AppUserWithQrCodeDto>(
         t('qrCode.appUsersWithQrCode'),
+        {entityCreate: false, entityUpdate: false},
+    )
+
+    const teamProps = useEntityAdministration<TeamStatusWithParticipantsDto>(
+        t('team.teams'),
         {entityCreate: false, entityUpdate: false},
     )
 
@@ -298,6 +302,7 @@ const EventPage = () => {
                                 <Shiftplan />
                                 <TaskTable {...taskProps.table} title={t('task.tasks')} />
                                 <TaskDialog {...taskProps.dialog} eventId={eventId} />
+                                <TeamTable {...teamProps.table} title={t('team.teams')} />
                                 <AppUserWithQrCodeTable
                                     {...appUserWithQrCodeProps.table}
                                     title={t('qrCode.appUsersWithQrCode')}

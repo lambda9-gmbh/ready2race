@@ -46,6 +46,7 @@ drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
+drop view if exists team_status_with_participants;
 
 create view app_user_name as
 select au.id,
@@ -779,3 +780,33 @@ from competition_setup_match csm
          left join competition_category cc on cp.competition_category = cc.id
          left join startlist_team st on csm.id = st.competition_match
 group by csm.id, csr.id, cm.competition_setup_match, cp.id, cc.id, c.event;
+
+
+create view team_status_with_participants as
+select
+    cr.id as competition_registration_id,
+    cr.event_registration,
+    cr.competition,
+    c.name as club,
+    cr.name as team_name,
+    p.id as participant_id,
+    p.firstname,
+    p.lastname,
+    p.year,
+    p.gender,
+    np.name as named_pariticpant_name,
+    tt.scan_type as current_status,
+    tt.scanned_at as last_scan_at,
+    tt.scanned_by
+from competition_registration cr
+join competition_registration_named_participant crnp on crnp.competition_registration = cr.id
+join participant p on p.id = crnp.participant
+    join named_participant np on crnp.named_participant = np.id
+join club c on cr.club = c.id
+left join lateral (
+    select scan_type, scanned_at, scanned_by
+    from team_tracking
+    where competition_registration_id = cr.id
+    order by scanned_at desc
+    limit 1
+) tt on true;
