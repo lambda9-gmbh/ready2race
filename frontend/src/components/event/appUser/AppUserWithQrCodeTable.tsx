@@ -7,7 +7,6 @@ import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../../EntityTable.tsx'
 import {Delete, Edit} from '@mui/icons-material'
 import {Fragment, useMemo, useState} from 'react'
-import {useUser} from '@contexts/user/UserContext.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {format} from 'date-fns'
 import {AppUserQrCodeEditDialog} from './AppUserQrCodeEditDialog.tsx'
@@ -21,7 +20,6 @@ const initialSort: GridSortModel = [{field: 'lastname', sort: 'asc'}]
 
 const AppUserWithQrCodeTable = (props: BaseEntityTableProps<AppUserWithQrCodeDto>) => {
     const {t} = useTranslation()
-    const user = useUser()
     const {eventId} = eventIndexRoute.useParams()
     const {confirmAction} = useConfirmation()
 
@@ -54,7 +52,7 @@ const AppUserWithQrCodeTable = (props: BaseEntityTableProps<AppUserWithQrCodeDto
             },
             {
                 field: 'email',
-                headerName: t('entity.email'),
+                headerName: t('contact.email'),
                 minWidth: 200,
                 flex: 1,
             },
@@ -138,7 +136,8 @@ const AppUserWithQrCodeTable = (props: BaseEntityTableProps<AppUserWithQrCodeDto
                 closeDialog={handleEditQrCancel}
                 reloadData={handleEditQrReload}
                 entity={editQrUser}
-                onOpen={() => {}}
+                onOpen={() => {
+                }}
                 eventId={eventId}
             />
         </Fragment>
