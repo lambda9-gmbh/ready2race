@@ -2,12 +2,14 @@ package de.lambda9.ready2race.backend.app.substitution.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.getCurrentAndNextRound
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
+import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantForCompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
@@ -18,12 +20,12 @@ import de.lambda9.ready2race.backend.app.substitution.entity.*
 import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.database.generated.tables.records.NamedParticipantForCompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.onNullDo
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.util.UUID
 
 object SubstitutionService {
@@ -39,6 +41,7 @@ object SubstitutionService {
         val currentSetupRound = !getCurrentRound(competitionId)
 
         val possibleSubsData = !getPossibleSubstitutionsHelper(
+            competitionId,
             currentSetupRound.setupRoundId,
             request.participantOut
         )
@@ -174,7 +177,8 @@ object SubstitutionService {
     ): App<ServiceError, ApiResponse.Dto<PossibleSubstitutionsForParticipantDto>> = KIO.comprehension {
         val currentSetupRound = !getCurrentRound(competitionId)
 
-        val possibleSubstitutionsData = !getPossibleSubstitutionsHelper(currentSetupRound.setupRoundId, participantId)
+        val possibleSubstitutionsData =
+            !getPossibleSubstitutionsHelper(competitionId, currentSetupRound.setupRoundId, participantId)
 
         KIO.ok(
             ApiResponse.Dto(
@@ -184,6 +188,7 @@ object SubstitutionService {
     }
 
     private fun getPossibleSubstitutionsHelper(
+        competitionId: UUID,
         competitionSetupRoundId: UUID,
         participantId: UUID,
     ): App<ServiceError, SubstitutionsSharedFunctionData> = KIO.comprehension {
@@ -197,6 +202,15 @@ object SubstitutionService {
         val participantWithData = registrationParticipants.find { it.id == participantId }
             ?: subbedInParticipants.find { it.id == participantId }!!
 
+
+        val namedParticipantsForCompetition =
+            !NamedParticipantForCompetitionPropertiesRepo.getByCompetition(competitionId).orDie()
+
+        val actuallyParticipatingTeamParticipants = !CompetitionExecutionService.getActuallyParticipatingParticipants(
+            teamParticipants = registrationParticipants.filter { it.competitionRegistrationId == participantWithData.competitionRegistrationId },
+            substitutions = substitutions,
+        )
+
         // Registered Participants
 
         val subbedOutRegistrationParticipants = getSubbedOutParticipants(registrationParticipants, substitutions)
@@ -207,9 +221,15 @@ object SubstitutionService {
             .filter { it.id != participantId }
             .map { !it.toPossibleSubstitutionParticipantDto() }
 
-        val (psRegisteredPart, psRegisteredNotParticipating) = clubMembersRegistered.partition { p ->
-            subbedOutRegistrationParticipants.find { it.id == p.id } == null
-        }
+        val (psRegisteredPart, psRegisteredNotParticipating) = clubMembersRegistered
+            .filterGender(
+                requirement = namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
+                participantGender = participant.gender,
+                currentActualTeamParticipants = actuallyParticipatingTeamParticipants
+            )
+            .partition { p ->
+                subbedOutRegistrationParticipants.find { it.id == p.id } == null
+            }
 
         // Almost identical with mapping in getParticipantsCurrentlyParticipatingHelper
         // Assign new values to registration and namedParticipant if the registered participant is subbed in (could be in another team/registration)
@@ -237,9 +257,20 @@ object SubstitutionService {
             .mapNotNull { p -> subbedInParticipants.find { regP -> regP.id == p.id } }
             .map { !it.toPossibleSubstitutionParticipantDto() }
             .filterSameRoleInSameTeam(participantWithData)
+            .filterGender(
+                namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
+                participant.gender,
+                actuallyParticipatingTeamParticipants
+            )
+
 
         val psNotRegisteredNotSubbedIn = psNotRegistered.filter { p -> subbedInParticipants.none { it.id == p.id } }
             .map { !it.toPossibleSubstitutionParticipantDto() }
+            .filterGender(
+                namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
+                participant.gender,
+                actuallyParticipatingTeamParticipants
+            )
 
 
 
@@ -267,7 +298,12 @@ object SubstitutionService {
             val participants = setupRoundRecord.matches!!.filterNotNull().flatMap { match ->
                 match.teams!!.filterNotNull().flatMap { team ->
                     team.participants!!.filterNotNull().map { participant ->
-                        !participant.toParticipantForExecutionDto(team)
+                        !participant.toParticipantForExecutionDto(
+                            clubId = team.clubId!!,
+                            clubName = team.clubName!!,
+                            registrationId = team.competitionRegistration!!,
+                            registrationName = team.registrationName,
+                        )
                     }
                 }
 
@@ -391,5 +427,51 @@ object SubstitutionService {
 
     private fun List<PossibleSubstitutionParticipantDto>.filterSameRoleInSameTeam(participant: ParticipantForExecutionDto): List<PossibleSubstitutionParticipantDto> {
         return this.filter { p -> !(p.registrationId == participant.competitionRegistrationId && p.namedParticipantId == participant.namedParticipantId) }
+    }
+
+    private fun List<PossibleSubstitutionParticipantDto>.filterGender(
+        requirement: NamedParticipantForCompetitionPropertiesRecord,
+        participantGender: Gender,
+        currentActualTeamParticipants: List<ParticipantForExecutionDto>
+    ): List<PossibleSubstitutionParticipantDto> = this.filter { p ->
+        /*namedParticipantsForCompetition.first { it.id == p.namedParticipantId }*/requirement.let { requirements ->
+        val genderPIn = p.gender
+
+        val countByGender =
+            currentActualTeamParticipants
+                .groupBy { it.gender }
+                .map {
+                    it.key to it.value.size - (if (it.key == participantGender) 1 else 0)
+                }
+                .toMap()
+
+        logger.info { "Check $participantGender" }
+        logger.info { "Gender PIn $genderPIn" }
+        logger.info { "count by gender $countByGender" }
+        logger.info { "currentActualTeamParticipants $currentActualTeamParticipants" } // TODO: THIS IS NOT THE CORRECT LIST - WHEN SELECTING INGRID INGA THERE IS ALSO WUSEL WURST IN THE LIST
+
+
+        val remainingMixed = (requirements.countMixed ?: 0) - (if ((countByGender[Gender.M]
+                ?: 0) > requirements.countMales!!
+        ) {
+            countByGender[Gender.M]!! - requirements.countMales!!
+        } else 0) - (if ((countByGender[Gender.F] ?: 0) > requirements.countFemales!!) {
+            countByGender[Gender.F]!! - requirements.countFemales!!
+        } else 0) - (if ((countByGender[Gender.D] ?: 0) > requirements.countNonBinary!!) {
+            countByGender[Gender.D]!! - requirements.countNonBinary!!
+        } else 0)
+
+        logger.info { "remaining mixed $remainingMixed" }
+
+        val requirementForPInGender = when (genderPIn) {
+            Gender.M -> requirements.countMales!!
+            Gender.F -> requirements.countFemales!!
+            else -> requirements.countNonBinary!!
+        }
+
+        logger.info { "requirement for PIn gender $requirementForPInGender" }
+
+        (countByGender[genderPIn] ?: 0) < requirementForPInGender || remainingMixed > 0
+    }
     }
 }

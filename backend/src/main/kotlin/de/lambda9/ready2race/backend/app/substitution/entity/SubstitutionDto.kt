@@ -9,7 +9,7 @@ data class SubstitutionDto(
     val setupRoundId: UUID,
     val setupRoundName: String,
     val competitionRegistrationId: UUID,
-    val competitionRegistrationName: String,
+    val competitionRegistrationName: String?,
     val clubId: UUID,
     val clubName: String,
     val namedParticipantId: UUID,

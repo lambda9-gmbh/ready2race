@@ -312,7 +312,7 @@ const CompetitionPage = () => {
                     )}
                     {user.checkPrivilege(updateEventGlobal) && (
                         <TabPanel index={'execution'} activeTab={activeTab}>
-                            <CompetitionExecution registrationsFinalized={eventData.registrationsFinalized} />
+                            <CompetitionExecution />
                         </TabPanel>
                     )}
                     <TabPanel index={'places'} activeTab={activeTab}>

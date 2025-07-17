@@ -6979,7 +6979,6 @@ components:
         - setupRoundId
         - setupRoundName
         - competitionRegistrationId
-        - competitionRegistrationName
         - clubId
         - clubName
         - namedParticipantId
@@ -7056,6 +7055,8 @@ components:
         - namedParticipantName
         - firstName
         - lastName
+        - year
+        - gender
         - clubId
         - clubName
         - competitionRegistrationId
@@ -7072,6 +7073,10 @@ components:
           type: string
         lastName:
           type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
         clubId:
           type: string
           format: uuid
@@ -7093,6 +7098,8 @@ components:
         - id
         - firstName
         - lastName
+        - year
+        - gender
       properties:
         id:
           type: string
@@ -7101,6 +7108,10 @@ components:
           type: string
         lastName:
           type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
         external:
           type: boolean
         externalClubName:

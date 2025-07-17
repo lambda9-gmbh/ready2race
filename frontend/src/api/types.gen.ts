@@ -825,6 +825,8 @@ export type ParticipantForExecutionDto = {
     namedParticipantName: string
     firstName: string
     lastName: string
+    year: number
+    gender: Gender
     clubId: string
     clubName: string
     competitionRegistrationId: string
@@ -900,6 +902,8 @@ export type PossibleSubstitutionParticipantDto = {
     id: string
     firstName: string
     lastName: string
+    year: number
+    gender: Gender
     external?: boolean
     externalClubName?: string
     registrationId?: string
@@ -962,7 +966,7 @@ export type SubstitutionDto = {
     setupRoundId: string
     setupRoundName: string
     competitionRegistrationId: string
-    competitionRegistrationName: string
+    competitionRegistrationName?: string
     clubId: string
     clubName: string
     namedParticipantId: string

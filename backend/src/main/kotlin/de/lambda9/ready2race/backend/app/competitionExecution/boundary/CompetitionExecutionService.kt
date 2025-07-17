@@ -7,6 +7,8 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchData.CompetitionMatchParticipant
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchData.CompetitionMatchTeam
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.applyCompetitionMatch
@@ -21,7 +23,11 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
+import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
+import de.lambda9.ready2race.backend.app.substitution.control.toPossibleSubstitutionParticipantDto
+import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.csv.CSV
@@ -557,12 +563,91 @@ object CompetitionExecutionService {
         KIO.ok(ApiResponse.ListDto(result))
     }
 
+    fun getActuallyParticipatingParticipants(
+        teamParticipants: List<ParticipantForExecutionDto>,
+        substitutions: List<SubstitutionViewRecord>,
+    ): App<Nothing, List<ParticipantForExecutionDto>> =
+        KIO.comprehension {
+            val orderedSubs = substitutions.sortedBy { it.orderForRound }
+
+            data class PersistedNamedParticipant(
+                val id: UUID,
+                val name: String,
+            )
+
+            val participantsStillInToRole = teamParticipants.map { p ->
+                val subsRelevantForParticipant = orderedSubs.filter { sub ->
+                    sub.participantIn!!.id == p.id || sub.participantOut!!.id == p.id
+                }
+                p to subsRelevantForParticipant
+            }.filter { pToSubs ->
+                if (pToSubs.second.isEmpty()) {
+                    true
+                } else {
+                    pToSubs.second.last().participantIn!!.id == pToSubs.first.id
+                }
+            }.map { pToSubs ->
+                pToSubs.first to if (pToSubs.second.isEmpty()) {
+                    PersistedNamedParticipant(
+                        id = pToSubs.first.namedParticipantId,
+                        name = pToSubs.first.namedParticipantName,
+                    )
+                } else {
+                    PersistedNamedParticipant(
+                        id = pToSubs.second.last().namedParticipantId!!,
+                        name = pToSubs.second.last().namedParticipantName!!,
+                    )
+                }
+            }
+
+            val subbedInParticipants = orderedSubs
+                .filter { sub ->
+                    // Filter subIns by participantsStillInToRole
+                    if (participantsStillInToRole.none { it.first.id == sub.participantIn!!.id }) {
+                        val substitutionsRelevantForSubIn = orderedSubs.filter {
+                            sub.participantIn!!.id == it.participantOut!!.id || sub.participantIn!!.id == it.participantIn!!.id
+                        }
+                        if (substitutionsRelevantForSubIn.isNotEmpty()) {
+                            // If the last sub was sub.participantIn being subbed in - add it to subbedInParticipants
+                            substitutionsRelevantForSubIn.last().participantIn!!.id == sub.participantIn!!.id
+                        } else {
+                            false
+                        }
+                    } else false
+                }.map {
+                    !it.toParticipantForExecutionDto(it.participantIn!!)
+                }
+
+            // todo: clean up
+            // NamedParticipant comes from the substitution (p.second) so it cant be mapped via the normal conversion
+            val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
+                ParticipantForExecutionDto(
+                    id = p.first.id,
+                    namedParticipantId = p.second.id,
+                    namedParticipantName = p.second.name,
+                    firstName = p.first.firstName,
+                    lastName = p.first.lastName,
+                    year = p.first.year,
+                    gender = p.first.gender,
+                    clubId = p.first.clubId,
+                    clubName = p.first.clubName,
+                    competitionRegistrationId = p.first.competitionRegistrationId,
+                    competitionRegistrationName = p.first.competitionRegistrationName,
+                    external = p.first.external,
+                    externalClubName = p.first.externalClubName,
+                )
+            }
+
+            KIO.ok(mappedParticipantsStillIn + subbedInParticipants)
+        }
+
     fun downloadStartlist(
         matchId: UUID,
         type: StartListFileType,
     ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
 
-        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
             .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
             .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
@@ -574,6 +659,7 @@ object CompetitionExecutionService {
                     .andThenNotNull { it.toPdfTemplate() }
                 buildPdf(data, pdfTemplate) to "pdf"
             }
+
             StartListFileType.CSV -> buildCsv(data) to "csv"
         }
 
@@ -702,7 +788,12 @@ object CompetitionExecutionService {
                                 ) { " $it" }
                             }
                             if (data.startTimeOffset != null) {
-                                text { "startet ${data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds).hrTime()}" }
+                                text {
+                                    "startet ${
+                                        data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds)
+                                            .hrTime()
+                                    }"
+                                }
                             }
                         }
 
@@ -772,7 +863,7 @@ object CompetitionExecutionService {
                     column("Last name") { participants.first().lastname }
                     column("Gender") { participants.first().gender.name }
                 } else {
-                    column("Name") { participants.joinToString(",") { p -> p.lastname }}
+                    column("Name") { participants.joinToString(",") { p -> p.lastname } }
                     column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
                 }
                 column("Team name") { clubName }

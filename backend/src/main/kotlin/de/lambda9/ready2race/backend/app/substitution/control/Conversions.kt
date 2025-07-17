@@ -44,6 +44,8 @@ fun SubstitutionViewRecord.toParticipantForExecutionDto(
         namedParticipantName = namedParticipantName!!,
         firstName = participant.firstname,
         lastName = participant.lastname,
+        year = participant.year,
+        gender = participant.gender,
         clubId = clubId!!,
         clubName = clubName!!,
         competitionRegistrationId = competitionRegistrationId!!,
@@ -62,6 +64,8 @@ fun SubstitutionViewRecord.toParticipantForExecutionDto(
         namedParticipantName = namedParticipantName!!,
         firstName = participant.firstName,
         lastName = participant.lastName,
+        year = participant.year,
+        gender = participant.gender,
         clubId = clubId!!,
         clubName = clubName!!,
         competitionRegistrationId = competitionRegistrationId!!,
@@ -72,7 +76,10 @@ fun SubstitutionViewRecord.toParticipantForExecutionDto(
 )
 
 fun RegisteredCompetitionTeamParticipantRecord.toParticipantForExecutionDto(
-    team: CompetitionMatchTeamWithRegistrationRecord
+    clubId: UUID,
+    clubName: String,
+    registrationId: UUID,
+    registrationName: String?,
 ) = KIO.ok(
     ParticipantForExecutionDto(
         id = participantId!!,
@@ -80,10 +87,12 @@ fun RegisteredCompetitionTeamParticipantRecord.toParticipantForExecutionDto(
         namedParticipantName = role!!,
         firstName = firstname!!,
         lastName = lastname!!,
-        clubId = team.clubId!!,
-        clubName = team.clubName!!,
-        competitionRegistrationId = team.competitionRegistration!!,
-        competitionRegistrationName = team.registrationName,
+        year = year!!,
+        gender = gender!!,
+        clubId = clubId,
+        clubName = clubName,
+        competitionRegistrationId = registrationId,
+        competitionRegistrationName = registrationName,
         external = external,
         externalClubName = externalClubName
     )
@@ -94,6 +103,8 @@ fun ParticipantRecord.toPossibleSubstitutionParticipantDto() = KIO.ok(
         id = id,
         firstName = firstname,
         lastName = lastname,
+        year = year,
+        gender = gender,
         external = external,
         externalClubName = externalClubName,
         registrationId = null,
@@ -108,6 +119,8 @@ fun ParticipantForExecutionDto.toPossibleSubstitutionParticipantDto() = KIO.ok(
         id = id,
         firstName = firstName,
         lastName = lastName,
+        year = year,
+        gender = gender,
         external = external,
         externalClubName = externalClubName,
         registrationId = competitionRegistrationId,
@@ -124,6 +137,8 @@ fun SubstitutionViewRecord.toPossibleSubstitutionParticipantDto(
         id = participant.id,
         firstName = participant.firstName,
         lastName = participant.lastName,
+        year = participant.year,
+        gender = participant.gender,
         external = participant.external,
         externalClubName = participant.externalClubName,
         registrationId = competitionRegistrationId!!,

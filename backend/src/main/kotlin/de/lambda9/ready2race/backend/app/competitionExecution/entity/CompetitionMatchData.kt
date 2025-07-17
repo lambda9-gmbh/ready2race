@@ -1,7 +1,9 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistViewRecord
@@ -75,71 +77,38 @@ data class CompetitionMatchData(
 
         private fun StartlistTeamRecord.toData(): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
 
-            val orderedSubs = substitutions!!.filterNotNull().sortedBy { it.orderForRound }
-
-            val participantsStillInToRole = participants!!.filterNotNull().map { p ->
-                val subsRelevantForParticipant = orderedSubs.filter { sub ->
-                    sub.participantIn!!.id == p.participantId || sub.participantOut!!.id == p.participantId
-                }
-                p to subsRelevantForParticipant
-            }.filter { pToSubs ->
-                if (pToSubs.second.isEmpty()) {
-                    true
-                } else {
-                    pToSubs.second.last().participantIn!!.id == pToSubs.first.participantId
-                }
-            }.map { pToSubs ->
-                pToSubs.first to if (pToSubs.second.isEmpty()) {
-                    pToSubs.first.role!!
-                } else {
-                    pToSubs.second.last().namedParticipantName!!
-                }
-            }
-
-            val subbedInParticipants = orderedSubs
-                .filter { sub ->
-                    // Filter subIns by participantsStillInToRole
-                    if (participantsStillInToRole.none { it.first.participantId == sub.participantIn!!.id }) {
-                        val substitutionsRelevantForSubIn = orderedSubs.filter {
-                            sub.participantIn!!.id == it.participantOut!!.id || sub.participantIn!!.id == it.participantIn!!.id
-                        }
-                        if (substitutionsRelevantForSubIn.isNotEmpty()) {
-                            // If the last sub was sub.participantIn being subbed in - add it to subbedInParticipants
-                            substitutionsRelevantForSubIn.last().participantIn!!.id == sub.participantIn!!.id
-                        } else {
-                            false
-                        }
-                    } else false
-                }.map {
-                    CompetitionMatchParticipant(
-                        role = it.namedParticipantName!!,
-                        firstname = it.participantIn!!.firstname,
-                        lastname = it.participantIn!!.lastname,
-                        year = it.participantIn!!.year,
-                        gender = it.participantIn!!.gender,
-                        externalClubName = it.participantIn!!.externalClubName,
-                    )
-                }
-
-            val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
-                CompetitionMatchParticipant(
-                    role = p.second,
-                    firstname = p.first.firstname!!,
-                    lastname = p.first.lastname!!,
-                    year = p.first.year!!,
-                    gender = p.first.gender!!,
-                    externalClubName = p.first.externalClubName,
+            val participantsWithData = participants!!.filterNotNull().map{
+                !it.toParticipantForExecutionDto(
+                    clubId = clubId!!,
+                    clubName = clubName!!,
+                    registrationId = teamId!!,
+                    registrationName = teamName,
                 )
             }
 
-            val result = mappedParticipantsStillIn + subbedInParticipants
+            val actuallyParticipatingParticipants = !CompetitionExecutionService.getActuallyParticipatingParticipants(
+                teamParticipants = participantsWithData,
+                substitutions = substitutions!!.filterNotNull(),
+            ).map { list ->
+                list.map { p ->
+                    CompetitionMatchParticipant(
+                        role = p.namedParticipantName,
+                        firstname = p.firstName,
+                        lastname = p.lastName,
+                        year = p.year,
+                        gender = p.gender,
+                        externalClubName = p.externalClubName,
+                    )
+                }
+            }
+
 
             KIO.ok(
                 CompetitionMatchTeam(
                     startNumber = startNumber!!,
                     clubName = clubName!!,
                     teamName = teamName,
-                    participants = result,
+                    participants = actuallyParticipatingParticipants,
                 )
             )
         }

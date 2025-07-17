@@ -139,12 +139,12 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
 
     const participantName = (
         participant: SubstitutionParticipantDto,
-        clubAndRegistration?: {clubName: string; registrationName: string},
+        clubAndRegistration?: {clubName: string; registrationName?: string},
     ) => {
         return (
             `${participant.firstName} ${participant.lastName}` +
             (clubAndRegistration
-                ? ` (${clubAndRegistration?.clubName} ${clubAndRegistration?.registrationName})`
+                ? ` (${clubAndRegistration?.clubName + (clubAndRegistration?.registrationName ? ' ' + clubAndRegistration?.registrationName : '')})`
                 : '')
         )
     }
@@ -256,7 +256,9 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                         flexDirection: 'column',
                                     },
                                 }}>
-                                <Typography sx={{flex: 1, wordBreak: 'break-word'}} >{sub.substitution.reason}</Typography>
+                                <Typography sx={{flex: 1, wordBreak: 'break-word'}}>
+                                    {sub.substitution.reason}
+                                </Typography>
                                 {subIdx === 0 && roundIndex === 0 && (
                                     <IconButton sx={{ml: 2}} onClick={handleDeleteSubstitution}>
                                         <DeleteIcon />

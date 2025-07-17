@@ -69,9 +69,11 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
                         </ListSubheader>
                         {subInsData?.currentlyParticipating.map(p => (
                             <MenuItem key={p.id} value={p.id}>
-                                {`${p.firstName} ${p.lastName} (${t(
-                                    'event.competition.execution.substitution.substituteFor.team',
-                                )} ${p.registrationName})`}
+                                {`${p.firstName} ${p.lastName}${
+                                    p.registrationName
+                                        ? `(${t('event.competition.execution.substitution.substituteFor.team')} ${p.registrationName})`
+                                        : ''
+                                }`}
                             </MenuItem>
                         ))}
                     </Select>

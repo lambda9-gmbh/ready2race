@@ -718,7 +718,9 @@ from invoice i
 create view startlist_team as
 select cmt.competition_match,
        cmt.start_number,
+       cr.id as team_id,
        cr.name as team_name,
+       c.id as club_id,
        c.name as club_name,
        coalesce(array_agg(distinct rctp) filter (where rctp.team_id is not null), '{}') as participants,
        coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}') as substitutions
@@ -728,7 +730,7 @@ from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join registered_competition_team_participant rctp on cmt.competition_registration = rctp.team_id
          left join substitution_view sv on cr.id = sv.competition_registration_id and csm.competition_setup_round = sv.competition_setup_round_id
-group by cmt.competition_match, cmt.start_number, cr.name, c.name;
+group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name;
 
 create view startlist_view as
 select csm.id,
