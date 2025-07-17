@@ -538,7 +538,7 @@
     },
     "action": {
       "registrationsReport": {
-        "download": "Download Meldeergebnis"
+        "download": "Meldeergebnis herunterladen"
       },
       "produceInvoices": "Rechnungen erstellen",
       "finalizeRegistrations": {
@@ -625,7 +625,6 @@
       "general": "Allgemein",
       "registrations": "Meldungen",
       "settings": "Einstellungen",
-      "actions": "Aktionen",
       "organisation": "Organisation",
       "invoices": "Rechnungen"
     }
@@ -863,7 +862,6 @@
       },
       "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
       "error": {
-        "notFound": "",
         "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
         "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",

@@ -375,7 +375,7 @@ const CompetitionExecution = () => {
                     {t(
                         'event.competition.execution.nextRound.reasons.registrationsNotFinalized.textStart',
                     )}
-                    <InlineLink to={'/event/$eventId'} search={{tab: 'actions'}}>
+                    <InlineLink to={'/event/$eventId'} search={{tab: 'registrations'}}>
                         {t(
                             'event.competition.execution.nextRound.reasons.registrationsNotFinalized.link',
                         )}
@@ -425,7 +425,7 @@ const CompetitionExecution = () => {
     return progressDto && sortedRounds ? (
         <Box>
             {!allRoundsCreated && (
-                <Box sx={{my: 4, display: 'flex', alignItems: 'center'}}>
+                <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
                     <Button
                         disabled={
                             progressDto.canNotCreateRoundReasons.length > 0 ||

@@ -33,6 +33,9 @@ object SubstitutionService {
         competitionId: UUID,
         request: SubstitutionRequest
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        // todo: Only allow subs in correct gender
+
         val currentSetupRound = !getCurrentRound(competitionId)
 
         val possibleSubsData = !getPossibleSubstitutionsHelper(
@@ -187,12 +190,15 @@ object SubstitutionService {
         val participant =
             !ParticipantRepo.get(participantId).orDie().onNullFail { ParticipantError.ParticipantNotFound }
 
+        val substitutions = !SubstitutionRepo.getViewByRound(competitionSetupRoundId).orDie()
+        val registrationParticipants = !getParticipantsInRound(competitionSetupRoundId)
+        val subbedInParticipants = !getSubbedInParticipants(substitutions)
+
+        val participantWithData = registrationParticipants.find { it.id == participantId }
+            ?: subbedInParticipants.find { it.id == participantId }!!
 
         // Registered Participants
 
-        val registrationParticipants = !getParticipantsInRound(competitionSetupRoundId)
-
-        val substitutions = !SubstitutionRepo.getViewByRound(competitionSetupRoundId).orDie()
         val subbedOutRegistrationParticipants = getSubbedOutParticipants(registrationParticipants, substitutions)
 
 
@@ -216,7 +222,7 @@ object SubstitutionService {
             } else {
                 rP
             }
-        }
+        }.filterSameRoleInSameTeam(participantWithData)
 
 
         // Not registered Participants (club members)
@@ -226,15 +232,15 @@ object SubstitutionService {
             clubMembersRegistered.find { regP -> regP.id == p.id } == null && p.id != participantId
         }
 
-        val subbedInParticipants = !getSubbedInParticipants(substitutions)
 
-        val psNotRegisteredSubbedIn =
-            psNotRegistered
-                .mapNotNull { p -> subbedInParticipants.find { regP -> regP.id == p.id } }
-                .map { !it.toPossibleSubstitutionParticipantDto() }
+        val psNotRegisteredSubbedIn = psNotRegistered
+            .mapNotNull { p -> subbedInParticipants.find { regP -> regP.id == p.id } }
+            .map { !it.toPossibleSubstitutionParticipantDto() }
+            .filterSameRoleInSameTeam(participantWithData)
 
         val psNotRegisteredNotSubbedIn = psNotRegistered.filter { p -> subbedInParticipants.none { it.id == p.id } }
             .map { !it.toPossibleSubstitutionParticipantDto() }
+
 
 
 
@@ -298,9 +304,10 @@ object SubstitutionService {
         substitutions: List<SubstitutionViewRecord>
     ): App<Nothing, List<ParticipantForExecutionDto>> = KIO.comprehension {
         val sortedSubs = substitutions.sortedBy { it.orderForRound }
-        val uniqueSubIns = sortedSubs.filter { subIn -> // These are the last times that the subIn was subbedIn (highest orderForRound)
-            sortedSubs.none { (it.participantIn!!.id == subIn.participantIn!!.id) && it.orderForRound!! > subIn.orderForRound!! }
-        }
+        val uniqueSubIns =
+            sortedSubs.filter { subIn -> // These are the last times that the subIn was subbedIn (highest orderForRound)
+                sortedSubs.none { (it.participantIn!!.id == subIn.participantIn!!.id) && it.orderForRound!! > subIn.orderForRound!! }
+            }
         KIO.ok(
             uniqueSubIns.filter { subIn ->
                 val subInId = subIn.participantIn!!.id
@@ -326,27 +333,22 @@ object SubstitutionService {
         substitution: SubstitutionViewRecord,
         substitutions: List<SubstitutionViewRecord>
     ): UUID? {
-        val subBefore = substitutions
-            .find { it.orderForRound == (substitution.orderForRound!! - 1) }
-
-        val subAfter = substitutions
-            .find { it.orderForRound == (substitution.orderForRound!! + 1) }
-
-        if (subBefore != null) {
-            if (substitution.participantOut == subBefore.participantIn
-                && substitution.participantIn == subBefore.participantOut
-                && substitution.competitionRegistrationId != subBefore.competitionRegistrationId
-            )
-                return subBefore.id
+        fun checkSwap(sub: SubstitutionViewRecord?): UUID? {
+            if (sub != null) {
+                if (substitution.participantOut!!.id == sub.participantIn!!.id
+                    && substitution.participantIn!!.id == sub.participantOut!!.id
+                    && (substitution.competitionRegistrationId != sub.competitionRegistrationId || substitution.namedParticipantId != sub.namedParticipantId)
+                ) {
+                    return sub.id
+                }
+            }
+            return null
         }
-        if (subAfter != null) {
-            if (substitution.participantOut == subAfter.participantIn
-                && substitution.participantIn == subAfter.participantOut
-                && substitution.competitionRegistrationId != subAfter.competitionRegistrationId
-            )
-                return subAfter.id
-        }
-        return null
+
+        val swapBefore = checkSwap(substitutions.find { it.orderForRound == (substitution.orderForRound!! - 1) })
+        val swapAfter = checkSwap(substitutions.find { it.orderForRound == (substitution.orderForRound!! + 1) })
+
+        return swapBefore ?: swapAfter
     }
 
     fun deleteLastSubstitution(
@@ -385,5 +387,9 @@ object SubstitutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.RoundNotFound)
         else
             KIO.ok(currentSetupRound)
+    }
+
+    private fun List<PossibleSubstitutionParticipantDto>.filterSameRoleInSameTeam(participant: ParticipantForExecutionDto): List<PossibleSubstitutionParticipantDto> {
+        return this.filter { p -> !(p.registrationId == participant.competitionRegistrationId && p.namedParticipantId == participant.namedParticipantId) }
     }
 }
