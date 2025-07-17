@@ -1,9 +1,11 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.AssignRequirementToNamedParticipantDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventConfigDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventSort
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.UpdateQrCodeRequirementDto
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pagination
 import de.lambda9.ready2race.backend.calls.requests.pathParam
@@ -118,6 +120,63 @@ fun Route.participantRequirementForEvent() {
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     ParticipantRequirementService.removeRequirementForEvent(participantRequirementId, eventId)
+                }
+            }
+        }
+
+        route("/namedParticipant/{namedParticipantId}") {
+            post {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
+                    val body = !receiveKIO(AssignRequirementToNamedParticipantDto.example)
+                    ParticipantRequirementService.assignRequirementToNamedParticipant(
+                        eventId,
+                        body.requirementId,
+                        namedParticipantId,
+                        body.qrCodeRequired,
+                        user.id!!
+                    )
+                }
+            }
+
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
+                    ParticipantRequirementService.getRequirementsForNamedParticipant(eventId, namedParticipantId)
+                }
+            }
+
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
+                    val body = !receiveKIO(AssignRequirementToNamedParticipantDto.example)
+                    ParticipantRequirementService.removeRequirementForEvent(
+                        body.requirementId,
+                        eventId,
+                        namedParticipantId
+                    )
+                }
+            }
+        }
+
+        route("/qrCode") {
+            put {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val body = !receiveKIO(UpdateQrCodeRequirementDto.example)
+                    ParticipantRequirementService.updateQrCodeRequirement(
+                        eventId,
+                        body.requirementId,
+                        body.namedParticipantId,
+                        body.qrCodeRequired
+                    )
                 }
             }
         }

@@ -217,7 +217,8 @@ object CompetitionRegistrationRepo {
                     external = it[PARTICIPANT_FOR_EVENT.EXTERNAL],
                     externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
                     participantRequirementsChecked = emptyList(),
-                    qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID]
+                    qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],
+                    namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull() ?: emptyList()
                 )
             }
         }
