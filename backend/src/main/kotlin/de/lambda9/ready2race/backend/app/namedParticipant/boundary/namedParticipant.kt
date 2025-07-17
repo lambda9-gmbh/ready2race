@@ -48,6 +48,27 @@ fun Route.namedParticipant() {
                     NamedParticipantService.deleteNamedParticipant(namedParticipantId)
                 }
             }
+
+            route("/event/{eventId}") {
+                get("/requirements") {
+                    call.respondComprehension {
+                        !authenticate(Privilege.ReadEventGlobal)
+                        val namedParticipantId = !pathParam("namedParticipantId", uuid)
+                        val eventId = !pathParam("eventId", uuid)
+                        NamedParticipantService.getNamedParticipantWithRequirements(namedParticipantId, eventId)
+                    }
+                }
+            }
+        }
+
+        route("/event/{eventId}") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    NamedParticipantService.getNamedParticipantsForEvent(eventId)
+                }
+            }
         }
     }
 }

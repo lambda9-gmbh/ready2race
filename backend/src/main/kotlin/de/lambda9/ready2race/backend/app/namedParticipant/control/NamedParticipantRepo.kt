@@ -48,4 +48,16 @@ object NamedParticipantRepo {
                 .fetch()
         }
     }
+
+    fun findById(id: UUID): JIO<NamedParticipantRecord?> = Jooq.query {
+        selectFrom(NAMED_PARTICIPANT)
+            .where(NAMED_PARTICIPANT.ID.eq(id))
+            .fetchOne()
+    }
+
+    fun findAll(): JIO<List<NamedParticipantRecord>> = Jooq.query {
+        selectFrom(NAMED_PARTICIPANT)
+            .orderBy(NAMED_PARTICIPANT.NAME)
+            .fetch()
+    }
 }

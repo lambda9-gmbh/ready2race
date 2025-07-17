@@ -19,6 +19,8 @@ drop view if exists event_public_view;
 drop view if exists participant_for_event;
 drop view if exists participant_id_for_event;
 drop view if exists participant_requirement_for_event;
+drop view if exists participant_requirement_named_participant;
+drop view if exists participant_requirement_status;
 drop view if exists event_document_download;
 drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
@@ -354,13 +356,31 @@ select ed.id,
 from event_document ed
          join event_document_data edd on ed.id = edd.event_document;
 
-create view participant_requirement_for_event as
-select pr.*,
-       e.id                                                        as event,
-       (case when ehpr.event is not null then true else false end) as active
+-- Helper view to convert requirements to typed records
+create or replace view participant_requirement_named_participant as
+select
+    ehpr.event,
+    ehpr.participant_requirement,
+    ehpr.named_participant as id,
+    np.name,
+    ehpr.qr_code_required
+from event_has_participant_requirement ehpr
+left join named_participant np on ehpr.named_participant = np.id;
+
+create or replace view participant_requirement_for_event as
+select
+    pr.*,
+    e.id as event,
+    bool_or(ehpr.event is not null) as active,
+    coalesce(array_agg(distinct prnp) filter (where prnp is not null), '{}') as requirements
 from participant_requirement pr
          cross join event e
-         left join event_has_participant_requirement ehpr on pr.id = ehpr.participant_requirement and e.id = ehpr.event;
+         left join event_has_participant_requirement ehpr
+                   on pr.id = ehpr.participant_requirement and e.id = ehpr.event
+         left join participant_requirement_named_participant prnp
+                   on ehpr.event = prnp.event
+                   and ehpr.participant_requirement = prnp.participant_requirement
+group by pr.id, e.id;
 
 create view participant_id_for_event as
 select er.event as event_id,
@@ -383,7 +403,8 @@ select er.event                                                                 
        p.external,
        p.external_club_name,
        coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
-       qc.qr_code_id
+       qc.qr_code_id,
+       array_agg(distinct crnp.named_participant) as named_participant_ids
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration

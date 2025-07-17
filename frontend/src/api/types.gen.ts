@@ -110,6 +110,11 @@ export type AssignedTemplateId = {
     value?: string
 }
 
+export type AssignRequirementToNamedParticipantDto = {
+    requirementId: string
+    qrCodeRequired: boolean
+}
+
 export type BadRequestError = ApiError & {
     details?: {
         validExample?: unknown
@@ -420,6 +425,14 @@ export type EventDto = {
     registrationCount?: number
 }
 
+export type EventParticipantRequirementDto = {
+    requirementId: string
+    requirementName: string
+    requirementDescription?: string
+    namedParticipantId?: string
+    qrCodeRequired: boolean
+}
+
 export type EventPublicDto = {
     id: string
     name: string
@@ -655,6 +668,22 @@ export type NamedParticipantRequest = {
     description?: string
 }
 
+export type NamedParticipantRequirmentForEventDto = {
+    id: string
+    name: string
+    qrCodeRequired: boolean
+    event: string
+    participantRequirement: string
+}
+
+export type NamedParticipantWithRequirementsDto = {
+    id: string
+    name: string
+    description?: string
+    requirements: Array<EventParticipantRequirementDto>
+    qrCodeRequired: boolean
+}
+
 export type Order = {
     field: string
     direction: 'ASC' | 'DESC'
@@ -734,6 +763,7 @@ export type ParticipantForEventDto = {
     externalClubName?: string | null
     participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
     qrCodeId?: string
+    namedParticipantIds?: Array<string>
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -751,6 +781,7 @@ export type ParticipantRequirementCheckForEventConfigDto = {
 export type ParticipantRequirementCheckForEventUpsertDto = {
     requirementId: string
     approvedParticipants: Array<string>
+    namedParticipantId?: string | null
 }
 
 export type ParticipantRequirementDto = {
@@ -774,6 +805,7 @@ export type ParticipantRequirementForEventDto = {
      * Per App prüfbar
      */
     checkInApp: boolean
+    requirements?: Array<NamedParticipantRequirmentForEventDto>
 }
 
 export type ParticipantRequirementReducedDto = {
@@ -975,6 +1007,12 @@ export type UpdateAppUserRequest = {
     firstname: string
     lastname: string
     roles: Array<string>
+}
+
+export type UpdateQrCodeRequirementDto = {
+    requirementId: string
+    namedParticipantId?: string
+    qrCodeRequired: boolean
 }
 
 export type VerifyRegistrationRequest = {
@@ -1916,6 +1954,27 @@ export type DeleteNamedParticipantResponse = void
 
 export type DeleteNamedParticipantError = BadRequestError | ApiError
 
+export type GetNamedParticipantRequirementsForEventData = {
+    path: {
+        eventId: string
+        namedParticipantId: string
+    }
+}
+
+export type GetNamedParticipantRequirementsForEventResponse = NamedParticipantWithRequirementsDto
+
+export type GetNamedParticipantRequirementsForEventError = BadRequestError | ApiError
+
+export type GetNamedParticipantsForEventData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetNamedParticipantsForEventResponse = Array<NamedParticipantWithRequirementsDto>
+
+export type GetNamedParticipantsForEventError = BadRequestError | ApiError
+
 export type NewCaptchaResponse = CaptchaDto
 
 export type NewCaptchaError = ApiError
@@ -2364,6 +2423,58 @@ export type RemoveParticipantRequirementForEventError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type AssignRequirementToNamedParticipantData = {
+    body: AssignRequirementToNamedParticipantDto
+    path: {
+        eventId: string
+        namedParticipantId: string
+    }
+}
+
+export type AssignRequirementToNamedParticipantResponse = void
+
+export type AssignRequirementToNamedParticipantError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetRequirementsForNamedParticipantData = {
+    path: {
+        eventId: string
+        namedParticipantId: string
+    }
+}
+
+export type GetRequirementsForNamedParticipantResponse = Array<EventParticipantRequirementDto>
+
+export type GetRequirementsForNamedParticipantError = BadRequestError | ApiError
+
+export type RemoveRequirementFromNamedParticipantData = {
+    body: AssignRequirementToNamedParticipantDto
+    path: {
+        eventId: string
+        namedParticipantId: string
+    }
+}
+
+export type RemoveRequirementFromNamedParticipantResponse = void
+
+export type RemoveRequirementFromNamedParticipantError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type UpdateQrCodeRequirementData = {
+    body: UpdateQrCodeRequirementDto
+    path: {
+        eventId: string
+    }
+}
+
+export type UpdateQrCodeRequirementResponse = void
+
+export type UpdateQrCodeRequirementError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetParticipantsForEventData = {
     path: {

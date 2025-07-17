@@ -4,6 +4,7 @@ import {eventIndexRoute} from '@routes'
 import {
     getActiveParticipantRequirementsForEvent,
     getParticipantsForEvent,
+    getNamedParticipantsForEvent,
     ParticipantForEventDto,
     ParticipantRequirementCheckForEventConfigDto,
 } from '../../api'
@@ -59,6 +60,13 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
         }),
     )
 
+    const {data: namedParticipantsForEvent} = useFetch(signal =>
+        getNamedParticipantsForEvent({
+            signal,
+            path: {eventId},
+        }),
+    )
+
     const columns: GridColDef<ParticipantForEventDto>[] = useMemo(
         () => [
             {
@@ -98,31 +106,86 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
             {
                 field: 'participantRequirementsChecked',
                 headerName: t('event.participantRequirement.approved'),
-                maxWidth: 180,
-                minWidth: 100,
+                maxWidth: 200,
+                minWidth: 120,
                 flex: 1,
                 sortable: false,
-                renderCell: ({row}) =>
-                    (requirementsData?.data.length ?? 0) > 0 ? (
+                renderCell: ({row}) => {
+                    const globalRequirements = requirementsData?.data || []
+                    
+                    // Find all named participants for this specific row
+                    const rowNamedParticipants = namedParticipantsForEvent?.filter(np => 
+                        row.namedParticipantIds?.includes(np.id)
+                    ) || []
+                    
+                    // Get requirements specific to this participant's named participants
+                    const namedParticipantRequirements = rowNamedParticipants.flatMap(np => 
+                        (np.requirements || []).map(req => ({...req, participantName: np.name}))
+                    )
+                    
+                    // Get all named participant requirement IDs across all named participants
+                    const allNamedRequirementIds = new Set(
+                        namedParticipantsForEvent?.flatMap(np => 
+                            np.requirements?.map(r => r.requirementId) || []
+                        ) || []
+                    )
+                    
+                    // Create a map to deduplicate requirements and track their assignment type
+                    const requirementMap = new Map()
+                    
+                    // Add global requirements ONLY if they are not assigned to any named participant
+                    globalRequirements.forEach(r => {
+                        if (!allNamedRequirementIds.has(r.id)) {
+                            requirementMap.set(r.id, {
+                                id: r.id,
+                                name: r.name,
+                                assignmentType: 'global',
+                                qrCodeRequired: false
+                            })
+                        }
+                    })
+
+                    // Add named participant requirements for this specific participant
+                    namedParticipantRequirements.forEach(req => {
+                        requirementMap.set(req.requirementId, {
+                            id: req.requirementId,
+                            name: req.requirementName,
+                            assignmentType: 'named',
+                            participantName: req.participantName || 'Unknown',
+                            qrCodeRequired: req.qrCodeRequired
+                        })
+                    })
+                    
+                    const deduplicatedRequirements = Array.from(requirementMap.values())
+                    
+                    if (deduplicatedRequirements.length === 0) {
+                        return ' - '
+                    }
+                    
+                    return (
                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
                             <Typography>
                                 {row.participantRequirementsChecked?.length}/
-                                {requirementsData?.data.length ?? 0}{' '}
+                                {deduplicatedRequirements.length}{' '}
                             </Typography>
                             <HtmlTooltip
                                 placement={'right'}
                                 title={
                                     <Stack spacing={1} p={1}>
-                                        {requirementsData?.data.map(r => (
-                                            <Stack direction={'row'} spacing={1} key={r.id}>
+                                        {deduplicatedRequirements.map(req => (
+                                            <Stack direction={'row'} spacing={1} key={req.id}>
                                                 {row.participantRequirementsChecked?.some(
-                                                    c => c.id === r.id,
+                                                    c => c.id === req.id,
                                                 ) ? (
                                                     <CheckCircle color={'success'}/>
                                                 ) : (
                                                     <Cancel color={'error'}/>
                                                 )}
-                                                <Typography>{r.name}</Typography>
+                                                <Typography>
+                                                    {req.name} 
+                                                    ({req.assignmentType === 'global' ? 'Global' : req.participantName})
+                                                    {req.qrCodeRequired && ' (QR)'}
+                                                </Typography>
                                             </Stack>
                                         ))}
                                     </Stack>
@@ -130,9 +193,8 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                 <Info color={'info'} fontSize={'small'}/>
                             </HtmlTooltip>
                         </Stack>
-                    ) : (
-                        ' - '
-                    ),
+                    )
+                }
             },
             {
                 field: 'qrCodeId',
@@ -142,7 +204,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 flex: 1,
             },
         ],
-        [requirementsData?.data.length],
+        [requirementsData?.data, namedParticipantsForEvent, t],
     )
 
     const participantRequirementCheckForEventConfigProps =
@@ -157,20 +219,56 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
             {entityUpdate: true},
         )
 
-    const splitOptions: SplitButtonOption[] = useMemo(
-        () =>
-            requirementsData?.data.map(r => ({
-                label: t('event.participantRequirement.checkManually', {name: r.name}),
-                onClick: () => {
-                    participantRequirementApproveManuallyForEventProps.table.openDialog({
-                        requirementId: r.id,
-                        requirementName: r.name,
-                        approvedParticipants: [],
-                    })
-                },
-            })) ?? [],
-        [requirementsData?.data],
-    )
+    const splitOptions: SplitButtonOption[] = useMemo(() => {
+        const options: SplitButtonOption[] = []
+        
+        // Get all named participant requirement IDs
+        const namedRequirementIds = new Set(
+            namedParticipantsForEvent?.flatMap(np => 
+                np.requirements?.map(r => r.requirementId) || []
+            ) || []
+        )
+        
+        // Add global requirements (those not assigned to any named participant)
+        requirementsData?.data
+            .filter(r => !namedRequirementIds.has(r.id))
+            .forEach(r => {
+                options.push({
+                    label: t('event.participantRequirement.checkManually', {name: r.name}),
+                    onClick: () => {
+                        participantRequirementApproveManuallyForEventProps.table.openDialog({
+                            requirementId: r.id,
+                            requirementName: r.name,
+                            isGlobal: true,
+                            approvedParticipants: [],
+                        })
+                    },
+                })
+            })
+        
+        // Add named participant requirements
+        namedParticipantsForEvent?.forEach(np => {
+            np.requirements?.forEach(req => {
+                options.push({
+                    label: t('event.participantRequirement.checkManually', {
+                        name: `${req.requirementName} (${np.name})`
+                    }),
+                    onClick: () => {
+                        participantRequirementApproveManuallyForEventProps.table.openDialog({
+                            requirementId: req.requirementId,
+                            requirementName: req.requirementName,
+                            isGlobal: false,
+                            namedParticipantId: np.id,
+                            namedParticipantName: np.name,
+                            approvedParticipants: [],
+                        })
+                    },
+                })
+            })
+        })
+        
+        return options
+    }, [requirementsData?.data, namedParticipantsForEvent, participantRequirementApproveManuallyForEventProps.table, t])
 
     const handleEditQr = (participant: ParticipantForEventDto) => {
         setEditQrParticipant(participant)
@@ -200,20 +298,24 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
         })
     }
 
-    const customEntityActions = (entity: ParticipantForEventDto) => [
-        <GridActionsCellItem
-            icon={<Edit/>}
-            label={t('club.participant.qrCodeEdit')}
-            onClick={() => handleEditQr(entity)}
-            showInMenu
-        />,
-        <GridActionsCellItem
-            icon={<Delete/>}
-            label={t('club.participant.qrCodeDelete')}
-            onClick={() => handleDeleteQr(entity)}
-            showInMenu
-        />,
-    ]
+    const customEntityActions = (entity: ParticipantForEventDto) => {
+        const actions = [
+            <GridActionsCellItem
+                icon={<Edit/>}
+                label={t('club.participant.qrCodeEdit')}
+                onClick={() => handleEditQr(entity)}
+                showInMenu
+            />,
+            <GridActionsCellItem
+                icon={<Delete/>}
+                label={t('club.participant.qrCodeDelete')}
+                onClick={() => handleDeleteQr(entity)}
+                showInMenu
+            />,
+        ]
+
+        return actions
+    }
 
     return (
         <Fragment>
