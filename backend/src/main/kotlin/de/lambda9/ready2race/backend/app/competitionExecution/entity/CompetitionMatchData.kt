@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -63,10 +64,10 @@ data class CompetitionMatchData(
                 startTime = persisted.startTime!!,
                 startTimeOffset = persisted.startTimeOffset,
                 competition = CompetitionData(
-                identifier = persisted.competitionIdentifier!!,
-                name = persisted.competitionName!!,
-                shortName = persisted.competitionShortName,
-                category = persisted.competitionCategory,
+                    identifier = persisted.competitionIdentifier!!,
+                    name = persisted.competitionName!!,
+                    shortName = persisted.competitionShortName,
+                    category = persisted.competitionCategory,
                 ),
                 teams = teams.sortedBy { it.startNumber }
             )
@@ -74,48 +75,64 @@ data class CompetitionMatchData(
 
         private fun StartlistTeamRecord.toData(): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
 
-            val orderedSubs = substitutions!!.sortedBy { it!!.orderForRound }
+            val orderedSubs = substitutions!!.filterNotNull().sortedBy { it.orderForRound }
 
-            val (addParticipants, removeParticipants) = orderedSubs.fold(mutableMapOf<UUID, String>() to mutableListOf<UUID>()) { acc, s ->
-                acc.apply {
-                    first.remove(s!!.participantOut!!)
-                    if (participants!!.none {it!!.participantId == s.participantIn}) {
-                        first.put(s.participantIn!!, s.role!!)
-                    }
-                    second.remove(s.participantIn!!)
-                    if (participants!!.any {it!!.participantId == s.participantOut}) {
-                        second.add(s.participantOut!!)
-                    }
+            val participantsStillInToRole = participants!!.filterNotNull().map { p ->
+                val subsRelevantForParticipant = orderedSubs.filter { sub ->
+                    sub.participantIn!!.id == p.participantId || sub.participantOut!!.id == p.participantId
+                }
+                p to subsRelevantForParticipant
+            }.filter { pToSubs ->
+                if (pToSubs.second.isEmpty()) {
+                    true
+                } else {
+                    pToSubs.second.last().participantIn!!.id == pToSubs.first.participantId
+                }
+            }.map { pToSubs ->
+                pToSubs.first to if (pToSubs.second.isEmpty()) {
+                    pToSubs.first.role!!
+                } else {
+                    pToSubs.second.last().namedParticipantName!!
                 }
             }
 
-            val remainingParticipants = participants!!.filter { p ->
-                removeParticipants.none { it == p!!.participantId }
-            }.map { p ->
+            val subbedInParticipants = orderedSubs
+                .filter { sub ->
+                    // Filter subIns by participantsStillInToRole
+                    if (participantsStillInToRole.none { it.first.participantId == sub.participantIn!!.id }) {
+                        val substitutionsRelevantForSubIn = orderedSubs.filter {
+                            sub.participantIn!!.id == it.participantOut!!.id || sub.participantIn!!.id == it.participantIn!!.id
+                        }
+                        if (substitutionsRelevantForSubIn.isNotEmpty()) {
+                            // If the last sub was sub.participantIn being subbed in - add it to subbedInParticipants
+                            substitutionsRelevantForSubIn.last().participantIn!!.id == sub.participantIn!!.id
+                        } else {
+                            false
+                        }
+                    } else false
+                }.map {
+                    CompetitionMatchParticipant(
+                        role = it.namedParticipantName!!,
+                        firstname = it.participantIn!!.firstname,
+                        lastname = it.participantIn!!.lastname,
+                        year = it.participantIn!!.year,
+                        gender = it.participantIn!!.gender,
+                        externalClubName = it.participantIn!!.externalClubName,
+                    )
+                }
+
+            val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
                 CompetitionMatchParticipant(
-                    role = p!!.role!!,
-                    firstname = p.firstname!!,
-                    lastname = p.lastname!!,
-                    year = p.year!!,
-                    gender = p.gender!!,
-                    externalClubName = p.externalClubName,
+                    role = p.second,
+                    firstname = p.first.firstname!!,
+                    lastname = p.first.lastname!!,
+                    year = p.first.year!!,
+                    gender = p.first.gender!!,
+                    externalClubName = p.first.externalClubName,
                 )
             }
 
-            val newParticipants = !addParticipants.toList().traverse { (id, role) ->
-                ParticipantRepo.get(id).orDie().onNullDie("foreign key constraint").map { p ->
-                    CompetitionMatchParticipant(
-                        role = role,
-                        firstname = p.firstname,
-                        lastname = p.lastname,
-                        year = p.year,
-                        gender = p.gender,
-                        externalClubName = p.externalClubName,
-                    )
-                }
-            }
-
-            val result = remainingParticipants + newParticipants
+            val result = mappedParticipantsStillIn + subbedInParticipants
 
             KIO.ok(
                 CompetitionMatchTeam(
