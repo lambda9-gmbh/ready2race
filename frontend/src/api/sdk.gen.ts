@@ -188,6 +188,12 @@ import type {
     DeleteNamedParticipantData,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
+    GetNamedParticipantRequirementsForEventData,
+    GetNamedParticipantRequirementsForEventError,
+    GetNamedParticipantRequirementsForEventResponse,
+    GetNamedParticipantsForEventData,
+    GetNamedParticipantsForEventError,
+    GetNamedParticipantsForEventResponse,
     NewCaptchaError,
     NewCaptchaResponse,
     AddClubData,
@@ -282,6 +288,18 @@ import type {
     RemoveParticipantRequirementForEventData,
     RemoveParticipantRequirementForEventError,
     RemoveParticipantRequirementForEventResponse,
+    AssignRequirementToNamedParticipantData,
+    AssignRequirementToNamedParticipantError,
+    AssignRequirementToNamedParticipantResponse,
+    GetRequirementsForNamedParticipantData,
+    GetRequirementsForNamedParticipantError,
+    GetRequirementsForNamedParticipantResponse,
+    RemoveRequirementFromNamedParticipantData,
+    RemoveRequirementFromNamedParticipantError,
+    RemoveRequirementFromNamedParticipantResponse,
+    UpdateQrCodeRequirementData,
+    UpdateQrCodeRequirementError,
+    UpdateQrCodeRequirementResponse,
     GetParticipantsForEventData,
     GetParticipantsForEventError,
     GetParticipantsForEventResponse,
@@ -1162,6 +1180,32 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getNamedParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetNamedParticipantRequirementsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetNamedParticipantRequirementsForEventResponse,
+        GetNamedParticipantRequirementsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant/{namedParticipantId}/event/{eventId}/requirements',
+    })
+}
+
+export const getNamedParticipantsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetNamedParticipantsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetNamedParticipantsForEventResponse,
+        GetNamedParticipantsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant/event/{eventId}',
+    })
+}
+
 export const newCaptcha = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
@@ -1532,6 +1576,58 @@ export const removeParticipantRequirementForEvent = <ThrowOnError extends boolea
     >({
         ...options,
         url: '/event/{eventId}/participantRequirement/{participantRequirementId}',
+    })
+}
+
+export const assignRequirementToNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignRequirementToNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AssignRequirementToNamedParticipantResponse,
+        AssignRequirementToNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}',
+    })
+}
+
+export const getRequirementsForNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRequirementsForNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRequirementsForNamedParticipantResponse,
+        GetRequirementsForNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}',
+    })
+}
+
+export const removeRequirementFromNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveRequirementFromNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveRequirementFromNamedParticipantResponse,
+        RemoveRequirementFromNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}',
+    })
+}
+
+export const updateQrCodeRequirement = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateQrCodeRequirementData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateQrCodeRequirementResponse,
+        UpdateQrCodeRequirementError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/qrCode',
     })
 }
 

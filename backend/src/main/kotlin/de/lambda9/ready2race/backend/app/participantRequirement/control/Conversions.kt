@@ -1,10 +1,12 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.control
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.NamedParticipantRequirmentForEventDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementUpsertDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementForEventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
@@ -45,5 +47,15 @@ fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequir
         optional = optional!!,
         active = active!!,
         checkInApp = checkInApp!!,
+        requirements = requirements?.filterNotNull()?.map { it.toNamedParticipantRequirementDto() } ?: emptyList(),
     )
 )
+
+fun ParticipantRequirementNamedParticipantRecord.toNamedParticipantRequirementDto(): NamedParticipantRequirmentForEventDto =
+    NamedParticipantRequirmentForEventDto(
+        id = id!!,
+        name = name!!,
+        qrCodeRequired = qrCodeRequired ?: false,
+        event = event!!,
+        participantRequirement = participantRequirement!!
+    )

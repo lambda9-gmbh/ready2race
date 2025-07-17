@@ -4,7 +4,7 @@ import {ParticipantForEventDto} from '@api/types.gen.ts'
 import {Stack} from '@mui/material'
 import {approveParticipantRequirementsForEvent, getParticipantsForEvent} from '@api/sdk.gen.ts'
 import {useForm} from 'react-hook-form-mui'
-import {useCallback} from 'react'
+import {useCallback, useMemo} from 'react'
 import {eventRoute} from '@routes'
 import FormInputTransferList from '@components/form/input/FormInputTransferList.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -14,6 +14,9 @@ import Throbber from '@components/Throbber.tsx'
 export type ParticipantRequirementApproveManuallyForEventForm = {
     requirementId: string
     requirementName: string
+    isGlobal: boolean
+    namedParticipantId?: string
+    namedParticipantName?: string
     approvedParticipants: Array<ParticipantForEventDto>
 }
 
@@ -30,6 +33,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
             body: {
                 requirementId: formData.requirementId,
                 approvedParticipants: formData.approvedParticipants.map(p => p.id),
+                namedParticipantId: formData.namedParticipantId,
             },
         })
     }
@@ -61,6 +65,20 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
         },
     )
 
+    // Filter participants based on requirement type
+    const filteredParticipants = useMemo(() => {
+        if (!participantsData?.data) return []
+        
+        return participantsData.data.filter(p => {
+            // If it's a named participant requirement, only show participants with matching namedParticipantId
+            if (!props.entity?.isGlobal && props.entity?.namedParticipantId) {
+                return p.namedParticipantIds?.includes(props.entity.namedParticipantId) ?? false
+            }
+            // For global requirements, show all participants
+            return true
+        })
+    }, [participantsData?.data, props.entity?.isGlobal, props.entity?.namedParticipantId])
+
     const formContext = useForm<ParticipantRequirementApproveManuallyForEventForm>()
 
     const onOpen = useCallback(() => {
@@ -69,7 +87,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
                 ? {
                       ...props.entity,
                       approvedParticipants:
-                          participantsData?.data.filter(p =>
+                          filteredParticipants.filter(p =>
                               p.participantRequirementsChecked?.some(
                                   r => r.id === props.entity?.requirementId,
                               ),
@@ -77,7 +95,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
                   }
                 : {},
         )
-    }, [props.entity, participantsData?.data])
+    }, [props.entity, filteredParticipants])
 
     return (
         <EntityDialog
@@ -87,14 +105,18 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
             editAction={editAction}
             maxWidth={'xl'}
             fullWidth={true}
-            title={props.entity?.requirementName}>
+            title={`${props.entity?.requirementName}${
+                props.entity && !props.entity.isGlobal && props.entity.namedParticipantName 
+                    ? ` (${props.entity.namedParticipantName})` 
+                    : ''
+            }`}>
             <Stack>
                 {participantsPending ? (
                     <Throbber />
                 ) : (
                     <FormInputTransferList
                         name={'approvedParticipants'}
-                        options={participantsData?.data ?? []}
+                        options={filteredParticipants}
                         labelLeft={t('event.participantRequirement.participantsOpen')}
                         labelRight={t('event.participantRequirement.participantsApproved')}
                         renderValue={v => ({

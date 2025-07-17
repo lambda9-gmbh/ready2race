@@ -49,18 +49,22 @@ object ParticipantRequirementService {
         requirementId: UUID,
         eventId: UUID,
         userId: UUID,
-    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        namedParticipantId: UUID? = null,
+        qrCodeRequired: Boolean = false
+    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+        val checkExists = !EventHasParticipantRequirementRepo.exists(eventId, requirementId, namedParticipantId).orDie()
+        !KIO.failOn(checkExists) { ParticipantRequirementError.InUse }
 
-        if (!!EventHasParticipantRequirementRepo.exists(eventId, requirementId).orDie()) {
-            !EventHasParticipantRequirementRepo.create(
-                EventHasParticipantRequirementRecord(
-                    event = eventId,
-                    participantRequirement = requirementId,
-                    createdAt = LocalDateTime.now(),
-                    createdBy = userId
-                )
-            ).orDie()
-        }
+        !EventHasParticipantRequirementRepo.create(
+            EventHasParticipantRequirementRecord(
+                event = eventId,
+                participantRequirement = requirementId,
+                namedParticipant = namedParticipantId,
+                qrCodeRequired = qrCodeRequired,
+                createdAt = LocalDateTime.now(),
+                createdBy = userId
+            )
+        ).orDie()
 
         noData
 
@@ -68,16 +72,14 @@ object ParticipantRequirementService {
 
     fun removeRequirementForEvent(
         requirementId: UUID,
-        eventId: UUID
-    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
-
-        if (!EventHasParticipantRequirementRepo.exists(eventId, requirementId).orDie()) {
-            !EventHasParticipantRequirementRepo.delete(eventId, requirementId).orDie()
-            !ParticipantHasRequirementForEventRepo.deleteWhereParticipantNotInList(eventId, requirementId, emptyList()).orDie()
-        }
+        eventId: UUID,
+        namedParticipantId: UUID? = null
+    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+        val checkExists = !EventHasParticipantRequirementRepo.exists(eventId, requirementId, namedParticipantId).orDie()
+        !KIO.failOn(!checkExists) { ParticipantRequirementError.NotFound }
+        !EventHasParticipantRequirementRepo.delete(eventId, requirementId, namedParticipantId).orDie()
 
         noData
-
     }
 
     fun pageForEvent(
@@ -118,7 +120,7 @@ object ParticipantRequirementService {
         userId: UUID
     ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
 
-        if (!!EventHasParticipantRequirementRepo.exists(eventId, dto.requirementId).orDie()) {
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, dto.requirementId, dto.namedParticipantId).orDie()) {
             return@comprehension KIO.fail(ParticipantRequirementError.NotFound)
         }
 
@@ -154,7 +156,10 @@ object ParticipantRequirementService {
         userId: UUID
     ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
 
-        if (!!EventHasParticipantRequirementRepo.exists(eventId, config.requirementId).orDie()) {
+        // Load namedParticipantId from database if this is a named participant requirement
+        val namedParticipantId = !EventHasParticipantRequirementRepo.getNamedParticipantId(eventId, config.requirementId).orDie()
+
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, config.requirementId, namedParticipantId).orDie()) {
             return@comprehension KIO.fail(ParticipantRequirementError.InvalidConfig("Missing requirement" to config.requirementId.toString()))
         }
 
@@ -172,6 +177,7 @@ object ParticipantRequirementService {
                     && up.lastname.equals(vp.lastname, ignoreCase = true)
                     && vp.club?.let { (up.externalClubName ?: up.clubName!!).equals(it, ignoreCase = true) } ?: true
                     && vp.year?.let { up.year?.equals(it) } ?: true
+                    && (namedParticipantId == null || up.namedParticipantIds?.contains(namedParticipantId) == true)
             }.traverse { candidate ->
                 ParticipantHasRequirementForEventRepo.create(
                     ParticipantHasRequirementForEventRecord(
@@ -231,8 +237,8 @@ object ParticipantRequirementService {
                         } else {
                             val valid =
                                 config.requirementColName == null || config.requirementIsValidValue == null || arr.getOrNull(
-                                header.getOrDefault(config.requirementColName.lowercase(), -1)
-                            ).equals(config.requirementIsValidValue, ignoreCase = true)
+                                    header.getOrDefault(config.requirementColName.lowercase(), -1)
+                                ).equals(config.requirementIsValidValue, ignoreCase = true)
 
                             if (valid) {
                                 ValidRequirementParticipant(
@@ -305,6 +311,60 @@ object ParticipantRequirementService {
         } else {
             noData
         }
+    }
+
+    fun assignRequirementToNamedParticipant(
+        eventId: UUID,
+        requirementId: UUID,
+        namedParticipantId: UUID,
+        qrCodeRequired: Boolean,
+        userId: UUID
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        !ParticipantRequirementForEventRepo.assignRequirementToNamedParticipant(
+            eventId = eventId,
+            participantRequirementId = requirementId,
+            namedParticipantId = namedParticipantId,
+            qrCodeRequired = qrCodeRequired,
+            createdBy = userId
+        ).orDie()
+        noData
+    }
+
+    fun getRequirementsForNamedParticipant(
+        eventId: UUID,
+        namedParticipantId: UUID
+    ): App<ParticipantRequirementError, ApiResponse.ListDto<EventParticipantRequirementDto>> = KIO.comprehension {
+        val requirements =
+            !ParticipantRequirementForEventRepo.getRequirementsForNamedParticipant(eventId, namedParticipantId).orDie()
+        val result = !requirements.traverse { record ->
+            ParticipantRequirementRepo.findById(record.participantRequirement!!).orDie()
+                .onNullFail { ParticipantRequirementError.NotFound }
+                .map { requirement ->
+                    EventParticipantRequirementDto(
+                        requirementId = requirement.id!!,
+                        requirementName = requirement.name!!,
+                        requirementDescription = requirement.description,
+                        namedParticipantId = record.namedParticipant,
+                        qrCodeRequired = record.qrCodeRequired!!
+                    )
+                }
+        }
+        KIO.ok(ApiResponse.ListDto(result))
+    }
+
+    fun updateQrCodeRequirement(
+        eventId: UUID,
+        requirementId: UUID,
+        namedParticipantId: UUID?,
+        qrCodeRequired: Boolean
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        !ParticipantRequirementForEventRepo.updateQrCodeRequirement(
+            eventId = eventId,
+            participantRequirementId = requirementId,
+            namedParticipantId = namedParticipantId,
+            qrCodeRequired = qrCodeRequired
+        ).orDie()
+        noData
     }
 
 }

@@ -9,4 +9,5 @@ data class ParticipantRequirementForEventDto(
     val optional: Boolean,
     val active: Boolean,
     val checkInApp: Boolean,
+    val requirements: List<NamedParticipantRequirmentForEventDto>
 )

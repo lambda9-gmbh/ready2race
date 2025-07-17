@@ -1616,6 +1616,66 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+  /namedParticipant/{namedParticipantId}/event/{eventId}/requirements:
+    parameters:
+      - name: namedParticipantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getNamedParticipantRequirementsForEvent
+      responses:
+        200:
+          description: Named participant requirements successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NamedParticipantWithRequirementsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /namedParticipant/event/{eventId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getNamedParticipantsForEvent
+      responses:
+        200:
+          description: Named participants for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NamedParticipantWithRequirementsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
   /captcha:
     post:
       operationId: newCaptcha
@@ -2461,6 +2521,112 @@ paths:
           $ref: '#/components/responses/500'
     delete:
       operationId: removeParticipantRequirementForEvent
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: namedParticipantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: assignRequirementToNamedParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequirementToNamedParticipantDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getRequirementsForNamedParticipant
+      responses:
+        200:
+          description: Requirements for named participant successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventParticipantRequirementDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: removeRequirementFromNamedParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequirementToNamedParticipantDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/qrCode:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateQrCodeRequirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQrCodeRequirementDto'
       responses:
         204:
           $ref: '#/components/responses/204'
@@ -5447,6 +5613,74 @@ components:
         description:
           type: string
 
+    NamedParticipantWithRequirementsDto:
+      type: object
+      required:
+        - id
+        - name
+        - requirements
+        - qrCodeRequired
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventParticipantRequirementDto'
+        qrCodeRequired:
+          type: boolean
+
+    EventParticipantRequirementDto:
+      type: object
+      required:
+        - requirementId
+        - requirementName
+        - qrCodeRequired
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        requirementName:
+          type: string
+        requirementDescription:
+          type: string
+        namedParticipantId:
+          type: string
+          format: uuid
+        qrCodeRequired:
+          type: boolean
+
+    AssignRequirementToNamedParticipantDto:
+      type: object
+      required:
+        - requirementId
+        - qrCodeRequired
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        qrCodeRequired:
+          type: boolean
+
+    UpdateQrCodeRequirementDto:
+      type: object
+      required:
+        - requirementId
+        - qrCodeRequired
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        namedParticipantId:
+          type: string
+          format: uuid
+        qrCodeRequired:
+          type: boolean
 
     # fee
 
@@ -5532,6 +5766,33 @@ components:
         checkInApp:
           type: boolean
           description: "Per App prüfbar"
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedParticipantRequirmentForEventDto'
+
+    NamedParticipantRequirmentForEventDto:
+      type: object
+      required:
+        - id
+        - name
+        - qrCodeRequired
+        - event
+        - participantRequirement
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        qrCodeRequired:
+          type: boolean
+        event:
+          type: string
+          format: uuid
+        participantRequirement:
+          type: string
+          format: uuid
 
     ParticipantRequirementUpsertDto:
       type: object
@@ -5589,6 +5850,10 @@ components:
           items:
             type: string
             format: uuid
+        namedParticipantId:
+          type: string
+          format: uuid
+          nullable: true
 
     # captcha
 
@@ -5813,6 +6078,11 @@ components:
             $ref: '#/components/schemas/ParticipantRequirementReducedDto'
         qrCodeId:
           type: string
+        namedParticipantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
 
     # participant
 

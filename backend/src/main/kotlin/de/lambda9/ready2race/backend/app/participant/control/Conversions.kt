@@ -68,5 +68,6 @@ fun ParticipantForEventRecord.toDto(): App<Nothing, ParticipantForEventDto> =
                 )
             },
             qrCodeId = qrCodeId,
+            namedParticipantIds = namedParticipantIds?.filterNotNull() ?: emptyList(),
         )
     )
