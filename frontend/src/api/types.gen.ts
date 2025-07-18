@@ -2300,17 +2300,6 @@ export type DeleteNamedParticipantResponse = void
 
 export type DeleteNamedParticipantError = BadRequestError | ApiError
 
-export type GetNamedParticipantRequirementsForEventData = {
-    path: {
-        eventId: string
-        namedParticipantId: string
-    }
-}
-
-export type GetNamedParticipantRequirementsForEventResponse = NamedParticipantWithRequirementsDto
-
-export type GetNamedParticipantRequirementsForEventError = BadRequestError | ApiError
-
 export type GetNamedParticipantsForEventData = {
     path: {
         eventId: string
