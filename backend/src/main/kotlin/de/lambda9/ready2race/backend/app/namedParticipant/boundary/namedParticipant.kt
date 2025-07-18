@@ -49,16 +49,6 @@ fun Route.namedParticipant() {
                 }
             }
 
-            route("/event/{eventId}") {
-                get("/requirements") {
-                    call.respondComprehension {
-                        !authenticate(Privilege.ReadEventGlobal)
-                        val namedParticipantId = !pathParam("namedParticipantId", uuid)
-                        val eventId = !pathParam("eventId", uuid)
-                        NamedParticipantService.getNamedParticipantWithRequirements(namedParticipantId, eventId)
-                    }
-                }
-            }
         }
 
         route("/event/{eventId}") {

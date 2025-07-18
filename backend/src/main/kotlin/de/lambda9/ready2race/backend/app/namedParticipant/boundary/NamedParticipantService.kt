@@ -87,14 +87,14 @@ object NamedParticipantService {
         namedParticipantId: UUID,
         eventId: UUID
     ): App<NamedParticipantError, ApiResponse.Dto<NamedParticipantWithRequirementsDto>> = KIO.comprehension {
-        val namedParticipant = !NamedParticipantRepo.findById(namedParticipantId).orDie()
+        val namedParticipant = !NamedParticipantRepo.get(namedParticipantId).orDie()
             .onNullFail { NamedParticipantError.NotFound }
 
         val requirements =
             !ParticipantRequirementForEventRepo.getRequirementsForNamedParticipant(eventId, namedParticipantId).orDie()
 
         val requirementDtos = !requirements.traverse { record ->
-            ParticipantRequirementRepo.findById(record.participantRequirement!!).orDie()
+            ParticipantRequirementRepo.get(record.participantRequirement!!).orDie()
                 .onNullFail { NamedParticipantError.NotFound }
                 .map { requirement ->
                     EventParticipantRequirementDto(

@@ -337,7 +337,7 @@ object ParticipantRequirementService {
         val requirements =
             !ParticipantRequirementForEventRepo.getRequirementsForNamedParticipant(eventId, namedParticipantId).orDie()
         val result = !requirements.traverse { record ->
-            ParticipantRequirementRepo.findById(record.participantRequirement!!).orDie()
+            ParticipantRequirementRepo.get(record.participantRequirement!!).orDie()
                 .onNullFail { ParticipantRequirementError.NotFound }
                 .map { requirement ->
                     EventParticipantRequirementDto(

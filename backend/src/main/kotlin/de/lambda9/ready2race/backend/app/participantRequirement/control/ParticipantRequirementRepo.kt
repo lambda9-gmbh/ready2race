@@ -45,10 +45,6 @@ object ParticipantRequirementRepo {
         }
     }
 
-    fun findById(id: UUID): JIO<ParticipantRequirementRecord?> = Jooq.query {
-        selectFrom(PARTICIPANT_REQUIREMENT)
-            .where(PARTICIPANT_REQUIREMENT.ID.eq(id))
-            .fetchOne()
-    }
+    fun get(id: UUID) = PARTICIPANT_REQUIREMENT.selectOne { ID.eq(id) }
 
 }
