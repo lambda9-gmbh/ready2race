@@ -122,7 +122,7 @@ data class Text(
                         val adding =
                             font.getStringWidth(lineCandidate) / 1000 * fontSize <= w
                         if (adding) {
-                            words.removeFirst()
+                            words.removeAt(0)
                             subLine = lineCandidate
                         }
                     } while (adding && words.isNotEmpty())
