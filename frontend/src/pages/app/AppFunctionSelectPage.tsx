@@ -1,15 +1,30 @@
-import {Button, Stack, Typography} from '@mui/material';
+import {Box, Card, CardActionArea, CardContent, Stack, Typography} from '@mui/material';
 import {useUser} from '@contexts/user/UserContext';
 import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx';
 import {useEffect, useState} from 'react';
 import {router} from "@routes";
 import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
 import { useTranslation } from 'react-i18next';
+import QrCodeIcon from '@mui/icons-material/QrCode';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 
 const APP_FUNCTIONS = [
-    {fn: 'APP_QR_MANAGEMENT' as AppFunction, labelKey: 'app.functionSelect.functions.qrManagement' as const},
-    {fn: 'APP_COMPETITION_CHECK' as AppFunction, labelKey: 'app.functionSelect.functions.competitionCheck' as const},
-    {fn: 'APP_EVENT_REQUIREMENT' as AppFunction, labelKey: 'app.functionSelect.functions.eventRequirement' as const},
+    {
+        fn: 'APP_QR_MANAGEMENT' as AppFunction, 
+        labelKey: 'app.functionSelect.functions.qrManagement' as const,
+        icon: QrCodeIcon
+    },
+    {
+        fn: 'APP_COMPETITION_CHECK' as AppFunction, 
+        labelKey: 'app.functionSelect.functions.competitionCheck' as const,
+        icon: CheckCircleIcon
+    },
+    {
+        fn: 'APP_EVENT_REQUIREMENT' as AppFunction, 
+        labelKey: 'app.functionSelect.functions.eventRequirement' as const,
+        icon: AssignmentIcon
+    },
 ] as const;
 
 const AppFunctionSelectPage = () => {
@@ -45,15 +60,56 @@ const AppFunctionSelectPage = () => {
     if (available.length <= 1) return null;
 
     return (
-        <Stack spacing={2} alignItems="center" justifyContent="center" p={4}>
+        <Stack spacing={4} alignItems="center" justifyContent="center" p={4}>
             <Typography variant="h4" textAlign="center">
                 {t('app.functionSelect.title')}
             </Typography>
-            {APP_FUNCTIONS.filter(f => available.includes(f.fn)).map(f => (
-                <Button key={f.fn} variant="contained" fullWidth onClick={() => handleSelect(f.fn)}>
-                    {t(f.labelKey)}
-                </Button>
-            ))}
+            <Box 
+                display="grid" 
+                gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))"
+                gap={3}
+                width="100%"
+                maxWidth="800px"
+            >
+                {APP_FUNCTIONS.filter(f => available.includes(f.fn)).map(f => {
+                    const Icon = f.icon;
+                    return (
+                        <Card 
+                            key={f.fn} 
+                            sx={{ 
+                                height: '200px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                transition: 'transform 0.2s',
+                                '&:hover': {
+                                    transform: 'scale(1.05)',
+                                    boxShadow: 3
+                                }
+                            }}
+                        >
+                            <CardActionArea 
+                                onClick={() => handleSelect(f.fn)}
+                                sx={{ 
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    p: 3
+                                }}
+                                className="cursor-pointer"
+                            >
+                                <CardContent sx={{ textAlign: 'center' }}>
+                                    <Icon sx={{ fontSize: 60, mb: 2, color: 'primary.main' }} />
+                                    <Typography variant="h6">
+                                        {t(f.labelKey)}
+                                    </Typography>
+                                </CardContent>
+                            </CardActionArea>
+                        </Card>
+                    );
+                })}
+            </Box>
         </Stack>
     );
 };
