@@ -188,9 +188,6 @@ import type {
     DeleteNamedParticipantData,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
-    GetNamedParticipantRequirementsForEventData,
-    GetNamedParticipantRequirementsForEventError,
-    GetNamedParticipantRequirementsForEventResponse,
     GetNamedParticipantsForEventData,
     GetNamedParticipantsForEventError,
     GetNamedParticipantsForEventResponse,
@@ -1177,19 +1174,6 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/namedParticipant/{namedParticipantId}',
-    })
-}
-
-export const getNamedParticipantRequirementsForEvent = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetNamedParticipantRequirementsForEventData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetNamedParticipantRequirementsForEventResponse,
-        GetNamedParticipantRequirementsForEventError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/namedParticipant/{namedParticipantId}/event/{eventId}/requirements',
     })
 }
 

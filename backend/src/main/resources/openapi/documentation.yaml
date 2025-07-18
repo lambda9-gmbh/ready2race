@@ -1616,39 +1616,6 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /namedParticipant/{namedParticipantId}/event/{eventId}/requirements:
-    parameters:
-      - name: namedParticipantId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      operationId: getNamedParticipantRequirementsForEvent
-      responses:
-        200:
-          description: Named participant requirements successfully retrieved
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NamedParticipantWithRequirementsDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
   /namedParticipant/event/{eventId}:
     parameters:
       - name: eventId
