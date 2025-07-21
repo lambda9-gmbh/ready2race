@@ -1,4 +1,4 @@
-import {Button, Stack, ToggleButton, ToggleButtonGroup, Typography, Alert} from "@mui/material";
+import {Button, Stack, ToggleButton, ToggleButtonGroup, Typography, Alert, Box, Paper} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {useFetch} from "@utils/hooks.ts";
 import {
@@ -11,13 +11,17 @@ import {
 import {qrEventRoute} from "@routes";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
+import QrNimiqScanner from "@components/qrApp/QrNimiqScanner.tsx";
+import {CheckQrCodeResponse} from "@api/types.gen.ts";
 
-type UserTyp = "User" | "Participant"
+type UserTyp = "User" | "Participant" | "SystemUser"
 const QrAssignPage = () => {
     const { t } = useTranslation();
     const { qr, appFunction } = useAppSession();
     const [userTyp, setUserTyp] = useState<UserTyp>("User")
     const [club, setClub] = useState<string>()
+    const [scanningSystemUser, setScanningSystemUser] = useState(false)
+    const [systemUserId, setSystemUserId] = useState<string | null>(null)
     const {eventId} = qrEventRoute.useParams()
 
     useEffect(() => {
@@ -32,6 +36,13 @@ const QrAssignPage = () => {
 
     const onChange = (_: React.MouseEvent<HTMLElement>, nextView: UserTyp) => {
         setUserTyp(nextView)
+        if (nextView === "SystemUser") {
+            setScanningSystemUser(true)
+            setSystemUserId(null)
+        } else {
+            setScanningSystemUser(false)
+            setSystemUserId(null)
+        }
     }
 
     const clubs = useFetch(signal => getClubNames({signal, query: {eventId: eventId}}), {
@@ -52,7 +63,7 @@ const QrAssignPage = () => {
     const selectParticipant = async (id: string) => {
         await updateQrCodeParticipant({
             body: {
-                qrCodeId: qr.qrCodeId!!,
+                qrCodeId: qr.qrCodeId!,
                 eventId: eventId,
                 id: id
             }
@@ -63,12 +74,27 @@ const QrAssignPage = () => {
     const selectUser = async (id: string) => {
         await updateQrCodeAppuser({
             body: {
-                qrCodeId: qr.qrCodeId!!,
+                qrCodeId: qr.qrCodeId!,
                 eventId: eventId,
                 id: id
             }
         })
         qr.reset(eventId)
+    }
+
+    const handleSystemUserScan = (qrCodeId: string, _response: CheckQrCodeResponse | null) => {
+        try {
+            const data = JSON.parse(qrCodeId)
+            if (data.appUserId) {
+                setSystemUserId(data.appUserId)
+                setScanningSystemUser(false)
+                selectUser(data.appUserId)
+            } else {
+                alert(t('qrAssign.invalidUserQr'))
+            }
+        } catch {
+            alert(t('qrAssign.invalidQrFormat'))
+        }
     }
 
     const canAssign = appFunction === 'APP_QR_MANAGEMENT';
@@ -80,12 +106,13 @@ const QrAssignPage = () => {
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
             {!canAssign && (
-                <Alert severity="warning">Du hast keine Berechtigung, diesen QR-Code zuzuordnen.</Alert>
+                <Alert severity="warning">{t('qrAssign.noPermission')}</Alert>
             )}
             {canAssign && <>
                 <ToggleButtonGroup value={userTyp} exclusive onChange={onChange}>
                     <ToggleButton value={"Participant"}>{t('qrAssign.participant')}</ToggleButton>
                     <ToggleButton value={"User"}>{t('qrAssign.user')}</ToggleButton>
+                    <ToggleButton value={"SystemUser"}>{t('qrAssign.scanSystemUser')}</ToggleButton>
                 </ToggleButtonGroup>
                 {clubs && userTyp === "Participant" && <Stack>
                     <Typography>{t('qrAssign.clubs')}</Typography>
@@ -113,6 +140,28 @@ const QrAssignPage = () => {
                     </Button>) ??
                         <Typography>{t('qrAssign.noData')}</Typography>}
                 </Stack>}
+                {userTyp === "SystemUser" && scanningSystemUser && (
+                    <Box sx={{ width: '100%', mt: 2 }}>
+                        <Paper elevation={3} sx={{ p: 2 }}>
+                            <Typography variant="h6" gutterBottom>
+                                {t('qrAssign.scanUserQr')}
+                            </Typography>
+                            <QrNimiqScanner callback={handleSystemUserScan} />
+                            <Button 
+                                onClick={() => setScanningSystemUser(false)} 
+                                fullWidth 
+                                sx={{ mt: 2 }}
+                            >
+                                {t('common.cancel')}
+                            </Button>
+                        </Paper>
+                    </Box>
+                )}
+                {userTyp === "SystemUser" && systemUserId && (
+                    <Alert severity="success">
+                        {t('qrAssign.userAssigned', { userId: systemUserId })}
+                    </Alert>
+                )}
             </>}
             <Button onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
         </Stack>
