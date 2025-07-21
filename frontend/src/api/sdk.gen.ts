@@ -502,6 +502,9 @@ import type {
     UpdateQrCodeParticipantData,
     UpdateQrCodeParticipantError,
     UpdateQrCodeParticipantResponse,
+    CreateCateringTransactionData,
+    CreateCateringTransactionError,
+    CreateCateringTransactionResponse,
     CheckInTeamData,
     CheckInTeamError,
     CheckInTeamResponse,
@@ -2550,6 +2553,19 @@ export const updateQrCodeParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/app/participant',
+    })
+}
+
+export const createCateringTransaction = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateCateringTransactionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateCateringTransactionResponse,
+        CreateCateringTransactionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/caterer/transactions',
     })
 }
 

@@ -145,6 +145,17 @@ export type CaptchaDto = {
     start: number
 }
 
+export type CatererTransactionDTO = {
+    id: string
+    catererId: string
+    appUserId: string
+    price: string
+    eventId: string
+    createdAt: string
+    updatedAt: string
+    createdBy: string
+}
+
 export type ClubDto = {
     id: string
     name: string
@@ -785,6 +796,12 @@ export type NamedParticipantWithRequirementsDto = {
     qrCodeRequired: boolean
 }
 
+export type NewCatererTransactionDTO = {
+    appUserId: string
+    price?: string | null
+    eventId: string
+}
+
 export type Order = {
     field: string
     direction: 'ASC' | 'DESC'
@@ -1033,6 +1050,7 @@ export type Resource =
     | 'APP_EVENT_REQUIREMENT'
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'
+    | 'APP_CATERER'
 
 export type RoleDto = {
     id: string
@@ -3578,6 +3596,14 @@ export type UpdateQrCodeParticipantData = {
 export type UpdateQrCodeParticipantResponse = void
 
 export type UpdateQrCodeParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type CreateCateringTransactionData = {
+    body: NewCatererTransactionDTO
+}
+
+export type CreateCateringTransactionResponse = void
+
+export type CreateCateringTransactionError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type CheckInTeamData = {
     body: {

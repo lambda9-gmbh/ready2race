@@ -4472,6 +4472,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  # Caterer endpoints
+  /caterer/transactions:
+    post:
+      operationId: createCateringTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCatererTransactionDTO'
+      responses:
+        204:
+          description: Catering transaction successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   # Team Tracking endpoints
   /app/team/{teamId}/check-in:
     parameters:
@@ -4952,6 +4976,7 @@ components:
         - APP_EVENT_REQUIREMENT
         - APP_QR_MANAGEMENT
         - APP_COMPETITION_CHECK
+        - APP_CATERER
 
     Scope:
       type: string
@@ -8095,3 +8120,57 @@ components:
           $ref: '#/components/schemas/Gender'
         role:
           type: string
+
+    NewCatererTransactionDTO:
+      type: object
+      required:
+        - appUserId
+        - eventId
+      properties:
+        appUserId:
+          type: string
+          format: uuid
+        price:
+          type: string
+          format: decimal
+          nullable: true
+        eventId:
+          type: string
+          format: uuid
+
+    CatererTransactionDTO:
+      type: object
+      required:
+        - id
+        - catererId
+        - appUserId
+        - price
+        - eventId
+        - createdAt
+        - updatedAt
+        - createdBy
+      properties:
+        id:
+          type: string
+          format: uuid
+        catererId:
+          type: string
+          format: uuid
+        appUserId:
+          type: string
+          format: uuid
+        price:
+          type: string
+          format: decimal
+        eventId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid

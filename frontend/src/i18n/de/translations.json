@@ -1017,8 +1017,19 @@
       "functions": {
         "qrManagement": "QR-Code Verwaltung",
         "competitionCheck": "Wettkampf-Check",
-        "eventRequirement": "Event Requirements"
+        "eventRequirement": "Event Requirements",
+        "caterer": "Verpflegung"
       }
     }
+  },
+  "caterer": {
+    "canReceiveFood": "Benutzer kann Essen erhalten",
+    "cannotReceiveFood": "Benutzer kann kein Essen erhalten",
+    "price": "Preis (€)",
+    "priceHelper": "Optional - Leer lassen für Typ 1 (nur Ja/Nein)",
+    "confirm": "Transaktion bestätigen",
+    "previousTransactions": "Vorherige Transaktionen",
+    "scanError": "Fehler beim Scannen des Benutzers",
+    "transactionError": "Fehler beim Erstellen der Transaktion"
   }
 }
