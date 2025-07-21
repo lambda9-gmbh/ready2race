@@ -1,10 +1,10 @@
-import {Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography} from "@mui/material";
+import {Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography, TextField, Box} from "@mui/material";
 import {useEffect, useState} from "react";
 import {qrEventRoute, router} from "@routes";
-import {deleteQrCode} from "@api/sdk.gen.ts";
+import {deleteQrCode, createCateringTransaction} from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
-import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal } from '@authorization/privileges';
+import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal, updateAppCatererGlobal } from '@authorization/privileges';
 
 const QrAppuserPage = () => {
     const {t} = useTranslation();
@@ -14,6 +14,10 @@ const QrAppuserPage = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const navigate = router.navigate
+    
+    // Caterer specific state
+    const [price, setPrice] = useState<string>('');
+    const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
         if (!appFunction) {
@@ -23,28 +27,53 @@ const QrAppuserPage = () => {
         if (!qr.received) {
             qr.reset(eventId)
         }
-    }, [qr, appFunction, eventId])
+    }, [qr, appFunction, eventId, navigate])
+    
 
     const handleDelete = async () => {
         setLoading(true);
         setError(null);
         try {
-            await deleteQrCode({path: {qrCodeId: qr.qrCodeId!!}});
+            await deleteQrCode({path: {qrCodeId: qr.qrCodeId!}});
             setDialogOpen(false);
             qr.reset(eventId);
-        } catch (e: any) {
-            setError(e?.message || t('qrAppuser.deleteError'));
+        } catch (e) {
+            setError((e as Error)?.message || t('qrAppuser.deleteError'));
         } finally {
             setLoading(false);
+        }
+    };
+    
+    const handleCateringTransaction = async () => {
+        if (!qr.qrCodeId) return;
+        
+        setSubmitting(true);
+        setError(null);
+        try {
+            await createCateringTransaction({
+                body: {
+                    appUserId: qr.qrCodeId,
+                    eventId: eventId,
+                    price: price || null
+                }
+            });
+            // Reset and go back to scanner
+            qr.reset(eventId);
+        } catch (e) {
+            setError((e as Error)?.message || t('caterer.transactionError'));
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const allowed = [
         updateAppQrManagementGlobal,
         updateAppCompetitionCheckGlobal,
-        updateAppEventRequirementGlobal
+        updateAppEventRequirementGlobal,
+        updateAppCatererGlobal
     ].some(priv => appFunction === priv.resource);
     const canRemove = appFunction === updateAppQrManagementGlobal.resource;
+    const isCaterer = appFunction === updateAppCatererGlobal.resource;
 
     return (
         <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
@@ -55,7 +84,41 @@ const QrAppuserPage = () => {
             {!allowed && (
                 <Alert severity="warning">Du hast für diesen QR-Code-Typ keine Berechtigung.</Alert>
             )}
-            {allowed && <Alert severity={"error"} variant={"filled"}>{t('qrAppuser.underConstruction')}</Alert>}
+            {allowed && !isCaterer && <Alert severity={"error"} variant={"filled"}>{t('qrAppuser.underConstruction')}</Alert>}
+            
+            {/* Caterer specific UI */}
+            {isCaterer && qr.qrCodeId && (
+                <Box sx={{ width: '100%', maxWidth: 600 }}>
+                    <Stack spacing={2}>
+                        <Alert severity="success">
+                            {t('caterer.canReceiveFood')}
+                        </Alert>
+                        
+                        <TextField
+                            label={t('caterer.price')}
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            type="number"
+                            slotProps={{ htmlInput: { step: "0.01", min: "0" } }}
+                            helperText={t('caterer.priceHelper')}
+                            fullWidth
+                        />
+                        
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleCateringTransaction}
+                            disabled={submitting}
+                            fullWidth
+                        >
+                            {t('caterer.confirm')}
+                        </Button>
+                    </Stack>
+                </Box>
+            )}
+            
+            {error && <Alert severity="error">{error}</Alert>}
+            
             <Button onClick={() => qr.reset(eventId)}>{t('common.back')}</Button>
             {canRemove && (
                 <Button

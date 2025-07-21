@@ -20,7 +20,8 @@ sealed class Privilege(
         REGISTRATION,
         APP_EVENT_REQUIREMENT,
         APP_QR_MANAGEMENT,
-        APP_COMPETITION_CHECK
+        APP_COMPETITION_CHECK,
+        APP_CATERER
     }
 
     enum class Scope(val level: Int) {
@@ -60,6 +61,7 @@ sealed class Privilege(
     data object UpdateAppEventRequirementGlobal: Privilege(Action.UPDATE, Resource.APP_EVENT_REQUIREMENT, Scope.GLOBAL)
     data object UpdateAppQrManagementGlobal: Privilege(Action.UPDATE, Resource.APP_QR_MANAGEMENT, Scope.GLOBAL)
     data object UpdateAppCompetitionCheckGlobal: Privilege(Action.UPDATE, Resource.APP_COMPETITION_CHECK, Scope.GLOBAL)
+    data object UpdateAppCatererGlobal: Privilege(Action.UPDATE, Resource.APP_CATERER, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

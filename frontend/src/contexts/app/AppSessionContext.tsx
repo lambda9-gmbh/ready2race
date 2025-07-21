@@ -2,7 +2,7 @@ import React, {createContext, PropsWithChildren, useContext, useState} from 'rea
 import {CheckQrCodeResponse} from "@api/types.gen.ts";
 import {router} from "@routes";
 
-export type AppFunction = 'APP_QR_MANAGEMENT' | 'APP_COMPETITION_CHECK' | 'APP_EVENT_REQUIREMENT' | null;
+export type AppFunction = 'APP_QR_MANAGEMENT' | 'APP_COMPETITION_CHECK' | 'APP_EVENT_REQUIREMENT' | 'APP_CATERER' | null;
 
 export type QrState = {
     qrCodeId: string | null;

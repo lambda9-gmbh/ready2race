@@ -20,7 +20,7 @@
 }
 
 .app-layout {
-  font-size: 2rem;
+  font-size: 1.2rem;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -37,7 +37,7 @@
   }
 
   h1, h2, .MuiTypography-h2 {
-    font-size: 2rem !important;
+    font-size: 1.2rem !important;
     margin-bottom: 1rem;
     color: #1a237e;
     letter-spacing: 0.04em;
@@ -48,7 +48,7 @@
   }
   button, .MuiButton-root, .MuiMenuItem-root {
     min-height: 3.5rem;
-    font-size: 2rem;
+    font-size: 1.2rem;
     padding: 0.75rem 0.5rem;
     border-radius: 0.7rem;
     font-weight: 700;
@@ -62,15 +62,15 @@
     border: 2px solid #bdbdbd;
   }
   .MuiFormControl-root, .MuiSelect-root, .MuiInputBase-root {
-    font-size: 2rem;
+    font-size: 1.2rem;
     min-height: 3.5rem;
   }
   .MuiInputLabel-root {
-    font-size: 2rem;
+    font-size: 1.2rem;
   }
   .MuiToggleButton-root {
     min-height: 3.5rem;
-    font-size: 2rem;
+    font-size: 1.2rem;
     border-radius: 0.5rem;
     font-weight: 700;
     border: 2px solid #e0e0e0;
@@ -115,7 +115,7 @@
   }
 
   .MuiDialogTitle-root {
-    font-size: 2rem;
+    font-size: 1.2rem;
     font-weight: 700;
     padding-top: 1.2rem !important;
     padding-bottom: 0.8rem !important;
@@ -182,7 +182,7 @@
       padding: 2rem;
     }
     header h1 {
-      font-size: 2rem;
+      font-size: 1.2rem;
     }
   }
 }
