@@ -77,7 +77,9 @@
       "menu": "Sprache auswählen"
     },
     "actions": "Aktionen",
-    "noClub": "Kein Verein"
+    "noClub": "Kein Verein",
+    "hide": "Ausblenden",
+    "show": "Anzeigen"
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -184,7 +186,10 @@
       "qrCodeEdit": "QR Code Wert bearbeiten",
       "qrCodeDelete": "QR Code Wert löschen",
       "qrCodeDeleteConfirm": "Möchten Sie den QR Code wirklich löschen?",
-      "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein."
+      "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein.",
+      "userQrCode": "Benutzer QR-Code",
+      "qrCode": "QR-Code",
+      "id": "Teilnehmer-ID"
     }
   },
   "event": {
@@ -598,6 +603,8 @@
     "firstname": "Vorname",
     "lastname": "Nachname",
     "qrCodeId": "Qr Code Wert",
+    "showQrCode": "QR-Code anzeigen",
+    "qrCodeFor": "QR-Code für",
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -782,9 +789,18 @@
     "clubs": "Vereine",
     "participants": "Teilnehmer",
     "users": "Benutzer",
-    "noData": "Keine Daten"
+    "noData": "Keine Daten",
+    "scanSystemUser": "Benutzer aus System scannen",
+    "scanUserQr": "Benutzer QR-Code scannen",
+    "invalidUserQr": "Ungültiger Benutzer QR-Code",
+    "invalidQrFormat": "Ungültiges QR-Code Format",
+    "userAssigned": "Benutzer {{userId}} zugewiesen",
+    "participantQrDetected": "Teilnehmer-QR-Code erkannt",
+    "appUserQrDetected": "Benutzer-QR-Code erkannt",
+    "noPermission": "Du hast keine Berechtigung, diesen QR-Code zuzuordnen."
   },
   "qrCode": {
+    "qrCode": "QR-Code",
     "qrCodeId": "QR-Code-Wert",
     "appUsersWithQrCode": "Benutzer mit QR-Codes",
     "edit": "QR-Code bearbeiten",

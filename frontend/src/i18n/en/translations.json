@@ -77,7 +77,9 @@
       "menu": "Select language"
     },
     "actions": "Actions",
-    "noClub": "No club"
+    "noClub": "No club",
+    "hide": "Hide",
+    "show": "Show"
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -184,7 +186,11 @@
       "qrCodeEdit": "Edit QR Code value",
       "qrCodeDelete": "Delete QR Code value",
       "qrCodeDeleteConfirm": "Do you really want to delete the QR Code?",
-      "qrCodeEditDescription": "Please enter the new QR Code value."
+      "qrCodeEditDescription": "Please enter the new QR Code value.",
+      "userQrCode": "User QR Code",
+      "userShowQrCode": "Show QR Code",
+      "qrCode": "QR Code",
+      "id": "Participant ID"
     }
   },
   "event": {
@@ -598,6 +604,8 @@
     "firstname": "Firstname",
     "lastname": "Lastname",
     "qrCodeId": "Qr Code Value",
+    "showQrCode": "Show QR Code",
+    "qrCodeFor": "QR Code for",
     "password": {
       "password": "Password",
       "confirm": "Passwort bestätigen",
@@ -779,12 +787,21 @@
     "title": "Assign QR Code",
     "participant": "Participant",
     "user": "User",
+    "participantQrDetected": "Participant QR code detected",
+    "appUserQrDetected": "User QR code detected",
     "clubs": "Clubs",
     "participants": "Participants",
     "users": "Users",
-    "noData": "No data"
+    "noData": "No data",
+    "scanSystemUser": "Scan User from System",
+    "scanUserQr": "Scan User QR Code",
+    "invalidUserQr": "Invalid User QR Code",
+    "invalidQrFormat": "Invalid QR Code Format",
+    "userAssigned": "User {{userId}} assigned",
+    "noPermission": "You don't have permission to assign this QR code."
   },
   "qrCode": {
+    "qrCode": "QR Code",
     "qrCodeId": "QR Code Value",
     "appUsersWithQrCode": "Users with QR Codes",
     "edit": "Edit QR Code",

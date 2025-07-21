@@ -1,10 +1,13 @@
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityTable from '@components/EntityTable.tsx'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {getUsers} from "@api/sdk.gen.ts";
 import {AppUserDto} from "@api/types.gen.ts";
+import {Fragment, useState} from 'react'
+import {QrCode2} from '@mui/icons-material'
+import {QrCodeDisplayDialog} from "@components/user/QrCodeDisplayDialog.tsx";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -21,6 +24,8 @@ const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParame
 
 const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
     const {t} = useTranslation()
+    const [qrDialogOpen, setQrDialogOpen] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<AppUserDto | null>(null)
 
     const columns: GridColDef<AppUserDto>[] = [
         {
@@ -43,20 +48,50 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
         },
     ]
 
+    const handleShowQr = (user: AppUserDto) => {
+        setSelectedUser(user)
+        setQrDialogOpen(true)
+    }
+
+    const handleCloseQr = () => {
+        setQrDialogOpen(false)
+        setSelectedUser(null)
+    }
+
+    const customEntityActions = (entity: AppUserDto) => {
+        return [
+            <GridActionsCellItem
+                key="show-qr"
+                icon={<QrCode2/>}
+                label={t('user.showQrCode')}
+                onClick={() => handleShowQr(entity)}
+                showInMenu
+            />,
+        ]
+    }
+
     return (
-        <EntityTable
-            {...props}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            resource={'USER'}
-            linkColumn={entity => ({
-                to: '/user/$userId',
-                params: {userId: entity.id}
-            })}
-        />
+        <Fragment>
+            <QrCodeDisplayDialog
+                dialogIsOpen={qrDialogOpen}
+                closeDialog={handleCloseQr}
+                entity={selectedUser}
+            />
+            <EntityTable
+                {...props}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                resource={'USER'}
+                linkColumn={entity => ({
+                    to: '/user/$userId',
+                    params: {userId: entity.id}
+                })}
+                customEntityActions={customEntityActions}
+            />
+        </Fragment>
     )
 }
 
