@@ -207,10 +207,13 @@ object SubstitutionService {
         val namedParticipantsForCompetition =
             !NamedParticipantForCompetitionPropertiesRepo.getByCompetition(competitionId).orDie()
 
-        val actuallyParticipatingTeamParticipants = !CompetitionExecutionService.getActuallyParticipatingParticipants(
-            teamParticipants = registrationParticipants.filter { it.competitionRegistrationId == participantWithData.competitionRegistrationId },
-            substitutions = substitutions,
-        )
+        val actualRegistrationTeams =
+            registrationParticipants.groupBy { it.competitionRegistrationId }.map { it.key }.map { registrationId ->
+                registrationId to !CompetitionExecutionService.getActuallyParticipatingParticipants(
+                    teamParticipants = registrationParticipants.filter { it.competitionRegistrationId == registrationId },
+                    substitutions
+                )
+            }.toMap()
 
         // Registered Participants
 
@@ -222,14 +225,15 @@ object SubstitutionService {
             .filter { it.id != participantId }
             .map { !it.toPossibleSubstitutionParticipantDto() }
 
-        val (psRegisteredPart, psRegisteredNotParticipating) = clubMembersRegistered
+        val (psRegisteredPart, psRegisteredNotParticipating) = !clubMembersRegistered
             .filterGender(
-                requirements = namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
-                participantGender = participant.gender,
-                currentActualTeamParticipants = actuallyParticipatingTeamParticipants
-            )
-            .partition { p ->
-                subbedOutRegistrationParticipants.find { it.id == p.id } == null
+                requirements = namedParticipantsForCompetition,
+                participantOut = !participantWithData.toPossibleSubstitutionParticipantDto(),
+                actualRegistrationTeams = actualRegistrationTeams
+            ).map { ps ->
+                ps.partition { p ->
+                    subbedOutRegistrationParticipants.find { it.id == p.id } == null
+                }
             }
 
         // Almost identical with mapping in getParticipantsCurrentlyParticipatingHelper
@@ -254,23 +258,23 @@ object SubstitutionService {
         }
 
 
-        val psNotRegisteredSubbedIn = psNotRegistered
+        val psNotRegisteredSubbedIn = !psNotRegistered
             .mapNotNull { p -> subbedInParticipants.find { regP -> regP.id == p.id } }
             .map { !it.toPossibleSubstitutionParticipantDto() }
             .filterSameRoleInSameTeam(participantWithData)
             .filterGender(
-                namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
-                participant.gender,
-                actuallyParticipatingTeamParticipants
+                requirements = namedParticipantsForCompetition,
+                participantOut = !participantWithData.toPossibleSubstitutionParticipantDto(),
+                actualRegistrationTeams
             )
 
 
-        val psNotRegisteredNotSubbedIn = psNotRegistered.filter { p -> subbedInParticipants.none { it.id == p.id } }
+        val psNotRegisteredNotSubbedIn = !psNotRegistered.filter { p -> subbedInParticipants.none { it.id == p.id } }
             .map { !it.toPossibleSubstitutionParticipantDto() }
             .filterGender(
-                namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
-                participant.gender,
-                actuallyParticipatingTeamParticipants
+                requirements = namedParticipantsForCompetition,
+                participantOut = !participantWithData.toPossibleSubstitutionParticipantDto(),
+                actualRegistrationTeams
             )
 
 
@@ -431,31 +435,71 @@ object SubstitutionService {
     }
 
     private fun List<PossibleSubstitutionParticipantDto>.filterGender(
-        requirements: NamedParticipantForCompetitionPropertiesRecord,
-        participantGender: Gender,
-        currentActualTeamParticipants: List<ParticipantForExecutionDto>
-    ): List<PossibleSubstitutionParticipantDto> = this.filter { p ->
-        val genderPIn = p.gender
+        requirements: List<NamedParticipantForCompetitionPropertiesRecord>,
+        participantOut: PossibleSubstitutionParticipantDto,
+        actualRegistrationTeams: Map<UUID, List<ParticipantForExecutionDto>>,
+    ): App<Nothing, List<PossibleSubstitutionParticipantDto>> = KIO.comprehension {
+        KIO.ok(
+            this@filterGender.filter { p ->
+                !p.checkGender(requirements, participantOut, actualRegistrationTeams, p.namedParticipantId != null)
+            }
+        )
+    }
 
-        val countByGender =
-            currentActualTeamParticipants
-                .filter { it.namedParticipantId == requirements.id}
-                .groupBy { it.gender }
-                .map { // add 1 to the gender of pIn and subtract 1 from the pOut
-                    it.key to (it.value.size + (if (it.key == genderPIn) 1 else 0) - (if (it.key == participantGender) 1 else 0))
-                }
-                .toMap()
+    // This checks a certain role in a team for the gender requirements (team and role of pOut)
+    // If the genders are correct after pOut was removed and pIn was added to the counts it is valid
+    // When reverseCheckForPInTeam is active, this same check will also be done the other way around - this is necessary so a swap is valid for both teams of pIn and POut
+    private fun PossibleSubstitutionParticipantDto.checkGender(
+        requirements: List<NamedParticipantForCompetitionPropertiesRecord>,
+        participantOut: PossibleSubstitutionParticipantDto,
+        actualRegistrationTeams: Map<UUID, List<ParticipantForExecutionDto>>,
+        reverseCheckForPInTeam: Boolean,
+    ): App<Nothing, Boolean> = KIO.comprehension {
+        val genderPIn = this@checkGender.gender
+        val genderPOut = participantOut.gender
+
+
+        val pOutRequirements = requirements.first { it.id == participantOut.namedParticipantId }
+
+        val countByGender: MutableMap<Gender, Int> = mutableMapOf(
+            Gender.M to 0,
+            Gender.F to 0,
+            Gender.D to 0,
+        )
+
+        val actualPOutTeam = actualRegistrationTeams[participantOut.registrationId]!!
+
+        actualPOutTeam
+            .filter { it.namedParticipantId == pOutRequirements.id }
+            .forEach { teamP ->
+                countByGender[teamP.gender] = countByGender[teamP.gender]!! + 1
+            }
+
+        countByGender[genderPIn] = countByGender[genderPIn]!! + 1
+        countByGender[genderPOut] = countByGender[genderPOut]!! - 1
+
 
         val enoughMixedSlots = checkEnoughMixedSpots(
             requirements = NamedParticipantRequirements(
-                countMales = requirements.countMales!!,
-                countFemales = requirements.countFemales!!,
-                countNonBinary = requirements.countNonBinary!!,
-                countMixed = requirements.countMixed!!,
+                countMales = pOutRequirements.countMales!!,
+                countFemales = pOutRequirements.countFemales!!,
+                countNonBinary = pOutRequirements.countNonBinary!!,
+                countMixed = pOutRequirements.countMixed!!,
             ),
             counts = countByGender
         )
 
-        enoughMixedSlots
+
+        val enoughMixedSlotsInPOutTeam = if (this@checkGender.registrationId != null && reverseCheckForPInTeam) {
+            !participantOut.checkGender(
+                requirements,
+                participantOut = this@checkGender,
+                actualRegistrationTeams,
+                false,
+            )
+        } else true
+
+
+        KIO.ok(enoughMixedSlots && enoughMixedSlotsInPOutTeam)
     }
 }

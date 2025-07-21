@@ -8,6 +8,7 @@ import {
     IconButton,
     List,
     ListItem,
+    ListSubheader,
     MenuItem,
     Select,
     Stack,
@@ -22,7 +23,6 @@ import {Fragment, useState} from 'react'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {Controller, FormContainer, useForm} from 'react-hook-form-mui'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
-import {AutocompleteOption} from '@utils/types.ts'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useTranslation} from 'react-i18next'
 import SubstitutionSelectParticipantIn from '@components/event/competition/excecution/SubstitutionSelectParticipantIn.tsx'
@@ -34,10 +34,19 @@ import Add from '@mui/icons-material/Add'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
+import {groupBy} from '@utils/helpers.ts'
 
 type SubstitutionWithSwap = {
     substitution: SubstitutionDto
     swapSubstitution?: SubstitutionDto
+}
+export type ParticipantOptionGroup = {
+    teamName: string
+    participants: {
+        id: string
+        fullName: string
+        roleName: string
+    }[]
 }
 
 type Props = {
@@ -107,11 +116,33 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
         },
     )
 
-    const subOutOptions: AutocompleteOption[] =
-        subOutsData?.map(p => ({
-            id: p.id,
-            label: `${p.firstName} ${p.lastName} (${p.clubName + (p.competitionRegistrationName ? (" " + p.competitionRegistrationName) : "")})`,
-        })) ?? []
+    const getTeamName = (clubName: string, registrationName?: string) =>
+        clubName + (registrationName ? ' ' + registrationName : '')
+
+    const subOutOptions: ParticipantOptionGroup[] = Array.from(
+        groupBy(subOutsData ?? [], val =>
+            getTeamName(val.clubName, val.competitionRegistrationName),
+        ),
+    )
+        .map(([key, participants]) => ({
+            teamName: key,
+            participants: participants
+                .map(p => ({
+                    id: p.id,
+                    fullName: p.firstName + ' ' + p.lastName,
+                    roleName: p.namedParticipantName,
+                }))
+                .sort((a, b) =>
+                    a.roleName > b.roleName
+                        ? 1
+                        : a.roleName === b.roleName
+                          ? a.fullName > b.fullName
+                              ? 1
+                              : -1
+                          : -1,
+                ),
+        }))
+        .sort((a, b) => (a.teamName > b.teamName ? 1 : -1))
 
     const onSubmit = async (formData: Form) => {
         setSubmitting(true)
@@ -144,7 +175,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
         return (
             `${participant.firstName} ${participant.lastName}` +
             (clubAndRegistration
-                ? ` (${clubAndRegistration?.clubName + (clubAndRegistration?.registrationName ? ' ' + clubAndRegistration?.registrationName : '')})`
+                ? ` (${getTeamName(clubAndRegistration.clubName, clubAndRegistration.registrationName)})`
                 : '')
         )
     }
@@ -298,11 +329,16 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                                 participantOutOnChange(e)
                                             }}
                                             sx={{width: 1}}>
-                                            {subOutOptions.map(opt => (
-                                                <MenuItem key={opt?.id} value={opt?.id}>
-                                                    {opt?.label}
-                                                </MenuItem>
-                                            ))}
+                                            {subOutOptions.flatMap(optGroup => [
+                                                <ListSubheader key={`header-${optGroup.teamName}`}>
+                                                    {optGroup.teamName}
+                                                </ListSubheader>,
+                                                ...optGroup.participants.map(p => (
+                                                    <MenuItem key={`ps-${p.id}`} value={p.id}>
+                                                        {p.fullName} ({p.roleName})
+                                                    </MenuItem>
+                                                )),
+                                            ])}
                                         </Select>
                                     </FormInputLabel>
                                     {participantOutValue && (

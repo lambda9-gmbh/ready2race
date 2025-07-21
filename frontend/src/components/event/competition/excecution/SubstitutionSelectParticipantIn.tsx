@@ -5,6 +5,7 @@ import {ListSubheader, MenuItem, Select} from '@mui/material'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {Controller} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
+import {groupBy} from '@utils/helpers.ts'
 
 type Props = {
     setupRoundId: string
@@ -38,6 +39,38 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
         },
     )
 
+    const notCurrentlyParticipating =
+        subInsData?.notCurrentlyParticipating.sort((a, b) =>
+            a.firstName > b.firstName
+                ? 1
+                : a.firstName === b.firstName
+                  ? a.lastName > b.lastName
+                      ? 1
+                      : -1
+                  : -1,
+        ) ?? []
+
+    const currentlyParticipating = Array.from(groupBy(subInsData?.currentlyParticipating ?? [], val => val.registrationName))
+        .map(([key, participants]) => ({
+            teamName: key,
+            participants: participants
+                .map(p => ({
+                    id: p.id,
+                    fullName: p.firstName + ' ' + p.lastName,
+                    roleName: p.namedParticipantName,
+                }))
+                .sort((a, b) =>
+                    (a.roleName ?? '') > (b.roleName ?? '')
+                        ? 1
+                        : a.roleName === b.roleName
+                          ? a.fullName > b.fullName
+                              ? 1
+                              : -1
+                          : -1,
+                ),
+        }))
+        .sort((a, b) => ((a.teamName ?? '') > (b.teamName ?? '') ? 1 : -1))
+
     return subInsData ? (
         <Controller
             name={'participantIn'}
@@ -63,25 +96,26 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
                                 'event.competition.execution.substitution.substituteFor.notCurrentlyParticipating',
                             )}
                         </ListSubheader>
-                        {subInsData.notCurrentlyParticipating.map(p => (
+                        {notCurrentlyParticipating.map(p => (
                             <MenuItem key={p.id} value={p.id}>
                                 {p.firstName + ' ' + p.lastName}
                             </MenuItem>
                         ))}
-                        <ListSubheader>
+                        <ListSubheader >
                             {t(
                                 'event.competition.execution.substitution.substituteFor.currentlyParticipating',
                             )}
                         </ListSubheader>
-                        {subInsData?.currentlyParticipating.map(p => (
-                            <MenuItem key={p.id} value={p.id}>
-                                {`${p.firstName} ${p.lastName}${
-                                    p.registrationName
-                                        ? ` (${t('event.competition.execution.substitution.substituteFor.team')} ${p.registrationName})`
-                                        : ''
-                                }`}
-                            </MenuItem>
-                        ))}
+                        {currentlyParticipating.flatMap(optGroup => [
+                            <ListSubheader sx={{pl: 4}} key={`header-${optGroup.teamName}`}>
+                                {t('event.competition.execution.substitution.substituteFor.team') + ": " + optGroup.teamName}
+                            </ListSubheader>,
+                            ...optGroup.participants.map(p => (
+                                <MenuItem key={`ps-${p.id}`} value={p.id}>
+                                    {p.fullName} ({p.roleName})
+                                </MenuItem>
+                            )),
+                        ])}
                     </Select>
                 </FormInputLabel>
             )}

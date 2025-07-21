@@ -30,6 +30,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipan
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -453,8 +454,11 @@ object EventRegistrationService {
         val overflowFemales = (counts[Gender.F] ?: 0) - requirements.countFemales
         val overflowNonBinary = (counts[Gender.D] ?: 0) - requirements.countNonBinary
 
+
         val maleFemaleSlotsAvailableForNonBinary =
             if (overflowMales < 0) overflowMales * -1 else 0 + if (overflowFemales < 0) overflowFemales * -1 else 0
+
+        logger.info { "$overflowMales $overflowFemales $overflowNonBinary $maleFemaleSlotsAvailableForNonBinary" }
 
         val enoughMixedSlots = ((if (overflowMales > 0) overflowMales else 0) +
             (if (overflowFemales > 0) overflowFemales else 0) +
