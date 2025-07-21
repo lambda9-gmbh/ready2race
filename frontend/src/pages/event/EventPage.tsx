@@ -55,8 +55,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
 import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
-import {AppUserWithQrCodeDto, TeamStatusWithParticipantsDto} from '@api/types.gen.ts'
-import TeamTable from '@components/team/TeamTable.tsx'
+import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
 
 export type EventTab = 
     | 'general'
@@ -119,10 +118,6 @@ const EventPage = () => {
         {entityCreate: false, entityUpdate: false},
     )
 
-    const teamProps = useEntityAdministration<TeamStatusWithParticipantsDto>(
-        t('team.teams'),
-        {entityCreate: false, entityUpdate: false},
-    )
 
     const a11yProps = (index: EventTab) => {
         return {
@@ -331,7 +326,6 @@ const EventPage = () => {
                                 <Shiftplan />
                                 <TaskTable {...taskProps.table} title={t('task.tasks')} />
                                 <TaskDialog {...taskProps.dialog} eventId={eventId} />
-                                <TeamTable {...teamProps.table} title={t('team.teams')} />
                                 <AppUserWithQrCodeTable
                                     {...appUserWithQrCodeProps.table}
                                     title={t('qrCode.appUsersWithQrCode')}

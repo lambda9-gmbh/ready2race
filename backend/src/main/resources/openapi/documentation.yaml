@@ -4097,6 +4097,107 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  # Competition Registration Check-In/Check-Out endpoints
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/check-in:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: competitionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: competitionRegistrationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: checkInCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventId
+              properties:
+                eventId:
+                  type: string
+                  format: uuid
+      responses:
+        200:
+          description: Competition registration check-in result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamTrackingScanDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/check-out:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: competitionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: competitionRegistrationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: checkOutCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - eventId
+              properties:
+                eventId:
+                  type: string
+                  format: uuid
+      responses:
+        200:
+          description: Competition registration check-out result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamTrackingScanDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -5306,6 +5407,14 @@ components:
         createdAt:
           type: string
           format: date-time
+        currentStatus:
+          $ref: '#/components/schemas/TeamScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+        scannedBy:
+          type: string
+          format: uuid
 
     CompetitionRegistrationFeeDto:
       type: object

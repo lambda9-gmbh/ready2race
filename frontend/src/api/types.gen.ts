@@ -230,6 +230,9 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
     updatedAt: string
     createdAt: string
+    currentStatus?: TeamScanType
+    lastScanAt?: string
+    scannedBy?: string
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -3161,3 +3164,33 @@ export type GetEventTeamsResponse = {
 }
 
 export type GetEventTeamsError = BadRequestError | ApiError
+
+export type CheckInCompetitionRegistrationData = {
+    body: {
+        eventId: string
+    }
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type CheckInCompetitionRegistrationResponse = TeamTrackingScanDto
+
+export type CheckInCompetitionRegistrationError = BadRequestError | ApiError
+
+export type CheckOutCompetitionRegistrationData = {
+    body: {
+        eventId: string
+    }
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type CheckOutCompetitionRegistrationResponse = TeamTrackingScanDto
+
+export type CheckOutCompetitionRegistrationError = BadRequestError | ApiError

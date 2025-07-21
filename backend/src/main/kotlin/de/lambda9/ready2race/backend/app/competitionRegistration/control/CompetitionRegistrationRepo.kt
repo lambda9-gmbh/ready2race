@@ -22,6 +22,8 @@ import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.impl.DSL
 import java.util.*
+import de.lambda9.ready2race.backend.app.teamTracking.entity.TeamScanType
+import java.time.LocalDateTime
 
 object CompetitionRegistrationRepo {
 
@@ -97,6 +99,19 @@ object CompetitionRegistrationRepo {
 
         val namedParticipants = selectNamedParticipants(participants)
 
+        // Subquery to get the latest team tracking data
+        val teamTrackingLateral = DSL.lateral(
+            DSL.select(
+                TEAM_TRACKING.SCAN_TYPE,
+                TEAM_TRACKING.SCANNED_AT,
+                TEAM_TRACKING.SCANNED_BY
+            )
+            .from(TEAM_TRACKING)
+            .where(TEAM_TRACKING.COMPETITION_REGISTRATION_ID.eq(COMPETITION_REGISTRATION.ID))
+            .orderBy(TEAM_TRACKING.SCANNED_AT.desc())
+            .limit(1)
+        ).`as`("tt")
+
         select(
             COMPETITION_REGISTRATION.ID,
             COMPETITION_REGISTRATION.NAME,
@@ -105,10 +120,14 @@ object CompetitionRegistrationRepo {
             optionalFees,
             namedParticipants,
             COMPETITION_REGISTRATION.CREATED_AT,
-            COMPETITION_REGISTRATION.UPDATED_AT
+            COMPETITION_REGISTRATION.UPDATED_AT,
+            teamTrackingLateral.field("scan_type", String::class.java),
+            teamTrackingLateral.field("scanned_at", LocalDateTime::class.java),
+            teamTrackingLateral.field("scanned_by", UUID::class.java)
         )
             .from(COMPETITION_REGISTRATION)
             .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
+            .leftJoin(teamTrackingLateral).on(DSL.trueCondition())
             .page(params) {
                 COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                     .and(filterScope(scope, user.club))
@@ -122,7 +141,10 @@ object CompetitionRegistrationRepo {
                     optionalFees = it[optionalFees],
                     namedParticipants = it[namedParticipants],
                     createdAt = it[COMPETITION_REGISTRATION.CREATED_AT]!!,
-                    updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!
+                    updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!,
+                    currentStatus = it.get(teamTrackingLateral.field("scan_type", String::class.java))?.let { TeamScanType.valueOf(it) },
+                    lastScanAt = it.get(teamTrackingLateral.field("scanned_at", LocalDateTime::class.java)),
+                    scannedBy = it.get(teamTrackingLateral.field("scanned_by", UUID::class.java))
                 )
             }
 
@@ -176,7 +198,9 @@ object CompetitionRegistrationRepo {
         PARTICIPANT_FOR_EVENT.YEAR,
         PARTICIPANT_FOR_EVENT.GENDER,
         PARTICIPANT_FOR_EVENT.EXTERNAL,
-        PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME
+        PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
+        PARTICIPANT_FOR_EVENT.QR_CODE_ID,
+        PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS
     )
         .from(PARTICIPANT_FOR_EVENT)
         .join(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
@@ -192,7 +216,9 @@ object CompetitionRegistrationRepo {
             PARTICIPANT_FOR_EVENT.YEAR,
             PARTICIPANT_FOR_EVENT.GENDER,
             PARTICIPANT_FOR_EVENT.EXTERNAL,
-            PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME
+            PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
+            PARTICIPANT_FOR_EVENT.QR_CODE_ID,
+            PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS
         )
         .orderBy(PARTICIPANT_FOR_EVENT.FIRSTNAME, PARTICIPANT_FOR_EVENT.LASTNAME)
         .asMultiset("participants")

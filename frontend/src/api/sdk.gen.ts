@@ -450,6 +450,12 @@ import type {
     GetEventTeamsData,
     GetEventTeamsError,
     GetEventTeamsResponse,
+    CheckInCompetitionRegistrationData,
+    CheckInCompetitionRegistrationError,
+    CheckInCompetitionRegistrationResponse,
+    CheckOutCompetitionRegistrationData,
+    CheckOutCompetitionRegistrationError,
+    CheckOutCompetitionRegistrationResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2236,4 +2242,30 @@ export const getEventTeams = <ThrowOnError extends boolean = false>(
             url: '/event/{eventId}/teams',
         },
     )
+}
+
+export const checkInCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckInCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CheckInCompetitionRegistrationResponse,
+        CheckInCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/check-in',
+    })
+}
+
+export const checkOutCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckOutCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CheckOutCompetitionRegistrationResponse,
+        CheckOutCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/check-out',
+    })
 }
