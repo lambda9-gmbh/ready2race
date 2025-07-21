@@ -22,7 +22,6 @@ const ClubPage = () => {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('club.club')}))
-                console.log(error)
             }
         },
         deps: [clubId, clubProps.table.lastRequested],
@@ -32,7 +31,6 @@ const ClubPage = () => {
         onResponse: ({error}) => {
             if (error) {
                 feedback.error(t('common.load.error.single', {entity: t('club.club')}))
-                console.log(error)
             }
         },
         deps: [clubId],

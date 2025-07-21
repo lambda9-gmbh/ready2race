@@ -100,7 +100,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 setupRoundId = sub.competitionSetupRoundId!!,
                 setupRoundName = sub.competitionSetupRoundName!!,
                 competitionRegistrationId = sub.competitionRegistrationId!!,
-                competitionRegistrationName = sub.competitionRegistrationName!!,
+                competitionRegistrationName = sub.competitionRegistrationName,
                 clubId = sub.clubId!!,
                 clubName = sub.clubName!!,
                 namedParticipantId = sub.namedParticipantId!!,

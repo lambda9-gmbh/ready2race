@@ -66,8 +66,6 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
         eventRegistrationPossible(event.registrationAvailableFrom, event.registrationAvailableTo) ? 'EVENT_REGISTRATION_ONGOING' : null
     )
 
-    console.log(problems)
-
     return (
         <TabPanel index={'invoices'} activeTab={activeTab}>
             <InvoiceTable

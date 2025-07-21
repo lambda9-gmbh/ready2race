@@ -110,7 +110,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
     const subOutOptions: AutocompleteOption[] =
         subOutsData?.map(p => ({
             id: p.id,
-            label: `${p.firstName} ${p.lastName} (${p.clubName} ${p.competitionRegistrationName})`,
+            label: `${p.firstName} ${p.lastName} (${p.clubName + (p.competitionRegistrationName ? (" " + p.competitionRegistrationName) : "")})`,
         })) ?? []
 
     const onSubmit = async (formData: Form) => {

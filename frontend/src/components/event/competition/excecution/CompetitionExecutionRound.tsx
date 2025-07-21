@@ -181,7 +181,7 @@ const CompetitionExecutionRound = ({
                                                             {match.weighting}
                                                         </TableCell>
                                                         <TableCell width="80%">
-                                                            {`${match.teams[0].clubName} ${match.teams[0].name}`}
+                                                            {match.teams[0].clubName + (match.teams[0].name ? ` ${match.teams[0].name}` : '')}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}

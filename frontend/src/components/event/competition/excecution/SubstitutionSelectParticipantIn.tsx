@@ -1,4 +1,4 @@
-import {useFetch} from '@utils/hooks.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getPossibleSubIns} from '@api/sdk.gen.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import {ListSubheader, MenuItem, Select} from '@mui/material'
@@ -12,6 +12,7 @@ type Props = {
 }
 const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}: Props) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -28,6 +29,11 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
             }),
         {
             preCondition: () => selectedParticipantOut != null,
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(t('event.competition.execution.deleteRound.error'))
+                }
+            },
             deps: [eventId, competitionId, setupRoundId, selectedParticipantOut],
         },
     )
@@ -71,7 +77,7 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
                             <MenuItem key={p.id} value={p.id}>
                                 {`${p.firstName} ${p.lastName}${
                                     p.registrationName
-                                        ? `(${t('event.competition.execution.substitution.substituteFor.team')} ${p.registrationName})`
+                                        ? ` (${t('event.competition.execution.substitution.substituteFor.team')} ${p.registrationName})`
                                         : ''
                                 }`}
                             </MenuItem>

@@ -24,7 +24,6 @@ const EventRegistrationCreatePage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                    console.log(error)
                 }
             },
             deps: [eventId],
@@ -37,7 +36,7 @@ const EventRegistrationCreatePage = () => {
             body: formContext.getValues(),
         }).then(({error}) => {
             if (error) {
-                console.error(error)
+                feedback.error(t('common.error.unexpected'))
             } else {
                 setRegistrationWasSuccessful(true)
             }

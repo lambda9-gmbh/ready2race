@@ -45,7 +45,6 @@ export function TasksWidget({userId}: {userId: string}) {
                             entity: t('task.task'),
                         }),
                     )
-                    console.log(error)
                 }
             },
             deps: [lastRequested],

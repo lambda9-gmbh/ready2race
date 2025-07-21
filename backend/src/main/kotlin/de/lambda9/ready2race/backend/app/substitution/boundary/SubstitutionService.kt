@@ -9,7 +9,9 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.Competition
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService.checkEnoughMixedSpots
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantForCompetitionPropertiesRepo
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequirements
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
@@ -17,7 +19,6 @@ import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForEx
 import de.lambda9.ready2race.backend.app.substitution.control.toPossibleSubstitutionParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.control.toRecord
 import de.lambda9.ready2race.backend.app.substitution.entity.*
-import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -223,7 +224,7 @@ object SubstitutionService {
 
         val (psRegisteredPart, psRegisteredNotParticipating) = clubMembersRegistered
             .filterGender(
-                requirement = namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
+                requirements = namedParticipantsForCompetition.first { it.id == participantWithData.namedParticipantId },
                 participantGender = participant.gender,
                 currentActualTeamParticipants = actuallyParticipatingTeamParticipants
             )
@@ -430,48 +431,31 @@ object SubstitutionService {
     }
 
     private fun List<PossibleSubstitutionParticipantDto>.filterGender(
-        requirement: NamedParticipantForCompetitionPropertiesRecord,
+        requirements: NamedParticipantForCompetitionPropertiesRecord,
         participantGender: Gender,
         currentActualTeamParticipants: List<ParticipantForExecutionDto>
     ): List<PossibleSubstitutionParticipantDto> = this.filter { p ->
-        /*namedParticipantsForCompetition.first { it.id == p.namedParticipantId }*/requirement.let { requirements ->
         val genderPIn = p.gender
 
         val countByGender =
             currentActualTeamParticipants
+                .filter { it.namedParticipantId == requirements.id}
                 .groupBy { it.gender }
-                .map {
-                    it.key to it.value.size - (if (it.key == participantGender) 1 else 0)
+                .map { // add 1 to the gender of pIn and subtract 1 from the pOut
+                    it.key to (it.value.size + (if (it.key == genderPIn) 1 else 0) - (if (it.key == participantGender) 1 else 0))
                 }
                 .toMap()
 
-        logger.info { "Check $participantGender" }
-        logger.info { "Gender PIn $genderPIn" }
-        logger.info { "count by gender $countByGender" }
-        logger.info { "currentActualTeamParticipants $currentActualTeamParticipants" } // TODO: THIS IS NOT THE CORRECT LIST - WHEN SELECTING INGRID INGA THERE IS ALSO WUSEL WURST IN THE LIST
+        val enoughMixedSlots = checkEnoughMixedSpots(
+            requirements = NamedParticipantRequirements(
+                countMales = requirements.countMales!!,
+                countFemales = requirements.countFemales!!,
+                countNonBinary = requirements.countNonBinary!!,
+                countMixed = requirements.countMixed!!,
+            ),
+            counts = countByGender
+        )
 
-
-        val remainingMixed = (requirements.countMixed ?: 0) - (if ((countByGender[Gender.M]
-                ?: 0) > requirements.countMales!!
-        ) {
-            countByGender[Gender.M]!! - requirements.countMales!!
-        } else 0) - (if ((countByGender[Gender.F] ?: 0) > requirements.countFemales!!) {
-            countByGender[Gender.F]!! - requirements.countFemales!!
-        } else 0) - (if ((countByGender[Gender.D] ?: 0) > requirements.countNonBinary!!) {
-            countByGender[Gender.D]!! - requirements.countNonBinary!!
-        } else 0)
-
-        logger.info { "remaining mixed $remainingMixed" }
-
-        val requirementForPInGender = when (genderPIn) {
-            Gender.M -> requirements.countMales!!
-            Gender.F -> requirements.countFemales!!
-            else -> requirements.countNonBinary!!
-        }
-
-        logger.info { "requirement for PIn gender $requirementForPInGender" }
-
-        (countByGender[genderPIn] ?: 0) < requirementForPInGender || remainingMixed > 0
-    }
+        enoughMixedSlots
     }
 }
