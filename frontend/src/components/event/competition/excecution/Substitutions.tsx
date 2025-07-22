@@ -35,6 +35,8 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {groupBy} from '@utils/helpers.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {createSubstitutionGlobal, deleteSubstitutionGlobal} from '@authorization/privileges.ts'
 
 type SubstitutionWithSwap = {
     substitution: SubstitutionDto
@@ -64,6 +66,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
     const feedback = useFeedback()
     const {t} = useTranslation()
     const theme = useTheme()
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -299,83 +302,90 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                 <Typography sx={{flex: 1, wordBreak: 'break-word'}}>
                                     {sub.substitution.reason}
                                 </Typography>
-                                {roundIndex === 0 && (
-                                    <IconButton
-                                        sx={{ml: 2}}
-                                        onClick={() =>
-                                            handleDeleteSubstitution(sub.substitution.id)
-                                        }>
-                                        <DeleteIcon />
-                                    </IconButton>
-                                )}
+                                {roundIndex === 0 &&
+                                    user.checkPrivilege(deleteSubstitutionGlobal) && (
+                                        <IconButton
+                                            sx={{ml: 2}}
+                                            onClick={() =>
+                                                handleDeleteSubstitution(sub.substitution.id)
+                                            }>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    )}
                             </Box>
                         </ListItem>
                         {subIdx < substitutions.length - 1 && <Divider sx={{my: 1}} />}
                     </Fragment>
                 ))}
             </List>
-
-            <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'sm'}>
-                <DialogTitle>{t('event.competition.execution.substitution.add.add')}</DialogTitle>
-                <FormContainer formContext={formContext} onSuccess={onSubmit}>
-                    <DialogContent dividers>
-                        <Controller
-                            name={'participantOut'}
-                            rules={{
-                                required: t('common.form.required'),
-                            }}
-                            render={({
-                                field: {
-                                    onChange: participantOutOnChange,
-                                    value: participantOutValue = '',
-                                },
-                            }) => (
-                                <Stack spacing={4}>
-                                    <FormInputLabel
-                                        label={t(
-                                            'event.competition.execution.substitution.participant',
+            {user.checkPrivilege(createSubstitutionGlobal) && (
+                <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'sm'}>
+                    <DialogTitle>
+                        {t('event.competition.execution.substitution.add.add')}
+                    </DialogTitle>
+                    <FormContainer formContext={formContext} onSuccess={onSubmit}>
+                        <DialogContent dividers>
+                            <Controller
+                                name={'participantOut'}
+                                rules={{
+                                    required: t('common.form.required'),
+                                }}
+                                render={({
+                                    field: {
+                                        onChange: participantOutOnChange,
+                                        value: participantOutValue = '',
+                                    },
+                                }) => (
+                                    <Stack spacing={4}>
+                                        <FormInputLabel
+                                            label={t(
+                                                'event.competition.execution.substitution.participant',
+                                            )}
+                                            required={true}>
+                                            <Select
+                                                value={participantOutValue}
+                                                onChange={e => {
+                                                    participantOutOnChange(e)
+                                                }}
+                                                sx={{width: 1}}>
+                                                {subOutOptions.flatMap(optGroup => [
+                                                    <ListSubheader
+                                                        key={`header-${optGroup.teamName}`}>
+                                                        {optGroup.teamName}
+                                                    </ListSubheader>,
+                                                    ...optGroup.participants.map(p => (
+                                                        <MenuItem key={`ps-${p.id}`} value={p.id}>
+                                                            {p.fullName} ({p.roleName})
+                                                        </MenuItem>
+                                                    )),
+                                                ])}
+                                            </Select>
+                                        </FormInputLabel>
+                                        {participantOutValue && (
+                                            <SubstitutionSelectParticipantIn
+                                                setupRoundId={roundDto.setupRoundId}
+                                                selectedParticipantOut={participantOutValue}
+                                            />
                                         )}
-                                        required={true}>
-                                        <Select
-                                            value={participantOutValue}
-                                            onChange={e => {
-                                                participantOutOnChange(e)
-                                            }}
-                                            sx={{width: 1}}>
-                                            {subOutOptions.flatMap(optGroup => [
-                                                <ListSubheader key={`header-${optGroup.teamName}`}>
-                                                    {optGroup.teamName}
-                                                </ListSubheader>,
-                                                ...optGroup.participants.map(p => (
-                                                    <MenuItem key={`ps-${p.id}`} value={p.id}>
-                                                        {p.fullName} ({p.roleName})
-                                                    </MenuItem>
-                                                )),
-                                            ])}
-                                        </Select>
-                                    </FormInputLabel>
-                                    {participantOutValue && (
-                                        <SubstitutionSelectParticipantIn
-                                            setupRoundId={roundDto.setupRoundId}
-                                            selectedParticipantOut={participantOutValue}
+                                        <FormInputText
+                                            name={'reason'}
+                                            label={t(
+                                                'event.competition.execution.substitution.reason',
+                                            )}
                                         />
-                                    )}
-                                    <FormInputText
-                                        name={'reason'}
-                                        label={t('event.competition.execution.substitution.reason')}
-                                    />
-                                </Stack>
-                            )}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={closeDialog} disabled={submitting}>
-                            {t('common.cancel')}
-                        </Button>
-                        <SubmitButton submitting={submitting}>{t('common.save')}</SubmitButton>
-                    </DialogActions>
-                </FormContainer>
-            </BaseDialog>
+                                    </Stack>
+                                )}
+                            />
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={closeDialog} disabled={submitting}>
+                                {t('common.cancel')}
+                            </Button>
+                            <SubmitButton submitting={submitting}>{t('common.save')}</SubmitButton>
+                        </DialogActions>
+                    </FormContainer>
+                </BaseDialog>
+            )}
         </>
     )
 }

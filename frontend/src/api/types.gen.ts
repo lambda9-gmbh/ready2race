@@ -940,7 +940,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE' | 'SUBSTITUTION'
 
 export type RoleDto = {
     id: string
