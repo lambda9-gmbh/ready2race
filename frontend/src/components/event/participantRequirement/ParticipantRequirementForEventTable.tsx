@@ -313,7 +313,7 @@ const ParticipantRequirementForEventTable = (
                     showInMenu
                 />
             )
-        ].filter(Boolean) as EntityTableAction[]
+        ].filter(Boolean)
     }
 
     return (
