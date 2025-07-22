@@ -1091,7 +1091,7 @@ export const deleteSubstitution = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution',
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}',
     })
 }
 

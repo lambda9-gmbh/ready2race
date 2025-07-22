@@ -392,21 +392,35 @@ object SubstitutionService {
         return swapBefore ?: swapAfter
     }
 
-    fun deleteLastSubstitution(
+    fun deleteSubstitution(
         competitionId: UUID,
+        substitutionId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         val currentSetupRound = !getCurrentRound(competitionId)
 
         val substitutions = !SubstitutionRepo.getViewByRound(currentSetupRound.setupRoundId).orDie()
-        if (substitutions.isEmpty()) return@comprehension KIO.fail(SubstitutionError.NotFound)
+        val substitution = substitutions.find { it.id == substitutionId }
+        if (substitution == null) {
+            return@comprehension KIO.fail(SubstitutionError.NotFound)
+        }
 
-        val lastSubstitution = substitutions.sortedBy { it.orderForRound }.last()
+        val swapSubstitution = getSwapSubstitution(substitution, substitutions)
+        val swapRecord = substitutions.find { it.id == swapSubstitution }
+        val order = if (swapRecord != null && substitution.orderForRound!! < swapRecord.orderForRound!!) {
+            swapRecord.orderForRound!!
+        } else {
+            substitution.orderForRound!!
+        }
 
-        val swapSubstitution = getSwapSubstitution(lastSubstitution, substitutions)
+        !KIO.failOn(substitutions.any {
+            it.orderForRound!! > order && (it.competitionRegistrationId == substitution.competitionRegistrationId
+                || it.competitionRegistrationId == swapRecord?.competitionRegistrationId)
+        }) { SubstitutionError.DependentSubstitutionFound }
+
 
         val deleted = !SubstitutionRepo.delete(
             listOfNotNull(
-                lastSubstitution.id,
+                substitution.id,
                 swapSubstitution
             )
         ).orDie()

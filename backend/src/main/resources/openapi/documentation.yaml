@@ -1383,6 +1383,16 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{substitutionId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: substitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
     delete:
       operationId: deleteSubstitution
       responses:
@@ -1396,6 +1406,8 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubOuts:

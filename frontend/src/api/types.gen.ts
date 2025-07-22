@@ -1910,6 +1910,7 @@ export type DeleteSubstitutionData = {
     path: {
         competitionId: string
         eventId: string
+        substitutionId: string
     }
 }
 

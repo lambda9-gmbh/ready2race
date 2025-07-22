@@ -9,7 +9,8 @@ enum class SubstitutionError : ServiceError {
     ParticipantOutNotFound,
     ParticipantInNotFound,
     ParticipantOutNotAvailableForSubstitution,
-    ParticipantInNotAvailableForSubstitution;
+    ParticipantInNotAvailableForSubstitution,
+    DependentSubstitutionFound;
 
     override fun respond(): ApiError = when (this) {
         NotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Substitution not found")
@@ -22,6 +23,10 @@ enum class SubstitutionError : ServiceError {
         ParticipantInNotAvailableForSubstitution -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "ParticipantIn is not available for substitution"
+        )
+        DependentSubstitutionFound -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "Later substitution found that depends on this substitution"
         )
     }
 }

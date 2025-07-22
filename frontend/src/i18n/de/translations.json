@@ -498,7 +498,10 @@
           "reason": "Begründung",
           "add": {
             "add": "Ummeldungen hinzufügen",
-            "error": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten",
+            "error": {
+              "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
+              "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
+},
             "success": "Ummeldungen erfolgreich hinzugefügt"
           },
           "delete": {

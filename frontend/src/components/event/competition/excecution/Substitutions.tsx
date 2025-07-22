@@ -180,7 +180,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
         )
     }
 
-    const handleDeleteSubstitution = async () => {
+    const handleDeleteSubstitution = async (substitutionId: string) => {
         confirmAction(
             async () => {
                 setSubmitting(true)
@@ -188,12 +188,21 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                     path: {
                         eventId: eventId,
                         competitionId: competitionId,
+                        substitutionId: substitutionId,
                     },
                 })
                 setSubmitting(false)
 
                 if (error) {
-                    feedback.error(t('event.competition.execution.substitution.delete.error'))
+                    if (error.status.value === 409) {
+                        feedback.error(
+                            t('event.competition.execution.substitution.delete.error.conflict'),
+                        )
+                    } else {
+                        feedback.error(
+                            t('event.competition.execution.substitution.delete.error.unexpected'),
+                        )
+                    }
                 } else {
                     feedback.success(t('event.competition.execution.substitution.delete.success'))
                 }
@@ -274,7 +283,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                     })}
                                 </Typography>
                             </Box>
-                            <Divider orientation={'vertical'} flexItem />
+                            <Divider color={'primary'} orientation={'vertical'} flexItem />
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -290,8 +299,12 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                 <Typography sx={{flex: 1, wordBreak: 'break-word'}}>
                                     {sub.substitution.reason}
                                 </Typography>
-                                {subIdx === 0 && roundIndex === 0 && (
-                                    <IconButton sx={{ml: 2}} onClick={handleDeleteSubstitution}>
+                                {roundIndex === 0 && (
+                                    <IconButton
+                                        sx={{ml: 2}}
+                                        onClick={() =>
+                                            handleDeleteSubstitution(sub.substitution.id)
+                                        }>
                                         <DeleteIcon />
                                     </IconButton>
                                 )}

@@ -503,7 +503,10 @@
           },
           "delete": {
             "confirmation": "Are you sure you want to delete the latest substitution?",
-            "error": "An error has occurred when deleting the substitution",
+            "error": {
+              "conflict": "Later created substitutions depend on this one. These would have to be deleted first.",
+              "unexpected": "An error has occurred when deleting the substitution"
+            },
             "success": "Substitution successfully deleted"
           }
         }

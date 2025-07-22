@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
@@ -23,14 +22,16 @@ fun Route.substitution() {
             }
         }
 
-        delete {
-            call.respondComprehension {
-                !authenticate(Privilege.UpdateEventGlobal)
-                val competitionId = !pathParam("competitionId", uuid)
+        route("/{substitutionId}") {
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val substitutionId = !pathParam("substitutionId", uuid)
 
-                SubstitutionService.deleteLastSubstitution(competitionId)
+                    SubstitutionService.deleteSubstitution(competitionId, substitutionId)
+                }
             }
-
         }
 
         route("/possibleSubOuts") {
