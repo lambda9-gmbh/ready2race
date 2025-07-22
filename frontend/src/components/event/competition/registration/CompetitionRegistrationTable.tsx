@@ -180,31 +180,24 @@ const CompetitionRegistrationTable = (
                                     </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                    {row.namedParticipants.map(np => (
-                                        <Box key={np.namedParticipantId} sx={{ mb: 2 }}>
-                                            {row.namedParticipants.length > 1 && (
-                                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                                    {np.namedParticipantName}:
-                                                </Typography>
-                                            )}
-                                            <Table size="small">
-                                                <TableHead>
-                                                    <TableRow>
-                                                        <TableCell>{t('entity.name')}</TableCell>
-                                                        <TableCell>{t('event.competition.namedParticipant.namedParticipant')}</TableCell>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>{t('entity.name')}</TableCell>
+                                                <TableCell>{t('event.competition.namedParticipant.namedParticipant')}</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {row.namedParticipants.map(np => 
+                                                np.participants.map((participant) => (
+                                                    <TableRow key={participant.id}>
+                                                        <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                                        <TableCell>{np.namedParticipantName}</TableCell>
                                                     </TableRow>
-                                                </TableHead>
-                                                <TableBody>
-                                                    {np.participants.map((participant) => (
-                                                        <TableRow key={participant.id}>
-                                                            <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
-                                                            <TableCell>{np.namedParticipantName}</TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </Box>
-                                    ))}
+                                                ))
+                                            )}
+                                        </TableBody>
+                                    </Table>
                                 </AccordionDetails>
                             </Accordion>
                         </Box>
