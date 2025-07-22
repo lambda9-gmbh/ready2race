@@ -337,9 +337,6 @@ import type {
     AssignRequirementToNamedParticipantData,
     AssignRequirementToNamedParticipantError,
     AssignRequirementToNamedParticipantResponse,
-    GetRequirementsForNamedParticipantData,
-    GetRequirementsForNamedParticipantError,
-    GetRequirementsForNamedParticipantResponse,
     RemoveRequirementFromNamedParticipantData,
     RemoveRequirementFromNamedParticipantError,
     RemoveRequirementFromNamedParticipantResponse,
@@ -511,15 +508,9 @@ import type {
     CheckOutTeamData,
     CheckOutTeamError,
     CheckOutTeamResponse,
-    GetTeamStatusData,
-    GetTeamStatusError,
-    GetTeamStatusResponse,
     GetTeamsByParticipantQrCodeData,
     GetTeamsByParticipantQrCodeError,
     GetTeamsByParticipantQrCodeResponse,
-    GetEventTeamsData,
-    GetEventTeamsError,
-    GetEventTeamsResponse,
     CheckInCompetitionRegistrationData,
     CheckInCompetitionRegistrationError,
     CheckInCompetitionRegistrationResponse,
@@ -1860,19 +1851,6 @@ export const assignRequirementToNamedParticipant = <ThrowOnError extends boolean
     })
 }
 
-export const getRequirementsForNamedParticipant = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetRequirementsForNamedParticipantData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<
-        GetRequirementsForNamedParticipantResponse,
-        GetRequirementsForNamedParticipantError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}',
-    })
-}
-
 export const removeRequirementFromNamedParticipant = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<RemoveRequirementFromNamedParticipantData, ThrowOnError>,
 ) => {
@@ -2587,17 +2565,6 @@ export const checkOutTeam = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const getTeamStatus = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetTeamStatusData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<GetTeamStatusResponse, GetTeamStatusError, ThrowOnError>(
-        {
-            ...options,
-            url: '/app/team/{teamId}/status',
-        },
-    )
-}
-
 export const getTeamsByParticipantQrCode = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetTeamsByParticipantQrCodeData, ThrowOnError>,
 ) => {
@@ -2609,17 +2576,6 @@ export const getTeamsByParticipantQrCode = <ThrowOnError extends boolean = false
         ...options,
         url: '/app/participant/{qrCode}/teams',
     })
-}
-
-export const getEventTeams = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<GetEventTeamsData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).get<GetEventTeamsResponse, GetEventTeamsError, ThrowOnError>(
-        {
-            ...options,
-            url: '/event/{eventId}/teams',
-        },
-    )
 }
 
 export const checkInCompetitionRegistration = <ThrowOnError extends boolean = false>(

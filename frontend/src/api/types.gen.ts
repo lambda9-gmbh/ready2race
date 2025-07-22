@@ -2886,17 +2886,6 @@ export type AssignRequirementToNamedParticipantError =
     | ApiError
     | UnprocessableEntityError
 
-export type GetRequirementsForNamedParticipantData = {
-    path: {
-        eventId: string
-        namedParticipantId: string
-    }
-}
-
-export type GetRequirementsForNamedParticipantResponse = Array<EventParticipantRequirementDto>
-
-export type GetRequirementsForNamedParticipantError = BadRequestError | ApiError
-
 export type RemoveRequirementFromNamedParticipantData = {
     body: AssignRequirementToNamedParticipantDto
     path: {
@@ -3631,16 +3620,6 @@ export type CheckOutTeamResponse = TeamTrackingScanDto
 
 export type CheckOutTeamError = BadRequestError | ApiError
 
-export type GetTeamStatusData = {
-    path: {
-        teamId: string
-    }
-}
-
-export type GetTeamStatusResponse = TeamStatusWithParticipantsDto
-
-export type GetTeamStatusError = BadRequestError | ApiError
-
 export type GetTeamsByParticipantQrCodeData = {
     path: {
         qrCode: string
@@ -3653,37 +3632,6 @@ export type GetTeamsByParticipantQrCodeData = {
 export type GetTeamsByParticipantQrCodeResponse = Array<TeamStatusWithParticipantsDto>
 
 export type GetTeamsByParticipantQrCodeError = BadRequestError | ApiError
-
-export type GetEventTeamsData = {
-    path: {
-        eventId: string
-    }
-    query?: {
-        /**
-         * Page size for pagination
-         */
-        limit?: number
-        /**
-         * Result offset for pagination
-         */
-        offset?: number
-        /**
-         * Filter result with space-separated search terms for pagination
-         */
-        search?: string
-        /**
-         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
-         */
-        sort?: string
-    }
-}
-
-export type GetEventTeamsResponse = {
-    data: Array<TeamStatusWithParticipantsDto>
-    pagination: Pagination
-}
-
-export type GetEventTeamsError = BadRequestError | ApiError
 
 export type CheckInCompetitionRegistrationData = {
     body: {

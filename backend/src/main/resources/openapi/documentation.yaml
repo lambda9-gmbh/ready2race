@@ -2939,27 +2939,6 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
-    get:
-      operationId: getRequirementsForNamedParticipant
-      responses:
-        200:
-          description: Requirements for named participant successfully retrieved
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/EventParticipantRequirementDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
     delete:
       operationId: removeRequirementFromNamedParticipant
       requestBody:
@@ -4573,33 +4552,6 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /app/team/{teamId}/status:
-    parameters:
-      - name: teamId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    get:
-      operationId: getTeamStatus
-      responses:
-        200:
-          description: Team status with participants
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-
-
   /app/participant/{qrCode}/teams:
     parameters:
       - name: qrCode
@@ -4628,43 +4580,6 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-
-  /event/{eventId}/teams:
-    parameters:
-      - $ref: '#/components/parameters/eventId'
-      - $ref: '#/components/parameters/limit'
-      - $ref: '#/components/parameters/offset'
-      - $ref: '#/components/parameters/sort'
-      - $ref: '#/components/parameters/search'
-    get:
-      operationId: getEventTeams
-      responses:
-        200:
-          description: All teams for event with their status
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - data
-                  - pagination
-                properties:
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
-                  pagination:
-                    $ref: '#/components/schemas/Pagination'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
         500:

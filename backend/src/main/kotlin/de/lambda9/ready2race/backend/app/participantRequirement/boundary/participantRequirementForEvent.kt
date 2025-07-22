@@ -141,15 +141,6 @@ fun Route.participantRequirementForEvent() {
                 }
             }
 
-            get {
-                call.respondComprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
-                    val eventId = !pathParam("eventId", uuid)
-                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
-                    ParticipantRequirementService.getRequirementsForNamedParticipant(eventId, namedParticipantId)
-                }
-            }
-
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateEventGlobal)

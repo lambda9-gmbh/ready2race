@@ -86,14 +86,6 @@ fun Route.qrCodeApp() {
                     TeamTrackingService.handleTeamCheckOut(teamId, body.eventId, user.id)
                 }
             }
-
-            get("/status") {
-                call.respondComprehension {
-                    !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
-                    val teamId = !pathParam("teamId", uuid)
-                    TeamTrackingService.getTeamWithParticipantsAndStatus(teamId)
-                }
-            }
         }
 
         route("/participant/{qrCode}/teams") {

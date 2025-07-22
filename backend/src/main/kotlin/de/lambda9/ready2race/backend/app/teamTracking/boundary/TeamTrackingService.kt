@@ -122,28 +122,6 @@ object TeamTrackingService {
         }
     }
 
-    fun getTeamWithParticipantsAndStatus(competitionRegistrationId: UUID): App<ServiceError, ApiResponse> =
-        KIO.comprehension {
-            val team = !TeamTrackingRepo.getTeamWithParticipantsAndStatus(competitionRegistrationId).orDie()
-            !KIO.failOn(team == null) { TeamTrackingError.TeamNotFound }
-            KIO.ok(ApiResponse.Dto(team!!))
-        }
-
-    fun getTeamsWithParticipantsAndStatusPaginated(
-        eventId: UUID,
-        params: PaginationParameters<TeamStatusWithParticipantsSort>
-    ): App<ServiceError, ApiResponse> = KIO.comprehension {
-        val total = !TeamTrackingRepo.countTeamsWithParticipantsAndStatus(eventId, params.search).orDie()
-        val teams = !TeamTrackingRepo.getTeamsWithParticipantsAndStatusPaginated(eventId, params).orDie()
-
-        KIO.ok(
-            ApiResponse.Page(
-                data = teams,
-                pagination = params.toPagination(total)
-            )
-        )
-    }
-
     fun getTeamsByParticipantQrCode(qrCode: String, eventId: UUID): App<ServiceError, ApiResponse> = KIO.comprehension {
         // First find the participant associated with the QR code
         val qrCodeRecord = !QrCodeRepo.findByCode(qrCode).orDie()

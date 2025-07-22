@@ -1,23 +1,17 @@
 package de.lambda9.ready2race.backend.app.teamTracking.control
 
-import de.lambda9.ready2race.backend.app.teamTracking.entity.*
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.app.teamTracking.entity.ScanType
+import de.lambda9.ready2race.backend.app.teamTracking.entity.TeamParticipantDto
+import de.lambda9.ready2race.backend.app.teamTracking.entity.TeamStatusWithParticipantsDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.TeamStatusWithParticipantsRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.TeamTrackingRecord
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.generated.tables.references.TEAM_TRACKING
-import de.lambda9.ready2race.backend.database.generated.tables.references.TEAM_STATUS_WITH_PARTICIPANTS
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
+import de.lambda9.ready2race.backend.database.generated.tables.references.TEAM_STATUS_WITH_PARTICIPANTS
+import de.lambda9.ready2race.backend.database.generated.tables.references.TEAM_TRACKING
 import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.jooq.Jooq
 import de.lambda9.tailwind.jooq.JIO
-import java.time.LocalDateTime
+import de.lambda9.tailwind.jooq.Jooq
 import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.groupBy
 
 object TeamTrackingRepo {
 
@@ -62,75 +56,38 @@ object TeamTrackingRepo {
             )
         }
 
-    fun getTeamWithParticipantsAndStatus(competitionRegistrationId: UUID): JIO<TeamStatusWithParticipantsDto?> = Jooq.query {
-        val teamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
-            .where(TEAM_STATUS_WITH_PARTICIPANTS.COMPETITION_REGISTRATION_ID.eq(competitionRegistrationId))
-            .fetch()
-            .toList()
+    fun getTeamWithParticipantsAndStatus(competitionRegistrationId: UUID): JIO<TeamStatusWithParticipantsDto?> =
+        Jooq.query {
+            val teamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
+                .where(TEAM_STATUS_WITH_PARTICIPANTS.COMPETITION_REGISTRATION_ID.eq(competitionRegistrationId))
+                .fetch()
+                .toList()
 
-        teamRecords.internalGroup()
-            .firstOrNull()
-    }
+            teamRecords.internalGroup()
+                .firstOrNull()
+        }
 
-    fun getTeamsByParticipantId(participantId: UUID, eventId: UUID): JIO<List<TeamStatusWithParticipantsDto>> = Jooq.query {
-        val teamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
-            .where(
-                TEAM_STATUS_WITH_PARTICIPANTS.PARTICIPANT_ID.eq(participantId)
-                    .and(
-                        TEAM_STATUS_WITH_PARTICIPANTS.EVENT_REGISTRATION.`in`(
-                            select(EVENT_REGISTRATION.ID)
-                                .from(EVENT_REGISTRATION)
-                                .where(EVENT_REGISTRATION.EVENT.eq(eventId))
-                        )
-                    )
-            )
-            .fetch()
-
-        val competitionRegistrationIds = teamRecords.map { it.competitionRegistrationId }.distinct()
-
-        val allTeamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
-            .where(TEAM_STATUS_WITH_PARTICIPANTS.COMPETITION_REGISTRATION_ID.`in`(competitionRegistrationIds))
-            .fetch()
-
-        allTeamRecords.internalGroup()
-    }
-
-    fun countTeamsWithParticipantsAndStatus(eventId: UUID, search: String?): JIO<Int> = Jooq.query {
-        fetchCount(
-            selectDistinct(TEAM_STATUS_WITH_PARTICIPANTS.COMPETITION_REGISTRATION_ID)
-                .from(TEAM_STATUS_WITH_PARTICIPANTS)
+    fun getTeamsByParticipantId(participantId: UUID, eventId: UUID): JIO<List<TeamStatusWithParticipantsDto>> =
+        Jooq.query {
+            val teamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
                 .where(
-                    TEAM_STATUS_WITH_PARTICIPANTS.EVENT_REGISTRATION.`in`(
-                        select(EVENT_REGISTRATION.ID)
-                            .from(EVENT_REGISTRATION)
-                            .where(EVENT_REGISTRATION.EVENT.eq(eventId))
-                    )
+                    TEAM_STATUS_WITH_PARTICIPANTS.PARTICIPANT_ID.eq(participantId)
+                        .and(
+                            TEAM_STATUS_WITH_PARTICIPANTS.EVENT_REGISTRATION.`in`(
+                                select(EVENT_REGISTRATION.ID)
+                                    .from(EVENT_REGISTRATION)
+                                    .where(EVENT_REGISTRATION.EVENT.eq(eventId))
+                            )
+                        )
                 )
-                .and(search.metaSearch(searchFields()))
-        )
-    }
+                .fetch()
 
-    fun getTeamsWithParticipantsAndStatusPaginated(
-        eventId: UUID,
-        params: PaginationParameters<TeamStatusWithParticipantsSort>
-    ): JIO<List<TeamStatusWithParticipantsDto>> = Jooq.query {
-        // Fetch paginated teams with participants using the view directly
-        val teamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
-            .page(params, searchFields()) {
-                TEAM_STATUS_WITH_PARTICIPANTS.EVENT_REGISTRATION.`in`(
-                    select(EVENT_REGISTRATION.ID)
-                        .from(EVENT_REGISTRATION)
-                        .where(EVENT_REGISTRATION.EVENT.eq(eventId))
-                )
-            }
-            .fetch()
+            val competitionRegistrationIds = teamRecords.map { it.competitionRegistrationId }.distinct()
 
-        teamRecords.internalGroup()
-    }
+            val allTeamRecords = selectFrom(TEAM_STATUS_WITH_PARTICIPANTS)
+                .where(TEAM_STATUS_WITH_PARTICIPANTS.COMPETITION_REGISTRATION_ID.`in`(competitionRegistrationIds))
+                .fetch()
 
-    private fun searchFields() = listOf(
-        TEAM_STATUS_WITH_PARTICIPANTS.TEAM_NAME,
-        TEAM_STATUS_WITH_PARTICIPANTS.FIRSTNAME,
-        TEAM_STATUS_WITH_PARTICIPANTS.LASTNAME
-    )
+            allTeamRecords.internalGroup()
+        }
 }
