@@ -60,7 +60,16 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
             styleOverrides: {
                 root: {
                     textTransform: 'none',
+                    [_theme.breakpoints.down('sm')]: {
+                        minHeight: '3.5rem',
+                        fontSize: '1.2rem',
+                        padding: '0.75rem 1rem',
+                        fontWeight: 600,
+                    },
                 },
+            },
+            defaultProps: {
+                size: 'large',
             },
         },
         MuiTab: {
@@ -79,6 +88,29 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
                     }
                 }
             }
+        },
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    [_theme.breakpoints.down('sm')]: {
+                        '& .MuiInputBase-root': {
+                            fontSize: '1.1rem',
+                        },
+                        '& .MuiInputLabel-root': {
+                            fontSize: '1.1rem',
+                        },
+                    },
+                },
+            },
+            defaultProps: {
+                size: 'medium',
+            },
+        },
+        MuiDialog: {
+            defaultProps: {
+                maxWidth: 'sm',
+                fullWidth: true,
+            },
         }
     },
 })

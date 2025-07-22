@@ -4,7 +4,7 @@ import {router} from '@routes'
 import {client} from './api'
 import Config from './Config'
 import {muiTheme} from './theme'
-import {ThemeProvider} from '@mui/material'
+import {ThemeProvider, CssBaseline} from '@mui/material'
 import {SnackbarProvider} from 'notistack'
 import {ConfirmationProvider} from './contexts/confirmation/ConfirmationProvider.tsx'
 import {LocalizationProvider} from '@mui/x-date-pickers'
@@ -34,6 +34,7 @@ const App = () => {
             adapterLocale={locale.date}
             localeText={locale.datePicker}>
             <ThemeProvider theme={theme}>
+                <CssBaseline />
                 <SnackbarProvider
                     maxSnack={1}
                     anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}>

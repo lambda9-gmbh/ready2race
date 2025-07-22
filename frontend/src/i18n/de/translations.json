@@ -69,6 +69,7 @@
     "saveAndNext": "Speichern und weiter",
     "search": "Suchen",
     "back": "Zurück",
+    "reset": "Zurücksetzen",
     "next": "Weiter",
     "and": "und",
     "remove": "Entfernen",
@@ -950,7 +951,9 @@
     "userAssigned": "Benutzer {{userId}} zugewiesen",
     "participantQrDetected": "Teilnehmer-QR-Code erkannt",
     "appUserQrDetected": "Benutzer-QR-Code erkannt",
-    "noPermission": "Du hast keine Berechtigung, diesen QR-Code zuzuordnen."
+    "noPermission": "Du hast keine Berechtigung, diesen QR-Code zuzuordnen.",
+    "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
+    "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen"
   },
   "qrCode": {
     "qrCode": "QR-Code",
@@ -967,7 +970,8 @@
     "removeAssignment": "Qr Code Zuweisung aufheben",
     "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
     "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
-    "deleteError": "Fehler beim Löschen"
+    "deleteError": "Fehler beim Löschen",
+    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
   },
   "qrParticipant": {
     "title": "Teilnehmer-QR-Code",
@@ -1005,31 +1009,37 @@
     "noTeamsFound": "Keine Teams gefunden"
   },
   "qrScanner": {
-    "title": "QR-Scanner"
+    "title": "Scanner"
   },
   "qrEvents": {
-    "title": "QR-Events",
+    "title": "Events",
     "switchApp": "App wechseln"
   },
   "app": {
     "functionSelect": {
-      "title": "Bitte wähle deine Funktion in der App",
+      "title": "Deine Aufgabe",
       "functions": {
         "qrManagement": "QR-Code Verwaltung",
         "competitionCheck": "Wettkampf-Check",
         "eventRequirement": "Event Requirements",
         "caterer": "Verpflegung"
       }
+    },
+    "forbidden": {
+      "title": "Nicht berechtigt",
+      "message": "Du bist für diese Seite nicht berechtigt.",
+      "backButton": "Zurück zur App"
     }
   },
   "caterer": {
     "canReceiveFood": "Benutzer kann Essen erhalten",
     "cannotReceiveFood": "Benutzer kann kein Essen erhalten",
     "price": "Preis (€)",
-    "priceHelper": "Optional - Leer lassen für Typ 1 (nur Ja/Nein)",
-    "confirm": "Transaktion bestätigen",
+    "priceHelper": "Optional",
+    "confirm": "Bestätigen",
     "previousTransactions": "Vorherige Transaktionen",
     "scanError": "Fehler beim Scannen des Benutzers",
-    "transactionError": "Fehler beim Erstellen der Transaktion"
+    "transactionError": "Fehler beim Erstellen der Transaktion",
+    "transactionSuccess": "Transaktion erfolgreich durchgeführt"
   }
 }

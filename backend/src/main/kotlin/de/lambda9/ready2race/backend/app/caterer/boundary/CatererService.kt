@@ -16,29 +16,29 @@ import java.math.BigDecimal
 import java.util.UUID
 
 object CatererService {
-    
+
     fun createCateringTransaction(
         transaction: NewCatererTransactionDTO,
         catererId: UUID
     ): App<CatererError, ApiResponse.NoData> = KIO.comprehension {
-        
+
         // Validate that the user exists
         !AppUserRepo.exists(transaction.appUserId).orDie()
             .onFalseFail { CatererError.UserNotFound }
-        
+
         // Validate price is non-negative if provided
-        transaction.price?.let { price ->
+        !(transaction.price?.let { price ->
             if (price < BigDecimal.ZERO) {
                 KIO.fail(CatererError.InvalidPrice)
             } else {
                 KIO.ok(Unit)
             }
-        } ?: KIO.ok(Unit)
-        
+        } ?: KIO.ok(Unit))
+
         // Create the transaction record
         val record = !transaction.toRecord(catererId)
         !CatererRepo.create(record).orDie()
-        
+
         noData
     }
 }

@@ -1,12 +1,10 @@
 import {useEffect, useRef, useState} from "react";
-import {Button, Stack} from "@mui/material";
+import {Stack} from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import {useFeedback, useFetch} from "@utils/hooks.ts";
-import {checkQrCode} from '@api/sdk.gen.ts'
-import {CheckQrCodeResponse} from "@api/types.gen.ts";
+import {useFeedback} from "@utils/hooks.ts";
 import {useTranslation} from "react-i18next";
 
 // @ts-ignore
@@ -14,14 +12,12 @@ import QrScanner from "qr-scanner";
 
 QrScanner.WORKER_PATH = "/qr-scanner-worker.min.js";
 
-const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
-
 const QrNimiqScanner = (props: {
-    callback: (qrCodeId: string, response: CheckQrCodeResponse | null) => void
+    callback: (qrCodeContent: string) => void
 }) => {
     const feedback = useFeedback()
     const {t} = useTranslation()
-    const [uuid, setUuid] = useState<string | null>(null);
+    const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
     const [cameraId, setCameraId] = useState<string | undefined>(undefined);
     const [devices, setDevices] = useState<{ id: string, label: string }[]>([]);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -75,11 +71,9 @@ const QrNimiqScanner = (props: {
                     scannerRef.current = new QrScanner(
                         videoRef.current!,
                         (result: { data: string }) => {
-                            if (result && result.data) {
-                                const match = result.data.match(uuidRegex);
-                                if (match) {
-                                    setUuid(match[1]);
-                                }
+                            if (result && result.data && result.data !== lastScannedCode) {
+                                setLastScannedCode(result.data);
+                                props.callback(result.data);
                             }
                         },
                         {returnDetailedScanResult: true}
@@ -105,30 +99,7 @@ const QrNimiqScanner = (props: {
                 scannerRef.current = null;
             }
         };
-    }, [cameraId, feedback, t]);
-
-    useFetch(signal => checkQrCode({signal, path: {qrCodeId: uuid!!}}),
-        {
-            onResponse: ({error, data}) => {
-                if (error) {
-                    feedback.error(
-                        t('common.load.error.single', {
-                            entity: t('task.task'),
-                        }),
-                    )
-                    console.log(error)
-                } else {
-                    console.log("call callback")
-                    if (Object.keys(data).length == 0) {
-                        props.callback(uuid!!, null)
-                    } else {
-                        props.callback(uuid!!, data)
-                    }
-                }
-            },
-            deps: [uuid],
-            preCondition: () => uuid !== null
-        })
+    }, [cameraId, feedback, t, lastScannedCode, props])
 
     return (
         <Stack
@@ -177,21 +148,6 @@ const QrNimiqScanner = (props: {
                     </Select>
                 </FormControl>
             )}
-            <Button
-                onClick={() => setUuid('b294a2e0-039d-4ede-bd84-c61a47dd9c04')}
-                fullWidth
-                sx={{
-                    minHeight: 60,
-                    fontSize: '1.2rem',
-                    borderRadius: 2,
-                    mt: 2,
-                    py: 2,
-                }}
-                variant="contained"
-                color="primary"
-            >
-                Dev (Test)
-            </Button>
         </Stack>
     );
 };

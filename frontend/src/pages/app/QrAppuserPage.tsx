@@ -1,10 +1,27 @@
-import {Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, Typography, TextField, Box} from "@mui/material";
+import {
+    Alert,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Stack,
+    TextField,
+    Typography
+} from "@mui/material";
 import {useEffect, useState} from "react";
 import {qrEventRoute, router} from "@routes";
-import {deleteQrCode, createCateringTransaction} from "@api/sdk.gen.ts";
+import {createCateringTransaction, deleteQrCode} from "@api/sdk.gen.ts";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
-import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal, updateAppCatererGlobal } from '@authorization/privileges';
+import {
+    updateAppCatererGlobal,
+    updateAppCompetitionCheckGlobal,
+    updateAppEventRequirementGlobal,
+    updateAppQrManagementGlobal
+} from '@authorization/privileges';
+import {PriceAdjuster} from "@components/qrApp/PriceAdjuster.tsx";
 
 const QrAppuserPage = () => {
     const {t} = useTranslation();
@@ -18,6 +35,7 @@ const QrAppuserPage = () => {
     // Caterer specific state
     const [price, setPrice] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (!appFunction) {
@@ -36,7 +54,10 @@ const QrAppuserPage = () => {
         try {
             await deleteQrCode({path: {qrCodeId: qr.qrCodeId!}});
             setDialogOpen(false);
-            qr.reset(eventId);
+            setSuccessMessage(t('qrAppuser.deleteSuccess'));
+            setTimeout(() => {
+                qr.reset(eventId);
+            }, 2000);
         } catch (e) {
             setError((e as Error)?.message || t('qrAppuser.deleteError'));
         } finally {
@@ -57,8 +78,11 @@ const QrAppuserPage = () => {
                     price: price || null
                 }
             });
-            // Reset and go back to scanner
-            qr.reset(eventId);
+            // Show success and go back after delay
+            setSuccessMessage(t('caterer.transactionSuccess'));
+            setTimeout(() => {
+                qr.reset(eventId);
+            }, 2000);
         } catch (e) {
             setError((e as Error)?.message || t('caterer.transactionError'));
         } finally {
@@ -76,11 +100,20 @@ const QrAppuserPage = () => {
     const isCaterer = appFunction === updateAppCatererGlobal.resource;
 
     return (
-        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" textAlign="center">
+        <Stack 
+            spacing={2} 
+            alignItems="center" 
+            justifyContent="center"
+            sx={{ width: '100%', maxWidth: 600 }}
+        >
+            <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrAppuser.title')}
             </Typography>
-            <Typography>{t('qrAppuser.user')}: {qr.qrCodeId}</Typography>
+            {successMessage && (
+                <Alert severity="success" sx={{ width: '100%' }}>
+                    {successMessage}
+                </Alert>
+            )}
             {!allowed && (
                 <Alert severity="warning">Du hast für diesen QR-Code-Typ keine Berechtigung.</Alert>
             )}
@@ -104,6 +137,8 @@ const QrAppuserPage = () => {
                             fullWidth
                         />
                         
+                        <PriceAdjuster price={price} onPriceChange={setPrice} />
+                        
                         <Button
                             variant="contained"
                             color="primary"
@@ -119,7 +154,7 @@ const QrAppuserPage = () => {
             
             {error && <Alert severity="error">{error}</Alert>}
             
-            <Button onClick={() => qr.reset(eventId)}>{t('common.back')}</Button>
+            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
             {canRemove && (
                 <Button
                     color="error"

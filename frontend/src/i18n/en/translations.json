@@ -950,7 +950,9 @@
     "invalidUserQr": "Invalid User QR Code",
     "invalidQrFormat": "Invalid QR Code Format",
     "userAssigned": "User {{userId}} assigned",
-    "noPermission": "You don't have permission to assign this QR code."
+    "noPermission": "You don't have permission to assign this QR code.",
+    "successParticipant": "QR code successfully assigned to participant",
+    "successUser": "QR code successfully assigned to user"
   },
   "qrCode": {
     "qrCode": "QR Code",
@@ -967,7 +969,8 @@
     "removeAssignment": "Remove QR code assignment",
     "removeAssignmentTitle": "Remove QR code assignment",
     "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
-    "deleteError": "Error while deleting"
+    "deleteError": "Error while deleting",
+    "deleteSuccess": "QR code assignment successfully removed"
   },
   "qrParticipant": {
     "title": "Participant QR Code",
@@ -1005,31 +1008,37 @@
     "noTeamsFound": "No teams found"
   },
   "qrScanner": {
-    "title": "QR Scanner"
+    "title": "Scanner"
   },
   "qrEvents": {
-    "title": "QR Events",
+    "title": "Events",
     "switchApp": "Switch app"
   },
   "app": {
     "functionSelect": {
-      "title": "Please select your function in the app",
+      "title": "Your Task",
       "functions": {
         "qrManagement": "QR Code Management",
         "competitionCheck": "Competition Check",
         "eventRequirement": "Event Requirements",
         "caterer": "Catering"
       }
+    },
+    "forbidden": {
+      "title": "Not authorized",
+      "message": "You are not authorized for this page.",
+      "backButton": "Back to app"
     }
   },
   "caterer": {
     "canReceiveFood": "User can receive food",
     "cannotReceiveFood": "User cannot receive food",
     "price": "Price (€)",
-    "priceHelper": "Optional - Leave empty for Type 1 (Yes/No only)",
-    "confirm": "Confirm Transaction",
+    "priceHelper": "Optional",
+    "confirm": "Transact",
     "previousTransactions": "Previous Transactions",
     "scanError": "Error scanning user",
-    "transactionError": "Error creating transaction"
+    "transactionError": "Error creating transaction",
+    "transactionSuccess": "Transaction successfully completed"
   }
 }

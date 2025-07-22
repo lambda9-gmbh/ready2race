@@ -1,4 +1,4 @@
-import {Box, Card, CardActionArea, CardContent, Stack, Typography} from '@mui/material';
+import {Box, Card, CardActionArea, CardContent, Stack, Typography, useMediaQuery, useTheme} from '@mui/material';
 import {useUser} from '@contexts/user/UserContext';
 import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx';
 import {useEffect, useState} from 'react';
@@ -39,6 +39,8 @@ const AppFunctionSelectPage = () => {
     const {setAppFunction} = useAppSession();
     const navigate = router.navigate
     const [available, setAvailable] = useState<AppFunction[]>([]);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     useEffect(() => {
         // Prüfe, welche App-Funktionen der User hat
@@ -67,14 +69,29 @@ const AppFunctionSelectPage = () => {
     if (available.length <= 1) return null;
 
     return (
-        <Stack spacing={4} alignItems="center" justifyContent="center" p={4}>
-            <Typography variant="h4" textAlign="center">
+        <Stack 
+            spacing={4} 
+            alignItems="center" 
+            justifyContent="center" 
+            sx={{ 
+                p: { xs: 2, sm: 4 },
+                minHeight: '60vh'
+            }}
+        >
+            <Typography 
+                variant={isMobile ? "h5" : "h4"} 
+                textAlign="center"
+            >
                 {t('app.functionSelect.title')}
             </Typography>
             <Box 
                 display="grid" 
-                gridTemplateColumns="repeat(auto-fit, minmax(250px, 1fr))"
-                gap={3}
+                gridTemplateColumns={{
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(auto-fit, minmax(250px, 1fr))'
+                }}
+                gap={{ xs: 2, sm: 3 }}
                 width="100%"
                 maxWidth="800px"
             >
@@ -82,15 +99,18 @@ const AppFunctionSelectPage = () => {
                     const Icon = f.icon;
                     return (
                         <Card 
-                            key={f.fn} 
+                            key={f.fn}
                             sx={{ 
-                                height: '200px',
+                                height: { xs: '180px', sm: '200px' },
                                 display: 'flex',
                                 flexDirection: 'column',
-                                transition: 'transform 0.2s',
+                                transition: 'all 0.2s ease-in-out',
                                 '&:hover': {
-                                    transform: 'scale(1.05)',
-                                    boxShadow: 3
+                                    transform: { xs: 'none', sm: 'scale(1.05)' },
+                                    boxShadow: { xs: 2, sm: 4 }
+                                },
+                                '&:active': {
+                                    transform: 'scale(0.98)'
                                 }
                             }}
                         >
@@ -102,13 +122,21 @@ const AppFunctionSelectPage = () => {
                                     flexDirection: 'column',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    p: 3
+                                    p: { xs: 2, sm: 3 }
                                 }}
-                                className="cursor-pointer"
                             >
-                                <CardContent sx={{ textAlign: 'center' }}>
-                                    <Icon sx={{ fontSize: 60, mb: 2, color: 'primary.main' }} />
-                                    <Typography variant="h6">
+                                <CardContent sx={{ textAlign: 'center', p: 0 }}>
+                                    <Icon sx={{ 
+                                        fontSize: { xs: 48, sm: 60 }, 
+                                        mb: { xs: 1, sm: 2 }, 
+                                        color: 'primary.main' 
+                                    }} />
+                                    <Typography 
+                                        variant={isMobile ? "body1" : "h6"}
+                                        sx={{ 
+                                            fontWeight: isMobile ? 600 : 400
+                                        }}
+                                    >
                                         {t(f.labelKey)}
                                     </Typography>
                                 </CardContent>

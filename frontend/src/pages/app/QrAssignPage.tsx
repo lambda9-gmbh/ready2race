@@ -1,4 +1,4 @@
-import {Button, Stack, ToggleButton, ToggleButtonGroup, Typography, Alert, Box, Paper} from "@mui/material";
+import {Alert, Box, Button, FormControlLabel, Radio, RadioGroup, Stack, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {useFetch} from "@utils/hooks.ts";
 import {
@@ -12,16 +12,15 @@ import {qrEventRoute} from "@routes";
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
 import QrNimiqScanner from "@components/qrApp/QrNimiqScanner.tsx";
-import {CheckQrCodeResponse} from "@api/types.gen.ts";
 
 type UserTyp = "User" | "Participant" | "SystemUser"
 const QrAssignPage = () => {
-    const { t } = useTranslation();
-    const { qr, appFunction } = useAppSession();
+    const {t} = useTranslation();
+    const {qr, appFunction} = useAppSession();
     const [userTyp, setUserTyp] = useState<UserTyp>("User")
     const [club, setClub] = useState<string>()
     const [scanningSystemUser, setScanningSystemUser] = useState(false)
-    const [systemUserId, setSystemUserId] = useState<string | null>(null)
+    const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const {eventId} = qrEventRoute.useParams()
 
     useEffect(() => {
@@ -34,14 +33,13 @@ const QrAssignPage = () => {
         }
     }, [qr, appFunction, eventId])
 
-    const onChange = (_: React.MouseEvent<HTMLElement>, nextView: UserTyp) => {
+    const onChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const nextView = event.target.value as UserTyp;
         setUserTyp(nextView)
         if (nextView === "SystemUser") {
             setScanningSystemUser(true)
-            setSystemUserId(null)
         } else {
             setScanningSystemUser(false)
-            setSystemUserId(null)
         }
     }
 
@@ -68,7 +66,10 @@ const QrAssignPage = () => {
                 id: id
             }
         })
-        qr.reset(eventId)
+        setSuccessMessage(t('qrAssign.successParticipant'))
+        setTimeout(() => {
+            qr.reset(eventId)
+        }, 2000)
     }
 
     const selectUser = async (id: string) => {
@@ -79,16 +80,22 @@ const QrAssignPage = () => {
                 id: id
             }
         })
-        qr.reset(eventId)
+        setSuccessMessage(t('qrAssign.successUser'))
+        setTimeout(() => {
+            qr.reset(eventId)
+        }, 2000)
     }
 
-    const handleSystemUserScan = (qrCodeId: string, _response: CheckQrCodeResponse | null) => {
+    const handleSystemUserScan = async (qrCodeContent: string) => {
         try {
-            const data = JSON.parse(qrCodeId)
+            const data = JSON.parse(qrCodeContent)
+            console.log(data)
             if (data.appUserId) {
-                setSystemUserId(data.appUserId)
                 setScanningSystemUser(false)
-                selectUser(data.appUserId)
+                await selectUser(data.appUserId)
+            } else if (data.participantId) {
+                setScanningSystemUser(false)
+                await selectParticipant(data.participantId)
             } else {
                 alert(t('qrAssign.invalidUserQr'))
             }
@@ -100,70 +107,84 @@ const QrAssignPage = () => {
     const canAssign = appFunction === 'APP_QR_MANAGEMENT';
 
     return (
-        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" textAlign="center">
+        <Stack
+            spacing={2}
+            alignItems="center"
+            justifyContent="center"
+            sx={{width: '100%', maxWidth: 600}}
+        >
+            <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrAssign.title')}
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
+            {successMessage && (
+                <Alert severity="success" sx={{width: '100%'}}>
+                    {successMessage}
+                </Alert>
+            )}
             {!canAssign && (
                 <Alert severity="warning">{t('qrAssign.noPermission')}</Alert>
             )}
             {canAssign && <>
-                <ToggleButtonGroup value={userTyp} exclusive onChange={onChange}>
-                    <ToggleButton value={"Participant"}>{t('qrAssign.participant')}</ToggleButton>
-                    <ToggleButton value={"User"}>{t('qrAssign.user')}</ToggleButton>
-                    <ToggleButton value={"SystemUser"}>{t('qrAssign.scanSystemUser')}</ToggleButton>
-                </ToggleButtonGroup>
-                {clubs && userTyp === "Participant" && <Stack>
-                    <Typography>{t('qrAssign.clubs')}</Typography>
-                    <ToggleButtonGroup exclusive orientation={"vertical"} value={club}
-                                       onChange={(_, club: string) => setClub(club)}>
-                        {clubs?.data.map(club => <ToggleButton value={club.id}
-                                                               key={club.id}>{club.name}</ToggleButton>) ??
+                <RadioGroup value={userTyp} onChange={onChange} sx={{width: '100%'}}>
+                    <FormControlLabel value="Participant" control={<Radio/>} label={t('qrAssign.participant')}
+                                      sx={{width: '100%'}}/>
+                    <FormControlLabel value="User" control={<Radio/>} label={t('qrAssign.user')} sx={{width: '100%'}}/>
+                    <FormControlLabel value="SystemUser" control={<Radio/>} label={t('qrAssign.scanSystemUser')}
+                                      sx={{width: '100%'}}/>
+                </RadioGroup>
+
+                {clubs && userTyp === "Participant" && (
+                    <Stack sx={{ width: '100%' }} spacing={2}>
+                        <Typography>{t('qrAssign.clubs')}</Typography>
+                        <RadioGroup value={club || ''} onChange={(e) => setClub(e.target.value)} sx={{width: '100%'}}>
+                            {clubs?.data.map(club =>
+                                <FormControlLabel
+                                    key={club.id}
+                                    value={club.id}
+                                    control={<Radio/>}
+                                    label={club.name}
+                                    sx={{width: '100%'}}
+                                />
+                            ) ?? <Typography>{t('qrAssign.noData')}</Typography>}
+                        </RadioGroup>
+                    </Stack>)}
+
+                {participants && userTyp === "Participant" && (
+                    <Stack sx={{ width: '100%' }} spacing={2}>
+                        <Typography>{t('qrAssign.participants')}</Typography>
+                        {participants?.data.map(participant =>
+                                <Button onClick={() => selectParticipant(participant.id)}
+                                        key={participant.id} fullWidth
+                                        variant="contained"
+                                        color="primary">
+                                    {participant.firstname} {participant.lastname}
+                                </Button>) ??
                             <Typography>{t('qrAssign.noData')}</Typography>}
-                    </ToggleButtonGroup>
-                </Stack>}
-                {participants && userTyp === "Participant" && <Stack>
-                    <Typography>{t('qrAssign.participants')}</Typography>
-                    {participants?.data.map(participant =>
-                            <Button onClick={() => selectParticipant(participant.id)}
-                                    key={participant.id} fullWidth>
-                                {participant.firstname} {participant.lastname}
+                    </Stack>)}
+
+                {users && userTyp === "User" && (
+                    <Stack sx={{ width: '100%' }} spacing={2}>
+                        <Typography>{t('qrAssign.users')}</Typography>
+                        {users?.data.map(user => <Button onClick={() => selectUser(user.id)}
+                                                         key={user.id} fullWidth
+                                                         variant="contained"
+                                                         color="primary">
+                                {user.firstname} {user.lastname}
                             </Button>) ??
-                        <Typography>{t('qrAssign.noData')}</Typography>}
-                </Stack>}
-                {users && userTyp === "User" && <Stack>
-                    <Typography>{t('qrAssign.users')}</Typography>
-                    {users?.data.map(user => <Button onClick={() => selectUser(user.id)}
-                                                     key={user.id} fullWidth>
-                        {user.firstname} {user.lastname}
-                    </Button>) ??
-                        <Typography>{t('qrAssign.noData')}</Typography>}
-                </Stack>}
+                            <Typography>{t('qrAssign.noData')}</Typography>}
+                    </Stack>)}
+
                 {userTyp === "SystemUser" && scanningSystemUser && (
-                    <Box sx={{ width: '100%', mt: 2 }}>
-                        <Paper elevation={3} sx={{ p: 2 }}>
-                            <Typography variant="h6" gutterBottom>
-                                {t('qrAssign.scanUserQr')}
-                            </Typography>
-                            <QrNimiqScanner callback={handleSystemUserScan} />
-                            <Button 
-                                onClick={() => setScanningSystemUser(false)} 
-                                fullWidth 
-                                sx={{ mt: 2 }}
-                            >
-                                {t('common.cancel')}
-                            </Button>
-                        </Paper>
+                    <Box sx={{width: '100%', mt: 2}}>
+                        <Typography variant="h6" gutterBottom>
+                            {t('qrAssign.scanUserQr')}
+                        </Typography>
+                        <QrNimiqScanner callback={handleSystemUserScan}/>
                     </Box>
                 )}
-                {userTyp === "SystemUser" && systemUserId && (
-                    <Alert severity="success">
-                        {t('qrAssign.userAssigned', { userId: systemUserId })}
-                    </Alert>
-                )}
             </>}
-            <Button onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
+            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
         </Stack>
     )
 }

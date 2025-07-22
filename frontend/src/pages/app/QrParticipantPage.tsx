@@ -203,13 +203,17 @@ const QrParticipantPage = () => {
     };
 
     return (
-        <Stack spacing={2} p={2} alignItems="center" justifyContent="center">
-            <Typography variant="h2" textAlign="center">
+        <Stack 
+            spacing={2} 
+            alignItems="center" 
+            justifyContent="center"
+            sx={{ width: '100%', maxWidth: 600 }}
+        >
+            <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrParticipant.title')}
             </Typography>
-            <Typography>{qr.qrCodeId}</Typography>
             {!allowed && (
-                <Alert severity="warning">{t('qrParticipant.noRight') as string}</Alert>
+                <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>
             )}
             {canCheck && (
                 <Stack spacing={2} sx={{width: '100%', maxWidth: 600}}>
@@ -292,7 +296,7 @@ const QrParticipantPage = () => {
                     ))}
                 </Stack>
             )}
-            <Button onClick={() => qr.reset(eventId)}>{t('common.back')}</Button>
+            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
             {canRemove && (
                 <Button
                     color="error"
