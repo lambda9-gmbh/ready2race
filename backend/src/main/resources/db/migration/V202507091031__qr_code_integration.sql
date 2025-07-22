@@ -1,6 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
-create table qr_codes
+create table if not exists qr_codes
 (
     id          uuid primary key,
     qr_code_id  TEXT      NOT NULL,

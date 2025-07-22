@@ -413,7 +413,7 @@ export const appFunctionSelectRoute = createRoute({
 });
 
 export const invoicesRoute = createRoute({
-    getParentRoute: () => rootRoute,
+    getParentRoute: () => mainLayoutRoute,
     path: 'invoices',
     component: () => <InvoicesPage />,
     beforeLoad: ({context, location}) => {
