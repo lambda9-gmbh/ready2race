@@ -36,7 +36,7 @@ const APP_FUNCTIONS = [
 const AppFunctionSelectPage = () => {
     const { t } = useTranslation();
     const user = useUser();
-    const {setAppFunction} = useAppSession();
+    const {appFunction, setAppFunction} = useAppSession();
     const navigate = router.navigate
     const [available, setAvailable] = useState<AppFunction[]>([]);
     const theme = useTheme();
@@ -50,11 +50,6 @@ const AppFunctionSelectPage = () => {
         if (user.checkPrivilege(updateAppEventRequirementGlobal)) rights.push('APP_EVENT_REQUIREMENT');
         if (user.checkPrivilege(updateAppCatererGlobal)) rights.push('APP_CATERER');
         setAvailable(rights);
-        // Wenn der User nur ein Recht hat, direkt weiterleiten
-        if (rights.length === 1) {
-            setAppFunction(rights[0]);
-            navigate({to: '/app'});
-        }
         // Wenn kein Recht, ggf. Forbidden
         if (rights.length === 0) {
             navigate({to: '/app/forbidden'});
@@ -63,10 +58,13 @@ const AppFunctionSelectPage = () => {
 
     const handleSelect = (fn: AppFunction) => {
         setAppFunction(fn);
-        navigate({to: '/app'});
     };
 
-    if (available.length <= 1) return null;
+    useEffect(() => {
+        if(appFunction !== null){
+            navigate({to: '/app'})
+        }
+    }, [appFunction])
 
     return (
         <Stack 
