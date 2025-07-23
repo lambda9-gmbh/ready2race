@@ -1028,7 +1028,7 @@
     "forbidden": {
       "title": "Nicht berechtigt",
       "message": "Du bist für diese Seite nicht berechtigt.",
-      "backButton": "Zurück zur App"
+      "backButton": "Zurück zum Login"
     }
   },
   "caterer": {

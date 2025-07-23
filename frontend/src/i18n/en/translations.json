@@ -1027,7 +1027,7 @@
     "forbidden": {
       "title": "Not authorized",
       "message": "You are not authorized for this page.",
-      "backButton": "Back to app"
+      "backButton": "Back to login"
     }
   },
   "caterer": {
