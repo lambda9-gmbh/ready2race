@@ -153,6 +153,15 @@ export type CompetitionCategoryRequest = {
     description?: string
 }
 
+export type CompetitionDeregistrationDto = {
+    competitionSetupRoundId?: string
+    reason?: string
+}
+
+export type CompetitionDeregistrationRequest = {
+    reason?: string
+}
+
 export type CompetitionDto = {
     id: string
     event: string
@@ -194,6 +203,9 @@ export type CompetitionMatchTeamDto = {
     name?: string
     startNumber: number
     place?: number
+    deregistered: boolean
+    deregistrationLocked?: boolean
+    deregistrationReason?: string
 }
 
 export type CompetitionPropertiesDto = {
@@ -249,13 +261,14 @@ export type CompetitionRegistrationsWithoutTeamNumberDto = {
 
 export type CompetitionRegistrationTeamDto = {
     id: string
-    name: string
+    name?: string
     clubId: string
     clubName: string
     optionalFees: Array<CompetitionRegistrationFeeDto>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
     updatedAt: string
     createdAt: string
+    deregistration?: CompetitionDeregistrationDto
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -370,6 +383,8 @@ export type CompetitionTeamPlaceDto = {
     clubName: string
     namedParticipants: Array<CompetitionTeamNamedParticipantDto>
     place: number
+    deregistered: boolean
+    deregistrationReason?: string
 }
 
 export type CompetitionTemplateDto = {
@@ -1046,7 +1061,9 @@ export type UpdateCompetitionMatchTeamRequest = {
 
 export type UpdateCompetitionMatchTeamResultRequest = {
     registrationId: string
-    place: number
+    place?: number
+    deregistered: boolean
+    deregistrationReason?: string
 }
 
 export type VerifyRegistrationRequest = {
@@ -1776,6 +1793,31 @@ export type DeleteCompetitionRegistrationData = {
 export type DeleteCompetitionRegistrationResponse = void
 
 export type DeleteCompetitionRegistrationError = BadRequestError | ApiError
+
+export type DeregisterCompetitionRegistrationData = {
+    body: CompetitionDeregistrationRequest
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type DeregisterCompetitionRegistrationResponse = void
+
+export type DeregisterCompetitionRegistrationError = BadRequestError | ApiError
+
+export type RevertCompetitionDeregistrationData = {
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type RevertCompetitionDeregistrationResponse = void
+
+export type RevertCompetitionDeregistrationError = BadRequestError | ApiError
 
 export type UpdateCompetitionSetupData = {
     body: CompetitionSetupDto

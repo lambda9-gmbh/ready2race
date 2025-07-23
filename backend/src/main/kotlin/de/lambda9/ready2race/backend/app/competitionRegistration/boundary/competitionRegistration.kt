@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionDeregistration.boundary.competitionDeregistration
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -59,6 +60,7 @@ fun Route.competitionRegistration() {
                 }
             }
 
+            competitionDeregistration()
         }
 
     }

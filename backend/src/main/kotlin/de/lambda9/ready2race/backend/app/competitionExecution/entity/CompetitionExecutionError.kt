@@ -17,7 +17,8 @@ enum class CompetitionExecutionError : ServiceError {
     TeamsNotMatching,
     RoundNotFound,
     MatchResultsLocked,
-    StartTimeNotSet;
+    StartTimeNotSet,
+    TeamWasPreviouslyDeregistered;
 
     override fun respond(): ApiError = when (this) {
         MatchNotFound -> ApiError(
@@ -83,6 +84,11 @@ enum class CompetitionExecutionError : ServiceError {
         StartTimeNotSet -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "StartTime not set",
+        )
+
+        TeamWasPreviouslyDeregistered -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Team has been deregistered before this round",
         )
     }
 }

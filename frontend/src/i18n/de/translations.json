@@ -300,7 +300,23 @@
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       },
       "registration": {
-        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
+        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
+        "infos": "Infos",
+        "deregister": {
+          "deregister": "Abmelden",
+          "revertDeregistration": {
+            "revertDeregistration": "Abmeldung zurücknehmen",
+            "revert": "Zurücknehmen",
+            "confirmation": "Sind Sie sich sicher, dass die Abmeldung zurückgenommen werden soll?",
+            "error": {
+              "locked": "Die Abmeldung wurde vor der aktuellen Runde erstellt und ist daher gesperrt",
+              "unexpected": "Beim Zurücknehmen der Abmeldung ist ein Fehler aufgetreten"
+            },
+            "success": "Abmeldung erfolgreich zurückgenommen"
+          },
+          "deregistered": "Abgemeldet",
+          "reason": "Begründung"
+        }
       },
       "setup": {
         "setup": "Wettbewerbsablauf",
@@ -434,7 +450,10 @@
         "match": {
           "startTime": "Startzeit",
           "startTimeOffset": "Versetzte Startzeit",
-          "startNumber": "Startnummer",
+          "startNumber": {
+            "startNumber": "Startnummer",
+            "short": "Nr."
+          },
           "team": "Team",
           "place": "Platz"
         },

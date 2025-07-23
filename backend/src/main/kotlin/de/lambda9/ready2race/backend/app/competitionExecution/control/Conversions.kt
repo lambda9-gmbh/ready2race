@@ -7,8 +7,11 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamParticipantRecord
 import de.lambda9.tailwind.core.KIO
+import java.util.*
 
-fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
+fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
+    checkDeregistrationIsLocked: (competitionRegistrationId: UUID) -> Boolean
+) = KIO.ok(
     CompetitionRoundDto(
         setupRoundId = setupRoundId,
         name = setupRoundName,
@@ -25,7 +28,10 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                             clubName = team.clubName,
                             name = team.registrationName,
                             startNumber = team.startNumber,
-                            place = team.place
+                            place = team.place,
+                            deregistered = team.deregistered,
+                            deregistrationLocked = if (team.deregistered) checkDeregistrationIsLocked(team.competitionRegistration) else null,
+                            deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
                         )
                     },
                     weighting = match.second.weighting,
@@ -87,7 +93,9 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                                 external = p.external,
                                 externalClubName = p.externalClubName,
                             )
-                        }
+                        },
+                        deregistered = team.deregistered!!,
+                        deregistrationReason = team.deregistrationReason
                     )
                 }
             )
@@ -136,6 +144,8 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) =
                 }
             )
         },
-        place = place
+        place = place,
+        deregistered = deregistered,
+        deregistrationReason = deregistrationReason,
     )
 )

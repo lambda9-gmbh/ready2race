@@ -631,13 +631,16 @@ select cmt.id,
        c.name                                                                  as club_name,
        cr.name                                                                 as registration_name,
        cr.team_number,
-       coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants
+       coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants,
+       (cd.competition_registration is not null)                                     as deregistered,
+       cd.reason                                                               as deregistration_reason
 from competition_match_team cmt
          left join competition_registration cr on cr.id = cmt.competition_registration
          left join club c on c.id = cr.club
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
+         left join competition_deregistration cd on cr.id = cd.competition_registration
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number
+         cr.name, cr.team_number, cd.competition_registration, cd.reason
 ;
 
 create view competition_match_with_teams as
@@ -696,9 +699,9 @@ group by sr.id
 create view invoice_for_event_registration as
 select i.*,
        substring(i.invoice_number for length(i.invoice_number) -
-                                   length(substring(i.invoice_number from '\d*$'))) as invoice_number_prefix,
-       cast(nullif(substring(i.invoice_number from '\d*$'), '') as int)             as invoice_number_suffix,
-       round(coalesce(sum(ip.unit_price * ip.quantity), 0), 2) as total_amount,
+                                      length(substring(i.invoice_number from '\d*$'))) as invoice_number_prefix,
+       cast(nullif(substring(i.invoice_number from '\d*$'), '') as int)                as invoice_number_suffix,
+       round(coalesce(sum(ip.unit_price * ip.quantity), 0), 2)                         as total_amount,
        eri.event_registration,
        er.club,
        er.event
@@ -725,16 +728,17 @@ from substitution s
 create view startlist_team as
 select cmt.competition_match,
        cmt.start_number,
-       cr.name as team_name,
-       c.name as club_name,
+       cr.name                                                                          as team_name,
+       c.name                                                                           as club_name,
        coalesce(array_agg(distinct rctp) filter (where rctp.team_id is not null), '{}') as participants,
-       coalesce(array_agg(distinct ss) filter (where ss.id is not null), '{}') as substitutions
+       coalesce(array_agg(distinct ss) filter (where ss.id is not null), '{}')          as substitutions
 from competition_match_team cmt
          join competition_registration cr on cmt.competition_registration = cr.id
          join club c on cr.club = c.id
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join registered_competition_team_participant rctp on cmt.competition_registration = rctp.team_id
-         left join startlist_substitution ss on cr.id = ss.competition_registration and csm.competition_setup_round = ss.competition_setup_round
+         left join startlist_substitution ss
+                   on cr.id = ss.competition_registration and csm.competition_setup_round = ss.competition_setup_round
 group by cmt.competition_match, cmt.start_number, cr.name, c.name;
 
 create view startlist_view as
@@ -742,12 +746,12 @@ select csm.id,
        csm.name,
        csm.execution_order,
        csm.start_time_offset,
-       csr.name as round_name,
+       csr.name                                                                        as round_name,
        cm.start_time,
-       cp.identifier as competition_identifier,
-       cp.name as competition_name,
-       cp.short_name as competition_short_name,
-       cc.name as competition_category,
+       cp.identifier                                                                   as competition_identifier,
+       cp.name                                                                         as competition_name,
+       cp.short_name                                                                   as competition_short_name,
+       cc.name                                                                         as competition_category,
        c.event,
        coalesce(array_agg(st) filter ( where st.competition_match is not null ), '{}') as teams
 from competition_setup_match csm
