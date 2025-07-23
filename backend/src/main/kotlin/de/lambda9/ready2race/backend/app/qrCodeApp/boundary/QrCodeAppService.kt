@@ -17,7 +17,7 @@ object QrCodeAppService {
     fun loadQrCode(
         qrCodeId: String
     ): App<ServiceError, ApiResponse> = KIO.comprehension {
-        val user = !QrCodeRepo.getUserOrParticipantByQrCodeId(qrCodeId).orDie()
+        val user = !QrCodeRepo.getUserOrParticipantByQrCodeIdWithDetails(qrCodeId).orDie()
 
         when {
             user != null -> KIO.ok(ApiResponse.Dto(user))

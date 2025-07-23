@@ -711,6 +711,46 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/caterer-transactions:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventCatererTransactions
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Caterer transactions page for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CatererTransactionViewDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDay:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -4552,6 +4592,40 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /app/qr-assignment/participants:
+    parameters:
+      - name: eventId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: clubId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getQrAssignmentParticipants
+      responses:
+        200:
+          description: Grouped participants for QR assignment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupedParticipantQrAssignmentDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
   /app/participant/{qrCode}/teams:
     parameters:
       - name: qrCode
@@ -7863,6 +7937,47 @@ components:
         paid:
           type: boolean
 
+    CatererTransactionViewDto:
+      type: object
+      required:
+        - id
+        - catererId
+        - catererFirstname
+        - catererLastname
+        - appUserId
+        - userFirstname
+        - userLastname
+        - eventId
+        - price
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        catererId:
+          type: string
+          format: uuid
+        catererFirstname:
+          type: string
+        catererLastname:
+          type: string
+        appUserId:
+          type: string
+          format: uuid
+        userFirstname:
+          type: string
+        userLastname:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+        price:
+          type: string
+          format: decimal
+        createdAt:
+          type: string
+          format: date-time
+
     StartListFileType:
       type: string
       enum:
@@ -7878,6 +7993,11 @@ components:
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
         type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        clubName: { type: string, nullable: true }
+        competitions:
+          type: array
+          items:
+            type: string
 
     QrCodeAppuserResponse:
       type: object
@@ -7888,6 +8008,7 @@ components:
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
         type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        clubName: { type: string, nullable: true }
 
     QrCodeAppuserUpdate:
       type: object
@@ -8036,11 +8157,54 @@ components:
         role:
           type: string
 
+    ParticipantQrAssignmentDto:
+      type: object
+      required:
+        - participantId
+        - firstname
+        - lastname
+        - namedParticipant
+        - competitionRegistration
+        - competitionName
+      properties:
+        participantId:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        qrCodeValue:
+          type: string
+          nullable: true
+        namedParticipant:
+          type: string
+        competitionRegistration:
+          type: string
+        competitionName:
+          type: string
+
+    GroupedParticipantQrAssignmentDto:
+      type: object
+      required:
+        - competitionRegistration
+        - competitionName
+        - participants
+      properties:
+        competitionRegistration:
+          type: string
+        competitionName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantQrAssignmentDto'
+
     NewCatererTransactionDTO:
       type: object
       required:
         - appUserId
         - eventId
+        - price
       properties:
         appUserId:
           type: string
@@ -8048,7 +8212,6 @@ components:
         price:
           type: string
           format: decimal
-          nullable: true
         eventId:
           type: string
           format: uuid

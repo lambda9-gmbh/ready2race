@@ -98,6 +98,17 @@ fun Route.qrCodeApp() {
                 }
             }
         }
+        
+        route("/qr-assignment/participants") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_QR_MANAGEMENT)
+                    val eventId = !queryParam("eventId", uuid)
+                    val clubId = !queryParam("clubId", uuid)
+                    ParticipantQrAssignmentService.getGroupedParticipants(eventId, clubId)
+                }
+            }
+        }
     }
 
 }

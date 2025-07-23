@@ -22,7 +22,6 @@
     "@mui/x-date-pickers": "^7.25.0",
     "@tanstack/react-router": "^1.91.2",
     "@types/react-big-calendar": "^1.16.1",
-    "@yudiel/react-qr-scanner": "^2.3.1",
     "date-fns": "^4.1.0",
     "i18next": "^24.2.1",
     "i18next-browser-languagedetector": "^8.0.2",

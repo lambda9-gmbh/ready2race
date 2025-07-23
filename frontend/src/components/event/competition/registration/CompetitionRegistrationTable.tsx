@@ -24,9 +24,10 @@ import {
     TableCell,
     TableHead,
     TableRow,
+    Tooltip,
     Typography
 } from '@mui/material'
-import {ExpandMore, Login, Logout} from '@mui/icons-material'
+import {ExpandMore, Login, Logout, Warning} from '@mui/icons-material'
 import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
 
@@ -168,6 +169,12 @@ const CompetitionRegistrationTable = (
                         (acc, np) => acc + np.participants.length,
                         0
                     )
+                    
+                    // Check if any participant has a QR code
+                    const hasQrCode = row.namedParticipants.some(np => 
+                        np.participants.some(participant => participant.qrCodeId)
+                    )
+                    
                     return (
                         <Box sx={{ width: '100%', py: 1 }}>
                             <Accordion elevation={0}>
@@ -175,9 +182,19 @@ const CompetitionRegistrationTable = (
                                     expandIcon={<ExpandMore />}
                                     sx={{ minHeight: 0, '& .MuiAccordionSummary-content': { margin: 0 } }}
                                 >
-                                    <Typography variant="body2">
-                                        {t('team.participantCount', { count: totalParticipants })}
-                                    </Typography>
+                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                        <Typography variant="body2">
+                                            {t('team.participantCount', { count: totalParticipants })}
+                                        </Typography>
+                                        {!hasQrCode && (
+                                            <Tooltip title={t('qrCode.noQrCodeAssigned')}>
+                                                <Warning 
+                                                    fontSize="small" 
+                                                    sx={{ color: 'warning.main' }}
+                                                />
+                                            </Tooltip>
+                                        )}
+                                    </Stack>
                                 </AccordionSummary>
                                 <AccordionDetails>
                                     <Table size="small">

@@ -1,9 +1,9 @@
-import {Alert, Box, Button, FormControlLabel, Radio, RadioGroup, Stack, Typography} from "@mui/material";
+import {Alert, Box, Button, Card, CardContent, Chip, FormControlLabel, Radio, RadioGroup, Stack, Typography} from "@mui/material";
 import React, {useEffect, useState} from "react";
 import {useFetch} from "@utils/hooks.ts";
 import {
     getClubNames,
-    getClubParticipants,
+    getQrAssignmentParticipants,
     getUsers,
     updateQrCodeAppuser,
     updateQrCodeParticipant
@@ -20,7 +20,6 @@ const QrAssignPage = () => {
     const [userTyp, setUserTyp] = useState<UserTyp>("User")
     const [club, setClub] = useState<string>()
     const [scanningSystemUser, setScanningSystemUser] = useState(false)
-    const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const {eventId} = qrEventRoute.useParams()
 
     useEffect(() => {
@@ -48,7 +47,7 @@ const QrAssignPage = () => {
         preCondition: () => userTyp === "Participant"
     }).data
 
-    const participants = useFetch(signal => getClubParticipants({signal, path: {clubId: club!!}}), {
+    const groupedParticipants = useFetch(signal => getQrAssignmentParticipants({signal, query: {eventId: eventId, clubId: club!!}}), {
         deps: [club],
         preCondition: () => userTyp === "Participant" && club !== undefined
     }).data
@@ -66,10 +65,7 @@ const QrAssignPage = () => {
                 id: id
             }
         })
-        setSuccessMessage(t('qrAssign.successParticipant'))
-        setTimeout(() => {
-            qr.reset(eventId)
-        }, 2000)
+        qr.reset(eventId)
     }
 
     const selectUser = async (id: string) => {
@@ -80,16 +76,12 @@ const QrAssignPage = () => {
                 id: id
             }
         })
-        setSuccessMessage(t('qrAssign.successUser'))
-        setTimeout(() => {
-            qr.reset(eventId)
-        }, 2000)
+        qr.reset(eventId)
     }
 
     const handleSystemUserScan = async (qrCodeContent: string) => {
         try {
             const data = JSON.parse(qrCodeContent)
-            console.log(data)
             if (data.appUserId) {
                 setScanningSystemUser(false)
                 await selectUser(data.appUserId)
@@ -117,11 +109,6 @@ const QrAssignPage = () => {
                 {t('qrAssign.title')}
             </Typography>
             <Typography>{qr.qrCodeId}</Typography>
-            {successMessage && (
-                <Alert severity="success" sx={{width: '100%'}}>
-                    {successMessage}
-                </Alert>
-            )}
             {!canAssign && (
                 <Alert severity="warning">{t('qrAssign.noPermission')}</Alert>
             )}
@@ -150,17 +137,52 @@ const QrAssignPage = () => {
                         </RadioGroup>
                     </Stack>)}
 
-                {participants && userTyp === "Participant" && (
+                {groupedParticipants && userTyp === "Participant" && (
                     <Stack sx={{ width: '100%' }} spacing={2}>
                         <Typography>{t('qrAssign.participants')}</Typography>
-                        {participants?.data.map(participant =>
-                                <Button onClick={() => selectParticipant(participant.id)}
-                                        key={participant.id} fullWidth
-                                        variant="contained"
-                                        color="primary">
-                                    {participant.firstname} {participant.lastname}
-                                </Button>) ??
-                            <Typography>{t('qrAssign.noData')}</Typography>}
+                        {groupedParticipants?.length > 0 ? (
+                            groupedParticipants.map((group) => (
+                                <Card key={group.competitionRegistration} sx={{ width: '100%' }}>
+                                    <CardContent>
+                                        <Typography variant="subtitle1" gutterBottom sx={{ fontWeight: 'medium' }}>
+                                            {group.competitionName}
+                                        </Typography>
+                                        <Stack spacing={1}>
+                                            {group.participants.map(participant => (
+                                                <Button 
+                                                    onClick={() => selectParticipant(participant.participantId)}
+                                                    key={participant.participantId} 
+                                                    fullWidth
+                                                    variant="contained"
+                                                    color={participant.qrCodeValue ? "inherit" : "primary"}
+                                                    disabled={!!participant.qrCodeValue}
+                                                    sx={{
+                                                        justifyContent: 'space-between',
+                                                        textAlign: 'left',
+                                                        cursor: participant.qrCodeValue ? 'not-allowed' : 'pointer'
+                                                    }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                        <span>{participant.firstname} {participant.lastname}</span>
+                                                        <Chip 
+                                                            label={participant.namedParticipant} 
+                                                            size="small" 
+                                                            color="default"
+                                                            variant="filled"
+                                                            sx={{ 
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                                                color: 'text.primary'
+                                                            }}
+                                                        />
+                                                    </Box>
+                                                </Button>
+                                            ))}
+                                        </Stack>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        ) : (
+                            <Typography>{t('qrAssign.noData')}</Typography>
+                        )}
                     </Stack>)}
 
                 {users && userTyp === "User" && (

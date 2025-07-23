@@ -156,6 +156,19 @@ export type CatererTransactionDTO = {
     createdBy: string
 }
 
+export type CatererTransactionViewDto = {
+    id: string
+    catererId: string
+    catererFirstname: string
+    catererLastname: string
+    appUserId: string
+    userFirstname: string
+    userLastname: string
+    eventId: string
+    price: string
+    createdAt: string
+}
+
 export type ClubDto = {
     id: string
     name: string
@@ -686,6 +699,12 @@ export type FeeRequest = {
 
 export type Gender = 'M' | 'F' | 'D'
 
+export type GroupedParticipantQrAssignmentDto = {
+    competitionRegistration: string
+    competitionName: string
+    participants: Array<ParticipantQrAssignmentDto>
+}
+
 export type Invalid =
     | string
     | {
@@ -798,7 +817,7 @@ export type NamedParticipantWithRequirementsDto = {
 
 export type NewCatererTransactionDTO = {
     appUserId: string
-    price?: string | null
+    price: string
     eventId: string
 }
 
@@ -896,6 +915,16 @@ export type ParticipantForExecutionDto = {
     competitionRegistrationName?: string
     external?: boolean
     externalClubName?: string
+}
+
+export type ParticipantQrAssignmentDto = {
+    participantId: string
+    firstname: string
+    lastname: string
+    qrCodeValue?: string | null
+    namedParticipant: string
+    competitionRegistration: string
+    competitionName: string
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -1007,6 +1036,7 @@ export type QrCodeAppuserResponse = {
     id?: string
     qrCodeId: string
     type?: QrCodeDtoType
+    clubName?: string | null
 }
 
 export type QrCodeAppuserUpdate = {
@@ -1023,6 +1053,8 @@ export type QrCodeParticipantResponse = {
     id?: string
     qrCodeId: string
     type?: QrCodeDtoType
+    clubName?: string | null
+    competitions?: Array<string>
 }
 
 export type QrCodeParticipantUpdate = {
@@ -1683,6 +1715,37 @@ export type GetEventInvoicesResponse = {
 }
 
 export type GetEventInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetEventCatererTransactionsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetEventCatererTransactionsResponse = {
+    data: Array<CatererTransactionViewDto>
+    pagination: Pagination
+}
+
+export type GetEventCatererTransactionsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddEventDayData = {
     body: EventDayRequest
@@ -3619,6 +3682,17 @@ export type CheckOutTeamData = {
 export type CheckOutTeamResponse = TeamTrackingScanDto
 
 export type CheckOutTeamError = BadRequestError | ApiError
+
+export type GetQrAssignmentParticipantsData = {
+    query: {
+        clubId: string
+        eventId: string
+    }
+}
+
+export type GetQrAssignmentParticipantsResponse = Array<GroupedParticipantQrAssignmentDto>
+
+export type GetQrAssignmentParticipantsError = BadRequestError | ApiError
 
 export type GetTeamsByParticipantQrCodeData = {
     path: {

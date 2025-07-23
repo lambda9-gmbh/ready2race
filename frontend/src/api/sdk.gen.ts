@@ -85,6 +85,9 @@ import type {
     GetEventInvoicesData,
     GetEventInvoicesError,
     GetEventInvoicesResponse,
+    GetEventCatererTransactionsData,
+    GetEventCatererTransactionsError,
+    GetEventCatererTransactionsResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -508,6 +511,9 @@ import type {
     CheckOutTeamData,
     CheckOutTeamError,
     CheckOutTeamResponse,
+    GetQrAssignmentParticipantsData,
+    GetQrAssignmentParticipantsError,
+    GetQrAssignmentParticipantsResponse,
     GetTeamsByParticipantQrCodeData,
     GetTeamsByParticipantQrCodeError,
     GetTeamsByParticipantQrCodeResponse,
@@ -801,6 +807,19 @@ export const getEventInvoices = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/invoices',
+    })
+}
+
+export const getEventCatererTransactions = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventCatererTransactionsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventCatererTransactionsResponse,
+        GetEventCatererTransactionsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/caterer-transactions',
     })
 }
 
@@ -2562,6 +2581,19 @@ export const checkOutTeam = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).post<CheckOutTeamResponse, CheckOutTeamError, ThrowOnError>({
         ...options,
         url: '/app/team/{teamId}/check-out',
+    })
+}
+
+export const getQrAssignmentParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetQrAssignmentParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetQrAssignmentParticipantsResponse,
+        GetQrAssignmentParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/qr-assignment/participants',
     })
 }
 

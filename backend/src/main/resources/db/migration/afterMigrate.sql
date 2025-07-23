@@ -49,6 +49,8 @@ drop view if exists role_with_privileges;
 drop view if exists every_role_with_privileges;
 drop view if exists app_user_name;
 drop view if exists team_status_with_participants;
+drop view if exists participant_qr_assignment_view;
+drop view if exists caterer_transaction_view;
 
 create view app_user_name as
 select au.id,
@@ -831,3 +833,48 @@ left join lateral (
     order by scanned_at desc
     limit 1
 ) tt on true;
+
+create view participant_qr_assignment_view as
+SELECT 
+    p.id AS participant_id,
+    p.firstname,
+    p.lastname,
+    qc.qr_code_id AS qr_code_value,
+    np.name AS named_participant,
+    crnp.competition_registration,
+    cp.name AS competition_name,
+    er.event AS event_id,
+    er.club AS club_id
+FROM participant p
+INNER JOIN competition_registration_named_participant crnp 
+    ON p.id = crnp.participant
+INNER JOIN named_participant np
+    ON crnp.named_participant = np.id
+INNER JOIN competition_registration cr
+    ON crnp.competition_registration = cr.id
+INNER JOIN competition c
+    ON cr.competition = c.id
+INNER JOIN competition_properties cp
+    ON c.id = cp.competition
+INNER JOIN event_registration er
+    ON cr.event_registration = er.id
+LEFT JOIN qr_codes qc
+    ON p.id = qc.participant 
+    AND qc.event = er.event
+ORDER BY crnp.competition_registration, p.lastname, p.firstname;
+
+create view caterer_transaction_view as
+SELECT 
+    ct.id,
+    ct.caterer_id,
+    caterer.firstname AS caterer_firstname,
+    caterer.lastname AS caterer_lastname,
+    ct.app_user_id,
+    app_user.firstname AS user_firstname,
+    app_user.lastname AS user_lastname,
+    ct.event_id,
+    ct.price,
+    ct.created_at
+FROM caterer_transaction ct
+INNER JOIN app_user caterer ON ct.caterer_id = caterer.id
+INNER JOIN app_user app_user ON ct.app_user_id = app_user.id;

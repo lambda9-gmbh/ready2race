@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.boundary.appUserWithQrCode
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.caterer.boundary.CatererService
+import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
@@ -80,6 +82,15 @@ fun Route.event() {
                     val id = !pathParam("eventId", uuid)
                     val params = !pagination<InvoiceForEventRegistrationSort>()
                     InvoiceService.pageForEvent(id, params, user, scope)
+                }
+            }
+
+            get("/caterer-transactions") {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
+                    val eventId = !pathParam("eventId", uuid)
+                    val params = !pagination<CatererTransactionViewSort>()
+                    CatererService.getByEventId(eventId, params)
                 }
             }
 

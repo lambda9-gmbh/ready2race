@@ -13,6 +13,7 @@ import {
     DialogContent,
     DialogTitle,
     FormControlLabel,
+    Paper,
     Stack,
     Typography
 } from "@mui/material";
@@ -30,12 +31,13 @@ import {
 import {useTranslation} from "react-i18next";
 import {useAppSession} from '@contexts/app/AppSessionContext';
 import {
+    updateAppCatererGlobal,
     updateAppCompetitionCheckGlobal,
     updateAppEventRequirementGlobal,
     updateAppQrManagementGlobal
 } from '@authorization/privileges';
 import {ParticipantRequirementForEventDto, TeamStatusWithParticipantsDto} from '@api/types.gen.ts';
-import {Login, Logout} from '@mui/icons-material';
+import {Business, Cancel, EmojiEvents, Login, Logout, Person} from '@mui/icons-material';
 import {useFeedback} from '@utils/hooks.ts';
 
 const QrParticipantPage = () => {
@@ -69,8 +71,14 @@ const QrParticipantPage = () => {
             if (appFunction === 'APP_EVENT_REQUIREMENT' && qr.response?.id && eventId) {
                 setPending(true);
                 const [{data: reqData}, {data: partData}] = await Promise.all([
-                    getParticipantRequirementsForEvent({path: {eventId, participantId: qr.response?.id}}),
-                    getParticipantsForEvent({path: {eventId}})
+                    getParticipantRequirementsForEvent({
+                        path: {eventId, participantId: qr.response?.id},
+                        throwOnError: true
+                    }),
+                    getParticipantsForEvent({
+                        path: {eventId},
+                        throwOnError: true
+                    })
                 ]);
                 setRequirements((reqData?.data || []).filter((r) => r.checkInApp));
                 const participant = (partData?.data || []).find((p) => p.id === qr.response?.id);
@@ -90,7 +98,8 @@ const QrParticipantPage = () => {
                 try {
                     const {data} = await getTeamsByParticipantQrCode({
                         path: {qrCode: qr.qrCodeId},
-                        query: {eventId}
+                        query: {eventId},
+                        throwOnError: true
                     });
                     setTeams(data || []);
                 } catch (error) {
@@ -113,6 +122,7 @@ const QrParticipantPage = () => {
                 requirementId,
                 approvedParticipants: checked ? [qr.response.id] : [],
             },
+            throwOnError: true
         });
         // Nach Änderung neu laden
         const {data: partData} = await getParticipantsForEvent({path: {eventId}});
@@ -126,17 +136,22 @@ const QrParticipantPage = () => {
     const allowed = appFunction !== null && [
         updateAppCompetitionCheckGlobal.resource,
         updateAppQrManagementGlobal.resource,
-        updateAppEventRequirementGlobal.resource
+        updateAppEventRequirementGlobal.resource,
+        updateAppCatererGlobal.resource
     ].includes(appFunction);
     const canCheck = appFunction === updateAppCompetitionCheckGlobal.resource;
     const canRemove = appFunction === updateAppQrManagementGlobal.resource;
     const canEditRequirements = appFunction === updateAppEventRequirementGlobal.resource;
+    const isCaterer = appFunction === updateAppCatererGlobal.resource;
 
     const handleDelete = async () => {
         setLoading(true);
         setError(null);
         try {
-            await deleteQrCode({path: {qrCodeId: qr.qrCodeId!}});
+            await deleteQrCode({
+                path: {qrCodeId: qr.qrCodeId!},
+                throwOnError: true
+            });
             setDialogOpen(false);
             qr.reset(eventId);
         } catch (e) {
@@ -159,7 +174,8 @@ const QrParticipantPage = () => {
                 // Reload teams to get updated status
                 const {data} = await getTeamsByParticipantQrCode({
                     path: {qrCode: qr.qrCodeId!},
-                    query: {eventId}
+                    query: {eventId},
+                    throwOnError: true
                 });
                 setTeams(data || []);
             }
@@ -179,7 +195,8 @@ const QrParticipantPage = () => {
         try {
             const result = await checkOutTeam({
                 path: {teamId: team.competitionRegistrationId},
-                body: {eventId}
+                body: {eventId},
+                throwOnError: true
             });
 
             if (result.data) {
@@ -203,15 +220,68 @@ const QrParticipantPage = () => {
     };
 
     return (
-        <Stack 
-            spacing={2} 
-            alignItems="center" 
+        <Stack
+            spacing={2}
+            alignItems="center"
             justifyContent="center"
-            sx={{ width: '100%', maxWidth: 600 }}
+            sx={{width: '100%', maxWidth: 600}}
         >
             <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrParticipant.title')}
             </Typography>
+
+            {/* Caterer food restriction message */}
+            {isCaterer && qr.response && (
+                <Alert severity="error" icon={<Cancel/>} sx={{mb: 2, width: '100%'}}>
+                    {t('club.participant.foodNotAllowed')}
+                </Alert>
+            )}
+
+            {/* QR Code Assignment Info Box */}
+            {qr.response && allowed && !isCaterer && (
+                <Paper elevation={2} sx={{p: 2, width: '100%', bgcolor: 'background.default'}}>
+                    <Stack spacing={1.5}>
+                        <Typography variant="h6" color="primary">
+                            {t('qrParticipant.assignmentInfo')}
+                        </Typography>
+
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <Person color="action"/>
+                            <Typography>
+                                <strong>{t('common.name')}:</strong> {qr.response.firstname} {qr.response.lastname}
+                            </Typography>
+                        </Stack>
+
+                        {qr.response.type === 'Participant' && 'clubName' in qr.response && qr.response.clubName && (
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Business color="action"/>
+                                <Typography>
+                                    <strong>{t('club.club')}:</strong> {qr.response.clubName}
+                                </Typography>
+                            </Stack>
+                        )}
+
+                        {qr.response.type === 'Participant' && 'competitions' in qr.response && qr.response.competitions && qr.response.competitions.length > 0 && (
+                            <Stack spacing={1}>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <EmojiEvents color="action"/>
+                                    <Typography>
+                                        <strong>{t('event.competition.competitions')}:</strong>
+                                    </Typography>
+                                </Stack>
+                                <Box sx={{pl: 4}}>
+                                    {qr.response.competitions.map((comp, index) => (
+                                        <Typography key={index} variant="body2">
+                                            • {comp}
+                                        </Typography>
+                                    ))}
+                                </Box>
+                            </Stack>
+                        )}
+                    </Stack>
+                </Paper>
+            )}
+
             {!allowed && (
                 <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>
             )}
@@ -296,7 +366,6 @@ const QrParticipantPage = () => {
                     ))}
                 </Stack>
             )}
-            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
             {canRemove && (
                 <Button
                     color="error"
@@ -307,6 +376,7 @@ const QrParticipantPage = () => {
                     {t('qrParticipant.removeAssignment')}
                 </Button>
             )}
+            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
                 <DialogTitle>{t('qrParticipant.removeAssignmentTitle')}</DialogTitle>
                 <DialogContent>

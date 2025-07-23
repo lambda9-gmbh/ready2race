@@ -81,7 +81,8 @@
     "actions": "Actions",
     "noClub": "No club",
     "hide": "Hide",
-    "show": "Show"
+    "show": "Show",
+    "name": "Name"
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -200,7 +201,8 @@
       "userQrCode": "User QR Code",
       "userShowQrCode": "Show QR Code",
       "qrCode": "QR Code",
-      "id": "Participant ID"
+      "id": "Participant ID",
+      "foodNotAllowed": "This person is NOT allowed to receive food"
     }
   },
   "event": {
@@ -945,6 +947,7 @@
     "participants": "Participants",
     "users": "Users",
     "noData": "No data",
+    "team": "Team",
     "scanSystemUser": "Scan User from System",
     "scanUserQr": "Scan User QR Code",
     "invalidUserQr": "Invalid User QR Code",
@@ -960,7 +963,8 @@
     "appUsersWithQrCode": "Users with QR Codes",
     "edit": "Edit QR Code",
     "delete": "Delete QR Code",
-    "deleteConfirm": "Do you really want to delete the QR code?"
+    "deleteConfirm": "Do you really want to delete the QR code?",
+    "noQrCodeAssigned": "No QR code assigned"
   },
   "qrAppuser": {
     "title": "QR Appuser",
@@ -970,7 +974,8 @@
     "removeAssignmentTitle": "Remove QR code assignment",
     "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
     "deleteError": "Error while deleting",
-    "deleteSuccess": "QR code assignment successfully removed"
+    "deleteSuccess": "QR code assignment successfully removed",
+    "assignmentInfo": "Assignment information"
   },
   "qrParticipant": {
     "title": "Participant QR Code",
@@ -982,7 +987,8 @@
     "removeAssignment": "Remove QR code assignment",
     "removeAssignmentTitle": "Remove assignment",
     "removeAssignmentConfirm": "Do you really want to remove the assignment?",
-    "deleteError": "Error while deleting the QR code."
+    "deleteError": "Error while deleting the QR code.",
+    "assignmentInfo": "Assignment information"
   },
   "team": {
     "teams": "Teams",
@@ -1040,5 +1046,13 @@
     "scanError": "Error scanning user",
     "transactionError": "Error creating transaction",
     "transactionSuccess": "Transaction successfully completed"
+  },
+  "catererTransaction": {
+    "catererTransaction": "Caterer Transaction",
+    "catererTransactions": "Caterer Transactions",
+    "catererName": "Caterer",
+    "userName": "User",
+    "price": "Amount",
+    "createdAt": "Time"
   }
 }

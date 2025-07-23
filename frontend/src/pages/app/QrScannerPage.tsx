@@ -11,10 +11,10 @@ import {useFeedback} from "@utils/hooks.ts";
 const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/;
 
 const QrScannerPage = () => {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const navigate = router.navigate
     const {eventId} = qrEventRoute.useParams()
-    const { qr, appFunction } = useAppSession();
+    const {qr, appFunction} = useAppSession();
     const feedback = useFeedback();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -44,7 +44,10 @@ const QrScannerPage = () => {
         if (match) {
             const qrCodeId = match[1];
             try {
-                const result = await checkQrCode({ path: { qrCodeId } });
+                const result = await checkQrCode({
+                    path: {qrCodeId},
+                    throwOnError: true
+                });
                 let response: CheckQrCodeResponse | null = null;
                 if (result.data && Object.keys(result.data).length > 0) {
                     response = result.data;
@@ -62,29 +65,29 @@ const QrScannerPage = () => {
     }
 
     return (
-        <Stack 
-            spacing={3} 
-            alignItems="center" 
+        <Stack
+            spacing={3}
+            alignItems="center"
             justifyContent="center"
-            sx={{ 
+            sx={{
                 minHeight: '60vh',
-                px: { xs: 2, sm: 3 },
+                px: {xs: 2, sm: 3},
                 py: 2
             }}
         >
-            <Typography 
-                variant={isMobile ? "h4" : "h3"} 
+            <Typography
+                variant={isMobile ? "h4" : "h3"}
                 textAlign="center"
             >
                 {t('qrScanner.title')}
             </Typography>
-            <QrNimiqScanner callback={handleScannerResult} />
-            <Stack 
-                spacing={2} 
-                sx={{ 
-                    width: '100%', 
+            <QrNimiqScanner callback={handleScannerResult}/>
+            <Stack
+                spacing={2}
+                sx={{
+                    width: '100%',
                     maxWidth: 400,
-                    mt: 2 
+                    mt: 2
                 }}
             >
                 <Button
@@ -94,13 +97,13 @@ const QrScannerPage = () => {
                     variant="contained"
                     color="primary"
                     sx={{
-                        py: { xs: 1.5, sm: 2 }
+                        py: {xs: 1.5, sm: 2}
                     }}
                 >
                     Dev (Test)
                 </Button>
-                <Button 
-                    onClick={() => navigate({to: "/app"})} 
+                <Button
+                    onClick={() => navigate({to: "/app"})}
                     fullWidth
                     size="large"
                     variant="outlined"

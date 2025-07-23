@@ -6,6 +6,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    Paper,
     Stack,
     TextField,
     Typography
@@ -22,6 +23,7 @@ import {
     updateAppQrManagementGlobal
 } from '@authorization/privileges';
 import {PriceAdjuster} from "@components/qrApp/PriceAdjuster.tsx";
+import {Person, Business} from '@mui/icons-material';
 
 const QrAppuserPage = () => {
     const {t} = useTranslation();
@@ -35,7 +37,6 @@ const QrAppuserPage = () => {
     // Caterer specific state
     const [price, setPrice] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
     useEffect(() => {
         if (!appFunction) {
@@ -54,10 +55,7 @@ const QrAppuserPage = () => {
         try {
             await deleteQrCode({path: {qrCodeId: qr.qrCodeId!}});
             setDialogOpen(false);
-            setSuccessMessage(t('qrAppuser.deleteSuccess'));
-            setTimeout(() => {
-                qr.reset(eventId);
-            }, 2000);
+            qr.reset(eventId);
         } catch (e) {
             setError((e as Error)?.message || t('qrAppuser.deleteError'));
         } finally {
@@ -66,23 +64,20 @@ const QrAppuserPage = () => {
     };
     
     const handleCateringTransaction = async () => {
-        if (!qr.qrCodeId) return;
+        if (!qr.response?.id) return;
         
         setSubmitting(true);
         setError(null);
         try {
             await createCateringTransaction({
                 body: {
-                    appUserId: qr.qrCodeId,
+                    appUserId: qr.response?.id!!,
                     eventId: eventId,
-                    price: price || null
-                }
+                    price: price === '' ? '0' : price
+                },
+                throwOnError: true
             });
-            // Show success and go back after delay
-            setSuccessMessage(t('caterer.transactionSuccess'));
-            setTimeout(() => {
-                qr.reset(eventId);
-            }, 2000);
+            qr.reset(eventId);
         } catch (e) {
             setError((e as Error)?.message || t('caterer.transactionError'));
         } finally {
@@ -109,16 +104,38 @@ const QrAppuserPage = () => {
             <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrAppuser.title')}
             </Typography>
-            {successMessage && (
-                <Alert severity="success" sx={{ width: '100%' }}>
-                    {successMessage}
-                </Alert>
+            
+            {/* QR Code Assignment Info Box */}
+            {qr.response && allowed && !isCaterer && (
+                <Paper elevation={2} sx={{ p: 2, width: '100%', bgcolor: 'background.default' }}>
+                    <Stack spacing={1.5}>
+                        <Typography variant="h6" color="primary">
+                            {t('qrAppuser.assignmentInfo')}
+                        </Typography>
+                        
+                        <Stack direction="row" spacing={1} alignItems="center">
+                            <Person color="action" />
+                            <Typography>
+                                <strong>{t('common.name')}:</strong> {qr.response.firstname} {qr.response.lastname}
+                            </Typography>
+                        </Stack>
+                        
+                        {qr.response.type === 'User' && 'clubName' in qr.response && qr.response.clubName && (
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Business color="action" />
+                                <Typography>
+                                    <strong>{t('club.club')}:</strong> {qr.response.clubName}
+                                </Typography>
+                            </Stack>
+                        )}
+                    </Stack>
+                </Paper>
             )}
+            
             {!allowed && (
                 <Alert severity="warning">Du hast für diesen QR-Code-Typ keine Berechtigung.</Alert>
             )}
-            {allowed && !isCaterer && <Alert severity={"error"} variant={"filled"}>{t('qrAppuser.underConstruction')}</Alert>}
-            
+
             {/* Caterer specific UI */}
             {isCaterer && qr.qrCodeId && (
                 <Box sx={{ width: '100%', maxWidth: 600 }}>
@@ -153,8 +170,6 @@ const QrAppuserPage = () => {
             )}
             
             {error && <Alert severity="error">{error}</Alert>}
-            
-            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
             {canRemove && (
                 <Button
                     color="error"
@@ -165,6 +180,8 @@ const QrAppuserPage = () => {
                     {t('qrAppuser.removeAssignment')}
                 </Button>
             )}
+            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
+
             <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
                 <DialogTitle>{t('qrAppuser.removeAssignmentTitle')}</DialogTitle>
                 <DialogContent>

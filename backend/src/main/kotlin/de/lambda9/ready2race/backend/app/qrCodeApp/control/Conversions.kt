@@ -17,6 +17,21 @@ fun ParticipantViewRecord.toQrCodeDto(qrCodeId: String): QrCodeDto.QrCodePartici
         qrCodeId = qrCodeId
     )
 
+fun ParticipantViewRecord.toQrCodeDtoWithDetails(
+    qrCodeId: String,
+    clubName: String?,
+    competitions: List<String>
+): QrCodeDto.QrCodeParticipantResponseDto =
+    QrCodeDto.QrCodeParticipantResponseDto(
+        firstname = firstname!!,
+        lastname = lastname!!,
+        id = id!!,
+        type = QrCodeDto.QrCodeDtoType.Participant,
+        qrCodeId = qrCodeId,
+        clubName = clubName,
+        competitions = competitions
+    )
+
 
 fun AppUserWithRolesRecord.toQrCodeAppuser(qrCodeId: String): QrCodeDto.QrCodeAppuserResponseDto =
     QrCodeDto.QrCodeAppuserResponseDto(
@@ -25,6 +40,19 @@ fun AppUserWithRolesRecord.toQrCodeAppuser(qrCodeId: String): QrCodeDto.QrCodeAp
         id = id!!,
         type = QrCodeDto.QrCodeDtoType.User,
         qrCodeId = qrCodeId
+    )
+
+fun AppUserWithRolesRecord.toQrCodeAppuserWithClub(
+    qrCodeId: String,
+    clubName: String?
+): QrCodeDto.QrCodeAppuserResponseDto =
+    QrCodeDto.QrCodeAppuserResponseDto(
+        firstname = firstname!!,
+        lastname = lastname!!,
+        id = id!!,
+        type = QrCodeDto.QrCodeDtoType.User,
+        qrCodeId = qrCodeId,
+        clubName = clubName
     )
 
 fun QrCodeUpdateDto.toRecord(userId: UUID): QrCodesRecord = when (this) {

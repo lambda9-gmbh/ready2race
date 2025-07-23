@@ -11,12 +11,13 @@ import java.util.UUID
 
 data class NewCatererTransactionDTO(
     val appUserId: UUID,
-    val price: BigDecimal?,
+    val price: BigDecimal,
     val eventId: UUID
 ): Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
             this::appUserId validate notNull,
+            this::price validate notNull,
             this::eventId validate notNull
         )
     
