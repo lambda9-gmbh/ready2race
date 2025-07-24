@@ -208,12 +208,15 @@ object SubstitutionService {
             !NamedParticipantForCompetitionPropertiesRepo.getByCompetition(competitionId).orDie()
 
         val actualRegistrationTeams =
-            registrationParticipants.groupBy { it.competitionRegistrationId }.map { it.key }.map { registrationId ->
-                registrationId to !CompetitionExecutionService.getActuallyParticipatingParticipants(
-                    teamParticipants = registrationParticipants.filter { it.competitionRegistrationId == registrationId },
-                    substitutions
-                )
-            }.toMap()
+            registrationParticipants
+                .groupBy { it.competitionRegistrationId }
+                .map { it.key }
+                .associateWith { registrationId ->
+                    !CompetitionExecutionService.getActuallyParticipatingParticipants(
+                        teamParticipants = registrationParticipants.filter { it.competitionRegistrationId == registrationId },
+                        substitutionsForRegistration = substitutions.filter { it.competitionRegistrationId == registrationId }
+                    )
+                }
 
         // Registered Participants
 
@@ -481,7 +484,11 @@ object SubstitutionService {
             Gender.D to 0,
         )
 
-        val actualPOutTeam = actualRegistrationTeams[participantOut.registrationId]!!
+        val pOutCurrentRegistrationId = actualRegistrationTeams.toList()
+            .first { registrations ->
+                registrations.second.map { participants -> participants.id }.contains(participantOut.id)
+            }.first
+        val actualPOutTeam = actualRegistrationTeams[pOutCurrentRegistrationId]!!
 
         actualPOutTeam
             .filter { it.namedParticipantId == pOutRequirements.id }
@@ -512,7 +519,6 @@ object SubstitutionService {
                 false,
             )
         } else true
-
 
         KIO.ok(enoughMixedSlots && enoughMixedSlotsInPOutTeam)
     }

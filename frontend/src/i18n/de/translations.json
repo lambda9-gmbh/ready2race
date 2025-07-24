@@ -493,7 +493,10 @@
             "substituteFor": "Ersetzen durch",
             "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
             "notCurrentlyParticipating": "Frei verfügbar",
-            "team": "Team"
+            "team": "Team",
+            "load": {
+              "error": "Beim Laden der möglichen Teilnehmer für eine Ummeldung ist ein Fehler aufgetreten"
+            }
           },
           "reason": "Begründung",
           "add": {

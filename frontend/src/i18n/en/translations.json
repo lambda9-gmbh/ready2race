@@ -493,7 +493,10 @@
             "substituteFor": "Substitute for",
             "currentlyParticipating": "In same competition (swap teams)",
             "notCurrentlyParticipating": "Freely available",
-            "team": "Team"
+            "team": "Team",
+            "load": {
+              "error": "An error has occurred when loading possible the possible substitution participants"
+            }
           },
           "reason": "Reason",
           "add": {

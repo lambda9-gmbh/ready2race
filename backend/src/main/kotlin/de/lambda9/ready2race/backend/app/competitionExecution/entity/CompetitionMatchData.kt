@@ -2,18 +2,13 @@ package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
-import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistViewRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
-import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
-import java.util.UUID
 import kotlin.String
 
 data class CompetitionMatchData(
@@ -88,7 +83,7 @@ data class CompetitionMatchData(
 
             val actuallyParticipatingParticipants = !CompetitionExecutionService.getActuallyParticipatingParticipants(
                 teamParticipants = participantsWithData,
-                substitutions = substitutions!!.filterNotNull(),
+                substitutionsForRegistration = substitutions!!.filterNotNull(),
             ).map { list ->
                 list.map { p ->
                     CompetitionMatchParticipant(

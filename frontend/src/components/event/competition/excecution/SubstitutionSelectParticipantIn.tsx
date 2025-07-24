@@ -32,7 +32,7 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
             preCondition: () => selectedParticipantOut != null,
             onResponse: ({error}) => {
                 if (error) {
-                    feedback.error(t('event.competition.execution.deleteRound.error'))
+                    feedback.error(t('event.competition.execution.substitution.substituteFor.load.error'))
                 }
             },
             deps: [eventId, competitionId, setupRoundId, selectedParticipantOut],

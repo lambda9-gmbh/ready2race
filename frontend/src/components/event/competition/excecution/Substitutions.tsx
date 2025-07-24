@@ -116,6 +116,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
             }),
         {
             deps: [eventId, competitionId],
+            preCondition: () => roundIndex === 0
         },
     )
 
@@ -250,7 +251,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                 }}>
                                 <Typography sx={{flex: 1}}>
                                     {participantName(
-                                        sub.substitution.participantIn,
+                                        sub.substitution.participantOut,
                                         sub.swapSubstitution !== undefined
                                             ? {
                                                   clubName: sub.swapSubstitution.clubName,
@@ -279,7 +280,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                             textAlign: 'end',
                                         },
                                     }}>
-                                    {participantName(sub.substitution.participantOut, {
+                                    {participantName(sub.substitution.participantIn, {
                                         clubName: sub.substitution.clubName,
                                         registrationName:
                                             sub.substitution.competitionRegistrationName,
@@ -318,7 +319,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                     </Fragment>
                 ))}
             </List>
-            {user.checkPrivilege(createSubstitutionGlobal) && (
+            {user.checkPrivilege(createSubstitutionGlobal) && roundIndex === 0 && (
                 <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'sm'}>
                     <DialogTitle>
                         {t('event.competition.execution.substitution.add.add')}

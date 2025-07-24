@@ -147,3 +147,10 @@ fun SubstitutionViewRecord.toPossibleSubstitutionParticipantDto(
         namedParticipantName = namedParticipantName!!,
     )
 )
+
+fun SubstitutionRecord.applyNewRound(newRoundId: UUID) = KIO.ok(
+    this.apply {
+        id = UUID.randomUUID()
+        competitionSetupRound = newRoundId
+    }
+)

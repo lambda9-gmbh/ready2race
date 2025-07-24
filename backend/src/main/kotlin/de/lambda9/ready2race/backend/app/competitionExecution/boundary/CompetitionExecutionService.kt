@@ -7,8 +7,6 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchData.CompetitionMatchParticipant
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionMatchData.CompetitionMatchTeam
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.applyCompetitionMatch
@@ -16,36 +14,28 @@ import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
-import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
+import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
-import de.lambda9.ready2race.backend.app.substitution.control.toPossibleSubstitutionParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.hr
-import de.lambda9.ready2race.backend.hrDate
 import de.lambda9.ready2race.backend.hrTime
-import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.*
-import org.jooq.impl.QOM.Round
-import org.jooq.impl.DSL
-import org.jooq.tools.csv.CSVParser
-import org.jooq.tools.csv.CSVReader
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
@@ -185,7 +175,11 @@ object CompetitionExecutionService {
 
 
                 // Carry over all substitutions to the new round
-                !SubstitutionRepo.copySubstitutionsToNewRound(currentRound.setupRoundId, nextRound.setupRoundId).orDie()
+                val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
+                val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
+                    !record.applyNewRound(nextRound.setupRoundId)
+                }
+                !SubstitutionRepo.insert(substitutionsRelevantForNextRound).orDie()
 
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
@@ -565,10 +559,10 @@ object CompetitionExecutionService {
 
     fun getActuallyParticipatingParticipants(
         teamParticipants: List<ParticipantForExecutionDto>,
-        substitutions: List<SubstitutionViewRecord>,
+        substitutionsForRegistration: List<SubstitutionViewRecord>,
     ): App<Nothing, List<ParticipantForExecutionDto>> =
         KIO.comprehension {
-            val orderedSubs = substitutions.sortedBy { it.orderForRound }
+            val orderedSubs = substitutionsForRegistration.sortedBy { it.orderForRound }
 
             data class PersistedNamedParticipant(
                 val id: UUID,
@@ -602,14 +596,15 @@ object CompetitionExecutionService {
 
             val subbedInParticipants = orderedSubs
                 .filter { sub ->
+                    val participantInId = sub.participantIn!!.id
                     // Filter subIns by participantsStillInToRole
-                    if (participantsStillInToRole.none { it.first.id == sub.participantIn!!.id }) {
+                    if (participantsStillInToRole.none { it.first.id == participantInId }) {
                         val substitutionsRelevantForSubIn = orderedSubs.filter {
-                            sub.participantIn!!.id == it.participantOut!!.id || sub.participantIn!!.id == it.participantIn!!.id
+                            participantInId == it.participantOut!!.id || participantInId == it.participantIn!!.id
                         }
                         if (substitutionsRelevantForSubIn.isNotEmpty()) {
                             // If the last sub was sub.participantIn being subbed in - add it to subbedInParticipants
-                            substitutionsRelevantForSubIn.last().participantIn!!.id == sub.participantIn!!.id
+                            substitutionsRelevantForSubIn.last().participantIn!!.id == participantInId
                         } else {
                             false
                         }

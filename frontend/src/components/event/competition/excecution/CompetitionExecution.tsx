@@ -21,7 +21,7 @@ import {
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, useState} from 'react'
+import {BaseSyntheticEvent, Fragment, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
@@ -443,8 +443,8 @@ const CompetitionExecution = () => {
                             title={
                                 <Stack spacing={1} p={1}>
                                     {progressDto.canNotCreateRoundReasons.map((reason, idx) => (
-                                        <>
-                                            <Stack direction={'row'} spacing={1} key={reason}>
+                                        <Fragment key={reason}>
+                                            <Stack direction={'row'} spacing={1}>
                                                 <WarningIcon color={'warning'} />
                                                 <Typography>{getReasonText(reason)}</Typography>
                                             </Stack>
@@ -452,7 +452,7 @@ const CompetitionExecution = () => {
                                                 progressDto.canNotCreateRoundReasons.length - 1 && (
                                                 <Divider />
                                             )}
-                                        </>
+                                        </Fragment>
                                     ))}
                                 </Stack>
                             }>
