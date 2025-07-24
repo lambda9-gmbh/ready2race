@@ -1,19 +1,6 @@
 import {
     Alert,
-    Box,
     Button,
-    Card,
-    CardActions,
-    CardContent,
-    Checkbox,
-    Chip,
-    CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    FormControlLabel,
-    Paper,
     Stack,
     Typography
 } from "@mui/material";
@@ -37,8 +24,12 @@ import {
     updateAppQrManagementGlobal
 } from '@authorization/privileges';
 import {ParticipantRequirementForEventDto, TeamStatusWithParticipantsDto} from '@api/types.gen.ts';
-import {Business, Cancel, EmojiEvents, Login, Logout, Person} from '@mui/icons-material';
+import {Cancel} from '@mui/icons-material';
 import {useFeedback} from '@utils/hooks.ts';
+import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo';
+import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog';
+import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut';
+import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist';
 
 const QrParticipantPage = () => {
     const {t} = useTranslation();
@@ -239,133 +230,32 @@ const QrParticipantPage = () => {
 
             {/* QR Code Assignment Info Box */}
             {qr.response && allowed && !isCaterer && (
-                <Paper elevation={2} sx={{p: 2, width: '100%', bgcolor: 'background.default'}}>
-                    <Stack spacing={1.5}>
-                        <Typography variant="h6" color="primary">
-                            {t('qrParticipant.assignmentInfo')}
-                        </Typography>
-
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Person color="action"/>
-                            <Typography>
-                                <strong>{t('common.name')}:</strong> {qr.response.firstname} {qr.response.lastname}
-                            </Typography>
-                        </Stack>
-
-                        {qr.response.type === 'Participant' && 'clubName' in qr.response && qr.response.clubName && (
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Business color="action"/>
-                                <Typography>
-                                    <strong>{t('club.club')}:</strong> {qr.response.clubName}
-                                </Typography>
-                            </Stack>
-                        )}
-
-                        {qr.response.type === 'Participant' && 'competitions' in qr.response && qr.response.competitions && qr.response.competitions.length > 0 && (
-                            <Stack spacing={1}>
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                    <EmojiEvents color="action"/>
-                                    <Typography>
-                                        <strong>{t('event.competition.competitions')}:</strong>
-                                    </Typography>
-                                </Stack>
-                                <Box sx={{pl: 4}}>
-                                    {qr.response.competitions.map((comp, index) => (
-                                        <Typography key={index} variant="body2">
-                                            • {comp}
-                                        </Typography>
-                                    ))}
-                                </Box>
-                            </Stack>
-                        )}
-                    </Stack>
-                </Paper>
+                <QrAssignmentInfo response={qr.response} />
             )}
 
             {!allowed && (
                 <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>
             )}
+            
             {canCheck && (
-                <Stack spacing={2} sx={{width: '100%', maxWidth: 600}}>
-                    <Typography variant="h6">{t('team.teams')}</Typography>
-                    {loadingTeams ? (
-                        <Box display="flex" justifyContent="center" p={2}>
-                            <CircularProgress/>
-                        </Box>
-                    ) : teams.length === 0 ? (
-                        <Alert severity="info">{t('team.noTeamsFound')}</Alert>
-                    ) : (
-                        teams.map((team) => (
-                            <Card key={team.competitionRegistrationId} variant="outlined">
-                                <CardContent>
-                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                                        <Box>
-                                            <Typography variant="h6">{team.teamName}</Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {team.clubName ?? t('common.noClub')}
-                                            </Typography>
-                                        </Box>
-                                        <Chip
-                                            label={team.currentStatus === 'ENTRY' ? t('team.status.in') : t('team.status.out')}
-                                            color={team.currentStatus === 'ENTRY' ? 'success' : 'default'}
-                                            size="small"
-                                        />
-                                    </Stack>
-                                    {team.lastScanAt && (
-                                        <Typography variant="caption" color="text.secondary" sx={{mt: 1}}>
-                                            {t('team.lastScan')}: {new Date(team.lastScanAt).toLocaleString()}
-                                        </Typography>
-                                    )}
-                                </CardContent>
-                                <CardActions>
-                                    {team.currentStatus === 'ENTRY' ? (
-                                        <Button
-                                            startIcon={<Logout/>}
-                                            onClick={() => handleTeamCheckOut(team)}
-                                            disabled={teamActionLoading.has(team.competitionRegistrationId)}
-                                            variant="outlined"
-                                            fullWidth
-                                        >
-                                            {t('team.checkOutText')}
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            startIcon={<Login/>}
-                                            onClick={() => handleTeamCheckIn(team)}
-                                            disabled={teamActionLoading.has(team.competitionRegistrationId)}
-                                            variant="contained"
-                                            fullWidth
-                                        >
-                                            {t('team.checkInText')}
-                                        </Button>
-                                    )}
-                                </CardActions>
-                            </Card>
-                        ))
-                    )}
-                </Stack>
+                <TeamCheckInOut
+                    teams={teams}
+                    loading={loadingTeams}
+                    teamActionLoading={teamActionLoading}
+                    onCheckIn={handleTeamCheckIn}
+                    onCheckOut={handleTeamCheckOut}
+                />
             )}
+            
             {canEditRequirements && (
-                <Stack spacing={1}>
-                    <Typography variant="h6">{t('participantRequirement.participantRequirements')}</Typography>
-                    {pending && <Typography>{t('qrParticipant.loading') as string}</Typography>}
-                    {requirements.length === 0 && !pending &&
-                        <Typography>{t('qrParticipant.noRequirements') as string}</Typography>}
-                    {requirements.map(req => (
-                        <FormControlLabel
-                            key={req.id}
-                            control={
-                                <Checkbox
-                                    checked={checkedRequirements.includes(req.id)}
-                                    onChange={e => handleRequirementChange(req.id, e.target.checked)}
-                                    disabled={pending}
-                                />
-                            }
-                            label={req.name}
-                        />
-                    ))}
-                </Stack>
+                <RequirementsChecklist
+                    requirements={requirements}
+                    checkedRequirements={checkedRequirements}
+                    pending={pending}
+                    onRequirementChange={handleRequirementChange}
+                />
             )}
+            
             {canRemove && (
                 <Button
                     color="error"
@@ -376,20 +266,17 @@ const QrParticipantPage = () => {
                     {t('qrParticipant.removeAssignment')}
                 </Button>
             )}
+            
             <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-                <DialogTitle>{t('qrParticipant.removeAssignmentTitle')}</DialogTitle>
-                <DialogContent>
-                    <Typography>{t('qrParticipant.removeAssignmentConfirm')}</Typography>
-                    {error && <Alert severity="error" sx={{mt: 2}}>{error}</Alert>}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDialogOpen(false)} disabled={loading}>{t('common.cancel')}</Button>
-                    <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
-                        {t('common.delete')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            
+            <QrDeleteDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                onDelete={handleDelete}
+                loading={loading}
+                error={error}
+                type="participant"
+            />
         </Stack>
     )
 }

@@ -1,14 +1,7 @@
 import {
     Alert,
-    Box,
     Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Paper,
     Stack,
-    TextField,
     Typography
 } from "@mui/material";
 import {useEffect, useState} from "react";
@@ -22,8 +15,9 @@ import {
     updateAppEventRequirementGlobal,
     updateAppQrManagementGlobal
 } from '@authorization/privileges';
-import {PriceAdjuster} from "@components/qrApp/PriceAdjuster.tsx";
-import {Person, Business} from '@mui/icons-material';
+import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo';
+import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog';
+import {CatererTransaction} from '@components/qrApp/CatererTransaction';
 
 const QrAppuserPage = () => {
     const {t} = useTranslation();
@@ -32,11 +26,8 @@ const QrAppuserPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const navigate = router.navigate
-    
-    // Caterer specific state
-    const [price, setPrice] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
+    const navigate = router.navigate
 
     useEffect(() => {
         if (!appFunction) {
@@ -47,7 +38,6 @@ const QrAppuserPage = () => {
             qr.reset(eventId)
         }
     }, [qr, appFunction, eventId, navigate])
-    
 
     const handleDelete = async () => {
         setLoading(true);
@@ -63,7 +53,7 @@ const QrAppuserPage = () => {
         }
     };
     
-    const handleCateringTransaction = async () => {
+    const handleCateringTransaction = async (price: string) => {
         if (!qr.response?.id) return;
         
         setSubmitting(true);
@@ -107,69 +97,23 @@ const QrAppuserPage = () => {
             
             {/* QR Code Assignment Info Box */}
             {qr.response && allowed && !isCaterer && (
-                <Paper elevation={2} sx={{ p: 2, width: '100%', bgcolor: 'background.default' }}>
-                    <Stack spacing={1.5}>
-                        <Typography variant="h6" color="primary">
-                            {t('qrAppuser.assignmentInfo')}
-                        </Typography>
-                        
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Person color="action" />
-                            <Typography>
-                                <strong>{t('common.name')}:</strong> {qr.response.firstname} {qr.response.lastname}
-                            </Typography>
-                        </Stack>
-                        
-                        {qr.response.type === 'User' && 'clubName' in qr.response && qr.response.clubName && (
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Business color="action" />
-                                <Typography>
-                                    <strong>{t('club.club')}:</strong> {qr.response.clubName}
-                                </Typography>
-                            </Stack>
-                        )}
-                    </Stack>
-                </Paper>
+                <QrAssignmentInfo response={qr.response} />
             )}
             
             {!allowed && (
-                <Alert severity="warning">Du hast für diesen QR-Code-Typ keine Berechtigung.</Alert>
+                <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>
             )}
 
             {/* Caterer specific UI */}
             {isCaterer && qr.qrCodeId && (
-                <Box sx={{ width: '100%', maxWidth: 600 }}>
-                    <Stack spacing={2}>
-                        <Alert severity="success">
-                            {t('caterer.canReceiveFood')}
-                        </Alert>
-                        
-                        <TextField
-                            label={t('caterer.price')}
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            type="number"
-                            slotProps={{ htmlInput: { step: "0.01", min: "0" } }}
-                            helperText={t('caterer.priceHelper')}
-                            fullWidth
-                        />
-                        
-                        <PriceAdjuster price={price} onPriceChange={setPrice} />
-                        
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={handleCateringTransaction}
-                            disabled={submitting}
-                            fullWidth
-                        >
-                            {t('caterer.confirm')}
-                        </Button>
-                    </Stack>
-                </Box>
+                <CatererTransaction 
+                    onConfirm={handleCateringTransaction}
+                    submitting={submitting}
+                />
             )}
             
             {error && <Alert severity="error">{error}</Alert>}
+            
             {canRemove && (
                 <Button
                     color="error"
@@ -180,21 +124,17 @@ const QrAppuserPage = () => {
                     {t('qrAppuser.removeAssignment')}
                 </Button>
             )}
+            
             <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
 
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
-                <DialogTitle>{t('qrAppuser.removeAssignmentTitle')}</DialogTitle>
-                <DialogContent>
-                    <Typography>{t('qrAppuser.removeAssignmentConfirm')}</Typography>
-                    {error && <Alert severity="error" sx={{mt: 2}}>{error}</Alert>}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDialogOpen(false)} disabled={loading}>{t('common.cancel')}</Button>
-                    <Button onClick={handleDelete} color="error" variant="contained" disabled={loading}>
-                        {t('common.delete')}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            <QrDeleteDialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                onDelete={handleDelete}
+                loading={loading}
+                error={error}
+                type="appuser"
+            />
         </Stack>
     )
 }
