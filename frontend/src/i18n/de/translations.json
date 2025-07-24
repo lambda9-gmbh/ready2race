@@ -956,7 +956,11 @@
     "appUserQrDetected": "Benutzer-QR-Code erkannt",
     "noPermission": "Du hast keine Berechtigung, diesen QR-Code zuzuordnen.",
     "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
-    "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen"
+    "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen",
+    "selectClub": "Verein auswählen",
+    "search": "Suchen...",
+    "confirmSelection": "Auswahl bestätigen",
+    "confirm": "Hinzufügen"
   },
   "qrCode": {
     "qrCode": "QR-Code",

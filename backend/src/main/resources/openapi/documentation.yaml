@@ -4602,7 +4602,7 @@ paths:
           format: uuid
       - name: clubId
         in: query
-        required: true
+        required: false
         schema:
           type: string
           format: uuid

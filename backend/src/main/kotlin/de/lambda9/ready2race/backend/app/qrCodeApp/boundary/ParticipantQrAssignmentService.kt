@@ -11,7 +11,7 @@ import java.util.UUID
 
 object ParticipantQrAssignmentService {
     
-    fun getGroupedParticipants(eventId: UUID, clubId: UUID): App<ServiceError, ApiResponse> = KIO.comprehension {
+    fun getGroupedParticipants(eventId: UUID, clubId: UUID?): App<ServiceError, ApiResponse> = KIO.comprehension {
         val participants = !ParticipantQrAssignmentRepo.findByEventAndClub(eventId, clubId).orDie()
         
         val grouped = participants

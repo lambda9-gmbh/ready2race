@@ -3685,7 +3685,7 @@ export type CheckOutTeamError = BadRequestError | ApiError
 
 export type GetQrAssignmentParticipantsData = {
     query: {
-        clubId: string
+        clubId?: string
         eventId: string
     }
 }

@@ -955,7 +955,11 @@
     "userAssigned": "User {{userId}} assigned",
     "noPermission": "You don't have permission to assign this QR code.",
     "successParticipant": "QR code successfully assigned to participant",
-    "successUser": "QR code successfully assigned to user"
+    "successUser": "QR code successfully assigned to user",
+    "selectClub": "Select club",
+    "search": "Search...",
+    "confirmSelection": "Confirm selection",
+    "confirm": "Add"
   },
   "qrCode": {
     "qrCode": "QR Code",

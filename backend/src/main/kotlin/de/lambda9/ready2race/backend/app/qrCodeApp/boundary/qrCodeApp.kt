@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.qrCodeApp.entity.CheckInOutRequest
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeUpdateDto
 import de.lambda9.ready2race.backend.app.teamTracking.boundary.TeamTrackingService
 import de.lambda9.ready2race.backend.calls.requests.authenticate
+import de.lambda9.ready2race.backend.calls.requests.optionalQueryParam
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.queryParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
@@ -104,7 +105,7 @@ fun Route.qrCodeApp() {
                 call.respondComprehension {
                     !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_QR_MANAGEMENT)
                     val eventId = !queryParam("eventId", uuid)
-                    val clubId = !queryParam("clubId", uuid)
+                    val clubId = !optionalQueryParam("clubId", uuid)
                     ParticipantQrAssignmentService.getGroupedParticipants(eventId, clubId)
                 }
             }
