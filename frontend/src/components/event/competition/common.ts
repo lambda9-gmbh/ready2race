@@ -67,7 +67,6 @@ export function mapCompetitionPropertiesToCompetitionForm(
     decimalPoint: string,
     setupTemplate?: CompetitionSetupTemplateOverviewDto
 ): CompetitionForm {
-    console.log(setupTemplate)
     return {
         identifier: dto.identifier,
         name: dto.name,

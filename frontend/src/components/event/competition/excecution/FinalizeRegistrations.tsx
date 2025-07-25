@@ -3,7 +3,9 @@ import {
     AlertTitle,
     Box,
     Button,
-    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     Link as MuiLink,
     Stack,
     Table,
@@ -30,11 +32,12 @@ import ReplayIcon from '@mui/icons-material/Replay'
 import DownloadIcon from '@mui/icons-material/Download'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Info} from '@mui/icons-material'
+import BaseDialog from '@components/BaseDialog.tsx'
 
 type Props = {
     registrationsFinalized: boolean
 }
-const EventActions = ({registrationsFinalized}: Props) => {
+const FinalizeRegistrations = ({registrationsFinalized}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
@@ -58,6 +61,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
         } else {
             feedback.success(t('event.action.finalizeRegistrations.success'))
             setFinalized(Date.now())
+            closeDialog()
         }
     }
 
@@ -95,6 +99,12 @@ const EventActions = ({registrationsFinalized}: Props) => {
         })
 
     const [dialogIsOpen, setDialogIsOpen] = useState(false)
+    const openDialog = () => {
+        setDialogIsOpen(true)
+    }
+    const closeDialog = () => {
+        setDialogIsOpen(false)
+    }
 
     const [keepTeamNumbersSelected, setKeepTeamNumbersSelected] = useState(true)
     const handleKeepNumbersChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,16 +112,18 @@ const EventActions = ({registrationsFinalized}: Props) => {
     }
 
     return (
-        <>
+        <Box>
             <MuiLink ref={downloadRef} display={'none'}></MuiLink>
             <Stack spacing={4}>
                 {registrationsWithoutTeamNumber !== null ? (
                     finalized === false ? (
-                        <Button
-                            variant={'contained'}
-                            onClick={() => handleFinalizeRegistrations(false)}>
-                            {t('event.action.finalizeRegistrations.finalize')}
-                        </Button>
+                        <Box>
+                            <Button
+                                variant={'contained'}
+                                onClick={() => handleFinalizeRegistrations(false)}>
+                                {t('event.action.finalizeRegistrations.finalize')}
+                            </Button>
+                        </Box>
                     ) : (
                         <>
                             {registrationsWithoutTeamNumber.length > 0 && (
@@ -180,7 +192,7 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                     {t('event.action.finalizeRegistrations.newRegistrations.hint')}
                                 </Alert>
                             )}
-                            <Box sx={{display: 'flex', gap: 2}}>
+                            <Stack spacing={1} sx={{alignItems: 'start'}}>
                                 <Button
                                     variant={'contained'}
                                     onClick={handleReportDownload}
@@ -190,37 +202,46 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                 </Button>
                                 <Button
                                     variant={'outlined'}
-                                    onClick={() => setDialogIsOpen(true)}
+                                    onClick={openDialog}
                                     startIcon={<ReplayIcon />}>
                                     {t(
                                         'event.action.finalizeRegistrations.refinalizeRegistrations',
                                     )}
                                 </Button>
-                            </Box>
-                            <Dialog
-                                open={dialogIsOpen}
-                                onClose={() => setDialogIsOpen(false)}
-                                className="ready2race">
-                                <Stack spacing={2} sx={{m: 2}}>
-                                    {registrationsWithoutTeamNumber.length > 0 ? (
-                                        <>
-                                            <FormInputLabel
-                                                label={t(
-                                                    'event.action.finalizeRegistrations.keepTeamNumbers.keep',
-                                                )}
-                                                required={true}
-                                                horizontal
-                                                reverse>
-                                                <Checkbox
-                                                    checked={keepTeamNumbersSelected}
-                                                    onChange={handleKeepNumbersChange}
-                                                />
-                                            </FormInputLabel>
-                                            <Alert severity={'info'}>
-                                                {t(
-                                                    'event.action.finalizeRegistrations.keepTeamNumbers.hint',
-                                                )}
-                                            </Alert>
+                            </Stack>
+                            <BaseDialog open={dialogIsOpen} onClose={closeDialog} maxWidth={'xs'}>
+                                <DialogTitle>
+                                    {t(
+                                        'event.action.finalizeRegistrations.refinalizeRegistrations',
+                                    )}
+                                </DialogTitle>
+                                {registrationsWithoutTeamNumber.length > 0 ? (
+                                    <>
+                                        <DialogContent>
+                                            <Stack spacing={2} sx={{m: 2}}>
+                                                <FormInputLabel
+                                                    label={t(
+                                                        'event.action.finalizeRegistrations.keepTeamNumbers.keep',
+                                                    )}
+                                                    required={true}
+                                                    horizontal
+                                                    reverse>
+                                                    <Checkbox
+                                                        checked={keepTeamNumbersSelected}
+                                                        onChange={handleKeepNumbersChange}
+                                                    />
+                                                </FormInputLabel>
+                                                <Alert severity={'info'}>
+                                                    {t(
+                                                        'event.action.finalizeRegistrations.keepTeamNumbers.hint',
+                                                    )}
+                                                </Alert>
+                                            </Stack>
+                                        </DialogContent>
+                                        <DialogActions>
+                                            <Button variant={'outlined'} onClick={closeDialog}>
+                                                {t('common.cancel')}
+                                            </Button>
                                             <Button
                                                 variant={'contained'}
                                                 onClick={() => {
@@ -230,34 +251,38 @@ const EventActions = ({registrationsFinalized}: Props) => {
                                                     setDialogIsOpen(false)
                                                 }}>
                                                 {t('event.action.finalizeRegistrations.refinalize')}
-                                                {/* todo cancel button */}
                                             </Button>
-                                        </>
-                                    ) : (
-                                        <>
+                                        </DialogActions>
+                                    </>
+                                ) : (
+                                    <>
+                                        <DialogContent>
                                             <Alert severity={'info'}>
                                                 {t('event.action.finalizeRegistrations.reshuffle')}
                                             </Alert>
+                                        </DialogContent>
+                                        <DialogActions>
+                                            <Button variant={'outlined'} onClick={closeDialog}>
+                                                {t('common.cancel')}
+                                            </Button>
                                             <Button
                                                 variant={'contained'}
-                                                onClick={() => {
+                                                onClick={() =>
                                                     void handleFinalizeRegistrations(false)
-                                                    setDialogIsOpen(false)
-                                                }}>
+                                                }>
                                                 {t('event.action.finalizeRegistrations.refinalize')}
                                             </Button>
-                                            {/* todo cancel button */}
-                                        </>
-                                    )}
-                                </Stack>
-                            </Dialog>
+                                        </DialogActions>
+                                    </>
+                                )}
+                            </BaseDialog>
                         </>
                     )
                 ) : (
                     pendingRegistrationsWithoutTeamNumber && <Throbber />
                 )}
             </Stack>
-        </>
+        </Box>
     )
 }
-export default EventActions
+export default FinalizeRegistrations

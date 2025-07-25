@@ -52,7 +52,6 @@ export function ShiftWidget({userId}: {userId: string}) {
                             entity: t('task.task'),
                         }),
                     )
-                    console.log(error)
                 }
             },
         },

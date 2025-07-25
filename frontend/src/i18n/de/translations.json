@@ -506,6 +506,34 @@
           "error": {
             "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
           }
+        },
+        "substitution": {
+          "substitutions": "Ummeldungen",
+          "inFor": "ersetzt durch",
+          "participant": "Teilnehmer",
+          "substituteFor":{
+            "substituteFor": "Ersetzen durch",
+            "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
+            "notCurrentlyParticipating": "Frei verfügbar",
+            "team": "Team",
+            "load": {
+              "error": "Beim Laden der möglichen Teilnehmer für eine Ummeldung ist ein Fehler aufgetreten"
+            }
+          },
+          "reason": "Begründung",
+          "add": {
+            "add": "Ummeldungen hinzufügen",
+            "error": {
+              "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
+              "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
+},
+            "success": "Ummeldungen erfolgreich hinzugefügt"
+          },
+          "delete": {
+            "confirmation": "Sind Sie sich sicher, dass die letzte Ummeldungen gelöscht werden soll?",
+            "error": "Beim löschen der Ummeldungen ist ein Fehler aufgetreten",
+            "success": "Ummeldungen erfolgreich gelöscht"
+          }
         }
       },
       "places": {
@@ -539,7 +567,7 @@
     },
     "action": {
       "registrationsReport": {
-        "download": "Download Meldeergebnis"
+        "download": "Meldeergebnis herunterladen"
       },
       "produceInvoices": "Rechnungen erstellen",
       "finalizeRegistrations": {
@@ -626,7 +654,6 @@
       "general": "Allgemein",
       "registrations": "Meldungen",
       "settings": "Einstellungen",
-      "actions": "Aktionen",
       "organisation": "Organisation",
       "invoices": "Rechnungen"
     }
@@ -901,7 +928,6 @@
       },
       "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
       "error": {
-        "notFound": "",
         "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
         "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",

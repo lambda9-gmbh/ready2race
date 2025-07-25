@@ -14,30 +14,28 @@ import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
+import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
+import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
+import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.hr
-import de.lambda9.ready2race.backend.hrDate
 import de.lambda9.ready2race.backend.hrTime
-import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.*
-import org.jooq.impl.DSL
-import org.jooq.tools.csv.CSVParser
-import org.jooq.tools.csv.CSVReader
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
@@ -57,6 +55,7 @@ object CompetitionExecutionService {
             val (currentRound, nextRound) = getCurrentAndNextRound(setupRounds)
 
             if (currentRound == null) {
+                // First Round
 
                 val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
 
@@ -106,6 +105,7 @@ object CompetitionExecutionService {
                 }
 
             } else {
+                // Following Round
 
                 !checkRoundCreation(true, setupRounds, currentRound, nextRound, null)
 
@@ -172,6 +172,15 @@ object CompetitionExecutionService {
                     )
                 }
                 !CompetitionMatchTeamRepo.create(newTeamRecords).orDie()
+
+
+                // Carry over all substitutions to the new round
+                val currentRoundSubstitutions = !SubstitutionRepo.getByRound(currentRound.setupRoundId).orDie()
+                val substitutionsRelevantForNextRound = currentRoundSubstitutions.map { record ->
+                    !record.applyNewRound(nextRound.setupRoundId)
+                }
+                !SubstitutionRepo.insert(substitutionsRelevantForNextRound).orDie()
+
 
                 if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
@@ -394,6 +403,8 @@ object CompetitionExecutionService {
         val currentRound = getCurrentAndNextRound(setupRounds).first
             ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
 
+        !SubstitutionRepo.deleteBySetupRoundId(currentRound.setupRoundId).orDie()
+
         val deleted = !CompetitionMatchRepo.delete(currentRound.matches.map { it.competitionSetupMatch }).orDie()
 
         if (deleted < 1) {
@@ -404,7 +415,7 @@ object CompetitionExecutionService {
     }
 
 
-    private fun getCurrentAndNextRound(
+    fun getCurrentAndNextRound(
         rounds: List<CompetitionSetupRoundWithMatches>
     ): Pair<CompetitionSetupRoundWithMatches?, CompetitionSetupRoundWithMatches?> {
         val finalRound = rounds.find { it.nextRound == null }
@@ -546,12 +557,92 @@ object CompetitionExecutionService {
         KIO.ok(ApiResponse.ListDto(result))
     }
 
+    fun getActuallyParticipatingParticipants(
+        teamParticipants: List<ParticipantForExecutionDto>,
+        substitutionsForRegistration: List<SubstitutionViewRecord>,
+    ): App<Nothing, List<ParticipantForExecutionDto>> =
+        KIO.comprehension {
+            val orderedSubs = substitutionsForRegistration.sortedBy { it.orderForRound }
+
+            data class PersistedNamedParticipant(
+                val id: UUID,
+                val name: String,
+            )
+
+            val participantsStillInToRole = teamParticipants.map { p ->
+                val subsRelevantForParticipant = orderedSubs.filter { sub ->
+                    sub.participantIn!!.id == p.id || sub.participantOut!!.id == p.id
+                }
+                p to subsRelevantForParticipant
+            }.filter { pToSubs ->
+                if (pToSubs.second.isEmpty()) {
+                    true
+                } else {
+                    pToSubs.second.last().participantIn!!.id == pToSubs.first.id
+                }
+            }.map { pToSubs ->
+                pToSubs.first to if (pToSubs.second.isEmpty()) {
+                    PersistedNamedParticipant(
+                        id = pToSubs.first.namedParticipantId,
+                        name = pToSubs.first.namedParticipantName,
+                    )
+                } else {
+                    PersistedNamedParticipant(
+                        id = pToSubs.second.last().namedParticipantId!!,
+                        name = pToSubs.second.last().namedParticipantName!!,
+                    )
+                }
+            }
+
+            val subbedInParticipants = orderedSubs
+                .filter { sub ->
+                    val participantInId = sub.participantIn!!.id
+                    // Filter subIns by participantsStillInToRole
+                    if (participantsStillInToRole.none { it.first.id == participantInId }) {
+                        val substitutionsRelevantForSubIn = orderedSubs.filter {
+                            participantInId == it.participantOut!!.id || participantInId == it.participantIn!!.id
+                        }
+                        if (substitutionsRelevantForSubIn.isNotEmpty()) {
+                            // If the last sub was sub.participantIn being subbed in - add it to subbedInParticipants
+                            substitutionsRelevantForSubIn.last().participantIn!!.id == participantInId
+                        } else {
+                            false
+                        }
+                    } else false
+                }.map {
+                    !it.toParticipantForExecutionDto(it.participantIn!!)
+                }
+
+            // todo: clean up
+            // NamedParticipant comes from the substitution (p.second) so it cant be mapped via the normal conversion
+            val mappedParticipantsStillIn = participantsStillInToRole.map { p ->
+                ParticipantForExecutionDto(
+                    id = p.first.id,
+                    namedParticipantId = p.second.id,
+                    namedParticipantName = p.second.name,
+                    firstName = p.first.firstName,
+                    lastName = p.first.lastName,
+                    year = p.first.year,
+                    gender = p.first.gender,
+                    clubId = p.first.clubId,
+                    clubName = p.first.clubName,
+                    competitionRegistrationId = p.first.competitionRegistrationId,
+                    competitionRegistrationName = p.first.competitionRegistrationName,
+                    external = p.first.external,
+                    externalClubName = p.first.externalClubName,
+                )
+            }
+
+            KIO.ok(mappedParticipantsStillIn + subbedInParticipants)
+        }
+
     fun downloadStartlist(
         matchId: UUID,
         type: StartListFileType,
     ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
 
-        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
             .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
             .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
@@ -563,6 +654,7 @@ object CompetitionExecutionService {
                     .andThenNotNull { it.toPdfTemplate() }
                 buildPdf(data, pdfTemplate) to "pdf"
             }
+
             StartListFileType.CSV -> buildCsv(data) to "csv"
         }
 
@@ -691,7 +783,12 @@ object CompetitionExecutionService {
                                 ) { " $it" }
                             }
                             if (data.startTimeOffset != null) {
-                                text { "startet ${data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds).hrTime()}" }
+                                text {
+                                    "startet ${
+                                        data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds)
+                                            .hrTime()
+                                    }"
+                                }
                             }
                         }
 
@@ -761,7 +858,7 @@ object CompetitionExecutionService {
                     column("Last name") { participants.first().lastname }
                     column("Gender") { participants.first().gender.name }
                 } else {
-                    column("Name") { participants.joinToString(",") { p -> p.lastname }}
+                    column("Name") { participants.joinToString(",") { p -> p.lastname } }
                     column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
                 }
                 column("Team name") { clubName }

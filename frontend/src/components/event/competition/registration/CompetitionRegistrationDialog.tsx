@@ -113,8 +113,14 @@ const CompetitionRegistrationDialog = ({
                 path: {eventId: eventId, competitionId: competition.id},
             }),
         {
-            onResponse: data => {
-                console.log(data)
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.registration.registrations'),
+                        }),
+                    )
+                }
             },
             deps: [eventId, competition.id, reloadCompetitionRegistrations],
         },

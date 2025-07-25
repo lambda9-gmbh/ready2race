@@ -1,16 +1,14 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
+import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistTeamRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistViewRecord
-import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
-import java.util.UUID
 import kotlin.String
 
 data class CompetitionMatchData(
@@ -63,10 +61,10 @@ data class CompetitionMatchData(
                 startTime = persisted.startTime!!,
                 startTimeOffset = persisted.startTimeOffset,
                 competition = CompetitionData(
-                identifier = persisted.competitionIdentifier!!,
-                name = persisted.competitionName!!,
-                shortName = persisted.competitionShortName,
-                category = persisted.competitionCategory,
+                    identifier = persisted.competitionIdentifier!!,
+                    name = persisted.competitionName!!,
+                    shortName = persisted.competitionShortName,
+                    category = persisted.competitionCategory,
                 ),
                 teams = teams.sortedBy { it.startNumber }
             )
@@ -74,40 +72,24 @@ data class CompetitionMatchData(
 
         private fun StartlistTeamRecord.toData(): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
 
-            val orderedSubs = substitutions!!.sortedBy { it!!.orderForRound }
-
-            val (addParticipants, removeParticipants) = orderedSubs.fold(mutableMapOf<UUID, String>() to mutableListOf<UUID>()) { acc, s ->
-                acc.apply {
-                    first.remove(s!!.participantOut!!)
-                    if (participants!!.none {it!!.participantId == s.participantIn}) {
-                        first.put(s.participantIn!!, s.role!!)
-                    }
-                    second.remove(s.participantIn!!)
-                    if (participants!!.any {it!!.participantId == s.participantOut}) {
-                        second.add(s.participantOut!!)
-                    }
-                }
-            }
-
-            val remainingParticipants = participants!!.filter { p ->
-                removeParticipants.none { it == p!!.participantId }
-            }.map { p ->
-                CompetitionMatchParticipant(
-                    role = p!!.role!!,
-                    firstname = p.firstname!!,
-                    lastname = p.lastname!!,
-                    year = p.year!!,
-                    gender = p.gender!!,
-                    externalClubName = p.externalClubName,
+            val participantsWithData = participants!!.filterNotNull().map{
+                !it.toParticipantForExecutionDto(
+                    clubId = clubId!!,
+                    clubName = clubName!!,
+                    registrationId = teamId!!,
+                    registrationName = teamName,
                 )
             }
 
-            val newParticipants = !addParticipants.toList().traverse { (id, role) ->
-                ParticipantRepo.get(id).orDie().onNullDie("foreign key constraint").map { p ->
+            val actuallyParticipatingParticipants = !CompetitionExecutionService.getActuallyParticipatingParticipants(
+                teamParticipants = participantsWithData,
+                substitutionsForRegistration = substitutions!!.filterNotNull(),
+            ).map { list ->
+                list.map { p ->
                     CompetitionMatchParticipant(
-                        role = role,
-                        firstname = p.firstname,
-                        lastname = p.lastname,
+                        role = p.namedParticipantName,
+                        firstname = p.firstName,
+                        lastname = p.lastName,
                         year = p.year,
                         gender = p.gender,
                         externalClubName = p.externalClubName,
@@ -115,14 +97,13 @@ data class CompetitionMatchData(
                 }
             }
 
-            val result = remainingParticipants + newParticipants
 
             KIO.ok(
                 CompetitionMatchTeam(
                     startNumber = startNumber!!,
                     clubName = clubName!!,
                     teamName = teamName,
-                    participants = result,
+                    participants = actuallyParticipatingParticipants,
                 )
             )
         }
