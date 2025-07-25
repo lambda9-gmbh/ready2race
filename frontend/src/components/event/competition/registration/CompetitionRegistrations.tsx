@@ -49,7 +49,10 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
                     competition={competitionData}
                     eventId={eventId}
                 />
-                <CompetitionRegistrationTable {...competitionRegistrationTeamsProps.table} />
+                <CompetitionRegistrationTable
+                    {...competitionRegistrationTeamsProps.table}
+                    registrationPossible={registrationPossible}
+                />
             </>
         )) ||
         (eventRegistrationPossible(

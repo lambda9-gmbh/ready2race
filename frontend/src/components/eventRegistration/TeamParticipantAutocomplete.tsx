@@ -2,7 +2,8 @@ import {
     CompetitionRegistrationNamedParticipantUpsertDto,
     CompetitionRegistrationUpsertDto,
     EventRegistrationParticipantUpsertDto,
-    Gender, ParticipantForEventDto,
+    Gender,
+    ParticipantForEventDto,
 } from '@api/types.gen.ts'
 import {SyntheticEvent, useCallback, useMemo} from 'react'
 import {AutocompleteChangeDetails, AutocompleteChangeReason} from '@mui/material'
@@ -62,6 +63,18 @@ export const TeamParticipantAutocomplete = (props: {
                     ? countByGender.D - props.countNonBinary
                     : 0)
 
+            const maleFemaleUsedByNonBinary =
+                (countByGender.D ?? 0) - props.countNonBinary - props.countMixed < 0
+                    ? 0
+                    : (countByGender.D ?? 0) - props.countNonBinary - props.countMixed
+
+            const maleSlotsFilled =
+                (countByGender.M ?? 0) + maleFemaleUsedByNonBinary >= props.countMales
+            const femaleSlotsFilled =
+                (countByGender.F ?? 0) + maleFemaleUsedByNonBinary >= props.countFemales
+
+            // NonBinary genders can also fill strict male/female slots
+            // These slots are only filled with nonBinary AFTER all strict nonBinary and mixed slots are filled
             return {
                 limitReached: value
                     ? (value.participantIds ?? []).length >=
@@ -70,10 +83,13 @@ export const TeamParticipantAutocomplete = (props: {
                           props.countMales +
                           props.countFemales
                     : false,
-                limitReachedMale: countByGender.M >= props.countMales && remainingMixed <= 0,
-                limitReachedFemale: countByGender.F >= props.countFemales && remainingMixed <= 0,
+                limitReachedMale: maleSlotsFilled && remainingMixed <= 0,
+                limitReachedFemale: femaleSlotsFilled && remainingMixed <= 0,
                 limitReachedNonBinary:
-                    countByGender.D >= props.countNonBinary && remainingMixed <= 0,
+                    (countByGender.D ?? 0) >= props.countNonBinary &&
+                    remainingMixed <= 0 &&
+                    maleSlotsFilled &&
+                    femaleSlotsFilled,
             }
         }, [value, props.countMales, props.countFemales, props.countNonBinary, props.countMixed])
 
@@ -105,7 +121,7 @@ export const TeamParticipantAutocomplete = (props: {
                         ?.flatMap(n => n?.participantIds ?? [])
                         ?.some(userId => userId === option.id) ??
                         false) ||
-                    (props.disabledParticipants?.some(p => (p.id === option.id )) ?? false)
+                    (props.disabledParticipants?.some(p => p.id === option.id) ?? false)
                 )
             }
         },
@@ -117,7 +133,7 @@ export const TeamParticipantAutocomplete = (props: {
             value,
             props.transform,
             competitionWatch,
-            props.disabledParticipants
+            props.disabledParticipants,
         ],
     )
 
@@ -129,9 +145,9 @@ export const TeamParticipantAutocomplete = (props: {
             required={props.required}
             multiple
             loading={props.loading}
-            rules={{
-                validate: _ => limitReached, // TODO validate selected genders?
-            }}
+            /*rules={{
+                validate: _ => limitReached, // TODO validate selected genders? - edit: "limitReached" does not mean, the input is wrong. It just disables the options
+            }}*/
             autocompleteProps={{
                 size: 'small',
                 limitTags: 5,

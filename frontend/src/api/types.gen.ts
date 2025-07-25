@@ -840,6 +840,8 @@ export type ParticipantForExecutionDto = {
     namedParticipantName: string
     firstName: string
     lastName: string
+    year: number
+    gender: Gender
     clubId: string
     clubName: string
     competitionRegistrationId: string
@@ -915,8 +917,14 @@ export type PossibleSubstitutionParticipantDto = {
     id: string
     firstName: string
     lastName: string
+    year: number
+    gender: Gender
     external?: boolean
     externalClubName?: string
+    registrationId?: string
+    registrationName?: string
+    namedParticipantId?: string
+    namedParticipantName?: string
 }
 
 export type PossibleSubstitutionsForParticipantDto = {
@@ -947,7 +955,7 @@ export type RegisterRequest = {
     callbackUrl: string
 }
 
-export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE'
+export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE' | 'SUBSTITUTION'
 
 export type RoleDto = {
     id: string
@@ -973,11 +981,14 @@ export type SubstitutionDto = {
     setupRoundId: string
     setupRoundName: string
     competitionRegistrationId: string
-    competitionRegistrationName: string
+    competitionRegistrationName?: string
     clubId: string
     clubName: string
+    namedParticipantId: string
+    namedParticipantName: string
     participantOut: SubstitutionParticipantDto
     participantIn: SubstitutionParticipantDto
+    swapSubstitution?: string
 }
 
 export type SubstitutionParticipantDto = {
@@ -991,8 +1002,6 @@ export type SubstitutionParticipantDto = {
 }
 
 export type SubstitutionRequest = {
-    competitionRegistrationId: string
-    competitionSetupRound: string
     participantOut: string
     participantIn: string
     reason?: string
@@ -1935,7 +1944,7 @@ export type AddSubstitutionData = {
     }
 }
 
-export type AddSubstitutionResponse = string
+export type AddSubstitutionResponse = void
 
 export type AddSubstitutionError = BadRequestError | ApiError
 
@@ -1954,7 +1963,6 @@ export type DeleteSubstitutionError = BadRequestError | ApiError
 export type GetPossibleSubOutsData = {
     path: {
         competitionId: string
-        competitionSetupRoundId: string
         eventId: string
     }
 }
@@ -1966,10 +1974,7 @@ export type GetPossibleSubOutsError = BadRequestError | ApiError
 export type GetPossibleSubInsData = {
     path: {
         competitionId: string
-        competitionSetupRoundId: string
         eventId: string
-    }
-    query: {
         participantId: string
     }
 }

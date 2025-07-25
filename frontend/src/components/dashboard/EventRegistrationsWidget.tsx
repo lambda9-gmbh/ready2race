@@ -32,7 +32,6 @@ export function EventRegistrationsWidget() {
                             entity: t('event.registration.registrations'),
                         }),
                     )
-                    console.log(error)
                 }
             },
         },

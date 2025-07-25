@@ -2,7 +2,6 @@ set search_path to ready2race, pg_catalog, public;
 
 drop view if exists startlist_view;
 drop view if exists startlist_team;
-drop view if exists startlist_substitution;
 drop view if exists invoice_download;
 drop view if exists invoice_for_event_registration;
 drop view if exists competition_setup_round_with_matches;
@@ -718,40 +717,35 @@ select i.id,
 from invoice i
          join invoice_document_data idd on i.id = idd.invoice;
 
-create view startlist_substitution as
-select s.*,
-       np.name as role
-from substitution s
-         join named_participant np on s.named_participant = np.id
-;
 
 create view startlist_team as
 select cmt.competition_match,
        cmt.start_number,
-       cr.name                                                                          as team_name,
-       c.name                                                                           as club_name,
+       cr.id as team_id,
+       cr.name as team_name,
+       c.id as club_id,
+       c.name as club_name,
        coalesce(array_agg(distinct rctp) filter (where rctp.team_id is not null), '{}') as participants,
-       coalesce(array_agg(distinct ss) filter (where ss.id is not null), '{}')          as substitutions
+       coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}') as substitutions
 from competition_match_team cmt
          join competition_registration cr on cmt.competition_registration = cr.id
          join club c on cr.club = c.id
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join registered_competition_team_participant rctp on cmt.competition_registration = rctp.team_id
-         left join startlist_substitution ss
-                   on cr.id = ss.competition_registration and csm.competition_setup_round = ss.competition_setup_round
-group by cmt.competition_match, cmt.start_number, cr.name, c.name;
+         left join substitution_view sv on cr.id = sv.competition_registration_id and csm.competition_setup_round = sv.competition_setup_round_id
+group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name;
 
 create view startlist_view as
 select csm.id,
        csm.name,
        csm.execution_order,
        csm.start_time_offset,
-       csr.name                                                                        as round_name,
+       csr.name as round_name,
        cm.start_time,
-       cp.identifier                                                                   as competition_identifier,
-       cp.name                                                                         as competition_name,
-       cp.short_name                                                                   as competition_short_name,
-       cc.name                                                                         as competition_category,
+       cp.identifier as competition_identifier,
+       cp.name as competition_name,
+       cp.short_name as competition_short_name,
+       cc.name as competition_category,
        c.event,
        coalesce(array_agg(st) filter ( where st.competition_match is not null ), '{}') as teams
 from competition_setup_match csm
