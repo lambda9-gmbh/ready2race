@@ -11,16 +11,19 @@ import java.util.UUID
 
 fun SubstitutionRequest.toRecord(
     userId: UUID,
+    competitionRegistrationId: UUID,
+    competitionSetupRound: UUID,
     orderForRound: Long,
-    namedParticipant: UUID
+    namedParticipant: UUID,
+    swapPInWithPOut: Boolean,
 ): App<Nothing, SubstitutionRecord> = KIO.ok(
     LocalDateTime.now().let { now ->
         SubstitutionRecord(
             id = UUID.randomUUID(),
             competitionRegistration = competitionRegistrationId,
             competitionSetupRound = competitionSetupRound,
-            participantOut = participantOut,
-            participantIn = participantIn,
+            participantOut = if(swapPInWithPOut) {participantIn} else {participantOut},
+            participantIn = if(swapPInWithPOut) {participantOut} else {participantIn},
             reason = reason,
             namedParticipant = namedParticipant,
             orderForRound = orderForRound,
@@ -32,7 +35,7 @@ fun SubstitutionRequest.toRecord(
     }
 )
 
-fun SubstitutionViewRecord.toParticipantParticipatingInRoundDto(
+fun SubstitutionViewRecord.toParticipantForExecutionDto(
     participant: ParticipantRecord,
 ) = KIO.ok(
     ParticipantForExecutionDto(
@@ -41,6 +44,8 @@ fun SubstitutionViewRecord.toParticipantParticipatingInRoundDto(
         namedParticipantName = namedParticipantName!!,
         firstName = participant.firstname,
         lastName = participant.lastname,
+        year = participant.year,
+        gender = participant.gender,
         clubId = clubId!!,
         clubName = clubName!!,
         competitionRegistrationId = competitionRegistrationId!!,
@@ -50,8 +55,31 @@ fun SubstitutionViewRecord.toParticipantParticipatingInRoundDto(
     )
 )
 
-fun RegisteredCompetitionTeamParticipantRecord.toParticipantParticipatingInRoundDto(
-    team: CompetitionMatchTeamWithRegistrationRecord
+fun SubstitutionViewRecord.toParticipantForExecutionDto(
+    participant: ParticipantForExecutionDto,
+) = KIO.ok(
+    ParticipantForExecutionDto(
+        id = participant.id,
+        namedParticipantId = namedParticipantId!!,
+        namedParticipantName = namedParticipantName!!,
+        firstName = participant.firstName,
+        lastName = participant.lastName,
+        year = participant.year,
+        gender = participant.gender,
+        clubId = clubId!!,
+        clubName = clubName!!,
+        competitionRegistrationId = competitionRegistrationId!!,
+        competitionRegistrationName = competitionRegistrationName,
+        external = participant.external,
+        externalClubName = participant.externalClubName
+    )
+)
+
+fun RegisteredCompetitionTeamParticipantRecord.toParticipantForExecutionDto(
+    clubId: UUID,
+    clubName: String,
+    registrationId: UUID,
+    registrationName: String?,
 ) = KIO.ok(
     ParticipantForExecutionDto(
         id = participantId!!,
@@ -59,10 +87,12 @@ fun RegisteredCompetitionTeamParticipantRecord.toParticipantParticipatingInRound
         namedParticipantName = role!!,
         firstName = firstname!!,
         lastName = lastname!!,
-        clubId = team.clubId!!,
-        clubName = team.clubName!!,
-        competitionRegistrationId = team.competitionRegistration!!,
-        competitionRegistrationName = team.registrationName,
+        year = year!!,
+        gender = gender!!,
+        clubId = clubId,
+        clubName = clubName,
+        competitionRegistrationId = registrationId,
+        competitionRegistrationName = registrationName,
         external = external,
         externalClubName = externalClubName
     )
@@ -73,8 +103,14 @@ fun ParticipantRecord.toPossibleSubstitutionParticipantDto() = KIO.ok(
         id = id,
         firstName = firstname,
         lastName = lastname,
+        year = year,
+        gender = gender,
         external = external,
-        externalClubName = externalClubName
+        externalClubName = externalClubName,
+        registrationId = null,
+        registrationName = null,
+        namedParticipantId = null,
+        namedParticipantName = null,
     )
 )
 
@@ -83,7 +119,38 @@ fun ParticipantForExecutionDto.toPossibleSubstitutionParticipantDto() = KIO.ok(
         id = id,
         firstName = firstName,
         lastName = lastName,
+        year = year,
+        gender = gender,
         external = external,
-        externalClubName = externalClubName
+        externalClubName = externalClubName,
+        registrationId = competitionRegistrationId,
+        registrationName = competitionRegistrationName,
+        namedParticipantId = namedParticipantId,
+        namedParticipantName = namedParticipantName,
     )
+)
+
+fun SubstitutionViewRecord.toPossibleSubstitutionParticipantDto(
+    participant: PossibleSubstitutionParticipantDto,
+) = KIO.ok(
+    PossibleSubstitutionParticipantDto(
+        id = participant.id,
+        firstName = participant.firstName,
+        lastName = participant.lastName,
+        year = participant.year,
+        gender = participant.gender,
+        external = participant.external,
+        externalClubName = participant.externalClubName,
+        registrationId = competitionRegistrationId!!,
+        registrationName = competitionRegistrationName,
+        namedParticipantId = namedParticipantId!!,
+        namedParticipantName = namedParticipantName!!,
+    )
+)
+
+fun SubstitutionRecord.applyNewRound(newRoundId: UUID) = KIO.ok(
+    this.apply {
+        id = UUID.randomUUID()
+        competitionSetupRound = newRoundId
+    }
 )

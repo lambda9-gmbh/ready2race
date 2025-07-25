@@ -19,6 +19,7 @@ sealed class Privilege(
         CLUB,
         REGISTRATION,
         INVOICE,
+        SUBSTITUTION,
     }
 
     enum class Scope(val level: Int) {
@@ -59,6 +60,9 @@ sealed class Privilege(
     data object ReadInvoiceGlobal: Privilege(Action.READ, Resource.INVOICE, Scope.GLOBAL)
     data object ReadInvoiceOwn: Privilege(Action.READ, Resource.INVOICE, Scope.OWN)
     data object UpdateInvoiceGlobal: Privilege(Action.UPDATE, Resource.INVOICE, Scope.GLOBAL)
+
+    data object CreateSubstitutionGlobal: Privilege(Action.CREATE, Resource.SUBSTITUTION, Scope.GLOBAL)
+    data object DeleteSubstitutionGlobal: Privilege(Action.DELETE, Resource.SUBSTITUTION, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

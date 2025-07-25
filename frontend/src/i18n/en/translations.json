@@ -484,11 +484,39 @@
           "error": {
             "missingStartTime": "The start time for this match is not set."
           }
+        },
+        "substitution": {
+          "substitutions": "Substitutions",
+          "inFor": "in for",
+          "participant": "Participant",
+          "substituteFor":{
+            "substituteFor": "Substitute for",
+            "currentlyParticipating": "In same competition (swap teams)",
+            "notCurrentlyParticipating": "Freely available",
+            "team": "Team",
+            "load": {
+              "error": "An error has occurred when loading possible the possible substitution participants"
+            }
+          },
+          "reason": "Reason",
+          "add": {
+            "add": "Add substitution",
+            "error": "An error has occurred when creating the substitution",
+            "success": "Substitution successfully created"
+          },
+          "delete": {
+            "confirmation": "Are you sure you want to delete the latest substitution?",
+            "error": {
+              "conflict": "Later created substitutions depend on this one. These would have to be deleted first.",
+              "unexpected": "An error has occurred when deleting the substitution"
+            },
+            "success": "Substitution successfully deleted"
+          }
         }
       },
       "places": {
         "places": "Places",
-        "tabTitle": "Places",
+        "tabTitle": "Results",
         "noPlaces": "There are no places for this competition yet."
       }
     },
@@ -603,7 +631,6 @@
       "general": "General",
       "registrations": "Registrations",
       "settings": "Settings",
-      "actions": "Actions",
       "organisation": "Organisation",
       "invoices": "Invoices"
     }

@@ -26,6 +26,7 @@ import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
+import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequirements
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
@@ -133,11 +134,12 @@ object EventRegistrationService {
             !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
         }
 
-        val singleCompetitionMultipleCounts = registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
-            .groupingBy { it.competitionId }
-            .eachCount()
-            .filter { it.value > 1 }
-            .mapValues { 0 }.toMutableMap()
+        val singleCompetitionMultipleCounts =
+            registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
+                .groupingBy { it.competitionId }
+                .eachCount()
+                .filter { it.value > 1 }
+                .mapValues { 0 }.toMutableMap()
 
         val userInfoMap = !registrationDto.participants.traverse { pDto ->
             handleSingleCompetitionRegistration(
@@ -417,22 +419,49 @@ object EventRegistrationService {
         }
 
         val requirements =
-            competition.namedParticipant?.first { np -> np.id == namedParticipantDto.namedParticipantId }
+            competition.namedParticipant?.find { np -> np.id == namedParticipantDto.namedParticipantId }
                 ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid team setup"))
 
-        if (requirements.countMales > counts[Gender.M]!!
-            || requirements.countFemales > counts[Gender.F]!!
-            || requirements.countNonBinary > counts[Gender.D]!!
-            || (requirements.countMixed
+        val enoughMixedSlots = checkEnoughMixedSpots(
+            requirements = NamedParticipantRequirements(
+                countMales = requirements.countMales,
+                countFemales = requirements.countFemales,
+                countNonBinary = requirements.countNonBinary,
+                countMixed = requirements.countMixed,
+            ),
+            counts
+        )
+
+        if ((requirements.countMixed
                 + requirements.countMales
                 + requirements.countFemales
                 + requirements.countNonBinary
                 ) != counts.values.sum()
+            || !enoughMixedSlots
         ) {
             return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid team distribution"))
         }
 
         unit
+    }
+
+    fun checkEnoughMixedSpots(
+        requirements: NamedParticipantRequirements,
+        counts: Map<Gender, Int>
+    ): Boolean {
+        val overflowMales = (counts[Gender.M] ?: 0) - requirements.countMales
+        val overflowFemales = (counts[Gender.F] ?: 0) - requirements.countFemales
+        val overflowNonBinary = (counts[Gender.D] ?: 0) - requirements.countNonBinary
+
+
+        val maleFemaleSlotsAvailableForNonBinary =
+            if (overflowMales < 0) overflowMales * -1 else 0 + if (overflowFemales < 0) overflowFemales * -1 else 0
+
+        val enoughMixedSlots = ((if (overflowMales > 0) overflowMales else 0) +
+            (if (overflowFemales > 0) overflowFemales else 0) +
+            (if (overflowNonBinary - maleFemaleSlotsAvailableForNonBinary > 0) (overflowNonBinary - maleFemaleSlotsAvailableForNonBinary) else 0)) <= requirements.countMixed
+
+        return enoughMixedSlots
     }
 
     private fun insertOptionalFee(
