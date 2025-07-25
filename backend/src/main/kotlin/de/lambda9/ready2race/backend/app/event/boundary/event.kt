@@ -18,9 +18,11 @@ import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrat
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.teamTracking.boundary.TeamTrackingService
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
@@ -124,6 +126,19 @@ fun Route.event() {
                     val user = !authenticate(Privilege.CreateInvoiceGlobal)
                     val id = !pathParam("eventId", uuid)
                     InvoiceService.createRegistrationInvoicesForEventJobs(id, user.id!!)
+                }
+            }
+
+            route("competitionRegistration/{competitionRegistrationId}/checkInOut") {
+                post {
+                    call.respondComprehension {
+                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
+                        val eventId = !pathParam("eventId", uuid)
+                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+                        val checkIn = !queryParam("checkIn", boolean)
+
+                        TeamTrackingService.teamCheckInOut(competitionRegistrationId, eventId, user.id!!, checkIn)
+                    }
                 }
             }
         }

@@ -4561,7 +4561,7 @@ paths:
 
 
   # Competition Registration Check-In/Check-Out endpoints
-  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/checkInOut:
+  /event/{eventId}/competitionRegistration/{competitionRegistrationId}/checkInOut:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionRegistrationId'
@@ -4794,6 +4794,7 @@ components:
         - CLUB
         - REGISTRATION
         - INVOICE
+        - SUBSTITUTION
         - APP_EVENT_REQUIREMENT
         - APP_QR_MANAGEMENT
         - APP_COMPETITION_CHECK

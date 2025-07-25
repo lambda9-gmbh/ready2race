@@ -22,7 +22,7 @@ object TeamTrackingService {
         competitionRegistrationId: UUID,
         userId: UUID,
         checkIn: Boolean,
-    ): App<ServiceError, ApiResponse> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Dto<TeamTrackingScanDto>> = KIO.comprehension {
         // Check if team exists
         val teamRegistration = !CompetitionRegistrationRepo.findById(competitionRegistrationId).orDie()
         !KIO.failOn(teamRegistration == null) { TeamTrackingError.TeamNotFound }
@@ -82,6 +82,12 @@ object TeamTrackingService {
 
         // Find all teams this participant belongs to
         val teams = !TeamTrackingRepo.getTeamsByParticipantId(qrCodeRecord.participant!!, eventId).orDie()
+
+        /* TODO: Substitutions for team: "CompetitionExecutionService.getActuallyParticipatingParticipants()"
+            The Substitutions are already in "teams" but since TeamParticipantDto is the current Data type, conversion functions are missing.
+            Revisit this AFTER the Logic and Conversions to Dtos are extracted into this Service Function
+            Take StartlistTeamRecord.toData() as inspiration for usage of the "getActuallyParticipatingParticipants" function*/
+
         KIO.ok(ApiResponse.ListDto(teams))
     }
 

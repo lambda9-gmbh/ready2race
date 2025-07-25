@@ -58,19 +58,6 @@ fun Route.competitionRegistration() {
                 }
             }
 
-            route("/checkInOut") {
-                post {
-                    call.respondComprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
-                        val eventId = !pathParam("eventId", uuid)
-                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
-                        val checkIn = !queryParam("checkIn", boolean)
-
-                        TeamTrackingService.teamCheckInOut(competitionRegistrationId, eventId, user.id!!, checkIn)
-                    }
-                }
-            }
-
         }
 
     }

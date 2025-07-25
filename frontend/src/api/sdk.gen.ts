@@ -2592,6 +2592,6 @@ export const checkInOutTeam = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/checkInOut',
+        url: '/event/{eventId}/competitionRegistration/{competitionRegistrationId}/checkInOut',
     })
 }

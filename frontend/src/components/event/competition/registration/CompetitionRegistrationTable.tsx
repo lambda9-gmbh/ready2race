@@ -2,8 +2,7 @@ import {useTranslation} from 'react-i18next'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
-    checkInCompetitionRegistration,
-    checkOutCompetitionRegistration,
+    checkInOutTeam,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
     getCompetitionRegistrations,
@@ -25,7 +24,7 @@ import {
     TableHead,
     TableRow,
     Tooltip,
-    Typography
+    Typography,
 } from '@mui/material'
 import {ExpandMore, Login, Logout, Warning} from '@mui/icons-material'
 import {useFeedback} from '@utils/hooks.ts'
@@ -68,13 +67,12 @@ const CompetitionRegistrationTable = (
     const handleCheckIn = async (team: CompetitionRegistrationTeamDto) => {
         setLoadingTeams(prev => new Set(prev).add(team.id))
         try {
-            const result = await checkInCompetitionRegistration({
+            const result = await checkInOutTeam({
                 path: {
                     eventId,
-                    competitionId,
                     competitionRegistrationId: team.id,
                 },
-                body: { eventId }
+                query: { checkIn: true }
             })
             
             if (result.data?.success) {
@@ -94,18 +92,20 @@ const CompetitionRegistrationTable = (
         }
     }
 
+    // TODO: Merge with prev Function, remove try-catches, change setLoadingTeams
     const handleCheckOut = async (team: CompetitionRegistrationTeamDto) => {
         setLoadingTeams(prev => new Set(prev).add(team.id))
         try {
-            const result = await checkOutCompetitionRegistration({
+            const result = await checkInOutTeam({
                 path: {
                     eventId,
-                    competitionId,
                     competitionRegistrationId: team.id,
                 },
-                body: { eventId }
+                query: {
+                    checkIn: false,
+                },
             })
-            
+
             if (result.data?.success) {
                 feedback.success(t('team.checkOut.success'))
                 props.reloadData()
@@ -126,7 +126,7 @@ const CompetitionRegistrationTable = (
     const customEntityActions = (team: CompetitionRegistrationTeamDto) => {
         const isLoading = loadingTeams.has(team.id)
         const isCheckedIn = team.currentStatus === 'ENTRY'
-        
+
         return [
             <GridActionsCellItem
                 key="check-in"
@@ -143,7 +143,7 @@ const CompetitionRegistrationTable = (
                 onClick={() => handleCheckOut(team)}
                 disabled={isLoading || !isCheckedIn}
                 showInMenu
-            />
+            />,
         ]
     }
 
@@ -153,7 +153,7 @@ const CompetitionRegistrationTable = (
                 field: 'clubName',
                 headerName: t('club.club') + ' / ' + t('entity.name'),
                 minWidth: 250,
-                renderCell: (params) => {
+                renderCell: params => {
                     const teamName = params.row.name ? ` - ${params.row.name}` : ''
                     return `${params.row.clubName}${teamName}`
                 },
@@ -167,30 +167,32 @@ const CompetitionRegistrationTable = (
                 renderCell: ({row}) => {
                     const totalParticipants = row.namedParticipants.reduce(
                         (acc, np) => acc + np.participants.length,
-                        0
+                        0,
                     )
-                    
+
                     // Check if any participant has a QR code
-                    const hasQrCode = row.namedParticipants.some(np => 
-                        np.participants.some(participant => participant.qrCodeId)
+                    const hasQrCode = row.namedParticipants.some(np =>
+                        np.participants.some(participant => participant.qrCodeId),
                     )
-                    
+
                     return (
-                        <Box sx={{ width: '100%', py: 1 }}>
+                        <Box sx={{width: '100%', py: 1}}>
                             <Accordion elevation={0}>
                                 <AccordionSummary
                                     expandIcon={<ExpandMore />}
-                                    sx={{ minHeight: 0, '& .MuiAccordionSummary-content': { margin: 0 } }}
-                                >
+                                    sx={{
+                                        minHeight: 0,
+                                        '& .MuiAccordionSummary-content': {margin: 0},
+                                    }}>
                                     <Stack direction="row" alignItems="center" spacing={1}>
                                         <Typography variant="body2">
-                                            {t('team.participantCount', { count: totalParticipants })}
+                                            {t('team.participantCount', {count: totalParticipants})}
                                         </Typography>
                                         {!hasQrCode && (
                                             <Tooltip title={t('qrCode.noQrCodeAssigned')}>
-                                                <Warning 
-                                                    fontSize="small" 
-                                                    sx={{ color: 'warning.main' }}
+                                                <Warning
+                                                    fontSize="small"
+                                                    sx={{color: 'warning.main'}}
                                                 />
                                             </Tooltip>
                                         )}
@@ -201,17 +203,23 @@ const CompetitionRegistrationTable = (
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>{t('entity.name')}</TableCell>
-                                                <TableCell>{t('event.competition.namedParticipant.namedParticipant')}</TableCell>
+                                                <TableCell>
+                                                    {t(
+                                                        'event.competition.namedParticipant.namedParticipant',
+                                                    )}
+                                                </TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {row.namedParticipants.map(np => 
-                                                np.participants.map((participant) => (
+                                            {row.namedParticipants.map(np =>
+                                                np.participants.map(participant => (
                                                     <TableRow key={participant.id}>
                                                         <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
-                                                        <TableCell>{np.namedParticipantName}</TableCell>
+                                                        <TableCell>
+                                                            {np.namedParticipantName}
+                                                        </TableCell>
                                                     </TableRow>
-                                                ))
+                                                )),
                                             )}
                                         </TableBody>
                                     </Table>
@@ -225,7 +233,7 @@ const CompetitionRegistrationTable = (
                 field: 'statusAndScan',
                 headerName: t('team.statusText'),
                 minWidth: 220,
-                renderCell: (params) => {
+                renderCell: params => {
                     const row = params.row
                     if (!row.currentStatus) return '-'
                     const isIn = row.currentStatus === 'ENTRY'

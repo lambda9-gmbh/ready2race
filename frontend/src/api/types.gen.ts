@@ -1076,6 +1076,7 @@ export type Resource =
     | 'CLUB'
     | 'REGISTRATION'
     | 'INVOICE'
+    | 'SUBSTITUTION'
     | 'APP_EVENT_REQUIREMENT'
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'

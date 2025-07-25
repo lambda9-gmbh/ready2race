@@ -48,7 +48,6 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
 import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
-import EventActions from "@components/event/EventActions.tsx";
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
 import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
