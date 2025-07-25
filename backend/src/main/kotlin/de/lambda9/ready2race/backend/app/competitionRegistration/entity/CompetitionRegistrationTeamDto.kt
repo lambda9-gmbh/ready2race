@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.entity
 
+import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationDto
 import java.time.LocalDateTime
 import java.util.*
 
@@ -12,4 +13,5 @@ data class CompetitionRegistrationTeamDto(
     val namedParticipants: List<CompetitionRegistrationNamedParticipantDto>,
     val updatedAt: LocalDateTime,
     val createdAt: LocalDateTime,
+    val deregistration: CompetitionDeregistrationDto?,
 )

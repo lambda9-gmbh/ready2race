@@ -40,12 +40,14 @@ type Props = {
     openEditMatchDialog: (roundIndex: number, matchIndex: number) => void
     accordionsExpanded: boolean[] | undefined
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
+    smallScreenLayout: boolean
 }
 const CompetitionExecutionRound = ({
     round,
     roundIndex,
     filteredMatches,
     submitting,
+    smallScreenLayout,
     ...props
 }: Props) => {
     const {t} = useTranslation()
@@ -181,7 +183,10 @@ const CompetitionExecutionRound = ({
                                                             {match.weighting}
                                                         </TableCell>
                                                         <TableCell width="80%">
-                                                            {match.teams[0].clubName + (match.teams[0].name ? ` ${match.teams[0].name}` : '')}
+                                                            {match.teams[0].clubName +
+                                                                (match.teams[0].name
+                                                                    ? ` ${match.teams[0].name}`
+                                                                    : '')}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -216,7 +221,15 @@ const CompetitionExecutionRound = ({
                 </Box>
                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                     {filteredMatches.map((match, matchIndex) => (
-                        <Card key={match.id} sx={{p: 2, minWidth: 400, flex: 1}}>
+                        <Card
+                            key={match.id}
+                            sx={{
+                                p: 2,
+                                flex: 1,
+                                [theme.breakpoints.up('md')]: {
+                                    minWidth: 400,
+                                },
+                            }}>
                             <Stack
                                 direction={'row'}
                                 sx={{
@@ -311,13 +324,19 @@ const CompetitionExecutionRound = ({
                                 <Table>
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell width="25%">
-                                                {t('event.competition.execution.match.startNumber')}
+                                            <TableCell width="15%">
+                                                {smallScreenLayout
+                                                    ? t(
+                                                          'event.competition.execution.match.startNumber.short',
+                                                      )
+                                                    : t(
+                                                          'event.competition.execution.match.startNumber.startNumber',
+                                                      )}
                                             </TableCell>
-                                            <TableCell width="50%">
+                                            <TableCell width="55%">
                                                 {t('event.competition.execution.match.team')}
                                             </TableCell>
-                                            <TableCell width="25%">
+                                            <TableCell width="30%">
                                                 {t('event.competition.execution.match.place')}
                                             </TableCell>
                                         </TableRow>
@@ -327,14 +346,23 @@ const CompetitionExecutionRound = ({
                                             .sort((a, b) => a.startNumber - b.startNumber)
                                             .map(team => (
                                                 <TableRow key={team.registrationId}>
-                                                    <TableCell width="25%">
+                                                    <TableCell width="15%">
                                                         {team.startNumber}
                                                     </TableCell>
-                                                    <TableCell width="50%">
+                                                    <TableCell width="55%">
                                                         {team.clubName +
                                                             (team.name ? ` ${team.name}` : '')}
                                                     </TableCell>
-                                                    <TableCell width="25%">{team.place}</TableCell>
+                                                    <TableCell width="30%">
+                                                        {!team.deregistered
+                                                            ? team.place
+                                                            : t(
+                                                                  'event.competition.registration.deregister.deregistered',
+                                                              ) +
+                                                              (team.deregistrationReason
+                                                                  ? ` (${team.deregistrationReason})`
+                                                                  : '')}
+                                                    </TableCell>
                                                 </TableRow>
                                             ))}
                                     </TableBody>

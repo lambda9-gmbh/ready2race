@@ -3,6 +3,11 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionDeregistration.boundary.CompetitionDeregistrationService
+import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
+import de.lambda9.ready2race.backend.app.competitionDeregistration.control.toDeregistrationRecord
+import de.lambda9.ready2race.backend.app.competitionDeregistration.control.toRecord
+import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationError.IsLocked
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
@@ -35,6 +40,7 @@ import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
@@ -127,9 +133,13 @@ object CompetitionExecutionService {
 
                 val currentTeamsWithOutcome =
                     currentRoundMatches.filter { it.second != null }.mapIndexed { matchIdx, match ->
-                        match.second!!.teams.sortedBy { team -> team.place }.mapIndexed { teamIdx, team ->
-                            team to currentRoundOutcomes[matchIdx][teamIdx]
-                        }
+                        match.second!!.teams
+                            .sortedWith(compareBy<CompetitionMatchTeamWithRegistration> { team ->
+                                team.place ?: Int.MAX_VALUE
+                            }.thenBy { team -> team.startNumber }) // This is required for teams that are deregistered but would still move on to the next round (f.e. losers bracket / both teams deregistered)
+                            .mapIndexed { teamIdx, team ->
+                                team to currentRoundOutcomes[matchIdx][teamIdx]
+                            }
                     }.flatten()
 
                 // --- Create next round
@@ -200,18 +210,15 @@ object CompetitionExecutionService {
 
             val currentAndNextRound = getCurrentAndNextRound(setupRounds)
 
-            val registrationsIfFirst = if (currentAndNextRound.first == null) {
-                !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
-            } else {
-                null
-            }
+            val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
+
 
             val canNotCreateRoundReasons = !checkRoundCreation(
                 false,
                 setupRounds,
                 currentAndNextRound.first,
                 currentAndNextRound.second,
-                registrationsIfFirst,
+                registrations,
             )
 
             val lastRoundFinished =
@@ -222,8 +229,14 @@ object CompetitionExecutionService {
 
             val sortedRounds = sortRounds(setupRounds)
 
+            val deregistrations = !CompetitionDeregistrationRepo.getByRegistrations(registrations.map { it.id }).orDie()
+
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
-                round.toCompetitionRoundDto()
+                round.toCompetitionRoundDto(
+                    checkDeregistrationIsLocked = { regId ->
+                        deregistrations.first { it.competitionRegistration == regId }.competitionSetupRound != round.setupRoundId
+                    }
+                )
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
@@ -295,9 +308,16 @@ object CompetitionExecutionService {
 
         } else {
             val currentRoundPlaces =
-                currentRound.matches.flatMap { match -> match.teams.map { team -> team.place } }
+                currentRound.matches.flatMap { match ->
+                    match.teams.filter { !it.deregistered }.map { team -> team.place }
+                }
 
-            if (currentRoundPlaces.contains(null))
+            val placesAreMissing = currentRound.matches.map { match ->
+                match.teams.map { it.place }.containsAll((1..match.teams.filter { !it.deregistered }.size).toList())
+            }.any { !it }
+
+
+            if (currentRoundPlaces.contains(null) || placesAreMissing)
                 reasons.add(CompetitionExecutionCanNotCreateRoundReason.NOT_ALL_PLACES_SET to CompetitionExecutionError.NotAllPlacesSet)
         }
 
@@ -369,29 +389,61 @@ object CompetitionExecutionService {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
-        if (setupRounds.flatMap { it.setupMatches.toList() }.find { it.id == matchId } == null) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchNotFound)
-        }
+        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }
+            .find { it.id == matchId } == null) { CompetitionExecutionError.MatchNotFound }
 
         val currentRound = getCurrentAndNextRound(setupRounds).first
             ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
 
         val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
-        if (match == null) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
-        }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
 
-        if (!currentRound.required && match.teams.size == 1) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
-        }
+        !KIO.failOn(!currentRound.required && match.teams.size == 1) { CompetitionExecutionError.MatchResultsLocked }
+
 
         request.teamResults.traverse { result ->
-            CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
-                place = result.place
-                updatedBy = userId
-                updatedAt = LocalDateTime.now()
-            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+            updateTeamResult(userId, currentRound.setupRoundId, matchId, result)
         }.map { ApiResponse.NoData }
+    }
+
+    private fun updateTeamResult(
+        userId: UUID,
+        setupRoundId: UUID,
+        matchId: UUID,
+        request: UpdateCompetitionMatchTeamResultRequest
+    ): App<ServiceError, Unit> = KIO.comprehension {
+
+        if (request.deregistered) {
+            // Create Deregistration (Remove a possible old entry and replace it with a new one)
+            !CompetitionDeregistrationRepo.delete(request.registrationId).orDie()
+
+            // Differentiate if in a previous round the team was already deregistered... if so, do not create a new one
+            val prevDeregistration = !CompetitionDeregistrationRepo.get(request.registrationId).orDie()
+            if (!(prevDeregistration != null && prevDeregistration.competitionSetupRound != setupRoundId)) {
+                val record = !request.toDeregistrationRecord(userId, setupRoundId)
+                !CompetitionDeregistrationRepo.create(record).orDie()
+            }
+
+        } else {
+            val deregistration = !CompetitionDeregistrationRepo.get(request.registrationId).orDie()
+
+            if (deregistration != null) {
+
+                !KIO.failOn(deregistration.competitionSetupRound != setupRoundId) { IsLocked }
+                !KIO.failOn(deregistration.competitionSetupRound != setupRoundId) { CompetitionExecutionError.TeamWasPreviouslyDeregistered }
+
+                !CompetitionDeregistrationRepo.delete(request.registrationId).orDie()
+            }
+        }
+
+
+        !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, request.registrationId) {
+            place = request.place
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+
+        unit
     }
 
 
@@ -510,11 +562,11 @@ object CompetitionExecutionService {
                 val nonAdvancingTeamsToMatchIndex = sortedRoundMatches.flatMapIndexed { matchIdx, match ->
                     match.teams.map { it to matchIdx }
                 }
-                    .filter { team -> // Filter teams that will move on to the next round or have no place set in the last round
+                    .filter { team -> // Filter out teams that will move on to the next round or have not yet a set place in the last round / are not deregistered
                         if (!isLastRound) {
                             setupRounds[roundIdx + 1].matches.toList().flatMap { m -> m.teams.toList() }
                                 .find { it.competitionRegistration == team.first.competitionRegistration } == null
-                        } else team.first.place != null
+                        } else team.first.place != null || team.first.deregistered
                     }
 
                 val seedingList =
@@ -529,6 +581,20 @@ object CompetitionExecutionService {
 
                 val teamsToPlaces = nonAdvancingTeamsToMatchIndex.map { team ->
 
+                    val teamsInSameMatch = nonAdvancingTeamsToMatchIndex.filter{ it.second == team.second }
+                    // Place can only be null here if this team is deregistered
+                    val (deregisteredTeamsInSameMatch, teamsWithPlacesInSameMatch) =
+                        teamsInSameMatch.partition { it.first.deregistered }
+
+                    val realPlace = team.first.place
+                        ?: (teamsWithPlacesInSameMatch.size
+                            + (deregisteredTeamsInSameMatch
+                            .sortedBy { it.first.startNumber }
+                            .map { it.first.competitionRegistration }
+                            .indexOf(team.first.competitionRegistration))
+                            + 1)
+
+
                     val teamToPlace = when (round.placesOption) {
                         CompetitionSetupPlacesOption.EQUAL.name -> {
                             team.first to if (!isLastRound) {
@@ -537,10 +603,10 @@ object CompetitionExecutionService {
                         }
 
                         CompetitionSetupPlacesOption.ASCENDING.name ->
-                            team.first to seedingList!![team.second][team.first.place!! - 1]
+                            team.first to seedingList!![team.second][realPlace - 1]
 
                         else ->
-                            team.first to round.places.first { it.roundOutcome == seedingList!![team.second][team.first.place!! - 1] }.place
+                            team.first to round.places.first { it.roundOutcome == seedingList!![team.second][realPlace - 1] }.place
                     }
                     teamToPlace
                 }
