@@ -5,10 +5,12 @@ import de.lambda9.ready2race.backend.app.appUserWithQrCode.control.AppUserWithQr
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.control.toAppUserWithQrCodeDto
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.entity.AppUserWithQrCodeDto
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.entity.AppUserWithQrCodeSort
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -34,7 +36,13 @@ object AppUserWithQrCodeService {
     fun deleteQrCode(
         qrCodeId: String,
     ): App<Nothing, ApiResponse.NoData> = KIO.Companion.comprehension {
-        !QrCodeRepo.delete(qrCodeId).orDie()
+        val deleted = !QrCodeRepo.delete(qrCodeId).orDie()
+
+        if (deleted < 1) {
+            KIO.fail(CompetitionError.CompetitionNotFound)
+        } else {
+            noData
+        }
         KIO.Companion.ok(ApiResponse.NoData)
     }
 }

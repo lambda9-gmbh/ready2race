@@ -145,15 +145,10 @@ export type CaptchaDto = {
     start: number
 }
 
-export type CatererTransactionDTO = {
-    id: string
-    catererId: string
+export type CatererTransactionRequest = {
     appUserId: string
     price: string
     eventId: string
-    createdAt: string
-    updatedAt: string
-    createdBy: string
 }
 
 export type CatererTransactionViewDto = {
@@ -813,12 +808,6 @@ export type NamedParticipantWithRequirementsDto = {
     description?: string
     requirements: Array<EventParticipantRequirementDto>
     qrCodeRequired: boolean
-}
-
-export type NewCatererTransactionDTO = {
-    appUserId: string
-    price: string
-    eventId: string
 }
 
 export type Order = {
@@ -3006,6 +2995,17 @@ export type GetParticipantsForEventResponse = {
 
 export type GetParticipantsForEventError = ApiError
 
+export type GetTeamsByParticipantQrCodeData = {
+    path: {
+        eventId: string
+        qrCode: string
+    }
+}
+
+export type GetTeamsByParticipantQrCodeResponse = Array<TeamStatusWithParticipantsDto>
+
+export type GetTeamsByParticipantQrCodeError = BadRequestError | ApiError
+
 export type UpdateParticipantRequirementData = {
     body: ParticipantRequirementUpsertDto
     path: {
@@ -3650,38 +3650,12 @@ export type UpdateQrCodeParticipantResponse = void
 export type UpdateQrCodeParticipantError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type CreateCateringTransactionData = {
-    body: NewCatererTransactionDTO
+    body: CatererTransactionRequest
 }
 
 export type CreateCateringTransactionResponse = void
 
 export type CreateCateringTransactionError = BadRequestError | ApiError | UnprocessableEntityError
-
-export type CheckInTeamData = {
-    body: {
-        eventId: string
-    }
-    path: {
-        teamId: string
-    }
-}
-
-export type CheckInTeamResponse = TeamTrackingScanDto
-
-export type CheckInTeamError = BadRequestError | ApiError
-
-export type CheckOutTeamData = {
-    body: {
-        eventId: string
-    }
-    path: {
-        teamId: string
-    }
-}
-
-export type CheckOutTeamResponse = TeamTrackingScanDto
-
-export type CheckOutTeamError = BadRequestError | ApiError
 
 export type GetQrAssignmentParticipantsData = {
     query: {
@@ -3694,45 +3668,16 @@ export type GetQrAssignmentParticipantsResponse = Array<GroupedParticipantQrAssi
 
 export type GetQrAssignmentParticipantsError = BadRequestError | ApiError
 
-export type GetTeamsByParticipantQrCodeData = {
+export type CheckInOutTeamData = {
     path: {
-        qrCode: string
+        competitionRegistrationId: string
+        eventId: string
     }
     query: {
-        eventId: string
+        checkIn: boolean
     }
 }
 
-export type GetTeamsByParticipantQrCodeResponse = Array<TeamStatusWithParticipantsDto>
+export type CheckInOutTeamResponse = TeamTrackingScanDto
 
-export type GetTeamsByParticipantQrCodeError = BadRequestError | ApiError
-
-export type CheckInCompetitionRegistrationData = {
-    body: {
-        eventId: string
-    }
-    path: {
-        competitionId: string
-        competitionRegistrationId: string
-        eventId: string
-    }
-}
-
-export type CheckInCompetitionRegistrationResponse = TeamTrackingScanDto
-
-export type CheckInCompetitionRegistrationError = BadRequestError | ApiError
-
-export type CheckOutCompetitionRegistrationData = {
-    body: {
-        eventId: string
-    }
-    path: {
-        competitionId: string
-        competitionRegistrationId: string
-        eventId: string
-    }
-}
-
-export type CheckOutCompetitionRegistrationResponse = TeamTrackingScanDto
-
-export type CheckOutCompetitionRegistrationError = BadRequestError | ApiError
+export type CheckInOutTeamError = BadRequestError | ApiError | UnprocessableEntityError

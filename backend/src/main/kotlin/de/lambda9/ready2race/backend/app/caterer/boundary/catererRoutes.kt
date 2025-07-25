@@ -1,14 +1,10 @@
 package de.lambda9.ready2race.backend.app.caterer.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
-import de.lambda9.ready2race.backend.app.caterer.entity.NewCatererTransactionDTO
-import de.lambda9.ready2race.backend.calls.requests.pagination
+import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
-import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
-import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
 fun Route.catererRoutes() {
@@ -16,7 +12,7 @@ fun Route.catererRoutes() {
         post("/transactions") {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateAppCatererGlobal)
-                val transaction = !receiveKIO(NewCatererTransactionDTO.example)
+                val transaction = !receiveKIO(CatererTransactionRequest.example)
                 CatererService.createCateringTransaction(transaction, user.id!!)
             }
         }

@@ -1,5 +1,4 @@
-import { 
-    Dialog, 
+import {
     DialogTitle, 
     DialogContent, 
     DialogActions, 
@@ -8,6 +7,7 @@ import {
     Alert 
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import BaseDialog from "@components/BaseDialog.tsx";
 
 interface QrDeleteDialogProps {
     open: boolean;
@@ -37,7 +37,7 @@ export const QrDeleteDialog = ({
         : 'qrAppuser.removeAssignmentConfirm';
 
     return (
-        <Dialog open={open} onClose={onClose}>
+        <BaseDialog open={open} onClose={onClose}>
             <DialogTitle>{t(titleKey)}</DialogTitle>
             <DialogContent>
                 <Typography>{t(confirmKey)}</Typography>
@@ -56,6 +56,6 @@ export const QrDeleteDialog = ({
                     {t('common.delete')}
                 </Button>
             </DialogActions>
-        </Dialog>
+        </BaseDialog>
     );
 };

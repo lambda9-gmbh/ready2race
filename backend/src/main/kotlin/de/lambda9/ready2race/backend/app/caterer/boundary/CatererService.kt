@@ -9,21 +9,20 @@ import de.lambda9.ready2race.backend.app.caterer.control.toRecord
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererError
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewDto
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
-import de.lambda9.ready2race.backend.app.caterer.entity.NewCatererTransactionDTO
-import de.lambda9.ready2race.backend.calls.pagination.Pagination
+import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionRequest
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.util.*
 
 object CatererService {
 
     fun createCateringTransaction(
-        transaction: NewCatererTransactionDTO,
+        transaction: CatererTransactionRequest,
         catererId: UUID
     ): App<CatererError, ApiResponse.NoData> = KIO.comprehension {
         !AppUserRepo.exists(transaction.appUserId).orDie()
@@ -35,25 +34,18 @@ object CatererService {
         noData
     }
 
-    fun getByEventId(
+    fun pageByEventId(
         eventId: UUID,
-        pagination: PaginationParameters<CatererTransactionViewSort>
+        params: PaginationParameters<CatererTransactionViewSort>
     ): App<ServiceError, ApiResponse.Page<CatererTransactionViewDto, CatererTransactionViewSort>> = KIO.comprehension {
-        val count = !CatererRepo.countByEventId(eventId, pagination.search).orDie()
-        val records = !CatererRepo.pageByEventId(eventId, pagination).orDie()
-        val dtos = records.map { it.toDto() }
+        val total = !CatererRepo.countByEventId(eventId, params.search).orDie()
+        val page = !CatererRepo.pageByEventId(eventId, params).orDie()
 
-        KIO.ok(
+        page.traverse { it.toDto() }.map {
             ApiResponse.Page(
-                data = dtos,
-                pagination = Pagination(
-                    total = count,
-                    limit = pagination.limit,
-                    offset = pagination.offset,
-                    sort = pagination.sort,
-                    search = pagination.search
-                )
+                data = it,
+                pagination = params.toPagination(total)
             )
-        )
+        }
     }
 }

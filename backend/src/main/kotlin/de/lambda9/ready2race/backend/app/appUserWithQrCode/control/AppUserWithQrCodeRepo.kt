@@ -39,15 +39,4 @@ object AppUserWithQrCodeRepo {
                 .fetch()
         }
     }
-
-    fun existsForEvent(eventId: UUID, appUserId: UUID): JIO<Boolean> = Jooq.query {
-        with(APP_USER_WITH_QR_CODE_FOR_EVENT) {
-            fetchExists(
-                this.where(
-                    EVENT_ID.eq(eventId)
-                        .and(ID.eq(appUserId))
-                )
-            )
-        }
-    }
 }

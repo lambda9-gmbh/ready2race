@@ -1,17 +1,15 @@
 package de.lambda9.ready2race.backend.app.caterer.control
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransaction
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewDto
-import de.lambda9.ready2race.backend.app.caterer.entity.NewCatererTransactionDTO
+import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.CatererTransactionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CatererTransactionViewRecord
 import de.lambda9.tailwind.core.KIO
-import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
 
-fun NewCatererTransactionDTO.toRecord(catererId: UUID): App<Nothing, CatererTransactionRecord> =
+fun CatererTransactionRequest.toRecord(catererId: UUID): App<Nothing, CatererTransactionRecord> =
     KIO.ok(
         LocalDateTime.now().let { now ->
             CatererTransactionRecord(
@@ -28,20 +26,8 @@ fun NewCatererTransactionDTO.toRecord(catererId: UUID): App<Nothing, CatererTran
         }
     )
 
-fun CatererTransactionRecord.toCatererTransaction(): App<Nothing, CatererTransaction> = KIO.ok(
-    CatererTransaction(
-        id = id,
-        catererId = catererId,
-        appUserId = appUserId,
-        price = price,
-        eventId = eventId,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        createdBy = createdBy!!,
-    )
-)
 
-fun CatererTransactionViewRecord.toDto(): CatererTransactionViewDto = CatererTransactionViewDto(
+fun CatererTransactionViewRecord.toDto():  App<Nothing, CatererTransactionViewDto> = KIO.ok( CatererTransactionViewDto(
     id = id!!,
     catererId = catererId!!,
     catererFirstname = catererFirstname!!,
@@ -52,4 +38,4 @@ fun CatererTransactionViewRecord.toDto(): CatererTransactionViewDto = CatererTra
     eventId = eventId!!,
     price = price!!,
     createdAt = createdAt!!
-)
+))

@@ -1,280 +1,257 @@
-import {
-    Alert,
-    Button,
-    Stack,
-    Typography
-} from "@mui/material";
-import {useEffect, useState} from "react";
-import {qrEventRoute, router} from "@routes";
+import {Alert, Button, Stack, Typography} from '@mui/material'
+import {useEffect, useState} from 'react'
+import {qrEventRoute, router} from '@routes'
 import {
     approveParticipantRequirementsForEvent,
-    checkInTeam,
-    checkOutTeam,
+    checkInOutTeam,
     deleteQrCode,
     getParticipantRequirementsForEvent,
     getParticipantsForEvent,
-    getTeamsByParticipantQrCode
-} from "@api/sdk.gen.ts";
-import {useTranslation} from "react-i18next";
-import {useAppSession} from '@contexts/app/AppSessionContext';
+    getTeamsByParticipantQrCode,
+} from '@api/sdk.gen.ts'
+import {useTranslation} from 'react-i18next'
+import {useAppSession} from '@contexts/app/AppSessionContext'
 import {
     updateAppCatererGlobal,
     updateAppCompetitionCheckGlobal,
     updateAppEventRequirementGlobal,
-    updateAppQrManagementGlobal
-} from '@authorization/privileges';
-import {ParticipantRequirementForEventDto, TeamStatusWithParticipantsDto} from '@api/types.gen.ts';
-import {Cancel} from '@mui/icons-material';
-import {useFeedback} from '@utils/hooks.ts';
-import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo';
-import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog';
-import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut';
-import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist';
+    updateAppQrManagementGlobal,
+} from '@authorization/privileges'
+import {TeamStatusWithParticipantsDto} from '@api/types.gen.ts'
+import {Cancel} from '@mui/icons-material'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo'
+import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog'
+import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
+import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
 
 const QrParticipantPage = () => {
-    const {t} = useTranslation();
-    const {qr, appFunction} = useAppSession();
+    const {t} = useTranslation()
+    const {qr, appFunction} = useAppSession()
     const {eventId} = qrEventRoute.useParams()
-    const [dialogOpen, setDialogOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [requirements, setRequirements] = useState<ParticipantRequirementForEventDto[]>([]);
-    const [checkedRequirements, setCheckedRequirements] = useState<string[]>([]);
-    const [pending, setPending] = useState(false);
-    const [teams, setTeams] = useState<TeamStatusWithParticipantsDto[]>([]);
-    const [loadingTeams, setLoadingTeams] = useState(false);
-    const [teamActionLoading, setTeamActionLoading] = useState<Set<string>>(new Set());
+    const [dialogOpen, setDialogOpen] = useState(false)
+    const [deleteQrCodeError, setDeleteQrCodeError] = useState<string | null>(null)
+    const [checkedRequirements, setCheckedRequirements] = useState<string[]>([])
+    const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
+    const [submitting, setSubmitting] = useState(false)
+    const [reloadTeams, setReloadTeams] = useState(false)
     const navigate = router.navigate
-    const feedback = useFeedback();
+    const feedback = useFeedback()
 
     useEffect(() => {
         if (!appFunction) {
-            navigate({to: "/app/function"})
-            return;
+            navigate({to: '/app/function'})
+            return
         }
         if (!qr.received) {
             qr.reset(eventId)
         }
     }, [qr, appFunction, eventId])
 
-    useEffect(() => {
-        const load = async () => {
-            if (appFunction === 'APP_EVENT_REQUIREMENT' && qr.response?.id && eventId) {
-                setPending(true);
-                const [{data: reqData}, {data: partData}] = await Promise.all([
-                    getParticipantRequirementsForEvent({
-                        path: {eventId, participantId: qr.response?.id},
-                        throwOnError: true
-                    }),
-                    getParticipantsForEvent({
+    const {data: participantRequirementsData} = useFetch(
+        signal => {
+            setParticipantRequirementsPending(true)
+            return getParticipantRequirementsForEvent({
+                signal,
+                path: {eventId, participantId: qr.response?.id},
+            })
+        },
+        {
+            onResponse: async ({error}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('participantRequirement.participantRequirements'),
+                        }),
+                    )
+                } else {
+                    const {data: participantsData} = await getParticipantsForEvent({
                         path: {eventId},
-                        throwOnError: true
                     })
-                ]);
-                setRequirements((reqData?.data || []).filter((r) => r.checkInApp));
-                const participant = (partData?.data || []).find((p) => p.id === qr.response?.id);
-                setCheckedRequirements(Array.isArray(participant?.participantRequirementsChecked)
-                    ? participant.participantRequirementsChecked.map((r) => r.id).filter((id: string | undefined): id is string => !!id)
-                    : []);
-                setPending(false);
-            }
-        };
-        load();
-    }, [appFunction, qr.response?.id, eventId]);
-
-    useEffect(() => {
-        const loadTeams = async () => {
-            if (appFunction === 'APP_COMPETITION_CHECK' && qr.qrCodeId && eventId) {
-                setLoadingTeams(true);
-                try {
-                    const {data} = await getTeamsByParticipantQrCode({
-                        path: {qrCode: qr.qrCodeId},
-                        query: {eventId},
-                        throwOnError: true
-                    });
-                    setTeams(data || []);
-                } catch (error) {
-                    console.error('Error loading teams:', error);
-                    setTeams([]);
-                } finally {
-                    setLoadingTeams(false);
+                    if (participantsData) {
+                        const participant = participantsData.data.find(
+                            p => p.id === qr.response?.id,
+                        )
+                        setCheckedRequirements(
+                            Array.isArray(participant?.participantRequirementsChecked)
+                                ? participant.participantRequirementsChecked
+                                      .map(r => r.id)
+                                      .filter((id: string | undefined): id is string => !!id)
+                                : [],
+                        )
+                    } else {
+                        feedback.error(
+                            t('common.load.error.multiple.short', {
+                                entity: t('event.participants'),
+                            }),
+                        )
+                    }
                 }
-            }
-        };
-        loadTeams();
-    }, [appFunction, qr.qrCodeId, eventId]);
+                setParticipantRequirementsPending(false)
+            },
+            preCondition: () => appFunction === 'APP_EVENT_REQUIREMENT' && qr.qrCodeId !== null,
+            deps: [eventId, qr],
+        },
+    )
+
+    const {data: teamsData, pending: teamsPending} = useFetch(
+        signal =>
+            getTeamsByParticipantQrCode({
+                signal,
+                path: {
+                    eventId,
+                    qrCode: qr.qrCodeId!,
+                },
+            }),
+        {
+            onResponse: ({error}) => {
+                if (error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('team.teams'),
+                        }),
+                    )
+                }
+            },
+            preCondition: () => appFunction === 'APP_COMPETITION_CHECK' && qr.qrCodeId !== null,
+            deps: [eventId, qr, reloadTeams],
+        },
+    )
 
     const handleRequirementChange = async (requirementId: string, checked: boolean) => {
-        if (!qr.response?.id) return;
-        setPending(true);
+        if (!qr.response?.id) return
+        setSubmitting(true)
         await approveParticipantRequirementsForEvent({
             path: {eventId},
             body: {
                 requirementId,
                 approvedParticipants: checked ? [qr.response.id] : [],
             },
-            throwOnError: true
-        });
+            throwOnError: true,
+        })
         // Nach Änderung neu laden
-        const {data: partData} = await getParticipantsForEvent({path: {eventId}});
-        const participant = (partData?.data || []).find((p) => p.id === qr.response?.id);
-        setCheckedRequirements(Array.isArray(participant?.participantRequirementsChecked)
-            ? participant.participantRequirementsChecked.map((r) => r.id).filter((id: string | undefined): id is string => !!id)
-            : []);
-        setPending(false);
-    };
+        const {data: partData} = await getParticipantsForEvent({path: {eventId}})
+        const participant = (partData?.data || []).find(p => p.id === qr.response?.id)
+        setCheckedRequirements(
+            Array.isArray(participant?.participantRequirementsChecked)
+                ? participant.participantRequirementsChecked
+                      .map(r => r.id)
+                      .filter((id: string | undefined): id is string => !!id)
+                : [],
+        )
+        setSubmitting(false)
+    }
 
-    const allowed = appFunction !== null && [
-        updateAppCompetitionCheckGlobal.resource,
-        updateAppQrManagementGlobal.resource,
-        updateAppEventRequirementGlobal.resource,
-        updateAppCatererGlobal.resource
-    ].includes(appFunction);
-    const canCheck = appFunction === updateAppCompetitionCheckGlobal.resource;
-    const canRemove = appFunction === updateAppQrManagementGlobal.resource;
-    const canEditRequirements = appFunction === updateAppEventRequirementGlobal.resource;
-    const isCaterer = appFunction === updateAppCatererGlobal.resource;
+    const allowed =
+        appFunction !== null &&
+        [
+            updateAppCompetitionCheckGlobal.resource,
+            updateAppQrManagementGlobal.resource,
+            updateAppEventRequirementGlobal.resource,
+            updateAppCatererGlobal.resource,
+        ].includes(appFunction)
+    const canCheck = appFunction === updateAppCompetitionCheckGlobal.resource
+    const canRemove = appFunction === updateAppQrManagementGlobal.resource
+    const canEditRequirements = appFunction === updateAppEventRequirementGlobal.resource
+    const isCaterer = appFunction === updateAppCatererGlobal.resource
 
     const handleDelete = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            await deleteQrCode({
-                path: {qrCodeId: qr.qrCodeId!},
-                throwOnError: true
-            });
-            setDialogOpen(false);
-            qr.reset(eventId);
-        } catch (e) {
-            setError((e as Error)?.message || t('qrParticipant.deleteError'));
-        } finally {
-            setLoading(false);
+        setSubmitting(true)
+        setDeleteQrCodeError(null)
+        const {error} = await deleteQrCode({
+            path: {qrCodeId: qr.qrCodeId!},
+        })
+        if (error) {
+            setDeleteQrCodeError(t('qrParticipant.deleteError'))
         }
-    };
+        setDialogOpen(false)
+        qr.reset(eventId)
+        setSubmitting(false)
+    }
 
-    const handleTeamCheckIn = async (team: TeamStatusWithParticipantsDto) => {
-        setTeamActionLoading(prev => new Set(prev).add(team.competitionRegistrationId));
-        try {
-            const result = await checkInTeam({
-                path: {teamId: team.competitionRegistrationId},
-                body: {eventId}
-            });
+    const handleTeamCheckInOut = async (team: TeamStatusWithParticipantsDto, checkIn: boolean) => {
+        setSubmitting(true)
+        const {error} = await checkInOutTeam({
+            path: {
+                eventId,
+                competitionRegistrationId: team.competitionRegistrationId,
+            },
+            query: {
+                checkIn: checkIn,
+            },
+        })
 
-            if (result.data) {
-                feedback.success(t('team.checkIn.success'));
-                // Reload teams to get updated status
-                const {data} = await getTeamsByParticipantQrCode({
-                    path: {qrCode: qr.qrCodeId!},
-                    query: {eventId},
-                    throwOnError: true
-                });
-                setTeams(data || []);
-            }
-        } catch {
-            feedback.error(t('team.checkIn.error'));
-        } finally {
-            setTeamActionLoading(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(team.competitionRegistrationId);
-                return newSet;
-            });
+        setSubmitting(false)
+        if (error) {
+            feedback.error(checkIn ? t('team.checkIn.error') : t('team.checkOut.error'))
+        } else {
+            feedback.success(checkIn ? t('team.checkIn.success') : t('team.checkOut.success'))
         }
-    };
-
-    const handleTeamCheckOut = async (team: TeamStatusWithParticipantsDto) => {
-        setTeamActionLoading(prev => new Set(prev).add(team.competitionRegistrationId));
-        try {
-            const result = await checkOutTeam({
-                path: {teamId: team.competitionRegistrationId},
-                body: {eventId},
-                throwOnError: true
-            });
-
-            if (result.data) {
-                feedback.success(t('team.checkOut.success'));
-                // Reload teams to get updated status
-                const {data} = await getTeamsByParticipantQrCode({
-                    path: {qrCode: qr.qrCodeId!},
-                    query: {eventId}
-                });
-                setTeams(data || []);
-            }
-        } catch {
-            feedback.error(t('team.checkOut.error'));
-        } finally {
-            setTeamActionLoading(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(team.competitionRegistrationId);
-                return newSet;
-            });
-        }
-    };
+        setReloadTeams(prev => !prev)
+    }
 
     return (
         <Stack
             spacing={2}
             alignItems="center"
             justifyContent="center"
-            sx={{width: '100%', maxWidth: 600}}
-        >
+            sx={{width: '100%', maxWidth: 600}}>
             <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrParticipant.title')}
             </Typography>
 
             {/* Caterer food restriction message */}
             {isCaterer && qr.response && (
-                <Alert severity="error" icon={<Cancel/>} sx={{mb: 2, width: '100%'}}>
+                <Alert severity="error" icon={<Cancel />} sx={{mb: 2, width: '100%'}}>
                     {t('club.participant.foodNotAllowed')}
                 </Alert>
             )}
 
             {/* QR Code Assignment Info Box */}
-            {qr.response && allowed && !isCaterer && (
-                <QrAssignmentInfo response={qr.response} />
-            )}
+            {qr.response && allowed && !isCaterer && <QrAssignmentInfo response={qr.response} />}
 
-            {!allowed && (
-                <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>
-            )}
-            
+            {!allowed && <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>}
+
             {canCheck && (
                 <TeamCheckInOut
-                    teams={teams}
-                    loading={loadingTeams}
-                    teamActionLoading={teamActionLoading}
-                    onCheckIn={handleTeamCheckIn}
-                    onCheckOut={handleTeamCheckOut}
+                    teams={teamsData ?? []}
+                    loading={teamsPending}
+                    teamActionLoading={submitting}
+                    onCheckIn={team => handleTeamCheckInOut(team, true)}
+                    onCheckOut={team => handleTeamCheckInOut(team, false)}
                 />
             )}
-            
+
             {canEditRequirements && (
                 <RequirementsChecklist
-                    requirements={requirements}
+                    requirements={participantRequirementsData?.data ?? []}
                     checkedRequirements={checkedRequirements}
-                    pending={pending}
+                    pending={participantRequirementsPending}
                     onRequirementChange={handleRequirementChange}
                 />
             )}
-            
+
             {canRemove && (
                 <Button
                     color="error"
                     variant="contained"
                     fullWidth
-                    onClick={() => setDialogOpen(true)}
-                >
+                    onClick={() => setDialogOpen(true)}>
                     {t('qrParticipant.removeAssignment')}
                 </Button>
             )}
-            
-            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>{t('common.back')}</Button>
-            
+
+            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>
+                {t('common.back')}
+            </Button>
+
+            {/*TODO useConfirmation()*/}
             <QrDeleteDialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 onDelete={handleDelete}
-                loading={loading}
-                error={error}
+                loading={submitting}
+                error={deleteQrCodeError}
                 type="participant"
             />
         </Stack>

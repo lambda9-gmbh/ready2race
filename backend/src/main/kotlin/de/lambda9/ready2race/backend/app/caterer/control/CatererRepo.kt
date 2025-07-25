@@ -15,9 +15,6 @@ import org.jooq.impl.DSL
 import java.util.UUID
 
 object CatererRepo {
-    
-    fun create(record: de.lambda9.ready2race.backend.database.generated.tables.records.CatererTransactionRecord): JIO<UUID> = 
-        CATERER_TRANSACTION.insertReturning(record) { CATERER_TRANSACTION.ID }
 
     fun CatererTransactionView.searchFields() = listOf(
         CATERER_FIRSTNAME,
@@ -25,6 +22,11 @@ object CatererRepo {
         USER_FIRSTNAME,
         USER_LASTNAME
     )
+
+    fun create(record: de.lambda9.ready2race.backend.database.generated.tables.records.CatererTransactionRecord): JIO<UUID> =
+        CATERER_TRANSACTION.insertReturning(record) { CATERER_TRANSACTION.ID }
+
+
 
     fun countByEventId(
         eventId: UUID,

@@ -17,7 +17,7 @@ import { TeamStatusWithParticipantsDto } from '@api/types.gen.ts';
 interface TeamCheckInOutProps {
     teams: TeamStatusWithParticipantsDto[];
     loading: boolean;
-    teamActionLoading: Set<string>;
+    teamActionLoading: boolean;
     onCheckIn: (team: TeamStatusWithParticipantsDto) => void;
     onCheckOut: (team: TeamStatusWithParticipantsDto) => void;
 }
@@ -31,6 +31,7 @@ export const TeamCheckInOut = ({
 }: TeamCheckInOutProps) => {
     const { t } = useTranslation();
 
+    // todo use Throbber
     if (loading) {
         return (
             <Box display="flex" justifyContent="center" p={2}>
@@ -73,17 +74,17 @@ export const TeamCheckInOut = ({
                             <Button
                                 startIcon={<Logout />}
                                 onClick={() => onCheckOut(team)}
-                                disabled={teamActionLoading.has(team.competitionRegistrationId)}
+                                disabled={teamActionLoading}
                                 variant="outlined"
                                 fullWidth
                             >
                                 {t('team.checkOutText')}
                             </Button>
-                        ) : (
+                        ) : (/* todo: use LoadingButton*/
                             <Button
                                 startIcon={<Login />}
                                 onClick={() => onCheckIn(team)}
-                                disabled={teamActionLoading.has(team.competitionRegistrationId)}
+                                disabled={teamActionLoading}
                                 variant="contained"
                                 fullWidth
                             >

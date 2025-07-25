@@ -3,13 +3,10 @@ package de.lambda9.ready2race.backend.app.competitionRegistration.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
-import de.lambda9.ready2race.backend.app.qrCodeApp.entity.CheckInOutRequest
 import de.lambda9.ready2race.backend.app.teamTracking.boundary.TeamTrackingService
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
@@ -61,26 +58,15 @@ fun Route.competitionRegistration() {
                 }
             }
 
-            route("/check-in") {
+            route("/checkInOut") {
                 post {
                     call.respondComprehension {
                         val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
+                        val eventId = !pathParam("eventId", uuid)
                         val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
-                        val body = !receiveKIO(CheckInOutRequest.example)
+                        val checkIn = !queryParam("checkIn", boolean)
 
-                        TeamTrackingService.handleTeamCheckIn(competitionRegistrationId, body.eventId, user.id)
-                    }
-                }
-            }
-
-            route("/check-out") {
-                post {
-                    call.respondComprehension {
-                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
-                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
-                        val body = !receiveKIO(CheckInOutRequest.example)
-
-                        TeamTrackingService.handleTeamCheckOut(competitionRegistrationId, body.eventId, user.id)
+                        TeamTrackingService.teamCheckInOut(competitionRegistrationId, eventId, user.id!!, checkIn)
                     }
                 }
             }

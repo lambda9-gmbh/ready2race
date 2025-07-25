@@ -3062,6 +3062,35 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{qrCode}/teams:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: qrCode
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getTeamsByParticipantQrCode
+      responses:
+        200:
+          description: Teams associated with participant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /participantRequirement/{participantRequirementId}:
     parameters:
       - name: participantRequirementId
@@ -4149,12 +4178,7 @@ paths:
 
   /event/{eventId}/workshift:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addWorkShift
       requestBody:
@@ -4228,12 +4252,7 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     put:
       operationId: updateWorkShift
       requestBody:
@@ -4500,7 +4519,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewCatererTransactionDTO'
+              $ref: '#/components/schemas/CatererTransactionRequest'
       responses:
         204:
           description: Catering transaction successfully created
@@ -4515,82 +4534,6 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  # Team Tracking endpoints
-  /app/team/{teamId}/check-in:
-    parameters:
-      - name: teamId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    post:
-      operationId: checkInTeam
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - eventId
-              properties:
-                eventId:
-                  type: string
-                  format: uuid
-      responses:
-        200:
-          description: Team check-in result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeamTrackingScanDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-
-  /app/team/{teamId}/check-out:
-    parameters:
-      - name: teamId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    post:
-      operationId: checkOutTeam
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - eventId
-              properties:
-                eventId:
-                  type: string
-                  format: uuid
-      responses:
-        200:
-          description: Team check-out result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeamTrackingScanDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
 
   /app/qr-assignment/participants:
     parameters:
@@ -4626,77 +4569,22 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /app/participant/{qrCode}/teams:
+
+  # Competition Registration Check-In/Check-Out endpoints
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/checkInOut:
     parameters:
-      - name: qrCode
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: eventId
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+      - name: checkIn
         in: query
         required: true
         schema:
-          type: string
-          format: uuid
-    get:
-      operationId: getTeamsByParticipantQrCode
-      responses:
-        200:
-          description: Teams associated with participant
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-
-  # Competition Registration Check-In/Check-Out endpoints
-  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/check-in:
-    parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: competitionId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: competitionRegistrationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+          type: boolean
     post:
-      operationId: checkInCompetitionRegistration
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - eventId
-              properties:
-                eventId:
-                  type: string
-                  format: uuid
+      operationId: checkInOutTeam
       responses:
         200:
-          description: Competition registration check-in result
+          description: Team check-in-out result
           content:
             application/json:
               schema:
@@ -4705,58 +4593,12 @@ paths:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
-        500:
-          $ref: '#/components/responses/500'
-
-  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/check-out:
-    parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: competitionId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: competitionRegistrationId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
-    post:
-      operationId: checkOutCompetitionRegistration
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - eventId
-              properties:
-                eventId:
-                  type: string
-                  format: uuid
-      responses:
-        200:
-          description: Competition registration check-out result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeamTrackingScanDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        404:
-          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
 
@@ -7937,6 +7779,16 @@ components:
         paid:
           type: boolean
 
+
+
+    StartListFileType:
+      type: string
+      enum:
+        - PDF
+        - CSV
+
+
+
     CatererTransactionViewDto:
       type: object
       required:
@@ -7978,11 +7830,23 @@ components:
           type: string
           format: date-time
 
-    StartListFileType:
-      type: string
-      enum:
-        - PDF
-        - CSV
+    CatererTransactionRequest:
+      type: object
+      required:
+        - appUserId
+        - eventId
+        - price
+      properties:
+        appUserId:
+          type: string
+          format: uuid
+        price:
+          type: string
+          format: decimal
+        eventId:
+          type: string
+          format: uuid
+
 
     QrCodeParticipantResponse:
       type: object
@@ -8199,56 +8063,3 @@ components:
           items:
             $ref: '#/components/schemas/ParticipantQrAssignmentDto'
 
-    NewCatererTransactionDTO:
-      type: object
-      required:
-        - appUserId
-        - eventId
-        - price
-      properties:
-        appUserId:
-          type: string
-          format: uuid
-        price:
-          type: string
-          format: decimal
-        eventId:
-          type: string
-          format: uuid
-
-    CatererTransactionDTO:
-      type: object
-      required:
-        - id
-        - catererId
-        - appUserId
-        - price
-        - eventId
-        - createdAt
-        - updatedAt
-        - createdBy
-      properties:
-        id:
-          type: string
-          format: uuid
-        catererId:
-          type: string
-          format: uuid
-        appUserId:
-          type: string
-          format: uuid
-        price:
-          type: string
-          format: decimal
-        eventId:
-          type: string
-          format: uuid
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        createdBy:
-          type: string
-          format: uuid
