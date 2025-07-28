@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.app.contactInformation.boundary.contactInfo
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.documentTemplate
 import de.lambda9.ready2race.backend.app.event.boundary.event
 import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumentType
+import de.lambda9.ready2race.backend.app.eventInfo.boundary.eventInfo
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.invoice.boundary.invoice
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
@@ -31,6 +32,7 @@ fun Application.configureRouting() {
             user()
             role()
             event()
+            eventInfo()
             club()
             namedParticipant()
             fee()

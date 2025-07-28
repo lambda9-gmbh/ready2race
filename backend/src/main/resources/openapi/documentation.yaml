@@ -4182,6 +4182,160 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+
+  /event/{eventId}/info/upcoming-matches:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getUpcomingMatches
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        200:
+          description: Upcoming competition matches retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpcomingCompetitionMatchInfo'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/info/latest-match-results:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getLatestMatchResults
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        200:
+          description: Latest match results retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LatestMatchResultInfo'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/info-views:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getInfoViews
+      responses:
+        200:
+          description: Info view configurations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InfoViewConfigurationDto'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    post:
+      operationId: createInfoView
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfoViewConfigurationRequest'
+      responses:
+        200:
+          description: Info view configuration created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoViewConfigurationDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/info-views/{viewId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: viewId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateInfoView
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InfoViewConfigurationRequest'
+      responses:
+        200:
+          description: Info view configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InfoViewConfigurationDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteInfoView
+      responses:
+        204:
+          description: Info view configuration deleted successfully
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
 components:
 
   parameters:
@@ -7192,3 +7346,307 @@ components:
       enum:
         - PDF
         - CSV
+    InfoViewType:
+      type: string
+      enum:
+        - UPCOMING_MATCHES
+        - LATEST_MATCH_RESULTS
+
+    InfoViewConfigurationDto:
+      type: object
+      required:
+        - id
+        - eventId
+        - viewType
+        - displayDurationSeconds
+        - dataLimit
+        - sortOrder
+        - isActive
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        viewType:
+          $ref: '#/components/schemas/InfoViewType'
+        displayDurationSeconds:
+          type: integer
+          minimum: 1
+        dataLimit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        filters:
+          type: object
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    InfoViewConfigurationRequest:
+      type: object
+      required:
+        - viewType
+        - displayDurationSeconds
+        - dataLimit
+        - sortOrder
+        - isActive
+      properties:
+        viewType:
+          $ref: '#/components/schemas/InfoViewType'
+        displayDurationSeconds:
+          type: integer
+          minimum: 1
+        dataLimit:
+          type: integer
+          minimum: 1
+          maximum: 100
+        filters:
+          type: object
+        sortOrder:
+          type: integer
+        isActive:
+          type: boolean
+
+
+
+    ParticipantInfo:
+      type: object
+      required:
+        - participantId
+        - firstName
+        - lastName
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        namedRole:
+          type: string
+          nullable: true
+
+
+
+
+    MatchStatus:
+      type: string
+      enum:
+        - PENDING
+        - IN_PROGRESS
+        - COMPLETED
+
+    MatchTeamInfo:
+      type: object
+      required:
+        - teamId
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+          nullable: true
+        teamNumber:
+          type: integer
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        result:
+          type: string
+          nullable: true
+        rank:
+          type: integer
+          nullable: true
+
+
+    UpcomingCompetitionMatchInfo:
+      type: object
+      required:
+        - matchId
+        - competitionId
+        - competitionName
+        - executionOrder
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        matchNumber:
+          type: integer
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        eventDayName:
+          type: string
+          nullable: true
+        scheduledStartTime:
+          type: string
+          format: date-time
+          nullable: true
+        placeName:
+          type: string
+          nullable: true
+        roundNumber:
+          type: integer
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        executionOrder:
+          type: integer
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpcomingMatchTeamInfo'
+
+    UpcomingMatchTeamInfo:
+      type: object
+      required:
+        - teamId
+        - participants
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+          nullable: true
+        startNumber:
+          type: integer
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpcomingMatchParticipantInfo'
+
+    UpcomingMatchParticipantInfo:
+      type: object
+      required:
+        - participantId
+        - firstName
+        - lastName
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        namedRole:
+          type: string
+          nullable: true
+        year:
+          type: integer
+          nullable: true
+        gender:
+          type: string
+          nullable: true
+        externalClubName:
+          type: string
+          nullable: true
+
+    LatestMatchResultInfo:
+      type: object
+      required:
+        - matchId
+        - competitionId
+        - competitionName
+        - updatedAt
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        matchNumber:
+          type: integer
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        eventDayName:
+          type: string
+          nullable: true
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchResultTeamInfo'
+
+    MatchResultTeamInfo:
+      type: object
+      required:
+        - teamId
+        - place
+        - participants
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+          nullable: true
+        teamNumber:
+          type: integer
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        place:
+          type: integer
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantInfo'

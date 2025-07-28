@@ -469,6 +469,24 @@ import type {
     SetInvoicePaidData,
     SetInvoicePaidError,
     SetInvoicePaidResponse,
+    GetUpcomingMatchesData,
+    GetUpcomingMatchesError,
+    GetUpcomingMatchesResponse,
+    GetLatestMatchResultsData,
+    GetLatestMatchResultsError,
+    GetLatestMatchResultsResponse,
+    GetInfoViewsData,
+    GetInfoViewsError,
+    GetInfoViewsResponse,
+    CreateInfoViewData,
+    CreateInfoViewError,
+    CreateInfoViewResponse,
+    UpdateInfoViewData,
+    UpdateInfoViewError,
+    UpdateInfoViewResponse,
+    DeleteInfoViewData,
+    DeleteInfoViewError,
+    DeleteInfoViewResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2357,5 +2375,79 @@ export const setInvoicePaid = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/invoice/{invoiceId}',
+    })
+}
+
+export const getUpcomingMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetUpcomingMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetUpcomingMatchesResponse,
+        GetUpcomingMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/upcoming-matches',
+    })
+}
+
+export const getLatestMatchResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLatestMatchResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLatestMatchResultsResponse,
+        GetLatestMatchResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/latest-match-results',
+    })
+}
+
+export const getInfoViews = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetInfoViewsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetInfoViewsResponse, GetInfoViewsError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/info-views',
+    })
+}
+
+export const createInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateInfoViewResponse,
+        CreateInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views',
+    })
+}
+
+export const updateInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateInfoViewResponse,
+        UpdateInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views/{viewId}',
+    })
+}
+
+export const deleteInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteInfoViewResponse,
+        DeleteInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views/{viewId}',
     })
 }

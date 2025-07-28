@@ -24,7 +24,7 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
-import {Forward} from '@mui/icons-material'
+import {Forward, InfoOutlined} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {useMemo, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
@@ -147,14 +147,16 @@ const EventPage = () => {
                             justifyContent={'space-between'}
                             alignItems={'center'}>
                             <Typography variant="h1">{data.name}</Typography>
-                            <Link
-                                to={'/event/$eventId/register'}
-                                params={{eventId}}
-                                hidden={!canRegister}>
-                                <Button endIcon={<Forward />} variant={'contained'}>
-                                    {t('event.registerNow')}
-                                </Button>
-                            </Link>
+                            <Stack direction={'row'} spacing={1}>
+                                <Link
+                                    to={'/event/$eventId/register'}
+                                    params={{eventId}}
+                                    hidden={!canRegister}>
+                                    <Button endIcon={<Forward />} variant={'contained'}>
+                                        {t('event.registerNow')}
+                                    </Button>
+                                </Link>
+                            </Stack>
                         </Stack>
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
@@ -268,6 +270,25 @@ const EventPage = () => {
                                         </List>
                                     </Box>
                                 </Card>
+                                {user.checkPrivilege(readEventGlobal) && (
+                                    <Card sx={{ p: 2 }}>
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            {t('event.info.sectionTitle')}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                            {t('event.info.pageDescription')}
+                                        </Typography>
+                                        <Link to={'/event/$eventId/info'} params={{eventId}}>
+                                            <Button 
+                                                startIcon={<InfoOutlined />} 
+                                                variant="outlined"
+                                                fullWidth
+                                            >
+                                                {t('event.info.manageInfoViews')}
+                                            </Button>
+                                        </Link>
+                                    </Card>
+                                )}
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'competitions'} activeTab={activeTab}>

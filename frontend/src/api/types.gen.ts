@@ -645,6 +645,34 @@ export type FeeRequest = {
 
 export type Gender = 'M' | 'F' | 'D'
 
+export type InfoViewConfigurationDto = {
+    id: string
+    eventId: string
+    viewType: InfoViewType
+    displayDurationSeconds: number
+    dataLimit: number
+    filters?: {
+        [key: string]: unknown
+    }
+    sortOrder: number
+    isActive: boolean
+    createdAt: string
+    updatedAt: string
+}
+
+export type InfoViewConfigurationRequest = {
+    viewType: InfoViewType
+    displayDurationSeconds: number
+    dataLimit: number
+    filters?: {
+        [key: string]: unknown
+    }
+    sortOrder: number
+    isActive: boolean
+}
+
+export type InfoViewType = 'UPCOMING_MATCHES' | 'LATEST_MATCH_RESULTS'
+
 export type Invalid =
     | string
     | {
@@ -699,6 +727,21 @@ export type InvoiceUpdateRequestDto = {
     paid: boolean
 }
 
+export type LatestMatchResultInfo = {
+    matchId: string
+    competitionId: string
+    competitionName: string
+    categoryName?: string | null
+    roundName?: string | null
+    matchName?: string | null
+    matchNumber?: number | null
+    updatedAt: string
+    eventDayId?: string | null
+    eventDayDate?: string | null
+    eventDayName?: string | null
+    teams: Array<MatchResultTeamInfo>
+}
+
 export type LoginDto = {
     id: string
     privileges: Array<PrivilegeDto>
@@ -708,6 +751,26 @@ export type LoginDto = {
 export type LoginRequest = {
     email: string
     password: string
+}
+
+export type MatchResultTeamInfo = {
+    teamId: string
+    teamName?: string | null
+    teamNumber?: number | null
+    clubName?: string | null
+    place: number
+    participants: Array<ParticipantInfo>
+}
+
+export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
+
+export type MatchTeamInfo = {
+    teamId: string
+    teamName?: string | null
+    teamNumber?: number | null
+    clubName?: string | null
+    result?: string | null
+    rank?: number | null
 }
 
 export type NamedParticipantDto = {
@@ -831,6 +894,13 @@ export type ParticipantForExecutionDto = {
     competitionRegistrationName?: string
     external?: boolean
     externalClubName?: string
+}
+
+export type ParticipantInfo = {
+    participantId: string
+    firstName: string
+    lastName: string
+    namedRole?: string | null
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -1022,6 +1092,41 @@ export type UnprocessableEntityError = ApiError & {
         | {
               result: Invalid
           }
+}
+
+export type UpcomingCompetitionMatchInfo = {
+    matchId: string
+    matchNumber?: number | null
+    competitionId: string
+    competitionName: string
+    categoryName?: string | null
+    eventDayId?: string | null
+    eventDayDate?: string | null
+    eventDayName?: string | null
+    scheduledStartTime?: string | null
+    placeName?: string | null
+    roundNumber?: number | null
+    roundName?: string | null
+    executionOrder: number
+    teams: Array<UpcomingMatchTeamInfo>
+}
+
+export type UpcomingMatchParticipantInfo = {
+    participantId: string
+    firstName: string
+    lastName: string
+    namedRole?: string | null
+    year?: number | null
+    gender?: string | null
+    externalClubName?: string | null
+}
+
+export type UpcomingMatchTeamInfo = {
+    teamId: string
+    teamName?: string | null
+    startNumber?: number | null
+    clubName?: string | null
+    participants: Array<UpcomingMatchParticipantInfo>
 }
 
 export type UpdateAppUserRequest = {
@@ -3290,3 +3395,73 @@ export type SetInvoicePaidData = {
 export type SetInvoicePaidResponse = void
 
 export type SetInvoicePaidError = BadRequestError | ApiError
+
+export type GetUpcomingMatchesData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        limit?: number
+    }
+}
+
+export type GetUpcomingMatchesResponse = Array<UpcomingCompetitionMatchInfo>
+
+export type GetUpcomingMatchesError = ApiError
+
+export type GetLatestMatchResultsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        limit?: number
+    }
+}
+
+export type GetLatestMatchResultsResponse = Array<LatestMatchResultInfo>
+
+export type GetLatestMatchResultsError = ApiError
+
+export type GetInfoViewsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetInfoViewsResponse = Array<InfoViewConfigurationDto>
+
+export type GetInfoViewsError = ApiError
+
+export type CreateInfoViewData = {
+    body: InfoViewConfigurationRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type CreateInfoViewResponse = InfoViewConfigurationDto
+
+export type CreateInfoViewError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateInfoViewData = {
+    body: InfoViewConfigurationRequest
+    path: {
+        eventId: string
+        viewId: string
+    }
+}
+
+export type UpdateInfoViewResponse = InfoViewConfigurationDto
+
+export type UpdateInfoViewError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteInfoViewData = {
+    path: {
+        eventId: string
+        viewId: string
+    }
+}
+
+export type DeleteInfoViewResponse = void
+
+export type DeleteInfoViewError = ApiError

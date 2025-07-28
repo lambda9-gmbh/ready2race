@@ -72,13 +72,20 @@
     "next": "Next",
     "and": "and",
     "remove": "Remove",
+    "items": "Items",
+    "more": "More",
+    "create": "Create",
+    "update": "Update",
+    "lastUpdate": "Last Update",
+    "confirmDelete": "Confirm Delete",
     "language": {
       "menu": "Select language"
     }
   },
   "format": {
     "date": "MM/dd/yyyy",
-    "datetime": "MM/dd/yyyy, hh:mm a"
+    "datetime": "MM/dd/yyyy, hh:mm a",
+    "time": "hh:mm a"
   },
   "document": {
     "template": {
@@ -606,6 +613,48 @@
       "actions": "Actions",
       "organisation": "Organisation",
       "invoices": "Invoices"
+    },
+    "info": {
+      "infoPage": "Info Display",
+      "sectionTitle": "Public Information Display",
+      "pageDescription": "Configure and view information displays for public screens showing event information like upcoming matches and results.",
+      "manageInfoViews": "View and Configure Info Displays",
+      "noViews": "No views configured",
+      "configureViews": "Click the settings icon to configure views",
+      "viewType": {
+        "upcomingMatches": "Upcoming Matches",
+        "latestMatchResults": "Latest Match Results"
+      },
+      "configuration": "View Configuration",
+      "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
+      "noViewsConfigured": "No views configured",
+      "editView": "Edit View",
+      "addView": "Add View",
+      "displayDuration": "Display Duration",
+      "dataLimit": "Data Limit",
+      "filtersComingSoon": "Filters coming soon",
+      "viewCreated": "View created successfully",
+      "viewUpdated": "View updated successfully",
+      "viewDeleted": "View deleted successfully",
+      "createError": "Error creating view",
+      "updateError": "Error updating view",
+      "deleteError": "Error deleting view",
+      "noUpcomingMatches": "No upcoming matches",
+      "noLatestMatchResults": "No latest match results available",
+      "unnamed": "Unnamed",
+      "matchStatus": {
+        "pending": "Pending",
+        "inProgress": "In Progress",
+        "completed": "Completed"
+      },
+      "rank": "Rank",
+      "place": "Place",
+      "team": "Team",
+      "participants": "Participants",
+      "result": "Result",
+      "points": "Points",
+      "matchTeams": "Match Teams",
+      "executionOrder": "Execution Order: {{order}}"
     }
   },
   "task": {

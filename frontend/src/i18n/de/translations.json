@@ -72,13 +72,20 @@
     "next": "Weiter",
     "and": "und",
     "remove": "Entfernen",
+    "items": "Elemente",
+    "more": "Mehr",
+    "create": "Erstellen",
+    "update": "Aktualisieren",
+    "lastUpdate": "Letzte Aktualisierung",
+    "confirmDelete": "Löschen bestätigen",
     "language": {
       "menu": "Sprache auswählen"
     }
   },
   "format": {
     "date": "dd.MM.yyyy",
-    "datetime": "dd.MM.yyyy, HH:mm"
+    "datetime": "dd.MM.yyyy, HH:mm",
+    "time": "HH:mm"
   },
   "document": {
     "template": {
@@ -606,6 +613,48 @@
       "actions": "Aktionen",
       "organisation": "Organisation",
       "invoices": "Rechnungen"
+    },
+    "info": {
+      "infoPage": "Info-Anzeige",
+      "sectionTitle": "Öffentliche Informationsanzeige",
+      "pageDescription": "Konfigurieren und betrachten Sie Informationsanzeigen für öffentliche Bildschirme, die Veranstaltungsinformationen wie anstehende Läufe und Ergebnisse anzeigen.",
+      "manageInfoViews": "Info-Anzeigen ansehen und konfigurieren",
+      "noViews": "Keine Ansichten konfiguriert",
+      "configureViews": "Klicken Sie auf das Einstellungssymbol, um Ansichten zu konfigurieren",
+      "viewType": {
+        "upcomingMatches": "Anstehende Läufe",
+        "latestMatchResults": "Neueste Laufergebnisse"
+      },
+      "configuration": "Ansichtskonfiguration",
+      "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
+      "noViewsConfigured": "Keine Ansichten konfiguriert",
+      "editView": "Ansicht bearbeiten",
+      "addView": "Ansicht hinzufügen",
+      "displayDuration": "Anzeigedauer",
+      "dataLimit": "Datenlimit",
+      "filtersComingSoon": "Filter werden in Kürze verfügbar sein",
+      "viewCreated": "Ansicht erfolgreich erstellt",
+      "viewUpdated": "Ansicht erfolgreich aktualisiert",
+      "viewDeleted": "Ansicht erfolgreich gelöscht",
+      "createError": "Fehler beim Erstellen der Ansicht",
+      "updateError": "Fehler beim Aktualisieren der Ansicht",
+      "deleteError": "Fehler beim Löschen der Ansicht",
+      "noUpcomingMatches": "Keine anstehenden Läufe",
+      "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
+      "unnamed": "Unbenannt",
+      "matchStatus": {
+        "pending": "Ausstehend",
+        "inProgress": "Läuft",
+        "completed": "Abgeschlossen"
+      },
+      "rank": "Rang",
+      "place": "Platz",
+      "team": "Team",
+      "participants": "Teilnehmer",
+      "result": "Ergebnis",
+      "points": "Punkte",
+      "matchTeams": "Lauf-Teams",
+      "executionOrder": "Ausführungsreihenfolge: {{order}}"
     }
   },
   "task": {
