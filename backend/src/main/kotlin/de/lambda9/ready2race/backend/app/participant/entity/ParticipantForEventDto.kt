@@ -15,4 +15,6 @@ data class ParticipantForEventDto(
     val external: Boolean?,
     val externalClubName: String?,
     val participantRequirementsChecked: List<ParticipantRequirementReducedDto>?,
+    val qrCodeId: String?,
+    val namedParticipantIds: List<UUID>,
 )

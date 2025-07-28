@@ -1,5 +1,8 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists caterer_transaction_view;
+drop view if exists participant_qr_assignment_view;
+drop view if exists team_status_with_participants;
 drop view if exists startlist_view;
 drop view if exists startlist_team;
 drop view if exists invoice_download;
@@ -27,6 +30,7 @@ drop view if exists event_public_view;
 drop view if exists participant_for_event;
 drop view if exists participant_id_for_event;
 drop view if exists participant_requirement_for_event;
+drop view if exists participant_requirement_named_participant;
 drop view if exists event_document_download;
 drop view if exists event_document_view;
 drop view if exists app_user_registration_view;
@@ -39,6 +43,7 @@ drop view if exists fee_for_competition;
 drop view if exists fee_for_competition_properties;
 drop view if exists named_participant_for_competition_properties;
 drop view if exists app_user_with_privileges;
+drop view if exists app_user_with_qr_code_for_event;
 drop view if exists app_user_with_roles;
 drop view if exists every_app_user_with_roles;
 drop view if exists role_with_privileges;
@@ -77,11 +82,13 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles
+       coalesce(array_agg(rwp) filter ( where rwp.id is not null ), '{}') as roles,
+       qc.qr_code_id
 from app_user au
          left join app_user_has_role auhr on au.id = auhr.app_user
          left join role_with_privileges rwp on auhr.role = rwp.id
-group by au.id;
+         left join qr_codes qc on qc.app_user = au.id
+    group by au.id, qc.id;
 
 -- refactor this and similar views to use where-clause in API instead
 create view app_user_with_roles as
@@ -90,12 +97,28 @@ select au.id,
        au.lastname,
        au.email,
        au.club,
-       au.roles
+       au.roles,
+       au.qr_code_id
 from every_app_user_with_roles au
 where not exists(select *
                  from app_user_has_role auhr2
                  where auhr2.role = '00000000-0000-0000-0000-000000000000'
                    and auhr2.app_user = au.id)
+;
+
+create view app_user_with_qr_code_for_event as
+select au.id,
+       au.firstname,
+       au.lastname,
+       au.email,
+       au.club,
+       au.roles,
+       qc.qr_code_id,
+       qc.event as event_id,
+       qc.created_at,
+       qc.created_by
+from every_app_user_with_roles au
+         left join qr_codes qc on qc.app_user = au.id
 ;
 
 create view app_user_with_privileges as
@@ -343,13 +366,31 @@ select ed.id,
 from event_document ed
          join event_document_data edd on ed.id = edd.event_document;
 
-create view participant_requirement_for_event as
-select pr.*,
-       e.id                                                        as event,
-       (case when ehpr.event is not null then true else false end) as active
+-- Helper view to convert requirements to typed records
+create or replace view participant_requirement_named_participant as
+select
+    ehpr.event,
+    ehpr.participant_requirement,
+    ehpr.named_participant as id,
+    np.name,
+    ehpr.qr_code_required
+from event_has_participant_requirement ehpr
+left join named_participant np on ehpr.named_participant = np.id;
+
+create or replace view participant_requirement_for_event as
+select
+    pr.*,
+    e.id as event,
+    bool_or(ehpr.event is not null) as active,
+    coalesce(array_agg(distinct prnp) filter (where prnp is not null), '{}') as requirements
 from participant_requirement pr
          cross join event e
-         left join event_has_participant_requirement ehpr on pr.id = ehpr.participant_requirement and e.id = ehpr.event;
+         left join event_has_participant_requirement ehpr
+                   on pr.id = ehpr.participant_requirement and e.id = ehpr.event
+         left join participant_requirement_named_participant prnp
+                   on ehpr.event = prnp.event
+                   and ehpr.participant_requirement = prnp.participant_requirement
+group by pr.id, e.id;
 
 create view participant_id_for_event as
 select er.event as event_id,
@@ -371,7 +412,9 @@ select er.event                                                                 
        p.gender,
        p.external,
        p.external_club_name,
-       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked
+       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
+       qc.qr_code_id,
+       array_agg(distinct crnp.named_participant) as named_participant_ids
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration
@@ -379,7 +422,8 @@ from event_registration er
          join participant p on crnp.participant = p.id
          left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
          left join participant_requirement pr on phrfe.participant_requirement = pr.id
-group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name
+         left join qr_codes qc on qc.participant = p.id
+group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name, qc.id
 order by c.name, p.firstname, p.lastname;
 
 create view event_public_view as
@@ -753,3 +797,82 @@ from competition_setup_match csm
          left join competition_category cc on cp.competition_category = cc.id
          left join startlist_team st on csm.id = st.competition_match
 group by csm.id, csr.id, cm.competition_setup_match, cp.id, cc.id, c.event;
+
+
+create view team_status_with_participants as
+select
+    cr.id as competition_registration_id,
+    cr.event_registration,
+    cr.competition,
+    c.name as club,
+    cr.name as team_name,
+    p.id as participant_id,
+    p.firstname,
+    p.lastname,
+    p.year,
+    p.gender,
+    np.name as named_pariticpant_name,
+    tt.scan_type as current_status,
+    tt.scanned_at as last_scan_at,
+    tt.scanned_by,
+    coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}') as substitutions_for_registration
+from competition_registration cr
+join competition_registration_named_participant crnp on crnp.competition_registration = cr.id
+join participant p on p.id = crnp.participant
+    join named_participant np on crnp.named_participant = np.id
+join club c on cr.club = c.id
+left join lateral (
+    select scan_type, scanned_at, scanned_by
+    from team_tracking
+    where competition_registration_id = cr.id
+    order by scanned_at desc
+    limit 1
+) tt on true
+left join substitution_view sv on cr.id = sv.competition_registration_id
+group by cr.id, cr.event_registration, cr.competition, c.name, cr.name, p.id, p.firstname, p.lastname, p.year, p.gender, np.name, tt.scan_type, tt.scanned_at, tt.scanned_by
+;
+
+create view participant_qr_assignment_view as
+SELECT 
+    p.id AS participant_id,
+    p.firstname,
+    p.lastname,
+    qc.qr_code_id AS qr_code_value,
+    np.name AS named_participant,
+    crnp.competition_registration,
+    cp.name AS competition_name,
+    er.event AS event_id,
+    er.club AS club_id
+FROM participant p
+INNER JOIN competition_registration_named_participant crnp 
+    ON p.id = crnp.participant
+INNER JOIN named_participant np
+    ON crnp.named_participant = np.id
+INNER JOIN competition_registration cr
+    ON crnp.competition_registration = cr.id
+INNER JOIN competition c
+    ON cr.competition = c.id
+INNER JOIN competition_properties cp
+    ON c.id = cp.competition
+INNER JOIN event_registration er
+    ON cr.event_registration = er.id
+LEFT JOIN qr_codes qc
+    ON p.id = qc.participant 
+    AND qc.event = er.event
+ORDER BY crnp.competition_registration, p.lastname, p.firstname;
+
+create view caterer_transaction_view as
+SELECT 
+    ct.id,
+    ct.caterer_id,
+    caterer.firstname AS caterer_firstname,
+    caterer.lastname AS caterer_lastname,
+    ct.app_user_id,
+    app_user.firstname AS user_firstname,
+    app_user.lastname AS user_lastname,
+    ct.event_id,
+    ct.price,
+    ct.created_at
+FROM caterer_transaction ct
+INNER JOIN app_user caterer ON ct.caterer_id = caterer.id
+INNER JOIN app_user app_user ON ct.app_user_id = app_user.id;

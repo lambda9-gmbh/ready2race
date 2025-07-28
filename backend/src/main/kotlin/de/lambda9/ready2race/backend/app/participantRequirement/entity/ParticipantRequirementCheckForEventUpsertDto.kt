@@ -6,7 +6,8 @@ import java.util.*
 
 data class ParticipantRequirementCheckForEventUpsertDto(
     val requirementId: UUID,
-    val approvedParticipants: List<UUID>
+    val approvedParticipants: List<UUID>,
+    val namedParticipantId: UUID? = null
 
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid
@@ -15,7 +16,8 @@ data class ParticipantRequirementCheckForEventUpsertDto(
         val example
             get() = ParticipantRequirementCheckForEventUpsertDto(
                 requirementId = UUID.randomUUID(),
-                approvedParticipants = listOf(UUID.randomUUID(), UUID.randomUUID())
+                approvedParticipants = listOf(UUID.randomUUID(), UUID.randomUUID()),
+                namedParticipantId = null
             )
     }
 }

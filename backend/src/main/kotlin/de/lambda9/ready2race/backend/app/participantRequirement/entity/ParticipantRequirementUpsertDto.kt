@@ -9,6 +9,7 @@ data class ParticipantRequirementUpsertDto(
     val name: String,
     val description: String?,
     val optional: Boolean?,
+    val checkInApp: Boolean?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::name validate notBlank,
@@ -20,6 +21,7 @@ data class ParticipantRequirementUpsertDto(
                 name = "Name",
                 description = "Description",
                 optional = false,
+                checkInApp = false,
             )
     }
 }

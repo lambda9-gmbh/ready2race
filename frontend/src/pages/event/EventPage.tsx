@@ -47,7 +47,9 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
+import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
+import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
 import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
 
 const EVENT_TABS = [
@@ -103,6 +105,12 @@ const EventPage = () => {
 
 
     const taskProps = useEntityAdministration<TaskDto>(t('task.task'))
+
+    const appUserWithQrCodeProps = useEntityAdministration<AppUserWithQrCodeDto>(
+        t('qrCode.appUsersWithQrCode'),
+        {entityCreate: false, entityUpdate: false},
+    )
+
 
     const a11yProps = (index: EventTab) => {
         return {
@@ -268,6 +276,10 @@ const EventPage = () => {
                             <Shiftplan />
                             <TaskTable {...taskProps.table} title={t('task.tasks')} />
                             <TaskDialog {...taskProps.dialog} eventId={eventId} />
+                            <AppUserWithQrCodeTable
+                                {...appUserWithQrCodeProps.table}
+                                title={t('qrCode.appUsersWithQrCode')}
+                            />
                         </Stack>
                     </TabPanel>
                     <TabPanel index={'settings'} activeTab={activeTab}>

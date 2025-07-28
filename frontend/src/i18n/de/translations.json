@@ -69,12 +69,21 @@
     "saveAndNext": "Speichern und weiter",
     "search": "Suchen",
     "back": "Zurück",
+    "reset": "Zurücksetzen",
     "next": "Weiter",
     "and": "und",
     "remove": "Entfernen",
+    "assign": "Zuweisen",
+    "noResults": "Keine Ergebnisse",
+    "tryDifferentSearch": "Versuchen Sie eine andere Suche",
     "language": {
       "menu": "Sprache auswählen"
-    }
+    },
+    "actions": "Aktionen",
+    "noClub": "Kein Verein",
+    "hide": "Ausblenden",
+    "show": "Anzeigen",
+    "name": "Name"
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -176,11 +185,24 @@
     "participants": "Mitglieder",
     "participant": {
       "title": "Mitglied",
+      "name": "Name",
+      "yearOfBirth": "Geburtsjahr",
+      "gender": "Geschlecht",
+      "role": "Rolle",
       "year": "Geburtsjahr",
       "external": "Extern",
       "externalClub": "Externer Verein",
       "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
-      "usedInRegistration": "In Meldung"
+      "usedInRegistration": "In Meldung",
+      "qrCodeId": "Qr Code Wert",
+      "qrCodeEdit": "QR Code Wert bearbeiten",
+      "qrCodeDelete": "QR Code Wert löschen",
+      "qrCodeDeleteConfirm": "Möchten Sie den QR Code wirklich löschen?",
+      "qrCodeEditDescription": "Bitte geben Sie den neuen QR Code Wert ein.",
+      "userQrCode": "Benutzer QR-Code",
+      "qrCode": "QR-Code",
+      "id": "Teilnehmer-ID",
+      "foodNotAllowed": "Diese Person darf KEIN Essen erhalten"
     }
   },
   "event": {
@@ -540,7 +562,8 @@
         "part1": "Bedingungen können ",
         "part2Link": "hier",
         "part3": " erstellt oder bearbeitet werden."
-      }
+      },
+      "checkInApp": "Per App prüfbar"
     },
     "action": {
       "registrationsReport": {
@@ -672,10 +695,44 @@
     "participantRequirement": "Teilnahmebedingung",
     "participantRequirements": "Teilnahmebedingungen",
     "active": "Aktiv",
-    "activate": "Für Veranstaltung aktivieren",
-    "remove": "Von Veranstaltung entfernen",
-    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
-    "tableHint": "Können bei Veranstaltungen aktiviert werden."
+    "activate": "Event zuweisen (für alle Teilnehmer)",
+    "remove": "Von Event entfernen",
+    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" vom Event entfernen? Dies betrifft alle zugewiesenen Teilnehmer und entfernt alle erfolgreichen Überprüfungen.",
+    "confirmRemoveGlobal": "Möchten Sie die globale Zuweisung der Bedingung \"{{requirement}}\" entfernen? Die Bedingung bleibt für individuell zugewiesene Teilnehmer bestehen.",
+    "tableHint": "Können bei Veranstaltungen aktiviert werden.",
+    "namedParticipantAssignments": "Zuordnungen",
+    "qrCodeRequirement": "QR-Code",
+    "global": "Global",
+    "toggleQrCode": "QR-Code-Pflicht umschalten",
+    "assignTo": "Zu {{name}} zuweisen",
+    "assignToWithQr": "Zu {{name}} zuweisen (mit QR-Code)",
+    "toggleQrCodeFor": "QR-Code für {{name}} umschalten",
+    "toggleQrCodeForGlobal": "QR-Code für globale Zuordnung umschalten",
+    "assignedToNamedParticipant": "Bedingung zu Named Participant zugewiesen",
+    "assignToParticipant": "Named Participant zuweisen",
+    "manageParticipants": "Named Participants verwalten",
+    "assignedParticipants": "Zugewiesene Named Participants",
+    "availableParticipants": "Verfügbare Named Participants",
+    "requireQrCode": "QR-Code erforderlich",
+    "allParticipantsAssigned": "Alle Named Participants sind bereits zugewiesen",
+    "removeFrom": "Von {{name}} entfernen",
+    "removedFromNamedParticipant": "Bedingung von Named Participant entfernt",
+    "assignGlobal": "Global zuweisen",
+    "assignGlobalWithQr": "Global zuweisen (mit QR-Code)",
+    "removeGlobal": "Globale Zuordnung entfernen",
+    "removedGlobal": "Globale Zuordnung entfernt",
+    "checkRequirements": "Bedingungen prüfen",
+    "checkInApp": "Per App prüfbar",
+    "namedParticipantRequirements": {
+      "title": "Named Participant Bedingungen",
+      "description": "Verwalten Sie spezifische Bedingungen für Named Participants",
+      "noNamedParticipants": "Keine Named Participants verfügbar",
+      "qrCodeRequired": "QR-Code erforderlich",
+      "assignedRequirements": "Zugewiesene Bedingungen",
+      "noRequirementsAssigned": "Keine Bedingungen zugewiesen",
+      "availableRequirements": "Verfügbare Bedingungen",
+      "allRequirementsAssigned": "Alle Bedingungen zugewiesen"
+    }
   },
   "user": {
     "user": "Benutzer",
@@ -692,6 +749,9 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
+    "qrCodeId": "Qr Code Wert",
+    "showQrCode": "QR-Code anzeigen",
+    "qrCodeFor": "QR-Code für",
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -903,5 +963,127 @@
       "notFound": "Der CAPTCHA ist veraltet"
     },
     "loading": "Lade CAPTCHA..."
+  },
+  "qrAssign": {
+    "title": "QR-Code zuweisen",
+    "participant": "Teilnehmer",
+    "user": "Benutzer",
+    "clubs": "Vereine",
+    "participants": "Teilnehmer",
+    "users": "Benutzer",
+    "noData": "Keine Daten",
+    "team": "Team",
+    "scanSystemUser": "Benutzer aus System scannen",
+    "scanUserQr": "Benutzer QR-Code scannen",
+    "invalidUserQr": "Ungültiger Benutzer QR-Code",
+    "invalidQrFormat": "Ungültiges QR-Code Format",
+    "userAssigned": "Benutzer {{userId}} zugewiesen",
+    "participantQrDetected": "Teilnehmer-QR-Code erkannt",
+    "appUserQrDetected": "Benutzer-QR-Code erkannt",
+    "noPermission": "Du hast keine Berechtigung, diesen QR-Code zuzuordnen.",
+    "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
+    "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen",
+    "selectClub": "Verein auswählen",
+    "search": "Suchen...",
+    "confirmSelection": "Auswahl bestätigen",
+    "confirm": "Hinzufügen"
+  },
+  "qrCode": {
+    "qrCode": "QR-Code",
+    "qrCodeId": "QR-Code-Wert",
+    "appUsersWithQrCode": "Benutzer mit QR-Codes",
+    "edit": "QR-Code bearbeiten",
+    "delete": "QR-Code löschen",
+    "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
+    "noQrCodeAssigned": "Kein QR-Code zugewiesen"
+  },
+  "qrAppuser": {
+    "title": "QR-Appuser",
+    "user": "User",
+    "underConstruction": "Seite im Aufbau",
+    "removeAssignment": "Qr Code Zuweisung aufheben",
+    "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
+    "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
+    "deleteError": "Fehler beim Löschen",
+    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben",
+    "assignmentInfo": "Zuordnungsinformationen"
+  },
+  "qrParticipant": {
+    "title": "Teilnehmer-QR-Code",
+    "noRight": "Du hast für diesen QR-Code-Typ keine Berechtigung.",
+    "loading": "Lade...",
+    "noRequirements": "Keine Requirements mit CheckInApp vorhanden.",
+    "enterArea": "Eintritt Wettkampfbereich",
+    "leaveArea": "Austritt Wettkampfbereich",
+    "removeAssignment": "QR-Code-Zuordnung entfernen",
+    "removeAssignmentTitle": "Zuordnung entfernen",
+    "removeAssignmentConfirm": "Möchtest du die Zuordnung wirklich entfernen?",
+    "deleteError": "Fehler beim Löschen des QR-Codes.",
+    "assignmentInfo": "Zuordnungsinformationen"
+  },
+  "team": {
+    "teams": "Teams",
+    "name": "Teamname",
+    "statusText": "Status",
+    "status": {
+      "in": "Drin",
+      "out": "Draußen"
+    },
+    "lastScan": "Letzter Scan",
+    "checkInText": "Team einchecken",
+    "checkOutText": "Team auschecken",
+    "checkIn": {
+      "success": "Team erfolgreich eingecheckt",
+      "error": "Fehler beim Einchecken des Teams"
+    },
+    "checkOut": {
+      "success": "Team erfolgreich ausgecheckt",
+      "error": "Fehler beim Auschecken des Teams"
+    },
+    "participants": "Teilnehmer",
+    "participantCount": "{{count}} Teilnehmer",
+    "noTeamsFound": "Keine Teams gefunden"
+  },
+  "qrScanner": {
+    "title": "Scanner"
+  },
+  "qrEvents": {
+    "title": "Events",
+    "switchApp": "App wechseln"
+  },
+  "app": {
+    "functionSelect": {
+      "title": "Deine Aufgabe",
+      "functions": {
+        "qrManagement": "QR-Code Verwaltung",
+        "competitionCheck": "Wettkampf-Check",
+        "eventRequirement": "Event Requirements",
+        "caterer": "Verpflegung"
+      }
+    },
+    "forbidden": {
+      "title": "Nicht berechtigt",
+      "message": "Du bist für diese Seite nicht berechtigt.",
+      "backButton": "Zurück zum Login"
+    }
+  },
+  "caterer": {
+    "canReceiveFood": "Benutzer kann Essen erhalten",
+    "cannotReceiveFood": "Benutzer kann kein Essen erhalten",
+    "price": "Preis (€)",
+    "priceHelper": "Optional",
+    "confirm": "Bestätigen",
+    "previousTransactions": "Vorherige Transaktionen",
+    "scanError": "Fehler beim Scannen des Benutzers",
+    "transactionError": "Fehler beim Erstellen der Transaktion",
+    "transactionSuccess": "Transaktion erfolgreich durchgeführt"
+  },
+  "catererTransaction": {
+    "catererTransaction": "Caterer Transaktion",
+    "catererTransactions": "Caterer Transaktionen",
+    "catererName": "Caterer",
+    "userName": "Benutzer",
+    "price": "Betrag",
+    "createdAt": "Zeitpunkt"
   }
 }

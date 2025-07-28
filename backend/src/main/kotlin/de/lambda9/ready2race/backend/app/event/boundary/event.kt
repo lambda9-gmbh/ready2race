@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend.app.event.boundary
 
+import de.lambda9.ready2race.backend.app.appUserWithQrCode.boundary.appUserWithQrCode
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.caterer.boundary.CatererService
+import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
@@ -15,9 +18,11 @@ import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrat
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.teamTracking.boundary.TeamTrackingService
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
@@ -70,6 +75,7 @@ fun Route.event() {
             participantForEvent()
             task()
             workShift()
+            appUserWithQrCode()
 
             get("/invoices") {
                 call.respondComprehension {
@@ -77,6 +83,15 @@ fun Route.event() {
                     val id = !pathParam("eventId", uuid)
                     val params = !pagination<InvoiceForEventRegistrationSort>()
                     InvoiceService.pageForEvent(id, params, user, scope)
+                }
+            }
+
+            get("/caterer-transactions") {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
+                    val eventId = !pathParam("eventId", uuid)
+                    val params = !pagination<CatererTransactionViewSort>()
+                    CatererService.pageByEventId(eventId, params)
                 }
             }
 
@@ -111,6 +126,19 @@ fun Route.event() {
                     val user = !authenticate(Privilege.CreateInvoiceGlobal)
                     val id = !pathParam("eventId", uuid)
                     InvoiceService.createRegistrationInvoicesForEventJobs(id, user.id!!)
+                }
+            }
+
+            route("competitionRegistration/{competitionRegistrationId}/checkInOut") {
+                post {
+                    call.respondComprehension {
+                        val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
+                        val eventId = !pathParam("eventId", uuid)
+                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+                        val checkIn = !queryParam("checkIn", boolean)
+
+                        TeamTrackingService.teamCheckInOut(competitionRegistrationId, eventId, user.id!!, checkIn)
+                    }
                 }
             }
         }

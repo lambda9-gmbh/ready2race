@@ -1,16 +1,33 @@
 import {useTranslation} from 'react-i18next'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
+    checkInOutTeam,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
     getCompetitionRegistrations,
 } from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {Fragment, useMemo} from 'react'
+import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
-import {Stack, Typography} from '@mui/material'
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    Box,
+    Chip,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    Tooltip,
+    Typography,
+} from '@mui/material'
+import {ExpandMore, Login, Logout, Warning} from '@mui/icons-material'
+import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
 
 const initialPagination: GridPaginationModel = {
@@ -24,6 +41,8 @@ const CompetitionRegistrationTable = (
     props: BaseEntityTableProps<CompetitionRegistrationTeamDto>,
 ) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
+    const [loadingTeams, setLoadingTeams] = useState<Set<string>>(new Set())
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -45,48 +64,195 @@ const CompetitionRegistrationTable = (
             },
         })
 
+    const handleCheckIn = async (team: CompetitionRegistrationTeamDto) => {
+        setLoadingTeams(prev => new Set(prev).add(team.id))
+        try {
+            const result = await checkInOutTeam({
+                path: {
+                    eventId,
+                    competitionRegistrationId: team.id,
+                },
+                query: { checkIn: true }
+            })
+            
+            if (result.data?.success) {
+                feedback.success(t('team.checkIn.success'))
+                props.reloadData()
+            } else {
+                feedback.error(result.data?.message || t('team.checkIn.error'))
+            }
+        } catch (error) {
+            feedback.error(t('team.checkIn.error'))
+        } finally {
+            setLoadingTeams(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(team.id)
+                return newSet
+            })
+        }
+    }
+
+    // TODO: Merge with prev Function, remove try-catches, change setLoadingTeams
+    const handleCheckOut = async (team: CompetitionRegistrationTeamDto) => {
+        setLoadingTeams(prev => new Set(prev).add(team.id))
+        try {
+            const result = await checkInOutTeam({
+                path: {
+                    eventId,
+                    competitionRegistrationId: team.id,
+                },
+                query: {
+                    checkIn: false,
+                },
+            })
+
+            if (result.data?.success) {
+                feedback.success(t('team.checkOut.success'))
+                props.reloadData()
+            } else {
+                feedback.error(result.data?.message || t('team.checkOut.error'))
+            }
+        } catch (error) {
+            feedback.error(t('team.checkOut.error'))
+        } finally {
+            setLoadingTeams(prev => {
+                const newSet = new Set(prev)
+                newSet.delete(team.id)
+                return newSet
+            })
+        }
+    }
+
+    const customEntityActions = (team: CompetitionRegistrationTeamDto) => {
+        const isLoading = loadingTeams.has(team.id)
+        const isCheckedIn = team.currentStatus === 'ENTRY'
+
+        return [
+            <GridActionsCellItem
+                key="check-in"
+                icon={<Login />}
+                label={t('team.checkInText')}
+                onClick={() => handleCheckIn(team)}
+                disabled={isLoading || isCheckedIn}
+                showInMenu
+            />,
+            <GridActionsCellItem
+                key="check-out"
+                icon={<Logout />}
+                label={t('team.checkOutText')}
+                onClick={() => handleCheckOut(team)}
+                disabled={isLoading || !isCheckedIn}
+                showInMenu
+            />,
+        ]
+    }
+
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
             {
                 field: 'clubName',
-                headerName: t('club.club'),
-                minWidth: 200,
-            },
-            {
-                field: 'name',
-                headerName: t('entity.name'),
-                valueGetter: value => value ?? '-',
+                headerName: t('club.club') + ' / ' + t('entity.name'),
+                minWidth: 250,
+                renderCell: params => {
+                    const teamName = params.row.name ? ` - ${params.row.name}` : ''
+                    return `${params.row.clubName}${teamName}`
+                },
             },
             {
                 field: 'namedParticipants',
                 headerName: t('club.participant.title'),
-                flex: 1,
-                minWidth: 120,
+                flex: 2,
+                minWidth: 300,
                 sortable: false,
-                renderCell: ({row}) => (
-                    <Stack spacing={1}>
-                        {row.namedParticipants.map(np => (
-                            <Fragment key={np.namedParticipantId}>
-                                {row.namedParticipants.length > 1 && (
-                                    <Typography variant={'subtitle2'}>
-                                        {np.namedParticipantName}:
-                                    </Typography>
-                                )}
-                                <Stack
-                                    direction={'column'}
-                                    spacing={0.5}
-                                    sx={{pl: row.namedParticipants.length > 1 ? 2 : undefined}}>
-                                    {np.participants.map(p => (
-                                        <Typography variant={'body2'} key={p.id}>
-                                            {p.firstname} {p.lastname}{' '}
-                                            {p.externalClubName && `(${p.externalClubName})`}
+                renderCell: ({row}) => {
+                    const totalParticipants = row.namedParticipants.reduce(
+                        (acc, np) => acc + np.participants.length,
+                        0,
+                    )
+
+                    // Check if any participant has a QR code
+                    const hasQrCode = row.namedParticipants.some(np =>
+                        np.participants.some(participant => participant.qrCodeId),
+                    )
+
+                    return (
+                        <Box sx={{width: '100%', py: 1}}>
+                            <Accordion elevation={0}>
+                                <AccordionSummary
+                                    expandIcon={<ExpandMore />}
+                                    sx={{
+                                        minHeight: 0,
+                                        '& .MuiAccordionSummary-content': {margin: 0},
+                                    }}>
+                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                        <Typography variant="body2">
+                                            {t('team.participantCount', {count: totalParticipants})}
                                         </Typography>
-                                    ))}
-                                </Stack>
-                            </Fragment>
-                        ))}
-                    </Stack>
-                ),
+                                        {!hasQrCode && (
+                                            <Tooltip title={t('qrCode.noQrCodeAssigned')}>
+                                                <Warning
+                                                    fontSize="small"
+                                                    sx={{color: 'warning.main'}}
+                                                />
+                                            </Tooltip>
+                                        )}
+                                    </Stack>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>{t('entity.name')}</TableCell>
+                                                <TableCell>
+                                                    {t(
+                                                        'event.competition.namedParticipant.namedParticipant',
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {row.namedParticipants.map(np =>
+                                                np.participants.map(participant => (
+                                                    <TableRow key={participant.id}>
+                                                        <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                                        <TableCell>
+                                                            {np.namedParticipantName}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )),
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </AccordionDetails>
+                            </Accordion>
+                        </Box>
+                    )
+                },
+            },
+            {
+                field: 'statusAndScan',
+                headerName: t('team.statusText'),
+                minWidth: 220,
+                renderCell: params => {
+                    const row = params.row
+                    if (!row.currentStatus) return '-'
+                    const isIn = row.currentStatus === 'ENTRY'
+                    const scanTime = row.lastScanAt ? new Date(row.lastScanAt).toLocaleString() : ''
+                    return (
+                        <Stack spacing={0.5}>
+                            <Chip
+                                label={isIn ? t('team.status.in') : t('team.status.out')}
+                                color={isIn ? 'success' : 'default'}
+                                size="small"
+                            />
+                            {scanTime && (
+                                <Typography variant="caption" color="text.secondary">
+                                    {scanTime}
+                                </Typography>
+                            )}
+                        </Stack>
+                    )
+                },
             },
             {
                 field: 'optionalFees',
@@ -124,6 +290,7 @@ const CompetitionRegistrationTable = (
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
+                customEntityActions={customEntityActions}
                 entityName={t('event.registration.registration')}
             />
         </Fragment>

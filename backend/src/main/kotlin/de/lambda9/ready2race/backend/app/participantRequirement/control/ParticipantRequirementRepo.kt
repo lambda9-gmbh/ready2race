@@ -45,4 +45,6 @@ object ParticipantRequirementRepo {
         }
     }
 
+    fun get(id: UUID) = PARTICIPANT_REQUIREMENT.selectOne { ID.eq(id) }
+
 }
