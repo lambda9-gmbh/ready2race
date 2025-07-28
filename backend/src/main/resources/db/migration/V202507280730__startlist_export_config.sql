@@ -1,0 +1,25 @@
+create table startlist_export_config
+(
+    id uuid primary key,
+    name text not null,
+    col_participant_firstname text,
+    col_participant_lastname text,
+    col_participant_gender text,
+    col_participant_role text,
+    col_participant_year text,
+    col_participant_club text,
+    col_club_name text,
+    col_team_name text,
+    col_team_start_number text,
+    col_match_name text,
+    col_match_start_time text,
+    col_round_name text,
+    col_competition_identifier text,
+    col_competition_name text,
+    col_competition_short_name text,
+    col_competition_category text,
+    created_at timestamp not null,
+    created_by uuid references app_user on delete set null,
+    updated_at timestamp not null,
+    updated_by uuid references app_user on delete set null
+);

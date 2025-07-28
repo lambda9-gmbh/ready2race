@@ -45,6 +45,7 @@ import ContactInformationDialog from '@components/contactInformation/ContactInfo
 import AssignContactInformation from '@components/contactInformation/AssignContactInformation.tsx'
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
+import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -166,6 +167,7 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.setup.tableHint')]}
                     />
                     <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
+                    <StartListConfigPanel />
                 </Stack>
             </TabPanel>
             <TabPanel index={'event-elements'} activeTab={activeTab}>

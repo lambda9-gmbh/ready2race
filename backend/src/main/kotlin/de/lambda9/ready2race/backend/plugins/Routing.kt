@@ -18,6 +18,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticip
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
 import de.lambda9.ready2race.backend.app.role.boundary.role
+import de.lambda9.ready2race.backend.app.startListConfig.boundary.startListConfig
 import de.lambda9.ready2race.backend.app.workType.boundary.workType
 import io.ktor.server.application.*
 import io.ktor.server.plugins.swagger.*
@@ -45,6 +46,7 @@ fun Application.configureRouting() {
             contactInformation()
             workType()
             invoice()
+            startListConfig()
         }
     }
 }
