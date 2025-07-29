@@ -479,7 +479,12 @@
           "download": "Startliste herunterladen",
           "dialog": {
             "title": "Konfiguration auswählen",
-            "config": "Konfiguration"
+            "config": "Konfiguration",
+            "alert": {
+              "1": "Konfigurationen können ",
+              "2": "hier",
+              "3": " erstellt und bearbeitet werden."
+            }
           },
           "type": {
             "PDF": "als PDF",
@@ -827,8 +832,9 @@
     },
     "export": {
       "startlist": {
-        "startlist": "Startliste",
-        "startlists": "Startlisten",
+        "startlist": "Startlistenkonfiguration",
+        "startlists": "Startlistenkonfigurationen",
+        "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
         "name": "Name",
         "col": {
           "heading": "Spalten",

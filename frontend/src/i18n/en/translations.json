@@ -479,7 +479,12 @@
           "download": "Download start list",
           "dialog": {
             "title": "Select configuration",
-            "config": "Configuration"
+            "config": "Configuration",
+            "alert": {
+              "1": "You can create and update configurations ",
+              "2": "here",
+              "3": "."
+            }
           },
           "type": {
             "PDF": "as PDF",
@@ -827,8 +832,9 @@
     },
     "export": {
       "startlist": {
-        "startlist": "Start list",
-        "startlists": "Start lists",
+        "startlist": "Start-list configuration",
+        "startlists": "Start-list configurations",
+        "tableHint": "Define the columns for the CSV export of start lists when conducting competitions.",
         "name": "Name",
         "col": {
           "heading": "Columns",

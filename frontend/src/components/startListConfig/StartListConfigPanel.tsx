@@ -10,7 +10,12 @@ const StartListConfigPanel = () => {
 
     return (
         <>
-            <StartListConfigTable  {...administrationProps.table} title={t('configuration.export.startlist.startlists')}/>
+            <StartListConfigTable
+                {...administrationProps.table}
+                title={t('configuration.export.startlist.startlists')}
+                hints={[t('configuration.export.startlist.tableHint')]}
+                id={'startlists'}
+            />
             <StartListConfigDialog {...administrationProps.dialog} />
         </>
     )

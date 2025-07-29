@@ -1,4 +1,4 @@
-import {Button, DialogActions, DialogContent, DialogTitle} from "@mui/material";
+import {Alert, Button, DialogActions, DialogContent, DialogTitle} from "@mui/material";
 import {FormContainer, useForm} from "react-hook-form-mui";
 import BaseDialog from "@components/BaseDialog.tsx";
 import {SubmitButton} from "@components/form/SubmitButton.tsx";
@@ -8,6 +8,7 @@ import {AutocompleteOption} from "@utils/types.ts";
 import {useFetch} from "@utils/hooks.ts";
 import {getStartListConfigs} from "@api/sdk.gen.ts";
 import {Trans, useTranslation} from "react-i18next";
+import InlineLink from "@components/InlineLink.tsx";
 
 type Props = {
     open: boolean
@@ -63,6 +64,14 @@ const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
                 }}
             >
                 <DialogContent>
+                    <Alert variant={'outlined'} severity={'info'}>
+                        <Trans i18nKey={'event.competition.execution.startList.dialog.alert.1'} />
+                        <InlineLink to={'/config'} search={{tab: 'competition-elements'}} hash={'startlists'}>
+                            <Trans i18nKey={'event.competition.execution.startList.dialog.alert.2'} />
+                        </InlineLink>
+                        <Trans i18nKey={'event.competition.execution.startList.dialog.alert.3'} />
+                    </Alert>
+
                     <FormInputAutocomplete
                         name={'config'}
                         options={configs}
