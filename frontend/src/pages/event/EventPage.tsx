@@ -41,7 +41,7 @@ import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
-import {eventRegistrationPossible} from '@utils/helpers.ts'
+import {a11yProps, eventRegistrationPossible} from '@utils/helpers.ts'
 import PlaceIcon from '@mui/icons-material/Place'
 import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays.tsx'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -104,13 +104,8 @@ const EventPage = () => {
 
     const taskProps = useEntityAdministration<TaskDto>(t('task.task'))
 
-    const a11yProps = (index: EventTab) => {
-        return {
-            value: index,
-            id: `event-tab-${index}`,
-            'aria-controls': `event-tabpanel-${index}`,
-        }
-    }
+    const tabProps = (tab: EventTab) =>
+        a11yProps('event', tab)
 
     const canRegister = useMemo(
         () =>
@@ -146,33 +141,33 @@ const EventPage = () => {
                         </Link>
                     </Stack>
                     <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                        <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
+                        <Tab label={t('event.tabs.general')} {...tabProps('general')} />
                         <Tab
                             label={t('event.competition.competitions')}
-                            {...a11yProps('competitions')}
+                            {...tabProps('competitions')}
                         />
                         {(user.checkPrivilege(readRegistrationGlobal) ||
                             user.checkPrivilege(readRegistrationOwn)) && (
-                            <Tab label={t('event.participants')} {...a11yProps('participants')} />
+                            <Tab label={t('event.participants')} {...tabProps('participants')} />
                         )}
                         {user.checkPrivilege(readEventGlobal) && (
                             <Tab
                                 label={t('event.tabs.registrations')}
-                                {...a11yProps('registrations')}
+                                {...tabProps('registrations')}
                             />
                         )}
                         {user.checkPrivilege(readEventGlobal) &&
                             user.checkPrivilege(readUserGlobal) && (
                                 <Tab
                                     label={t('event.tabs.organisation')}
-                                    {...a11yProps('organization')}
+                                    {...tabProps('organization')}
                                 />
                             )}
                         {user.checkPrivilege(readEventGlobal) && (
-                            <Tab label={t('event.tabs.settings')} {...a11yProps('settings')} />
+                            <Tab label={t('event.tabs.settings')} {...tabProps('settings')} />
                         )}
                         {user.getPrivilegeScope('READ', 'INVOICE') && (
-                            <Tab label={t('event.tabs.invoices')} {...a11yProps('invoices')} />
+                            <Tab label={t('event.tabs.invoices')} {...tabProps('invoices')} />
                         )}
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>

@@ -74,3 +74,11 @@ export const shuffle = <T>(list: T[]) => {
     }
     return newList
 }
+
+export const a11yProps = <TabType> (name: string, index: TabType) => {
+    return {
+        value: index,
+        id: `${name}-tab-${index}`,
+        'aria-controls': `${name}-tabpanel-${index}`,
+    }
+}

@@ -4,6 +4,7 @@ import {StartListConfigDto} from "@api/types.gen.ts";
 import {GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
 import {PaginationParameters} from "@utils/ApiUtils.ts";
 import {deleteStartListConfig, getStartListConfigs} from "@api/sdk.gen.ts";
+import {useTranslation} from "react-i18next";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -23,10 +24,12 @@ const deleteRequest = (dto: StartListConfigDto) =>
 
 const StartListConfigTable = (props: BaseEntityTableProps<StartListConfigDto>) => {
 
+    const {t} = useTranslation()
+
     const columns: ExtendedGridColDef<StartListConfigDto>[] = [
         {
             field: 'name',
-            headerName: '[todo] Name',
+            headerName: t('configuration.export.startlist.name'),
             minWidth: 200,
             flex: 1,
         }

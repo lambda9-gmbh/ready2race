@@ -46,6 +46,7 @@ import AssignContactInformation from '@components/contactInformation/AssignConta
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
 import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
+import {a11yProps} from "@utils/helpers.ts";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -66,13 +67,8 @@ const ConfigurationPage = () => {
         navigate({from: configurationIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const a11yProps = (index: ConfigurationTab) => {
-        return {
-            value: index,
-            id: `configuration-tab-${index}`,
-            'aria-controls': `configuration-tabpanel-${index}`,
-        }
-    }
+    const tabProps = (tab: ConfigurationTab) =>
+        a11yProps('configuration', tab)
 
     const competitionTemplateAdministrationProps = useEntityAdministration<CompetitionTemplateDto>(
         t('event.competition.template.template'),
@@ -118,19 +114,19 @@ const ConfigurationPage = () => {
             <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                 <Tab
                     label={t('configuration.tabs.competitionTemplates')}
-                    {...a11yProps('competition-templates')}
+                    {...tabProps('competition-templates')}
                 />
                 <Tab
                     label={t('configuration.tabs.competitionElements')}
-                    {...a11yProps('competition-elements')}
+                    {...tabProps('competition-elements')}
                 />
                 <Tab
                     label={t('configuration.tabs.eventElements')}
-                    {...a11yProps('event-elements')}
+                    {...tabProps('event-elements')}
                 />
                 <Tab
                     label={t('configuration.tabs.globalSettings')}
-                    {...a11yProps('global-settings')}
+                    {...tabProps('global-settings')}
                 />
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>

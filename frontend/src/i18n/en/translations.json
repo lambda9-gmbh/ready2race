@@ -477,6 +477,10 @@
         },
         "startList": {
           "download": "Download start list",
+          "dialog": {
+            "title": "Select configuration",
+            "config": "Configuration"
+          },
           "type": {
             "PDF": "as PDF",
             "CSV": "as CSV"
@@ -820,6 +824,53 @@
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings"
+    },
+    "export": {
+      "startlist": {
+        "startlist": "Start list",
+        "startlists": "Start lists",
+        "name": "Name",
+        "col": {
+          "heading": "Columns",
+          "participant": {
+            "heading": "Participants",
+            "firstname": "First names",
+            "lastname": "Last names",
+            "gender": "Gender",
+            "role": "Role",
+            "year": "Year of birth",
+            "club": "club"
+          },
+          "club": {
+            "heading": "Registering club",
+            "name": "Name"
+          },
+          "team": {
+            "heading": "Team",
+            "name": "Name",
+            "startNumber": "Start number"
+          },
+          "match": {
+            "heading": "Match",
+            "name": "Name",
+            "startTime": "Start time"
+          },
+          "round": {
+            "heading": "Round",
+            "name": "Name"
+          },
+          "competition": {
+            "heading": "Competition",
+            "identifier": "Identifier",
+            "name": "Name",
+            "shortName": "Short name",
+            "category": "Category"
+          }
+        },
+        "error": {
+          "tooFewCols": "Please specify at least one column."
+        }
+      }
     }
   },
   "contact": {

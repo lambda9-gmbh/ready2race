@@ -2,11 +2,12 @@ import {Button, DialogActions, DialogContent, DialogTitle} from "@mui/material";
 import {FormContainer, useForm} from "react-hook-form-mui";
 import BaseDialog from "@components/BaseDialog.tsx";
 import {SubmitButton} from "@components/form/SubmitButton.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import FormInputAutocomplete from "@components/form/input/FormInputAutocomplete.tsx";
 import {AutocompleteOption} from "@utils/types.ts";
 import {useFetch} from "@utils/hooks.ts";
 import {getStartListConfigs} from "@api/sdk.gen.ts";
+import {Trans, useTranslation} from "react-i18next";
 
 type Props = {
     open: boolean
@@ -15,11 +16,15 @@ type Props = {
 }
 
 type Form = {
-    config: string
+    config: AutocompleteOption
+}
+
+const defaultValues: Form = {
+    config: null
 }
 
 const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
-
+    const {t} = useTranslation()
     const formContext = useForm<Form>()
     const [submitting, setSubmitting] = useState(false)
 
@@ -33,18 +38,26 @@ const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
             label: dto.name
         })) ?? []
 
+    useEffect(() => {
+        if (open) {
+            formContext.reset(defaultValues)
+        }
+    }, [open])
+
     return (
         <BaseDialog
             open={open}
             onClose={onClose}
             maxWidth={'sm'}
         >
-            <DialogTitle>[todo] Konfiguration wählen</DialogTitle>
+            <DialogTitle>
+                <Trans i18nKey={'event.competition.execution.startList.dialog.title'} />
+            </DialogTitle>
             <FormContainer
                 formContext={formContext}
                 onSuccess={async (data: Form) => {
                     setSubmitting(true)
-                    await onSuccess(data.config)
+                    await onSuccess(data.config!.id)
                     setSubmitting(false)
                     onClose()
                 }}
@@ -53,17 +66,17 @@ const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
                     <FormInputAutocomplete
                         name={'config'}
                         options={configs}
-                        label={'[todo] Konfiguration'}
+                        label={t('event.competition.execution.startList.dialog.config')}
                         loading={pending}
                         required
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose} disabled={submitting}>
-                        [todo] Abbrechen
+                        <Trans i18nKey={'common.cancel'} />
                     </Button>
                     <SubmitButton submitting={submitting}>
-                        [todo] Laden
+                        <Trans i18nKey={'event.competition.execution.startList.download'} />
                     </SubmitButton>
                 </DialogActions>
             </FormContainer>

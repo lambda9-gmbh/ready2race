@@ -477,6 +477,10 @@
         },
         "startList": {
           "download": "Startliste herunterladen",
+          "dialog": {
+            "title": "Konfiguration auswählen",
+            "config": "Konfiguration"
+          },
           "type": {
             "PDF": "als PDF",
             "CSV": "als CSV"
@@ -820,6 +824,53 @@
       "eventElements": "Komponenten Veranstaltung",
       "competitionElements": "Komponenten Wettkampf",
       "globalSettings": "Globale Einstellungen"
+    },
+    "export": {
+      "startlist": {
+        "startlist": "Startliste",
+        "startlists": "Startlisten",
+        "name": "Name",
+        "col": {
+          "heading": "Spalten",
+          "participant": {
+            "heading": "Teilnehmende",
+            "firstname": "Vornamen",
+            "lastname": "Nachnamen",
+            "gender": "Geschlecht",
+            "role": "Rolle",
+            "year": "Geburtsjahr",
+            "club": "Verein"
+          },
+          "club": {
+            "heading": "Meldender Verein",
+            "name": "Name"
+          },
+          "team": {
+            "heading": "Team",
+            "name": "Name",
+            "startNumber": "Startnummer"
+          },
+          "match": {
+            "heading": "Partie",
+            "name": "Name",
+            "startTime": "Startzeit"
+          },
+          "round": {
+            "heading": "Runde",
+            "name": "Name"
+          },
+          "competition": {
+            "heading": "Wettkampf",
+            "identifier": "Kennung",
+            "name": "Name",
+            "shortName": "Kurzname",
+            "category": "Kategorie"
+          }
+        },
+        "error": {
+          "tooFewCols": "Geben Sie bitte mindestens für eine Spalte die Bezeichnung an."
+        }
+      }
     }
   },
   "contact": {

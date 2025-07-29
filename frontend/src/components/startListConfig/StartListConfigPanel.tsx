@@ -2,14 +2,15 @@ import StartListConfigTable from "@components/startListConfig/StartListConfigTab
 import {useEntityAdministration} from "@utils/hooks.ts";
 import {StartListConfigDto} from "@api/types.gen.ts";
 import StartListConfigDialog from "@components/startListConfig/StartListConfigDialog.tsx";
+import {useTranslation} from "react-i18next";
 
 const StartListConfigPanel = () => {
-
-    const administrationProps = useEntityAdministration<StartListConfigDto>('[todo] SL Config')
+    const {t} = useTranslation()
+    const administrationProps = useEntityAdministration<StartListConfigDto>(t('configuration.export.startlist.startlist'))
 
     return (
         <>
-            <StartListConfigTable  {...administrationProps.table} title={'[todo] SL-Configs'}/>
+            <StartListConfigTable  {...administrationProps.table} title={t('configuration.export.startlist.startlists')}/>
             <StartListConfigDialog {...administrationProps.dialog} />
         </>
     )
