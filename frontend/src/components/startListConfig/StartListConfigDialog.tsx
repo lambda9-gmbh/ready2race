@@ -7,7 +7,7 @@ import {
 } from "@api/types.gen.ts";
 import EntityDialog from "@components/EntityDialog.tsx";
 import {useForm} from "react-hook-form-mui";
-import {useCallback, useRef, useState} from "react";
+import {useCallback, useState} from "react";
 import {Stack, Tab} from "@mui/material";
 import {FormInputText} from "@components/form/input/FormInputText.tsx";
 import {addStartListConfig, updateStartListConfig} from "@api/sdk.gen.ts";
@@ -80,15 +80,6 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
     const feedback = useFeedback()
     const formContext = useForm<Form>()
 
-    const tabRefs = useRef<Record<FormTab, HTMLDivElement | null>>({
-        participant: null,
-        club: null,
-        team: null,
-        match: null,
-        round: null,
-        competition: null
-    })
-
     const [activeTab, setActiveTab] = useState<FormTab>('participant')
 
     const onOpen = useCallback(() => {
@@ -105,8 +96,6 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
         }
     }
 
-    console.log(tabRefs.current)
-
     return (
         <EntityDialog
             {...props}
@@ -116,7 +105,11 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
             onAddError={onError}
             onEditError={onError}
             editAction={editAction}
-            maxWidth={'md'}>
+            maxWidth={'md'}
+            sx={{
+                '& .MuiDialog-paper': {height: 1}
+            }}
+        >
             <Stack spacing={4}>
                 <FormInputText name={'name'} label={t('configuration.export.startlist.name')} required />
                 <TabSelectionContainer activeTab={activeTab} setActiveTab={setActiveTab}>

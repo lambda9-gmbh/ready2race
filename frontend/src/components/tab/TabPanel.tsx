@@ -1,8 +1,12 @@
-import {ReactNode} from 'react'
+import {PropsWithChildren} from 'react'
 import {Box} from '@mui/material'
 
-const TabPanel = <TabType extends string,>(props: {children?: ReactNode; index: TabType; activeTab: TabType}) => {
-    const {children, activeTab, index} = props
+type Props<TabType> = {
+    index: TabType
+    activeTab: TabType
+}
+
+const TabPanel = <TabType extends string,> ({children, activeTab, index}: PropsWithChildren<Props<TabType>>) => {
 
     return (
         <div
@@ -14,4 +18,5 @@ const TabPanel = <TabType extends string,>(props: {children?: ReactNode; index: 
         </div>
     )
 }
+
 export default TabPanel
