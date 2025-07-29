@@ -2,6 +2,7 @@ import {Box, Typography} from '@mui/material'
 import {InfoViewConfigurationDto} from '@api/types.gen'
 import UpcomingMatchesView from './views/UpcomingMatchesView'
 import {LatestMatchResultsView} from './views/LatestMatchResultsView'
+import RunningMatchesView from './views/RunningMatchesView'
 
 interface InfoViewDisplayProps {
     eventId: string
@@ -22,6 +23,14 @@ const InfoViewDisplay = ({eventId, view}: InfoViewDisplayProps) => {
             case 'LATEST_MATCH_RESULTS':
                 return (
                     <LatestMatchResultsView
+                        eventId={eventId}
+                        limit={view.dataLimit}
+                        filters={view.filters}
+                    />
+                )
+            case 'RUNNING_MATCHES':
+                return (
+                    <RunningMatchesView
                         eventId={eventId}
                         limit={view.dataLimit}
                         filters={view.filters}

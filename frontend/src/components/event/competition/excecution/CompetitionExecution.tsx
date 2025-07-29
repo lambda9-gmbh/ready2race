@@ -5,13 +5,16 @@ import {
     getCompetitionExecutionProgress,
     updateMatchData,
     updateMatchResults,
+    updateMatchRunningState,
 } from '@api/sdk.gen.ts'
 import {
     Box,
     Button,
     Card,
+    Checkbox,
     Dialog,
     Divider,
+    FormControlLabel,
     Link,
     List,
     ListItemText,
@@ -482,6 +485,37 @@ const CompetitionExecution = () => {
         }
     }
 
+    const handleToggleRunningState = async (match: CompetitionMatchDto) => {
+        // Check if match has no places set
+        const hasPlacesSet = match.teams.some(
+            team => team.place !== null && team.place !== undefined,
+        )
+        if (hasPlacesSet) {
+            feedback.error(t('event.competition.execution.running.error.hasPlaces'))
+            return
+        }
+
+        setSubmitting(true)
+        const {error} = await updateMatchRunningState({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+            body: {
+                currentlyRunning: !match.currentlyRunning,
+            },
+        })
+        setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            setReloadData(!reloadData)
+        }
+    }
+
     return progressDto ? (
         <Box>
             <Link ref={downloadRef} display={'none'}></Link>
@@ -553,7 +587,18 @@ const CompetitionExecution = () => {
                                 {/*{roundIndex === 0 && <Substitutions reloadRoundDto={() => setReloadData(!reloadData)} roundDto={round} />}*/}
                                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                                     {matchesFiltered(round.matches).map((match, matchIndex) => (
-                                        <Card key={match.id} sx={{p: 2, minWidth: 400, flex: 1}}>
+                                        <Card
+                                            key={match.id}
+                                            sx={{
+                                                p: 2,
+                                                minWidth: 400,
+                                                flex: 1,
+                                                ...(match.currentlyRunning && {
+                                                    borderColor: 'primary.main',
+                                                    borderWidth: 2,
+                                                    borderStyle: 'solid',
+                                                }),
+                                            }}>
                                             <Stack
                                                 direction={'row'}
                                                 sx={{
@@ -581,6 +626,29 @@ const CompetitionExecution = () => {
                                                             ) + ': '}
                                                             {match.startTimeOffset}
                                                         </Typography>
+                                                    )}
+                                                    {/* Only show toggle if match has no places set */}
+                                                    {!match.teams.some(
+                                                        team =>
+                                                            team.place !== null &&
+                                                            team.place !== undefined,
+                                                    ) && (
+                                                        <FormControlLabel
+                                                            control={
+                                                                <Checkbox
+                                                                    checked={match.currentlyRunning}
+                                                                    onChange={() =>
+                                                                        handleToggleRunningState(
+                                                                            match,
+                                                                        )
+                                                                    }
+                                                                    disabled={submitting}
+                                                                />
+                                                            }
+                                                            label={t(
+                                                                'event.competition.execution.match.currentlyRunning',
+                                                            )}
+                                                        />
                                                     )}
                                                 </Stack>
                                                 <Stack direction={'column'} spacing={1}>

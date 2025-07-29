@@ -151,6 +151,9 @@ import type {
     UpdateMatchDataData,
     UpdateMatchDataError,
     UpdateMatchDataResponse,
+    UpdateMatchRunningStateData,
+    UpdateMatchRunningStateError,
+    UpdateMatchRunningStateResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -475,6 +478,9 @@ import type {
     GetLatestMatchResultsData,
     GetLatestMatchResultsError,
     GetLatestMatchResultsResponse,
+    GetRunningMatchesData,
+    GetRunningMatchesError,
+    GetRunningMatchesResponse,
     GetInfoViewsData,
     GetInfoViewsError,
     GetInfoViewsResponse,
@@ -1045,6 +1051,19 @@ export const updateMatchData = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data',
+    })
+}
+
+export const updateMatchRunningState = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchRunningStateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchRunningStateResponse,
+        UpdateMatchRunningStateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state',
     })
 }
 
@@ -2401,6 +2420,19 @@ export const getLatestMatchResults = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info/latest-match-results',
+    })
+}
+
+export const getRunningMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRunningMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRunningMatchesResponse,
+        GetRunningMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/running-matches',
     })
 }
 

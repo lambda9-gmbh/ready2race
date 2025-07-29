@@ -32,6 +32,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                     executionOrder = match.second.executionOrder,
                     startTime = match.first.startTime,
                     startTimeOffset = match.second.startTimeOffset,
+                    currentlyRunning = match.first.currentlyRunning,
                 )
             },
         required = required,
@@ -63,6 +64,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
             CompetitionMatchWithTeams(
                 competitionSetupMatch = match.competitionSetupMatch!!,
                 startTime = match.startTime,
+                currentlyRunning = match.currentlyRunning ?: false,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,

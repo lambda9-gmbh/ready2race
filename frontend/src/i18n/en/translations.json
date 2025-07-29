@@ -446,7 +446,15 @@
                     "startTimeOffset": "Start time offset",
                     "startNumber": "Start number",
                     "team": "Team",
-                    "place": "Place"
+                    "place": "Place",
+                    "currentlyRunning": "Currently running"
+                },
+                "running": {
+                    "error": {
+                        "hasPlaces": "Cannot change running state for matches with results",
+                        "update": "Failed to update running state"
+                    },
+                    "success": "Running state updated successfully"
                 },
                 "results": {
                     "enter": "Enter results",
@@ -628,7 +636,8 @@
             "viewType": "View Type",
             "viewTypes": {
                 "upcomingMatches": "Upcoming Matches",
-                "latestMatchResults": "Latest Match Results"
+                "latestMatchResults": "Latest Match Results",
+                "runningMatches": "Currently Running"
             },
             "configuration": "View Configuration",
             "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
@@ -647,6 +656,10 @@
             "confirmDeleteView": "Are you sure you want to delete this view?",
             "noUpcomingMatches": "No upcoming matches",
             "noLatestMatchResults": "No latest match results available",
+            "noRunningMatches": "No matches currently running",
+            "live": "LIVE",
+            "minutes": "min",
+            "justStarted": "Just started",
             "unnamed": "Unnamed",
             "matchStatus": {
                 "pending": "Pending",

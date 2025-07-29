@@ -446,7 +446,15 @@
                     "startTimeOffset": "Versetzte Startzeit",
                     "startNumber": "Startnummer",
                     "team": "Team",
-                    "place": "Platz"
+                    "place": "Platz",
+                    "currentlyRunning": "Läuft gerade"
+                },
+                "running": {
+                    "error": {
+                        "hasPlaces": "Der Laufstatus kann nicht für Spiele mit Ergebnissen geändert werden",
+                        "update": "Fehler beim Aktualisieren des Laufstatus"
+                    },
+                    "success": "Laufstatus erfolgreich aktualisiert"
                 },
                 "results": {
                     "enter": "Ergebnis eintragen",
@@ -628,7 +636,8 @@
             "viewType": "Ansichtstyp",
             "viewTypes": {
                 "upcomingMatches": "Anstehend",
-                "latestMatchResults": "Neueste Ergebnisse"
+                "latestMatchResults": "Neueste Ergebnisse",
+                "runningMatches": "Aktuell laufend"
             },
             "configuration": "Ansichtskonfiguration",
             "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
@@ -647,6 +656,10 @@
             "confirmDeleteView": "Sind Sie sicher, dass Sie diese Ansicht löschen möchten?",
             "noUpcomingMatches": "Keine anstehenden Läufe",
             "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
+            "noRunningMatches": "Keine laufenden Wettkämpfe",
+            "live": "LIVE",
+            "minutes": "Min.",
+            "justStarted": "Gerade gestartet",
             "unnamed": "Unbenannt",
             "matchStatus": {
                 "pending": "Ausstehend",

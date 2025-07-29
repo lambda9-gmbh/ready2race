@@ -1,27 +1,22 @@
 import {Avatar, Box, Card, CardContent, Chip, Skeleton, Stack, Typography} from '@mui/material'
-import {
-    AccessTime as AccessTimeIcon,
-    AccessTimeFilled,
-    EmojiEvents as EmojiEventsIcon,
-} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks'
-import {getUpcomingMatches} from '@api/sdk.gen'
-import {UpcomingCompetitionMatchInfo, UpcomingMatchTeamInfo} from '@api/types.gen'
-import {format} from 'date-fns'
+import {getRunningMatches} from '@api/sdk.gen'
+import {RunningMatchInfo, RunningMatchTeamInfo} from '@api/types.gen'
+import {PlayCircleFilled} from '@mui/icons-material'
 
-interface UpcomingMatchesViewProps {
+interface RunningMatchesViewProps {
     eventId: string
     limit: number
     filters?: any
 }
 
-const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
+const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
     const {t} = useTranslation()
 
     const {data, pending} = useFetch(
         signal =>
-            getUpcomingMatches({
+            getRunningMatches({
                 signal,
                 path: {eventId},
                 query: {limit},
@@ -33,7 +28,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
         return (
             <Box sx={{p: 3}}>
                 <Typography variant="h4" gutterBottom>
-                    {t('event.info.viewTypes.upcomingMatches')}
+                    {t('event.info.viewTypes.runningMatches')}
                 </Typography>
                 <Stack spacing={2}>
                     {[...Array(3)].map((_, i) => (
@@ -54,7 +49,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                     justifyContent: 'center',
                 }}>
                 <Typography variant="h5" color="text.secondary">
-                    {t('event.info.noUpcomingMatches')}
+                    {t('event.info.noRunningMatches')}
                 </Typography>
             </Box>
         )
@@ -63,46 +58,17 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
     return (
         <Box sx={{p: 3, height: '100%', overflow: 'auto'}}>
             <Stack direction="row" spacing={2} alignItems={'center'} sx={{mb: 3}}>
-                <AccessTimeFilled fontSize={'large'} color={'info'} />
+                <PlayCircleFilled fontSize={'large'} color={'info'} />
                 <Typography variant="h4" gutterBottom>
-                    {t('event.info.viewTypes.upcomingMatches')}
+                    {t('event.info.viewTypes.runningMatches')}
                 </Typography>
             </Stack>
 
             <Stack spacing={2}>
-                {data.map((match: UpcomingCompetitionMatchInfo) => (
+                {data.map((match: RunningMatchInfo) => (
                     <Card key={match.matchId}>
                         <CardContent>
-                            <Box sx={{display: 'flex', alignItems: 'flex-start', gap: 3}}>
-                                {/* Prominent Start Time */}
-                                {match.scheduledStartTime && (
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            minWidth: 120,
-                                            p: 2,
-                                            bgcolor: 'primary.main',
-                                            color: 'primary.contrastText',
-                                            borderRadius: 2,
-                                        }}>
-                                        <AccessTimeIcon sx={{mb: 1}} />
-                                        <Typography variant="h6" fontWeight="bold">
-                                            {format(
-                                                new Date(match.scheduledStartTime),
-                                                t('format.time'),
-                                            )}
-                                        </Typography>
-                                        <Typography variant="caption">
-                                            {format(
-                                                new Date(match.scheduledStartTime),
-                                                t('format.date'),
-                                            )}
-                                        </Typography>
-                                    </Box>
-                                )}
-
+                            <Box sx={{display: 'flex', alignItems: 'center', gap: 3}}>
                                 {/* Match Details */}
                                 <Box sx={{flex: 1}}>
                                     <Stack mb={1}>
@@ -141,6 +107,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                             </Typography>
                                         )}
                                     </Stack>
+
                                     {/* Teams */}
                                     {match.teams.length > 0 && (
                                         <Box
@@ -154,7 +121,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                     match.teams.length > 2 ? 'stretch' : 'center',
                                             }}>
                                             {match.teams.map(
-                                                (team: UpcomingMatchTeamInfo, index) => (
+                                                (team: RunningMatchTeamInfo, index) => (
                                                     <Box key={team.teamId} display={'flex'}>
                                                         <Box
                                                             sx={{
@@ -251,6 +218,16 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                                     </>
                                                                 )}
                                                             </Box>
+                                                            {/* Show current score if available */}
+                                                            {team.currentScore !== null &&
+                                                                team.currentScore !== undefined && (
+                                                                    <Typography
+                                                                        variant="h5"
+                                                                        fontWeight="bold"
+                                                                        color="primary">
+                                                                        {team.currentScore}
+                                                                    </Typography>
+                                                                )}
                                                         </Box>
                                                         {match.teams.length <= 2 &&
                                                             index < match.teams.length - 1 && (
@@ -270,20 +247,10 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                     {/* Additional Info */}
                                     <Box
                                         sx={{display: 'flex', gap: 2, mt: 1, alignItems: 'center'}}>
-                                        {match.placeName && (
-                                            <Box
-                                                sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 0.5,
-                                                }}>
-                                                <EmojiEventsIcon fontSize="small" color="action" />
-                                                <Typography
-                                                    variant="caption"
-                                                    color="text.secondary">
-                                                    {match.placeName}
-                                                </Typography>
-                                            </Box>
+                                        {match.eventDayName && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {match.eventDayName}
+                                            </Typography>
                                         )}
                                     </Box>
                                 </Box>
@@ -296,4 +263,4 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
     )
 }
 
-export default UpcomingMatchesView
+export default RunningMatchesView

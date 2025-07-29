@@ -25,6 +25,7 @@ const ViewConfigurationForm = ({view, onSubmit, onCancel}: ViewConfigurationForm
     const VIEW_TYPES = [
         {id: 'UPCOMING_MATCHES', label: t('event.info.viewTypes.upcomingMatches')},
         {id: 'LATEST_MATCH_RESULTS', label: t('event.info.viewTypes.latestMatchResults')},
+        {id: 'RUNNING_MATCHES', label: t('event.info.viewTypes.runningMatches')},
     ]
 
     const formContext = useForm<InfoViewConfigurationRequest>({

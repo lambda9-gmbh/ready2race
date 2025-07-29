@@ -36,6 +36,16 @@ fun Route.eventInfo() {
                 EventInfoService.getLatestMatchResults(eventId, limit)
             }
         }
+
+        // Get currently running matches
+        get("/running-matches") {
+            call.respondComprehension {
+                val eventId = !pathParam("eventId", uuid)
+                val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
+
+                EventInfoService.getRunningMatches(eventId, limit)
+            }
+        }
     }
 
     route("/event/{eventId}/info-views") {

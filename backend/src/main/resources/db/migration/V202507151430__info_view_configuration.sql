@@ -1,5 +1,5 @@
 -- Create enum type for view types
-CREATE TYPE info_view_type AS ENUM ('LATEST_MATCH_RESULTS', 'UPCOMING_MATCHES');
+CREATE TYPE info_view_type AS ENUM ('LATEST_MATCH_RESULTS', 'UPCOMING_MATCHES', 'RUNNING_MATCHES');
 
 -- Create info_view_configuration table
 CREATE TABLE info_view_configuration (

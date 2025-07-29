@@ -72,6 +72,8 @@ const SortableItem = ({view, onEdit, onDelete, onToggle}: SortableItemProps) => 
                 return t('event.info.viewTypes.upcomingMatches')
             case 'LATEST_MATCH_RESULTS':
                 return t('event.info.viewTypes.latestMatchResults')
+            case 'RUNNING_MATCHES':
+                return t('event.info.viewTypes.runningMatches')
             default:
                 return type
         }

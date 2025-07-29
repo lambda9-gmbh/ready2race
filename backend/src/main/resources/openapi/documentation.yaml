@@ -1270,6 +1270,39 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchRunningState
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCompetitionMatchRunningStateRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -4237,6 +4270,33 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/info/running-matches:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRunningMatches
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        200:
+          description: Currently running matches retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunningMatchInfo'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/info-views:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6978,6 +7038,7 @@ components:
         - teams
         - weighting
         - executionOrder
+        - currentlyRunning
       properties:
         id:
           type: string
@@ -6997,6 +7058,8 @@ components:
           format: date-time
         startTimeOffset:
           type: integer
+        currentlyRunning:
+          type: boolean
 
     CompetitionMatchTeamDto:
       type: object
@@ -7037,6 +7100,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpdateCompetitionMatchTeamRequest'
+
+    UpdateCompetitionMatchRunningStateRequest:
+      type: object
+      required:
+        - currentlyRunning
+      properties:
+        currentlyRunning:
+          type: boolean
 
     UpdateCompetitionMatchTeamRequest:
       type: object
@@ -7351,6 +7422,7 @@ components:
       enum:
         - UPCOMING_MATCHES
         - LATEST_MATCH_RESULTS
+        - RUNNING_MATCHES
 
     InfoViewConfigurationDto:
       type: object
@@ -7653,3 +7725,93 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantInfo'
+
+    RunningMatchInfo:
+      type: object
+      required:
+        - matchId
+        - competitionId
+        - competitionName
+        - executionOrder
+        - teams
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        matchNumber:
+          type: integer
+          nullable: true
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        categoryName:
+          type: string
+          nullable: true
+        eventDayId:
+          type: string
+          format: uuid
+          nullable: true
+        eventDayDate:
+          type: string
+          format: date
+          nullable: true
+        eventDayName:
+          type: string
+          nullable: true
+        startTime:
+          type: string
+          format: date-time
+          nullable: true
+        elapsedMinutes:
+          type: integer
+          format: int64
+          nullable: true
+        placeName:
+          type: string
+          nullable: true
+        roundNumber:
+          type: integer
+          nullable: true
+        roundName:
+          type: string
+          nullable: true
+        matchName:
+          type: string
+          nullable: true
+        executionOrder:
+          type: integer
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunningMatchTeamInfo'
+
+    RunningMatchTeamInfo:
+      type: object
+      required:
+        - teamId
+        - participants
+      properties:
+        teamId:
+          type: string
+          format: uuid
+        teamName:
+          type: string
+          nullable: true
+        startNumber:
+          type: integer
+          nullable: true
+        clubName:
+          type: string
+          nullable: true
+        currentScore:
+          type: integer
+          nullable: true
+        currentPosition:
+          type: integer
+          nullable: true
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/UpcomingMatchParticipantInfo'

@@ -376,6 +376,12 @@ object CompetitionExecutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
         }
 
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = false
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
                 place = result.place
@@ -383,6 +389,23 @@ object CompetitionExecutionService {
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
         }.map { ApiResponse.NoData }
+    }
+
+    fun updateMatchRunningState(
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchRunningStateRequest
+    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = request.currentlyRunning
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
     }
 
 
@@ -551,7 +574,8 @@ object CompetitionExecutionService {
         type: StartListFileType,
     ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
 
-        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+        val match = !CompetitionMatchRepo.getForStartList(matchId).orDie()
+            .onNullFail { CompetitionExecutionError.MatchNotFound }
             .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
             .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
@@ -563,6 +587,7 @@ object CompetitionExecutionService {
                     .andThenNotNull { it.toPdfTemplate() }
                 buildPdf(data, pdfTemplate) to "pdf"
             }
+
             StartListFileType.CSV -> buildCsv(data) to "csv"
         }
 
@@ -691,7 +716,12 @@ object CompetitionExecutionService {
                                 ) { " $it" }
                             }
                             if (data.startTimeOffset != null) {
-                                text { "startet ${data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds).hrTime()}" }
+                                text {
+                                    "startet ${
+                                        data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds)
+                                            .hrTime()
+                                    }"
+                                }
                             }
                         }
 
@@ -761,7 +791,7 @@ object CompetitionExecutionService {
                     column("Last name") { participants.first().lastname }
                     column("Gender") { participants.first().gender.name }
                 } else {
-                    column("Name") { participants.joinToString(",") { p -> p.lastname }}
+                    column("Name") { participants.joinToString(",") { p -> p.lastname } }
                     column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
                 }
                 column("Team name") { clubName }

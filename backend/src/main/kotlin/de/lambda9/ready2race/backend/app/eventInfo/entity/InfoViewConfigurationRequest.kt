@@ -26,7 +26,7 @@ data class InfoViewConfigurationRequest(
 
     companion object {
         val example = InfoViewConfigurationRequest(
-            viewType = InfoViewType.UPCOMING_COMPETITIONS,
+            viewType = InfoViewType.UPCOMING_MATCHES,
             displayDurationSeconds = 10,
             dataLimit = 10,
             filters = null,
