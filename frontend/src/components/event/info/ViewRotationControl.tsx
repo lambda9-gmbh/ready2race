@@ -39,20 +39,22 @@ const ViewRotationControl = ({
 
         const startTime = Date.now()
         const duration = currentView.displayDurationSeconds * 1000
+        const updateInterval = 100
 
-        const updateProgress = () => {
+        const timer = setInterval(() => {
             const elapsed = Date.now() - startTime
             const newProgress = Math.min((elapsed / duration) * 100, 100)
             setProgress(newProgress)
 
-            if (newProgress < 100) {
-                requestAnimationFrame(updateProgress)
+            if (newProgress >= 100) {
+                clearInterval(timer)
             }
+        }, updateInterval)
+
+        return () => {
+            clearInterval(timer)
+            setProgress(0)
         }
-
-        requestAnimationFrame(updateProgress)
-
-        return () => setProgress(0)
     }, [currentIndex, isPlaying, currentView])
 
     const handlePrevious = () => {
@@ -90,7 +92,13 @@ const ViewRotationControl = ({
             <LinearProgress
                 variant="determinate"
                 value={isPlaying ? progress : 0}
-                sx={{height: 4}}
+                sx={{
+                    height: 4,
+                    '& .MuiLinearProgress-bar': {
+                        transition:
+                            progress === 0 ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    },
+                }}
             />
             <Box
                 sx={{

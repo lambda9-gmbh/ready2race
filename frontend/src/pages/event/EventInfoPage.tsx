@@ -192,14 +192,31 @@ const EventInfoPage = () => {
                     />
                 )}
 
-                {/* View display */}
+                {/* View display with preloading */}
                 {currentView && !configOpen && (
-                    <Box sx={{flex: 1, overflow: 'auto'}}>
+                    <Box sx={{flex: 1, overflow: 'auto', position: 'relative'}}>
+                        {/* Current view */}
                         <InfoViewDisplay
                             key={`${currentView.id}-${dataRefreshKey}`}
                             eventId={eventId}
                             view={currentView}
                         />
+
+                        {/* Preload next view */}
+                        {views.length > 1 && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    visibility: 'hidden',
+                                    pointerEvents: 'none',
+                                }}>
+                                <InfoViewDisplay
+                                    key={`${views[(currentViewIndex + 1) % views.length].id}-${dataRefreshKey}-preload`}
+                                    eventId={eventId}
+                                    view={views[(currentViewIndex + 1) % views.length]}
+                                />
+                            </Box>
+                        )}
                     </Box>
                 )}
 
@@ -274,14 +291,31 @@ const EventInfoPage = () => {
                         />
                     )}
 
-                    {/* View display in fullscreen */}
+                    {/* View display in fullscreen with preloading */}
                     {currentView && (
-                        <Box sx={{height: '100%', overflow: 'auto'}}>
+                        <Box sx={{height: '100%', overflow: 'auto', position: 'relative'}}>
+                            {/* Current view */}
                             <InfoViewDisplay
                                 key={`${currentView.id}-${dataRefreshKey}`}
                                 eventId={eventId}
                                 view={currentView}
                             />
+
+                            {/* Preload next view */}
+                            {views.length > 1 && (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        visibility: 'hidden',
+                                        pointerEvents: 'none',
+                                    }}>
+                                    <InfoViewDisplay
+                                        key={`${views[(currentViewIndex + 1) % views.length].id}-${dataRefreshKey}-preload`}
+                                        eventId={eventId}
+                                        view={views[(currentViewIndex + 1) % views.length]}
+                                    />
+                                </Box>
+                            )}
                         </Box>
                     )}
 

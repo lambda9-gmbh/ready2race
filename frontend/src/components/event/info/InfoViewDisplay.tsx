@@ -1,4 +1,4 @@
-import {Box, Typography} from '@mui/material'
+import {Box, Typography, Fade} from '@mui/material'
 import {InfoViewConfigurationDto} from '@api/types.gen'
 import UpcomingMatchesView from './views/UpcomingMatchesView'
 import {LatestMatchResultsView} from './views/LatestMatchResultsView'
@@ -45,7 +45,13 @@ const InfoViewDisplay = ({eventId, view}: InfoViewDisplayProps) => {
         }
     }
 
-    return <Box sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>{renderView()}</Box>
+    return (
+        <Box sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>
+            <Fade in={true} timeout={600}>
+                <Box sx={{flex: 1}}>{renderView()}</Box>
+            </Fade>
+        </Box>
+    )
 }
 
 export default InfoViewDisplay
