@@ -49,7 +49,7 @@ import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
-import SelectionMenu from "@components/SelectionMenu.tsx";
+import SelectionMenu from '@components/SelectionMenu.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -619,23 +619,39 @@ const CompetitionExecution = () => {
                                                             menu: {
                                                                 vertical: 'top',
                                                                 horizontal: 'right',
-                                                            }
-                                                        }}
-                                                        buttonContent={t('event.competition.execution.startList.download')}
-                                                        keyLabel={'competition-execution-startlist-download'}
-                                                        onSelectItem={(fileType: string) =>
-                                                            handleDownloadStartList(match.id, fileType as StartListFileType)
-                                                        }
-                                                        items={[
-                                                            {
-                                                                id: 'PDF',
-                                                                label: t('event.competition.execution.startList.type.PDF')
                                                             },
-                                                            {
-                                                                id: 'CSV',
-                                                                label: t('event.competition.execution.startList.type.CSV')
-                                                            }
-                                                        ] satisfies {id: StartListFileType, label: string}[]}
+                                                        }}
+                                                        buttonContent={t(
+                                                            'event.competition.execution.startList.download',
+                                                        )}
+                                                        keyLabel={
+                                                            'competition-execution-startlist-download'
+                                                        }
+                                                        onSelectItem={(fileType: string) =>
+                                                            handleDownloadStartList(
+                                                                match.id,
+                                                                fileType as StartListFileType,
+                                                            )
+                                                        }
+                                                        items={
+                                                            [
+                                                                {
+                                                                    id: 'PDF',
+                                                                    label: t(
+                                                                        'event.competition.execution.startList.type.PDF',
+                                                                    ),
+                                                                },
+                                                                {
+                                                                    id: 'CSV',
+                                                                    label: t(
+                                                                        'event.competition.execution.startList.type.CSV',
+                                                                    ),
+                                                                },
+                                                            ] satisfies {
+                                                                id: StartListFileType
+                                                                label: string
+                                                            }[]
+                                                        }
                                                     />
                                                 </Stack>
                                             </Stack>

@@ -1,8 +1,8 @@
 import {Avatar, Box, Card, CardContent, Chip, Skeleton, Stack, Typography} from '@mui/material'
 import {
     AccessTime as AccessTimeIcon,
+    AccessTimeFilled,
     EmojiEvents as EmojiEventsIcon,
-    Numbers as NumbersIcon,
 } from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks'
@@ -33,7 +33,7 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
         return (
             <Box sx={{p: 3}}>
                 <Typography variant="h4" gutterBottom>
-                    {t('event.info.viewType.upcomingMatches')}
+                    {t('event.info.viewTypes.upcomingMatches')}
                 </Typography>
                 <Stack spacing={2}>
                     {[...Array(3)].map((_, i) => (
@@ -62,9 +62,12 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
 
     return (
         <Box sx={{p: 3, height: '100%', overflow: 'auto'}}>
-            <Typography variant="h4" gutterBottom sx={{mb: 3}}>
-                {t('event.info.viewType.upcomingMatches')}
-            </Typography>
+            <Stack direction="row" spacing={2} alignItems={'center'} sx={{mb: 3}}>
+                <AccessTimeFilled fontSize={'large'} color={'info'} />
+                <Typography variant="h4" gutterBottom>
+                    {t('event.info.viewTypes.upcomingMatches')}
+                </Typography>
+            </Stack>
 
             <Stack spacing={2}>
                 {data.map((match: UpcomingCompetitionMatchInfo) => (
@@ -102,29 +105,42 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
 
                                 {/* Match Details */}
                                 <Box sx={{flex: 1}}>
-                                    <Box
-                                        sx={{display: 'flex', alignItems: 'center', gap: 1, mb: 1}}>
-                                        <Typography variant="h6" sx={{mr: 2}}>
-                                            {match.competitionName}
-                                        </Typography>
-                                        {match.categoryName && (
-                                            <Chip
-                                                label={match.categoryName}
-                                                size="small"
-                                                color="primary"
-                                                variant="outlined"
-                                            />
+                                    <Stack mb={1}>
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: 1,
+                                            }}>
+                                            {match.matchName && (
+                                                <Typography
+                                                    variant="subtitle1"
+                                                    fontWeight="bold"
+                                                    color="primary">
+                                                    {match.matchName}
+                                                </Typography>
+                                            )}
+                                            <Typography variant="h6">
+                                                {match.competitionName}
+                                            </Typography>
+                                            {match.categoryName && (
+                                                <Chip
+                                                    label={match.categoryName}
+                                                    size="small"
+                                                    color="primary"
+                                                    variant="outlined"
+                                                />
+                                            )}
+                                        </Box>
+                                        {match.roundName && match.roundName !== match.matchName && (
+                                            <Typography
+                                                variant="subtitle2"
+                                                color="text.secondary"
+                                                sx={{mr: 1}}>
+                                                {match.roundName}
+                                            </Typography>
                                         )}
-                                        {match.roundName && (
-                                            <Chip
-                                                label={match.roundName}
-                                                size="small"
-                                                color="secondary"
-                                                variant="outlined"
-                                            />
-                                        )}
-                                    </Box>
-
+                                    </Stack>
                                     {/* Teams */}
                                     {match.teams.length > 0 && (
                                         <Box
@@ -269,14 +285,6 @@ const UpcomingMatchesView = ({eventId, limit}: UpcomingMatchesViewProps) => {
                                                 </Typography>
                                             </Box>
                                         )}
-                                        <Box sx={{display: 'flex', alignItems: 'center', gap: 0.5}}>
-                                            <NumbersIcon fontSize="small" color="action" />
-                                            <Typography variant="caption" color="text.secondary">
-                                                {t('event.info.executionOrder', {
-                                                    order: match.executionOrder,
-                                                })}
-                                            </Typography>
-                                        </Box>
                                     </Box>
                                 </Box>
                             </Box>

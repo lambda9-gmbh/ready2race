@@ -2,7 +2,8 @@ import {
     CompetitionRegistrationNamedParticipantUpsertDto,
     CompetitionRegistrationUpsertDto,
     EventRegistrationParticipantUpsertDto,
-    Gender, ParticipantForEventDto,
+    Gender,
+    ParticipantForEventDto,
 } from '@api/types.gen.ts'
 import {SyntheticEvent, useCallback, useMemo} from 'react'
 import {AutocompleteChangeDetails, AutocompleteChangeReason} from '@mui/material'
@@ -105,7 +106,7 @@ export const TeamParticipantAutocomplete = (props: {
                         ?.flatMap(n => n?.participantIds ?? [])
                         ?.some(userId => userId === option.id) ??
                         false) ||
-                    (props.disabledParticipants?.some(p => (p.id === option.id )) ?? false)
+                    (props.disabledParticipants?.some(p => p.id === option.id) ?? false)
                 )
             }
         },
@@ -117,7 +118,7 @@ export const TeamParticipantAutocomplete = (props: {
             value,
             props.transform,
             competitionWatch,
-            props.disabledParticipants
+            props.disabledParticipants,
         ],
     )
 

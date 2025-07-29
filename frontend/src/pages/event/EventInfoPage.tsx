@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react'
-import {Box, CircularProgress, Fade, IconButton, Dialog, DialogContent} from '@mui/material'
+import {Box, CircularProgress, Fade, IconButton, Dialog, DialogContent, Button} from '@mui/material'
 import {
     Fullscreen as FullscreenIcon,
     FullscreenExit as FullscreenExitIcon,
@@ -47,17 +47,17 @@ const EventInfoPage = () => {
     // Handle mouse movement for auto-hiding controls
     const handleMouseMove = useCallback(() => {
         setShowControls(true)
-        
+
         // Clear existing timer
         if (mouseTimer) {
             clearTimeout(mouseTimer)
         }
-        
+
         // Set new timer to hide controls after 5 seconds
         const timer = setTimeout(() => {
             setShowControls(false)
         }, 5000)
-        
+
         setMouseTimer(timer)
     }, [mouseTimer])
 
@@ -138,10 +138,9 @@ const EventInfoPage = () => {
     const currentView = views[currentViewIndex]
 
     return (
-        <Box 
+        <Box
             sx={{height: '90vh', position: 'relative', overflow: 'hidden'}}
-            onMouseMove={handleMouseMove}
-        >
+            onMouseMove={handleMouseMove}>
             {/* Main content */}
             <Box
                 sx={{
@@ -152,28 +151,32 @@ const EventInfoPage = () => {
                 }}>
                 {/* Controls */}
                 {!configOpen && (
-                    <Fade in={showControls}>
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 16,
-                                right: 16,
-                                zIndex: 10,
-                                display: 'flex',
-                                gap: 1,
-                            }}>
-                            <IconButton
-                                onClick={() => setConfigOpen(true)}
-                                sx={{bgcolor: 'background.paper', boxShadow: 1}}>
-                                <SettingsIcon />
-                            </IconButton>
-                            <IconButton
-                                onClick={toggleFullscreen}
-                                sx={{bgcolor: 'background.paper', boxShadow: 1}}>
-                                {fullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
-                            </IconButton>
-                        </Box>
-                    </Fade>
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            zIndex: 10,
+                            display: 'flex',
+                            gap: 1,
+                        }}>
+                        <Button
+                            onClick={() => setConfigOpen(true)}
+                            startIcon={<SettingsIcon />}
+                            variant="contained"
+                            color="primary"
+                            size="small">
+                            {t('event.info.configure')}
+                        </Button>
+                        <Button
+                            onClick={toggleFullscreen}
+                            startIcon={fullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                            variant="contained"
+                            color="primary"
+                            size="small">
+                            {fullscreen ? t('common.exitFullscreen') : t('common.fullscreen')}
+                        </Button>
+                    </Box>
                 )}
 
                 {/* Rotation control - show for multiple views or single view when playing */}

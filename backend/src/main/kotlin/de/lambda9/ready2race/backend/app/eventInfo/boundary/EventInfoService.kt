@@ -268,6 +268,7 @@ object EventInfoService {
                 placeName = null, // No place join in this query
                 roundNumber = null, // No round number field available
                 roundName = match.get("round_name", String::class.java),
+                matchName = match.get("match_name", String::class.java),
                 executionOrder = match[COMPETITION_SETUP_MATCH.EXECUTION_ORDER] ?: 0,
                 teams = teams
             )

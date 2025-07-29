@@ -1,6 +1,8 @@
 import {
     Button,
-    DialogActions, DialogContent, DialogTitle,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     Divider,
     List,
     ListItem,
@@ -19,7 +21,7 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import {Link} from '@tanstack/react-router'
 import InputIcon from '@mui/icons-material/Input'
-import BaseDialog from "@components/BaseDialog.tsx";
+import BaseDialog from '@components/BaseDialog.tsx'
 
 type AssignmentForm = {
     selected: string[]
@@ -142,10 +144,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                             ),
                     )}
             </List>
-            <BaseDialog
-                open={dialogOpen}
-                onClose={closeDialog}
-                maxWidth={'xs'}>
+            <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'xs'}>
                 <DialogTitle>
                     {competitionsToDay
                         ? t('event.eventDay.assignedCompetitions')
@@ -165,7 +164,7 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                         <Button onClick={closeDialog} disabled={submitting}>
                             {t('common.cancel')}
                         </Button>
-                        <SubmitButton submitting={submitting} >{t('common.save')}</SubmitButton>
+                        <SubmitButton submitting={submitting}>{t('common.save')}</SubmitButton>
                     </DialogActions>
                 </FormContainer>
             </BaseDialog>

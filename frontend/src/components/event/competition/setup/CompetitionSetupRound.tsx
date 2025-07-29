@@ -245,12 +245,11 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                       formContext.getValues(`rounds.${roundIndex + 1}.matches`),
                   )
 
-
             const newPlaces = getNewPlaces(
                 nextRoundParticipants,
                 thisRoundTeams,
                 teamCounts.nextRound,
-                currentPlaces
+                currentPlaces,
             )
 
             formContext.setValue(`rounds.${roundIndex}.places`, newPlaces)
@@ -260,7 +259,12 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
         if (roundIndex > 0) {
             const participants = getParticipantsFromMatchOrGroup(watchMatches)
 
-            const newPlaces = getNewPlaces(participants, teamCounts.prevRound, thisRoundTeams, currentPlaces)
+            const newPlaces = getNewPlaces(
+                participants,
+                teamCounts.prevRound,
+                thisRoundTeams,
+                currentPlaces,
+            )
 
             formContext.setValue(`rounds.${roundIndex - 1}.places`, newPlaces)
         }
@@ -341,7 +345,16 @@ const CompetitionSetupRound = ({round, formContext, removeRound, teamCounts, ...
                             value: useStartTimeOffsetsValue = true,
                         },
                     }) => (
-                        <Box sx={{display: 'flex', flexDirection: 'column', gap: 2, borderLeft: 1, borderColor: theme.palette.primary.main, pl: 4, py: 2}}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 2,
+                                borderLeft: 1,
+                                borderColor: theme.palette.primary.main,
+                                pl: 4,
+                                py: 2,
+                            }}>
                             <Box>
                                 <Button
                                     variant="outlined"

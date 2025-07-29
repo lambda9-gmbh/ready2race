@@ -39,7 +39,7 @@ const SubstitutionSelectParticipantIn = ({setupRoundId, selectedParticipantOut}:
                 ...subInsData.notCurrentlyParticipating,
             ].map(p => ({
                 id: p.id,
-                label: p.firstName + " " + p.lastName
+                label: p.firstName + ' ' + p.lastName,
             }))}
             required
             label={'todo: P in'}

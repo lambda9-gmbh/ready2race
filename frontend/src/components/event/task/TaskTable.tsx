@@ -7,7 +7,7 @@ import {deleteTask, getTasks} from '@api/sdk.gen.ts'
 import {eventIndexRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import {TaskStateIcon} from '@components/event/task/TaskStateIcon.tsx'
-import {format} from "date-fns";
+import {format} from 'date-fns'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -59,7 +59,7 @@ const TaskTable = (props: BaseEntityTableProps<TaskDto>) => {
         {
             field: 'dueDate',
             headerName: t('task.dueDate'),
-            valueGetter: (v: string) => v ? format(new Date(v), t('format.datetime')) : null,
+            valueGetter: (v: string) => (v ? format(new Date(v), t('format.datetime')) : null),
             minWidth: 200,
         },
         {

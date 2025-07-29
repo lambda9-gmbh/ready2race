@@ -1,8 +1,9 @@
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {
-    CompetitionPropertiesDto, CompetitionPropertiesRequest,
-    CompetitionSetupTemplateOverviewDto
+    CompetitionPropertiesDto,
+    CompetitionPropertiesRequest,
+    CompetitionSetupTemplateOverviewDto,
 } from '@api/types.gen.ts'
 
 export type CompetitionForm = {
@@ -58,14 +59,14 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             required: value.required,
             amount: value.amount.replace(',', '.'),
         })),
-        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id)
+        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id),
     }
 }
 
 export function mapCompetitionPropertiesToCompetitionForm(
     dto: CompetitionPropertiesDto,
     decimalPoint: string,
-    setupTemplate?: CompetitionSetupTemplateOverviewDto
+    setupTemplate?: CompetitionSetupTemplateOverviewDto,
 ): CompetitionForm {
     console.log(setupTemplate)
     return {
@@ -91,10 +92,12 @@ export function mapCompetitionPropertiesToCompetitionForm(
             required: value.required,
             amount: value.amount.replace('.', decimalPoint),
         })),
-        setupTemplate: setupTemplate ? {
-            id: setupTemplate.id,
-            label: setupTemplate.name,
-        } : null,
+        setupTemplate: setupTemplate
+            ? {
+                  id: setupTemplate.id,
+                  label: setupTemplate.name,
+              }
+            : null,
     }
 }
 

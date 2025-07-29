@@ -1107,6 +1107,7 @@ export type UpcomingCompetitionMatchInfo = {
     placeName?: string | null
     roundNumber?: number | null
     roundName?: string | null
+    matchName?: string | null
     executionOrder: number
     teams: Array<UpcomingMatchTeamInfo>
 }

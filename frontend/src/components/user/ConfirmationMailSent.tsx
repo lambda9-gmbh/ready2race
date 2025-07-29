@@ -15,7 +15,7 @@ const ConfirmationMailSent = ({header, children}: PropsWithChildren<Props>) => {
             <Typography variant="h2" textAlign="center">
                 {header}
             </Typography>
-            {children && (<Divider />)}
+            {children && <Divider />}
             {children}
         </Stack>
     )

@@ -5,15 +5,15 @@ import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} fro
 import EntityTable from '@components/EntityTable.tsx'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {deleteDocumentTemplate, getDocumentTemplates} from '@api/sdk.gen.ts'
-import {Preview} from "@mui/icons-material";
-import {useState} from "react";
-import DocumentTemplatePreviewDialog from "@components/documentTemplate/DocumentTemplatePreviewDialog.tsx";
+import {Preview} from '@mui/icons-material'
+import {useState} from 'react'
+import DocumentTemplatePreviewDialog from '@components/documentTemplate/DocumentTemplatePreviewDialog.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
     pageSize: 10,
 }
-const pageSizeOptions: (number | { value: number; label: string })[] = [10]
+const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'name', sort: 'asc'}]
 
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) =>
@@ -43,14 +43,13 @@ const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>)
         },
     ]
 
-
     const customEntityActions = (entity: DocumentTemplateDto): EntityAction[] => [
         <GridActionsCellItem
-            icon={<Preview/>}
+            icon={<Preview />}
             label={t('document.template.preview.show')}
             onClick={() => setPreviewId(entity.id)}
             showInMenu
-        />
+        />,
     ]
 
     return (
@@ -66,8 +65,11 @@ const DocumentTemplateTable = (props: BaseEntityTableProps<DocumentTemplateDto>)
                 deleteRequest={deleteRequest}
                 customEntityActions={customEntityActions}
             />
-            <DocumentTemplatePreviewDialog open={showPreview} onClose={handleClosePreview}
-                                           documentTemplateId={previewId}/>
+            <DocumentTemplatePreviewDialog
+                open={showPreview}
+                onClose={handleClosePreview}
+                documentTemplateId={previewId}
+            />
         </>
     )
 }

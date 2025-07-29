@@ -1,930 +1,936 @@
 {
-  "common": {
-    "no": "Nein",
-    "cancel": "Abbrechen",
-    "close": "Schließen",
-    "confirmation": {
-      "title": "Bestätigung erforderlich",
-      "content": "Bitte bestätigen Sie das Ausführen der gewählten Aktion"
-    },
-    "delete": "Löschen",
-    "edit": "Bearbeiten",
-    "selected": "Ausgewählt",
-    "manage": "Verwalten",
-    "all" : "Alle",
-    "error": {
-      "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
-      "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
-    },
-    "organisation": "Organisation",
-    "form": {
-      "autocomplete": {
-        "noOptions": "Keine Auswahl",
-        "add": "{{entity}} hinzufügen"
-      },
-      "currency": {
-        "invalid": "Bitte geben Sie einen gültigen Betrag ein."
-      },
-      "dateTime": {
-        "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
-      },
-      "email": {
-        "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
-      },
-      "number": {
-        "invalid": {
-          "pattern": {
-            "integer": "Bitte geben Sie eine ganze Zahl ein.",
-            "number": "Bitte geben Sie eine gültige Zahl ein."
-          },
-          "value": {
-            "messageStart": "Bitte wählen Sie eine Zahl ",
-            "min": "über {{min}}.",
-            "max": "unter {{max}}.",
-            "range": "zwischen {{min}} und {{max}}."
-          },
-          "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
-        }
-      },
-      "seconds": "Sekunden",
-      "optional": "Optional",
-      "required": "Bitte füllen Sie dieses Feld aus.",
-      "selectFile": "Datei auswählen",
-      "select": {
-        "none": "Keine"
-      }
-    },
-    "load": {
-      "error": {
-        "multiple": {
-          "short": "{{entity}} konnten nicht geladen werden",
-          "detailed": "Beim Laden von {{entity}} ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
+    "common": {
+        "no": "Nein",
+        "cancel": "Abbrechen",
+        "close": "Schließen",
+        "confirmation": {
+            "title": "Bestätigung erforderlich",
+            "content": "Bitte bestätigen Sie das Ausführen der gewählten Aktion"
         },
-        "single": "{{entity}} konnte nicht geladen werden"
-      }
-    },
-    "ok": "Ok",
-    "save": "Speichern",
-    "saveAndNew": "Speichern und Neu",
-    "saveAndNext": "Speichern und weiter",
-    "search": "Suchen",
-    "back": "Zurück",
-    "next": "Weiter",
-    "and": "und",
-    "remove": "Entfernen",
-    "items": "Elemente",
-    "more": "Mehr",
-    "create": "Erstellen",
-    "update": "Aktualisieren",
-    "lastUpdate": "Letzte Aktualisierung",
-    "confirmDelete": "Löschen bestätigen",
-    "language": {
-      "menu": "Sprache auswählen"
-    }
-  },
-  "format": {
-    "date": "dd.MM.yyyy",
-    "datetime": "dd.MM.yyyy, HH:mm",
-    "time": "HH:mm"
-  },
-  "document": {
-    "template": {
-      "tableHint": {
-        "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
-        "2": "In den ",
-        "3": "globalen Einstellungen",
-        "4": " können die Zuweisungen vorgenommen werden."
-      },
-      "template": "Dokumentvorlage",
-      "templates": "Dokumentvorlagen",
-      "type": {
-        "INVOICE": "Rechnung",
-        "REGISTRATION_REPORT": "Meldeergebnis",
-        "START_LIST": "Startliste"
-      },
-      "none": "Keine Vorlage",
-      "name": "Name",
-      "file": {
-        "choose": "Vorlage auswählen",
-        "change": "Vorlage ändern",
-        "missing": "Bitte wählen Sie ein Dokument aus."
-      },
-      "pagePadding": {
-        "top": "Rand oben",
-        "left": "Rand links",
-        "right": "Rand rechts",
-        "bottom": "Rand unten"
-      },
-      "assignments": {
-        "global": "Global zugewiesene Vorlagen",
-        "event": "Für Veranstaltung zugewiesene Vorlagen"
-      },
-      "preview": {
-        "title": "Mustervorschau",
-        "type": "Dokumenttyp",
-        "show": "Mustervorschau",
-        "error": "Fehler beim Laden der Vorschau"
-      }
-    }
-  },
-  "decimal": {
-    "point": ","
-  },
-  "entity": {
-    "entity": "Objekt",
-    "add": {
-      "action": "{{entity}} anlegen",
-      "success": "{{entity}} angelegt",
-      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht angelegt"
-    },
-    "delete": {
-      "success": "{{entity}} gelöscht",
-      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
-    },
-    "description": "Beschreibung",
-    "createdAt": "Erstellt am",
-    "updatedAt": "Letzte Änderung",
-    "edit": {
-      "action": "{{entity}} bearbeiten",
-      "success": "{{entity}} aktualisiert",
-      "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
-    },
-    "optional": "Optional",
-    "name": "Name",
-    "firstname": "Vorname",
-    "lastname": "Nachname",
-    "gender": "Geschlecht",
-    "phone": "Telefon",
-    "remark": "Anmerkung",
-    "color" : "Farbe"
-  },
-  "navigation": {
-    "titles": {
-      "landing": "Start",
-      "dashboard": "Dashboard",
-      "events": "Veranstaltungen",
-      "competitionConfig": "Wettkampf Einstellungen",
-      "roles": "Rollen",
-      "users": "Benutzer",
-      "config": "Konfigurationen",
-      "clubs": "Vereine",
-      "myClub": "Mein Verein",
-      "invoices": "Rechnungen"
-    }
-  },
-  "dashboard": {
-    "registration": {
-      "showMessage": "Nachricht anzeigen"
-    }
-  },
-  "club": {
-    "club": "Verein",
-    "clubs": "Vereine",
-    "participants": "Mitglieder",
-    "participant": {
-      "title": "Mitglied",
-      "year": "Geburtsjahr",
-      "external": "Extern",
-      "externalClub": "Externer Verein",
-      "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
-      "usedInRegistration": "In Meldung"
-    }
-  },
-  "event": {
-    "event": "Veranstaltung",
-    "events": "Veranstaltungen",
-    "name": "Name",
-    "description": "Beschreibung",
-    "registerNow": "Zur Meldung",
-    "invoice": {
-      "prefix": "Rechnungspräfix",
-      "paymentDueBy": "Zahlungstermin Meldegebühren"
-    },
-    "location": "Ort",
-    "upcoming": "Anstehende Veranstaltungen",
-    "registrationAvailable": {
-      "timespan": "Anmeldezeitraum",
-      "timespanFrom": "Anmeldezeitraum von",
-      "timespanTo": "Anmeldezeitraum bis",
-      "from": "ab",
-      "to": "bis",
-      "unknown": "Noch nicht bekannt gegeben"
-    },
-    "published": {
-      "published": "Veröffentlicht",
-      "not": "Nicht veröffentlicht"
-    },
-    "eventDay": {
-      "eventDay": "Tag",
-      "eventDays": "Tage",
-      "date": "Datum",
-      "name": "Name",
-      "description": "Beschreibung",
-      "assignedCompetitions": "Wettkämpfe an diesem Tag"
-    },
-    "competition": {
-      "competition": "Wettkampf",
-      "competitions": "Wettkämpfe",
-      "identifier": "Kennung",
-      "name": "Name",
-      "description": "Beschreibung",
-      "registrationCount": "Meldungen",
-      "shortName": "Kurzname",
-      "tableHint": {
-        "competitionComponents": {
-          "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
-          "part2Link": "hier",
-          "part3": " definiert werden."
-        },
-        "templates": {
-          "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
-          "part2Link": "Vorlagen",
-          "part3": " definiert werden."
-        }
-      },
-      "category": {
-        "category": "Kategorie",
-        "categories": "Kategorien",
-        "name": "Name",
-        "description": "Beschreibung",
-        "tableHint": "Ermöglichen das Sortieren und Filtern von Wettkämpfen (noch nicht implementiert)."
-      },
-      "count": {
-        "males": "Anzahl Männer",
-        "females": "Anzahl Frauen",
-        "nonBinary": "Anzahl nicht-binäre Personen",
-        "mixed": "Anzahl Beliebige"
-      },
-      "gender": {
-        "male": "Männlich",
-        "female": "Weiblich",
-        "nonBinary": "Nicht-binär",
-        "mixed": "Beliebig"
-      },
-      "namedParticipant": {
-        "namedParticipant": "Teilnehmertyp",
-        "namedParticipants": "Teilnehmertypen",
-        "name": "Name",
-        "description": "Beschreibung",
-        "role": "Rolle",
-        "add": "Teilnehmertyp hinzufügen",
-        "tableHint": "Rollen, die Teilnehmende in einem Wettkampf einnehmen können.",
+        "delete": "Löschen",
+        "edit": "Bearbeiten",
+        "selected": "Ausgewählt",
+        "manage": "Verwalten",
+        "all": "Alle",
         "error": {
-          "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
-          "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
-          "duplicates": {
-            "one": "Die Rolle {{label}} wird mehrfach verwendet.",
-            "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
-            "message": "Bitte wählen Sie für jeden Teilnehmertyp eine einzigartige Rolle aus."
-          }
-        }
-      },
-      "teamComposition": "Teamzusammensetzung",
-      "fee": {
-        "fee": "Gebühr",
-        "fees": "Gebühren",
-        "name": "Name",
-        "description": "Beschreibung",
-        "amount": "Betrag",
-        "add": "Gebühr hinzufügen",
-        "type": "Gebührenart",
-        "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
-        "required": {
-          "notRequired": "Gebühr ist nicht verpflichtend",
-          "required": "Gebühr ist verpflichtend"
-        }
-      },
-      "template": {
-        "template": "Wettkampf Vorlage",
-        "templates": "Wettkampf Vorlagen",
-        "name": "Name",
-        "description": "Beschreibung",
-        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung.",
-        "select": "Vorlage auswählen"
-      },
-      "assignedDays": "Wettkampftage",
-      "error": {
-        "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
-      },
-      "registration": {
-        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
-      },
-      "setup": {
-        "setup": "Wettbewerbsablauf",
-        "save": {
-          "save": "Speichern",
-          "error": "Ein Fehler ist aufgetreten - Der Wettbewerbsablauf konnte nicht gespeichert werden",
-          "success": "Wettbewerbsablauf erfolgreich gespeichert"
+            "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
+            "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
         },
-        "reset": "Ablauf zurücksetzen",
-        "round": {
-          "round": "Runde",
-          "name": "Name",
-          "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
-          "required": "Runde muss durchgeführt werden",
-          "finals": {
-            "long": {
-              "final": {
-                "round": "Finalrunde",
-                "final": "Finale",
-                "matchForThirdPlace": "Partie um Platz 3"
-              },
-              "semifinal": "Halbfinale",
-              "quarterfinal": "Viertelfinale",
-              "roundOf16": "Achtelfinale",
-              "roundOf32": "Sechzehntelfinale"
+        "organisation": "Organisation",
+        "form": {
+            "autocomplete": {
+                "noOptions": "Keine Auswahl",
+                "add": "{{entity}} hinzufügen"
             },
-            "short": {
-              "semifinal": "HF",
-              "quarterfinal": "VF",
-              "roundOf16": "AF",
-              "roundOf32": "SF"
-            }
-          },
-          "remove": "Runde entfernen"
-        },
-        "match": {
-          "match": "Partie",
-          "participants": "Matchup",
-          "name": "Name",
-          "executionOrder": "Durchführungsreihenfolge",
-          "teams": {
-            "teams": "Teamanzahl",
-            "unlimited": "Unbegrenzt"
-          },
-          "outcome": {
-            "outcome": "Setzung",
-            "outcomes": "Setzungen",
-            "tooltip": "Resultierende Setzungen dieser Partie",
-            "result": "Ergebnis"
-          },
-          "remove": "Partie entfernen",
-          "info": {
-            "roundOneFillMatches": "Die Partien werden gleichmäßig mit zufällig gewählten Teams befüllt."
-          }
-        },
-        "place": {
-          "place": "Platz",
-          "places": "Gesamtplatzierungen",
-          "placesOption": {
-            "equal": "Gleichgestellt (Platz = {{place}})",
-            "ascending": "Aufsteigend (Platz = Setzung)",
-            "custom": "Benutzerdefiniert"
-          }
-        },
-        "tournamentTree": {
-          "generate": "Generieren",
-          "generateTree": "Turnierbaum generieren",
-          "participatingTeams": "Teilnehmende Teams",
-          "includeMatchForThirdPlace": "Partie um Platz 3 erstellen",
-          "overwriteSetup": "Bisherigen Ablauf überschreiben",
-          "info": {
-            "noOverwrite": "Die generierten Runden werden an das Ende des bisherigen Ablaufs angehängt."
-          }
-        },
-        "template": {
-          "template": "Vorlage für Wettbewerbsablauf",
-          "templates": "Vorlagen für Wettbewerbsabläufe",
-          "name": "Name",
-          "description": "Beschreibung",
-          "select": "Vorlage auswählen"
-        },
-        "startTimeOffset": {
-          "startTimeOffset": "Versetzte Startzeit",
-          "enable": "Versetzte Startzeiten erlauben"
-        },
-        "validation": {
-          "duplicateParticipants": {
-            "one": "Das Team: {{participants}} wird mehrfach verwendet.",
-            "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
-            "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
-          },
-          "duplicatePositions": {
-            "one": "In der Durchführungsreihenfolge wird {{positions}} mehrfach verwendet.",
-            "multiple": "In der Durchführungsreihenfolge werden {{positions}} mehrfach verwendet.",
-            "message": "Bitte fügen Sie jeden Wert nur je einer Partie pro Runde hinzu."
-          }
-        },
-        "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
-      },
-      "execution": {
-        "tabTitle": "Durchführung",
-        "progress": {
-          "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
-        },
-        "nextRound": {
-          "create": "Erstelle nächste Runde",
-          "error": "Nächste Runde konnte nicht erstellt werden",
-          "success": "Nächste Runde erstellt",
-          "reasons": {
-            "noRoundsInSetup": "In dem Wettbewerbsablauf sind keine Runden festgelegt.",
-            "noSetupMatches": "In der nächsten Runde des Wettbewerbsablaufs sind keine Partien festgelegt.",
-            "noRegistrations": "Es gibt keine Meldungen für diesen Wettbewerb.",
-            "registrationsNotFinalized": {
-              "textStart": "Die Meldungen für diese Veranstaltung sind noch nicht finalisiert. Die Meldungen können ",
-              "link": "hier",
-              "textEnd": " finalisiert werden."
+            "currency": {
+                "invalid": "Bitte geben Sie einen gültigen Betrag ein."
             },
-            "notEnoughTeamSpace": "Es gibt mehr Meldungen für diesen Wettbewerb als Teams in dem Wettbewerbsablauf definiert sind. Bitte vergewissern Sie sich, dass genügend Teams oder Partien für die erste Runde des Wettbewerbs definiert sind.",
-            "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
-          }
-        },
-        "deleteRound": {
-          "delete": "Runde löschen",
-          "confirmation": {
-            "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
-          },
-          "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
-          "success": "Runde erfolgreich gelöscht"
-        },
-        "teamsWithBye": "Teams mit Freilos",
-        "match": {
-          "startTime": "Startzeit",
-          "startTimeOffset": "Versetzte Startzeit",
-          "startNumber": "Startnummer",
-          "team": "Team",
-          "place": "Platz"
-        },
-        "results": {
-          "enter": "Ergebnis eintragen",
-          "title": {
-            "named": "Ergebnis für {{matchName}}",
-            "unnamed": "Partie Ergebnis"
-          },
-          "validation": {
-            "duplicates": {
-              "single": "Der Platz: {{places}} wird mehrfach verwendet.",
-              "multiple": "Die Plätze: {{places}} werden mehrfach verwendet.",
-              "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
+            "dateTime": {
+                "invalid": "Bitte wählen Sie einen gültigen Zeitpunkt."
+            },
+            "email": {
+                "invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
+            },
+            "number": {
+                "invalid": {
+                    "pattern": {
+                        "integer": "Bitte geben Sie eine ganze Zahl ein.",
+                        "number": "Bitte geben Sie eine gültige Zahl ein."
+                    },
+                    "value": {
+                        "messageStart": "Bitte wählen Sie eine Zahl ",
+                        "min": "über {{min}}.",
+                        "max": "unter {{max}}.",
+                        "range": "zwischen {{min}} und {{max}}."
+                    },
+                    "minOrUndefined": "Bitte wählen Sie eine Zahl über {{min}} oder lassen Sie das Feld leer."
+                }
+            },
+            "seconds": "Sekunden",
+            "optional": "Optional",
+            "required": "Bitte füllen Sie dieses Feld aus.",
+            "selectFile": "Datei auswählen",
+            "select": {
+                "none": "Keine"
             }
-          },
-          "submit": {
-            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
-            "success": "Ergebnis gespeichert"
-          }
         },
-        "matchData": {
-          "edit": "Partie bearbeiten",
-          "title": {
-            "named": "Details für {{matchName}}",
-            "unnamed": "Details für Partie"
-          },
-          "randomizeStartNumbers": "Startnummern zufällig vergeben",
-          "validation": {
-            "duplicates": {
-              "single": "Die Startnummer: {{startNumbers}} wird mehrfach verwendet.",
-              "multiple": "Die Startnummern: {{startNumbers}} werden mehrfach verwendet.",
-              "message": "Bitte wählen Sie einzigartige Startnummern pro Partie."
+        "load": {
+            "error": {
+                "multiple": {
+                    "short": "{{entity}} konnten nicht geladen werden",
+                    "detailed": "Beim Laden von {{entity}} ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
+                },
+                "single": "{{entity}} konnte nicht geladen werden"
             }
-          },
-          "submit": {
-            "error": "Beim speichern der Details ist ein Fehler aufgetreten",
-            "success": "Partie gespeichert"
-          }
         },
-        "startList": {
-          "download": "Startliste herunterladen",
-          "type": {
-            "PDF": "als PDF",
-            "CSV": "als CSV"
-          },
-          "error": {
-            "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
-          }
+        "ok": "Ok",
+        "save": "Speichern",
+        "saveAndNew": "Speichern und Neu",
+        "saveAndNext": "Speichern und weiter",
+        "search": "Suchen",
+        "back": "Zurück",
+        "next": "Weiter",
+        "and": "und",
+        "remove": "Entfernen",
+        "items": "Elemente",
+        "more": "Mehr",
+        "create": "Erstellen",
+        "seconds": "Sekunden",
+        "update": "Aktualisieren",
+        "lastUpdate": "Letzte Aktualisierung",
+        "confirmDelete": "Löschen bestätigen",
+        "fullscreen": "Vollbild",
+        "exitFullscreen": "Vollbild beenden",
+        "language": {
+            "menu": "Sprache auswählen"
         }
-      },
-      "places": {
-        "places": "Platzierungen",
-        "tabTitle": "Platzierungen",
-        "noPlaces": "Für diesen Wettbewerb gibt es noch keine Platzierungen."
-      }
     },
-    "participantRequirement": {
-      "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
-      "approved": "Überprüfte Bedingungen",
-      "checkUpload": "Bedingungen abgleichen",
-      "checkManually": "\"{{name}}\" überprüfen",
-      "file": "CSV-Datei",
-      "charset": "Charset",
-      "separator": "Trennzeichen",
-      "firstnameColName": "Spalte mit Vornamen",
-      "lastnameColName": "Spalte mit Nachnamen",
-      "yearsColName": "Spalte mit Jahrgang",
-      "clubColName": "Spalte mit Vereinsnamen",
-      "requirementColName": "Spalte mit Teilnahmebedingung",
-      "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
-      "participantsOpen": "Offen",
-      "participantsApproved": "Überprüft",
-      "tableHint": {
-        "part1": "Bedingungen können ",
-        "part2Link": "hier",
-        "part3": " erstellt oder bearbeitet werden."
-      }
-    },
-    "action": {
-      "registrationsReport": {
-        "download": "Download Meldeergebnis"
-      },
-      "produceInvoices": "Rechnungen erstellen",
-      "finalizeRegistrations": {
-        "finalize": "Meldungen finalisieren",
-        "newRegistrations": {
-          "altertTitle": "Es gibt neue Meldungen",
-          "hint": "Seit der letzten Finalisierung wurden neue Meldungen abgegeben. Die neu gemeldeten Teilnehmer nehmen nicht an den Wettkämpfen teil, bis die Meldungen erneut finalisiert wurden."
-        },
-        "refinalize": "Refinalisieren",
-        "refinalizeRegistrations": "Meldungen refinalisieren",
-        "keepTeamNumbers": {
-          "keep": "Gesetzte Startnummern beibehalten",
-          "hint": "Bei Beibehaltung der Startnummern erhalten nur die neuen Teams/Teilnehmer zufällige Startnummern. Diese werden höher sein als die derzeit höchste des Wettbewerbs. Wenn sie nicht beibehalten werden, werden alle Startnummern neu gemischt."
-        },
-        "reshuffle": "Dies würfelt alle Startnummern neu aus",
-        "success": "Meldungen finalisiert"
-      }
-    },
-    "assign": {
-      "save": {
-        "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
-        "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
-      }
+    "format": {
+        "date": "dd.MM.yyyy",
+        "datetime": "dd.MM.yyyy, HH:mm",
+        "time": "HH:mm"
     },
     "document": {
-      "document": "Dokument",
-      "documents": "Dokumente",
-      "name": "Name",
-      "tableHint": {
-        "description": "Werden bei der Meldung zur Verfügung gestellt.",
-        "part1": "Zum Gruppieren und Konfigurieren können ",
-        "part2Link": "Dokumenttypen",
-        "part3": " definiert werden."
-      },
-      "type": {
-        "type": "Typ",
-        "documentType": "Dokumenttyp",
-        "documentTypes": "Dokumenttypen",
+        "template": {
+            "tableHint": {
+                "1": "Können vom System generierten Dokumenten hinzugefügt werden, um die Darstellung anzupassen.",
+                "2": "In den ",
+                "3": "globalen Einstellungen",
+                "4": " können die Zuweisungen vorgenommen werden."
+            },
+            "template": "Dokumentvorlage",
+            "templates": "Dokumentvorlagen",
+            "type": {
+                "INVOICE": "Rechnung",
+                "REGISTRATION_REPORT": "Meldeergebnis",
+                "START_LIST": "Startliste"
+            },
+            "none": "Keine Vorlage",
+            "name": "Name",
+            "file": {
+                "choose": "Vorlage auswählen",
+                "change": "Vorlage ändern",
+                "missing": "Bitte wählen Sie ein Dokument aus."
+            },
+            "pagePadding": {
+                "top": "Rand oben",
+                "left": "Rand links",
+                "right": "Rand rechts",
+                "bottom": "Rand unten"
+            },
+            "assignments": {
+                "global": "Global zugewiesene Vorlagen",
+                "event": "Für Veranstaltung zugewiesene Vorlagen"
+            },
+            "preview": {
+                "title": "Mustervorschau",
+                "type": "Dokumenttyp",
+                "show": "Mustervorschau",
+                "error": "Fehler beim Laden der Vorschau"
+            }
+        }
+    },
+    "decimal": {
+        "point": ","
+    },
+    "entity": {
+        "entity": "Objekt",
+        "add": {
+            "action": "{{entity}} anlegen",
+            "success": "{{entity}} angelegt",
+            "error": "Ein Fehler ist aufgetreten - {{entity}} nicht angelegt"
+        },
+        "delete": {
+            "success": "{{entity}} gelöscht",
+            "error": "Ein Fehler ist aufgetreten - {{entity}} nicht gelöscht"
+        },
+        "description": "Beschreibung",
+        "createdAt": "Erstellt am",
+        "updatedAt": "Letzte Änderung",
+        "edit": {
+            "action": "{{entity}} bearbeiten",
+            "success": "{{entity}} aktualisiert",
+            "error": "Ein Fehler ist aufgetreten - {{entity}} nicht aktualisiert"
+        },
+        "optional": "Optional",
+        "name": "Name",
+        "firstname": "Vorname",
+        "lastname": "Nachname",
+        "gender": "Geschlecht",
+        "phone": "Telefon",
+        "remark": "Anmerkung",
+        "color": "Farbe"
+    },
+    "navigation": {
+        "titles": {
+            "landing": "Start",
+            "dashboard": "Dashboard",
+            "events": "Veranstaltungen",
+            "competitionConfig": "Wettkampf Einstellungen",
+            "roles": "Rollen",
+            "users": "Benutzer",
+            "config": "Konfigurationen",
+            "clubs": "Vereine",
+            "myClub": "Mein Verein",
+            "invoices": "Rechnungen"
+        }
+    },
+    "dashboard": {
+        "registration": {
+            "showMessage": "Nachricht anzeigen"
+        }
+    },
+    "club": {
+        "club": "Verein",
+        "clubs": "Vereine",
+        "participants": "Mitglieder",
+        "participant": {
+            "title": "Mitglied",
+            "year": "Geburtsjahr",
+            "external": "Extern",
+            "externalClub": "Externer Verein",
+            "externalHint": "Wählen Sie diese Option, wenn Sie ein Mitglied eines anderen Vereins melden wollen.",
+            "usedInRegistration": "In Meldung"
+        }
+    },
+    "event": {
+        "event": "Veranstaltung",
+        "events": "Veranstaltungen",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
-        "required": {
-          "forEvent": "Erforderlich für Veranstaltung",
-          "confirmation": "Bestätigung erforderlich"
+        "registerNow": "Zur Meldung",
+        "invoice": {
+            "prefix": "Rechnungspräfix",
+            "paymentDueBy": "Zahlungstermin Meldegebühren"
+        },
+        "location": "Ort",
+        "upcoming": "Anstehende Veranstaltungen",
+        "registrationAvailable": {
+            "timespan": "Anmeldezeitraum",
+            "timespanFrom": "Anmeldezeitraum von",
+            "timespanTo": "Anmeldezeitraum bis",
+            "from": "ab",
+            "to": "bis",
+            "unknown": "Noch nicht bekannt gegeben"
+        },
+        "published": {
+            "published": "Veröffentlicht",
+            "not": "Nicht veröffentlicht"
+        },
+        "eventDay": {
+            "eventDay": "Tag",
+            "eventDays": "Tage",
+            "date": "Datum",
+            "name": "Name",
+            "description": "Beschreibung",
+            "assignedCompetitions": "Wettkämpfe an diesem Tag"
+        },
+        "competition": {
+            "competition": "Wettkampf",
+            "competitions": "Wettkämpfe",
+            "identifier": "Kennung",
+            "name": "Name",
+            "description": "Beschreibung",
+            "registrationCount": "Meldungen",
+            "shortName": "Kurzname",
+            "tableHint": {
+                "competitionComponents": {
+                    "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
+                    "part2Link": "hier",
+                    "part3": " definiert werden."
+                },
+                "templates": {
+                    "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
+                    "part2Link": "Vorlagen",
+                    "part3": " definiert werden."
+                }
+            },
+            "category": {
+                "category": "Kategorie",
+                "categories": "Kategorien",
+                "name": "Name",
+                "description": "Beschreibung",
+                "tableHint": "Ermöglichen das Sortieren und Filtern von Wettkämpfen (noch nicht implementiert)."
+            },
+            "count": {
+                "males": "Anzahl Männer",
+                "females": "Anzahl Frauen",
+                "nonBinary": "Anzahl nicht-binäre Personen",
+                "mixed": "Anzahl Beliebige"
+            },
+            "gender": {
+                "male": "Männlich",
+                "female": "Weiblich",
+                "nonBinary": "Nicht-binär",
+                "mixed": "Beliebig"
+            },
+            "namedParticipant": {
+                "namedParticipant": "Teilnehmertyp",
+                "namedParticipants": "Teilnehmertypen",
+                "name": "Name",
+                "description": "Beschreibung",
+                "role": "Rolle",
+                "add": "Teilnehmertyp hinzufügen",
+                "tableHint": "Rollen, die Teilnehmende in einem Wettkampf einnehmen können.",
+                "error": {
+                    "emptyList": "Bitte fügen Sie mindestens einen Teilnehmertyp hinzu",
+                    "noCount": "Bitte tragen Sie mindestens einen Teilnehmer beliebiger Art für diese Rolle ein",
+                    "duplicates": {
+                        "one": "Die Rolle {{label}} wird mehrfach verwendet.",
+                        "multiple": "Die Rollen {{labels}} werden mehrfach verwendet.",
+                        "message": "Bitte wählen Sie für jeden Teilnehmertyp eine einzigartige Rolle aus."
+                    }
+                }
+            },
+            "teamComposition": "Teamzusammensetzung",
+            "fee": {
+                "fee": "Gebühr",
+                "fees": "Gebühren",
+                "name": "Name",
+                "description": "Beschreibung",
+                "amount": "Betrag",
+                "add": "Gebühr hinzufügen",
+                "type": "Gebührenart",
+                "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
+                "required": {
+                    "notRequired": "Gebühr ist nicht verpflichtend",
+                    "required": "Gebühr ist verpflichtend"
+                }
+            },
+            "template": {
+                "template": "Wettkampf Vorlage",
+                "templates": "Wettkampf Vorlagen",
+                "name": "Name",
+                "description": "Beschreibung",
+                "tableHint": "Ermöglichen ein schnelles Erstellen von Wettkämpfen einer Veranstaltung.",
+                "select": "Vorlage auswählen"
+            },
+            "assignedDays": "Wettkampftage",
+            "error": {
+                "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
+            },
+            "registration": {
+                "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
+            },
+            "setup": {
+                "setup": "Wettbewerbsablauf",
+                "save": {
+                    "save": "Speichern",
+                    "error": "Ein Fehler ist aufgetreten - Der Wettbewerbsablauf konnte nicht gespeichert werden",
+                    "success": "Wettbewerbsablauf erfolgreich gespeichert"
+                },
+                "reset": "Ablauf zurücksetzen",
+                "round": {
+                    "round": "Runde",
+                    "name": "Name",
+                    "useDefaultSeeding": "Normales Seeding für Matchups nutzen",
+                    "required": "Runde muss durchgeführt werden",
+                    "finals": {
+                        "long": {
+                            "final": {
+                                "round": "Finalrunde",
+                                "final": "Finale",
+                                "matchForThirdPlace": "Partie um Platz 3"
+                            },
+                            "semifinal": "Halbfinale",
+                            "quarterfinal": "Viertelfinale",
+                            "roundOf16": "Achtelfinale",
+                            "roundOf32": "Sechzehntelfinale"
+                        },
+                        "short": {
+                            "semifinal": "HF",
+                            "quarterfinal": "VF",
+                            "roundOf16": "AF",
+                            "roundOf32": "SF"
+                        }
+                    },
+                    "remove": "Runde entfernen"
+                },
+                "match": {
+                    "match": "Partie",
+                    "participants": "Matchup",
+                    "name": "Name",
+                    "executionOrder": "Durchführungsreihenfolge",
+                    "teams": {
+                        "teams": "Teamanzahl",
+                        "unlimited": "Unbegrenzt"
+                    },
+                    "outcome": {
+                        "outcome": "Setzung",
+                        "outcomes": "Setzungen",
+                        "tooltip": "Resultierende Setzungen dieser Partie",
+                        "result": "Ergebnis"
+                    },
+                    "remove": "Partie entfernen",
+                    "info": {
+                        "roundOneFillMatches": "Die Partien werden gleichmäßig mit zufällig gewählten Teams befüllt."
+                    }
+                },
+                "place": {
+                    "place": "Platz",
+                    "places": "Gesamtplatzierungen",
+                    "placesOption": {
+                        "equal": "Gleichgestellt (Platz = {{place}})",
+                        "ascending": "Aufsteigend (Platz = Setzung)",
+                        "custom": "Benutzerdefiniert"
+                    }
+                },
+                "tournamentTree": {
+                    "generate": "Generieren",
+                    "generateTree": "Turnierbaum generieren",
+                    "participatingTeams": "Teilnehmende Teams",
+                    "includeMatchForThirdPlace": "Partie um Platz 3 erstellen",
+                    "overwriteSetup": "Bisherigen Ablauf überschreiben",
+                    "info": {
+                        "noOverwrite": "Die generierten Runden werden an das Ende des bisherigen Ablaufs angehängt."
+                    }
+                },
+                "template": {
+                    "template": "Vorlage für Wettbewerbsablauf",
+                    "templates": "Vorlagen für Wettbewerbsabläufe",
+                    "name": "Name",
+                    "description": "Beschreibung",
+                    "select": "Vorlage auswählen"
+                },
+                "startTimeOffset": {
+                    "startTimeOffset": "Versetzte Startzeit",
+                    "enable": "Versetzte Startzeiten erlauben"
+                },
+                "validation": {
+                    "duplicateParticipants": {
+                        "one": "Das Team: {{participants}} wird mehrfach verwendet.",
+                        "multiple": "Die Teams: {{participants}} werden mehrfach verwendet.",
+                        "message": "Bitte fügen Sie jedes Team nur je einem Matchup pro Runde hinzu."
+                    },
+                    "duplicatePositions": {
+                        "one": "In der Durchführungsreihenfolge wird {{positions}} mehrfach verwendet.",
+                        "multiple": "In der Durchführungsreihenfolge werden {{positions}} mehrfach verwendet.",
+                        "message": "Bitte fügen Sie jeden Wert nur je einer Partie pro Runde hinzu."
+                    }
+                },
+                "tableHint": "Ermöglichen ein schnelles Erstellen von Wettbewerbsabläufen für verschiedene Wettbewerbe."
+            },
+            "execution": {
+                "tabTitle": "Durchführung",
+                "progress": {
+                    "error": "Die Partien des Wettbewerbs konnten nicht geladen werden."
+                },
+                "nextRound": {
+                    "create": "Erstelle nächste Runde",
+                    "error": "Nächste Runde konnte nicht erstellt werden",
+                    "success": "Nächste Runde erstellt",
+                    "reasons": {
+                        "noRoundsInSetup": "In dem Wettbewerbsablauf sind keine Runden festgelegt.",
+                        "noSetupMatches": "In der nächsten Runde des Wettbewerbsablaufs sind keine Partien festgelegt.",
+                        "noRegistrations": "Es gibt keine Meldungen für diesen Wettbewerb.",
+                        "registrationsNotFinalized": {
+                            "textStart": "Die Meldungen für diese Veranstaltung sind noch nicht finalisiert. Die Meldungen können ",
+                            "link": "hier",
+                            "textEnd": " finalisiert werden."
+                        },
+                        "notEnoughTeamSpace": "Es gibt mehr Meldungen für diesen Wettbewerb als Teams in dem Wettbewerbsablauf definiert sind. Bitte vergewissern Sie sich, dass genügend Teams oder Partien für die erste Runde des Wettbewerbs definiert sind.",
+                        "notAllPlacesSet": "Es fehlen Ergebnisse. Bitte geben Sie alle Plätze für die Partien an."
+                    }
+                },
+                "deleteRound": {
+                    "delete": "Runde löschen",
+                    "confirmation": {
+                        "content": "Sind Sie sich sicher, dass die letzte Runde gelöscht werden soll?"
+                    },
+                    "error": "Beim Löschen der Runde ist ein Fehler aufgetreten",
+                    "success": "Runde erfolgreich gelöscht"
+                },
+                "teamsWithBye": "Teams mit Freilos",
+                "match": {
+                    "startTime": "Startzeit",
+                    "startTimeOffset": "Versetzte Startzeit",
+                    "startNumber": "Startnummer",
+                    "team": "Team",
+                    "place": "Platz"
+                },
+                "results": {
+                    "enter": "Ergebnis eintragen",
+                    "title": {
+                        "named": "Ergebnis für {{matchName}}",
+                        "unnamed": "Partie Ergebnis"
+                    },
+                    "validation": {
+                        "duplicates": {
+                            "single": "Der Platz: {{places}} wird mehrfach verwendet.",
+                            "multiple": "Die Plätze: {{places}} werden mehrfach verwendet.",
+                            "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
+                        }
+                    },
+                    "submit": {
+                        "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+                        "success": "Ergebnis gespeichert"
+                    }
+                },
+                "matchData": {
+                    "edit": "Partie bearbeiten",
+                    "title": {
+                        "named": "Details für {{matchName}}",
+                        "unnamed": "Details für Partie"
+                    },
+                    "randomizeStartNumbers": "Startnummern zufällig vergeben",
+                    "validation": {
+                        "duplicates": {
+                            "single": "Die Startnummer: {{startNumbers}} wird mehrfach verwendet.",
+                            "multiple": "Die Startnummern: {{startNumbers}} werden mehrfach verwendet.",
+                            "message": "Bitte wählen Sie einzigartige Startnummern pro Partie."
+                        }
+                    },
+                    "submit": {
+                        "error": "Beim speichern der Details ist ein Fehler aufgetreten",
+                        "success": "Partie gespeichert"
+                    }
+                },
+                "startList": {
+                    "download": "Startliste herunterladen",
+                    "type": {
+                        "PDF": "als PDF",
+                        "CSV": "als CSV"
+                    },
+                    "error": {
+                        "missingStartTime": "Für diese Partie wurde noch keine Startzeit gesetzt."
+                    }
+                }
+            },
+            "places": {
+                "places": "Platzierungen",
+                "tabTitle": "Platzierungen",
+                "noPlaces": "Für diesen Wettbewerb gibt es noch keine Platzierungen."
+            }
+        },
+        "participantRequirement": {
+            "info": "Wird keine explizite Spalte für die Prüfung der Teilnahmebedingung angegeben, werden alle übereinstimmenden Teilnehmer der Datei genehmigt.",
+            "approved": "Überprüfte Bedingungen",
+            "checkUpload": "Bedingungen abgleichen",
+            "checkManually": "\"{{name}}\" überprüfen",
+            "file": "CSV-Datei",
+            "charset": "Charset",
+            "separator": "Trennzeichen",
+            "firstnameColName": "Spalte mit Vornamen",
+            "lastnameColName": "Spalte mit Nachnamen",
+            "yearsColName": "Spalte mit Jahrgang",
+            "clubColName": "Spalte mit Vereinsnamen",
+            "requirementColName": "Spalte mit Teilnahmebedingung",
+            "requirementIsValidValue": "Gültiger Wert für Teilnahmebedingung",
+            "participantsOpen": "Offen",
+            "participantsApproved": "Überprüft",
+            "tableHint": {
+                "part1": "Bedingungen können ",
+                "part2Link": "hier",
+                "part3": " erstellt oder bearbeitet werden."
+            }
+        },
+        "action": {
+            "registrationsReport": {
+                "download": "Download Meldeergebnis"
+            },
+            "produceInvoices": "Rechnungen erstellen",
+            "finalizeRegistrations": {
+                "finalize": "Meldungen finalisieren",
+                "newRegistrations": {
+                    "altertTitle": "Es gibt neue Meldungen",
+                    "hint": "Seit der letzten Finalisierung wurden neue Meldungen abgegeben. Die neu gemeldeten Teilnehmer nehmen nicht an den Wettkämpfen teil, bis die Meldungen erneut finalisiert wurden."
+                },
+                "refinalize": "Refinalisieren",
+                "refinalizeRegistrations": "Meldungen refinalisieren",
+                "keepTeamNumbers": {
+                    "keep": "Gesetzte Startnummern beibehalten",
+                    "hint": "Bei Beibehaltung der Startnummern erhalten nur die neuen Teams/Teilnehmer zufällige Startnummern. Diese werden höher sein als die derzeit höchste des Wettbewerbs. Wenn sie nicht beibehalten werden, werden alle Startnummern neu gemischt."
+                },
+                "reshuffle": "Dies würfelt alle Startnummern neu aus",
+                "success": "Meldungen finalisiert"
+            }
+        },
+        "assign": {
+            "save": {
+                "error": "Ein Fehler ist aufgetreten - {{toBeAssigned}} konnten {{assignedTo}} nicht zugewiesen werden",
+                "success": "{{toBeAssigned}} wurden dem {{assignedTo}} zugewiesen"
+            }
+        },
+        "document": {
+            "document": "Dokument",
+            "documents": "Dokumente",
+            "name": "Name",
+            "tableHint": {
+                "description": "Werden bei der Meldung zur Verfügung gestellt.",
+                "part1": "Zum Gruppieren und Konfigurieren können ",
+                "part2Link": "Dokumenttypen",
+                "part3": " definiert werden."
+            },
+            "type": {
+                "type": "Typ",
+                "documentType": "Dokumenttyp",
+                "documentTypes": "Dokumenttypen",
+                "name": "Name",
+                "description": "Beschreibung",
+                "tableHint": "Ermöglichen das Kategorisieren verschiedener Dokumente einer Veranstaltung.",
+                "required": {
+                    "forEvent": "Erforderlich für Veranstaltung",
+                    "confirmation": "Bestätigung erforderlich"
+                }
+            },
+            "add": {
+                "add": "Dokument hinzufügen"
+            },
+            "download": {
+                "download": "Herunterladen",
+                "error": "Beim Herunterladen des Dokuments ist ein Fehler aufgetreten"
+            },
+            "error": {
+                "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
+            }
+        },
+        "registration": {
+            "registration": "Anmeldung",
+            "registrations": "Anmeldungen",
+            "addParticipant": "Mitglied hinzufügen",
+            "singleCompetition": "Einzelwettkampf",
+            "teamCompetition": "Teamwettkampf",
+            "males": "Männer",
+            "females": "Frauen",
+            "nonBinary": "Nicht-binäre Personen",
+            "mixed": "Beliebig",
+            "summary": "Zusammenfassung",
+            "schedule": "Programm",
+            "message": "Nachricht",
+            "optionalFee": "Optional",
+            "totalFees": "Meldegebühr",
+            "acceptDocuments": "Ich akzeptiere Folgendes:",
+            "infoDocuments": "Weitere Informationen",
+            "finish": "Anmeldung abschicken",
+            "success": {
+                "title": "Erfolgreich angemeldet!",
+                "subtitle": "Sie bekommen eine Bestätigung per Mail."
+            },
+            "mostRecent": "Neuste Anmeldungen"
+        },
+        "participants": "Teilnehmende",
+        "tabs": {
+            "general": "Allgemein",
+            "registrations": "Meldungen",
+            "settings": "Einstellungen",
+            "actions": "Aktionen",
+            "organisation": "Organisation",
+            "invoices": "Rechnungen"
+        },
+        "info": {
+            "infoPage": "Info-Anzeige",
+            "sectionTitle": "Öffentliche Informationsanzeige",
+            "pageDescription": "Konfigurieren und betrachten Sie Informationsanzeigen für öffentliche Bildschirme, die Veranstaltungsinformationen wie anstehende Läufe und Ergebnisse anzeigen.",
+            "manageInfoViews": "Info-Anzeigen ansehen und konfigurieren",
+            "configure": "Konfigurieren",
+            "noViews": "Keine Ansichten konfiguriert",
+            "configureViews": "Klicken Sie auf das Einstellungssymbol, um Ansichten zu konfigurieren",
+            "viewType": "Ansichtstyp",
+            "viewTypes": {
+                "upcomingMatches": "Anstehend",
+                "latestMatchResults": "Neueste Ergebnisse"
+            },
+            "configuration": "Ansichtskonfiguration",
+            "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
+            "noViewsConfigured": "Keine Ansichten konfiguriert",
+            "editView": "Ansicht bearbeiten",
+            "addView": "Ansicht hinzufügen",
+            "displayDuration": "Anzeigedauer",
+            "dataLimit": "Datenlimit",
+            "filtersComingSoon": "Filter werden in Kürze verfügbar sein",
+            "viewCreated": "Ansicht erfolgreich erstellt",
+            "viewUpdated": "Ansicht erfolgreich aktualisiert",
+            "viewDeleted": "Ansicht erfolgreich gelöscht",
+            "createError": "Fehler beim Erstellen der Ansicht",
+            "updateError": "Fehler beim Aktualisieren der Ansicht",
+            "deleteError": "Fehler beim Löschen der Ansicht",
+            "confirmDeleteView": "Sind Sie sicher, dass Sie diese Ansicht löschen möchten?",
+            "noUpcomingMatches": "Keine anstehenden Läufe",
+            "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
+            "unnamed": "Unbenannt",
+            "matchStatus": {
+                "pending": "Ausstehend",
+                "inProgress": "Läuft",
+                "completed": "Abgeschlossen"
+            },
+            "rank": "Rang",
+            "place": "Platz",
+            "team": "Team",
+            "participants": "Teilnehmer",
+            "result": "Ergebnis",
+            "points": "Punkte",
+            "matchTeams": "Lauf-Teams",
+            "executionOrder": "Ausführungsreihenfolge: {{order}}"
         }
-      },
-      "add": {
-        "add": "Dokument hinzufügen"
-      },
-      "download": {
+    },
+    "task": {
+        "task": "Aufgabe",
+        "tasks": "Aufgaben",
+        "myTasks": "Meine Aufgaben",
+        "name": "Titel",
+        "dueDate": "Fälligkeitsdatum",
+        "state": "Status",
+        "OPEN": "Offen",
+        "IN_PROGRESS": "In Bearbeitung",
+        "DONE": "Erledigt",
+        "CANCELED": "Abgebrochen",
+        "responsibleUsers": "Verantwortlich"
+    },
+    "work": {
+        "type": {
+            "type": "Arbeitsart",
+            "types": "Arbeitsarten",
+            "tableHint": "Ermöglichen das Planen von Schichten für eine Veranstaltung.",
+            "noneAvailable": "Es wurden noch keine Arbeitsarten angelegt."
+        },
+        "shift": {
+            "shift": "Schicht",
+            "shifts": "Schichten",
+            "myShifts": "Meine Schichten",
+            "plan": "Schichtplan",
+            "timeFrom": "Beginn",
+            "timeTo": "Ende",
+            "minUser": "Min. Personen",
+            "maxUser": "Max. Personen",
+            "remark": "Anmerkung",
+            "assignedUsers": "Eingeteilte Personen"
+        }
+    },
+    "participantRequirement": {
+        "participantRequirement": "Teilnahmebedingung",
+        "participantRequirements": "Teilnahmebedingungen",
+        "active": "Aktiv",
+        "activate": "Für Veranstaltung aktivieren",
+        "remove": "Von Veranstaltung entfernen",
+        "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
+        "tableHint": "Können bei Veranstaltungen aktiviert werden."
+    },
+    "user": {
+        "user": "Benutzer",
+        "users": "Benutzer",
+        "email": {
+            "email": "E-Mail",
+            "inUse": {
+                "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
+                "callToAction": {
+                    "invitation": "Bitte prüfen Sie die derzeitige Verwendung der E-Mail-Adresse oder wählen Sie eine andere.",
+                    "registration": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
+                }
+            }
+        },
+        "firstname": "Vorname",
+        "lastname": "Nachname",
+        "password": {
+            "password": "Passwort",
+            "confirm": "Passwort bestätigen",
+            "minLength": "{{min}} oder mehr Zeichen",
+            "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
+            "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
+        },
+        "login": {
+            "login": "Anmelden",
+            "password": "Passwort",
+            "forgotPassword": "Passwort vergessen?",
+            "signUp": {
+                "message": "Sie haben noch kein Konto?",
+                "link": "Hier registrieren"
+            },
+            "submit": "Anmelden",
+            "error": {
+                "credentials": "Logindaten inkorrekt",
+                "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
+            }
+        },
+        "settings": {
+            "menu": "Nutzereinstellungen",
+            "profile": "Profil",
+            "logout": "Abmelden"
+        },
+        "page": {
+            "error": {
+                "load": "Profile could not be loaded"
+            }
+        },
+        "update": {
+            "error": "Beim Aktualisieren des Benutzers ist ein Fehler aufgetreten",
+            "success": "Benutzer erfolgreich aktualisiert"
+        },
+        "invitation": {
+            "invitation": "Einladung",
+            "pendingInvitations": "Ausstehende Einladungen",
+            "accept": "Einladung annehmen",
+            "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
+            "submitPassword": "Einladung annehmen",
+            "userCreated": {
+                "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
+                "toLogin": "Zum Login"
+            },
+            "error": {
+                "header": "Es ist ein Fehler aufgetreten",
+                "message": {
+                    "notFound": "Für diesen Link gibt es keine offene Einladung. Bitte überprüfen Sie, ob der Link korrekt ist.",
+                    "unexpected": "Ihr Konto konnte nicht angelegt werden. Bitte versuchen Sie es später erneut."
+                }
+            }
+        },
+        "registration": {
+            "register": "Registrieren",
+            "pendingRegistrations": "Ausstehende Registrierungen",
+            "email": {
+                "emailSent": {
+                    "header": "Bestätigen Sie Ihre E-Mail-Adresse",
+                    "message": {
+                        "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
+                        "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+                    }
+                },
+                "verified": {
+                    "header": "E-Mail bestätigt",
+                    "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
+                },
+                "verificationError": {
+                    "header": "Es ist ein Fehler aufgetreten",
+                    "message": {
+                        "notFound": "Für diesen Link gibt es keine offene Registrierung. Bitte überprüfen Sie, ob der Link korrekt ist oder ob die E-Mail-Adresse bereits bestätigt wurde.",
+                        "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
+                    }
+                }
+            },
+            "error": "Bei der Registrierung ist ein Fehler aufgetreten",
+            "login": {
+                "message": "Sie besitzen bereits ein Konto?",
+                "link": "Hier anmelden"
+            }
+        },
+        "resetPassword": {
+            "resetPassword": "Passwort zurücksetzen",
+            "forgotPassword": "Passwort vergessen?",
+            "newPassword": "Neues Passwort",
+            "init": {
+                "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
+                "submit": "Passwort zurücksetzen"
+            },
+            "emailSent": {
+                "header": "Prüfen Sie Ihr Postfach",
+                "message": {
+                    "part1": "Wir haben Ihnen eine E-Mail mit weiteren Anweisungen zum Zurücksetzen Ihres Passworts geschickt.",
+                    "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
+                }
+            },
+            "success": {
+                "header": "Passwort geändert!",
+                "message": "Ihr Passwort wurde erfolgreich geändert."
+            },
+            "error": {
+                "header": "Ein Fehler ist aufgetreten",
+                "message": {
+                    "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
+                    "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
+                },
+                "invalid": "Das versendete Formular war fehlerhaft"
+            }
+        }
+    },
+    "role": {
+        "role": "Rolle",
+        "roles": "Rollen",
+        "userRoles": "Benutzerrollen",
+        "name": "Name",
+        "description": "Beschreibung",
+        "error": {
+            "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
+        }
+    },
+    "configuration": {
+        "configuration": "Konfigurationen",
+        "tabs": {
+            "competitionTemplates": "Vorlagen Wettkampf",
+            "eventElements": "Komponenten Veranstaltung",
+            "competitionElements": "Komponenten Wettkampf",
+            "globalSettings": "Globale Einstellungen"
+        }
+    },
+    "contact": {
+        "name": "Name",
+        "zip": "PLZ",
+        "city": "Ort",
+        "street": "Straße (mit Hausnummer)",
+        "email": "E-Mail",
+        "information": "Kontaktinformation",
+        "contacts": "Kontaktinformationen",
+        "global": "Global zugewiesene Kontaktinformation",
+        "tableHint": {
+            "1": "Werden für die Rechnungsstellung als Absender verwendet.",
+            "2": "In den ",
+            "3": "globalen Einstellungen",
+            "4": " können die Zuweisungen vorgenommen werden."
+        }
+    },
+    "invoice": {
+        "invoice": "Rechnung",
+        "invoices": "Rechnungen",
         "download": "Herunterladen",
-        "error": "Beim Herunterladen des Dokuments ist ein Fehler aufgetreten"
-      },
-      "error": {
-        "emptyList": "Bitte fügen Sie mindestens ein Dokument hinzu"
-      }
-    },
-    "registration": {
-      "registration": "Anmeldung",
-      "registrations": "Anmeldungen",
-      "addParticipant": "Mitglied hinzufügen",
-      "singleCompetition": "Einzelwettkampf",
-      "teamCompetition": "Teamwettkampf",
-      "males": "Männer",
-      "females": "Frauen",
-      "nonBinary": "Nicht-binäre Personen",
-      "mixed": "Beliebig",
-      "summary": "Zusammenfassung",
-      "schedule": "Programm",
-      "message": "Nachricht",
-      "optionalFee": "Optional",
-      "totalFees": "Meldegebühr",
-      "acceptDocuments": "Ich akzeptiere Folgendes:",
-      "infoDocuments": "Weitere Informationen",
-      "finish": "Anmeldung abschicken",
-      "success": {
-        "title": "Erfolgreich angemeldet!",
-        "subtitle": "Sie bekommen eine Bestätigung per Mail."
-      },
-      "mostRecent": "Neuste Anmeldungen"
-    },
-    "participants": "Teilnehmende",
-    "tabs": {
-      "general": "Allgemein",
-      "registrations": "Meldungen",
-      "settings": "Einstellungen",
-      "actions": "Aktionen",
-      "organisation": "Organisation",
-      "invoices": "Rechnungen"
-    },
-    "info": {
-      "infoPage": "Info-Anzeige",
-      "sectionTitle": "Öffentliche Informationsanzeige",
-      "pageDescription": "Konfigurieren und betrachten Sie Informationsanzeigen für öffentliche Bildschirme, die Veranstaltungsinformationen wie anstehende Läufe und Ergebnisse anzeigen.",
-      "manageInfoViews": "Info-Anzeigen ansehen und konfigurieren",
-      "noViews": "Keine Ansichten konfiguriert",
-      "configureViews": "Klicken Sie auf das Einstellungssymbol, um Ansichten zu konfigurieren",
-      "viewType": {
-        "upcomingMatches": "Anstehende Läufe",
-        "latestMatchResults": "Neueste Laufergebnisse"
-      },
-      "configuration": "Ansichtskonfiguration",
-      "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
-      "noViewsConfigured": "Keine Ansichten konfiguriert",
-      "editView": "Ansicht bearbeiten",
-      "addView": "Ansicht hinzufügen",
-      "displayDuration": "Anzeigedauer",
-      "dataLimit": "Datenlimit",
-      "filtersComingSoon": "Filter werden in Kürze verfügbar sein",
-      "viewCreated": "Ansicht erfolgreich erstellt",
-      "viewUpdated": "Ansicht erfolgreich aktualisiert",
-      "viewDeleted": "Ansicht erfolgreich gelöscht",
-      "createError": "Fehler beim Erstellen der Ansicht",
-      "updateError": "Fehler beim Aktualisieren der Ansicht",
-      "deleteError": "Fehler beim Löschen der Ansicht",
-      "noUpcomingMatches": "Keine anstehenden Läufe",
-      "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
-      "unnamed": "Unbenannt",
-      "matchStatus": {
-        "pending": "Ausstehend",
-        "inProgress": "Läuft",
-        "completed": "Abgeschlossen"
-      },
-      "rank": "Rang",
-      "place": "Platz",
-      "team": "Team",
-      "participants": "Teilnehmer",
-      "result": "Ergebnis",
-      "points": "Punkte",
-      "matchTeams": "Lauf-Teams",
-      "executionOrder": "Ausführungsreihenfolge: {{order}}"
-    }
-  },
-  "task": {
-    "task": "Aufgabe",
-    "tasks": "Aufgaben",
-    "myTasks": "Meine Aufgaben",
-    "name": "Titel",
-    "dueDate": "Fälligkeitsdatum",
-    "state": "Status",
-    "OPEN": "Offen",
-    "IN_PROGRESS": "In Bearbeitung",
-    "DONE": "Erledigt",
-    "CANCELED": "Abgebrochen",
-    "responsibleUsers": "Verantwortlich"
-  },
-  "work": {
-    "type": {
-      "type": "Arbeitsart",
-      "types": "Arbeitsarten",
-      "tableHint": "Ermöglichen das Planen von Schichten für eine Veranstaltung.",
-      "noneAvailable": "Es wurden noch keine Arbeitsarten angelegt."
-    },
-    "shift": {
-      "shift": "Schicht",
-      "shifts": "Schichten",
-      "myShifts": "Meine Schichten",
-      "plan": "Schichtplan",
-      "timeFrom": "Beginn",
-      "timeTo": "Ende",
-      "minUser": "Min. Personen",
-      "maxUser": "Max. Personen",
-      "remark": "Anmerkung",
-      "assignedUsers": "Eingeteilte Personen"
-    }
-  },
-  "participantRequirement": {
-    "participantRequirement": "Teilnahmebedingung",
-    "participantRequirements": "Teilnahmebedingungen",
-    "active": "Aktiv",
-    "activate": "Für Veranstaltung aktivieren",
-    "remove": "Von Veranstaltung entfernen",
-    "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" inklusive erfolgreicher Überprüfungen von dieser Veranstaltung wieder entfernen?",
-    "tableHint": "Können bei Veranstaltungen aktiviert werden."
-  },
-  "user": {
-    "user": "Benutzer",
-    "users": "Benutzer",
-    "email": {
-      "email": "E-Mail",
-      "inUse": {
-        "statement": "Die eingegebene E-Mail-Adresse ist bereits in Verwendung.",
-        "callToAction": {
-          "invitation": "Bitte prüfen Sie die derzeitige Verwendung der E-Mail-Adresse oder wählen Sie eine andere.",
-          "registration": "Bitte verwenden Sie eine andere E-Mail-Adresse oder melden Sie sich mit der bestehenden an."
-        }
-      }
-    },
-    "firstname": "Vorname",
-    "lastname": "Nachname",
-    "password": {
-      "password": "Passwort",
-      "confirm": "Passwort bestätigen",
-      "minLength": "{{min}} oder mehr Zeichen",
-      "notMatching": "Das beiden eingegebenen Passwörter stimmen nicht miteinander überein. Bitte stellen Sie sicher, dass diese identisch miteinander sind.",
-      "tooShort": "Bitte geben Sie ein Passwort mit mindestens {{min}} Zeichen an"
-    },
-    "login": {
-      "login": "Anmelden",
-      "password": "Passwort",
-      "forgotPassword": "Passwort vergessen?",
-      "signUp": {
-        "message": "Sie haben noch kein Konto?",
-        "link": "Hier registrieren"
-      },
-      "submit": "Anmelden",
-      "error": {
-        "credentials": "Logindaten inkorrekt",
-        "tooManyRequests": "Zu viele Anmeldeversuche. Versuchen Sie es später erneut."
-      }
-    },
-    "settings": {
-      "menu": "Nutzereinstellungen",
-      "profile": "Profil",
-      "logout": "Abmelden"
-    },
-    "page": {
-      "error": {
-        "load": "Profile could not be loaded"
-      }
-    },
-    "update": {
-      "error": "Beim Aktualisieren des Benutzers ist ein Fehler aufgetreten",
-      "success": "Benutzer erfolgreich aktualisiert"
-    },
-    "invitation": {
-      "invitation": "Einladung",
-      "pendingInvitations": "Ausstehende Einladungen",
-      "accept": "Einladung annehmen",
-      "hint": "Bitte vergeben Sie noch ein Passwort für das zu erstellende Benutzerkonto.",
-      "submitPassword": "Einladung annehmen",
-      "userCreated": {
-        "text": "Ihr Konto wurde erfolgreich erstellt und Sie können sich ab sofort anmelden.",
-        "toLogin": "Zum Login"
-      },
-      "error": {
-        "header": "Es ist ein Fehler aufgetreten",
-        "message": {
-          "notFound": "Für diesen Link gibt es keine offene Einladung. Bitte überprüfen Sie, ob der Link korrekt ist.",
-          "unexpected": "Ihr Konto konnte nicht angelegt werden. Bitte versuchen Sie es später erneut."
-        }
-      }
-    },
-    "registration": {
-      "register": "Registrieren",
-      "pendingRegistrations": "Ausstehende Registrierungen",
-      "email": {
-        "emailSent": {
-          "header": "Bestätigen Sie Ihre E-Mail-Adresse",
-          "message": {
-            "part1": "Wir haben Ihnen eine E-Mail geschickt, um Ihre E-Mail-Adresse zu verifizieren und Ihr Konto zu aktivieren.",
-            "part2": "Klicken Sie auf den Link in dieser E-Mail, um Ihre Registrierung abzuschließen. Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
-          }
+        "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
+        "invoiceNumber": "Rechnungsnummer",
+        "amount": "Rechnungsbetrag",
+        "paid": "Bezahlt",
+        "tableHint": {
+            "1": "Rechnungen können hier einmalig für alle Meldungen eines Events erstellt werden.",
+            "2": "Konten für Zahlungsempfänger und Absenderdaten können ",
+            "3": "hier",
+            "4": " definiert werden.",
+            "5": "Vor dem Erstellen von Rechnungen müssen in den ",
+            "6": "globalen Einstellungen",
+            "7": " die zu verwendenden Daten zugewiesen werden."
         },
-        "verified": {
-          "header": "E-Mail bestätigt",
-          "message": "Ihre E-Mail-Adresse wurde erfolgreich bestätigt. Ihr Konto ist nun aktiviert."
+        "action": {
+            "setPaid": "Zahlungseingang feststellen",
+            "setNotPaid": "Zahlungseingang zurücknehmen"
         },
-        "verificationError": {
-          "header": "Es ist ein Fehler aufgetreten",
-          "message": {
-            "notFound": "Für diesen Link gibt es keine offene Registrierung. Bitte überprüfen Sie, ob der Link korrekt ist oder ob die E-Mail-Adresse bereits bestätigt wurde.",
-            "unexpected": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. Bitte versuchen Sie es später erneut."
-          }
-        }
-      },
-      "error": "Bei der Registrierung ist ein Fehler aufgetreten",
-      "login": {
-        "message": "Sie besitzen bereits ein Konto?",
-        "link": "Hier anmelden"
-      }
-    },
-    "resetPassword": {
-      "resetPassword": "Passwort zurücksetzen",
-      "forgotPassword": "Passwort vergessen?",
-      "newPassword": "Neues Passwort",
-      "init": {
-        "instruction": "Bitte geben Sie Ihre E-Mail-Adresse ein. Wir senden Ihnen einen Link, mit dem Sie Ihr Passwort zurücksetzen können.",
-        "submit": "Passwort zurücksetzen"
-      },
-      "emailSent": {
-        "header": "Prüfen Sie Ihr Postfach",
-        "message": {
-          "part1": "Wir haben Ihnen eine E-Mail mit weiteren Anweisungen zum Zurücksetzen Ihres Passworts geschickt.",
-          "part2": "Wenn Sie die E-Mail nicht sehen, überprüfen Sie bitte Ihren Spam-Ordner."
-        }
-      },
-      "success": {
-        "header": "Passwort geändert!",
-        "message": "Ihr Passwort wurde erfolgreich geändert."
-      },
-      "error": {
-        "header": "Ein Fehler ist aufgetreten",
-        "message": {
-          "part1": "Beim Zurücksetzen Ihres Passworts ist ein Fehler aufgetreten.",
-          "part2": "Prüfen Sie, ob Sie den korrekten und vollständigen Link aus der E-Mail verwenden. Nur der zuletzt versendete Link ist gültig. Der Link ist 24 Stunden lang gültig."
+        "produce": {
+            "info": {
+                "paymentDueBy": {
+                    "title": "Standard Zahlungsziel für Rechnungen",
+                    "content": "Wenn für diese Veranstaltung kein Fälligkeitsdatum zur Begleichung der Rechnung definiert ist, wird ein Standardwert von 14 Tagen ab Erstellung der Rechnung verwendet."
+                }
+            },
+            "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
+            "error": {
+                "notFound": "",
+                "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
+                "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
+                "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
+                "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
+            }
         },
-        "invalid": "Das versendete Formular war fehlerhaft"
-      }
-    }
-  },
-  "role": {
-    "role": "Rolle",
-    "roles": "Rollen",
-    "userRoles": "Benutzerrollen",
-    "name": "Name",
-    "description": "Beschreibung",
-    "error": {
-      "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
-    }
-  },
-  "configuration": {
-    "configuration": "Konfigurationen",
-    "tabs": {
-      "competitionTemplates": "Vorlagen Wettkampf",
-      "eventElements": "Komponenten Veranstaltung",
-      "competitionElements": "Komponenten Wettkampf",
-      "globalSettings": "Globale Einstellungen"
-    }
-  },
-  "contact": {
-    "name": "Name",
-    "zip": "PLZ",
-    "city": "Ort",
-    "street": "Straße (mit Hausnummer)",
-    "email": "E-Mail",
-    "information": "Kontaktinformation",
-    "contacts": "Kontaktinformationen",
-    "global": "Global zugewiesene Kontaktinformation",
-    "tableHint": {
-      "1": "Werden für die Rechnungsstellung als Absender verwendet.",
-      "2": "In den ",
-      "3": "globalen Einstellungen",
-      "4": " können die Zuweisungen vorgenommen werden."
-    }
-  },
-  "invoice": {
-    "invoice": "Rechnung",
-    "invoices": "Rechnungen",
-    "download": "Herunterladen",
-    "downloadError": "Beim Versuch, die Rechnung herunterzuladen, ist ein Fehler aufgetreten.",
-    "invoiceNumber": "Rechnungsnummer",
-    "amount": "Rechnungsbetrag",
-    "paid": "Bezahlt",
-    "tableHint": {
-      "1": "Rechnungen können hier einmalig für alle Meldungen eines Events erstellt werden.",
-      "2": "Konten für Zahlungsempfänger und Absenderdaten können ",
-      "3": "hier",
-      "4": " definiert werden.",
-      "5": "Vor dem Erstellen von Rechnungen müssen in den ",
-      "6": "globalen Einstellungen",
-      "7": " die zu verwendenden Daten zugewiesen werden."
-    },
-    "action": {
-      "setPaid": "Zahlungseingang feststellen",
-      "setNotPaid": "Zahlungseingang zurücknehmen"
-    },
-    "produce": {
-      "info": {
-        "paymentDueBy": {
-          "title": "Standard Zahlungsziel für Rechnungen",
-          "content": "Wenn für diese Veranstaltung kein Fälligkeitsdatum zur Begleichung der Rechnung definiert ist, wird ein Standardwert von 14 Tagen ab Erstellung der Rechnung verwendet."
+        "bank": {
+            "accountData": {
+                "holder": "Kontoinhaber",
+                "iban": "IBAN",
+                "bic": "BIC",
+                "bank": "Bank"
+            },
+            "account": "Bankverbindung",
+            "accounts": "Bankverbindungen",
+            "global": "Global zugewiesene Bankverbindung",
+            "tableHint": {
+                "1": "Werden für die Rechnungsstellung als Empfängerkonto verwendet.",
+                "2": "In den ",
+                "3": "globalen Einstellungen",
+                "4": " können die Zuweisungen vorgenommen werden."
+            }
         }
-      },
-      "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
-      "error": {
-        "notFound": "",
-        "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
-        "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
-        "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",
-        "EVENT_REGISTRATION_ONGOING": "Der Meldezeitraum für diese Veranstaltung ist noch im Gange."
-      }
     },
-    "bank": {
-      "accountData": {
-        "holder": "Kontoinhaber",
-        "iban": "IBAN",
-        "bic": "BIC",
-        "bank": "Bank"
-      },
-      "account": "Bankverbindung",
-      "accounts": "Bankverbindungen",
-      "global": "Global zugewiesene Bankverbindung",
-      "tableHint": {
-        "1": "Werden für die Rechnungsstellung als Empfängerkonto verwendet.",
-        "2": "In den ",
-        "3": "globalen Einstellungen",
-        "4": " können die Zuweisungen vorgenommen werden."
-      }
+    "captcha": {
+        "instruction": {
+            "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
+            "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
+        },
+        "error": {
+            "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
+            "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
+            "notFound": "Der CAPTCHA ist veraltet"
+        },
+        "loading": "Lade CAPTCHA..."
     }
-  },
-  "captcha": {
-    "instruction": {
-      "desktop": "Verschieben Sie mit der Maus das Logo in den kleinen Kreis",
-      "mobile": "Verschieben Sie mit dem Finger das Logo in den kleinen Kreis"
-    },
-    "error": {
-      "createCaptcha": "Beim erstellen des CAPTCHAS ist ein unerwarteter Fehler aufgetreten",
-      "incorrect": "CAPTCHA wurde nicht korrekt gelöst",
-      "notFound": "Der CAPTCHA ist veraltet"
-    },
-    "loading": "Lade CAPTCHA..."
-  }
 }

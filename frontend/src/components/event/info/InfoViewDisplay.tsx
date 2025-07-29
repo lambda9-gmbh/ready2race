@@ -1,14 +1,14 @@
-import { Box, Typography } from '@mui/material'
-import { InfoViewConfigurationDto } from '@api/types.gen'
+import {Box, Typography} from '@mui/material'
+import {InfoViewConfigurationDto} from '@api/types.gen'
 import UpcomingMatchesView from './views/UpcomingMatchesView'
-import { LatestMatchResultsView } from './views/LatestMatchResultsView'
+import {LatestMatchResultsView} from './views/LatestMatchResultsView'
 
 interface InfoViewDisplayProps {
     eventId: string
     view: InfoViewConfigurationDto
 }
 
-const InfoViewDisplay = ({ eventId, view }: InfoViewDisplayProps) => {
+const InfoViewDisplay = ({eventId, view}: InfoViewDisplayProps) => {
     const renderView = () => {
         switch (view.viewType) {
             case 'UPCOMING_MATCHES':
@@ -29,18 +29,14 @@ const InfoViewDisplay = ({ eventId, view }: InfoViewDisplayProps) => {
                 )
             default:
                 return (
-                    <Box sx={{ p: 3 }}>
+                    <Box sx={{p: 3}}>
                         <Typography>Unknown view type: {view.viewType}</Typography>
                     </Box>
                 )
         }
     }
-    
-    return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {renderView()}
-        </Box>
-    )
+
+    return <Box sx={{height: '100%', display: 'flex', flexDirection: 'column'}}>{renderView()}</Box>
 }
 
 export default InfoViewDisplay

@@ -17,6 +17,7 @@ data class UpcomingCompetitionMatchInfo(
     val placeName: String?,
     val roundNumber: Int?,
     val roundName: String?,
+    val matchName: String?,
     val executionOrder: Int,
     val teams: List<UpcomingMatchTeamInfo>
 )

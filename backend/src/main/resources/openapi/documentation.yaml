@@ -7520,6 +7520,9 @@ components:
         roundName:
           type: string
           nullable: true
+        matchName:
+          type: string
+          nullable: true
         executionOrder:
           type: integer
         teams:

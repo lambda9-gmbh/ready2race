@@ -9,9 +9,9 @@ import {getEventInvoices, produceInvoicesForEventRegistrations} from '@api/sdk.g
 import {Box, Button, List, ListItem, ListItemText, Tooltip} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createInvoiceGlobal} from '@authorization/privileges.ts'
-import {useConfirmation} from "@contexts/confirmation/ConfirmationContext.ts";
-import {arrayOfNotNull, eventRegistrationPossible} from "@utils/helpers.ts";
-import InlineLink from "@components/InlineLink.tsx";
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import {arrayOfNotNull, eventRegistrationPossible} from '@utils/helpers.ts'
+import InlineLink from '@components/InlineLink.tsx'
 
 type Props = {
     activeTab: EventTab
@@ -56,14 +56,16 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
             {
                 title: t('invoice.produce.info.paymentDueBy.title'),
                 content: t('invoice.produce.info.paymentDueBy.content'),
-                okText: t('event.action.produceInvoices')
-            }
+                okText: t('event.action.produceInvoices'),
+            },
         )
     }
 
     const problems: ('INVOICES_ALREADY_PRODUCED' | 'EVENT_REGISTRATION_ONGOING')[] = arrayOfNotNull(
         event.invoicesProduced ? 'INVOICES_ALREADY_PRODUCED' : null,
-        eventRegistrationPossible(event.registrationAvailableFrom, event.registrationAvailableTo) ? 'EVENT_REGISTRATION_ONGOING' : null
+        eventRegistrationPossible(event.registrationAvailableFrom, event.registrationAvailableTo)
+            ? 'EVENT_REGISTRATION_ONGOING'
+            : null,
     )
 
     console.log(problems)
@@ -99,18 +101,24 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
                 }
                 customTableActions={
                     checkPrivilege(createInvoiceGlobal) ? (
-                        <Tooltip title={
-                            <List>
-                                {problems.map(p => (
-                                    <ListItem key={p}>
-                                        <ListItemText primary={<Trans i18nKey={`invoice.produce.error.${p}`} />}>
-                                        </ListItemText>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        }>
+                        <Tooltip
+                            title={
+                                <List>
+                                    {problems.map(p => (
+                                        <ListItem key={p}>
+                                            <ListItemText
+                                                primary={
+                                                    <Trans i18nKey={`invoice.produce.error.${p}`} />
+                                                }></ListItemText>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            }>
                             <Box>
-                                <Button variant={'outlined'} onClick={handleProduceInvoices} disabled={problems.length > 0}>
+                                <Button
+                                    variant={'outlined'}
+                                    onClick={handleProduceInvoices}
+                                    disabled={problems.length > 0}>
                                     <Trans i18nKey={'event.action.produceInvoices'} />
                                 </Button>
                             </Box>

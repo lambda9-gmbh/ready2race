@@ -49,7 +49,7 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
-import EventActions from "@components/event/EventActions.tsx";
+import EventActions from '@components/event/EventActions.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 
 const EVENT_TABS = [
@@ -271,19 +271,21 @@ const EventPage = () => {
                                     </Box>
                                 </Card>
                                 {user.checkPrivilege(readEventGlobal) && (
-                                    <Card sx={{ p: 2 }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                    <Card sx={{p: 2}}>
+                                        <Typography variant="h6" sx={{mb: 1}}>
                                             {t('event.info.sectionTitle')}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{mb: 2}}>
                                             {t('event.info.pageDescription')}
                                         </Typography>
                                         <Link to={'/event/$eventId/info'} params={{eventId}}>
-                                            <Button 
-                                                startIcon={<InfoOutlined />} 
+                                            <Button
+                                                startIcon={<InfoOutlined />}
                                                 variant="outlined"
-                                                fullWidth
-                                            >
+                                                fullWidth>
                                                 {t('event.info.manageInfoViews')}
                                             </Button>
                                         </Link>
@@ -355,13 +357,9 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'actions'} activeTab={activeTab}>
-                            <EventActions registrationsFinalized={data.registrationsFinalized}/>
+                            <EventActions registrationsFinalized={data.registrationsFinalized} />
                         </TabPanel>
-                        <InvoicesTabPanel
-                            activeTab={activeTab}
-                            event={data}
-                            reloadEvent={reload}
-                        />
+                        <InvoicesTabPanel activeTab={activeTab} event={data} reloadEvent={reload} />
                     </Stack>
                 ) : (
                     pending && <Throbber />

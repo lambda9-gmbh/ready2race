@@ -2,45 +2,46 @@ import {useState} from 'react'
 import {
     Box,
     Drawer,
-    Typography,
+    Fab,
     IconButton,
     List,
     ListItem,
-    ListItemText,
     ListItemSecondaryAction,
+    ListItemText,
     Switch,
-    Fab,
-    Dialog,
+    Typography,
 } from '@mui/material'
 import {
-    Close as CloseIcon,
     Add as AddIcon,
-    Edit as EditIcon,
+    Close as CloseIcon,
     Delete as DeleteIcon,
     DragHandle as DragHandleIcon,
+    Edit as EditIcon,
 } from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
-import {useFetch, useFeedback} from '@utils/hooks'
+import {useFeedback, useFetch} from '@utils/hooks'
 import {
-    DndContext,
     closestCenter,
+    DndContext,
+    DragEndEvent,
     KeyboardSensor,
     PointerSensor,
     useSensor,
     useSensors,
-    DragEndEvent,
 } from '@dnd-kit/core'
 import {
     arrayMove,
     SortableContext,
     sortableKeyboardCoordinates,
+    useSortable,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import {CSS} from '@dnd-kit/utilities'
-import {useSortable} from '@dnd-kit/sortable'
 import ViewConfigurationForm from './ViewConfigurationForm'
+import BaseDialog from '@components/BaseDialog'
 import {InfoViewConfigurationDto, InfoViewConfigurationRequest} from '@api/types.gen'
-import {getInfoViews, createInfoView, updateInfoView, deleteInfoView} from '@api/sdk.gen'
+import {createInfoView, deleteInfoView, getInfoViews, updateInfoView} from '@api/sdk.gen'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext'
 
 interface InfoViewConfigurationProps {
     eventId: string
@@ -68,9 +69,9 @@ const SortableItem = ({view, onEdit, onDelete, onToggle}: SortableItemProps) => 
     const getViewTypeName = (type: string) => {
         switch (type) {
             case 'UPCOMING_MATCHES':
-                return t('event.info.viewType.upcomingMatches')
+                return t('event.info.viewTypes.upcomingMatches')
             case 'LATEST_MATCH_RESULTS':
-                return t('event.info.viewType.latestMatchResults')
+                return t('event.info.viewTypes.latestMatchResults')
             default:
                 return type
         }
@@ -109,6 +110,7 @@ const SortableItem = ({view, onEdit, onDelete, onToggle}: SortableItemProps) => 
 const InfoViewConfiguration = ({eventId, open, onClose, onUpdate}: InfoViewConfigurationProps) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const {confirmAction} = useConfirmation()
     const [formOpen, setFormOpen] = useState(false)
     const [editingView, setEditingView] = useState<InfoViewConfigurationDto | null>(null)
 
@@ -218,19 +220,26 @@ const InfoViewConfiguration = ({eventId, open, onClose, onUpdate}: InfoViewConfi
         }
     }
 
-    const handleDelete = async (viewId: string) => {
-        if (!confirm(t('common.confirmDelete'))) return
-
-        try {
-            await deleteInfoView({
-                path: {eventId, viewId},
-            })
-            feedback.success(t('event.info.viewDeleted'))
-            setReloadKey(prev => prev + 1)
-            onUpdate()
-        } catch (error) {
-            feedback.error(t('event.info.deleteError'))
-        }
+    const handleDelete = (viewId: string) => {
+        confirmAction(
+            async () => {
+                try {
+                    await deleteInfoView({
+                        path: {eventId, viewId},
+                    })
+                    feedback.success(t('event.info.viewDeleted'))
+                    setReloadKey(prev => prev + 1)
+                    onUpdate()
+                } catch (error) {
+                    feedback.error(t('event.info.deleteError'))
+                }
+            },
+            {
+                title: t('common.confirmDelete'),
+                content: t('event.info.confirmDeleteView'),
+                okText: t('common.delete'),
+            },
+        )
     }
 
     return (
@@ -301,14 +310,13 @@ const InfoViewConfiguration = ({eventId, open, onClose, onUpdate}: InfoViewConfi
                 </Fab>
             </Drawer>
 
-            <Dialog
+            <BaseDialog
                 open={formOpen}
                 onClose={() => {
                     setFormOpen(false)
                     setEditingView(null)
                 }}
-                maxWidth="sm"
-                fullWidth>
+                maxWidth="sm">
                 <ViewConfigurationForm
                     view={editingView}
                     onSubmit={editingView ? handleUpdate : handleCreate}
@@ -317,7 +325,7 @@ const InfoViewConfiguration = ({eventId, open, onClose, onUpdate}: InfoViewConfi
                         setEditingView(null)
                     }}
                 />
-            </Dialog>
+            </BaseDialog>
         </>
     )
 }
