@@ -711,6 +711,41 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/matches:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventMatches
+      parameters:
+        - name: currentlyRunning
+          in: query
+          schema:
+            type: boolean
+          description: Filter matches by running status
+        - name: withoutPlaces
+          in: query
+          schema:
+            type: boolean
+          description: Filter matches where teams have no places set
+      responses:
+        200:
+          description: Matches for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchForRunningStatusDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDay:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -7108,6 +7143,43 @@ components:
       properties:
         currentlyRunning:
           type: boolean
+
+    MatchForRunningStatusDto:
+      type: object
+      required:
+        - id
+        - competitionId
+        - competitionName
+        - roundNumber
+        - roundName
+        - matchNumber
+        - hasPlacesSet
+        - currentlyRunning
+      properties:
+        id:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionName:
+          type: string
+        roundNumber:
+          type: integer
+        roundName:
+          type: string
+        matchNumber:
+          type: integer
+        matchName:
+          type: string
+          nullable: true
+        hasPlacesSet:
+          type: boolean
+        currentlyRunning:
+          type: boolean
+        startTime:
+          type: string
+          format: date-time
 
     UpdateCompetitionMatchTeamRequest:
       type: object

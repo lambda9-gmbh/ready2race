@@ -447,7 +447,13 @@
                     "startNumber": "Start number",
                     "team": "Team",
                     "place": "Place",
-                    "currentlyRunning": "Currently running"
+                    "manageRunning": "Manage Running Matches",
+                    "running": "Running",
+                    "roundAndMatch": "Round {{round}}, Match {{match}}",
+                    "currentlyRunning": "Currently Running",
+                    "availableMatches": "Available Matches",
+                    "noRunningMatches": "No matches are currently running",
+                    "noAvailableMatches": "No matches available to start"
                 },
                 "running": {
                     "error": {

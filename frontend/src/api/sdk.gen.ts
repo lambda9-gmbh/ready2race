@@ -85,6 +85,9 @@ import type {
     GetEventInvoicesData,
     GetEventInvoicesError,
     GetEventInvoicesResponse,
+    GetEventMatchesData,
+    GetEventMatchesError,
+    GetEventMatchesResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -777,6 +780,19 @@ export const getEventInvoices = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/invoices',
+    })
+}
+
+export const getEventMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventMatchesResponse,
+        GetEventMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/matches',
     })
 }
 

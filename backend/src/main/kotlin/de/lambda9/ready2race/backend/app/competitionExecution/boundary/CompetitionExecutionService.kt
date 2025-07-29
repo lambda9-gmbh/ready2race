@@ -45,6 +45,15 @@ import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
+    
+    fun getMatchesByEvent(
+        eventId: UUID,
+        currentlyRunning: Boolean? = null,
+        withoutPlaces: Boolean? = null
+    ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        KIO.ok(ApiResponse.ListDto(matches))
+    }
 
     fun createNewRound(
         competitionId: UUID,

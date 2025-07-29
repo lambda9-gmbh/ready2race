@@ -447,7 +447,13 @@
                     "startNumber": "Startnummer",
                     "team": "Team",
                     "place": "Platz",
-                    "currentlyRunning": "Läuft gerade"
+                    "manageRunning": "Laufende Partien verwalten",
+                    "running": "Läuft",
+                    "roundAndMatch": "Runde {{round}}, Partie {{match}}",
+                    "currentlyRunning": "Aktuell laufend",
+                    "availableMatches": "Verfügbare Partien",
+                    "noRunningMatches": "Keine Partien laufen gerade",
+                    "noAvailableMatches": "Keine Partien zum Starten verfügbar"
                 },
                 "running": {
                     "error": {

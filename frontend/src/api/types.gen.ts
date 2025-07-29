@@ -754,6 +754,19 @@ export type LoginRequest = {
     password: string
 }
 
+export type MatchForRunningStatusDto = {
+    id: string
+    competitionId: string
+    competitionName: string
+    roundNumber: number
+    roundName: string
+    matchNumber: number
+    matchName?: string | null
+    hasPlacesSet: boolean
+    currentlyRunning: boolean
+    startTime?: string
+}
+
 export type MatchResultTeamInfo = {
     teamId: string
     teamName?: string | null
@@ -1657,6 +1670,26 @@ export type GetEventInvoicesResponse = {
 }
 
 export type GetEventInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetEventMatchesData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Filter matches by running status
+         */
+        currentlyRunning?: boolean
+        /**
+         * Filter matches where teams have no places set
+         */
+        withoutPlaces?: boolean
+    }
+}
+
+export type GetEventMatchesResponse = Array<MatchForRunningStatusDto>
+
+export type GetEventMatchesError = BadRequestError | ApiError
 
 export type AddEventDayData = {
     body: EventDayRequest
