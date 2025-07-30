@@ -22,12 +22,13 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Fragment, SyntheticEvent, useRef} from 'react'
+import {Fragment, SyntheticEvent, useRef, useState} from 'react'
 import {deleteCurrentCompetitionExecutionRound, downloadStartList} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
+import StartListConfigPicker from "@components/event/competition/excecution/StartListConfigPicker.tsx";
 
 type Props = {
     round: CompetitionRoundDto
@@ -58,6 +59,10 @@ const CompetitionExecutionRound = ({
     const {confirmAction} = useConfirmation()
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
+
+    const [startListMatch, setStartListMatch] = useState<string | null>(null)
+    const showStartListConfigDialog = startListMatch !== null
+    const closeStartListConfigDialog = () => setStartListMatch(null)
 
     const deleteCurrentRound = async () => {
         confirmAction(
@@ -92,6 +97,7 @@ const CompetitionExecutionRound = ({
     const handleDownloadStartList = async (
         competitionMatchId: string,
         fileType: StartListFileType,
+        config?: string,
     ) => {
         const {data, error, response} = await downloadStartList({
             path: {
@@ -101,6 +107,7 @@ const CompetitionExecutionRound = ({
             },
             query: {
                 fileType,
+                config,
             },
         })
         const anchor = downloadRef.current
@@ -281,12 +288,20 @@ const CompetitionExecutionRound = ({
                                             'event.competition.execution.startList.download',
                                         )}
                                         keyLabel={'competition-execution-startlist-download'}
-                                        onSelectItem={(fileType: string) =>
-                                            handleDownloadStartList(
-                                                match.id,
-                                                fileType as StartListFileType,
-                                            )
-                                        }
+                                        onSelectItem={async (fileType: string) => {
+                                            const ft = fileType as StartListFileType
+                                            switch (ft) {
+                                                case 'PDF':
+                                                    await handleDownloadStartList(
+                                                        match.id,
+                                                        'PDF',
+                                                    )
+                                                    break;
+                                                case 'CSV':
+                                                    setStartListMatch(match.id)
+                                                    break;
+                                            }
+                                        }}
                                         items={
                                             [
                                                 {
@@ -352,6 +367,13 @@ const CompetitionExecutionRound = ({
                     </LoadingButton>
                 )}
             </Stack>
+            <StartListConfigPicker
+                open={showStartListConfigDialog}
+                onClose={closeStartListConfigDialog}
+                onSuccess={async (config) =>
+                    handleDownloadStartList(startListMatch!, 'CSV', config)
+                }
+            />
         </Fragment>
     )
 }

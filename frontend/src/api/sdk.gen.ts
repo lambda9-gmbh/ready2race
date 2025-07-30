@@ -462,6 +462,7 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    GetInvoicesData,
     GetInvoicesError,
     GetInvoicesResponse,
     DownloadInvoiceError,
@@ -469,6 +470,18 @@ import type {
     SetInvoicePaidData,
     SetInvoicePaidError,
     SetInvoicePaidResponse,
+    AddStartListConfigData,
+    AddStartListConfigError,
+    AddStartListConfigResponse,
+    GetStartListConfigsData,
+    GetStartListConfigsError,
+    GetStartListConfigsResponse,
+    UpdateStartListConfigData,
+    UpdateStartListConfigError,
+    UpdateStartListConfigResponse,
+    DeleteStartListConfigData,
+    DeleteStartListConfigError,
+    DeleteStartListConfigResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2326,7 +2339,7 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
 }
 
 export const getInvoices = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options?: OptionsLegacyParser<GetInvoicesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetInvoicesResponse, GetInvoicesError, ThrowOnError>({
         ...options,
@@ -2357,5 +2370,57 @@ export const setInvoicePaid = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/invoice/{invoiceId}',
+    })
+}
+
+export const addStartListConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddStartListConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddStartListConfigResponse,
+        AddStartListConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig',
+    })
+}
+
+export const getStartListConfigs = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetStartListConfigsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetStartListConfigsResponse,
+        GetStartListConfigsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig',
+    })
+}
+
+export const updateStartListConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateStartListConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateStartListConfigResponse,
+        UpdateStartListConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig/{startListConfigId}',
+    })
+}
+
+export const deleteStartListConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteStartListConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteStartListConfigResponse,
+        DeleteStartListConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig/{startListConfigId}',
     })
 }
