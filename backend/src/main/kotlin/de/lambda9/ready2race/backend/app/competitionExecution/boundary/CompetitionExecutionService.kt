@@ -861,12 +861,12 @@ object CompetitionExecutionService {
                 out,
                 data.teams
             ) {
-                optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.lastname } }
+                optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
                 optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSet().joinToString("/") }
                 optionalColumn(config.colParticipantYear) { participants.joinToString(",") { p -> p.year.toString() } }
-                optionalColumn(config.colParticipantRole) { participants.joinToString(",") { p -> p.role } }
-                optionalColumn(config.colParticipantClub) { participants.mapNotNull { it.externalClubName }.joinToString(",") }
+                optionalColumn(config.colParticipantRole) { participants.map { p -> p.role }.toSet().joinToString(",") }
+                optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: clubName }.toSet().joinToString(",") }
 
                 optionalColumn(config.colClubName) { clubName }
 
