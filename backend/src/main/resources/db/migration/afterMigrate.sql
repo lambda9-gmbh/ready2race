@@ -531,7 +531,8 @@ create view applied_fee as
 select cphf.id,
        cr.id as competition_registration,
        f.name,
-       cphf.amount
+       cphf.amount,
+       cphf.lateAmount
 from competition_registration cr
          join competition_properties cp on cr.competition = cp.competition
          left join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
@@ -543,6 +544,7 @@ where cphf.required is true
 
 create view competition_registration_with_fees as
 select cr.event_registration,
+       cr.is_late,
        cp.id                                                            as properties_id,
        cp.identifier,
        cp.name,

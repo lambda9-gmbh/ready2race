@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.control
 
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
+import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
@@ -26,17 +27,20 @@ object EventRegistrationRepo {
 
     fun delete(id: UUID) = EVENT_REGISTRATION.delete { ID.eq(id) }
 
-    fun getIdsByEvent(
-        eventId: UUID
-    ): JIO<List<UUID>> = Jooq.query {
-        with(EVENT_REGISTRATION) {
-            select(ID)
-                .from(this)
-                .where(EVENT.eq(eventId))
-                .fetch {
-                    it.value1()
-                }
-        }
+    fun getIdsForInvoicing(eventId: UUID, type: RegistrationInvoiceType) = EVENT_REGISTRATION.select({ ID }) {
+        DSL.and(
+            EVENT.eq(eventId),
+            DSL.exists(
+                DSL.select().from(COMPETITION_REGISTRATION)
+                    .where(COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventId))
+                    .and(
+                        when (type) {
+                            RegistrationInvoiceType.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                            RegistrationInvoiceType.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                        }
+                    )
+            )
+        )
     }
 
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
