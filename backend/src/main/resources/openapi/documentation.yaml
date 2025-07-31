@@ -6309,14 +6309,6 @@ components:
           type: string
         description:
           type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
         competitionCategory:
           type: string
         namedParticipant:
@@ -6332,15 +6324,14 @@ components:
           items:
             type: string
             format: uuid
+        lateRegistrationAllowed:
+          type: boolean
       required:
         - id
         - name
         - identifier
-        - countMales
-        - countFemales
-        - countMixed
-        - countNonBinary
         - days
+        - lateRegistrationAllowed
 
     EventRegistrationNamedParticipantDto:
       type: object

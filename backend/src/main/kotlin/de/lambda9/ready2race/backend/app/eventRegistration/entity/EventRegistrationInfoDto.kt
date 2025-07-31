@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
 data class EventRegistrationInfoDto(
+    val state: OpenForRegistrationType,
     val name: String,
     val description: String?,
     val location: String?,

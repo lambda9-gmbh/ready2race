@@ -204,6 +204,7 @@ export type CompetitionPropertiesDto = {
     competitionCategory?: CompetitionCategoryDto
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
+    lateRegistrationAllowed: boolean
 }
 
 export type CompetitionPropertiesRequest = {
@@ -214,6 +215,7 @@ export type CompetitionPropertiesRequest = {
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
+    lateRegistrationAllowed: boolean
     setupTemplate?: string
 }
 
@@ -484,10 +486,13 @@ export type EventDto = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
     invoicePrefix?: string
     published?: boolean
     invoicesProduced?: string
+    lateInvoicesProduced?: string
     paymentDueBy?: string
+    latePaymentDueBy?: string
     registrationCount?: number
     registrationsFinalized: boolean
 }
@@ -499,6 +504,7 @@ export type EventPublicDto = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
     createdAt: string
     competitionCount: number
     eventFrom?: string
@@ -511,14 +517,11 @@ export type EventRegistrationCompetitionDto = {
     name: string
     shortName?: string
     description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
     competitionCategory?: string
     namedParticipant?: Array<EventRegistrationNamedParticipantDto>
     fees?: Array<EventRegistrationFeeDto>
     days: Array<string>
+    lateRegistrationAllowed: boolean
 }
 
 export type EventRegistrationDayDto = {
@@ -613,9 +616,11 @@ export type EventRequest = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
     invoicePrefix?: string
     published: boolean
     paymentDueBy?: string
+    latePaymentDueBy?: string
 }
 
 export type FeeDto = {
@@ -630,12 +635,14 @@ export type FeeForCompetitionDto = {
     description?: string
     required: boolean
     amount: string
+    lateAmount?: string
 }
 
 export type FeeForCompetitionRequestDto = {
     fee: string
     required: boolean
     amount: string
+    lateAmount?: string
 }
 
 export type FeeRequest = {
@@ -930,6 +937,10 @@ export type PrivilegeDto = {
     scope: Scope
 }
 
+export type ProduceInvoicesRequest = {
+    type: RegistrationInvoiceType
+}
+
 export type RegisterRequest = {
     email: string
     password: string
@@ -939,6 +950,8 @@ export type RegisterRequest = {
     language: EmailLanguage
     callbackUrl: string
 }
+
+export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
 
 export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE'
 
@@ -3137,6 +3150,7 @@ export type AssignBankAccountResponse = void
 export type AssignBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type ProduceInvoicesForEventRegistrationsData = {
+    body: ProduceInvoicesRequest
     path: {
         eventId: string
     }

@@ -84,14 +84,20 @@ object EventRegistrationService {
 
     fun getEventRegistrationTemplate(
         eventId: UUID, clubId: UUID
-    ): App<EventRegistrationError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
-        val info = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
+    ): App<ServiceError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
+
+        val type = !EventService.getOpenForRegistrationType(eventId)
+
+        val info = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
 
-        val upsertableRegistration = !EventRegistrationRepo.getEventRegistrationForUpdate(eventId, clubId).orDie()
+        val upsertableRegistration = !EventRegistrationRepo.getEventRegistrationForUpdate(eventId, clubId, type).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
 
-        ok(EventRegistrationTemplateDto(info, upsertableRegistration)).map { ApiResponse.Dto(it) }
+        val lockedRegistration = !EventRegistrationRepo.getLockedEventRegistration(eventId, clubId, type).orDie()
+            .onNullFail { EventRegistrationError.EventNotFound }
+
+        ok(EventRegistrationTemplateDto(info, upsertableRegistration, lockedRegistration)).map { ApiResponse.Dto(it) }
     }
 
     fun upsertRegistrationForEvent(
@@ -99,14 +105,13 @@ object EventRegistrationService {
         registrationDto: EventRegistrationUpsertDto,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope,
-    ): App<EventRegistrationError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
-        if (scope == Privilege.Scope.OWN) {
-            !EventRepo.isOpenForRegistration(eventId, LocalDateTime.now()).orDie()
-                .onFalseFail { EventRegistrationError.RegistrationClosed }
-        }
+        val type = !EventService.getOpenForRegistrationType(eventId).failIf({
+            scope == Privilege.Scope.OWN && it == OpenForRegistrationType.CLOSED
+        }) { EventRegistrationError.RegistrationClosed }
 
-        val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
+        val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
 
         val now = LocalDateTime.now()
 

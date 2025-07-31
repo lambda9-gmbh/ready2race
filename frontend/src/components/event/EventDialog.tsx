@@ -10,7 +10,7 @@ import {useCallback} from 'react'
 import {EventDto, EventRequest} from '@api/types.gen.ts'
 import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
-import FormInputDate from "@components/form/input/FormInputDate.tsx";
+import FormInputDate from '@components/form/input/FormInputDate.tsx'
 
 type EventForm = {
     name: string
@@ -18,9 +18,11 @@ type EventForm = {
     location: string
     registrationAvailableFrom: string
     registrationAvailableTo: string
+    lateRegistrationAvailableTo: string
     invoicePrefix: string
     published: boolean
     paymentDueBy: string
+    latePaymentDueBy: string
 }
 
 const addAction = (formData: EventForm) => {
@@ -45,9 +47,11 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         location: '',
         registrationAvailableFrom: '',
         registrationAvailableTo: '',
+        lateRegistrationAvailableTo: '',
         invoicePrefix: '',
         published: false,
         paymentDueBy: '',
+        latePaymentDueBy: '',
     }
 
     const formContext = useForm<EventForm>()
@@ -76,10 +80,15 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     name={'registrationAvailableTo'}
                     label={t('event.registrationAvailable.timespanTo')}
                 />
+                <FormInputDateTime
+                    name={'lateRegistrationAvailableTo'}
+                    label={t('event.registrationAvailable.lateTo')}
+                />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
+                <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
                 <FormInputDate
-                    name={'paymentDueBy'}
-                    label={t('event.invoice.paymentDueBy')}
+                    name={'latePaymentDueBy'}
+                    label={t('event.invoice.latePaymentDueBy')}
                 />
             </Stack>
         </EntityDialog>
@@ -93,9 +102,11 @@ function mapFormToRequest(formData: EventForm): EventRequest {
         location: takeIfNotEmpty(formData.location),
         registrationAvailableFrom: takeIfNotEmpty(formData.registrationAvailableFrom),
         registrationAvailableTo: takeIfNotEmpty(formData.registrationAvailableTo),
+        lateRegistrationAvailableTo: takeIfNotEmpty(formData.lateRegistrationAvailableTo),
         invoicePrefix: takeIfNotEmpty(formData.invoicePrefix),
         published: formData.published,
-        paymentDueBy: takeIfNotEmpty(formData.paymentDueBy)
+        paymentDueBy: takeIfNotEmpty(formData.paymentDueBy),
+        latePaymentDueBy: takeIfNotEmpty(formData.latePaymentDueBy),
     }
 }
 
@@ -106,9 +117,11 @@ function mapDtoToForm(dto: EventDto): EventForm {
         location: dto.location ?? '',
         registrationAvailableFrom: dto.registrationAvailableFrom ?? '',
         registrationAvailableTo: dto.registrationAvailableTo ?? '',
+        lateRegistrationAvailableTo: dto.lateRegistrationAvailableTo ?? '',
         invoicePrefix: dto.invoicePrefix ?? '',
         published: dto.published ?? false,
         paymentDueBy: dto.paymentDueBy ?? '',
+        latePaymentDueBy: dto.latePaymentDueBy ?? '',
     }
 }
 

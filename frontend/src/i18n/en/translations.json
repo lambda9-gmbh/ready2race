@@ -191,7 +191,8 @@
     "registerNow": "To Registration",
     "invoice": {
       "prefix": "Invoice prefix",
-      "paymentDueBy": "Payment due by"
+      "paymentDueBy": "Registration payment due by",
+      "latePaymentDueBy": "Late registration payment due by"
     },
     "location": "Location",
     "upcoming": "Upcoming events",
@@ -199,6 +200,8 @@
       "timespan": "Registration period",
       "timespanFrom": "Registration period start",
       "timespanTo": "Registration period end",
+      "lateTimespan": "Late registration period",
+      "lateTo": "Late registration period end",
       "from": "from",
       "to": "until",
       "unknown": "Not announced yet"
@@ -221,6 +224,7 @@
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
+      "lateRegistrationAllowed": "Late registration allowed",
       "registrationCount": "Registrations",
       "shortName": "Short name",
       "tableHint": {
@@ -279,6 +283,7 @@
         "name": "Name",
         "description": "Description",
         "amount": "Amount",
+        "lateAmount": "Different amount for late registration",
         "add": "Add Fee",
         "type": "Fee type",
         "tableHint": "Defines possible fees for a competition.",
@@ -917,6 +922,11 @@
       "setNotPaid": "Cancel payment receipt"
     },
     "produce": {
+      "for": "for {{type}}",
+      "type": {
+        "REGULAR": "Registrations",
+        "LATE": "Late registrations"
+      },
       "info": {
         "paymentDueBy": {
           "title": "Default deadline for payment",

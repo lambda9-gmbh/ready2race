@@ -1,8 +1,9 @@
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {
-    CompetitionPropertiesDto, CompetitionPropertiesRequest,
-    CompetitionSetupTemplateOverviewDto
+    CompetitionPropertiesDto,
+    CompetitionPropertiesRequest,
+    CompetitionSetupTemplateOverviewDto,
 } from '@api/types.gen.ts'
 
 export type CompetitionForm = {
@@ -22,8 +23,10 @@ export type CompetitionForm = {
         fee: AutocompleteOption
         required: boolean
         amount: string
+        lateAmount: string
     }[]
     setupTemplate: AutocompleteOption
+    lateRegistrationAllowed: boolean
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -35,6 +38,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     namedParticipants: [],
     fees: [],
     setupTemplate: null,
+    lateRegistrationAllowed: false,
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
@@ -57,15 +61,17 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             fee: value.fee?.id ?? '',
             required: value.required,
             amount: value.amount.replace(',', '.'),
+            lateAmount: takeIfNotEmpty(value.lateAmount.replace(',', '.')),
         })),
-        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id)
+        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id),
+        lateRegistrationAllowed: formData.lateRegistrationAllowed,
     }
 }
 
 export function mapCompetitionPropertiesToCompetitionForm(
     dto: CompetitionPropertiesDto,
     decimalPoint: string,
-    setupTemplate?: CompetitionSetupTemplateOverviewDto
+    setupTemplate?: CompetitionSetupTemplateOverviewDto,
 ): CompetitionForm {
     return {
         identifier: dto.identifier,
@@ -89,11 +95,15 @@ export function mapCompetitionPropertiesToCompetitionForm(
             fee: {id: value.id, label: value.name},
             required: value.required,
             amount: value.amount.replace('.', decimalPoint),
+            lateAmount: value.lateAmount?.replace('.', decimalPoint) ?? '',
         })),
-        setupTemplate: setupTemplate ? {
-            id: setupTemplate.id,
-            label: setupTemplate.name,
-        } : null,
+        setupTemplate: setupTemplate
+            ? {
+                  id: setupTemplate.id,
+                  label: setupTemplate.name,
+              }
+            : null,
+        lateRegistrationAllowed: dto.lateRegistrationAllowed,
     }
 }
 
