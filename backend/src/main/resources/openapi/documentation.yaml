@@ -3657,6 +3657,12 @@ paths:
       - $ref: '#/components/parameters/eventId'
     post:
       operationId: produceInvoicesForEventRegistrations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProduceInvoicesRequest'
       responses:
         204:
           description: invoice produce jobs successfully created
@@ -4523,6 +4529,12 @@ components:
         - F
         - D
 
+    RegistrationInvoiceType:
+      type: string
+      enum:
+        - 'REGULAR'
+        - 'LATE'
+
     # error
 
     ApiError:
@@ -5079,6 +5091,9 @@ components:
         registrationAvailableTo:
           type: string
           format: date-time
+        lateRegistrationAvailableTo:
+          type: string
+          format: date-time
         invoicePrefix:
           type: string
         published:
@@ -5086,7 +5101,13 @@ components:
         invoicesProduced:
           type: string
           format: date-time
+        lateInvoicesProduced:
+          type: string
+          format: date-time
         paymentDueBy:
+          type: string
+          format: date
+        latePaymentDueBy:
           type: string
           format: date
         registrationCount:
@@ -5115,6 +5136,9 @@ components:
           type: string
           format: date-time
         registrationAvailableTo:
+          type: string
+          format: date-time
+        lateRegistrationAvailableTo:
           type: string
           format: date-time
         createdAt:
@@ -5186,6 +5210,9 @@ components:
         registrationAvailableTo:
           type: string
           format: date-time
+        lateRegistrationAvailableTo:
+          type: string
+          format: date-time
         invoicePrefix:
           type: string
         published:
@@ -5193,7 +5220,9 @@ components:
         paymentDueBy:
           type: string
           format: date
-
+        latePaymentDueBy:
+          type: string
+          format: date
 
 
     # eventDay
@@ -5255,6 +5284,7 @@ components:
         - name
         - namedParticipants
         - fees
+        - lateRegistrationAllowed
       properties:
         identifier:
           type: string
@@ -5274,6 +5304,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionDto'
+        lateRegistrationAllowed:
+          type: boolean
 
 
     NamedParticipantForCompetitionDto:
@@ -5322,6 +5354,9 @@ components:
         amount:
           type: string
           format: decimal
+        lateAmount:
+          type: string
+          format: decimal
 
 
     CompetitionPropertiesRequest:
@@ -5331,6 +5366,7 @@ components:
         - name
         - namedParticipants
         - fees
+        - lateRegistrationAllowed
       properties:
         identifier:
           type: string
@@ -5351,6 +5387,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionRequestDto'
+        lateRegistrationAllowed:
+          type: boolean
         setupTemplate:
           type: string
           format: uuid
@@ -5392,7 +5430,9 @@ components:
         amount:
           type: string
           format: decimal
-
+        lateAmount:
+          type: string
+          format: decimal
 
 
     # competition
@@ -7409,3 +7449,11 @@ components:
           type: string
         colCompetitionCategory:
           type: string
+
+    ProduceInvoicesRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/RegistrationInvoiceType'

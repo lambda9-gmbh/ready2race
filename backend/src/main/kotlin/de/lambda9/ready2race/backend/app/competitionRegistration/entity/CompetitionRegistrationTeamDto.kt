@@ -10,6 +10,7 @@ data class CompetitionRegistrationTeamDto(
     val clubName: String,
     val optionalFees: List<CompetitionRegistrationFeeDto>,
     val namedParticipants: List<CompetitionRegistrationNamedParticipantDto>,
+    val isLate: Boolean,
     val updatedAt: LocalDateTime,
     val createdAt: LocalDateTime,
 )

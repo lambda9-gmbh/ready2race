@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistr
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationResultData
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceData
+import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -289,6 +290,7 @@ object DocumentTemplateService {
                     )
                 ),
                 template,
+                RegistrationInvoiceType.REGULAR
             )
 
             DocumentType.START_LIST -> CompetitionExecutionService.buildPdf(

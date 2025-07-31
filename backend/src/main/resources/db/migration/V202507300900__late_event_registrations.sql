@@ -30,5 +30,5 @@ alter table produce_invoice_for_registration
 ;
 
 alter table competition_properties_has_fee
-    add column lateAmount decimal(10,2)
+    add column late_amount decimal(10,2)
 ;

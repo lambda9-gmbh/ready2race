@@ -11,6 +11,7 @@ data class EventPublicDto(
     val location: String?,
     val registrationAvailableFrom: LocalDateTime?,
     val registrationAvailableTo: LocalDateTime?,
+    val lateRegistrationAvailableTo: LocalDateTime?,
     val createdAt: LocalDateTime,
     val competitionCount: Long,
     val eventFrom: LocalDate?,

@@ -110,6 +110,7 @@ object CompetitionRegistrationRepo {
             CLUB.NAME,
             optionalFees,
             namedParticipants,
+            COMPETITION_REGISTRATION.IS_LATE,
             COMPETITION_REGISTRATION.CREATED_AT,
             COMPETITION_REGISTRATION.UPDATED_AT
         )
@@ -127,6 +128,7 @@ object CompetitionRegistrationRepo {
                     clubName = it[CLUB.NAME]!!,
                     optionalFees = it[optionalFees],
                     namedParticipants = it[namedParticipants],
+                    isLate = it[COMPETITION_REGISTRATION.IS_LATE]!!,
                     createdAt = it[COMPETITION_REGISTRATION.CREATED_AT]!!,
                     updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!
                 )

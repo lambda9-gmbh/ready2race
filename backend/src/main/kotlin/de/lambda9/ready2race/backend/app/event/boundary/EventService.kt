@@ -81,9 +81,11 @@ object EventService {
             location = request.location
             registrationAvailableFrom = request.registrationAvailableFrom
             registrationAvailableTo = request.registrationAvailableTo
+            lateRegistrationAvailableTo = request.lateRegistrationAvailableTo
             invoicePrefix = request.invoicePrefix
             published = request.published
             paymentDueBy = request.paymentDueBy
+            latePaymentDueBy = request.latePaymentDueBy
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

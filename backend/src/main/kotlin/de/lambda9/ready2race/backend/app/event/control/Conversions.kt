@@ -22,8 +22,11 @@ fun EventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 location = location,
                 registrationAvailableFrom = registrationAvailableFrom,
                 registrationAvailableTo = registrationAvailableTo,
+                lateRegistrationAvailableTo = lateRegistrationAvailableTo,
                 invoicePrefix = invoicePrefix,
                 published = published,
+                paymentDueBy = paymentDueBy,
+                latePaymentDueBy = latePaymentDueBy,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -40,18 +43,17 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         location = location,
         registrationAvailableFrom = registrationAvailableFrom,
         registrationAvailableTo = registrationAvailableTo,
-        invoicePrefix = if (scope == Privilege.Scope.GLOBAL) invoicePrefix else null,
+        lateRegistrationAvailableTo = lateRegistrationAvailableTo,
+        invoicePrefix = invoicePrefix.takeIf { scope == Privilege.Scope.GLOBAL },
         published = published,
-        invoicesProduced = if (scope == Privilege.Scope.GLOBAL) invoicesProduced else null,
+        invoicesProduced = invoicesProduced.takeIf { scope == Privilege.Scope.GLOBAL },
+        lateInvoicesProduced = lateInvoicesProduced.takeIf { scope == Privilege.Scope.GLOBAL },
         paymentDueBy = paymentDueBy,
-        registrationCount = if (scope != null) {
-            if (scope == Privilege.Scope.GLOBAL) {
-                registeredClubs?.size
-            } else {
-                registeredClubs?.toList()?.filter { it == userClubId }?.size
-            }
-        } else {
-            null
+        latePaymentDueBy = latePaymentDueBy,
+        registrationCount = when (scope) {
+            Privilege.Scope.OWN -> registeredClubs?.count { it == userClubId }
+            Privilege.Scope.GLOBAL -> registeredClubs?.size
+            null -> null
         },
         registrationsFinalized = registrationsFinalized!!,
     )
@@ -65,10 +67,10 @@ fun EventPublicViewRecord.eventPublicDto(): App<Nothing, EventPublicDto> = KIO.o
         location = location,
         registrationAvailableFrom = registrationAvailableFrom,
         registrationAvailableTo = registrationAvailableTo,
+        lateRegistrationAvailableTo = lateRegistrationAvailableTo,
         createdAt = createdAt!!,
         competitionCount = competitionCount!!,
         eventFrom = eventFrom,
         eventTo = eventTo
-
     )
 )
