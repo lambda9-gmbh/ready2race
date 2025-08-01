@@ -390,7 +390,7 @@ select e.id,
        e.registration_available_from,
        e.registration_available_to,
        e.created_at,
-       count(c.id)  as competition_count,
+       count(distinct c.id)  as competition_count,
        min(ed.date) as event_from,
        max(ed.date) as event_to
 from event e
