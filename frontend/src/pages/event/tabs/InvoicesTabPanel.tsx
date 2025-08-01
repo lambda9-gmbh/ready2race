@@ -68,8 +68,6 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
             : null,
     )
 
-    console.log(problems)
-
     return (
         <TabPanel index={'invoices'} activeTab={activeTab}>
             <InvoiceTable

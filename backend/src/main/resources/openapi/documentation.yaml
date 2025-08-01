@@ -1388,6 +1388,13 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/StartListFileType'
+        - name: config
+          description: This parameter is required with fileType 'CSV', otherwise discarded.
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
       operationId: downloadStartList
       responses:
         200:
@@ -1441,8 +1448,8 @@ paths:
             schema:
               $ref: '#/components/schemas/SubstitutionRequest'
       responses:
-        201:
-          $ref: '#/components/responses/201'
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1474,18 +1481,14 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubOuts:
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubOuts:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
-      - name: competitionSetupRoundId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
     get:
       operationId: getPossibleSubOuts
       responses:
@@ -1507,18 +1510,12 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
-  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/{competitionSetupRoundId}/possibleSubIns:
+  /event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubIns/{participantId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
       - $ref: '#/components/parameters/competitionId'
-      - name: competitionSetupRoundId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
       - name: participantId
-        in: query
+        in: path
         required: true
         schema:
           type: string
@@ -4182,6 +4179,11 @@ paths:
 
   /invoice:
     get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
       operationId: getInvoices
       responses:
         200:
@@ -4248,6 +4250,112 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /startListConfig:
+    post:
+      operationId: addStartListConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartListConfigRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getStartListConfigs
+      responses:
+        200:
+          description: Start-list config page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StartListConfigDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /startListConfig/{startListConfigId}:
+    parameters:
+      - in: path
+        name: startListConfigId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateStartListConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartListConfigRequest'
+      responses:
+        204:
+          description: configuration updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteStartListConfig
+      responses:
+        204:
+          description: Configuration successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
 
@@ -7298,9 +7406,10 @@ components:
         - setupRoundId
         - setupRoundName
         - competitionRegistrationId
-        - competitionRegistrationName
         - clubId
         - clubName
+        - namedParticipantId
+        - namedParticipantName
         - participantOut
         - participantIn
       properties:
@@ -7327,10 +7436,18 @@ components:
           format: uuid
         clubName:
           type: string
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
         participantOut:
           $ref: '#/components/schemas/SubstitutionParticipantDto'
         participantIn:
           $ref: '#/components/schemas/SubstitutionParticipantDto'
+        swapSubstitution:
+          type: string
+          format: uuid
 
     SubstitutionParticipantDto:
       type: object
@@ -7365,6 +7482,8 @@ components:
         - namedParticipantName
         - firstName
         - lastName
+        - year
+        - gender
         - clubId
         - clubName
         - competitionRegistrationId
@@ -7381,6 +7500,10 @@ components:
           type: string
         lastName:
           type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
         clubId:
           type: string
           format: uuid
@@ -7402,6 +7525,8 @@ components:
         - id
         - firstName
         - lastName
+        - year
+        - gender
       properties:
         id:
           type: string
@@ -7410,10 +7535,25 @@ components:
           type: string
         lastName:
           type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
         external:
           type: boolean
         externalClubName:
           type: string
+        registrationId:
+          type: string
+          format: uuid
+        registrationName:
+          type: string
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+
 
     PossibleSubstitutionsForParticipantDto:
       type: object
@@ -7433,17 +7573,9 @@ components:
     SubstitutionRequest:
       type: object
       required:
-        - competitionRegistrationId
-        - competitionSetupRound
         - participantOut
         - participantIn
       properties:
-        competitionRegistrationId:
-          type: string
-          format: uuid
-        competitionSetupRound:
-          type: string
-          format: uuid
         participantOut:
           type: string
           format: uuid
@@ -7489,6 +7621,91 @@ components:
       enum:
         - PDF
         - CSV
+
+    StartListConfigRequest:
+      type: object
+      description: At least one column must be specified.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        colParticipantFirstname:
+          type: string
+        colParticipantLastname:
+          type: string
+        colParticipantGender:
+          type: string
+        colParticipantRole:
+          type: string
+        colParticipantYear:
+          type: string
+        colParticipantClub:
+          type: string
+        colClubName:
+          type: string
+        colTeamName:
+          type: string
+        colTeamStartNumber:
+          type: string
+        colMatchName:
+          type: string
+        colMatchStartTime:
+          type: string
+        colRoundName:
+          type: string
+        colCompetitionIdentifier:
+          type: string
+        colCompetitionName:
+          type: string
+        colCompetitionShortName:
+          type: string
+        colCompetitionCategory:
+          type: string
+
+    StartListConfigDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        colParticipantFirstname:
+          type: string
+        colParticipantLastname:
+          type: string
+        colParticipantGender:
+          type: string
+        colParticipantRole:
+          type: string
+        colParticipantYear:
+          type: string
+        colParticipantClub:
+          type: string
+        colClubName:
+          type: string
+        colTeamName:
+          type: string
+        colTeamStartNumber:
+          type: string
+        colMatchName:
+          type: string
+        colMatchStartTime:
+          type: string
+        colRoundName:
+          type: string
+        colCompetitionIdentifier:
+          type: string
+        colCompetitionName:
+          type: string
+        colCompetitionShortName:
+          type: string
+        colCompetitionCategory:
+          type: string
     InfoViewType:
       type: string
       enum:

@@ -69,7 +69,6 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
 
     const onSubmit = async (formData: AssignmentForm) => {
         setSubmitting(true)
-        console.log(formData)
         const {error} = competitionsToDay
             ? await assignCompetitionsToEventDay({
                   path: {eventId: eventId, eventDayId: props.entityPathId},

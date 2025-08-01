@@ -18,14 +18,37 @@ data class Text(
 
         private fun String.sanitizeNonPrintable() = codePoints()
             .toList()
+            .map { codePoint ->
+                when (codePoint) {
+                    // Replace various Unicode spaces with regular space
+                    0x00A0, // Non-breaking space
+                    0x2002, // En space
+                    0x2003, // Em space
+                    0x2004, // Three-per-em space
+                    0x2005, // Four-per-em space
+                    0x2006, // Six-per-em space
+                    0x2007, // Figure space
+                    0x2008, // Punctuation space
+                    0x2009, // Thin space
+                    0x200A, // Hair space
+                    0x202F, // Narrow no-break space
+                    0x205F, // Medium mathematical space
+                    0x3000  // Ideographic space
+                        -> 0x0020 // Regular space
+
+                    else -> codePoint
+                }
+            }
             .filter {
                 !Character.isISOControl(it) &&
                     Character.UnicodeBlock.of(it) != null &&
                     it !in 0x200E..0x206F
             }
             .joinToString("") { Character.toString(it) }
-
     }
+
+
+    private val sanitizedContent = content.sanitizeNonPrintable()
 
     private val font = when (fontStyle) {
         FontStyle.NORMAL -> PDType1Font(Standard14Fonts.FontName.HELVETICA)
@@ -34,7 +57,7 @@ data class Text(
         FontStyle.BOLD_ITALIC -> PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD_OBLIQUE)
     }
 
-    private val width = font.getStringWidth(content) / 1000 * fontSize
+    private val width = font.getStringWidth(sanitizedContent) / 1000 * fontSize
     private val height = lineHeight * fontSize * font.fontDescriptor.capHeight / 1000
 
     private val yOffset = fontSize / 4f
@@ -51,12 +74,16 @@ data class Text(
 
         val xMax = context.parentContentWidth
 
-        var x = if (newLine) { 0f } else { context.startPosition.x }
+        var x = if (newLine) {
+            0f
+        } else {
+            context.startPosition.x
+        }
 
         if (x + width <= xMax) {
-            tmpLines.add(content)
+            tmpLines.add(sanitizedContent)
         } else {
-            val words = content.split("""\s""".toRegex()).toMutableList()
+            val words = sanitizedContent.split("""\s""".toRegex()).toMutableList()
             while (words.isNotEmpty()) {
                 val w = xMax - x
                 val firstWordLength = fontSize * font.getStringWidth(words.first()) / 1000
@@ -95,10 +122,10 @@ data class Text(
                         val adding =
                             font.getStringWidth(lineCandidate) / 1000 * fontSize <= w
                         if (adding) {
-                            words.removeFirst()
+                            words.removeAt(0)
                             subLine = lineCandidate
                         }
-                    } while(adding && words.isNotEmpty())
+                    } while (adding && words.isNotEmpty())
                     if (subLine != null) {
                         tmpLines.add(subLine)
                     }
@@ -124,7 +151,12 @@ data class Text(
 
         c.setFont(font, fontSize)
 
-        val l = computeLines(SizeContext(startPosition = currentContext.startPosition, parentContentWidth = getXMax(currentContext) - getXMin(currentContext)))
+        val l = computeLines(
+            SizeContext(
+                startPosition = currentContext.startPosition,
+                parentContentWidth = getXMax(currentContext) - getXMin(currentContext)
+            )
+        )
 
         if (l.isEmpty()) {
             return currentContext

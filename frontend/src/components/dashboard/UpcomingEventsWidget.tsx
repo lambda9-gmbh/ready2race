@@ -41,7 +41,6 @@ export function UpcomingEventsWidget(props: {hideRegistration?: boolean}) {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(t('common.load.error.single', {entity: t('event.events')}))
-                    console.log(error)
                 }
             },
         },

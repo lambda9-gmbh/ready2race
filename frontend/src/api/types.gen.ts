@@ -902,6 +902,8 @@ export type ParticipantForExecutionDto = {
     namedParticipantName: string
     firstName: string
     lastName: string
+    year: number
+    gender: Gender
     clubId: string
     clubName: string
     competitionRegistrationId: string
@@ -984,8 +986,14 @@ export type PossibleSubstitutionParticipantDto = {
     id: string
     firstName: string
     lastName: string
+    year: number
+    gender: Gender
     external?: boolean
     externalClubName?: string
+    registrationId?: string
+    registrationName?: string
+    namedParticipantId?: string
+    namedParticipantName?: string
 }
 
 export type PossibleSubstitutionsForParticipantDto = {
@@ -1062,6 +1070,50 @@ export type RunningMatchTeamInfo = {
 
 export type Scope = 'OWN' | 'GLOBAL'
 
+export type StartListConfigDto = {
+    id: string
+    name: string
+    colParticipantFirstname?: string
+    colParticipantLastname?: string
+    colParticipantGender?: string
+    colParticipantRole?: string
+    colParticipantYear?: string
+    colParticipantClub?: string
+    colClubName?: string
+    colTeamName?: string
+    colTeamStartNumber?: string
+    colMatchName?: string
+    colMatchStartTime?: string
+    colRoundName?: string
+    colCompetitionIdentifier?: string
+    colCompetitionName?: string
+    colCompetitionShortName?: string
+    colCompetitionCategory?: string
+}
+
+/**
+ * At least one column must be specified.
+ */
+export type StartListConfigRequest = {
+    name: string
+    colParticipantFirstname?: string
+    colParticipantLastname?: string
+    colParticipantGender?: string
+    colParticipantRole?: string
+    colParticipantYear?: string
+    colParticipantClub?: string
+    colClubName?: string
+    colTeamName?: string
+    colTeamStartNumber?: string
+    colMatchName?: string
+    colMatchStartTime?: string
+    colRoundName?: string
+    colCompetitionIdentifier?: string
+    colCompetitionName?: string
+    colCompetitionShortName?: string
+    colCompetitionCategory?: string
+}
+
 export type StartListFileType = 'PDF' | 'CSV'
 
 export type SubstitutionDto = {
@@ -1071,11 +1123,14 @@ export type SubstitutionDto = {
     setupRoundId: string
     setupRoundName: string
     competitionRegistrationId: string
-    competitionRegistrationName: string
+    competitionRegistrationName?: string
     clubId: string
     clubName: string
+    namedParticipantId: string
+    namedParticipantName: string
     participantOut: SubstitutionParticipantDto
     participantIn: SubstitutionParticipantDto
+    swapSubstitution?: string
 }
 
 export type SubstitutionParticipantDto = {
@@ -1089,8 +1144,6 @@ export type SubstitutionParticipantDto = {
 }
 
 export type SubstitutionRequest = {
-    competitionRegistrationId: string
-    competitionSetupRound: string
     participantOut: string
     participantIn: string
     reason?: string
@@ -2052,6 +2105,10 @@ export type DownloadStartListData = {
         eventId: string
     }
     query: {
+        /**
+         * This parameter is required with fileType 'CSV', otherwise discarded.
+         */
+        config?: string
         fileType: StartListFileType
     }
 }
@@ -2079,7 +2136,7 @@ export type AddSubstitutionData = {
     }
 }
 
-export type AddSubstitutionResponse = string
+export type AddSubstitutionResponse = void
 
 export type AddSubstitutionError = BadRequestError | ApiError
 
@@ -2098,7 +2155,6 @@ export type DeleteSubstitutionError = BadRequestError | ApiError
 export type GetPossibleSubOutsData = {
     path: {
         competitionId: string
-        competitionSetupRoundId: string
         eventId: string
     }
 }
@@ -2110,10 +2166,7 @@ export type GetPossibleSubOutsError = BadRequestError | ApiError
 export type GetPossibleSubInsData = {
     path: {
         competitionId: string
-        competitionSetupRoundId: string
         eventId: string
-    }
-    query: {
         participantId: string
     }
 }
@@ -3458,6 +3511,27 @@ export type GetWorkShiftsForUserResponse = {
 
 export type GetWorkShiftsForUserError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type GetInvoicesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
 export type GetInvoicesResponse = {
     data: Array<InvoiceDto>
     pagination: Pagination
@@ -3476,6 +3550,63 @@ export type SetInvoicePaidData = {
 export type SetInvoicePaidResponse = void
 
 export type SetInvoicePaidError = BadRequestError | ApiError
+
+export type AddStartListConfigData = {
+    body: StartListConfigRequest
+}
+
+export type AddStartListConfigResponse = string
+
+export type AddStartListConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetStartListConfigsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetStartListConfigsResponse = {
+    data: Array<StartListConfigDto>
+    pagination: Pagination
+}
+
+export type GetStartListConfigsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateStartListConfigData = {
+    body: StartListConfigRequest
+    path: {
+        startListConfigId: string
+    }
+}
+
+export type UpdateStartListConfigResponse = void
+
+export type UpdateStartListConfigError = BadRequestError | ApiError
+
+export type DeleteStartListConfigData = {
+    path: {
+        startListConfigId: string
+    }
+}
+
+export type DeleteStartListConfigResponse = void
+
+export type DeleteStartListConfigError = BadRequestError | ApiError
 
 export type GetUpcomingMatchesData = {
     path: {

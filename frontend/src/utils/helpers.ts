@@ -31,7 +31,7 @@ export const languageMapping: Record<Language, EmailLanguage> = {
 export const i18nLanguage = (): Language =>
     isLanguage(i18next.language) ? i18next.language : fallbackLng
 
-export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K) => {
+export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K): Map<K, T[]> => {
     const map = new Map()
     list.forEach(item => {
         const key = keyGetter(item)
@@ -74,4 +74,12 @@ export const shuffle = <T>(list: T[]) => {
         newList[randomIndex] = currentValue
     }
     return newList
+}
+
+export const a11yProps = <TabType> (name: string, index: TabType) => {
+    return {
+        value: index,
+        id: `${name}-tab-${index}`,
+        'aria-controls': `${name}-tabpanel-${index}`,
+    }
 }

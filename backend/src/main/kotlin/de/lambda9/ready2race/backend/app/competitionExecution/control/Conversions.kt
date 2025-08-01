@@ -1,11 +1,11 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionParticipantDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamParticipantRecord
 import de.lambda9.tailwind.core.KIO
 
 fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
@@ -102,11 +102,14 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                 setupRoundId = sub.competitionSetupRoundId!!,
                 setupRoundName = sub.competitionSetupRoundName!!,
                 competitionRegistrationId = sub.competitionRegistrationId!!,
-                competitionRegistrationName = sub.competitionRegistrationName!!,
+                competitionRegistrationName = sub.competitionRegistrationName,
                 clubId = sub.clubId!!,
                 clubName = sub.clubName!!,
+                namedParticipantId = sub.namedParticipantId!!,
+                namedParticipantName = sub.namedParticipantName!!,
                 participantOut = sub.participantOut!!.toSubstituteParticipantDto(),
                 participantIn = sub.participantIn!!.toSubstituteParticipantDto(),
+                swapSubstitution = getSwapSubstitution(sub, substitutions!!.filterNotNull())
             )
         }
     )

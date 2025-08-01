@@ -1,954 +1,1039 @@
 {
-    "common": {
-        "no": "No",
-        "cancel": "Cancel",
-        "close": "Close",
-        "confirmation": {
-            "title": "Confirmation required",
-            "content": "Please confirm the execution of the selected action"
+  "common": {
+    "no": "No",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirmation": {
+      "title": "Confirmation required",
+      "content": "Please confirm the execution of the selected action"
+    },
+    "delete": "Delete",
+    "edit": "Edit",
+    "selected": "Selected",
+    "manage": "Manage",
+    "all": "All",
+    "error": {
+      "unexpected": "An unexpected error has occurred. Please try again later.",
+      "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
+    },
+    "organisation": "Organisation",
+    "form": {
+      "autocomplete": {
+        "noOptions": "No options",
+        "add": "Add {{entity}}"
+      },
+      "currency": {
+        "invalid": "Please select a valid amount."
+      },
+      "dateTime": {
+        "invalid": "Please select a valid date and time."
+      },
+      "email": {
+        "invalid": "Please enter a valid email adress."
+      },
+      "number": {
+        "invalid": {
+          "pattern": {
+            "integer": "Please enter an integer number.",
+            "number": "Please enter a valid number."
+          },
+          "value": {
+            "messageStart": "Please enter a number ",
+            "min": "above {{min}}.",
+            "max": "below {{max}}.",
+            "range": "between {{min}} and {{max}}."
+          },
+          "minOrUndefined": "Please enter a number above {{min}} or leave the field blank."
+        }
+      },
+      "seconds": "Seconds",
+      "optional": "Optional",
+      "required": "Please fill in this field.",
+      "selectFile": "Select file",
+      "select": {
+        "none": "None"
+      }
+    },
+    "load": {
+      "error": {
+        "multiple": {
+          "short": "{{entity}} could not be loaded",
+          "detailed": "An error occurred while loading {{entity}}. Please try again later."
         },
-        "delete": "Delete",
-        "edit": "Edit",
-        "selected": "Selected",
-        "manage": "Manage",
-        "all": "All",
+        "single": "{{entity}} could not be loaded"
+      }
+    },
+    "ok": "Ok",
+    "save": "Save",
+    "saveAndNew": "Save and new",
+    "saveAndNext": "Save and next",
+    "search": "Search",
+    "back": "Back",
+    "next": "Next",
+    "and": "and",
+    "remove": "Remove",
+    "items": "Items",
+    "more": "More",
+    "create": "Create",
+    "seconds": "seconds",
+    "update": "Update",
+    "lastUpdate": "Last Update",
+    "confirmDelete": "Confirm Delete",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
+    "language": {
+      "menu": "Select language"
+    }
+  },
+  "format": {
+    "date": "MM/dd/yyyy",
+    "datetime": "MM/dd/yyyy, hh:mm a",
+    "time": "hh:mm a"
+  },
+  "document": {
+    "template": {
+      "tableHint": {
+        "1": "Can be added to system-generated documents to customize the layout.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      },
+      "template": "Document template",
+      "templates": "Document templates",
+      "type": {
+        "INVOICE": "Invoice",
+        "REGISTRATION_REPORT": "Event registration result",
+        "START_LIST": "Match start list"
+      },
+      "none": "No template",
+      "name": "Filename",
+      "file": {
+        "choose": "Choose template",
+        "change": "Change template",
+        "missing": "Please choose a document."
+      },
+      "pagePadding": {
+        "top": "Page margin top",
+        "left": "Page margin left",
+        "right": "Page margin right",
+        "bottom": "Page margin bottom"
+      },
+      "assignments": {
+        "global": "Globally assigned templates",
+        "event": "Event assigned templates"
+      },
+      "preview": {
+        "title": "Template preview",
+        "type": "Document type",
+        "show": "Preview sample",
+        "error": "Cannot load preview."
+      }
+    }
+  },
+  "decimal": {
+    "point": "."
+  },
+  "entity": {
+    "entity": "Object",
+    "add": {
+      "action": "Add {{entity}}",
+      "success": "{{entity}} added",
+      "error": "An error has occurred when adding {{entity}}"
+    },
+    "delete": {
+      "success": "{{entity}} deleted",
+      "error": "An error has occurred when deleting {{entity}}"
+    },
+    "description": "Description",
+    "createdAt": "Created at",
+    "updatedAt": "Updated at",
+    "edit": {
+      "action": "Edit {{entity}}",
+      "success": "{{entity}} updated",
+      "error": "An error has occurred when updating {{entity}}"
+    },
+    "optional": "Optional",
+    "name": "Name",
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "gender": "Gender",
+    "phone": "Phone",
+    "remark": "Remark",
+    "color": "Color"
+  },
+  "navigation": {
+    "titles": {
+      "landing": "Home",
+      "dashboard": "Dashboard",
+      "events": "Events",
+      "competitionConfig": "Competition Settings",
+      "roles": "Roles",
+      "users": "Users",
+      "config": "Configurations",
+      "clubs": "Clubs",
+      "myClub": "My Club",
+      "invoices": "Invoices"
+    }
+  },
+  "dashboard": {
+    "registration": {
+      "showMessage": "Show message"
+    }
+  },
+  "club": {
+    "club": "Club",
+    "clubs": "Clubs",
+    "participants": "Members",
+    "participant": {
+      "title": "Member",
+      "year": "Year of birth",
+      "external": "External",
+      "externalClub": "External club",
+      "externalHint": "Select this option if you want to register a member of another club.",
+      "usedInRegistration": "In Registration"
+    }
+  },
+  "event": {
+    "event": "Event",
+    "events": "Events",
+    "name": "Name",
+    "description": "Description",
+    "registerNow": "To Registration",
+    "invoice": {
+      "prefix": "Invoice prefix",
+      "paymentDueBy": "Payment due by"
+    },
+    "location": "Location",
+    "upcoming": "Upcoming events",
+    "registrationAvailable": {
+      "timespan": "Registration period",
+      "timespanFrom": "Registration period start",
+      "timespanTo": "Registration period end",
+      "from": "from",
+      "to": "until",
+      "unknown": "Not announced yet"
+    },
+    "published": {
+      "published": "Published",
+      "not": "Not published"
+    },
+    "eventDay": {
+      "eventDay": "Day",
+      "eventDays": "Days",
+      "date": "Date",
+      "name": "Name",
+      "description": "Description",
+      "assignedCompetitions": "Competitions on this day"
+    },
+    "competition": {
+      "competition": "Competition",
+      "competitions": "Competitions",
+      "identifier": "Identifier",
+      "name": "Name",
+      "description": "Description",
+      "registrationCount": "Registrations",
+      "shortName": "Short name",
+      "tableHint": {
+        "competitionComponents": {
+          "part1": "Categories, participants types and fee types for the competitions can be defined ",
+          "part2Link": "here",
+          "part3": "."
+        },
+        "templates": {
+          "part1": "For reuse in different events, ",
+          "part2Link": "templates",
+          "part3": " can be defined."
+        }
+      },
+      "category": {
+        "category": "Category",
+        "categories": "Categories",
+        "name": "Name",
+        "description": "Description",
+        "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
+      },
+      "count": {
+        "males": "Number of men",
+        "females": "Number of women",
+        "nonBinary": "Number of non-binary",
+        "mixed": "Number of any"
+      },
+      "gender": {
+        "male": "Male",
+        "female": "Female",
+        "nonBinary": "Non-binary",
+        "mixed": "Any"
+      },
+      "namedParticipant": {
+        "namedParticipant": "Participant Type",
+        "namedParticipants": "Participant Types",
+        "name": "Name",
+        "description": "Description",
+        "role": "Role",
+        "add": "Add Participant Type",
+        "tableHint": "Roles that participants can have in a competition.",
         "error": {
-            "unexpected": "An unexpected error has occurred. Please try again later.",
-            "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
-        },
-        "organisation": "Organisation",
-        "form": {
-            "autocomplete": {
-                "noOptions": "No options",
-                "add": "Add {{entity}}"
-            },
-            "currency": {
-                "invalid": "Please select a valid amount."
-            },
-            "dateTime": {
-                "invalid": "Please select a valid date and time."
-            },
-            "email": {
-                "invalid": "Please enter a valid email adress."
-            },
-            "number": {
-                "invalid": {
-                    "pattern": {
-                        "integer": "Please enter an integer number.",
-                        "number": "Please enter a valid number."
-                    },
-                    "value": {
-                        "messageStart": "Please enter a number ",
-                        "min": "above {{min}}.",
-                        "max": "below {{max}}.",
-                        "range": "between {{min}} and {{max}}."
-                    },
-                    "minOrUndefined": "Please enter a number above {{min}} or leave the field blank."
-                }
-            },
-            "seconds": "Seconds",
-            "optional": "Optional",
-            "required": "Please fill in this field.",
-            "selectFile": "Select file",
-            "select": {
-                "none": "None"
-            }
-        },
-        "load": {
-            "error": {
-                "multiple": {
-                    "short": "{{entity}} could not be loaded",
-                    "detailed": "An error occurred while loading {{entity}}. Please try again later."
-                },
-                "single": "{{entity}} could not be loaded"
-            }
-        },
-        "ok": "Ok",
-        "save": "Save",
-        "saveAndNew": "Save and new",
-        "saveAndNext": "Save and next",
-        "search": "Search",
-        "back": "Back",
-        "next": "Next",
-        "and": "and",
-        "remove": "Remove",
-        "items": "Items",
-        "more": "More",
-        "create": "Create",
-        "seconds": "seconds",
-        "update": "Update",
-        "lastUpdate": "Last Update",
-        "confirmDelete": "Confirm Delete",
-        "fullscreen": "Fullscreen",
-        "exitFullscreen": "Exit Fullscreen",
-        "language": {
-            "menu": "Select language"
+          "emptyList": "Please add one or more participant types",
+          "noCount": "Please enter at least one participant of any kind for this role",
+          "duplicates": {
+            "one": "The role {{label}} is used several times.",
+            "multiple": "The roles {{labels}} are used several times.",
+            "message": "Please select a unique role for each participant type."
+          }
         }
-    },
-    "format": {
-        "date": "MM/dd/yyyy",
-        "datetime": "MM/dd/yyyy, hh:mm a",
-        "time": "hh:mm a"
-    },
-    "document": {
+      },
+      "teamComposition": "Team composition",
+      "fee": {
+        "fee": "Fee",
+        "fees": "Fees",
+        "name": "Name",
+        "description": "Description",
+        "amount": "Amount",
+        "add": "Add Fee",
+        "type": "Fee type",
+        "tableHint": "Defines possible fees for a competition.",
+        "required": {
+          "notRequired": "Fee is optional",
+          "required": "Fee is mandatory"
+        }
+      },
+      "template": {
+        "template": "Competition Template",
+        "templates": "Competition Templates",
+        "name": "Name",
+        "description": "Description",
+        "tableHint": "Provide a quick way to create competitions for an event.",
+        "select": "Select template"
+      },
+      "assignedDays": "Competition days",
+      "error": {
+        "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
+      },
+      "registration": {
+        "noEventRegistration": "No registration from your club has been made for this event yet."
+      },
+      "setup": {
+        "setup": "Competition Setup",
+        "save": {
+          "save": "Save",
+          "error": "An error has occurred when saving the competition setup",
+          "success": "Competition setup successfully saved"
+        },
+        "reset": "Reset setup",
+        "round": {
+          "round": "Round",
+          "name": "Name",
+          "useDefaultSeeding": "Use default seeding for matchups",
+          "required": "Round must be held",
+          "finals": {
+            "long": {
+              "final": {
+                "round": "Finals",
+                "final": "Final",
+                "matchForThirdPlace": "Match for 3rd place"
+              },
+              "semifinal": "Semi-final",
+              "quarterfinal": "Quarter-final",
+              "roundOf16": "Round of 16",
+              "roundOf32": "Round of 32"
+            },
+            "short": {
+              "semifinal": "SF",
+              "quarterfinal": "QF",
+              "roundOf16": "R16",
+              "roundOf32": "R32"
+            }
+          },
+          "remove": "Remove round"
+        },
+        "match": {
+          "match": "Match",
+          "participants": "Matchup",
+          "name": "Name",
+          "executionOrder": "Order of execution",
+          "teams": {
+            "teams": "Number of teams",
+            "unlimited": "Unlimited"
+          },
+          "outcome": {
+            "outcome": "Seeding",
+            "outcomes": "Seedings",
+            "tooltip": "Resulting seedings of this match",
+            "result": "Result"
+          },
+          "remove": "Remove match",
+          "info": {
+            "roundOneFillMatches": "The matches are filled evenly with randomly selected teams."
+          }
+        },
+        "place": {
+          "place": "Place",
+          "places": "Overall placings",
+          "placesOption": {
+            "equal": "Equal (Place = {{place}})",
+            "ascending": "Ascending (Place = Seeding)",
+            "custom": "Custom"
+          }
+        },
+        "tournamentTree": {
+          "generate": "Generate",
+          "generateTree": "Generate tournament tree",
+          "participatingTeams": "Participating Teams",
+          "includeMatchForThirdPlace": "Include match for 3rd place",
+          "overwriteSetup": "Overwrite current setup",
+          "info": {
+            "noOverwrite": "The generated rounds will be added to the end of your current setup."
+          }
+        },
         "template": {
-            "tableHint": {
-                "1": "Can be added to system-generated documents to customize the layout.",
-                "2": "The assignments can be made in the ",
-                "3": "global settings",
-                "4": "."
+          "template": "Competition Setup Template",
+          "templates": "Competition Setup Templates",
+          "name": "Name",
+          "description": "Description",
+          "select": "Select template"
+        },
+        "startTimeOffset": {
+          "startTimeOffset": "Offset start time",
+          "enable": "Enable start time offsets"
+        },
+        "validation": {
+          "duplicateParticipants": {
+            "one": "The team: {{participants}} is used several times.",
+            "multiple": "The teams: {{participants}} are used several times.",
+            "message": "Please select each team only for one matchup per round."
+          },
+          "duplicatePositions": {
+            "one": "In the order of execution, {{positions}} is used several times.",
+            "multiple": "In the order of execution, {{positions}} are used several times.",
+            "message": "Please select each value only once per round."
+          }
+        },
+        "tableHint": "Enable the quick creation of setups for different competitions."
+      },
+      "execution": {
+        "tabTitle": "Live",
+        "progress": {
+          "error": "The matches of the competition could not be loaded."
+        },
+        "nextRound": {
+          "create": "Create next round",
+          "error": "Next round could not be created.",
+          "success": "Next round created",
+          "reasons": {
+            "noRoundsInSetup": "There are no rounds defined in the competition setup.",
+            "noSetupMatches": "There are no matches defined for the next round in the competition setup",
+            "noRegistrations": "There are no registrations for this competition.",
+            "registrationsNotFinalized": {
+              "textStart": "The registrations for this event are not finalized. The registrations can be finalized ",
+              "link": "here",
+              "textEnd": "."
             },
-            "template": "Document template",
-            "templates": "Document templates",
-            "type": {
-                "INVOICE": "Invoice",
-                "REGISTRATION_REPORT": "Event registration result",
-                "START_LIST": "Match start list"
-            },
-            "none": "No template",
-            "name": "Filename",
-            "file": {
-                "choose": "Choose template",
-                "change": "Change template",
-                "missing": "Please choose a document."
-            },
-            "pagePadding": {
-                "top": "Page margin top",
-                "left": "Page margin left",
-                "right": "Page margin right",
-                "bottom": "Page margin bottom"
-            },
-            "assignments": {
-                "global": "Globally assigned templates",
-                "event": "Event assigned templates"
-            },
-            "preview": {
-                "title": "Template preview",
-                "type": "Document type",
-                "show": "Preview sample",
-                "error": "Cannot load preview."
+            "notEnoughTeamSpace": "There are more registrations for this competition than there are teams defined in the competition setup. Please make sure that there are enough teams or matches defined for the first round of the competition setup.",
+            "notAllPlacesSet": "Match results are missing. Please enter all places in the match results."
+          }
+        },
+        "deleteRound": {
+          "delete": "Delete round",
+          "confirmation": {
+            "content": "Are you sure you want to delete the latest round?"
+          },
+          "error": "An error has occurred when deleting the round",
+          "success": "Round successfully deleted"
+        },
+        "teamsWithBye": "Teams with a bye",
+        "match": {
+          "startTime": "Start time",
+          "startTimeOffset": "Start time offset",
+          "startNumber": "Start number",
+          "team": "Team",
+          "place": "Place",
+          "manageRunning": "Manage Running Matches",
+          "running": "Running",
+          "roundAndMatch": "Round {{round}}, Match {{match}}",
+          "currentlyRunning": "Currently Running",
+          "availableMatches": "Available Matches",
+          "noRunningMatches": "No matches are currently running",
+          "noAvailableMatches": "No matches available to start"
+        },
+        "running": {
+          "error": {
+            "hasPlaces": "Cannot change running state for matches with results",
+            "update": "Failed to update running state"
+          },
+          "success": "Running state updated successfully"
+        },
+        "results": {
+          "enter": "Enter results",
+          "title": {
+            "named": "Results for {{matchName}}",
+            "unnamed": "Match results"
+          },
+          "validation": {
+            "duplicates": {
+              "single": "The place: {{places}} is used several times.",
+              "multiple": "The places: {{places}} are used several times.",
+              "message": "Please select each place only once per match."
             }
-        }
-    },
-    "decimal": {
-        "point": "."
-    },
-    "entity": {
-        "entity": "Object",
-        "add": {
-            "action": "Add {{entity}}",
-            "success": "{{entity}} added",
-            "error": "An error has occurred when adding {{entity}}"
+          },
+          "submit": {
+            "error": "An error has occurred when entering the results",
+            "success": "Results successfully saved"
+          }
         },
-        "delete": {
-            "success": "{{entity}} deleted",
-            "error": "An error has occurred when deleting {{entity}}"
-        },
-        "description": "Description",
-        "createdAt": "Created at",
-        "updatedAt": "Updated at",
-        "edit": {
-            "action": "Edit {{entity}}",
-            "success": "{{entity}} updated",
-            "error": "An error has occurred when updating {{entity}}"
-        },
-        "optional": "Optional",
-        "name": "Name",
-        "firstname": "Firstname",
-        "lastname": "Lastname",
-        "gender": "Gender",
-        "phone": "Phone",
-        "remark": "Remark",
-        "color": "Color"
-    },
-    "navigation": {
-        "titles": {
-            "landing": "Home",
-            "dashboard": "Dashboard",
-            "events": "Events",
-            "competitionConfig": "Competition Settings",
-            "roles": "Roles",
-            "users": "Users",
-            "config": "Configurations",
-            "clubs": "Clubs",
-            "myClub": "My Club",
-            "invoices": "Invoices"
-        }
-    },
-    "dashboard": {
-        "registration": {
-            "showMessage": "Show message"
-        }
-    },
-    "club": {
-        "club": "Club",
-        "clubs": "Clubs",
-        "participants": "Members",
-        "participant": {
-            "title": "Member",
-            "year": "Year of birth",
-            "external": "External",
-            "externalClub": "External club",
-            "externalHint": "Select this option if you want to register a member of another club.",
-            "usedInRegistration": "In Registration"
-        }
-    },
-    "event": {
-        "event": "Event",
-        "events": "Events",
-        "name": "Name",
-        "description": "Description",
-        "registerNow": "To Registration",
-        "invoice": {
-            "prefix": "Invoice prefix",
-            "paymentDueBy": "Payment due by"
-        },
-        "location": "Location",
-        "upcoming": "Upcoming events",
-        "registrationAvailable": {
-            "timespan": "Registration period",
-            "timespanFrom": "Registration period start",
-            "timespanTo": "Registration period end",
-            "from": "from",
-            "to": "until",
-            "unknown": "Not announced yet"
-        },
-        "published": {
-            "published": "Published",
-            "not": "Not published"
-        },
-        "eventDay": {
-            "eventDay": "Day",
-            "eventDays": "Days",
-            "date": "Date",
-            "name": "Name",
-            "description": "Description",
-            "assignedCompetitions": "Competitions on this day"
-        },
-        "competition": {
-            "competition": "Competition",
-            "competitions": "Competitions",
-            "identifier": "Identifier",
-            "name": "Name",
-            "description": "Description",
-            "registrationCount": "Registrations",
-            "shortName": "Short name",
-            "tableHint": {
-                "competitionComponents": {
-                    "part1": "Categories, participants types and fee types for the competitions can be defined ",
-                    "part2Link": "here",
-                    "part3": "."
-                },
-                "templates": {
-                    "part1": "For reuse in different events, ",
-                    "part2Link": "templates",
-                    "part3": " can be defined."
-                }
-            },
-            "category": {
-                "category": "Category",
-                "categories": "Categories",
-                "name": "Name",
-                "description": "Description",
-                "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
-            },
-            "count": {
-                "males": "Number of men",
-                "females": "Number of women",
-                "nonBinary": "Number of non-binary",
-                "mixed": "Number of any"
-            },
-            "gender": {
-                "male": "Male",
-                "female": "Female",
-                "nonBinary": "Non-binary",
-                "mixed": "Any"
-            },
-            "namedParticipant": {
-                "namedParticipant": "Participant Type",
-                "namedParticipants": "Participant Types",
-                "name": "Name",
-                "description": "Description",
-                "role": "Role",
-                "add": "Add Participant Type",
-                "tableHint": "Roles that participants can have in a competition.",
-                "error": {
-                    "emptyList": "Please add one or more participant types",
-                    "noCount": "Please enter at least one participant of any kind for this role",
-                    "duplicates": {
-                        "one": "The role {{label}} is used several times.",
-                        "multiple": "The roles {{labels}} are used several times.",
-                        "message": "Please select a unique role for each participant type."
-                    }
-                }
-            },
-            "teamComposition": "Team composition",
-            "fee": {
-                "fee": "Fee",
-                "fees": "Fees",
-                "name": "Name",
-                "description": "Description",
-                "amount": "Amount",
-                "add": "Add Fee",
-                "type": "Fee type",
-                "tableHint": "Defines possible fees for a competition.",
-                "required": {
-                    "notRequired": "Fee is optional",
-                    "required": "Fee is mandatory"
-                }
-            },
-            "template": {
-                "template": "Competition Template",
-                "templates": "Competition Templates",
-                "name": "Name",
-                "description": "Description",
-                "tableHint": "Provide a quick way to create competitions for an event.",
-                "select": "Select template"
-            },
-            "assignedDays": "Competition days",
-            "error": {
-                "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
-            },
-            "registration": {
-                "noEventRegistration": "No registration from your club has been made for this event yet."
-            },
-            "setup": {
-                "setup": "Competition Setup",
-                "save": {
-                    "save": "Save",
-                    "error": "An error has occurred when saving the competition setup",
-                    "success": "Competition setup successfully saved"
-                },
-                "reset": "Reset setup",
-                "round": {
-                    "round": "Round",
-                    "name": "Name",
-                    "useDefaultSeeding": "Use default seeding for matchups",
-                    "required": "Round must be held",
-                    "finals": {
-                        "long": {
-                            "final": {
-                                "round": "Finals",
-                                "final": "Final",
-                                "matchForThirdPlace": "Match for 3rd place"
-                            },
-                            "semifinal": "Semi-final",
-                            "quarterfinal": "Quarter-final",
-                            "roundOf16": "Round of 16",
-                            "roundOf32": "Round of 32"
-                        },
-                        "short": {
-                            "semifinal": "SF",
-                            "quarterfinal": "QF",
-                            "roundOf16": "R16",
-                            "roundOf32": "R32"
-                        }
-                    },
-                    "remove": "Remove round"
-                },
-                "match": {
-                    "match": "Match",
-                    "participants": "Matchup",
-                    "name": "Name",
-                    "executionOrder": "Order of execution",
-                    "teams": {
-                        "teams": "Number of teams",
-                        "unlimited": "Unlimited"
-                    },
-                    "outcome": {
-                        "outcome": "Seeding",
-                        "outcomes": "Seedings",
-                        "tooltip": "Resulting seedings of this match",
-                        "result": "Result"
-                    },
-                    "remove": "Remove match",
-                    "info": {
-                        "roundOneFillMatches": "The matches are filled evenly with randomly selected teams."
-                    }
-                },
-                "place": {
-                    "place": "Place",
-                    "places": "Overall placings",
-                    "placesOption": {
-                        "equal": "Equal (Place = {{place}})",
-                        "ascending": "Ascending (Place = Seeding)",
-                        "custom": "Custom"
-                    }
-                },
-                "tournamentTree": {
-                    "generate": "Generate",
-                    "generateTree": "Generate tournament tree",
-                    "participatingTeams": "Participating Teams",
-                    "includeMatchForThirdPlace": "Include match for 3rd place",
-                    "overwriteSetup": "Overwrite current setup",
-                    "info": {
-                        "noOverwrite": "The generated rounds will be added to the end of your current setup."
-                    }
-                },
-                "template": {
-                    "template": "Competition Setup Template",
-                    "templates": "Competition Setup Templates",
-                    "name": "Name",
-                    "description": "Description",
-                    "select": "Select template"
-                },
-                "startTimeOffset": {
-                    "startTimeOffset": "Offset start time",
-                    "enable": "Enable start time offsets"
-                },
-                "validation": {
-                    "duplicateParticipants": {
-                        "one": "The team: {{participants}} is used several times.",
-                        "multiple": "The teams: {{participants}} are used several times.",
-                        "message": "Please select each team only for one matchup per round."
-                    },
-                    "duplicatePositions": {
-                        "one": "In the order of execution, {{positions}} is used several times.",
-                        "multiple": "In the order of execution, {{positions}} are used several times.",
-                        "message": "Please select each value only once per round."
-                    }
-                },
-                "tableHint": "Enable the quick creation of setups for different competitions."
-            },
-            "execution": {
-                "tabTitle": "Live",
-                "progress": {
-                    "error": "The matches of the competition could not be loaded."
-                },
-                "nextRound": {
-                    "create": "Create next round",
-                    "error": "Next round could not be created.",
-                    "success": "Next round created",
-                    "reasons": {
-                        "noRoundsInSetup": "There are no rounds defined in the competition setup.",
-                        "noSetupMatches": "There are no matches defined for the next round in the competition setup",
-                        "noRegistrations": "There are no registrations for this competition.",
-                        "registrationsNotFinalized": {
-                            "textStart": "The registrations for this event are not finalized. The registrations can be finalized ",
-                            "link": "here",
-                            "textEnd": "."
-                        },
-                        "notEnoughTeamSpace": "There are more registrations for this competition than there are teams defined in the competition setup. Please make sure that there are enough teams or matches defined for the first round of the competition setup.",
-                        "notAllPlacesSet": "Match results are missing. Please enter all places in the match results."
-                    }
-                },
-                "deleteRound": {
-                    "delete": "Delete round",
-                    "confirmation": {
-                        "content": "Are you sure you want to delete the latest round?"
-                    },
-                    "error": "An error has occurred when deleting the round",
-                    "success": "Round successfully deleted"
-                },
-                "teamsWithBye": "Teams with a bye",
-                "match": {
-                    "startTime": "Start time",
-                    "startTimeOffset": "Start time offset",
-                    "startNumber": "Start number",
-                    "team": "Team",
-                    "place": "Place",
-                    "manageRunning": "Manage Running Matches",
-                    "running": "Running",
-                    "roundAndMatch": "Round {{round}}, Match {{match}}",
-                    "currentlyRunning": "Currently Running",
-                    "availableMatches": "Available Matches",
-                    "noRunningMatches": "No matches are currently running",
-                    "noAvailableMatches": "No matches available to start"
-                },
-                "running": {
-                    "error": {
-                        "hasPlaces": "Cannot change running state for matches with results",
-                        "update": "Failed to update running state"
-                    },
-                    "success": "Running state updated successfully"
-                },
-                "results": {
-                    "enter": "Enter results",
-                    "title": {
-                        "named": "Results for {{matchName}}",
-                        "unnamed": "Match results"
-                    },
-                    "validation": {
-                        "duplicates": {
-                            "single": "The place: {{places}} is used several times.",
-                            "multiple": "The places: {{places}} are used several times.",
-                            "message": "Please select each place only once per match."
-                        }
-                    },
-                    "submit": {
-                        "error": "An error has occurred when entering the results",
-                        "success": "Results successfully saved"
-                    }
-                },
-                "matchData": {
-                    "edit": "Edit match",
-                    "title": {
-                        "named": "Match data for {{matchName}}",
-                        "unnamed": "Match data"
-                    },
-                    "randomizeStartNumbers": "Randomize start numbers",
-                    "validation": {
-                        "duplicates": {
-                            "single": "The start number: {{startNumbers}} is used several times.",
-                            "multiple": "The start numbers: {{startNumbers}} are used several times.",
-                            "message": "Please select each number only once per match."
-                        }
-                    },
-                    "submit": {
-                        "error": "An error has occurred when editing the match data",
-                        "success": "Match data successfully updated"
-                    }
-                },
-                "startList": {
-                    "download": "Download start list",
-                    "type": {
-                        "PDF": "as PDF",
-                        "CSV": "as CSV"
-                    },
-                    "error": {
-                        "missingStartTime": "The start time for this match is not set."
-                    }
-                }
-            },
-            "places": {
-                "places": "Places",
-                "tabTitle": "Places",
-                "noPlaces": "There are no places for this competition yet."
+        "matchData": {
+          "edit": "Edit match",
+          "title": {
+            "named": "Match data for {{matchName}}",
+            "unnamed": "Match data"
+          },
+          "randomizeStartNumbers": "Randomize start numbers",
+          "validation": {
+            "duplicates": {
+              "single": "The start number: {{startNumbers}} is used several times.",
+              "multiple": "The start numbers: {{startNumbers}} are used several times.",
+              "message": "Please select each number only once per match."
             }
+          },
+          "submit": {
+            "error": "An error has occurred when editing the match data",
+            "success": "Match data successfully updated"
+          }
         },
-        "participantRequirement": {
-            "info": "If no column to check for the requirement is provided, all matching participants from the file will be approved.",
-            "approved": "Approved requirements",
-            "checkUpload": "Check requirements",
-            "checkManually": "Manually check '{{name}}'",
-            "file": "CSV-File",
-            "charset": "Charset",
-            "separator": "Separator",
-            "firstnameColName": "Column to check for firstname",
-            "lastnameColName": "Column to check for lastname",
-            "yearsColName": "Column to check year of birth",
-            "clubColName": "Column to check for name of club",
-            "requirementColName": "Column to check for requirement",
-            "requirementIsValidValue": "Accepted value in requirement column",
-            "participantsOpen": "Open",
-            "participantsApproved": "Approved",
-            "tableHint": {
-                "part1": "Requirements can be created or edited ",
-                "part2Link": "here",
-                "part3": "."
+        "startList": {
+          "download": "Download start list",
+          "dialog": {
+            "title": "Select configuration",
+            "config": "Configuration",
+            "alert": {
+              "1": "You can create and update configurations ",
+              "2": "here",
+              "3": "."
             }
+          },
+          "type": {
+            "PDF": "as PDF",
+            "CSV": "as CSV"
+          },
+          "error": {
+            "missingStartTime": "The start time for this match is not set."
+          }
         },
-        "action": {
-            "registrationsReport": {
-                "download": "Download registrations result"
-            },
-            "produceInvoices": "Produce invoices",
-            "finalizeRegistrations": {
-                "finalize": "Finalize registrations",
-                "newRegistrations": {
-                    "altertTitle": "There are new registrations",
-                    "hint": "Since the last finalization, new registrations were made. These new registrations will not participate in the competitions until the registrations are refinalized."
-                },
-                "refinalize": "Refinalize",
-                "refinalizeRegistrations": "Refinalize Registrations",
-                "keepTeamNumbers": {
-                    "keep": "Keep set team numbers",
-                    "hint": "When keeping the start numbers, new teams/participants will receive new random start numbers. These will be higher than the currently highest of the competition. When not kept, all the start numbers will be reshuffled."
-                },
-                "reshuffle": "This will reshuffle all start numbers",
-                "success": "Registrations finalized"
-            }
-        },
-        "assign": {
-            "save": {
-                "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
-                "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
-            }
-        },
-        "document": {
-            "document": "Document",
-            "documents": "Documents",
-            "name": "Name",
-            "tableHint": {
-                "description": "Will be provided upon event registration.",
-                "part1": "In order to group and configure documents, ",
-                "part2Link": "document types",
-                "part3": " must first be defined."
-            },
-            "type": {
-                "type": "Type",
-                "documentType": "Document Type",
-                "documentTypes": "Document Types",
-                "name": "Name",
-                "description": "Description",
-                "tableHint": "Enable the categorization of different documents for an event.",
-                "required": {
-                    "forEvent": "Required for event",
-                    "confirmation": "Confirmation required"
-                }
-            },
-            "add": {
-                "add": "Add document"
-            },
-            "download": {
-                "download": "Download",
-                "error": "An error occurred when downloading the document"
-            },
-            "error": {
-                "emptyList": "Please add one or more documents"
-            }
-        },
-        "registration": {
-            "registration": "Registration",
-            "registrations": "Registrations",
-            "addParticipant": "Add Participant",
-            "singleCompetition": "Single Competition",
-            "teamCompetition": "Team Competition",
-            "males": "Men",
-            "females": "Women",
-            "nonBinary": "Non-binary",
-            "mixed": "Any",
-            "summary": "Summary",
-            "schedule": "Schedule",
-            "message": "Message",
-            "optionalFee": "Optional",
-            "totalFees": "Registration Fee",
-            "acceptDocuments": "I accept the following:",
-            "infoDocuments": "Additional info",
-            "finish": "Submit registration",
-            "success": {
-                "title": "Registration successful!",
-                "subtitle": "You will receive a confirmation by e-mail."
-            },
-            "mostRecent": "Latest registrations"
-        },
-        "participants": "Participants",
-        "tabs": {
-            "general": "General",
-            "registrations": "Registrations",
-            "settings": "Settings",
-            "actions": "Actions",
-            "organisation": "Organisation",
-            "invoices": "Invoices"
-        },
-        "info": {
-            "infoPage": "Info Display",
-            "sectionTitle": "Public Information Display",
-            "pageDescription": "Configure and view information displays for public screens showing event information like upcoming matches and results.",
-            "manageInfoViews": "View and Configure Info Displays",
-            "configure": "Configure",
-            "noViews": "No views configured",
-            "configureViews": "Click the settings icon to configure views",
-            "viewType": "View Type",
-            "viewTypes": {
-                "upcomingMatches": "Upcoming Matches",
-                "latestMatchResults": "Latest Match Results",
-                "runningMatches": "Currently Running"
-            },
-            "configuration": "View Configuration",
-            "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
-            "noViewsConfigured": "No views configured",
-            "editView": "Edit View",
-            "addView": "Add View",
-            "displayDuration": "Display Duration",
-            "dataLimit": "Data Limit",
-            "filtersComingSoon": "Filters coming soon",
-            "viewCreated": "View created successfully",
-            "viewUpdated": "View updated successfully",
-            "viewDeleted": "View deleted successfully",
-            "createError": "Error creating view",
-            "updateError": "Error updating view",
-            "deleteError": "Error deleting view",
-            "confirmDeleteView": "Are you sure you want to delete this view?",
-            "noUpcomingMatches": "No upcoming matches",
-            "noLatestMatchResults": "No latest match results available",
-            "noRunningMatches": "No matches currently running",
-            "live": "LIVE",
-            "minutes": "min",
-            "justStarted": "Just started",
-            "unnamed": "Unnamed",
-            "matchStatus": {
-                "pending": "Pending",
-                "inProgress": "In Progress",
-                "completed": "Completed"
-            },
-            "rank": "Rank",
-            "place": "Place",
+        "substitution": {
+          "substitutions": "Substitutions",
+          "inFor": "in for",
+          "participant": "Participant",
+          "substituteFor": {
+            "substituteFor": "Substitute for",
+            "currentlyParticipating": "In same competition (swap teams)",
+            "notCurrentlyParticipating": "Freely available",
             "team": "Team",
-            "participants": "Participants",
-            "result": "Result",
-            "points": "Points",
-            "matchTeams": "Match Teams",
-            "executionOrder": "Execution Order: {{order}}"
+            "load": {
+              "error": "An error has occurred when loading possible the possible substitution participants"
+            }
+          },
+          "reason": "Reason",
+          "add": {
+            "add": "Add substitution",
+            "error": "An error has occurred when creating the substitution",
+            "success": "Substitution successfully created"
+          },
+          "delete": {
+            "confirmation": "Are you sure you want to delete the latest substitution?",
+            "error": {
+              "conflict": "Later created substitutions depend on this one. These would have to be deleted first.",
+              "unexpected": "An error has occurred when deleting the substitution"
+            },
+            "success": "Substitution successfully deleted"
+          }
         }
-    },
-    "task": {
-        "task": "Task",
-        "tasks": "Tasks",
-        "myTasks": "My open tasks",
-        "name": "Title",
-        "dueDate": "Due date",
-        "state": "State",
-        "OPEN": "Open",
-        "IN_PROGRESS": "In Progress",
-        "DONE": "Done",
-        "CANCELED": "Canceled",
-        "responsibleUsers": "Responsible"
-    },
-    "work": {
-        "type": {
-            "type": "Work Type",
-            "types": "Work Types",
-            "tableHint": "Enable the planning of work shifts for an event.",
-            "noneAvailable": "No work types exist yet."
-        },
-        "shift": {
-            "shift": "Shift",
-            "shifts": "Shifts",
-            "myShifts": "My Shifts",
-            "plan": "Shift Schedule",
-            "timeFrom": "Start",
-            "timeTo": "End",
-            "minUser": "Min. Persons",
-            "maxUser": "Max. Persons",
-            "remark": "Remark",
-            "assignedUsers": "Assigned Persons"
-        }
+      },
+      "places": {
+        "places": "Places",
+        "tabTitle": "Results",
+        "noPlaces": "There are no places for this competition yet."
+      }
     },
     "participantRequirement": {
-        "participantRequirement": "Participant requirement",
-        "participantRequirements": "Participant requirements",
-        "active": "Active",
-        "activate": "Activate for event",
-        "remove": "Remove from event",
-        "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
-        "tableHint": "Can be enabled for events."
+      "info": "If no column to check for the requirement is provided, all matching participants from the file will be approved.",
+      "approved": "Approved requirements",
+      "checkUpload": "Check requirements",
+      "checkManually": "Manually check '{{name}}'",
+      "file": "CSV-File",
+      "charset": "Charset",
+      "separator": "Separator",
+      "firstnameColName": "Column to check for firstname",
+      "lastnameColName": "Column to check for lastname",
+      "yearsColName": "Column to check year of birth",
+      "clubColName": "Column to check for name of club",
+      "requirementColName": "Column to check for requirement",
+      "requirementIsValidValue": "Accepted value in requirement column",
+      "participantsOpen": "Open",
+      "participantsApproved": "Approved",
+      "tableHint": {
+        "part1": "Requirements can be created or edited ",
+        "part2Link": "here",
+        "part3": "."
+      }
     },
-    "user": {
-        "user": "User",
-        "users": "Users",
-        "email": {
-            "email": "Email",
-            "inUse": {
-                "statement": "The email address you entered is already in use.",
-                "callToAction": {
-                    "invitation": "Please verify the current use of the email address or select a different one.",
-                    "registration": "Please use a different email address or log in with the existing one."
-                }
-            }
+    "action": {
+      "registrationsReport": {
+        "download": "Download registrations result"
+      },
+      "produceInvoices": "Produce invoices",
+      "finalizeRegistrations": {
+        "finalize": "Finalize registrations",
+        "newRegistrations": {
+          "altertTitle": "There are new registrations",
+          "hint": "Since the last finalization, new registrations were made. These new registrations will not participate in the competitions until the registrations are refinalized."
         },
-        "firstname": "Firstname",
-        "lastname": "Lastname",
-        "password": {
-            "password": "Password",
-            "confirm": "Passwort bestätigen",
-            "minLength": "{{min}} or more characters",
-            "notMatching": "The two passwords you entered do not match. Please ensure that they are identical.",
-            "tooShort": "Please enter a password with at least {{min}} characters"
+        "refinalize": "Refinalize",
+        "refinalizeRegistrations": "Refinalize Registrations",
+        "keepTeamNumbers": {
+          "keep": "Keep set team numbers",
+          "hint": "When keeping the start numbers, new teams/participants will receive new random start numbers. These will be higher than the currently highest of the competition. When not kept, all the start numbers will be reshuffled."
         },
-        "login": {
-            "login": "Login",
-            "password": "Password",
-            "forgotPassword": "Forgot password?",
-            "signUp": {
-                "message": "Don't have an account?",
-                "link": "Register here"
-            },
-            "submit": "Login",
-            "error": {
-                "credentials": "Incorrect credentials",
-                "tooManyRequests": "Too many login requests. Try again later."
-            }
-        },
-        "settings": {
-            "menu": "User settings",
-            "profile": "Profile",
-            "logout": "Logout"
-        },
-        "page": {
-            "error": {
-                "load": "Profile could not be loaded"
-            }
-        },
-        "update": {
-            "error": "An error has occurred when updating the user",
-            "success": "User successfully updated"
-        },
-        "invitation": {
-            "invitation": "Invitation",
-            "pendingInvitations": "Pending invitations",
-            "accept": "Accept invitation",
-            "hint": "Please enter a password for the user account that will be created.",
-            "submitPassword": "Accept invitation",
-            "userCreated": {
-                "text": "Your account has been successfully created and you can log in now.",
-                "toLogin": "Go to Login"
-            },
-            "error": {
-                "header": "An error has occurred",
-                "message": {
-                    "notFound": "There is no open invitation for this link. Please check that the link is correct.",
-                    "unexpected": "Your could not be created. Please try again later."
-                }
-            }
-        },
-        "registration": {
-            "register": "Register",
-            "pendingRegistrations": "Pending registrations",
-            "email": {
-                "emailSent": {
-                    "header": "Please verify your email",
-                    "message": {
-                        "part1": "We've sent you an email to verify your email adress and activate your account.",
-                        "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
-                    }
-                },
-                "verified": {
-                    "header": "Email verified",
-                    "message": "Your email adress has been successfully verified. Your account is now activated."
-                },
-                "verificationError": {
-                    "header": "An error has occurred",
-                    "message": {
-                        "notFound": "There is no open registration for this link. Please check that the link is correct or whether the e-mail address has already been confirmed.",
-                        "unexpected": "Your e-mail address could not be confirmed. Please try again later."
-                    }
-                }
-            },
-            "error": "An error has occurred during registration",
-            "login": {
-                "message": "Already have an account?",
-                "link": "Login here"
-            }
-        },
-        "resetPassword": {
-            "resetPassword": "Reset password",
-            "forgotPassword": "Forgot your password?",
-            "newPassword": "New Passwort",
-            "init": {
-                "instruction": "Enter your email adress and we'll send you a link to reset your password.",
-                "submit": "Reset password"
-            },
-            "emailSent": {
-                "header": "Check your email",
-                "message": {
-                    "part1": "We've sent you an email with further instructions to reset your password.",
-                    "part2": "If you don't see it, you may need to check your spam folder."
-                }
-            },
-            "success": {
-                "header": "Password changed!",
-                "message": "Your password has been successfully changed."
-            },
-            "error": {
-                "header": "An error has occurred",
-                "message": {
-                    "part1": "An error has occurred when resetting your password.",
-                    "part2": "Make sure that you are using the correct and complete link from the email. Only the last link sent is valid. The link is valid for 24 hours."
-                },
-                "invalid": "The form sent was invalid"
-            }
-        }
+        "reshuffle": "This will reshuffle all start numbers",
+        "success": "Registrations finalized"
+      }
     },
-    "role": {
-        "role": "Role",
-        "roles": "Roles",
-        "userRoles": "User Roles",
+    "assign": {
+      "save": {
+        "error": "An error has occurred when assigning the {{toBeAssigned}} to the {{assignedTo}}",
+        "success": "{{toBeAssigned}} were assigned to the {{assignedTo}}"
+      }
+    },
+    "document": {
+      "document": "Document",
+      "documents": "Documents",
+      "name": "Name",
+      "tableHint": {
+        "description": "Will be provided upon event registration.",
+        "part1": "In order to group and configure documents, ",
+        "part2Link": "document types",
+        "part3": " must first be defined."
+      },
+      "type": {
+        "type": "Type",
+        "documentType": "Document Type",
+        "documentTypes": "Document Types",
         "name": "Name",
         "description": "Description",
-        "error": {
-            "cannotAssign": "Role(s) could not be assigned to the user"
+        "tableHint": "Enable the categorization of different documents for an event.",
+        "required": {
+          "forEvent": "Required for event",
+          "confirmation": "Confirmation required"
         }
-    },
-    "configuration": {
-        "configuration": "Configuration",
-        "tabs": {
-            "competitionTemplates": "Competition templates",
-            "eventElements": "Event elements",
-            "competitionElements": "Competition elements",
-            "globalSettings": "Global settings"
-        }
-    },
-    "contact": {
-        "name": "Name",
-        "zip": "Zip code",
-        "city": "City",
-        "street": "Street (with No.)",
-        "email": "Email",
-        "information": "Contact information",
-        "contacts": "Contacts information",
-        "global": "Globally assigned contact information",
-        "tableHint": {
-            "1": "Used as sender for invoicing.",
-            "2": "The assignments can be made in the ",
-            "3": "global settings",
-            "4": "."
-        }
-    },
-    "invoice": {
-        "invoice": "Invoice",
-        "invoices": "Invoices",
+      },
+      "add": {
+        "add": "Add document"
+      },
+      "download": {
         "download": "Download",
-        "downloadError": "An error occurred trying to download the invoice.",
-        "invoiceNumber": "Invoice number",
-        "amount": "Amount",
-        "paid": "Paid",
-        "tableHint": {
-            "1": "Invoices can be produced here once for all registrations of a event.",
-            "2": "You can provide payee bank account information and sender contact information ",
-            "3": "here",
-            "4": ".",
-            "5": "You have to assign payee and sender in ",
-            "6": "global settings",
-            "7": " before producing any invoices."
-        },
-        "action": {
-            "setPaid": "Confirm receipt of payment",
-            "setNotPaid": "Cancel payment receipt"
-        },
-        "produce": {
-            "info": {
-                "paymentDueBy": {
-                    "title": "Default deadline for payment",
-                    "content": "If no invoice payment due date is defined for this event, a default value of 14 days from the invoice creation date will be used."
-                }
-            },
-            "success": "Invoices will be produced and sent via email. This may take some minutes.",
-            "error": {
-                "NO_ASSIGNED_PAYEE_INFORMATION": "Please assign valid payee information.",
-                "NO_ASSIGNED_CONTACT_INFORMATION": "Please assign valid contact information.",
-                "INVOICES_ALREADY_PRODUCED": "Producing invoices was already started.",
-                "EVENT_REGISTRATION_ONGOING": "The registration period for this event is still ongoing."
-            }
-        },
-        "bank": {
-            "accountData": {
-                "holder": "Holder",
-                "iban": "IBAN",
-                "bic": "BIC",
-                "bank": "Bank"
-            },
-            "account": "Bank account",
-            "accounts": "Bank accounts",
-            "global": "Globally assigned bank account",
-            "tableHint": {
-                "1": "Used as payee for invoicing.",
-                "2": "The assignments can be made in the ",
-                "3": "global settings",
-                "4": "."
-            }
-        }
+        "error": "An error occurred when downloading the document"
+      },
+      "error": {
+        "emptyList": "Please add one or more documents"
+      }
     },
-    "captcha": {
-        "instruction": {
-            "desktop": "Use the mouse to move the logo into the small circle",
-            "mobile": "Use your finger to move the logo into the small circle"
+    "registration": {
+      "registration": "Registration",
+      "registrations": "Registrations",
+      "addParticipant": "Add Participant",
+      "singleCompetition": "Single Competition",
+      "teamCompetition": "Team Competition",
+      "males": "Men",
+      "females": "Women",
+      "nonBinary": "Non-binary",
+      "mixed": "Any",
+      "summary": "Summary",
+      "schedule": "Schedule",
+      "message": "Message",
+      "optionalFee": "Optional",
+      "totalFees": "Registration Fee",
+      "acceptDocuments": "I accept the following:",
+      "infoDocuments": "Additional info",
+      "finish": "Submit registration",
+      "success": {
+        "title": "Registration successful!",
+        "subtitle": "You will receive a confirmation by e-mail."
+      },
+      "mostRecent": "Latest registrations"
+    },
+    "participants": "Participants",
+    "tabs": {
+      "general": "General",
+      "registrations": "Registrations",
+      "settings": "Settings",
+      "actions": "Actions",
+      "organisation": "Organisation",
+      "invoices": "Invoices"
+    },
+    "info": {
+      "infoPage": "Info Display",
+      "sectionTitle": "Public Information Display",
+      "pageDescription": "Configure and view information displays for public screens showing event information like upcoming matches and results.",
+      "manageInfoViews": "View and Configure Info Displays",
+      "configure": "Configure",
+      "noViews": "No views configured",
+      "configureViews": "Click the settings icon to configure views",
+      "viewType": "View Type",
+      "viewTypes": {
+        "upcomingMatches": "Upcoming Matches",
+        "latestMatchResults": "Latest Match Results",
+        "runningMatches": "Currently Running"
+      },
+      "configuration": "View Configuration",
+      "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
+      "noViewsConfigured": "No views configured",
+      "editView": "Edit View",
+      "addView": "Add View",
+      "displayDuration": "Display Duration",
+      "dataLimit": "Data Limit",
+      "filtersComingSoon": "Filters coming soon",
+      "viewCreated": "View created successfully",
+      "viewUpdated": "View updated successfully",
+      "viewDeleted": "View deleted successfully",
+      "createError": "Error creating view",
+      "updateError": "Error updating view",
+      "deleteError": "Error deleting view",
+      "confirmDeleteView": "Are you sure you want to delete this view?",
+      "noUpcomingMatches": "No upcoming matches",
+      "noLatestMatchResults": "No latest match results available",
+      "noRunningMatches": "No matches currently running",
+      "live": "LIVE",
+      "minutes": "min",
+      "justStarted": "Just started",
+      "unnamed": "Unnamed",
+      "matchStatus": {
+        "pending": "Pending",
+        "inProgress": "In Progress",
+        "completed": "Completed"
+      },
+      "rank": "Rank",
+      "place": "Place",
+      "team": "Team",
+      "participants": "Participants",
+      "result": "Result",
+      "points": "Points",
+      "matchTeams": "Match Teams",
+      "executionOrder": "Execution Order: {{order}}"
+    }
+  },
+  "task": {
+    "task": "Task",
+    "tasks": "Tasks",
+    "myTasks": "My open tasks",
+    "name": "Title",
+    "dueDate": "Due date",
+    "state": "State",
+    "OPEN": "Open",
+    "IN_PROGRESS": "In Progress",
+    "DONE": "Done",
+    "CANCELED": "Canceled",
+    "responsibleUsers": "Responsible"
+  },
+  "work": {
+    "type": {
+      "type": "Work Type",
+      "types": "Work Types",
+      "tableHint": "Enable the planning of work shifts for an event.",
+      "noneAvailable": "No work types exist yet."
+    },
+    "shift": {
+      "shift": "Shift",
+      "shifts": "Shifts",
+      "myShifts": "My Shifts",
+      "plan": "Shift Schedule",
+      "timeFrom": "Start",
+      "timeTo": "End",
+      "minUser": "Min. Persons",
+      "maxUser": "Max. Persons",
+      "remark": "Remark",
+      "assignedUsers": "Assigned Persons"
+    }
+  },
+  "participantRequirement": {
+    "participantRequirement": "Participant requirement",
+    "participantRequirements": "Participant requirements",
+    "active": "Active",
+    "activate": "Activate for event",
+    "remove": "Remove from event",
+    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
+    "tableHint": "Can be enabled for events."
+  },
+  "user": {
+    "user": "User",
+    "users": "Users",
+    "email": {
+      "email": "Email",
+      "inUse": {
+        "statement": "The email address you entered is already in use.",
+        "callToAction": {
+          "invitation": "Please verify the current use of the email address or select a different one.",
+          "registration": "Please use a different email address or log in with the existing one."
+        }
+      }
+    },
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "password": {
+      "password": "Password",
+      "confirm": "Passwort bestätigen",
+      "minLength": "{{min}} or more characters",
+      "notMatching": "The two passwords you entered do not match. Please ensure that they are identical.",
+      "tooShort": "Please enter a password with at least {{min}} characters"
+    },
+    "login": {
+      "login": "Login",
+      "password": "Password",
+      "forgotPassword": "Forgot password?",
+      "signUp": {
+        "message": "Don't have an account?",
+        "link": "Register here"
+      },
+      "submit": "Login",
+      "error": {
+        "credentials": "Incorrect credentials",
+        "tooManyRequests": "Too many login requests. Try again later."
+      }
+    },
+    "settings": {
+      "menu": "User settings",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "page": {
+      "error": {
+        "load": "Profile could not be loaded"
+      }
+    },
+    "update": {
+      "error": "An error has occurred when updating the user",
+      "success": "User successfully updated"
+    },
+    "invitation": {
+      "invitation": "Invitation",
+      "pendingInvitations": "Pending invitations",
+      "accept": "Accept invitation",
+      "hint": "Please enter a password for the user account that will be created.",
+      "submitPassword": "Accept invitation",
+      "userCreated": {
+        "text": "Your account has been successfully created and you can log in now.",
+        "toLogin": "Go to Login"
+      },
+      "error": {
+        "header": "An error has occurred",
+        "message": {
+          "notFound": "There is no open invitation for this link. Please check that the link is correct.",
+          "unexpected": "Your could not be created. Please try again later."
+        }
+      }
+    },
+    "registration": {
+      "register": "Register",
+      "pendingRegistrations": "Pending registrations",
+      "email": {
+        "emailSent": {
+          "header": "Please verify your email",
+          "message": {
+            "part1": "We've sent you an email to verify your email adress and activate your account.",
+            "part2": "Click on the link in that email to complete your signup. If you don't see it, you may need to check your spam folder."
+          }
+        },
+        "verified": {
+          "header": "Email verified",
+          "message": "Your email adress has been successfully verified. Your account is now activated."
+        },
+        "verificationError": {
+          "header": "An error has occurred",
+          "message": {
+            "notFound": "There is no open registration for this link. Please check that the link is correct or whether the e-mail address has already been confirmed.",
+            "unexpected": "Your e-mail address could not be confirmed. Please try again later."
+          }
+        }
+      },
+      "error": "An error has occurred during registration",
+      "login": {
+        "message": "Already have an account?",
+        "link": "Login here"
+      }
+    },
+    "resetPassword": {
+      "resetPassword": "Reset password",
+      "forgotPassword": "Forgot your password?",
+      "newPassword": "New Passwort",
+      "init": {
+        "instruction": "Enter your email adress and we'll send you a link to reset your password.",
+        "submit": "Reset password"
+      },
+      "emailSent": {
+        "header": "Check your email",
+        "message": {
+          "part1": "We've sent you an email with further instructions to reset your password.",
+          "part2": "If you don't see it, you may need to check your spam folder."
+        }
+      },
+      "success": {
+        "header": "Password changed!",
+        "message": "Your password has been successfully changed."
+      },
+      "error": {
+        "header": "An error has occurred",
+        "message": {
+          "part1": "An error has occurred when resetting your password.",
+          "part2": "Make sure that you are using the correct and complete link from the email. Only the last link sent is valid. The link is valid for 24 hours."
+        },
+        "invalid": "The form sent was invalid"
+      }
+    }
+  },
+  "role": {
+    "role": "Role",
+    "roles": "Roles",
+    "userRoles": "User Roles",
+    "name": "Name",
+    "description": "Description",
+    "error": {
+      "cannotAssign": "Role(s) could not be assigned to the user"
+    }
+  },
+  "configuration": {
+    "configuration": "Configuration",
+    "tabs": {
+      "competitionTemplates": "Competition templates",
+      "eventElements": "Event elements",
+      "competitionElements": "Competition elements",
+      "globalSettings": "Global settings"
+    },
+    "export": {
+      "startlist": {
+        "startlist": "Start-list configuration",
+        "startlists": "Start-list configurations",
+        "tableHint": "Define the columns for the CSV export of start lists when conducting competitions.",
+        "name": "Name",
+        "col": {
+          "heading": "Columns",
+          "participant": {
+            "heading": "Participants",
+            "firstname": "First names",
+            "lastname": "Last names",
+            "gender": "Gender",
+            "role": "Role",
+            "year": "Year of birth",
+            "club": "club"
+          },
+          "club": {
+            "heading": "Registering club",
+            "name": "Name"
+          },
+          "team": {
+            "heading": "Team",
+            "name": "Name",
+            "startNumber": "Start number"
+          },
+          "match": {
+            "heading": "Match",
+            "name": "Name",
+            "startTime": "Start time"
+          },
+          "round": {
+            "heading": "Round",
+            "name": "Name"
+          },
+          "competition": {
+            "heading": "Competition",
+            "identifier": "Identifier",
+            "name": "Name",
+            "shortName": "Short name",
+            "category": "Category"
+          }
         },
         "error": {
-            "createCaptcha": "An unexpected error has occurred when creating a CAPTCHA",
-            "incorrect": "CAPTCHA was not solved correctly",
-            "notFound": "The CAPTCHA is outdated"
-        },
-        "loading": "Loading CAPTCHA..."
+          "tooFewCols": "Please specify at least one column."
+        }
+      }
     }
+  },
+  "contact": {
+    "name": "Name",
+    "zip": "Zip code",
+    "city": "City",
+    "street": "Street (with No.)",
+    "email": "Email",
+    "information": "Contact information",
+    "contacts": "Contacts information",
+    "global": "Globally assigned contact information",
+    "tableHint": {
+      "1": "Used as sender for invoicing.",
+      "2": "The assignments can be made in the ",
+      "3": "global settings",
+      "4": "."
+    }
+  },
+  "invoice": {
+    "invoice": "Invoice",
+    "invoices": "Invoices",
+    "download": "Download",
+    "downloadError": "An error occurred trying to download the invoice.",
+    "invoiceNumber": "Invoice number",
+    "amount": "Amount",
+    "paid": "Paid",
+    "tableHint": {
+      "1": "Invoices can be produced here once for all registrations of a event.",
+      "2": "You can provide payee bank account information and sender contact information ",
+      "3": "here",
+      "4": ".",
+      "5": "You have to assign payee and sender in ",
+      "6": "global settings",
+      "7": " before producing any invoices."
+    },
+    "action": {
+      "setPaid": "Confirm receipt of payment",
+      "setNotPaid": "Cancel payment receipt"
+    },
+    "produce": {
+      "info": {
+        "paymentDueBy": {
+          "title": "Default deadline for payment",
+          "content": "If no invoice payment due date is defined for this event, a default value of 14 days from the invoice creation date will be used."
+        }
+      },
+      "success": "Invoices will be produced and sent via email. This may take some minutes.",
+      "error": {
+        "NO_ASSIGNED_PAYEE_INFORMATION": "Please assign valid payee information.",
+        "NO_ASSIGNED_CONTACT_INFORMATION": "Please assign valid contact information.",
+        "INVOICES_ALREADY_PRODUCED": "Producing invoices was already started.",
+        "EVENT_REGISTRATION_ONGOING": "The registration period for this event is still ongoing."
+      }
+    },
+    "bank": {
+      "accountData": {
+        "holder": "Holder",
+        "iban": "IBAN",
+        "bic": "BIC",
+        "bank": "Bank"
+      },
+      "account": "Bank account",
+      "accounts": "Bank accounts",
+      "global": "Globally assigned bank account",
+      "tableHint": {
+        "1": "Used as payee for invoicing.",
+        "2": "The assignments can be made in the ",
+        "3": "global settings",
+        "4": "."
+      }
+    }
+  },
+  "captcha": {
+    "instruction": {
+      "desktop": "Use the mouse to move the logo into the small circle",
+      "mobile": "Use your finger to move the logo into the small circle"
+    },
+    "error": {
+      "createCaptcha": "An unexpected error has occurred when creating a CAPTCHA",
+      "incorrect": "CAPTCHA was not solved correctly",
+      "notFound": "The CAPTCHA is outdated"
+    },
+    "loading": "Loading CAPTCHA..."
+  }
 }

@@ -1,11 +1,8 @@
 import {
     createNextCompetitionRound,
-    deleteCurrentCompetitionExecutionRound,
-    downloadStartList,
     getCompetitionExecutionProgress,
     updateMatchData,
     updateMatchResults,
-    updateMatchRunningState,
 } from '@api/sdk.gen.ts'
 import {
     Box,
@@ -26,12 +23,11 @@ import {
     TableHead,
     TableRow,
     Typography,
-    useTheme,
 } from '@mui/material'
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, useRef, useState} from 'react'
+import {BaseSyntheticEvent, Fragment, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
@@ -41,18 +37,15 @@ import {
     CompetitionExecutionCanNotCreateRoundReason,
     CompetitionMatchDto,
     CompetitionMatchTeamDto,
-    CompetitionRoundDto,
-    StartListFileType,
 } from '@api/types.gen.ts'
 import CompetitionExecutionMatchDialog from '@components/event/competition/excecution/CompetitionExecutionMatchDialog.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
-import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
-import SelectionMenu from '@components/SelectionMenu.tsx'
+import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -76,11 +69,6 @@ type EnterResultsForm = {
 const CompetitionExecution = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
-    const theme = useTheme()
-
-    const downloadRef = useRef<HTMLAnchorElement>(null)
-
-    const {confirmAction} = useConfirmation()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -103,10 +91,15 @@ const CompetitionExecution = () => {
                 if (error) {
                     feedback.error(t('event.competition.execution.progress.error'))
                 }
+                handleAccordionExpandedChange()
             },
             deps: [eventId, competitionId, reloadData],
         },
     )
+    const sortedRounds = progressDto?.rounds
+        .map((r, idx) => ({roundIndex: idx, round: r}))
+        .sort((a, b) => b.roundIndex - a.roundIndex)
+        .map(r => r.round)
 
     const handleCreateNextRound = async () => {
         setSubmitting(true)
@@ -190,7 +183,6 @@ const CompetitionExecution = () => {
     const openResultsDialog = (matchIndex: number) => {
         if (currentRoundMatches) {
             setResultsDialogOpen(true)
-            console.log(matchIndex, currentRoundMatches)
             resultsFormContext.reset({
                 selectedMatchDto: currentRoundMatches[matchIndex],
                 teamResults: mapTeamDtoToFormTeamResults(currentRoundMatches[matchIndex].teams),
@@ -303,7 +295,7 @@ const CompetitionExecution = () => {
 
     const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
     const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
-        const selectedMatch = progressDto?.rounds[roundIndex]?.matches[matchIndex]
+        const selectedMatch = matchesFiltered(sortedRounds?.[roundIndex].matches ?? [])[matchIndex]
         if (selectedMatch) {
             setEditMatchDialogOpen(true)
             editMatchFormContext.reset({
@@ -379,32 +371,6 @@ const CompetitionExecution = () => {
         }
     }
 
-    const deleteCurrentRound = async () => {
-        confirmAction(
-            async () => {
-                setSubmitting(true)
-                const {error} = await deleteCurrentCompetitionExecutionRound({
-                    path: {
-                        eventId: eventId,
-                        competitionId: competitionId,
-                    },
-                })
-                setSubmitting(false)
-                if (error) {
-                    feedback.error(t('event.competition.execution.deleteRound.error'))
-                } else {
-                    feedback.success(t('event.competition.execution.deleteRound.success'))
-                }
-                setReloadData(!reloadData)
-            },
-            {
-                title: t('common.confirmation.title'),
-                content: t('event.competition.execution.deleteRound.confirmation.content'),
-                okText: t('common.delete'),
-            },
-        )
-    }
-
     const allRoundsCreated =
         progressDto?.canNotCreateRoundReasons.find(r => r === 'ALL_ROUNDS_CREATED') !== undefined
 
@@ -415,7 +381,7 @@ const CompetitionExecution = () => {
                     {t(
                         'event.competition.execution.nextRound.reasons.registrationsNotFinalized.textStart',
                     )}
-                    <InlineLink to={'/event/$eventId'} search={{tab: 'actions'}}>
+                    <InlineLink to={'/event/$eventId'} search={{tab: 'registrations'}}>
                         {t(
                             'event.competition.execution.nextRound.reasons.registrationsNotFinalized.link',
                         )}
@@ -440,49 +406,26 @@ const CompetitionExecution = () => {
         }
     }
 
-    const automaticQualifications = (round: CompetitionRoundDto) => {
-        return round.matches
-            .filter(match => match.teams.length === 1)
-            .map(
-                match =>
-                    match.teams[0].clubName + (match.teams[0].name && ` ${match.teams[0].name}`),
-            )
-    }
-
-    const handleDownloadStartList = async (
-        competitionMatchId: string,
-        fileType: StartListFileType,
-    ) => {
-        const {data, error, response} = await downloadStartList({
-            path: {
-                eventId,
-                competitionId,
-                competitionMatchId,
-            },
-            query: {
-                fileType,
-            },
-        })
-        const anchor = downloadRef.current
-
-        const disposition = response.headers.get('Content-Disposition')
-        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
-
-        if (error) {
-            if (error.status.value === 409) {
-                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
-            } else {
-                feedback.error(t('common.error.unexpected'))
-            }
-        } else if (data !== undefined && anchor) {
-            // need Blob constructor for text/csv
-            anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
-            anchor.download =
-                filename ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
-            anchor.click()
-            anchor.href = ''
-            anchor.download = ''
-        }
+    const [accordionsOpen, setAccordionsOpen] = useState<boolean[][]>([])
+    const handleAccordionExpandedChange = (expandedProps?: {
+        roundIndex: number
+        accordionIndex: number
+        isExpanded: boolean
+    }) => {
+        setAccordionsOpen(
+            sortedRounds?.map((_, idx) => [
+                expandedProps &&
+                expandedProps.accordionIndex === 0 &&
+                expandedProps.roundIndex === idx
+                    ? expandedProps.isExpanded
+                    : (accordionsOpen[idx]?.[0] ?? false),
+                expandedProps &&
+                expandedProps.accordionIndex === 1 &&
+                expandedProps.roundIndex === idx
+                    ? expandedProps.isExpanded
+                    : (accordionsOpen[idx]?.[1] ?? false),
+            ]) ?? [],
+        )
     }
 
     const handleToggleRunningState = async (match: CompetitionMatchDto) => {
@@ -516,11 +459,34 @@ const CompetitionExecution = () => {
         }
     }
 
-    return progressDto ? (
+    // {/* Only show toggle if match has no places set */}
+    // {!match.teams.some(
+    //     team =>
+    //         team.place !== null &&
+    //         team.place !== undefined,
+    // ) && (
+    //     <FormControlLabel
+    //         control={
+    //             <Checkbox
+    //                 checked={match.currentlyRunning}
+    //                 onChange={() =>
+    //                     handleToggleRunningState(
+    //                         match,
+    //                     )
+    //                 }
+    //                 disabled={submitting}
+    //             />
+    //         }
+    //         label={t(
+    //             'event.competition.execution.match.currentlyRunning',
+    //         )}
+    //     />
+    // )}
+
+    return progressDto && sortedRounds ? (
         <Box>
-            <Link ref={downloadRef} display={'none'}></Link>
             {!allRoundsCreated && (
-                <Box sx={{my: 4, display: 'flex', alignItems: 'center'}}>
+                <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
                     <Button
                         disabled={
                             progressDto.canNotCreateRoundReasons.length > 0 ||
@@ -538,8 +504,8 @@ const CompetitionExecution = () => {
                             title={
                                 <Stack spacing={1} p={1}>
                                     {progressDto.canNotCreateRoundReasons.map((reason, idx) => (
-                                        <>
-                                            <Stack direction={'row'} spacing={1} key={reason}>
+                                        <Fragment key={reason}>
+                                            <Stack direction={'row'} spacing={1}>
                                                 <WarningIcon color={'warning'} />
                                                 <Typography>{getReasonText(reason)}</Typography>
                                             </Stack>
@@ -547,7 +513,7 @@ const CompetitionExecution = () => {
                                                 progressDto.canNotCreateRoundReasons.length - 1 && (
                                                 <Divider />
                                             )}
-                                        </>
+                                        </Fragment>
                                     ))}
                                 </Stack>
                             }>
@@ -556,242 +522,25 @@ const CompetitionExecution = () => {
                     )}
                 </Box>
             )}
-            <Box>
-                {progressDto.rounds
-                    .map((r, idx) => ({roundIndex: idx, round: r}))
-                    .sort((a, b) => b.roundIndex - a.roundIndex)
-                    .map(r => r.round)
-                    .map((round, roundIndex) => (
-                        <>
-                            <Stack key={`${round.matches[0]?.id}-r${roundIndex}`} spacing={2}>
-                                <Typography variant={'h2'}>{round.name}</Typography>
-                                {round.required && (
-                                    <Typography>
-                                        {t('event.competition.setup.round.required')}
-                                    </Typography>
-                                )}
-                                {automaticQualifications(round).length > 0 && (
-                                    <Box>
-                                        <Box sx={{my: 2}}>
-                                            <Typography variant={'h6'}>
-                                                {t('event.competition.execution.teamsWithBye')}:
-                                            </Typography>
-                                            <List>
-                                                {automaticQualifications(round).map(team => (
-                                                    <ListItemText>{team}</ListItemText>
-                                                ))}
-                                            </List>
-                                        </Box>
-                                    </Box>
-                                )}
-                                {/*{roundIndex === 0 && <Substitutions reloadRoundDto={() => setReloadData(!reloadData)} roundDto={round} />}*/}
-                                <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
-                                    {matchesFiltered(round.matches).map((match, matchIndex) => (
-                                        <Card
-                                            key={match.id}
-                                            sx={{
-                                                p: 2,
-                                                minWidth: 400,
-                                                flex: 1,
-                                                ...(match.currentlyRunning && {
-                                                    borderColor: 'primary.main',
-                                                    borderWidth: 2,
-                                                    borderStyle: 'solid',
-                                                }),
-                                            }}>
-                                            <Stack
-                                                direction={'row'}
-                                                sx={{
-                                                    justifyContent: 'space-between',
-                                                    [theme.breakpoints.down('md')]: {
-                                                        flexDirection: 'column',
-                                                    },
-                                                }}>
-                                                <Stack spacing={1}>
-                                                    {match.name && (
-                                                        <Typography variant={'h3'}>
-                                                            {match.name}
-                                                        </Typography>
-                                                    )}
-                                                    <Typography>
-                                                        {t(
-                                                            'event.competition.execution.match.startTime',
-                                                        ) + ': '}
-                                                        {match.startTime ?? '-'}
-                                                    </Typography>
-                                                    {match.startTimeOffset && (
-                                                        <Typography>
-                                                            {t(
-                                                                'event.competition.execution.match.startTimeOffset',
-                                                            ) + ': '}
-                                                            {match.startTimeOffset}
-                                                        </Typography>
-                                                    )}
-                                                    {/* Only show toggle if match has no places set */}
-                                                    {!match.teams.some(
-                                                        team =>
-                                                            team.place !== null &&
-                                                            team.place !== undefined,
-                                                    ) && (
-                                                        <FormControlLabel
-                                                            control={
-                                                                <Checkbox
-                                                                    checked={match.currentlyRunning}
-                                                                    onChange={() =>
-                                                                        handleToggleRunningState(
-                                                                            match,
-                                                                        )
-                                                                    }
-                                                                    disabled={submitting}
-                                                                />
-                                                            }
-                                                            label={t(
-                                                                'event.competition.execution.match.currentlyRunning',
-                                                            )}
-                                                        />
-                                                    )}
-                                                </Stack>
-                                                <Stack direction={'column'} spacing={1}>
-                                                    {roundIndex === 0 && (
-                                                        <LoadingButton
-                                                            disabled={submitting}
-                                                            onClick={() =>
-                                                                openResultsDialog(matchIndex)
-                                                            }
-                                                            variant={'outlined'}
-                                                            pending={submitting}>
-                                                            {t(
-                                                                'event.competition.execution.results.enter',
-                                                            )}
-                                                        </LoadingButton>
-                                                    )}
-                                                    <LoadingButton
-                                                        onClick={() =>
-                                                            openEditMatchDialog(
-                                                                roundIndex,
-                                                                matchIndex,
-                                                            )
-                                                        }
-                                                        variant={'outlined'}
-                                                        pending={submitting}>
-                                                        {t(
-                                                            'event.competition.execution.matchData.edit',
-                                                        )}
-                                                    </LoadingButton>
-                                                    <SelectionMenu
-                                                        anchor={{
-                                                            button: {
-                                                                vertical: 'bottom',
-                                                                horizontal: 'right',
-                                                            },
-                                                            menu: {
-                                                                vertical: 'top',
-                                                                horizontal: 'right',
-                                                            },
-                                                        }}
-                                                        buttonContent={t(
-                                                            'event.competition.execution.startList.download',
-                                                        )}
-                                                        keyLabel={
-                                                            'competition-execution-startlist-download'
-                                                        }
-                                                        onSelectItem={(fileType: string) =>
-                                                            handleDownloadStartList(
-                                                                match.id,
-                                                                fileType as StartListFileType,
-                                                            )
-                                                        }
-                                                        items={
-                                                            [
-                                                                {
-                                                                    id: 'PDF',
-                                                                    label: t(
-                                                                        'event.competition.execution.startList.type.PDF',
-                                                                    ),
-                                                                },
-                                                                {
-                                                                    id: 'CSV',
-                                                                    label: t(
-                                                                        'event.competition.execution.startList.type.CSV',
-                                                                    ),
-                                                                },
-                                                            ] satisfies {
-                                                                id: StartListFileType
-                                                                label: string
-                                                            }[]
-                                                        }
-                                                    />
-                                                </Stack>
-                                            </Stack>
-                                            <Divider sx={{my: 2}} />
-                                            <TableContainer>
-                                                <Table>
-                                                    <TableHead>
-                                                        <TableRow>
-                                                            <TableCell width="25%">
-                                                                {t(
-                                                                    'event.competition.execution.match.startNumber',
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell width="50%">
-                                                                {t(
-                                                                    'event.competition.execution.match.team',
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell width="25%">
-                                                                {t(
-                                                                    'event.competition.execution.match.place',
-                                                                )}
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    </TableHead>
-                                                    <TableBody>
-                                                        {match.teams
-                                                            .sort(
-                                                                (a, b) =>
-                                                                    a.startNumber - b.startNumber,
-                                                            )
-                                                            .map(team => (
-                                                                <TableRow key={team.registrationId}>
-                                                                    <TableCell width="25%">
-                                                                        {team.startNumber}
-                                                                    </TableCell>
-                                                                    <TableCell width="50%">
-                                                                        {team.clubName +
-                                                                            (team.name
-                                                                                ? ` ${team.name}`
-                                                                                : '')}
-                                                                    </TableCell>
-                                                                    <TableCell width="25%">
-                                                                        {team.place}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </TableContainer>
-                                        </Card>
-                                    ))}
-                                </Box>
-                                {roundIndex === 0 && (
-                                    <LoadingButton
-                                        pending={submitting}
-                                        onClick={deleteCurrentRound}
-                                        variant={'outlined'}>
-                                        {t('event.competition.execution.deleteRound.delete')}
-                                    </LoadingButton>
-                                )}
-                            </Stack>
-                            {roundIndex < progressDto.rounds.length && (
-                                <Divider
-                                    key={`${round.matches[0]?.id}-d${roundIndex}`}
-                                    variant={'middle'}
-                                    sx={{my: 8}}
-                                />
-                            )}
-                        </>
-                    ))}
-            </Box>
+            <Stack spacing={6}>
+                {sortedRounds.map((round, roundIndex) => (
+                    <CompetitionExecutionRound
+                        key={round.setupRoundId}
+                        round={round}
+                        roundIndex={roundIndex}
+                        filteredMatches={matchesFiltered(round.matches)}
+                        reloadRoundDto={() => setReloadData(!reloadData)}
+                        setSubmitting={setSubmitting}
+                        submitting={submitting}
+                        openResultsDialog={openResultsDialog}
+                        openEditMatchDialog={openEditMatchDialog}
+                        accordionsExpanded={accordionsOpen[roundIndex]}
+                        handleAccordionExpandedChange={(accordionIndex, isExpanded) =>
+                            handleAccordionExpandedChange({roundIndex, accordionIndex, isExpanded})
+                        }
+                    />
+                ))}
+            </Stack>
             <Dialog
                 open={resultsDialogOpen}
                 fullWidth

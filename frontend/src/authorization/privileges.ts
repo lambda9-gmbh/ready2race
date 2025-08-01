@@ -80,3 +80,15 @@ export const updateInvoiceGlobal: Privilege = {
     resource: 'INVOICE',
     scope: 'GLOBAL',
 }
+
+export const createSubstitutionGlobal: Privilege = {
+    action: 'CREATE',
+    resource: 'SUBSTITUTION',
+    scope: 'GLOBAL'
+}
+
+export const deleteSubstitutionGlobal: Privilege = {
+    action: 'DELETE',
+    resource: 'SUBSTITUTION',
+    scope: 'GLOBAL'
+}
