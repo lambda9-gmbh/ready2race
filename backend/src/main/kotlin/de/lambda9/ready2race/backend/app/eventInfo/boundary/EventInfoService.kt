@@ -2,29 +2,19 @@ package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
 import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfigurationRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
-import de.lambda9.ready2race.backend.app.eventInfo.entity.EventInfoProblem
-import de.lambda9.ready2race.backend.app.eventInfo.entity.InfoViewConfigurationDto
-import de.lambda9.ready2race.backend.app.eventInfo.entity.InfoViewConfigurationRequest
-import de.lambda9.ready2race.backend.app.eventInfo.entity.LatestMatchResultInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.MatchResultTeamInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.ParticipantInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.RunningMatchTeamInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingCompetitionMatchInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchParticipantInfo
-import de.lambda9.ready2race.backend.app.eventInfo.entity.UpcomingMatchTeamInfo
+import de.lambda9.ready2race.backend.app.eventInfo.entity.*
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.JSONB
-import org.jooq.impl.DSL.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -33,7 +23,10 @@ object EventInfoService {
 
     // Info View Configuration Methods
 
-    fun getInfoViews(eventId: UUID, includeInactive: Boolean = false): App<EventInfoProblem, ApiResponse.ListDto<InfoViewConfigurationDto>> =
+    fun getInfoViews(
+        eventId: UUID,
+        includeInactive: Boolean = false
+    ): App<EventInfoProblem, ApiResponse.ListDto<InfoViewConfigurationDto>> =
         KIO.comprehension {
             val exists = !EventRepo.exists(eventId).orDie()
             if (!exists) {
@@ -108,8 +101,6 @@ object EventInfoService {
     // Data Fetching Methods
 
 
-
-
     fun getLatestMatchResults(
         eventId: UUID,
         limit: Int = 10,
@@ -118,63 +109,7 @@ object EventInfoService {
         val eventDayId = filters?.get("eventDayId")?.asText()?.let { UUID.fromString(it) }
         val competitionId = filters?.get("competitionId")?.asText()?.let { UUID.fromString(it) }
 
-        val matches = !Jooq.query {
-            select(
-                COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
-                COMPETITION_MATCH.UPDATED_AT,
-                COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
-                COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
-                COMPETITION.ID.`as`("competition_id"),
-                COMPETITION_VIEW.NAME.`as`("competition_name"),
-                COMPETITION_VIEW.CATEGORY_NAME,
-                EVENT_DAY.ID.`as`("event_day_id"),
-                EVENT_DAY.DATE.`as`("event_day_date"),
-                EVENT_DAY.NAME.`as`("event_day_name")
-            )
-            .from(COMPETITION_MATCH)
-            .join(COMPETITION_SETUP_MATCH).on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
-            .join(COMPETITION_SETUP_ROUND).on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-            .join(COMPETITION_PROPERTIES).on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
-            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY_HAS_COMPETITION).on(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
-            .where(COMPETITION.EVENT.eq(eventId))
-            .and(
-                exists(
-                    selectOne()
-                    .from(COMPETITION_MATCH_TEAM)
-                    .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                    .and(COMPETITION_MATCH_TEAM.PLACE.isNotNull)
-                )
-            )
-            .and(
-                notExists(
-                    selectOne()
-                    .from(COMPETITION_MATCH_TEAM)
-                    .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                    .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
-                )
-            )
-            .and(
-                field(
-                    select(count())
-                    .from(COMPETITION_MATCH_TEAM)
-                    .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                ).gt(1)
-            )
-            .apply {
-                if (eventDayId != null) {
-                    and(EVENT_DAY.ID.eq(eventDayId))
-                }
-                if (competitionId != null) {
-                    and(COMPETITION.ID.eq(competitionId))
-                }
-            }
-            .orderBy(COMPETITION_MATCH.UPDATED_AT.desc())
-            .limit(limit)
-            .fetch()
-        }.orDie()
+        val matches = !CompetitionMatchRepo.getMatchResults(eventId, eventDayId, competitionId, limit).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
@@ -208,50 +143,8 @@ object EventInfoService {
         val competitionId = filters?.get("competitionId")?.asText()?.let { UUID.fromString(it) }
         val roundName = filters?.get("roundName")?.asText()
 
-        val matches = !Jooq.query {
-            select(
-                COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
-                COMPETITION_MATCH.START_TIME,
-                COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-                COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
-                COMPETITION_SETUP_MATCH.START_TIME_OFFSET,
-                COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
-                COMPETITION.ID.`as`("competition_id"),
-                COMPETITION_VIEW.NAME.`as`("competition_name"),
-                COMPETITION_VIEW.CATEGORY_NAME,
-                EVENT_DAY.ID.`as`("event_day_id"),
-                EVENT_DAY.DATE.`as`("event_day_date"),
-                EVENT_DAY.NAME.`as`("event_day_name")
-            )
-            .from(COMPETITION_MATCH)
-            .join(COMPETITION_SETUP_MATCH).on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
-            .join(COMPETITION_SETUP_ROUND).on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-            .join(COMPETITION_PROPERTIES).on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
-            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY_HAS_COMPETITION).on(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
-            .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.START_TIME.isNotNull)
-            .and(COMPETITION_MATCH.START_TIME.gt(LocalDateTime.now()))
-            .apply {
-                if (eventDayId != null) {
-                    and(EVENT_DAY.ID.eq(eventDayId))
-                }
-                if (competitionId != null) {
-                    and(COMPETITION.ID.eq(competitionId))
-                }
-                if (roundName != null) {
-                    and(COMPETITION_SETUP_ROUND.NAME.eq(roundName))
-                }
-            }
-            .orderBy(
-                COMPETITION_MATCH.START_TIME.asc(),
-                COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
-            )
-            .limit(limit)
-            .fetch()
-        }.orDie()
+        val matches =
+            !CompetitionMatchRepo.getUpcomingMatches(eventId, eventDayId, competitionId, roundName, limit).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
@@ -287,52 +180,13 @@ object EventInfoService {
         val eventDayId = filters?.get("eventDayId")?.asText()?.let { UUID.fromString(it) }
         val competitionId = filters?.get("competitionId")?.asText()?.let { UUID.fromString(it) }
 
-        val matches = !Jooq.query {
-            select(
-                COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
-                COMPETITION_MATCH.START_TIME,
-                COMPETITION_MATCH.CURRENTLY_RUNNING,
-                COMPETITION_SETUP_MATCH.EXECUTION_ORDER,
-                COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
-                COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
-                COMPETITION.ID.`as`("competition_id"),
-                COMPETITION_VIEW.NAME.`as`("competition_name"),
-                COMPETITION_VIEW.CATEGORY_NAME,
-                EVENT_DAY.ID.`as`("event_day_id"),
-                EVENT_DAY.DATE.`as`("event_day_date"),
-                EVENT_DAY.NAME.`as`("event_day_name")
-            )
-            .from(COMPETITION_MATCH)
-            .join(COMPETITION_SETUP_MATCH).on(COMPETITION_MATCH.COMPETITION_SETUP_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
-            .join(COMPETITION_SETUP_ROUND).on(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
-            .join(COMPETITION_PROPERTIES).on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
-            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY_HAS_COMPETITION).on(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
-            .where(COMPETITION.EVENT.eq(eventId))
-            .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(true))
-            .apply {
-                if (eventDayId != null) {
-                    and(EVENT_DAY.ID.eq(eventDayId))
-                }
-                if (competitionId != null) {
-                    and(COMPETITION.ID.eq(competitionId))
-                }
-            }
-            .orderBy(
-                COMPETITION_MATCH.START_TIME.asc(),
-                COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
-            )
-            .limit(limit)
-            .fetch()
-        }.orDie()
+        val matches = !CompetitionMatchRepo.getRunningMatches(eventId, eventDayId, competitionId, limit).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
             val startTime = match[COMPETITION_MATCH.START_TIME]
-            val elapsedMinutes = startTime?.let { 
-                java.time.Duration.between(it, LocalDateTime.now()).toMinutes() 
+            val elapsedMinutes = startTime?.let {
+                java.time.Duration.between(it, LocalDateTime.now()).toMinutes()
             }
             val teams = !getRunningMatchTeams(matchId)
 
@@ -359,62 +213,11 @@ object EventInfoService {
         KIO.ok(ApiResponse.ListDto(result))
     }
 
+
     // Helper Methods
 
-
-
-
-    private fun getParticipantsForRegistration(registrationId: UUID): App<Nothing, List<ParticipantInfo>> = KIO.comprehension {
-        val participants = !Jooq.query {
-            select(
-                PARTICIPANT.ID,
-                PARTICIPANT.FIRSTNAME,
-                PARTICIPANT.LASTNAME,
-                NAMED_PARTICIPANT.NAME.`as`("named_role")
-            )
-            .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-            .join(PARTICIPANT).on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
-            .join(NAMED_PARTICIPANT).on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.eq(NAMED_PARTICIPANT.ID))
-            .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(registrationId))
-            .fetch()
-        }.orDie()
-
-        val result = participants.map { record ->
-            ParticipantInfo(
-                participantId = record[PARTICIPANT.ID]!!,
-                firstName = record[PARTICIPANT.FIRSTNAME] ?: "",
-                lastName = record[PARTICIPANT.LASTNAME] ?: "",
-                namedRole = record.get("named_role", String::class.java)
-            )
-        }
-
-        KIO.ok(result)
-    }
-
     private fun getMatchResultTeams(matchId: UUID): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
-        val records = !Jooq.query {
-            select(
-                COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
-                COMPETITION_MATCH_TEAM.PLACE,
-                COMPETITION_REGISTRATION.NAME.`as`("team_name"),
-                CLUB.NAME.`as`("club_name"),
-                PARTICIPANT.ID.`as`("participant_id"),
-                PARTICIPANT.FIRSTNAME,
-                PARTICIPANT.LASTNAME,
-                NAMED_PARTICIPANT.NAME.`as`("named_role")
-            )
-            .from(COMPETITION_MATCH_TEAM)
-            .join(COMPETITION_REGISTRATION).on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
-            .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-                .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
-            .leftJoin(NAMED_PARTICIPANT).on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
-            .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
-            .and(COMPETITION_MATCH_TEAM.PLACE.isNotNull)
-            .orderBy(COMPETITION_MATCH_TEAM.PLACE.asc())
-            .fetch()
-        }.orDie()
+        val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
@@ -442,34 +245,7 @@ object EventInfoService {
     }
 
     private fun getUpcomingMatchTeams(matchId: UUID): App<Nothing, List<UpcomingMatchTeamInfo>> = KIO.comprehension {
-        val records = !Jooq.query {
-            select(
-                COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
-                COMPETITION_MATCH_TEAM.START_NUMBER,
-                COMPETITION_REGISTRATION.NAME.`as`("team_name"),
-                CLUB.NAME.`as`("club_name"),
-                PARTICIPANT.ID.`as`("participant_id"),
-                PARTICIPANT.FIRSTNAME,
-                PARTICIPANT.LASTNAME,
-                PARTICIPANT.YEAR,
-                PARTICIPANT.GENDER,
-                PARTICIPANT.EXTERNAL_CLUB_NAME,
-                NAMED_PARTICIPANT.NAME.`as`("named_role")
-            )
-            .from(COMPETITION_MATCH_TEAM)
-            .join(COMPETITION_REGISTRATION).on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
-            .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-                .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
-            .leftJoin(NAMED_PARTICIPANT).on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
-            .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
-            .orderBy(
-                COMPETITION_MATCH_TEAM.START_NUMBER.asc().nullsLast(),
-                COMPETITION_REGISTRATION.NAME.asc().nullsLast()
-            )
-            .fetch()
-        }.orDie()
+        val records = !CompetitionMatchTeamRepo.getTeamsForUpcomingMatch(matchId).orDie()
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
@@ -499,35 +275,7 @@ object EventInfoService {
     }
 
     private fun getRunningMatchTeams(matchId: UUID): App<Nothing, List<RunningMatchTeamInfo>> = KIO.comprehension {
-        val records = !Jooq.query {
-            select(
-                COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
-                COMPETITION_MATCH_TEAM.START_NUMBER,
-                COMPETITION_MATCH_TEAM.PLACE,
-                COMPETITION_REGISTRATION.NAME.`as`("team_name"),
-                CLUB.NAME.`as`("club_name"),
-                PARTICIPANT.ID.`as`("participant_id"),
-                PARTICIPANT.FIRSTNAME,
-                PARTICIPANT.LASTNAME,
-                PARTICIPANT.YEAR,
-                PARTICIPANT.GENDER,
-                PARTICIPANT.EXTERNAL_CLUB_NAME,
-                NAMED_PARTICIPANT.NAME.`as`("named_role")
-            )
-            .from(COMPETITION_MATCH_TEAM)
-            .join(COMPETITION_REGISTRATION).on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
-            .leftJoin(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-                .on(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-            .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
-            .leftJoin(NAMED_PARTICIPANT).on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
-            .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
-            .orderBy(
-                COMPETITION_MATCH_TEAM.START_NUMBER.asc().nullsLast(),
-                COMPETITION_REGISTRATION.NAME.asc().nullsLast()
-            )
-            .fetch()
-        }.orDie()
+        val records = !CompetitionMatchTeamRepo.getTeamForRunningMatch(matchId).orDie()
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
@@ -557,4 +305,5 @@ object EventInfoService {
 
         KIO.ok(result)
     }
+
 }
