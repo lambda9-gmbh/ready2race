@@ -4,5 +4,5 @@ import java.util.UUID
 
 data class CompetitionRegistrationNamedParticipantLockedDto(
     val namedParticipantId: UUID,
-    val participants: List<UUID>,
+    val participantIds: List<UUID>,
 )

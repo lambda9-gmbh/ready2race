@@ -4535,6 +4535,13 @@ components:
         - 'REGULAR'
         - 'LATE'
 
+    OpenForRegistrationType:
+      type: string
+      enum:
+        - 'REGULAR'
+        - 'LATE'
+        - 'CLOSED'
+
     # error
 
     ApiError:
@@ -6207,13 +6214,18 @@ components:
           $ref: '#/components/schemas/EventRegistrationInfoDto'
         upsertableRegistration:
           $ref: '#/components/schemas/EventRegistrationUpsertDto'
+        lockedRegistration:
+          $ref: '#/components/schemas/EventRegistrationLockedDto'
       required:
         - info
         - upsertableRegistration
+        - lockedRegistration
 
     EventRegistrationInfoDto:
       type: object
       properties:
+        state:
+          $ref: '#/components/schemas/OpenForRegistrationType'
         name:
           type: string
         description:
@@ -6237,6 +6249,7 @@ components:
           items:
             $ref: '#/components/schemas/EventRegistrationCompetitionDto'
       required:
+        - state
         - name
         - days
         - competitionsSingle
@@ -6380,7 +6393,11 @@ components:
         required:
           type: boolean
         amount:
-          type: number
+          type: string
+          format: decimal
+        lateAmount:
+          type: string
+          format: decimal
 
     EventRegistrationUpsertDto:
       type: object
@@ -6496,6 +6513,99 @@ components:
             format: uuid
       required:
         - competitionId
+
+    EventRegistrationLockedDto:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationParticipantLockedDto'
+        competitionRegistrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationLockedDto'
+      required:
+        - participants
+        - competitionRegistrations
+
+    CompetitionRegistrationLockedDto:
+      type: object
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationTeamLockedDto'
+      required:
+        - id
+        - teams
+
+    CompetitionRegistrationTeamLockedDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantLockedDto'
+      required:
+        - id
+        - optionalFees
+        - namedParticipants
+
+    CompetitionRegistrationNamedParticipantLockedDto:
+      type: object
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - namedParticipantId
+        - participantIds
+
+    EventRegistrationParticipantLockedDto:
+      type: object
+      required:
+        - id
+        - competitionsSingle
+      properties:
+        id:
+          type: string
+          format: uuid
+        competitionsSingle:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationSingleLockedDto'
+
+    CompetitionRegistrationSingleLockedDto:
+      type: object
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - competitionId
+        - optionalFees
 
     DocumentType:
       type: string
@@ -7096,7 +7206,7 @@ components:
         namedParticipantId:
           type: string
           format: uuid
-        namedParticipanName:
+        namedParticipantName:
           type: string
         participants:
           type: array

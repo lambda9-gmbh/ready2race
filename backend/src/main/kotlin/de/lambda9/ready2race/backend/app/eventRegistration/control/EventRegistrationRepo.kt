@@ -195,6 +195,7 @@ object EventRegistrationRepo {
 
             val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
                 CompetitionRegistrationTeamLockedDto(
+                    it[COMPETITION_REGISTRATION.ID]!!,
                     it[fees],
                     it[namedParticipants],
                 )

@@ -631,6 +631,7 @@
       "message": "Nachricht",
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
+      "lateTotalFees": "Nachmeldegebühr",
       "acceptDocuments": "Ich akzeptiere Folgendes:",
       "infoDocuments": "Weitere Informationen",
       "finish": "Anmeldung abschicken",

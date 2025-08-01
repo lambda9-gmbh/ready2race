@@ -1,6 +1,5 @@
 import {
     CheckboxButtonGroup,
-    FieldArrayWithId,
     useFieldArray,
     useFormContext,
     useWatch,
@@ -12,26 +11,24 @@ import {v4 as uuid} from 'uuid'
 import {
     EventRegistrationCompetitionDto,
     EventRegistrationNamedParticipantDto,
-    EventRegistrationParticipantUpsertDto,
-    EventRegistrationUpsertDto,
 } from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
 import {useCallback, useMemo} from 'react'
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
+import {
+    EventRegistrationFormData,
+    EventRegistrationParticipantFormData
+} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
 
 const TeamInput = (props: {
     competition: EventRegistrationCompetitionDto
     competitionIndex: number
     teamIndex: number
-    participants: EventRegistrationParticipantUpsertDto[]
+    participants: EventRegistrationParticipantFormData[]
     onRemove: (id: number) => void
-    team: FieldArrayWithId<
-        EventRegistrationUpsertDto,
-        `competitionRegistrations.${number}.teams`,
-        'fieldId'
-    >
+    locked: boolean
 }) => {
     const {t} = useTranslation()
 
@@ -54,7 +51,7 @@ const TeamInput = (props: {
     )
 
     return (
-        <Paper sx={{p: 2}} elevation={2} key={props.team.fieldId}>
+        <Paper sx={{p: 2}} elevation={2}>
             <Stack rowGap={2}>
                 <Stack spacing={2}>
                     {props.competition.namedParticipant?.map(
@@ -62,6 +59,7 @@ const TeamInput = (props: {
                             <Stack rowGap={1} flexWrap={'wrap'} key={namedParticipant.id}>
                                 <TeamNamedParticipantLabel namedParticipant={namedParticipant} />
                                 <TeamParticipantAutocomplete
+                                    disabled={props.locked}
                                     name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.namedParticipants.${namedParticipantIndex}`}
                                     key={`${namedParticipant.id}`}
                                     label={t('club.participant.title')}
@@ -93,13 +91,14 @@ const TeamInput = (props: {
                 </Stack>
                 {(props.competition.fees?.filter(f => !f.required)?.length ?? 0) > 0 && (
                     <CheckboxButtonGroup
+                        disabled={props.locked}
                         label={t('event.registration.optionalFee')}
                         name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.optionalFees`}
                         options={props.competition.fees?.filter(f => !f.required) ?? []}
                         row
                     />
                 )}
-                <IconButton sx={{alignSelf: 'end'}} onClick={() => props.onRemove(props.teamIndex)}>
+                <IconButton sx={{alignSelf: 'end'}} disabled={props.locked} onClick={() => props.onRemove(props.teamIndex)}>
                     <DeleteIcon />
                 </IconButton>
             </Stack>
@@ -110,8 +109,9 @@ const TeamInput = (props: {
 const EventRegistrationTeamsForm = (props: {
     index: number
     competition: EventRegistrationCompetitionDto
+    isLate: boolean
 }) => {
-    const formContext = useFormContext<EventRegistrationUpsertDto>()
+    const formContext = useFormContext<EventRegistrationFormData>()
 
     const {
         fields: teams,
@@ -123,7 +123,7 @@ const EventRegistrationTeamsForm = (props: {
         keyName: 'fieldId',
     })
 
-    const participants: EventRegistrationParticipantUpsertDto[] = useWatch({
+    const participants: EventRegistrationParticipantFormData[] = useWatch({
         control: formContext.control,
         name: `participants`,
     })
@@ -155,17 +155,18 @@ const EventRegistrationTeamsForm = (props: {
                 {teams.map((team, teamIndex) => (
                     <TeamInput
                         key={team.fieldId}
-                        team={team}
                         competition={props.competition}
                         competitionIndex={props.index}
                         teamIndex={teamIndex}
                         participants={participantOptions}
                         onRemove={remove}
+                        locked={team.locked}
                     />
                 ))}
                 <Button
+                    disabled={props.isLate && !props.competition.lateRegistrationAllowed}
                     onClick={() => {
-                        append({id: uuid(), namedParticipants: [], optionalFees: []})
+                        append({id: uuid(), namedParticipants: [], optionalFees: [], locked: false})
                     }}>
                     <GroupAdd />
                 </Button>

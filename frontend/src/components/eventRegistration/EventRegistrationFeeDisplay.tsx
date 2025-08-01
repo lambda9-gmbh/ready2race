@@ -2,21 +2,43 @@ import {Paper, Stack, Typography} from '@mui/material'
 import {useEffect, useMemo, useState} from 'react'
 import {useFormContext, useWatch} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
+import {useEventRegistration} from "@contexts/eventRegistration/EventRegistrationContext.ts";
 import {
-    CompetitionRegistrationSingleUpsertDto,
-    CompetitionRegistrationTeamUpsertDto,
-    EventRegistrationInfoDto,
-    EventRegistrationUpsertDto,
-} from '@api/types.gen.ts'
+    CompetitionRegistrationSingleFormData,
+    CompetitionRegistrationTeamFormData,
+    EventRegistrationFormData, EventRegistrationParticipantFormData
+} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
+import {EventRegistrationCompetitionDto} from "@api/types.gen.ts";
 
-export const EventRegistrationFeeDisplay = (props: {
-    registrationInfo: EventRegistrationInfoDto | null
-}) => {
+const calcAmountForCompetitionRegistration = (
+    competition: EventRegistrationCompetitionDto,
+    optionalFees: string[],
+    late: boolean,
+): number =>
+    competition.fees?.filter(fee => fee.required || optionalFees.includes(fee.id))
+        .reduce((sum, fee) => sum + Number(late ? (fee.lateAmount ?? fee.amount) : fee.amount), 0)
+        ?? 0
+
+const calcAmountForSingles = (
+    participants: EventRegistrationParticipantFormData[],
+    late: boolean,
+) =>
+    participants.reduce((sum, participant) =>
+        sum + (participant.competitionsSingle?.reduce((sumP, reg) => sumP + calcAmountForCompetitionRegistration(reg), 0) ?? 0), 0
+    )
+
+const calcAmountforTeams = () => 0
+
+export const EventRegistrationFeeDisplay = () => {
     const {t} = useTranslation()
-    const formContext = useFormContext<EventRegistrationUpsertDto>()
+    const formContext = useFormContext<EventRegistrationFormData>()
+    const {info} = useEventRegistration()
 
     const [teamAmount, setTeamAmount] = useState<number>(0)
     const [singleAmount, setSingleAmount] = useState<number>(0)
+
+    const [lateTeamAmount, setLateTeamAmount] = useState<number>(0)
+    const [lateSingleAmount, setLateSingleAmount] = useState<number>(0)
 
     const competitionRegistrations = useWatch({
         control: formContext.control,
@@ -27,13 +49,13 @@ export const EventRegistrationFeeDisplay = (props: {
     const competitionMap = useMemo(() => {
         return new Map(
             [
-                ...(props.registrationInfo?.competitionsSingle ?? []),
-                ...(props.registrationInfo?.competitionsTeam ?? []),
+                ...(info?.competitionsSingle ?? []),
+                ...(info?.competitionsTeam ?? []),
             ].map(competition => {
                 return [competition.id, competition]
             }),
         )
-    }, [props.registrationInfo?.competitionsSingle, props.registrationInfo?.competitionsTeam])
+    }, [info?.competitionsSingle, info?.competitionsTeam])
 
     useEffect(() => {
         setTeamAmount(
@@ -63,7 +85,7 @@ export const EventRegistrationFeeDisplay = (props: {
 
     const calcAmountForTeam = (
         competitionId: string,
-        registration: CompetitionRegistrationTeamUpsertDto,
+        registration: CompetitionRegistrationTeamFormData,
     ): number => {
         const competition = competitionMap.get(competitionId)
         if (competition) {
@@ -79,7 +101,7 @@ export const EventRegistrationFeeDisplay = (props: {
         }
     }
 
-    const calcAmountForSingle = (registration: CompetitionRegistrationSingleUpsertDto): number => {
+    const calcAmountForSingle = (registration: CompetitionRegistrationSingleFormData): number => {
         const competition = competitionMap.get(registration.competitionId)
         if (competition) {
             return (
@@ -99,6 +121,12 @@ export const EventRegistrationFeeDisplay = (props: {
             <Stack p={1} alignItems={'end'}>
                 <Typography variant={'caption'}>{t('event.registration.totalFees')}</Typography>
                 <Typography variant={'h5'}>{(teamAmount + singleAmount).toFixed(2)}€</Typography>
+                { info?.state !== 'REGULAR' &&
+                    <>
+                        <Typography variant={'caption'}>{t('event.registration.lateTotalFees')}</Typography>
+                        <Typography variant={'h5'}>{(teamAmount + singleAmount).toFixed(2)}€</Typography>
+                    </>
+                }
             </Stack>
         </Paper>
     )

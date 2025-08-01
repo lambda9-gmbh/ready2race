@@ -13,15 +13,19 @@ import {
     Typography,
 } from '@mui/material'
 import * as React from 'react'
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback, useEffect, useMemo, useState} from 'react'
 import {FilterAlt, Person} from '@mui/icons-material'
 import {EventRegistrationCompetitionDto, EventRegistrationUpsertDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
+import {EventRegistrationFormData} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
+import {useEventRegistration} from "@contexts/eventRegistration/EventRegistrationContext.ts";
 
 const EventSingleCompetitionField = (props: {
     option: EventRegistrationCompetitionDto
     participantIndex: number
+    locked: boolean
+    isLate: boolean
 }) => {
     const formContext = useFormContext<EventRegistrationUpsertDto>()
 
@@ -57,6 +61,7 @@ const EventSingleCompetitionField = (props: {
         <Stack direction="row">
             <FormControlLabel
                 control={<Checkbox />}
+                disabled={props.locked || props.isLate && !props.option.lateRegistrationAllowed}
                 checked={active}
                 onChange={(_, checked) => onChange(checked)}
                 label={
@@ -73,6 +78,7 @@ const EventSingleCompetitionField = (props: {
                 <>
                     <Divider orientation={'vertical'} sx={{mr: 2}} />
                     <CheckboxButtonGroup
+                        disabled={props.locked}
                         name={`participants.${props.participantIndex}.competitionsSingle.${competitionIndex}.optionalFees`}
                         options={props.option.fees?.filter(f => !f.required) ?? []}
                         row
@@ -83,14 +89,37 @@ const EventSingleCompetitionField = (props: {
     )
 }
 
-export const EventRegistrationSingleCompetitionForm = (props: {
-    competitionsSingle: Map<string, Array<EventRegistrationCompetitionDto>>
-}) => {
+export const EventRegistrationSingleCompetitionForm = () => {
     const ALL_CATEGORIES = 'show_all_categories'
 
     const {t} = useTranslation()
     const [category, setCategory] = React.useState<string>(ALL_CATEGORIES)
-    const formContext = useFormContext<EventRegistrationUpsertDto>()
+    const formContext = useFormContext<EventRegistrationFormData>()
+    const {info} = useEventRegistration()
+
+    const competitionsSingle: Map<string, Array<EventRegistrationCompetitionDto>> = useMemo(() => {
+        return new Map([
+            [
+                'M',
+                info?.competitionsSingle?.filter(
+                    c =>
+                        c.namedParticipant?.[0].countMales === 1 ||
+                        c.namedParticipant?.[0].countMixed === 1 ||
+                        c.namedParticipant?.[0].countNonBinary === 1,
+                ) ?? [],
+            ],
+            [
+                'F',
+                info?.competitionsSingle?.filter(
+                    c =>
+                        c.namedParticipant?.[0].countFemales === 1 ||
+                        c.namedParticipant?.[0].countMixed === 1 ||
+                        c.namedParticipant?.[0].countNonBinary === 1,
+                ) ?? [],
+            ],
+            ['D', info?.competitionsSingle ?? []],
+        ])
+    }, [info?.competitionsSingle])
 
     const participantList = useWatch({
         control: formContext.control,
@@ -105,7 +134,7 @@ export const EventRegistrationSingleCompetitionForm = (props: {
 
     const getToggleButtons = useCallback(() => {
         const allCategories = new Set(
-            Array.from(props.competitionsSingle.values()).flatMap(competitions =>
+            Array.from(competitionsSingle.values()).flatMap(competitions =>
                 competitions.map(c => c.competitionCategory),
             ),
         )
@@ -132,7 +161,7 @@ export const EventRegistrationSingleCompetitionForm = (props: {
                 </Alert>
             )
         }
-    }, [props.competitionsSingle, category])
+    }, [competitionsSingle, category])
 
     return (
         <Stack spacing={2}>
@@ -148,19 +177,21 @@ export const EventRegistrationSingleCompetitionForm = (props: {
                                 </Typography>
                             </Stack>
                             <Stack flex={1}>
-                                {props.competitionsSingle
+                                {competitionsSingle
                                     .get(participant.gender ?? 'O')
                                     ?.map(option => (
                                         <Box
+                                            key={option.id}
                                             // We just hide the input, so fields are still validated
                                             hidden={
                                                 category !== ALL_CATEGORIES &&
                                                 option.competitionCategory !== category
                                             }>
                                             <EventSingleCompetitionField
-                                                key={option.id}
                                                 participantIndex={index}
                                                 option={option}
+                                                locked={participant.competitionsSingle?.find(c => c.competitionId === option.id)?.locked === true}
+                                                isLate={info?.state === 'LATE'}
                                             />
                                         </Box>
                                     ))}

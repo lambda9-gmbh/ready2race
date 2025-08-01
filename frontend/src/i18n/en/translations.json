@@ -631,6 +631,7 @@
       "message": "Message",
       "optionalFee": "Optional",
       "totalFees": "Registration Fee",
+      "lateTotalFees": "Late Registration Fee",
       "acceptDocuments": "I accept the following:",
       "infoDocuments": "Additional info",
       "finish": "Submit registration",

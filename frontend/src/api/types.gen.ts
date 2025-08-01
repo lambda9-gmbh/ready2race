@@ -224,15 +224,30 @@ export type CompetitionRegistrationFeeDto = {
     feeName: string
 }
 
+export type CompetitionRegistrationLockedDto = {
+    competitionId?: string
+    teams: Array<CompetitionRegistrationTeamLockedDto>
+}
+
 export type CompetitionRegistrationNamedParticipantDto = {
     namedParticipantId: string
     namedParticipantName: string
     participants: Array<ParticipantForEventDto>
 }
 
+export type CompetitionRegistrationNamedParticipantLockedDto = {
+    namedParticipantId: string
+    participantIds: Array<string>
+}
+
 export type CompetitionRegistrationNamedParticipantUpsertDto = {
     namedParticipantId: string
     participantIds: Array<string>
+}
+
+export type CompetitionRegistrationSingleLockedDto = {
+    competitionId: string
+    optionalFees: Array<string>
 }
 
 export type CompetitionRegistrationSingleUpsertDto = {
@@ -258,6 +273,12 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
     updatedAt: string
     createdAt: string
+}
+
+export type CompetitionRegistrationTeamLockedDto = {
+    id: string
+    optionalFees: Array<string>
+    namedParticipants: Array<CompetitionRegistrationNamedParticipantLockedDto>
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -349,7 +370,7 @@ export type CompetitionSetupTemplateRequest = {
 
 export type CompetitionTeamNamedParticipantDto = {
     namedParticipantId: string
-    namedParticipanName?: string
+    namedParticipantName: string
     participants: Array<CompetitionTeamParticipantDto>
 }
 
@@ -549,10 +570,12 @@ export type EventRegistrationFeeDto = {
     label: string
     description?: string | null
     required: boolean
-    amount: number
+    amount: string
+    lateAmount?: string
 }
 
 export type EventRegistrationInfoDto = {
+    state: OpenForRegistrationType
     name: string
     description?: string
     location?: string
@@ -560,6 +583,11 @@ export type EventRegistrationInfoDto = {
     documentTypes?: Array<EventRegistrationDocumentTypeDto>
     competitionsSingle: Array<EventRegistrationCompetitionDto>
     competitionsTeam: Array<EventRegistrationCompetitionDto>
+}
+
+export type EventRegistrationLockedDto = {
+    participants: Array<EventRegistrationParticipantLockedDto>
+    competitionRegistrations: Array<CompetitionRegistrationLockedDto>
 }
 
 export type EventRegistrationNamedParticipantDto = {
@@ -571,6 +599,11 @@ export type EventRegistrationNamedParticipantDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
+}
+
+export type EventRegistrationParticipantLockedDto = {
+    id: string
+    competitionsSingle: Array<CompetitionRegistrationSingleLockedDto>
 }
 
 export type EventRegistrationParticipantUpsertDto = {
@@ -589,6 +622,7 @@ export type EventRegistrationParticipantUpsertDto = {
 export type EventRegistrationTemplateDto = {
     info: EventRegistrationInfoDto
     upsertableRegistration: EventRegistrationUpsertDto
+    lockedRegistration: EventRegistrationLockedDto
 }
 
 export type EventRegistrationUpsertDto = {
@@ -745,6 +779,8 @@ export type NamedParticipantRequest = {
     name: string
     description?: string
 }
+
+export type OpenForRegistrationType = 'REGULAR' | 'LATE' | 'CLOSED'
 
 export type Order = {
     field: string
