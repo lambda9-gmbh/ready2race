@@ -1,13 +1,13 @@
-import {BaseEntityDialogProps} from "@utils/types.ts";
-import {FeeDto, FeeRequest} from "@api/types.gen.ts";
-import {useTranslation} from "react-i18next";
-import {addFee, updateFee} from "@api/sdk.gen.ts";
-import {useForm} from "react-hook-form-mui";
-import {useCallback} from "react";
-import EntityDialog from "@components/EntityDialog.tsx";
-import {Stack} from "@mui/material";
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import {takeIfNotEmpty} from "@utils/ApiUtils.ts";
+import {BaseEntityDialogProps} from '@utils/types.ts'
+import {FeeDto, FeeRequest} from '@api/types.gen.ts'
+import {useTranslation} from 'react-i18next'
+import {addFee, updateFee} from '@api/sdk.gen.ts'
+import {useForm} from 'react-hook-form-mui'
+import {useCallback} from 'react'
+import EntityDialog from '@components/EntityDialog.tsx'
+import {Stack} from '@mui/material'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 
 type FeeForm = {
     name: string
@@ -40,7 +40,6 @@ const FeeDialog = (props: BaseEntityDialogProps<FeeDto>) => {
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
-
 
     return (
         <EntityDialog

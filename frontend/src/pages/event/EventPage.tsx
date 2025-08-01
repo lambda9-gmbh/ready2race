@@ -23,7 +23,7 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
-import {Forward} from '@mui/icons-material'
+import {Forward, InfoOutlined, PlayCircleOutlined} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {useMemo, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
@@ -47,8 +47,10 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
+import EventActions from '@components/event/EventActions.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
+import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
 
 const EVENT_TABS = [
     'general',
@@ -78,6 +80,8 @@ const EventPage = () => {
 
     const [lastRequested, setLastRequested] = useState(Date.now())
     const reload = () => setLastRequested(Date.now())
+
+    const [manageRunningMatchesOpen, setManageRunningMatchesOpen] = useState(false)
     const {data, pending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
@@ -126,6 +130,7 @@ const EventPage = () => {
         : undefined
 
     return (
+        <Box>
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {data ? (
                 <Stack spacing={4}>
@@ -244,6 +249,35 @@ const EventPage = () => {
                                     </List>
                                 </Box>
                             </Card>
+                            {user.checkPrivilege(readEventGlobal) && (
+                                <Card sx={{p: 2}}>
+                                    <Typography variant="h6" sx={{mb: 1}}>
+                                        {t('event.info.sectionTitle')}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{mb: 2}}>
+                                        {t('event.info.pageDescription')}
+                                    </Typography>
+                                    <Link to={'/event/$eventId/info'} params={{eventId}}>
+                                        <Button
+                                            startIcon={<InfoOutlined />}
+                                            variant="outlined"
+                                            fullWidth>
+                                            {t('event.info.manageInfoViews')}
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        startIcon={<PlayCircleOutlined />}
+                                        variant="outlined"
+                                        fullWidth
+                                        sx={{mt: 1}}
+                                        onClick={() => setManageRunningMatchesOpen(true)}>
+                                        {t('event.competition.execution.match.manageRunning')}
+                                    </Button>
+                                </Card>
+                            )}
                         </Stack>
                     </TabPanel>
                     <TabPanel index={'competitions'} activeTab={activeTab}>
@@ -305,6 +339,14 @@ const EventPage = () => {
                 </Stack>
             ) : (
                 pending && <Throbber />
+            )}
+        </Box>
+            {manageRunningMatchesOpen && (
+                <ManageRunningMatchesDialog
+                    open={manageRunningMatchesOpen}
+                    onClose={() => setManageRunningMatchesOpen(false)}
+                    eventId={eventId}
+                />
             )}
         </Box>
     )

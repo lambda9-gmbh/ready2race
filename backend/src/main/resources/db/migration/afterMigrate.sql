@@ -642,6 +642,7 @@ group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competi
 create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
+       cm.currently_running,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams
 from competition_match cm
          left join competition_match_team_with_registration cmtwr

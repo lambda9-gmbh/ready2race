@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRunningStateRequest
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
@@ -55,6 +56,17 @@ fun Route.competitionExecution() {
 
                         val body = !receiveKIO(UpdateCompetitionMatchRequest.example)
                         CompetitionExecutionService.updateMatchData(competitionMatchId, user.id!!, body)
+                    }
+                }
+            }
+            route("/running-state") {
+                put {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                        val body = !receiveKIO<UpdateCompetitionMatchRunningStateRequest>(UpdateCompetitionMatchRunningStateRequest.example)
+                        CompetitionExecutionService.updateMatchRunningState(competitionMatchId, user.id!!, body)
                     }
                 }
             }

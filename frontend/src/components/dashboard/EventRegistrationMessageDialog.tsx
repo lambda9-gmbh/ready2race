@@ -1,6 +1,6 @@
 import {Button, DialogActions, DialogContent, DialogTitle} from '@mui/material'
 import {useTranslation} from 'react-i18next'
-import BaseDialog from "@components/BaseDialog.tsx";
+import BaseDialog from '@components/BaseDialog.tsx'
 
 export function EventRegistrationMessageDialog(props: {
     open: boolean
@@ -9,10 +9,7 @@ export function EventRegistrationMessageDialog(props: {
 }) {
     const {t} = useTranslation()
     return (
-        <BaseDialog
-            maxWidth={'md'}
-            open={props.open}
-            onClose={props.onClose}>
+        <BaseDialog maxWidth={'md'} open={props.open} onClose={props.onClose}>
             <DialogTitle>{t('event.registration.message')}</DialogTitle>
             <DialogContent dividers={true} sx={{minHeight: 200}}>
                 {props.content}

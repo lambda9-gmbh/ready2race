@@ -1,7 +1,7 @@
 import {Pagination} from '@api/types.gen.ts'
 import {ReactElement, ReactNode} from 'react'
 import {UseEntityAdministrationOptions} from './hooks.ts'
-import {GridActionsCellItemProps} from "@mui/x-data-grid";
+import {GridActionsCellItemProps} from '@mui/x-data-grid'
 
 export type PartialRequired<T, K extends keyof T = keyof T> = Omit<T, K> & Required<Pick<T, K>>
 
@@ -31,4 +31,4 @@ export type BaseEntityDialogProps<E> = {
     entity?: E
 }
 
-export type AutocompleteOption = { id: string; label: string } | null
+export type AutocompleteOption = {id: string; label: string} | null

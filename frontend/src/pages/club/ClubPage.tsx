@@ -8,7 +8,7 @@ import ParticipantTable from '../../components/participant/ParticipantTable.tsx'
 import ParticipantDialog from '../../components/participant/ParticipantDialog.tsx'
 import Card from '@mui/material/Card'
 import {AccountCircle, Edit, Email} from '@mui/icons-material'
-import ClubDialog from "@components/club/ClubDialog.tsx";
+import ClubDialog from '@components/club/ClubDialog.tsx'
 
 const ClubPage = () => {
     const {t} = useTranslation()
@@ -44,7 +44,9 @@ const ClubPage = () => {
                 <Stack spacing={2}>
                     <Stack direction={'row'} spacing={1}>
                         <Typography variant="h2">{data.name}</Typography>
-                        <IconButton onClick={() => clubProps.table.openDialog(data)}><Edit /></IconButton>
+                        <IconButton onClick={() => clubProps.table.openDialog(data)}>
+                            <Edit />
+                        </IconButton>
                     </Stack>
                     <Stack direction={'row'}>
                         {userData?.map(u => (

@@ -17,14 +17,18 @@ const EventRegistrationPage = () => {
     const {data, pending} = useFetch(signal => getEventRegistration({signal, path}), {
         onResponse: ({error}) => {
             if (error) {
-                feedback.error(t('common.load.error.single', {entity: t('event.registration.registration')}))
+                feedback.error(
+                    t('common.load.error.single', {entity: t('event.registration.registration')}),
+                )
             }
         },
-        deps: [path]
+        deps: [path],
     })
 
-    const invoiceAdministrationProps =
-        useEntityAdministration<InvoiceDto>(t('invoice.invoice'), {entityCreate: false, entityUpdate: false})
+    const invoiceAdministrationProps = useEntityAdministration<InvoiceDto>(t('invoice.invoice'), {
+        entityCreate: false,
+        entityUpdate: false,
+    })
 
     return (
         <Box>
@@ -40,7 +44,6 @@ const EventRegistrationPage = () => {
                         })
                     }
                 />
-
             ) : (
                 pending && <Throbber />
             )}

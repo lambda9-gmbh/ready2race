@@ -3,8 +3,8 @@ import {useTranslation} from 'react-i18next'
 import EntityTable from '@components/EntityTable.tsx'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {getUsers} from "@api/sdk.gen.ts";
-import {AppUserDto} from "@api/types.gen.ts";
+import {getUsers} from '@api/sdk.gen.ts'
+import {AppUserDto} from '@api/types.gen.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -54,7 +54,7 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
             resource={'USER'}
             linkColumn={entity => ({
                 to: '/user/$userId',
-                params: {userId: entity.id}
+                params: {userId: entity.id},
             })}
         />
     )

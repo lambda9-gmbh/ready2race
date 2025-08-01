@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
@@ -18,6 +19,7 @@ import de.lambda9.ready2race.backend.app.task.boundary.task
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
@@ -70,6 +72,17 @@ fun Route.event() {
             participantForEvent()
             task()
             workShift()
+            
+            get("/matches") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val currentlyRunning = !optionalQueryParam("currentlyRunning", boolean)
+                    val withoutPlaces = !optionalQueryParam("withoutPlaces", boolean)
+                    
+                    CompetitionExecutionService.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces)
+                }
+            }
 
             get("/invoices") {
                 call.respondComprehension {
