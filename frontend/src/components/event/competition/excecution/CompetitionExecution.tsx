@@ -7,14 +7,8 @@ import {
 import {
     Box,
     Button,
-    Card,
-    Checkbox,
     Dialog,
     Divider,
-    FormControlLabel,
-    Link,
-    List,
-    ListItemText,
     Stack,
     Table,
     TableBody,
@@ -427,61 +421,6 @@ const CompetitionExecution = () => {
             ]) ?? [],
         )
     }
-
-    const handleToggleRunningState = async (match: CompetitionMatchDto) => {
-        // Check if match has no places set
-        const hasPlacesSet = match.teams.some(
-            team => team.place !== null && team.place !== undefined,
-        )
-        if (hasPlacesSet) {
-            feedback.error(t('event.competition.execution.running.error.hasPlaces'))
-            return
-        }
-
-        setSubmitting(true)
-        const {error} = await updateMatchRunningState({
-            path: {
-                eventId: eventId,
-                competitionId: competitionId,
-                competitionMatchId: match.id,
-            },
-            body: {
-                currentlyRunning: !match.currentlyRunning,
-            },
-        })
-        setSubmitting(false)
-
-        if (error) {
-            feedback.error(t('event.competition.execution.running.error.update'))
-        } else {
-            feedback.success(t('event.competition.execution.running.success'))
-            setReloadData(!reloadData)
-        }
-    }
-
-    // {/* Only show toggle if match has no places set */}
-    // {!match.teams.some(
-    //     team =>
-    //         team.place !== null &&
-    //         team.place !== undefined,
-    // ) && (
-    //     <FormControlLabel
-    //         control={
-    //             <Checkbox
-    //                 checked={match.currentlyRunning}
-    //                 onChange={() =>
-    //                     handleToggleRunningState(
-    //                         match,
-    //                     )
-    //                 }
-    //                 disabled={submitting}
-    //             />
-    //         }
-    //         label={t(
-    //             'event.competition.execution.match.currentlyRunning',
-    //         )}
-    //     />
-    // )}
 
     return progressDto && sortedRounds ? (
         <Box>
