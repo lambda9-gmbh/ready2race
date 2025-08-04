@@ -3,7 +3,7 @@ import {useForm} from 'react-hook-form-mui'
 import {
     addEventRegistration,
     CompetitionRegistrationSingleUpsertDto, CompetitionRegistrationTeamUpsertDto, CompetitionRegistrationUpsertDto,
-    EventRegistrationParticipantUpsertDto,
+    EventRegistrationParticipantUpsertDto, EventRegistrationUpsertDto,
     getEventRegistrationTemplate,
 } from '../../api'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -11,10 +11,11 @@ import {useTranslation} from 'react-i18next'
 import {eventRegisterRoute} from '@routes'
 import {Result} from '@components/Result.tsx'
 import EventRegistrationForm from '../../components/eventRegistration/EventRegistrationForm.tsx'
-import EventRegistrationProvider from "@contexts/eventRegistration/EventRegistrationProvider.tsx";
+import EventRegistrationProvider from '@contexts/eventRegistration/EventRegistrationProvider.tsx'
 
 export type CompetitionRegistrationSingleFormData = CompetitionRegistrationSingleUpsertDto & {
     locked: boolean
+    isLate: boolean
 }
 
 export type EventRegistrationParticipantFormData = Omit<EventRegistrationParticipantUpsertDto, 'competitionsSingle'> & {
@@ -23,6 +24,7 @@ export type EventRegistrationParticipantFormData = Omit<EventRegistrationPartici
 
 export type CompetitionRegistrationTeamFormData = CompetitionRegistrationTeamUpsertDto & {
     locked: boolean
+    isLate: boolean
 }
 
 export type CompetitionRegistrationFormData = Omit<CompetitionRegistrationUpsertDto, 'teams'> & {
@@ -34,6 +36,32 @@ export type EventRegistrationFormData = {
     competitionRegistrations: CompetitionRegistrationFormData[]
     message?: string
 }
+
+const formDataToRequest = (formData: EventRegistrationFormData): EventRegistrationUpsertDto => ({
+    participants: formData.participants.map(p => ({
+        ...p,
+        competitionsSingle: p.competitionsSingle?.filter(s => !s.locked).map(s => {
+            const single: CompetitionRegistrationSingleUpsertDto = {
+                competitionId: s.competitionId,
+                optionalFees: s.optionalFees,
+            }
+            return single
+        })
+    })),
+    competitionRegistrations: formData.competitionRegistrations.map(r => ({
+        ...r,
+        teams: r.teams.filter(t => !t.locked).map(t => {
+            const team: CompetitionRegistrationTeamUpsertDto = {
+                id: t.id,
+                clubId: t.clubId,
+                optionalFees: t.optionalFees,
+                namedParticipants: t.namedParticipants,
+            }
+            return team
+        })
+    })),
+    message: formData.message,
+})
 
 const EventRegistrationCreatePage = () => {
     const {t} = useTranslation()
@@ -57,7 +85,7 @@ const EventRegistrationCreatePage = () => {
     const onSubmit = () => {
         addEventRegistration({
             path: {eventId: eventId},
-            body: formContext.getValues(), // [todo] update
+            body: formDataToRequest(formContext.getValues()),
         }).then(({error}) => {
             if (error) {
                 feedback.error(t('common.error.unexpected'))
@@ -86,7 +114,7 @@ const EventRegistrationCreatePage = () => {
                                 ...p,
                                 competitionsSingle: [
                                     ...p.competitionsSingle?.map(
-                                        s => ({...s, locked: false})
+                                        s => ({...s, locked: false, isLate: registrationInfo?.state === 'LATE'})
                                     ) ?? [],
                                     ...data.lockedRegistration.participants.find(lp => lp.id === p.id)
                                         ?.competitionsSingle.map(s => ({...s, locked: true})) ?? []
@@ -101,7 +129,7 @@ const EventRegistrationCreatePage = () => {
                                 ...r,
                                 teams: [
                                     ...r.teams?.map(
-                                        t => ({...t, locked: false})
+                                        t => ({...t, locked: false, isLate: registrationInfo?.state === 'LATE'})
                                     ) ?? [],
                                     ...data.lockedRegistration.competitionRegistrations.find(cr => cr.competitionId === r.competitionId)
                                         ?.teams.map(t => ({...t, locked: true})) ?? []

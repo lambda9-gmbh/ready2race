@@ -183,6 +183,7 @@ object EventRegistrationRepo {
                 CompetitionRegistrationSingleLockedDto(
                     it[COMPETITION_VIEW.ID]!!,
                     it[fees],
+                    it[COMPETITION_REGISTRATION.IS_LATE]!!,
                 )
             }
 
@@ -198,6 +199,7 @@ object EventRegistrationRepo {
                     it[COMPETITION_REGISTRATION.ID]!!,
                     it[fees],
                     it[namedParticipants],
+                    it[COMPETITION_REGISTRATION.IS_LATE]!!,
                 )
             }
 
@@ -520,6 +522,7 @@ object EventRegistrationRepo {
         convert: (Record) -> A
     ) = DSL.select(
         COMPETITION_REGISTRATION.ID,
+        COMPETITION_REGISTRATION.IS_LATE,
         fees,
         namedParticipants
     )
@@ -561,6 +564,7 @@ object EventRegistrationRepo {
         convert: (Record) -> A,
     ) = DSL.select(
         COMPETITION_VIEW.ID,
+        COMPETITION_REGISTRATION.IS_LATE,
         fees
     ).from(COMPETITION_VIEW)
         .join(COMPETITION_REGISTRATION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION_VIEW.ID))

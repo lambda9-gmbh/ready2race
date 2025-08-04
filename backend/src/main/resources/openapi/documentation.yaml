@@ -6558,10 +6558,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantLockedDto'
+        isLate:
+          type: boolean
       required:
         - id
         - optionalFees
         - namedParticipants
+        - isLate
 
     CompetitionRegistrationNamedParticipantLockedDto:
       type: object
@@ -6603,9 +6606,12 @@ components:
           items:
             type: string
             format: uuid
+        isLate:
+          type: boolean
       required:
         - competitionId
         - optionalFees
+        - isLate
 
     DocumentType:
       type: string

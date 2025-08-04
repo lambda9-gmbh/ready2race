@@ -66,10 +66,10 @@ fun Route.eventRegistration() {
 
     post("/register") {
         call.respondComprehension {
-            val (user, scope) = !authenticate(Privilege.Action.CREATE, Privilege.Resource.REGISTRATION)
+            val user = !authenticate(Privilege.CreateRegistrationOwn)
             val eventId = !pathParam("eventId", uuid)
             val payload = !receiveKIO(EventRegistrationUpsertDto.example)
-            EventRegistrationService.upsertRegistrationForEvent(eventId, payload, user, scope)
+            EventRegistrationService.upsertRegistrationForEvent(eventId, payload, user)
         }
     }
 

@@ -5,5 +5,6 @@ import java.util.*
 data class CompetitionRegistrationTeamLockedDto(
     val id: UUID,
     val optionalFees: List<UUID>,
-    val namedParticipants: List<CompetitionRegistrationNamedParticipantLockedDto>
+    val namedParticipants: List<CompetitionRegistrationNamedParticipantLockedDto>,
+    val isLate: Boolean,
 )

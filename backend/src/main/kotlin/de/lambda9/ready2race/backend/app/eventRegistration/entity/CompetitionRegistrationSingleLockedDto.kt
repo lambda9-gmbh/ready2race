@@ -5,4 +5,5 @@ import java.util.*
 data class CompetitionRegistrationSingleLockedDto(
     val competitionId: UUID,
     val optionalFees: List<UUID>,
+    val isLate: Boolean,
 )

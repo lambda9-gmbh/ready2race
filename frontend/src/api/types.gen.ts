@@ -248,6 +248,7 @@ export type CompetitionRegistrationNamedParticipantUpsertDto = {
 export type CompetitionRegistrationSingleLockedDto = {
     competitionId: string
     optionalFees: Array<string>
+    isLate: boolean
 }
 
 export type CompetitionRegistrationSingleUpsertDto = {
@@ -279,6 +280,7 @@ export type CompetitionRegistrationTeamLockedDto = {
     id: string
     optionalFees: Array<string>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantLockedDto>
+    isLate: boolean
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {

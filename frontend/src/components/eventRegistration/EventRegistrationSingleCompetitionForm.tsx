@@ -15,7 +15,7 @@ import {
 import * as React from 'react'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {FilterAlt, Person} from '@mui/icons-material'
-import {EventRegistrationCompetitionDto, EventRegistrationUpsertDto} from '../../api'
+import {EventRegistrationCompetitionDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
 import {EventRegistrationFormData} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
@@ -27,7 +27,7 @@ const EventSingleCompetitionField = (props: {
     locked: boolean
     isLate: boolean
 }) => {
-    const formContext = useFormContext<EventRegistrationUpsertDto>()
+    const formContext = useFormContext<EventRegistrationFormData>()
 
     const [active, setActive] = useState(false)
     const [competitionIndex, setCompetitionIndex] = useState<number | undefined>(undefined)
@@ -47,7 +47,7 @@ const EventSingleCompetitionField = (props: {
         if (checked) {
             formContext.setValue(`participants.${props.participantIndex}.competitionsSingle`, [
                 ...(singleCompetitions ?? []),
-                {competitionId: props.option.id},
+                {competitionId: props.option.id, locked: false, isLate: props.isLate},
             ])
         } else {
             formContext.setValue(

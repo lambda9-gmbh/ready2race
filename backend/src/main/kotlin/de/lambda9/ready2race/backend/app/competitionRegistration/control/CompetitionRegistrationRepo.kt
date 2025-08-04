@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationNamedParticipantDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamDto
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
@@ -46,8 +47,17 @@ object CompetitionRegistrationRepo {
         user: AppUserWithPrivilegesRecord,
     ) = COMPETITION_REGISTRATION.delete { ID.eq(competitionId).and(filterScope(scope, user.club)) }
 
-    fun deleteByEventRegistration(eventRegistrationId: UUID) =
-        COMPETITION_REGISTRATION.delete { COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId) }
+    fun deleteForEventRegistrationUpdate(eventRegistrationId: UUID, type: OpenForRegistrationType) =
+        COMPETITION_REGISTRATION.delete {
+            DSL.and(
+                COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId),
+                when (type) {
+                    OpenForRegistrationType.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                    OpenForRegistrationType.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                    OpenForRegistrationType.CLOSED -> DSL.falseCondition()
+                }
+            )
+        }
 
     fun getClub(id: UUID) = COMPETITION_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
 

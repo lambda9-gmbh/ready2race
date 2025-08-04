@@ -166,7 +166,7 @@ const EventRegistrationTeamsForm = (props: {
                 <Button
                     disabled={props.isLate && !props.competition.lateRegistrationAllowed}
                     onClick={() => {
-                        append({id: uuid(), namedParticipants: [], optionalFees: [], locked: false})
+                        append({id: uuid(), namedParticipants: [], optionalFees: [], locked: false, isLate: props.isLate})
                     }}>
                     <GroupAdd />
                 </Button>

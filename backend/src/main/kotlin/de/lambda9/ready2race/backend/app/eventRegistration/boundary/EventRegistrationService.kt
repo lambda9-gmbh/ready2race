@@ -35,7 +35,6 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noDat
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -104,11 +103,10 @@ object EventRegistrationService {
         eventId: UUID,
         registrationDto: EventRegistrationUpsertDto,
         user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope,
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
         val type = !EventService.getOpenForRegistrationType(eventId).failIf({
-            scope == Privilege.Scope.OWN && it == OpenForRegistrationType.CLOSED
+            it == OpenForRegistrationType.CLOSED
         }) { EventRegistrationError.RegistrationClosed }
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
@@ -136,7 +134,7 @@ object EventRegistrationService {
                 updatedBy = user.id!!
             }.orDie()
 
-            !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
+            !CompetitionRegistrationRepo.deleteForEventRegistrationUpdate(persistedRegistrationId, type).orDie()
         }
 
         val singleCompetitionMultipleCounts =
@@ -154,7 +152,8 @@ object EventRegistrationService {
                 template,
                 persistedRegistrationId,
                 now,
-                singleCompetitionMultipleCounts
+                singleCompetitionMultipleCounts,
+                type,
             )
         }.map { it.toMap(mutableMapOf()) }
 
@@ -166,7 +165,8 @@ object EventRegistrationService {
                 user.club!!,
                 now,
                 user.id!!,
-                userInfoMap
+                userInfoMap,
+                type,
             )
         }
 
@@ -253,7 +253,8 @@ object EventRegistrationService {
         template: EventRegistrationInfoDto?,
         persistedRegistrationId: UUID,
         now: LocalDateTime,
-        singleCompetitionMultiCounts: MutableMap<UUID, Int>
+        singleCompetitionMultiCounts: MutableMap<UUID, Int>,
+        type: OpenForRegistrationType,
     ): App<EventRegistrationError, Pair<UUID, PersistedIdAndGender>> = KIO.comprehension {
         val persistedUserInfo = if (pDto.isNew == true) {
             !ParticipantRepo.create(!pDto.toRecord(userId, clubId)).orDie().map {
@@ -302,7 +303,8 @@ object EventRegistrationService {
                         now,
                         userId,
                         now,
-                        userId
+                        userId,
+                        isLate = type == OpenForRegistrationType.LATE,
                     )
                 ).orDie()
 
@@ -336,7 +338,8 @@ object EventRegistrationService {
         clubId: UUID,
         now: LocalDateTime,
         userId: UUID,
-        participantIdMap: MutableMap<UUID, PersistedIdAndGender>
+        participantIdMap: MutableMap<UUID, PersistedIdAndGender>,
+        type: OpenForRegistrationType,
     ): App<EventRegistrationError, Unit> = KIO.comprehension {
 
         val userIdsList =
@@ -371,7 +374,8 @@ object EventRegistrationService {
                         now,
                         userId,
                         now,
-                        userId
+                        userId,
+                        isLate = type == OpenForRegistrationType.LATE,
                     )
                 ).orDie()
 
