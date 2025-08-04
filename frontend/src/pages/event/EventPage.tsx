@@ -47,7 +47,6 @@ import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
-import EventActions from '@components/event/EventActions.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
