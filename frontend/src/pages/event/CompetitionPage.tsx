@@ -1,5 +1,5 @@
 import {Box, Card, List, ListItem, Stack, Tab, Typography, useTheme} from '@mui/material'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {competitionIndexRoute, competitionRoute, eventRoute} from '@routes'
 import {eventDayName} from '@components/event/common.ts'
@@ -121,6 +121,9 @@ const CompetitionPage = () => {
             eventData?.registrationAvailableFrom,
             eventData?.registrationAvailableTo,
         )
+
+    const withLateRegistration =
+        eventData?.lateRegistrationAvailableTo && competitionData?.properties.lateRegistrationAllowed
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -245,7 +248,7 @@ const CompetitionPage = () => {
                                                     <Stack
                                                         direction={'row'}
                                                         spacing={1}
-                                                        sx={{alignItems: 'center'}}>
+                                                        sx={{alignItems: 'center', mb: 1}}>
                                                         <Typography fontWeight={'bold'}>
                                                             {f.name}
                                                         </Typography>
@@ -262,13 +265,27 @@ const CompetitionPage = () => {
                                                                 />
                                                             </HtmlTooltip>
                                                         )}
+                                                        {!f.required && (
+                                                            <Typography>
+                                                                {t('event.registration.optionalFee')}
+                                                            </Typography>
+                                                        )}
                                                     </Stack>
-                                                    <Typography>{f.amount}€</Typography>
-                                                    {!f.required && (
+                                                    {withLateRegistration ? (
+                                                        <>
+                                                            <Typography>
+                                                                <Trans i18nKey={'event.competition.fee.asRegular'} values={{amount: f.amount}} />
+                                                            </Typography>
+                                                            <Typography>
+                                                                <Trans i18nKey={'event.competition.fee.asLate'} values={{amount: f.lateAmount ?? f.amount}} />
+                                                            </Typography>
+                                                        </>
+                                                    ) : (
                                                         <Typography>
-                                                            {t('event.registration.optionalFee')}
+                                                            {f.amount}€
                                                         </Typography>
-                                                    )}
+                                                    )
+                                                    }
                                                 </Box>
                                             </ListItem>
                                         ))}

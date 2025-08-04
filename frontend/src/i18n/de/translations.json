@@ -290,7 +290,9 @@
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
-        }
+        },
+        "asRegular": "bei Meldung: {{amount}}€",
+        "asLate": "bei Nachmeldung: {{amount}}€"
       },
       "template": {
         "template": "Wettkampf Vorlage",

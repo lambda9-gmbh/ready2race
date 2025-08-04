@@ -8,5 +8,6 @@ data class EventRegistrationFeeDto (
     val label: String,
     val description: String?,
     val required: Boolean,
-    val amount: BigDecimal
+    val amount: BigDecimal,
+    val lateAmount: BigDecimal?,
 )

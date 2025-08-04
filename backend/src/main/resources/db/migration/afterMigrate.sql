@@ -138,6 +138,7 @@ select f.id,
        f.name,
        f.description,
        cphf.amount,
+       cphf.late_amount,
        cphf.required,
        cp.competition as competition_id
 from competition_properties_has_fee cphf

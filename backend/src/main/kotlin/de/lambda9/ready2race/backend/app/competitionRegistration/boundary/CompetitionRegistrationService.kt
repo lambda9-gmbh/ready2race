@@ -289,6 +289,8 @@ object CompetitionRegistrationService {
             // TODO check no race exists yet
         }
 
+        registration.delete()
+
         val remaining = !CompetitionRegistrationRepo.getByCompetitionAndClub(competitionId, registration.club).orDie()
 
         if (remaining.size == 1) {
@@ -302,8 +304,6 @@ object CompetitionRegistrationService {
                 rec.update()
             }
         }
-
-        registration.delete()
 
         noData
     }

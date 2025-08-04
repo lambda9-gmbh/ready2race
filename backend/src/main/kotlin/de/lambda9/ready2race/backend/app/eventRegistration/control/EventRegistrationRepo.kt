@@ -430,6 +430,7 @@ object EventRegistrationRepo {
         FEE_FOR_COMPETITION.DESCRIPTION,
         FEE_FOR_COMPETITION.REQUIRED,
         FEE_FOR_COMPETITION.AMOUNT,
+        FEE_FOR_COMPETITION.LATE_AMOUNT,
     )
         .from(FEE_FOR_COMPETITION)
         .where(COMPETITION_VIEW.ID.eq(FEE_FOR_COMPETITION.COMPETITION_ID))
@@ -442,7 +443,8 @@ object EventRegistrationRepo {
                     it[FEE_FOR_COMPETITION.NAME]!!,
                     it[FEE_FOR_COMPETITION.DESCRIPTION],
                     it[FEE_FOR_COMPETITION.REQUIRED]!!,
-                    it[FEE_FOR_COMPETITION.AMOUNT]!!
+                    it[FEE_FOR_COMPETITION.AMOUNT]!!,
+                    it[FEE_FOR_COMPETITION.LATE_AMOUNT]
                 )
             }
         }
