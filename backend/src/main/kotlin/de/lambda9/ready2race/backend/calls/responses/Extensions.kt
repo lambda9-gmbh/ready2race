@@ -14,12 +14,16 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import jakarta.activation.MimetypesFileTypeMap
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.URLConnection
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+
+fun <R, E, A> KIO<R, E, A>.noDataResponse() = map { ApiResponse.NoData }
+fun <R, E> KIO<R, E, UUID>.createdResponse() = map { ApiResponse.Created(it) }
+fun <R, E, A> KIO<R, E, A>.createdResponse(f: A.() -> UUID) = map { ApiResponse.Created(f(it)) }
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,

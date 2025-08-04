@@ -11,8 +11,8 @@ import {
     competitionFormDefaultValues,
 } from '../common.ts'
 import {useCallback} from 'react'
-import {addCompetitionTemplate, updateCompetitionTemplate} from "@api/sdk.gen.ts";
-import {CompetitionTemplateDto} from "@api/types.gen.ts";
+import {addCompetitionTemplate, updateCompetitionTemplate} from '@api/sdk.gen.ts'
+import {CompetitionTemplateDto} from '@api/types.gen.ts'
 
 const CompetitionTemplateDialog = (props: BaseEntityDialogProps<CompetitionTemplateDto>) => {
     const {t} = useTranslation()
@@ -30,13 +30,16 @@ const CompetitionTemplateDialog = (props: BaseEntityDialogProps<CompetitionTempl
         })
     }
 
-
     const formContext = useForm<CompetitionForm>()
 
     const onOpen = useCallback(() => {
         formContext.reset(
             props.entity
-                ? mapCompetitionPropertiesToCompetitionForm(props.entity.properties, t('decimal.point'), props.entity.setupTemplate)
+                ? mapCompetitionPropertiesToCompetitionForm(
+                      props.entity.properties,
+                      t('decimal.point'),
+                      props.entity.setupTemplate,
+                  )
                 : competitionFormDefaultValues,
         )
     }, [props.entity])

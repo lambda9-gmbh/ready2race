@@ -18,7 +18,7 @@ import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
 import {useState} from 'react'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
-import {groupBy} from "@utils/helpers.ts";
+import {groupBy} from '@utils/helpers.ts'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -127,8 +127,8 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     return 'empty'
                 }
 
-                const duplicates = Array.from(groupBy(values, (val)  => val.namedParticipant?.id))
-                    .filter(([, items] ) => items.length > 1)
+                const duplicates = Array.from(groupBy(values, val => val.namedParticipant?.id))
+                    .filter(([, items]) => items.length > 1)
                     .map(([, items]) => items[0].namedParticipant?.label)
                     .filter(label => label !== undefined)
 

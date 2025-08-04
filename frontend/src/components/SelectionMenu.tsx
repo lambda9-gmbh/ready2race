@@ -3,8 +3,8 @@ import {MouseEvent, ReactNode, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 
 type Anchor = {
-    button: PopoverOrigin,
-    menu: PopoverOrigin,
+    button: PopoverOrigin
+    menu: PopoverOrigin
 }
 
 type Props = {

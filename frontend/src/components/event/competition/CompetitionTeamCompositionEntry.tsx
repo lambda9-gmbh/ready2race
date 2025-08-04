@@ -8,7 +8,7 @@ type Props = {
     np: NamedParticipantForCompetitionDto
     gender: 'male' | 'female' | 'nonBinary' | 'mixed'
 }
-const  CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
+const CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
     const {t} = useTranslation()
 
     const count =
@@ -22,10 +22,7 @@ const  CompetitionTeamCompositionEntry = ({np, gender}: Props) => {
 
     return count > 0 ? (
         <ListItem>
-            <Stack
-                spacing={1}
-                direction={'row'}
-                sx={{flexWrap: 'wrap', alignItems: 'center'}}>
+            <Stack spacing={1} direction={'row'} sx={{flexWrap: 'wrap', alignItems: 'center'}}>
                 <ListItemText>
                     {count} {np.name}{' '}
                     {gender === 'male'

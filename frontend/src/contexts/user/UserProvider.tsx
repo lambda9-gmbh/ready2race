@@ -5,8 +5,8 @@ import {useFetch} from '@utils/hooks.ts'
 import {scopeLevel} from '@utils/helpers.ts'
 import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
 import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
-import i18next from "i18next";
-import {fallbackLng, isLanguage, Language} from "@i18n/config.ts";
+import i18next from 'i18next'
+import {fallbackLng, isLanguage, Language} from '@i18n/config.ts'
 
 type Session = {
     token: string
@@ -15,11 +15,11 @@ type Session = {
 type UserData = LoginDto
 
 const UserProvider = ({children}: PropsWithChildren) => {
-    const [language, setLanguage] = useState(isLanguage(i18next.language) ? i18next.language : fallbackLng)
-    const [userData, setUserData] = useState<UserData>()
-    const [token, setToken] = useState<string | null>(
-        sessionStorage.getItem('session')
+    const [language, setLanguage] = useState(
+        isLanguage(i18next.language) ? i18next.language : fallbackLng,
     )
+    const [userData, setUserData] = useState<UserData>()
+    const [token, setToken] = useState<string | null>(sessionStorage.getItem('session'))
     const [ready, setReady] = useState(false)
     const prevLoggedIn = useRef(false)
     const autoLogin = useRef(false)
@@ -40,7 +40,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }, [client])
 
     useEffect(() => {
-
         if (token) {
             const f = async (req: Request) => {
                 req.headers.set('X-Api-Session', JSON.stringify({token}))
@@ -81,12 +80,12 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const login = (data: LoginDto, headers?: Headers) => {
         autoLogin.current = false
         if (headers) {
-            const sessionHeader = headers.get("X-Api-Session")
+            const sessionHeader = headers.get('X-Api-Session')
             if (sessionHeader === null) {
-                throw Error("Missing header on login response")
+                throw Error('Missing header on login response')
             }
             const token = (JSON.parse(sessionHeader) as Session).token
-            sessionStorage.setItem("session", token)
+            sessionStorage.setItem('session', token)
             setToken(token)
         }
         setUserData({...data})
@@ -96,7 +95,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         autoLogin.current = false
         const {error} = await userLogout()
         if (error === undefined) {
-            sessionStorage.removeItem("session")
+            sessionStorage.removeItem('session')
             setUserData(undefined)
             setToken(null)
         }
@@ -134,7 +133,9 @@ const UserProvider = ({children}: PropsWithChildren) => {
                     if (scope === undefined) {
                         return privilege.scope
                     } else {
-                        return scopeLevel[scope] >= scopeLevel[privilege.scope] ? scope : privilege.scope
+                        return scopeLevel[scope] >= scopeLevel[privilege.scope]
+                            ? scope
+                            : privilege.scope
                     }
                 }, undefined)
 

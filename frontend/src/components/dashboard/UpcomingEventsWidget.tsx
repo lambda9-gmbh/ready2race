@@ -1,5 +1,15 @@
 import React, {Fragment} from 'react'
-import {Box, Button, Divider, List, ListItem, ListItemText, Stack, Typography, useTheme} from '@mui/material'
+import {
+    Box,
+    Button,
+    Divider,
+    List,
+    ListItem,
+    ListItemText,
+    Stack,
+    Typography,
+    useTheme,
+} from '@mui/material'
 import {ClockIcon} from '@mui/x-date-pickers'
 import {useTranslation} from 'react-i18next'
 import {DashboardWidget} from '@components/dashboard/DashboardWidget.tsx'

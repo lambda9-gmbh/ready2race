@@ -3,8 +3,8 @@ import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityTable from '@components/EntityTable.tsx'
-import {getRegistrations} from "@api/sdk.gen.ts";
-import {AppUserRegistrationDto} from "@api/types.gen.ts";
+import {getRegistrations} from '@api/sdk.gen.ts'
+import {AppUserRegistrationDto} from '@api/types.gen.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,

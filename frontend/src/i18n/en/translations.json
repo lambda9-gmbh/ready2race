@@ -72,13 +72,23 @@
     "next": "Next",
     "and": "and",
     "remove": "Remove",
+    "items": "Items",
+    "more": "More",
+    "create": "Create",
+    "seconds": "seconds",
+    "update": "Update",
+    "lastUpdate": "Last Update",
+    "confirmDelete": "Confirm Delete",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit Fullscreen",
     "language": {
       "menu": "Select language"
     }
   },
   "format": {
     "date": "MM/dd/yyyy",
-    "datetime": "MM/dd/yyyy, hh:mm a"
+    "datetime": "MM/dd/yyyy, hh:mm a",
+    "time": "hh:mm a"
   },
   "document": {
     "template": {
@@ -455,7 +465,21 @@
             "short": "No."
           },
           "team": "Team",
-          "place": "Place"
+          "place": "Place",
+          "manageRunning": "Manage Running Matches",
+          "running": "Running",
+          "roundAndMatch": "Round {{round}}, Match {{match}}",
+          "currentlyRunning": "Currently Running",
+          "availableMatches": "Available Matches",
+          "noRunningMatches": "No matches are currently running",
+          "noAvailableMatches": "No matches available to start"
+        },
+        "running": {
+          "error": {
+            "hasPlaces": "Cannot change running state for matches with results",
+            "update": "Failed to update running state"
+          },
+          "success": "Running state updated successfully"
         },
         "results": {
           "enter": "Enter results",
@@ -496,6 +520,15 @@
         },
         "startList": {
           "download": "Download start list",
+          "dialog": {
+            "title": "Select configuration",
+            "config": "Configuration",
+            "alert": {
+              "1": "You can create and update configurations ",
+              "2": "here",
+              "3": "."
+            }
+          },
           "type": {
             "PDF": "as PDF",
             "CSV": "as CSV"
@@ -508,7 +541,7 @@
           "substitutions": "Substitutions",
           "inFor": "in for",
           "participant": "Participant",
-          "substituteFor":{
+          "substituteFor": {
             "substituteFor": "Substitute for",
             "currentlyParticipating": "In same competition (swap teams)",
             "notCurrentlyParticipating": "Freely available",
@@ -650,8 +683,59 @@
       "general": "General",
       "registrations": "Registrations",
       "settings": "Settings",
+      "actions": "Actions",
       "organisation": "Organisation",
       "invoices": "Invoices"
+    },
+    "info": {
+      "infoPage": "Info Display",
+      "sectionTitle": "Public Information Display",
+      "pageDescription": "Configure and view information displays for public screens showing event information like upcoming matches and results.",
+      "manageInfoViews": "View and Configure Info Displays",
+      "configure": "Configure",
+      "noViews": "No views configured",
+      "configureViews": "Click the settings icon to configure views",
+      "viewType": "View Type",
+      "viewTypes": {
+        "upcomingMatches": "Upcoming Matches",
+        "latestMatchResults": "Latest Match Results",
+        "runningMatches": "Currently Running"
+      },
+      "configuration": "View Configuration",
+      "configurationHelp": "Drag views to reorder them. Each view will be displayed for the specified duration.",
+      "noViewsConfigured": "No views configured",
+      "editView": "Edit View",
+      "addView": "Add View",
+      "displayDuration": "Display Duration",
+      "dataLimit": "Data Limit",
+      "filtersComingSoon": "Filters coming soon",
+      "viewCreated": "View created successfully",
+      "viewUpdated": "View updated successfully",
+      "viewDeleted": "View deleted successfully",
+      "createError": "Error creating view",
+      "updateError": "Error updating view",
+      "deleteError": "Error deleting view",
+      "confirmDeleteView": "Are you sure you want to delete this view?",
+      "noUpcomingMatches": "No upcoming matches",
+      "noLatestMatchResults": "No latest match results available",
+      "noRunningMatches": "No matches currently running",
+      "live": "LIVE",
+      "minutes": "min",
+      "justStarted": "Just started",
+      "unnamed": "Unnamed",
+      "matchStatus": {
+        "pending": "Pending",
+        "inProgress": "In Progress",
+        "completed": "Completed"
+      },
+      "rank": "Rank",
+      "place": "Place",
+      "team": "Team",
+      "participants": "Participants",
+      "result": "Result",
+      "points": "Points",
+      "matchTeams": "Match Teams",
+      "executionOrder": "Execution Order: {{order}}"
     }
   },
   "task": {
@@ -839,6 +923,54 @@
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings"
+    },
+    "export": {
+      "startlist": {
+        "startlist": "Start-list configuration",
+        "startlists": "Start-list configurations",
+        "tableHint": "Define the columns for the CSV export of start lists when conducting competitions.",
+        "name": "Name",
+        "col": {
+          "heading": "Columns",
+          "participant": {
+            "heading": "Participants",
+            "firstname": "First names",
+            "lastname": "Last names",
+            "gender": "Gender",
+            "role": "Role",
+            "year": "Year of birth",
+            "club": "club"
+          },
+          "club": {
+            "heading": "Registering club",
+            "name": "Name"
+          },
+          "team": {
+            "heading": "Team",
+            "name": "Name",
+            "startNumber": "Start number"
+          },
+          "match": {
+            "heading": "Match",
+            "name": "Name",
+            "startTime": "Start time"
+          },
+          "round": {
+            "heading": "Round",
+            "name": "Name"
+          },
+          "competition": {
+            "heading": "Competition",
+            "identifier": "Identifier",
+            "name": "Name",
+            "shortName": "Short name",
+            "category": "Category"
+          }
+        },
+        "error": {
+          "tooFewCols": "Please specify at least one column."
+        }
+      }
     }
   },
   "contact": {

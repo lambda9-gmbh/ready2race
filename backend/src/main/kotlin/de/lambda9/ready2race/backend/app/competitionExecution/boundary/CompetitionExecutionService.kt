@@ -25,6 +25,8 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
+import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
@@ -45,10 +47,20 @@ import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
+
+    fun getMatchesByEvent(
+        eventId: UUID,
+        currentlyRunning: Boolean? = null,
+        withoutPlaces: Boolean? = null
+    ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        KIO.ok(ApiResponse.ListDto(matches))
+    }
 
     fun createNewRound(
         competitionId: UUID,
@@ -401,6 +413,12 @@ object CompetitionExecutionService {
         !KIO.failOn(!currentRound.required && match.teams.size == 1) { CompetitionExecutionError.MatchResultsLocked }
 
 
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = false
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
         request.teamResults.traverse { result ->
             updateTeamResult(userId, currentRound.setupRoundId, matchId, result)
         }.map { ApiResponse.NoData }
@@ -444,6 +462,23 @@ object CompetitionExecutionService {
         }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
 
         unit
+    }
+
+    fun updateMatchRunningState(
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchRunningStateRequest
+    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = request.currentlyRunning
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
     }
 
 
@@ -705,7 +740,7 @@ object CompetitionExecutionService {
     fun downloadStartlist(
         matchId: UUID,
         type: StartListFileType,
-    ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
 
         val match = !CompetitionMatchRepo.getForStartList(matchId).orDie()
             .onNullFail { CompetitionExecutionError.MatchNotFound }
@@ -721,7 +756,11 @@ object CompetitionExecutionService {
                 buildPdf(data, pdfTemplate) to "pdf"
             }
 
-            StartListFileType.CSV -> buildCsv(data) to "csv"
+            is StartListFileType.CSV -> {
+                val config = !StartListConfigRepo.get(type.config).orDie()
+                    .onNullFail { StartListConfigError.NotFound }
+                buildCsv(data, config) to "csv"
+            }
         }
 
         KIO.ok(
@@ -912,6 +951,7 @@ object CompetitionExecutionService {
 
     fun buildCsv(
         data: CompetitionMatchData,
+        config: StartlistExportConfigRecord,
     ): ByteArray {
 
         val bytes = ByteArrayOutputStream().use { out ->
@@ -919,21 +959,32 @@ object CompetitionExecutionService {
                 out,
                 data.teams
             ) {
-                if (data.teams.first().participants.size == 1) {
-                    column("First name") { participants.first().firstname }
-                    column("Last name") { participants.first().lastname }
-                    column("Gender") { participants.first().gender.name }
-                } else {
-                    column("Name") { participants.joinToString(",") { p -> p.lastname } }
-                    column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
+                optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
+                optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
+                optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSet().joinToString("/") }
+                optionalColumn(config.colParticipantYear) { participants.joinToString(",") { p -> p.year.toString() } }
+                optionalColumn(config.colParticipantRole) { participants.map { p -> p.role }.toSet().joinToString(",") }
+                optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: clubName }.toSet().joinToString(",") }
+
+                optionalColumn(config.colClubName) { clubName }
+
+                optionalColumn(config.colTeamName) { teamName ?: "" }
+                optionalColumn(config.colTeamStartNumber) { startNumber.toString() }
+
+                optionalColumn(config.colMatchName) { data.matchName ?: "" }
+                optionalColumn(config.colMatchStartTime) { idx ->
+                    val offsetSeconds = (idx * (data.startTimeOffset ?: 0)).milliseconds.inWholeSeconds
+                    data.startTime.toLocalTime().plusSeconds(offsetSeconds)
+                        .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 }
-                column("Team name") { clubName }
-                column("Team name 2") { teamName ?: "" }
-                column("Category") { data.competition.category ?: "" }
-                column("Bib") { startNumber.toString() }
-                if (data.startTimeOffset != null) {
-                    column("Start time") { idx -> (idx * data.startTimeOffset).milliseconds.toIsoString() }
-                }
+
+                optionalColumn(config.colRoundName) { data.roundName }
+
+                optionalColumn(config.colCompetitionIdentifier) { data.competition.identifier }
+                optionalColumn(config.colCompetitionName) { data.competition.name }
+                optionalColumn(config.colCompetitionShortName) { data.competition.shortName ?: "" }
+                optionalColumn(config.colCompetitionCategory) { data.competition.category ?: "" }
+
             }
 
             out.toByteArray()

@@ -5,8 +5,7 @@ import {PropsWithChildren} from 'react'
 type Props = SidebarProps
 
 const Sidebar = ({children, ...props}: PropsWithChildren<Props>) => {
-
-    return(
+    return (
         <Box sx={{display: 'flex'}}>
             <SidebarContext.Provider value={props}>
                 <List>{children}</List>

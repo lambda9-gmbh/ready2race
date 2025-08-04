@@ -29,8 +29,8 @@ type ExtendedEntityDialogProps<
     onOpen: () => void
     addAction?: (formData: Form) => RequestResult<any, AddError, false>
     editAction?: (formData: Form, entity: Entity) => RequestResult<void, UpdateError, false>
-    onAddError?: (error: AddError) => void
-    onEditError?: (error: UpdateError) => void
+    onAddError?: (error: AddError) => boolean
+    onEditError?: (error: UpdateError) => boolean
     title?: string
     showSaveAndNew?: boolean
     disableSave?: boolean
@@ -94,9 +94,9 @@ const EntityDialog = <
         setSubmitting(false)
 
         if (addResult?.error) {
-            onAddError ? onAddError(addResult.error) : handleErrorGeneric(addResult.error)
+            onAddError && onAddError(addResult.error) || handleErrorGeneric(addResult.error)
         } else if (editResult?.error) {
-            onEditError ? onEditError(editResult.error) : handleErrorGeneric(editResult.error)
+            onEditError && onEditError(editResult.error) || handleErrorGeneric(editResult.error)
         } else {
             if (addNew) {
                 onOpen()

@@ -58,7 +58,7 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
         formContext.reset(defaultValues)
     }, [props.entity])
 
-    const onAddError = (error: InviteUserError) => {
+    const onAddError = (error: InviteUserError): boolean => {
         if (error.status.value === 409) {
             if (error.errorCode === 'EMAIL_IN_USE') {
                 formContext.setError('email', {
@@ -70,9 +70,12 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
                 })
             } else if (error.errorCode === 'CANNOT_ASSIGN_ROLES') {
                 feedback.error(t('role.error.cannotAssign'))
+            } else {
+                return false
             }
+            return true
         } else {
-            feedback.error(t('entity.add.error', {entity: props.entityName}))
+            return false
         }
     }
 

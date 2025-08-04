@@ -4,13 +4,20 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRunningStateRequest
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.tailwind.core.KIO
 import io.ktor.server.routing.*
+
+private enum class StartListFileTypeParam {
+    PDF,
+    CSV
+}
 
 fun Route.competitionExecution() {
     route("/competitionExecution") {
@@ -52,6 +59,17 @@ fun Route.competitionExecution() {
                     }
                 }
             }
+            route("/running-state") {
+                put {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val competitionMatchId = !pathParam("competitionMatchId", uuid)
+
+                        val body = !receiveKIO<UpdateCompetitionMatchRunningStateRequest>(UpdateCompetitionMatchRunningStateRequest.example)
+                        CompetitionExecutionService.updateMatchRunningState(competitionMatchId, user.id!!, body)
+                    }
+                }
+            }
             route("/results") {
                 put {
                     call.respondComprehension {
@@ -73,7 +91,16 @@ fun Route.competitionExecution() {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
                     val competitionMatchId = !pathParam("competitionMatchId", uuid)
-                    val type = !queryParam("fileType", enum<StartListFileType>())
+                    val typeParam = !queryParam("fileType", enum<StartListFileTypeParam>())
+
+                    val type = when (typeParam) {
+                        StartListFileTypeParam.PDF -> StartListFileType.PDF
+                        StartListFileTypeParam.CSV -> {
+                            val config = !queryParam("config", uuid)
+                            StartListFileType.CSV(config)
+                        }
+                    }
+
                     CompetitionExecutionService.downloadStartlist(competitionMatchId, type)
                 }
             }

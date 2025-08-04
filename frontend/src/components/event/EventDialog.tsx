@@ -10,7 +10,7 @@ import {useCallback} from 'react'
 import {EventDto, EventRequest} from '@api/types.gen.ts'
 import {addEvent, updateEvent} from '@api/sdk.gen.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
-import FormInputDate from "@components/form/input/FormInputDate.tsx";
+import FormInputDate from '@components/form/input/FormInputDate.tsx'
 
 type EventForm = {
     name: string
@@ -77,10 +77,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                     label={t('event.registrationAvailable.timespanTo')}
                 />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
-                <FormInputDate
-                    name={'paymentDueBy'}
-                    label={t('event.invoice.paymentDueBy')}
-                />
+                <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />
             </Stack>
         </EntityDialog>
     )
@@ -95,7 +92,7 @@ function mapFormToRequest(formData: EventForm): EventRequest {
         registrationAvailableTo: takeIfNotEmpty(formData.registrationAvailableTo),
         invoicePrefix: takeIfNotEmpty(formData.invoicePrefix),
         published: formData.published,
-        paymentDueBy: takeIfNotEmpty(formData.paymentDueBy)
+        paymentDueBy: takeIfNotEmpty(formData.paymentDueBy),
     }
 }
 

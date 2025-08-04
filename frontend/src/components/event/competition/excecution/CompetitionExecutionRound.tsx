@@ -6,6 +6,7 @@ import {
     Box,
     Card,
     Divider,
+    FormControlLabel,
     Link,
     Stack,
     Table,
@@ -22,12 +23,18 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Fragment, SyntheticEvent, useRef} from 'react'
-import {deleteCurrentCompetitionExecutionRound, downloadStartList} from '@api/sdk.gen.ts'
+import {Fragment, SyntheticEvent, useRef, useState} from 'react'
+import {
+    deleteCurrentCompetitionExecutionRound,
+    downloadStartList,
+    updateMatchRunningState,
+} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
+import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
+import Checkbox from '@mui/material/Checkbox'
 
 type Props = {
     round: CompetitionRoundDto
@@ -60,6 +67,10 @@ const CompetitionExecutionRound = ({
     const {confirmAction} = useConfirmation()
 
     const downloadRef = useRef<HTMLAnchorElement>(null)
+
+    const [startListMatch, setStartListMatch] = useState<string | null>(null)
+    const showStartListConfigDialog = startListMatch !== null
+    const closeStartListConfigDialog = () => setStartListMatch(null)
 
     const deleteCurrentRound = async () => {
         confirmAction(
@@ -94,6 +105,7 @@ const CompetitionExecutionRound = ({
     const handleDownloadStartList = async (
         competitionMatchId: string,
         fileType: StartListFileType,
+        config?: string,
     ) => {
         const {data, error, response} = await downloadStartList({
             path: {
@@ -103,6 +115,7 @@ const CompetitionExecutionRound = ({
             },
             query: {
                 fileType,
+                config,
             },
         })
         const anchor = downloadRef.current
@@ -124,6 +137,37 @@ const CompetitionExecutionRound = ({
             anchor.click()
             anchor.href = ''
             anchor.download = ''
+        }
+    }
+
+    const handleToggleRunningState = async (match: CompetitionMatchDto) => {
+        // Check if match has no places set
+        const hasPlacesSet = match.teams.some(
+            team => team.place !== null && team.place !== undefined,
+        )
+        if (hasPlacesSet) {
+            feedback.error(t('event.competition.execution.running.error.hasPlaces'))
+            return
+        }
+
+        props.setSubmitting(true)
+        const {error} = await updateMatchRunningState({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+            body: {
+                currentlyRunning: !match.currentlyRunning,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
         }
     }
 
@@ -229,6 +273,11 @@ const CompetitionExecutionRound = ({
                                 [theme.breakpoints.up('md')]: {
                                     minWidth: 400,
                                 },
+                                ...(match.currentlyRunning && {
+                                    borderColor: 'primary.main',
+                                    borderWidth: 2,
+                                    borderStyle: 'solid',
+                                }),
                             }}>
                             <Stack
                                 direction={'row'}
@@ -258,6 +307,23 @@ const CompetitionExecutionRound = ({
                                             ) + ': '}
                                             {match.startTimeOffset} {t('common.form.seconds')}
                                         </Typography>
+                                    )}
+                                    {/* Only show toggle if match has no places set */}
+                                    {!match.teams.some(
+                                        team => team.place !== null && team.place !== undefined,
+                                    ) && (
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={match.currentlyRunning}
+                                                    onChange={() => handleToggleRunningState(match)}
+                                                    disabled={submitting}
+                                                />
+                                            }
+                                            label={t(
+                                                'event.competition.execution.match.currentlyRunning',
+                                            )}
+                                        />
                                     )}
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>
@@ -294,12 +360,17 @@ const CompetitionExecutionRound = ({
                                             'event.competition.execution.startList.download',
                                         )}
                                         keyLabel={'competition-execution-startlist-download'}
-                                        onSelectItem={(fileType: string) =>
-                                            handleDownloadStartList(
-                                                match.id,
-                                                fileType as StartListFileType,
-                                            )
-                                        }
+                                        onSelectItem={async (fileType: string) => {
+                                            const ft = fileType as StartListFileType
+                                            switch (ft) {
+                                                case 'PDF':
+                                                    await handleDownloadStartList(match.id, 'PDF')
+                                                    break
+                                                case 'CSV':
+                                                    setStartListMatch(match.id)
+                                                    break
+                                            }
+                                        }}
                                         items={
                                             [
                                                 {
@@ -380,6 +451,11 @@ const CompetitionExecutionRound = ({
                     </LoadingButton>
                 )}
             </Stack>
+            <StartListConfigPicker
+                open={showStartListConfigDialog}
+                onClose={closeStartListConfigDialog}
+                onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
+            />
         </Fragment>
     )
 }

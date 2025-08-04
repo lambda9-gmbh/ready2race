@@ -18,7 +18,7 @@ import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import CompetitionTeamCompositionEntry from '@components/event/competition/CompetitionTeamCompositionEntry.tsx'
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
-import {eventRegistrationPossible} from '@utils/helpers.ts'
+import {a11yProps, eventRegistrationPossible} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 
@@ -87,13 +87,8 @@ const CompetitionPage = () => {
         },
     )
 
-    const a11yProps = (index: CompetitionTab) => {
-        return {
-            value: index,
-            id: `event-tab-${index}`,
-            'aria-controls': `event-tabpanel-${index}`,
-        }
-    }
+    const tabProps = (tab: CompetitionTab) =>
+        a11yProps('competition', tab)
 
     const assignedEventDays = assignedEventDaysData?.data.map(value => value.id) ?? []
 
@@ -137,28 +132,28 @@ const CompetitionPage = () => {
                             competitionData.properties.name}
                     </Typography>
                     <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                        <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
+                        <Tab label={t('event.tabs.general')} {...tabProps('general')} />
                         {user.loggedIn && showRegistrationsTab && (
                             <Tab
                                 label={t('event.registration.registrations')}
-                                {...a11yProps('registrations')}
+                                {...tabProps('registrations')}
                             />
                         )}
                         {user.checkPrivilege(updateEventGlobal) && (
                             <Tab
                                 label={t('event.competition.setup.setup')}
-                                {...a11yProps('setup')}
+                                {...tabProps('setup')}
                             />
                         )}
                         {user.checkPrivilege(updateEventGlobal) && (
                             <Tab
                                 label={t('event.competition.execution.tabTitle')}
-                                {...a11yProps('execution')}
+                                {...tabProps('execution')}
                             />
                         )}
                         <Tab
                             label={t('event.competition.places.tabTitle')}
-                            {...a11yProps('places')}
+                            {...tabProps('places')}
                         />
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>

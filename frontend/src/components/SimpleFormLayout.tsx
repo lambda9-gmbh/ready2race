@@ -16,7 +16,7 @@ const SimpleFormLayout = ({children, maxWidth}: Props) => {
                     margin: 'auto',
                     maxWidth: maxWidth,
                     padding: 4,
-                    flex:1
+                    flex: 1,
                 }}>
                 {children}
             </Card>

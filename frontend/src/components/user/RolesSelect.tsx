@@ -1,6 +1,6 @@
 import {MultiSelectElement} from 'react-hook-form-mui'
 import {RoleDto} from '@api/types.gen.ts'
-import {useTranslation} from "react-i18next";
+import {useTranslation} from 'react-i18next'
 
 type Props = {
     availableRoles?: Array<RoleDto>

@@ -55,9 +55,10 @@ export const eventRegistrationPossible = (from?: string, to?: string) => {
     )
 }
 
-export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A => u.includes(s as A)
+export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A =>
+    u.includes(s as A)
 
-export const arrayOfNotNull = <T> (...args: (T | null)[]): T[] => {
+export const arrayOfNotNull = <T>(...args: (T | null)[]): T[] => {
     return args.filter(a => a !== null)
 }
 
@@ -73,4 +74,12 @@ export const shuffle = <T>(list: T[]) => {
         newList[randomIndex] = currentValue
     }
     return newList
+}
+
+export const a11yProps = <TabType> (name: string, index: TabType) => {
+    return {
+        value: index,
+        id: `${name}-tab-${index}`,
+        'aria-controls': `${name}-tabpanel-${index}`,
+    }
 }
