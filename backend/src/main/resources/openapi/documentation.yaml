@@ -1070,6 +1070,12 @@ paths:
           $ref: '#/components/responses/500'
     post:
       operationId: addCompetitionRegistration
+      parameters:
+        - in: query
+          name: registrationType
+          required: false
+          schema:
+            $ref: '#/components/schemas/RegistrationInvoiceType'
       requestBody:
         required: true
         content:
@@ -1098,6 +1104,12 @@ paths:
       - $ref: '#/components/parameters/competitionRegistrationId'
     put:
       operationId: updateCompetitionRegistration
+      parameters:
+        - in: query
+          name: registrationType
+          required: false
+          schema:
+            $ref: '#/components/schemas/RegistrationInvoiceType'
       requestBody:
         required: true
         content:
@@ -5488,6 +5500,7 @@ components:
         - clubId
         - optionalFees
         - namedParticipants
+        - isLate
         - updatedAt
         - createdAt
       properties:
@@ -5509,6 +5522,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantDto'
+        isLate:
+          type: boolean
         updatedAt:
           type: string
           format: date-time

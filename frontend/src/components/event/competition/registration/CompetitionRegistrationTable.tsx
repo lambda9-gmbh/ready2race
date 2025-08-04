@@ -4,7 +4,7 @@ import {competitionRoute, eventRoute} from '@routes'
 import {
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
-    getCompetitionRegistrations,
+    getCompetitionRegistrations, OpenForRegistrationType,
 } from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
@@ -12,6 +12,8 @@ import {Fragment, useMemo} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {Stack, Typography} from '@mui/material'
 import {format} from 'date-fns'
+import {useUser} from "@contexts/user/UserContext.ts";
+import {updateRegistrationGlobal} from "@authorization/privileges.ts";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -20,10 +22,15 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
+type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
+    registrationState: OpenForRegistrationType
+}
+
 const CompetitionRegistrationTable = (
-    props: BaseEntityTableProps<CompetitionRegistrationTeamDto>,
+    {registrationState, ...props}: Props,
 ) => {
     const {t} = useTranslation()
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -112,6 +119,10 @@ const CompetitionRegistrationTable = (
         [],
     )
 
+    // closed is already checked in parent component
+    const writable = (dto: CompetitionRegistrationTeamDto) =>
+        dto.isLate === (registrationState === 'LATE') || user.checkPrivilege(updateRegistrationGlobal)
+
     return (
         <Fragment>
             <EntityTable
@@ -125,6 +136,8 @@ const CompetitionRegistrationTable = (
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
                 entityName={t('event.registration.registration')}
+                deletableIf={writable}
+                editableIf={writable}
             />
         </Fragment>
     )

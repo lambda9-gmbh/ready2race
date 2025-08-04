@@ -272,6 +272,7 @@ export type CompetitionRegistrationTeamDto = {
     clubName: string
     optionalFees: Array<CompetitionRegistrationFeeDto>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
+    isLate: boolean
     updatedAt: string
     createdAt: string
 }
@@ -1847,6 +1848,9 @@ export type AddCompetitionRegistrationData = {
         competitionId: string
         eventId: string
     }
+    query?: {
+        registrationType?: RegistrationInvoiceType
+    }
 }
 
 export type AddCompetitionRegistrationResponse = string
@@ -1859,6 +1863,9 @@ export type UpdateCompetitionRegistrationData = {
         competitionId: string
         competitionRegistrationId: string
         eventId: string
+    }
+    query?: {
+        registrationType?: RegistrationInvoiceType
     }
 }
 

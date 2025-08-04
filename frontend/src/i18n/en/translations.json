@@ -305,7 +305,14 @@
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
       "registration": {
-        "noEventRegistration": "No registration from your club has been made for this event yet."
+        "noEventRegistration": "No registration from your club has been made for this event yet.",
+        "dialog": {
+          "registrationType": {
+            "label": "Add as",
+            "REGULAR": "Registration",
+            "LATE": "Late registration"
+          }
+        }
       },
       "setup": {
         "setup": "Competition Setup",

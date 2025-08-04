@@ -305,7 +305,14 @@
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       },
       "registration": {
-        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
+        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
+        "dialog": {
+          "registrationType": {
+            "label": "Hinzufügen als",
+            "REGULAR": "Meldung",
+            "LATE": "Nachmeldung"
+          }
+        }
       },
       "setup": {
         "setup": "Wettbewerbsablauf",

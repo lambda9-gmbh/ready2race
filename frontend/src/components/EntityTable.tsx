@@ -50,6 +50,7 @@ type ExtendedEntityTableProps<
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
+    editableIf?: (entity: Entity) => boolean
 } & (
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false>
@@ -172,6 +173,7 @@ const EntityTableInternal = <
     onDelete,
     onDeleteError,
     deletableIf,
+    editableIf,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
     const {t} = useTranslation()
@@ -211,7 +213,7 @@ const EntityTableInternal = <
             getActions: (params: GridRowParams<Entity>) => [
                 ...customEntityActions(params.row, user.checkPrivilege)
                     .filter(action => !!action),
-                ...(crud.update && options.entityUpdate
+                ...(crud.update && options.entityUpdate && (editableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
                               icon={<Edit />}
@@ -221,7 +223,7 @@ const EntityTableInternal = <
                           />,
                       ]
                     : []),
-                ...(deleteRequest && crud.delete && (deletableIf?.(params.row) ?? true)
+                ...(deleteRequest && crud.delete && options.entityDelete && (deletableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
                               icon={<Delete />}
