@@ -32,8 +32,8 @@ object EventRegistrationRepo {
         DSL.and(
             EVENT.eq(eventId),
             DSL.exists(
-                DSL.select().from(COMPETITION_REGISTRATION)
-                    .where(COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventId))
+                DSL.selectFrom(COMPETITION_REGISTRATION)
+                    .where(COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(ID))
                     .and(
                         when (type) {
                             RegistrationInvoiceType.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
