@@ -19,6 +19,7 @@ import {FormInputCurrency} from '@components/form/input/FormInputCurrency.tsx'
 import {useState} from 'react'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 import {groupBy} from '@utils/helpers.ts'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
@@ -229,6 +230,10 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                     }}
                 />
             )}
+            <FormInputCheckbox
+                name={'lateRegistrationAllowed'}
+                label={t('event.competition.lateRegistrationAllowed')}
+            />
             <Divider />
             <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
                 {namedParticipantsError && (
@@ -374,6 +379,10 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                                         label={t('event.competition.fee.amount')}
                                         required
                                     />
+                                    <FormInputCurrency
+                                        name={'fees[' + index + '].lateAmount'}
+                                        label={t('event.competition.fee.lateAmount')}
+                                    />
                                 </Stack>
                             </Card>
                             <Tooltip title={t('common.delete')}>
@@ -395,6 +404,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                             fee: null,
                             required: false,
                             amount: '0',
+                            lateAmount: '',
                         })
                     }}
                     sx={{width: 1}}>

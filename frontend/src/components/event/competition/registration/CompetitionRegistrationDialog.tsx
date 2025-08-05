@@ -4,8 +4,8 @@ import {
     CompetitionDto,
     CompetitionRegistrationNamedParticipantUpsertDto,
     CompetitionRegistrationTeamDto,
-    CompetitionRegistrationTeamUpsertDto,
-    EventRegistrationNamedParticipantDto,
+    CompetitionRegistrationTeamUpsertDto, EventDto,
+    EventRegistrationNamedParticipantDto, RegistrationInvoiceType,
 } from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {CheckboxButtonGroup, useForm, useWatch} from 'react-hook-form-mui'
@@ -24,28 +24,35 @@ import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamed
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {createRegistrationGlobal} from '@authorization/privileges.ts'
+import {updateRegistrationGlobal} from '@authorization/privileges.ts'
+import {FormInputSelect} from "@components/form/input/FormInputSelect.tsx";
+
+const registrationTypes: RegistrationInvoiceType[] = ['REGULAR', 'LATE']
+type RegistrationType = (typeof registrationTypes)[number]
 
 type CompetitionRegistrationForm = {
     id?: string
     clubId?: string
     optionalFees?: Array<string>
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
+    asRegistrationType: RegistrationType
 }
 
 const CompetitionRegistrationDialog = ({
     competition,
-    eventId,
+    eventData,
     ...props
 }: BaseEntityDialogProps<CompetitionRegistrationTeamDto> & {
     competition: CompetitionDto
-    eventId: string
+    eventData: EventDto
 }) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
 
     const formContext = useForm<CompetitionRegistrationForm>()
+
+    const globalPrivilege = user.checkPrivilege(updateRegistrationGlobal)
 
     const clubId = useWatch({
         control: formContext.control,
@@ -59,7 +66,7 @@ const CompetitionRegistrationDialog = ({
                 signal,
                 query: {
                     sort: JSON.stringify([{field: 'NAME', direction: 'ASC'}]),
-                    eventId,
+                    eventId: eventData.id,
                 },
             }),
         {
@@ -72,7 +79,7 @@ const CompetitionRegistrationDialog = ({
                     )
                 }
             },
-            deps: [eventId],
+            deps: [eventData],
         },
     )
 
@@ -110,7 +117,7 @@ const CompetitionRegistrationDialog = ({
         signal =>
             getCompetitionRegistrations({
                 signal,
-                path: {eventId: eventId, competitionId: competition.id},
+                path: {eventId: eventData.id, competitionId: competition.id},
             }),
         {
             onResponse: ({error}) => {
@@ -122,7 +129,7 @@ const CompetitionRegistrationDialog = ({
                     )
                 }
             },
-            deps: [eventId, competition.id, reloadCompetitionRegistrations],
+            deps: [eventData, competition.id, reloadCompetitionRegistrations],
         },
     )
 
@@ -150,8 +157,9 @@ const CompetitionRegistrationDialog = ({
 
     const addAction = (formData: CompetitionRegistrationForm) => {
         return addCompetitionRegistration({
-            path: {eventId, competitionId: competition.id},
+            path: {eventId: eventData.id, competitionId: competition.id},
             body: mapFormToRequest(formData),
+            query: {registrationType: globalPrivilege ? formData.asRegistrationType : undefined}
         })
     }
 
@@ -161,11 +169,12 @@ const CompetitionRegistrationDialog = ({
     ) => {
         return updateCompetitionRegistration({
             path: {
-                eventId,
+                eventId: eventData.id,
                 competitionId: competition.id,
                 competitionRegistrationId: entity.id,
             },
             body: mapFormToRequest(formData),
+            query: {registrationType: globalPrivilege ? formData.asRegistrationType : undefined}
         })
     }
 
@@ -173,6 +182,7 @@ const CompetitionRegistrationDialog = ({
         namedParticipants: [],
         optionalFees: [],
         clubId: user.loggedIn ? user.clubId : undefined,
+        asRegistrationType: 'LATE',
     }
 
     const optionalFees = useMemo(
@@ -193,73 +203,86 @@ const CompetitionRegistrationDialog = ({
             onOpen={onOpen}
             addAction={addAction}
             editAction={editAction}>
-            <Stack spacing={2}>
-                {props.entity?.id == null && user.checkPrivilege(createRegistrationGlobal) && (
-                    <FormInputAutocomplete
-                        label={t('club.club')}
-                        autocompleteProps={{getOptionLabel: (o: ClubSearchDto) => o.name}}
-                        matchId
-                        name={'clubId'}
-                        required={true}
-                        options={clubs?.data ?? []}
+            <Stack spacing={4}>
+                {globalPrivilege && competition.properties.lateRegistrationAllowed && eventData.registrationAvailableTo && new Date(eventData.registrationAvailableTo) < new Date() &&
+                    <FormInputSelect
+                        name={'asRegistrationType'}
+                        label={t('event.competition.registration.dialog.registrationType.label')}
+                        options={registrationTypes.map( type => ({
+                            id: type,
+                            label: t(`event.competition.registration.dialog.registrationType.${type}`)
+                        } satisfies {id: RegistrationType, label: string} ))}
+                        required
                     />
-                )}
-                {competition.properties.namedParticipants.map(
-                    (namedParticipant, namedParticipantIndex) => (
-                        <Stack key={`${namedParticipant.id}`} spacing={1}>
-                            <TeamNamedParticipantLabel namedParticipant={namedParticipant} />
-                            <TeamParticipantAutocomplete
-                                name={`namedParticipants.${namedParticipantIndex}`}
-                                label={t('club.participant.title')}
-                                loading={clubId != null && participantsPending}
-                                disabled={clubId == null}
-                                options={getFilteredParticipants(namedParticipant)}
-                                required={true}
-                                namedParticipantsPath={'namedParticipants'}
-                                transform={{
-                                    input: value =>
-                                        participants.filter(p =>
-                                            value?.participantIds?.some(
-                                                (id: string) => id === p.id,
-                                            ),
-                                        ) ?? [],
-                                    output: (_, value) => {
-                                        return {
-                                            namedParticipantId: namedParticipant.id,
-                                            participantIds: value.map(p => p.id),
-                                        }
-                                    },
-                                }}
-                                countMales={namedParticipant.countMales}
-                                countFemales={namedParticipant.countFemales}
-                                countMixed={namedParticipant.countMixed}
-                                countNonBinary={namedParticipant.countNonBinary}
-                                disabledParticipants={competitionRegistrations?.data
-                                    ?.flatMap(cr =>
-                                        cr.namedParticipants.flatMap(np => np.participants),
-                                    )
-                                    .filter(
-                                        p =>
-                                            props.entity?.namedParticipants
-                                                .flatMap(np => np.participants)
-                                                .find(
-                                                    entityParticipant =>
-                                                        entityParticipant.id === p.id,
-                                                ) === undefined,
-                                    )}
-                            />
-                        </Stack>
-                    ),
-                )}
-                {optionalFees.length > 0 && (
-                    <CheckboxButtonGroup
-                        label={t('event.registration.optionalFee')}
-                        name={`optionalFees`}
-                        labelKey={'name'}
-                        options={optionalFees}
-                        row
-                    />
-                )}
+                }
+                <Stack spacing={2}>
+                    {props.entity?.id == null && globalPrivilege && (
+                        <FormInputAutocomplete
+                            label={t('club.club')}
+                            autocompleteProps={{getOptionLabel: (o: ClubSearchDto) => o.name}}
+                            matchId
+                            name={'clubId'}
+                            required={true}
+                            options={clubs?.data ?? []}
+                        />
+                    )}
+                    {competition.properties.namedParticipants.map(
+                        (namedParticipant, namedParticipantIndex) => (
+                            <Stack key={`${namedParticipant.id}`} spacing={1}>
+                                <TeamNamedParticipantLabel namedParticipant={namedParticipant} />
+                                <TeamParticipantAutocomplete
+                                    name={`namedParticipants.${namedParticipantIndex}`}
+                                    label={t('club.participant.title')}
+                                    loading={clubId != null && participantsPending}
+                                    disabled={clubId == null}
+                                    options={getFilteredParticipants(namedParticipant)}
+                                    required={true}
+                                    namedParticipantsPath={'namedParticipants'}
+                                    transform={{
+                                        input: value =>
+                                            participants.filter(p =>
+                                                value?.participantIds?.some(
+                                                    (id: string) => id === p.id,
+                                                ),
+                                            ) ?? [],
+                                        output: (_, value) => {
+                                            return {
+                                                namedParticipantId: namedParticipant.id,
+                                                participantIds: value.map(p => p.id),
+                                            }
+                                        },
+                                    }}
+                                    countMales={namedParticipant.countMales}
+                                    countFemales={namedParticipant.countFemales}
+                                    countMixed={namedParticipant.countMixed}
+                                    countNonBinary={namedParticipant.countNonBinary}
+                                    disabledParticipants={competitionRegistrations?.data
+                                        ?.flatMap(cr =>
+                                            cr.namedParticipants.flatMap(np => np.participants),
+                                        )
+                                        .filter(
+                                            p =>
+                                                props.entity?.namedParticipants
+                                                    .flatMap(np => np.participants)
+                                                    .find(
+                                                        entityParticipant =>
+                                                            entityParticipant.id === p.id,
+                                                    ) === undefined,
+                                        )}
+                                />
+                            </Stack>
+                        ),
+                    )}
+                    {optionalFees.length > 0 && (
+                        <CheckboxButtonGroup
+                            label={t('event.registration.optionalFee')}
+                            name={`optionalFees`}
+                            labelKey={'name'}
+                            options={optionalFees}
+                            row
+                        />
+                    )}
+                </Stack>
             </Stack>
         </EntityDialog>
     )
@@ -268,7 +291,12 @@ const CompetitionRegistrationDialog = ({
 function mapFormToRequest(
     formData: CompetitionRegistrationForm,
 ): CompetitionRegistrationTeamUpsertDto {
-    return {id: '', ...formData}
+    return {
+        id: formData.id ?? '',
+        clubId: formData.clubId,
+        optionalFees: formData.optionalFees,
+        namedParticipants: formData.namedParticipants,
+    }
 }
 
 function mapDtoToForm(dto: CompetitionRegistrationTeamDto): CompetitionRegistrationForm {
@@ -280,6 +308,7 @@ function mapDtoToForm(dto: CompetitionRegistrationTeamDto): CompetitionRegistrat
             namedParticipantId: np.namedParticipantId,
             participantIds: np.participants.map(p => p.id),
         })),
+        asRegistrationType: dto.isLate ? 'LATE' : 'REGULAR',
     }
 }
 

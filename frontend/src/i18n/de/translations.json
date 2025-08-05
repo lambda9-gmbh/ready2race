@@ -201,7 +201,8 @@
     "registerNow": "Zur Meldung",
     "invoice": {
       "prefix": "Rechnungspräfix",
-      "paymentDueBy": "Zahlungstermin Meldegebühren"
+      "paymentDueBy": "Zahlungstermin Meldegebühren",
+      "latePaymentDueBy": "Zahlungstermin Nachmeldegebühren"
     },
     "location": "Ort",
     "upcoming": "Anstehende Veranstaltungen",
@@ -209,6 +210,8 @@
       "timespan": "Anmeldezeitraum",
       "timespanFrom": "Anmeldezeitraum von",
       "timespanTo": "Anmeldezeitraum bis",
+      "lateTimespan": "Nachmeldezeitraum",
+      "lateTo": "Nachmeldezeitraum bis",
       "from": "ab",
       "to": "bis",
       "unknown": "Noch nicht bekannt gegeben"
@@ -231,6 +234,7 @@
       "identifier": "Kennung",
       "name": "Name",
       "description": "Beschreibung",
+      "lateRegistrationAllowed": "zur Nachmeldung erlaubt",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
       "tableHint": {
@@ -289,13 +293,16 @@
         "name": "Name",
         "description": "Beschreibung",
         "amount": "Betrag",
+        "lateAmount": "Abweichender Betrag bei Nachmeldung",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
         "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
-        }
+        },
+        "asRegular": "bei Meldung: {{amount}}€",
+        "asLate": "bei Nachmeldung: {{amount}}€"
       },
       "template": {
         "template": "Wettkampf Vorlage",
@@ -310,7 +317,15 @@
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       },
       "registration": {
-        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben."
+        "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
+        "dialog": {
+          "registrationType": {
+            "label": "Hinzufügen als",
+            "REGULAR": "Meldung",
+            "LATE": "Nachmeldung"
+          }
+        },
+        "isLate": "als Nachmeldung"
       },
       "setup": {
         "setup": "Wettbewerbsablauf",
@@ -650,6 +665,7 @@
       "message": "Nachricht",
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
+      "lateTotalFees": "Nachmeldegebühr",
       "acceptDocuments": "Ich akzeptiere Folgendes:",
       "infoDocuments": "Weitere Informationen",
       "finish": "Anmeldung abschicken",
@@ -992,6 +1008,11 @@
       "setNotPaid": "Zahlungseingang zurücknehmen"
     },
     "produce": {
+      "for": "für {{type}}",
+      "type": {
+        "REGULAR": "Meldungen",
+        "LATE": "Nachmeldungen"
+      },
       "info": {
         "paymentDueBy": {
           "title": "Standard Zahlungsziel für Rechnungen",

@@ -41,13 +41,12 @@ import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
-import {a11yProps, eventRegistrationPossible} from '@utils/helpers.ts'
+import {a11yProps, arrayOfNotNull, eventRegistrationPossible, ifDefined} from '@utils/helpers.ts'
 import PlaceIcon from '@mui/icons-material/Place'
 import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays.tsx'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
-import EventActions from '@components/event/EventActions.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
@@ -122,12 +121,39 @@ const EventPage = () => {
         [data, user],
     )
 
-    const regAvailableFrom = data?.registrationAvailableFrom
-        ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
-        : undefined
-    const regAvailableTo = data?.registrationAvailableTo
-        ? format(new Date(data.registrationAvailableTo), t('format.datetime'))
-        : undefined
+    const registrationPeriod =
+        !data?.registrationAvailableFrom && !data?.registrationAvailableTo
+            ? t('event.registrationAvailable.unknown')
+            : arrayOfNotNull(
+                ifDefined(
+                    data.registrationAvailableFrom,
+                    from =>
+                        t('event.registrationAvailable.from') +
+                        ' ' +
+                        format(new Date(from), t('format.datetime')),
+                ),
+                ifDefined(
+                    data.registrationAvailableTo,
+                    to =>
+                        t('event.registrationAvailable.to') +
+                        ' ' +
+                        format(new Date(to), t('format.datetime')),
+                ),
+            ).join(' ')
+
+    const lateRegistrationPeriod = ifDefined(data?.lateRegistrationAvailableTo, lateTo =>
+        ifDefined(
+            data?.registrationAvailableTo,
+            to =>
+                t('event.registrationAvailable.from') +
+                ' ' +
+                format(new Date(to), t('format.datetime')) +
+                ' ' +
+                t('event.registrationAvailable.to') +
+                ' ' +
+                format(new Date(lateTo), t('format.datetime')),
+        ),
+    )
 
     return (
         <Box>
@@ -210,21 +236,16 @@ const EventPage = () => {
                                                 </ListItemIcon>
                                                 <ListItemText
                                                     primary={
-                                                        regAvailableFrom && regAvailableTo
-                                                            ? t(
-                                                                  'event.registrationAvailable.timespan',
-                                                              ) +
-                                                              ': ' +
-                                                              regAvailableFrom +
-                                                              ' - ' +
-                                                              regAvailableTo
-                                                            : regAvailableFrom
-                                                              ? t(
-                                                                    'event.registrationAvailable.timespanFrom',
-                                                                ) + ` ${regAvailableFrom}`
-                                                              : t(
-                                                                    'event.registrationAvailable.timespanTo',
-                                                                ) + ` ${regAvailableTo}`
+                                                        t('event.registrationAvailable.timespan') +
+                                                            ': ' +
+                                                            registrationPeriod
+                                                    }
+                                                    secondary={
+                                                        lateRegistrationPeriod && (
+                                                            t('event.registrationAvailable.lateTimespan') +
+                                                            ': ' +
+                                                            lateRegistrationPeriod
+                                                        )
                                                     }
                                                 />
                                             </ListItem>

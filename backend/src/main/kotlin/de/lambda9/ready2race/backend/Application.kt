@@ -82,7 +82,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {
-                            is ProduceInvoiceError.MissingRecipient -> DynamicIntervalJobState.Processed
+                            is ProduceInvoiceError.MissingRecipient, ProduceInvoiceError.NoPositions -> DynamicIntervalJobState.Processed
                             ProduceInvoiceError.NoOpenJobs -> DynamicIntervalJobState.Empty
                         }
                     }

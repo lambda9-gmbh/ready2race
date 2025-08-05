@@ -126,6 +126,7 @@ create view fee_for_competition_properties as
 select cphf.competition_properties,
        cphf.required,
        cphf.amount,
+       cphf.late_amount,
        f.id,
        f.name,
        f.description
@@ -137,6 +138,7 @@ select f.id,
        f.name,
        f.description,
        cphf.amount,
+       cphf.late_amount,
        cphf.required,
        cp.competition as competition_id
 from competition_properties_has_fee cphf
@@ -152,6 +154,7 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
+       cp.late_registration_allowed,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -179,7 +182,7 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          left join competition_registration cr on c.id = cr.competition
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id, cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees
 ;
 
@@ -190,6 +193,7 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
+       cp.late_registration_allowed,
        nps.total_count                        as total_count,
        cc.id                                  as category_id,
        cc.name                                as category_name,
@@ -219,7 +223,7 @@ from competition c
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          cross join club cb
          left join competition_registration cr on c.id = cr.competition and cb.id = cr.club
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id, cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees, cb.id;
 
 create view competition_public_view as
@@ -229,6 +233,7 @@ select c.id,
        cp.name,
        cp.short_name,
        cp.description,
+       cp.late_registration_allowed,
        nps.total_count                        as total_count,
        cc.id                                  as category_id,
        cc.name                                as category_name,
@@ -256,7 +261,7 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
 where e.published is true
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id, cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees;
 
 create view competition_template_view as
@@ -265,6 +270,7 @@ select ct.id,
        cp.name,
        cp.short_name,
        cp.description,
+       cp.late_registration_allowed,
        cc.id                                  as category_id,
        cc.name                                as category_name,
        cc.description                         as category_description,
@@ -389,6 +395,7 @@ select e.id,
        e.location,
        e.registration_available_from,
        e.registration_available_to,
+       e.late_registration_available_to,
        e.created_at,
        count(distinct c.id)  as competition_count,
        min(ed.date) as event_from,
@@ -410,10 +417,13 @@ select e.id,
        e.location,
        e.registration_available_from,
        e.registration_available_to,
+       e.late_registration_available_to,
        e.invoice_prefix,
        e.published,
        e.invoices_produced,
+       e.late_invoices_produced,
        e.payment_due_by,
+       e.late_payment_due_by,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        err.event is not null                                                            as registrations_finalized
 from event e
@@ -471,6 +481,7 @@ select cr.id,
        cr.club,
        cr.name                                                                   as team_name,
        cr.team_number,
+       cr.is_late,
        coalesce(array_agg(rctp) filter ( where rctp.team_id is not null ), '{}') as participants
 from competition_registration cr
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
@@ -531,7 +542,8 @@ create view applied_fee as
 select cphf.id,
        cr.id as competition_registration,
        f.name,
-       cphf.amount
+       cphf.amount,
+       cphf.late_amount
 from competition_registration cr
          join competition_properties cp on cr.competition = cp.competition
          left join competition_properties_has_fee cphf on cp.id = cphf.competition_properties
@@ -543,6 +555,7 @@ where cphf.required is true
 
 create view competition_registration_with_fees as
 select cr.event_registration,
+       cr.is_late,
        cp.id                                                            as properties_id,
        cp.identifier,
        cp.name,

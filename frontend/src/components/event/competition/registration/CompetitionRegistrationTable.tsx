@@ -2,16 +2,20 @@ import {useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
+    CompetitionDto,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
-    getCompetitionRegistrations,
+    getCompetitionRegistrations, OpenForRegistrationType,
 } from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
-import {Stack, Typography} from '@mui/material'
+import {Stack, Tooltip, Typography} from '@mui/material'
 import {format} from 'date-fns'
+import {useUser} from "@contexts/user/UserContext.ts";
+import {updateRegistrationGlobal} from "@authorization/privileges.ts";
+import {PendingActions} from "@mui/icons-material";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -20,10 +24,16 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
+type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
+    registrationState: OpenForRegistrationType
+    competition: CompetitionDto
+}
+
 const CompetitionRegistrationTable = (
-    props: BaseEntityTableProps<CompetitionRegistrationTeamDto>,
+    {registrationState, ...props}: Props,
 ) => {
     const {t} = useTranslation()
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -51,6 +61,21 @@ const CompetitionRegistrationTable = (
                 field: 'clubName',
                 headerName: t('club.club'),
                 minWidth: 200,
+                renderCell: ({row}) => (
+                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                        <Typography>
+                            {row.clubName}
+                        </Typography>
+                        {row.isLate ? (
+                            <Tooltip title={t('event.competition.registration.isLate')}>
+                                <PendingActions />
+                            </Tooltip>
+                            ) : (
+                                <></>
+                            )
+                        }
+                    </Stack>
+                ),
             },
             {
                 field: 'name',
@@ -112,11 +137,14 @@ const CompetitionRegistrationTable = (
         [],
     )
 
+    // closed is already checked in parent component
+    const writable = (dto: CompetitionRegistrationTeamDto) =>
+        dto.isLate === (registrationState === 'LATE') || user.checkPrivilege(updateRegistrationGlobal)
+
     return (
         <Fragment>
             <EntityTable
                 {...props}
-                withSearch={false}
                 parentResource={'REGISTRATION'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}
@@ -125,6 +153,8 @@ const CompetitionRegistrationTable = (
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
                 entityName={t('event.registration.registration')}
+                deletableIf={writable}
+                editableIf={writable}
             />
         </Fragment>
     )

@@ -8,5 +8,6 @@ data class FeeForCompetitionDto(
     val name: String,
     val description: String?,
     val required: Boolean,
-    val amount: BigDecimal
+    val amount: BigDecimal,
+    val lateAmount: BigDecimal?,
 )

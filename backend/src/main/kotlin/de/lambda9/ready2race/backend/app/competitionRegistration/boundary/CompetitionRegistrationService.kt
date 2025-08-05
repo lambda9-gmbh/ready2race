@@ -12,9 +12,12 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.control.Competi
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationError
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamDto
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationNamedParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
+import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -25,6 +28,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
+import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.tailwind.core.KIO
@@ -47,8 +51,7 @@ object CompetitionRegistrationService {
     ): App<ServiceError, ApiResponse.Page<CompetitionRegistrationTeamDto, CompetitionRegistrationSort>> =
         KIO.comprehension {
 
-            // TODO add search?
-            val total = !CompetitionRegistrationRepo.countForCompetition(competitionId, scope, user).orDie()
+            val total = !CompetitionRegistrationRepo.countForCompetition(competitionId, params.search, scope, user).orDie()
             val page = !CompetitionRegistrationRepo.pageForCompetition(competitionId, params, scope, user).orDie()
 
             ok(
@@ -65,15 +68,43 @@ object CompetitionRegistrationService {
         competitionId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
-    ): App<CompetitionRegistrationError, ApiResponse.Created> = KIO.comprehension {
+        diffRegType: RegistrationInvoiceType?,
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
+
+        val type = diffRegType.takeIf { scope == Privilege.Scope.GLOBAL }
+            ?: !EventService.getOpenForRegistrationType(eventId).map {
+                when (it) {
+                    OpenForRegistrationType.REGULAR -> RegistrationInvoiceType.REGULAR
+                    OpenForRegistrationType.LATE -> RegistrationInvoiceType.LATE
+                    OpenForRegistrationType.CLOSED -> null
+                }
+            }.onNullDie("Already validated: Either global permission with specified type or failed on own permission when closed")
+
+        val isLate = type == RegistrationInvoiceType.LATE
 
         val registrationId = !EventRegistrationRepo.findByEventAndClub(eventId, request.clubId).map { it?.id }.orDie()
             .onNullFail { CompetitionRegistrationError.EventRegistrationNotFound }
 
         val existingCount =
             !CompetitionRegistrationRepo.countForCompetitionAndClub(competitionId, request.clubId).orDie()
+
+        val name = when {
+
+            existingCount < 1 -> {
+                null
+            }
+
+            existingCount == 1 -> {
+                val first = !CompetitionRegistrationRepo.getByCompetitionAndClub(competitionId, request.clubId).orDie().map { it.singleOrNull() }.onNullDie("Count returned 1 row, select returned NOT 1 row.")
+                first.name = "#1"
+                first.update()
+                "#2"
+            }
+
+            else -> "#${existingCount + 1}"
+        }
 
         val now = LocalDateTime.now()
 
@@ -83,11 +114,12 @@ object CompetitionRegistrationService {
                 registrationId,
                 competitionId,
                 request.clubId,
-                "#${existingCount + 1}",
+                name,
                 now,
                 user.id,
                 now,
-                user.id
+                user.id,
+                isLate = isLate,
             )
         ).orDie()
 
@@ -104,17 +136,28 @@ object CompetitionRegistrationService {
 
     fun update(
         request: CompetitionRegistrationTeamUpsertDto,
+        eventId: UUID,
         competitionId: UUID,
         competitionRegistrationId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
-    ): App<CompetitionRegistrationError, ApiResponse.NoData> = KIO.comprehension {
+        diffRegType: RegistrationInvoiceType?,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
 
         val registration =
             !CompetitionRegistrationRepo.findByIdAndCompetitionId(competitionRegistrationId, competitionId).orDie()
                 .onNullFail { CompetitionRegistrationError.NotFound }
+
+        if (scope == Privilege.Scope.GLOBAL) {
+            registration.isLate = diffRegType == RegistrationInvoiceType.LATE
+            registration.update()
+        } else {
+            val type = !EventService.getOpenForRegistrationType(eventId)
+            val changeIsLate = type == OpenForRegistrationType.LATE
+            !KIO.failOn(registration.isLate != changeIsLate ) { CompetitionRegistrationError.RegistrationClosed }
+        }
 
         !CompetitionRegistrationNamedParticipantRepo.deleteAllByRegistrationId(registration.id).orDie()
 
@@ -225,30 +268,40 @@ object CompetitionRegistrationService {
     }
 
     fun delete(
+        eventId: UUID,
         competitionId: UUID,
         competitionRegistrationId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
-    ): App<CompetitionRegistrationError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val registration = !CompetitionRegistrationRepo.findByIdAndCompetitionId(competitionRegistrationId, competitionId).orDie()
+            .onNullFail { CompetitionRegistrationError.NotFound }
+
+        !validateScope(scope, competitionId, user, registration.club)
 
         if (scope == Privilege.Scope.OWN) {
-            !CompetitionRepo.isOpenForRegistration(competitionId, LocalDateTime.now()).orDie()
-                .onFalseFail { CompetitionRegistrationError.RegistrationClosed }
+            val type = !EventService.getOpenForRegistrationType(eventId)
+            val changeIsLate = type == OpenForRegistrationType.LATE
+            !KIO.failOn(registration.isLate != changeIsLate ) { CompetitionRegistrationError.RegistrationClosed }
         } else {
             // TODO check no race exists yet
         }
 
-        val clubId = !CompetitionRegistrationRepo.getClub(competitionRegistrationId).orDie()
-            .onNullFail { CompetitionRegistrationError.NotFound }
+        registration.delete()
 
-        !CompetitionRegistrationRepo.delete(competitionRegistrationId, scope, user).orDie()
-            .failIf({ it < 1 }) { CompetitionRegistrationError.NotFound }
+        val remaining = !CompetitionRegistrationRepo.getByCompetitionAndClub(competitionId, registration.club).orDie()
 
-        val remaining = !CompetitionRegistrationRepo.getByCompetitionAndClub(competitionId, clubId).orDie()
-
-        remaining.sortedWith(lexiNumberComp { it.name }).mapIndexed { idx, rec ->
-            rec.name = "#${idx + 1}"
-            rec.update()
+        if (remaining.size == 1) {
+            remaining.first().let {
+                it.name = null
+                it.update()
+            }
+        } else {
+            remaining.sortedWith(lexiNumberComp { it.name }).mapIndexed { idx, rec ->
+                rec.name = "#${idx + 1}"
+                rec.update()
+            }
         }
 
         noData

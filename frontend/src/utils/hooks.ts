@@ -113,6 +113,7 @@ export const useParamDialogState = <T>(defaultOpen: boolean): UseParamDialogStat
 export type UseEntityAdministrationOptions = {
     entityCreate?: boolean
     entityUpdate?: boolean
+    entityDelete?: boolean
 }
 
 export type UseEntityAdministrationReturn<T> = {
@@ -134,7 +135,7 @@ export type UseEntityAdministrationReturn<T> = {
 
 export const useEntityAdministration = <T extends GridValidRowModel | undefined = undefined>(
     entityName: string,
-    {entityCreate = true, entityUpdate = true}: UseEntityAdministrationOptions = {},
+    {entityCreate = true, entityUpdate = true, entityDelete = true}: UseEntityAdministrationOptions = {},
 ): UseEntityAdministrationReturn<T> => {
     const [dialogIsOpen, openDialog, closeDialog, entity] = useParamDialogState<T>(false)
 
@@ -145,6 +146,7 @@ export const useEntityAdministration = <T extends GridValidRowModel | undefined 
     const options: UseEntityAdministrationOptions = {
         entityCreate,
         entityUpdate,
+        entityDelete
     }
 
     return {

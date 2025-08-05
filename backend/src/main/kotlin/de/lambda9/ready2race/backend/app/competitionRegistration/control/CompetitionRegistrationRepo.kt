@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationNamedParticipantDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamDto
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
@@ -13,9 +14,11 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.database.insertReturning
+import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -25,11 +28,17 @@ import java.util.*
 
 object CompetitionRegistrationRepo {
 
+    private val searchFieldsForCompetition = listOf(CLUB.NAME, COMPETITION_REGISTRATION.NAME)
+
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
 
     // TODO: @What?: Why also competitionId? id is already unique
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
         COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }
+
+    fun getByClub(clubId: UUID) = COMPETITION_REGISTRATION.select { CLUB.eq(clubId) }
+
+    fun update(id: UUID, f: CompetitionRegistrationRecord.() -> Unit) = COMPETITION_REGISTRATION.update(f) { ID.eq(id) }
 
     fun allForEvent(eventId: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
         select(COMPETITION_REGISTRATION)
@@ -46,8 +55,17 @@ object CompetitionRegistrationRepo {
         user: AppUserWithPrivilegesRecord,
     ) = COMPETITION_REGISTRATION.delete { ID.eq(competitionId).and(filterScope(scope, user.club)) }
 
-    fun deleteByEventRegistration(eventRegistrationId: UUID) =
-        COMPETITION_REGISTRATION.delete { COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId) }
+    fun deleteForEventRegistrationUpdate(eventRegistrationId: UUID, type: OpenForRegistrationType) =
+        COMPETITION_REGISTRATION.delete {
+            DSL.and(
+                COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(eventRegistrationId),
+                when (type) {
+                    OpenForRegistrationType.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                    OpenForRegistrationType.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                    OpenForRegistrationType.CLOSED -> DSL.falseCondition()
+                }
+            )
+        }
 
     fun getClub(id: UUID) = COMPETITION_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
 
@@ -70,16 +88,16 @@ object CompetitionRegistrationRepo {
 
     fun countForCompetition(
         competitionId: UUID,
+        search: String?,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
     ): JIO<Int> = Jooq.query {
-        with(COMPETITION_REGISTRATION) {
-            fetchCount(
-                this,
-                COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
-                    .and(filterScope(scope, user.club))
-            )
-        }
+        fetchCount(
+            COMPETITION_REGISTRATION.join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)),
+            COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
+                .and(filterScope(scope, user.club))
+                .and(search.metaSearch(searchFieldsForCompetition))
+        )
     }
 
     fun getByCompetitionId(id: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
@@ -110,12 +128,13 @@ object CompetitionRegistrationRepo {
             CLUB.NAME,
             optionalFees,
             namedParticipants,
+            COMPETITION_REGISTRATION.IS_LATE,
             COMPETITION_REGISTRATION.CREATED_AT,
             COMPETITION_REGISTRATION.UPDATED_AT
         )
             .from(COMPETITION_REGISTRATION)
             .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
-            .page(params) {
+            .page(params, searchFieldsForCompetition) {
                 COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                     .and(filterScope(scope, user.club))
             }
@@ -127,6 +146,7 @@ object CompetitionRegistrationRepo {
                     clubName = it[CLUB.NAME]!!,
                     optionalFees = it[optionalFees],
                     namedParticipants = it[namedParticipants],
+                    isLate = it[COMPETITION_REGISTRATION.IS_LATE]!!,
                     createdAt = it[COMPETITION_REGISTRATION.CREATED_AT]!!,
                     updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!
                 )
