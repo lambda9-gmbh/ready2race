@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.database.insertReturning
+import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
@@ -26,6 +27,8 @@ import org.jooq.impl.DSL
 import java.util.*
 
 object CompetitionRegistrationRepo {
+
+    private val searchFieldsForCompetition = listOf(CLUB.NAME, COMPETITION_REGISTRATION.NAME)
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
 
@@ -85,16 +88,16 @@ object CompetitionRegistrationRepo {
 
     fun countForCompetition(
         competitionId: UUID,
+        search: String?,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
     ): JIO<Int> = Jooq.query {
-        with(COMPETITION_REGISTRATION) {
-            fetchCount(
-                this,
-                COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
-                    .and(filterScope(scope, user.club))
-            )
-        }
+        fetchCount(
+            COMPETITION_REGISTRATION.join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)),
+            COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
+                .and(filterScope(scope, user.club))
+                .and(search.metaSearch(searchFieldsForCompetition))
+        )
     }
 
     fun getByCompetitionId(id: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
@@ -131,7 +134,7 @@ object CompetitionRegistrationRepo {
         )
             .from(COMPETITION_REGISTRATION)
             .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
-            .page(params) {
+            .page(params, searchFieldsForCompetition) {
                 COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                     .and(filterScope(scope, user.club))
             }

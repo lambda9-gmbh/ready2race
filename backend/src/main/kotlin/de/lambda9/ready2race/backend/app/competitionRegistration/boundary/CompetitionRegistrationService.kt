@@ -51,8 +51,7 @@ object CompetitionRegistrationService {
     ): App<ServiceError, ApiResponse.Page<CompetitionRegistrationTeamDto, CompetitionRegistrationSort>> =
         KIO.comprehension {
 
-            // TODO add search?
-            val total = !CompetitionRegistrationRepo.countForCompetition(competitionId, scope, user).orDie()
+            val total = !CompetitionRegistrationRepo.countForCompetition(competitionId, params.search, scope, user).orDie()
             val page = !CompetitionRegistrationRepo.pageForCompetition(competitionId, params, scope, user).orDie()
 
             ok(

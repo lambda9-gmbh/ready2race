@@ -1,6 +1,6 @@
-import {Divider, Stack, Typography} from '@mui/material'
+import {Divider, List, ListItem, ListItemText, Stack, Typography} from '@mui/material'
 import {EventRegistrationCompetitionDto} from '../../api'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {useCallback} from 'react'
@@ -16,18 +16,21 @@ export const EventRegistrationPriceTooltip = (props: {
 
             if (fees.length > 0) {
                 return (
-                    <>
-                        {fees.map((fee, index) => (
-                            <Stack
-                                direction={'row'}
-                                justifyContent={'space-between'}
-                                spacing={2}
-                                key={`${fee}-${index}`}>
-                                <Typography>{fee.label}:</Typography>
-                                <Typography>{Number(fee.amount).toFixed(2)}€</Typography>
-                            </Stack>
+                    <List>
+                        {fees.map((fee) => (
+                            <ListItem key={fee.id}>
+                                <ListItemText
+                                    primary={
+                                        <>{fee.label}: {Number(fee.amount).toFixed(2)}€</>
+                                    }
+                                    secondary={
+                                        props.competition.lateRegistrationAllowed &&
+                                        <Trans i18nKey={'event.competition.fee.asLate'} values={{amount: Number(fee.lateAmount ?? fee.amount).toFixed(2)}} />
+                                    }
+                                />
+                            </ListItem>
                         ))}
-                    </>
+                    </List>
                 )
             } else {
                 return <Typography>-</Typography>

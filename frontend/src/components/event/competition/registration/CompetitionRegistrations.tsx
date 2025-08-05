@@ -51,6 +51,7 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
                 />
                 <CompetitionRegistrationTable
                     {...competitionRegistrationTeamsProps.table}
+                    competition={competitionData}
                     registrationState={registrationState}
                 />
             </>

@@ -2,6 +2,7 @@ import {useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
+    CompetitionDto,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
     getCompetitionRegistrations, OpenForRegistrationType,
@@ -10,10 +11,11 @@ import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
-import {Stack, Typography} from '@mui/material'
+import {Stack, Tooltip, Typography} from '@mui/material'
 import {format} from 'date-fns'
 import {useUser} from "@contexts/user/UserContext.ts";
 import {updateRegistrationGlobal} from "@authorization/privileges.ts";
+import {PendingActions} from "@mui/icons-material";
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -24,6 +26,7 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
     registrationState: OpenForRegistrationType
+    competition: CompetitionDto
 }
 
 const CompetitionRegistrationTable = (
@@ -58,6 +61,21 @@ const CompetitionRegistrationTable = (
                 field: 'clubName',
                 headerName: t('club.club'),
                 minWidth: 200,
+                renderCell: ({row}) => (
+                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                        <Typography>
+                            {row.clubName}
+                        </Typography>
+                        {row.isLate ? (
+                            <Tooltip title={t('event.competition.registration.isLate')}>
+                                <PendingActions />
+                            </Tooltip>
+                            ) : (
+                                <></>
+                            )
+                        }
+                    </Stack>
+                ),
             },
             {
                 field: 'name',
@@ -127,7 +145,6 @@ const CompetitionRegistrationTable = (
         <Fragment>
             <EntityTable
                 {...props}
-                withSearch={false}
                 parentResource={'REGISTRATION'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}

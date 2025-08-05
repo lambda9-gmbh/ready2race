@@ -12,7 +12,7 @@ enum class CompetitionRegistrationSort : Sortable {
     UPDATED_AT;
 
     override fun toFields(): List<Field<*>> = when (this) {
-        CLUB_NAME -> listOf(CLUB.NAME)
+        CLUB_NAME -> listOf(CLUB.NAME, COMPETITION_REGISTRATION.IS_LATE)
         NAME -> listOf(COMPETITION_REGISTRATION.NAME)
         CREATED_AT -> listOf(COMPETITION_REGISTRATION.CREATED_AT)
         UPDATED_AT -> listOf(COMPETITION_REGISTRATION.UPDATED_AT)
