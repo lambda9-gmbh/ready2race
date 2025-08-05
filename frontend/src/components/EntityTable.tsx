@@ -46,7 +46,10 @@ type ExtendedEntityTableProps<
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, GetError, false>
     customTableActions?: ReactNode
-    customEntityActions?: (entity: Entity, checkPrivilege: (privilege: Privilege) => boolean) => EntityAction[]
+    customEntityActions?: (
+        entity: Entity,
+        checkPrivilege: (privilege: Privilege) => boolean,
+    ) => EntityAction[]
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
@@ -203,16 +206,12 @@ const EntityTableInternal = <
                   },
               ]
             : []),
-        ...columns.filter(
-            c =>
-                !c.requiredPrivilege || (user.checkPrivilege(c.requiredPrivilege)),
-        ),
+        ...columns.filter(c => !c.requiredPrivilege || user.checkPrivilege(c.requiredPrivilege)),
         {
             field: 'actions',
             type: 'actions' as 'actions',
             getActions: (params: GridRowParams<Entity>) => [
-                ...customEntityActions(params.row, user.checkPrivilege)
-                    .filter(action => !!action),
+                ...customEntityActions(params.row, user.checkPrivilege).filter(action => !!action),
                 ...(crud.update && options.entityUpdate && (editableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
@@ -236,7 +235,9 @@ const EntityTableInternal = <
                                       if (error) {
                                           onDeleteError
                                               ? onDeleteError(error)
-                                              : feedback.error(t('entity.delete.error', {entity: entityName}))
+                                              : feedback.error(
+                                                    t('entity.delete.error', {entity: entityName}),
+                                                )
                                       } else {
                                           onDelete?.()
                                           feedback.success(
@@ -349,7 +350,7 @@ const EntityTableInternal = <
                                     py: '22px',
                                 },
                                 '& .MuiDataGrid-columnHeader': {
-                                    backgroundColor: t => t.palette.primary.light
+                                    backgroundColor: t => t.palette.primary.light,
                                 },
                             }}
                             {...gridProps}

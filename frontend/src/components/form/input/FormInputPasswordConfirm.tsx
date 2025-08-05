@@ -18,8 +18,7 @@ const FormInputPasswordConfirm = (props: FormInputPasswordConfirmProps) => {
             <PasswordRepeatElement
                 {...props}
                 customInvalidFieldMessage={
-                    props.customInvalidFieldMessage ??
-                    t('user.password.notMatching')
+                    props.customInvalidFieldMessage ?? t('user.password.notMatching')
                 }
                 rules={{
                     ...props.rules,

@@ -47,6 +47,15 @@ import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
 
+    fun getMatchesByEvent(
+        eventId: UUID,
+        currentlyRunning: Boolean? = null,
+        withoutPlaces: Boolean? = null
+    ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        KIO.ok(ApiResponse.ListDto(matches))
+    }
+
     fun createNewRound(
         competitionId: UUID,
         userId: UUID,
@@ -388,6 +397,12 @@ object CompetitionExecutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
         }
 
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = false
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
                 place = result.place
@@ -395,6 +410,23 @@ object CompetitionExecutionService {
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
         }.map { ApiResponse.NoData }
+    }
+
+    fun updateMatchRunningState(
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchRunningStateRequest
+    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = request.currentlyRunning
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
     }
 
 

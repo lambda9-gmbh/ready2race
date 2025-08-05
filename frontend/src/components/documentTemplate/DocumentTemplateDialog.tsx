@@ -67,7 +67,6 @@ const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto
         setFileError(null)
     }, [props.entity])
 
-
     const {fields, append, update} = useFieldArray({
         control: formContext.control,
         name: 'files',
@@ -81,8 +80,8 @@ const DocumentTemplateDialog = (props: BaseEntityDialogProps<DocumentTemplateDto
                     setFileError(null)
                     return undefined
                 }
-            }
-        }
+            },
+        },
     })
 
     const filename = fields[0]?.file?.name

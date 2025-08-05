@@ -2,7 +2,7 @@ import {useTranslation} from 'react-i18next'
 import {PropsWithChildren, useState} from 'react'
 import {Confirmation, ConfirmationContext, ConfirmationOptions} from './ConfirmationContext'
 import {Button, DialogActions, DialogContent, DialogTitle} from '@mui/material'
-import BaseDialog from "@components/BaseDialog.tsx";
+import BaseDialog from '@components/BaseDialog.tsx'
 
 type ConfirmationState =
     | {
@@ -52,10 +52,7 @@ export const ConfirmationProvider = (props: PropsWithChildren<{}>) => {
     return (
         <ConfirmationContext.Provider value={confirmationValue}>
             {props.children}
-            <BaseDialog
-                open={confirmation.open}
-                onClose={handleCancel}
-                maxWidth={'sm'}>
+            <BaseDialog open={confirmation.open} onClose={handleCancel} maxWidth={'sm'}>
                 <DialogTitle>
                     {confirmation.options?.title ?? t('common.confirmation.title')}
                 </DialogTitle>

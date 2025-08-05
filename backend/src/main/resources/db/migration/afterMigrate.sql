@@ -397,7 +397,7 @@ select e.id,
        e.registration_available_to,
        e.late_registration_available_to,
        e.created_at,
-       count(c.id)  as competition_count,
+       count(distinct c.id)  as competition_count,
        min(ed.date) as event_from,
        max(ed.date) as event_to
 from event e
@@ -655,6 +655,7 @@ group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competi
 create view competition_match_with_teams as
 select cm.competition_setup_match,
        cm.start_time,
+       cm.currently_running,
        coalesce(array_agg(cmtwr) filter (where cmtwr.id is not null), '{}') as teams
 from competition_match cm
          left join competition_match_team_with_registration cmtwr

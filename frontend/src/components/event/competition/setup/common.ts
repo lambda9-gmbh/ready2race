@@ -153,7 +153,7 @@ export function mapCompetitionSetupTemplateDtoToForm(
         name: dto.name,
         description: dto.description ?? '',
         rounds: mapDtoRoundsToFormRounds(dto.rounds),
-        setupTemplateId: dto.id
+        setupTemplateId: dto.id,
     }
 }
 

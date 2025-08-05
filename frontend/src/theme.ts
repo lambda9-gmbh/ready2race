@@ -16,32 +16,32 @@ const baseThemeOptions: ThemeOptions = {
         info: {
             main: '#6fb0d4',
         },
-        common:{
-            black: '#1d1d1d'
+        common: {
+            black: '#1d1d1d',
         },
         primary: {
             main: '#4d9f85',
             light: '#ecfaf7',
-        }
+        },
     },
     typography: {
         h1: {
             fontSize: '3rem',
-            fontWeight: 'normal'
+            fontWeight: 'normal',
         },
         h2: {
             fontSize: '2rem',
-            fontWeight: 'normal'
+            fontWeight: 'normal',
         },
         h3: {
             fontSize: '1.5rem',
-            fontWeight: 'normal'
+            fontWeight: 'normal',
         },
         subtitle1: {
             fontSize: '1.3rem',
-            fontWeight: 'normal'
+            fontWeight: 'normal',
         },
-        body1:{
+        body1: {
             fontSize: '1rem',
         },
     },
@@ -52,8 +52,8 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    background: _theme.palette.primary.light
-                }
+                    background: _theme.palette.primary.light,
+                },
             },
         },
         MuiButton: {
@@ -75,11 +75,11 @@ const componentOverrides = (_theme: Theme): ThemeOptions => ({
                 root: {
                     '& .MuiSvgIcon-root': {
                         height: '25px',
-                        width: '25px'
-                    }
-                }
-            }
-        }
+                        width: '25px',
+                    },
+                },
+            },
+        },
     },
 })
 

@@ -7,8 +7,8 @@ export type PaginationParameters = {
     search?: string
 }
 
-function toSnakeCase(value: string){
-    if(value.length < 1){
+function toSnakeCase(value: string) {
+    if (value.length < 1) {
         return ''
     } else {
         const result = [value.charAt(0).toLowerCase()]
@@ -33,11 +33,16 @@ export const paginationParameters = (
     return {
         limit: pageModel.pageSize,
         offset: pageModel.pageSize * pageModel.page,
-        sort: JSON.stringify(sortModel.map((v) => {
-            return {field: toSnakeCase(v.field).toUpperCase(), direction: v.sort === 'desc' ? 'DESC' : 'ASC'}
-        })),
-        search: searchString !== "" ? searchString : undefined
+        sort: JSON.stringify(
+            sortModel.map(v => {
+                return {
+                    field: toSnakeCase(v.field).toUpperCase(),
+                    direction: v.sort === 'desc' ? 'DESC' : 'ASC',
+                }
+            }),
+        ),
+        search: searchString !== '' ? searchString : undefined,
     }
 }
 
-export const takeIfNotEmpty = (str: string | undefined) => str ? str : undefined
+export const takeIfNotEmpty = (str: string | undefined) => (str ? str : undefined)

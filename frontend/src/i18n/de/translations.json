@@ -11,7 +11,7 @@
     "edit": "Bearbeiten",
     "selected": "Ausgewählt",
     "manage": "Verwalten",
-    "all" : "Alle",
+    "all": "Alle",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
@@ -72,13 +72,23 @@
     "next": "Weiter",
     "and": "und",
     "remove": "Entfernen",
+    "items": "Elemente",
+    "more": "Mehr",
+    "create": "Erstellen",
+    "seconds": "Sekunden",
+    "update": "Aktualisieren",
+    "lastUpdate": "Letzte Aktualisierung",
+    "confirmDelete": "Löschen bestätigen",
+    "fullscreen": "Vollbild",
+    "exitFullscreen": "Vollbild beenden",
     "language": {
       "menu": "Sprache auswählen"
     }
   },
   "format": {
     "date": "dd.MM.yyyy",
-    "datetime": "dd.MM.yyyy, HH:mm"
+    "datetime": "dd.MM.yyyy, HH:mm",
+    "time": "HH:mm"
   },
   "document": {
     "template": {
@@ -149,7 +159,7 @@
     "gender": "Geschlecht",
     "phone": "Telefon",
     "remark": "Anmerkung",
-    "color" : "Farbe"
+    "color": "Farbe"
   },
   "navigation": {
     "titles": {
@@ -450,7 +460,21 @@
           "startTimeOffset": "Versetzte Startzeit",
           "startNumber": "Startnummer",
           "team": "Team",
-          "place": "Platz"
+          "place": "Platz",
+          "manageRunning": "Laufende Partien verwalten",
+          "running": "Läuft",
+          "roundAndMatch": "Runde {{round}}, Partie {{match}}",
+          "currentlyRunning": "Aktuell laufend",
+          "availableMatches": "Verfügbare Partien",
+          "noRunningMatches": "Keine Partien laufen gerade",
+          "noAvailableMatches": "Keine Partien zum Starten verfügbar"
+        },
+        "running": {
+          "error": {
+            "hasPlaces": "Der Laufstatus kann nicht für Spiele mit Ergebnissen geändert werden",
+            "update": "Fehler beim Aktualisieren des Laufstatus"
+          },
+          "success": "Laufstatus erfolgreich aktualisiert"
         },
         "results": {
           "enter": "Ergebnis eintragen",
@@ -512,7 +536,7 @@
           "substitutions": "Ummeldungen",
           "inFor": "ersetzt durch",
           "participant": "Teilnehmer",
-          "substituteFor":{
+          "substituteFor": {
             "substituteFor": "Ersetzen durch",
             "currentlyParticipating": "Im selben Wettkampf (Teams tauschen)",
             "notCurrentlyParticipating": "Frei verfügbar",
@@ -527,7 +551,7 @@
             "error": {
               "conflict": "Später erzeugte Ummeldungen hängen von dieser ab. Diese müssten zuerst gelöscht werden.",
               "unexpected": "Beim hinzufügen der Ummeldungen ist ein Fehler aufgetreten"
-},
+            },
             "success": "Ummeldungen erfolgreich hinzugefügt"
           },
           "delete": {
@@ -655,8 +679,59 @@
       "general": "Allgemein",
       "registrations": "Meldungen",
       "settings": "Einstellungen",
+      "actions": "Aktionen",
       "organisation": "Organisation",
       "invoices": "Rechnungen"
+    },
+    "info": {
+      "infoPage": "Info-Anzeige",
+      "sectionTitle": "Öffentliche Informationsanzeige",
+      "pageDescription": "Konfigurieren und betrachten Sie Informationsanzeigen für öffentliche Bildschirme, die Veranstaltungsinformationen wie anstehende Läufe und Ergebnisse anzeigen.",
+      "manageInfoViews": "Info-Anzeigen ansehen und konfigurieren",
+      "configure": "Konfigurieren",
+      "noViews": "Keine Ansichten konfiguriert",
+      "configureViews": "Klicken Sie auf das Einstellungssymbol, um Ansichten zu konfigurieren",
+      "viewType": "Ansichtstyp",
+      "viewTypes": {
+        "upcomingMatches": "Anstehend",
+        "latestMatchResults": "Neueste Ergebnisse",
+        "runningMatches": "Aktuell laufend"
+      },
+      "configuration": "Ansichtskonfiguration",
+      "configurationHelp": "Ziehen Sie die Ansichten, um sie neu anzuordnen. Jede Ansicht wird für die angegebene Dauer angezeigt.",
+      "noViewsConfigured": "Keine Ansichten konfiguriert",
+      "editView": "Ansicht bearbeiten",
+      "addView": "Ansicht hinzufügen",
+      "displayDuration": "Anzeigedauer",
+      "dataLimit": "Datenlimit",
+      "filtersComingSoon": "Filter werden in Kürze verfügbar sein",
+      "viewCreated": "Ansicht erfolgreich erstellt",
+      "viewUpdated": "Ansicht erfolgreich aktualisiert",
+      "viewDeleted": "Ansicht erfolgreich gelöscht",
+      "createError": "Fehler beim Erstellen der Ansicht",
+      "updateError": "Fehler beim Aktualisieren der Ansicht",
+      "deleteError": "Fehler beim Löschen der Ansicht",
+      "confirmDeleteView": "Sind Sie sicher, dass Sie diese Ansicht löschen möchten?",
+      "noUpcomingMatches": "Keine anstehenden Läufe",
+      "noLatestMatchResults": "Keine aktuellen Laufergebnisse vorhanden",
+      "noRunningMatches": "Keine laufenden Wettkämpfe",
+      "live": "LIVE",
+      "minutes": "Min.",
+      "justStarted": "Gerade gestartet",
+      "unnamed": "Unbenannt",
+      "matchStatus": {
+        "pending": "Ausstehend",
+        "inProgress": "Läuft",
+        "completed": "Abgeschlossen"
+      },
+      "rank": "Rang",
+      "place": "Platz",
+      "team": "Team",
+      "participants": "Teilnehmer",
+      "result": "Ergebnis",
+      "points": "Punkte",
+      "matchTeams": "Lauf-Teams",
+      "executionOrder": "Ausführungsreihenfolge: {{order}}"
     }
   },
   "task": {
@@ -945,6 +1020,7 @@
       },
       "success": "Rechnungen werden erstellt und per E-Mail verschickt. Dies kann einige Minuten dauern.",
       "error": {
+        "notFound": "",
         "NO_ASSIGNED_PAYEE_INFORMATION": "Bitte fügen Sie einen Zahlungsempfänger hinzu.",
         "NO_ASSIGNED_CONTACT_INFORMATION": "Bitte fügen Sie Kontaktinformationen (Absender) hinzu.",
         "INVOICES_ALREADY_PRODUCED": "Das Erstellen der Rechnungen wurde bereits begonnen.",

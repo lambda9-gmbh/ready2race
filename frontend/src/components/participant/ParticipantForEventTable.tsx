@@ -93,7 +93,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 headerName: t('event.participantRequirement.approved'),
                 maxWidth: 180,
                 minWidth: 100,
-                flex:1,
+                flex: 1,
                 sortable: false,
                 renderCell: ({row}) =>
                     (requirementsData?.data.length ?? 0) > 0 ? (

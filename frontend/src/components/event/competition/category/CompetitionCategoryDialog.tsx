@@ -50,7 +50,10 @@ const CompetitionCategoryDialog = (props: BaseEntityDialogProps<CompetitionCateg
             editAction={editAction}>
             <Stack spacing={4}>
                 <FormInputText name="name" label={t('event.competition.category.name')} required />
-                <FormInputText name="description" label={t('event.competition.category.description')} />
+                <FormInputText
+                    name="description"
+                    label={t('event.competition.category.description')}
+                />
             </Stack>
         </EntityDialog>
     )

@@ -1,12 +1,12 @@
-import {BaseEntityDialogProps} from "@utils/types.ts";
-import {ContactInformationDto, ContactInformationRequest} from "@api/types.gen.ts";
-import EntityDialog from "@components/EntityDialog.tsx";
-import {useForm} from "react-hook-form-mui";
-import {useCallback} from "react";
-import {addContact, updateContact} from "@api/sdk.gen.ts";
-import {Stack} from "@mui/material";
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import {useTranslation} from "react-i18next";
+import {BaseEntityDialogProps} from '@utils/types.ts'
+import {ContactInformationDto, ContactInformationRequest} from '@api/types.gen.ts'
+import EntityDialog from '@components/EntityDialog.tsx'
+import {useForm} from 'react-hook-form-mui'
+import {useCallback} from 'react'
+import {addContact, updateContact} from '@api/sdk.gen.ts'
+import {Stack} from '@mui/material'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {useTranslation} from 'react-i18next'
 
 type Form = ContactInformationRequest
 
@@ -25,25 +25,24 @@ const mapDtoToForm = (dto: ContactInformationDto): Form => {
 
 const addAction = (formData: Form) =>
     addContact({
-        body: formData
+        body: formData,
     })
 
 const editAction = (formData: Form, entity: ContactInformationDto) =>
     updateContact({
         path: {contactId: entity.id},
-        body: formData
+        body: formData,
     })
 
 const ContactInformationDialog = (props: BaseEntityDialogProps<ContactInformationDto>) => {
-
     const {t} = useTranslation()
 
     const formContext = useForm<Form>()
-    
+
     const onOpen = useCallback(() => {
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
-    
+
     return (
         <EntityDialog
             {...props}

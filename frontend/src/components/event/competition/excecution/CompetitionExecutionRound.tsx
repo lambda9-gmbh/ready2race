@@ -6,6 +6,7 @@ import {
     Box,
     Card,
     Divider,
+    FormControlLabel,
     Link,
     Stack,
     Table,
@@ -23,12 +24,17 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {Fragment, SyntheticEvent, useRef, useState} from 'react'
-import {deleteCurrentCompetitionExecutionRound, downloadStartList} from '@api/sdk.gen.ts'
+import {
+    deleteCurrentCompetitionExecutionRound,
+    downloadStartList,
+    updateMatchRunningState,
+} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
-import StartListConfigPicker from "@components/event/competition/excecution/StartListConfigPicker.tsx";
+import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
+import Checkbox from '@mui/material/Checkbox'
 
 type Props = {
     round: CompetitionRoundDto
@@ -132,6 +138,37 @@ const CompetitionExecutionRound = ({
         }
     }
 
+    const handleToggleRunningState = async (match: CompetitionMatchDto) => {
+        // Check if match has no places set
+        const hasPlacesSet = match.teams.some(
+            team => team.place !== null && team.place !== undefined,
+        )
+        if (hasPlacesSet) {
+            feedback.error(t('event.competition.execution.running.error.hasPlaces'))
+            return
+        }
+
+        props.setSubmitting(true)
+        const {error} = await updateMatchRunningState({
+            path: {
+                eventId: eventId,
+                competitionId: competitionId,
+                competitionMatchId: match.id,
+            },
+            body: {
+                currentlyRunning: !match.currentlyRunning,
+            },
+        })
+        props.setSubmitting(false)
+
+        if (error) {
+            feedback.error(t('event.competition.execution.running.error.update'))
+        } else {
+            feedback.success(t('event.competition.execution.running.success'))
+            props.reloadRoundDto()
+        }
+    }
+
     return (
         <Fragment>
             <Link ref={downloadRef} display={'none'}></Link>
@@ -188,7 +225,10 @@ const CompetitionExecutionRound = ({
                                                             {match.weighting}
                                                         </TableCell>
                                                         <TableCell width="80%">
-                                                            {match.teams[0].clubName + (match.teams[0].name ? ` ${match.teams[0].name}` : '')}
+                                                            {match.teams[0].clubName +
+                                                                (match.teams[0].name
+                                                                    ? ` ${match.teams[0].name}`
+                                                                    : '')}
                                                         </TableCell>
                                                     </TableRow>
                                                 ))}
@@ -223,7 +263,18 @@ const CompetitionExecutionRound = ({
                 </Box>
                 <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 4}}>
                     {filteredMatches.map((match, matchIndex) => (
-                        <Card key={match.id} sx={{p: 2, minWidth: 400, flex: 1}}>
+                        <Card
+                            key={match.id}
+                            sx={{
+                                p: 2,
+                                minWidth: 400,
+                                flex: 1,
+                                ...(match.currentlyRunning && {
+                                    borderColor: 'primary.main',
+                                    borderWidth: 2,
+                                    borderStyle: 'solid',
+                                }),
+                            }}>
                             <Stack
                                 direction={'row'}
                                 sx={{
@@ -252,6 +303,23 @@ const CompetitionExecutionRound = ({
                                             ) + ': '}
                                             {match.startTimeOffset} {t('common.form.seconds')}
                                         </Typography>
+                                    )}
+                                    {/* Only show toggle if match has no places set */}
+                                    {!match.teams.some(
+                                        team => team.place !== null && team.place !== undefined,
+                                    ) && (
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={match.currentlyRunning}
+                                                    onChange={() => handleToggleRunningState(match)}
+                                                    disabled={submitting}
+                                                />
+                                            }
+                                            label={t(
+                                                'event.competition.execution.match.currentlyRunning',
+                                            )}
+                                        />
                                     )}
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>
@@ -292,14 +360,11 @@ const CompetitionExecutionRound = ({
                                             const ft = fileType as StartListFileType
                                             switch (ft) {
                                                 case 'PDF':
-                                                    await handleDownloadStartList(
-                                                        match.id,
-                                                        'PDF',
-                                                    )
-                                                    break;
+                                                    await handleDownloadStartList(match.id, 'PDF')
+                                                    break
                                                 case 'CSV':
                                                     setStartListMatch(match.id)
-                                                    break;
+                                                    break
                                             }
                                         }}
                                         items={
@@ -370,9 +435,7 @@ const CompetitionExecutionRound = ({
             <StartListConfigPicker
                 open={showStartListConfigDialog}
                 onClose={closeStartListConfigDialog}
-                onSuccess={async (config) =>
-                    handleDownloadStartList(startListMatch!, 'CSV', config)
-                }
+                onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
             />
         </Fragment>
     )

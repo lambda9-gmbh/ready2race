@@ -1,10 +1,14 @@
-import {useFetch} from "@utils/hooks.ts";
-import {assignDocumentTemplate, getDocumentTemplates, getDocumentTemplateTypes} from "@api/sdk.gen.ts";
-import {Box, List, ListItem, MenuItem, Select, Typography} from "@mui/material";
-import Throbber from "@components/Throbber.tsx";
-import {useTranslation} from "react-i18next";
-import {DocumentType} from "@api/types.gen.ts";
-import {useState} from "react";
+import {useFetch} from '@utils/hooks.ts'
+import {
+    assignDocumentTemplate,
+    getDocumentTemplates,
+    getDocumentTemplateTypes,
+} from '@api/sdk.gen.ts'
+import {Box, List, ListItem, MenuItem, Select, Typography} from '@mui/material'
+import Throbber from '@components/Throbber.tsx'
+import {useTranslation} from 'react-i18next'
+import {DocumentType} from '@api/types.gen.ts'
+import {useState} from 'react'
 
 const AssignDocumentTemplate = () => {
     const {t} = useTranslation()
@@ -14,59 +18,55 @@ const AssignDocumentTemplate = () => {
     const updateTemplateAssignment = async (documentType: DocumentType, template?: string) => {
         await assignDocumentTemplate({
             path: {
-                documentType
+                documentType,
             },
             body: {
-                template
-            }
+                template,
+            },
         })
 
         setLastRequested(Date.now())
     }
 
     const {data: templates} = useFetch(
-        signal => getDocumentTemplates({
-            signal
-        }),
+        signal =>
+            getDocumentTemplates({
+                signal,
+            }),
         {
-            deps: [lastRequested]
-        }
+            deps: [lastRequested],
+        },
     )
 
-    const {data: types} = useFetch(
-        signal => getDocumentTemplateTypes({signal}),
-        {
-            deps: [lastRequested]
-        }
-    )
+    const {data: types} = useFetch(signal => getDocumentTemplateTypes({signal}), {
+        deps: [lastRequested],
+    })
 
     return (
         <Box>
             <Typography variant={'h2'}>{t('document.template.assignments.global')}</Typography>
-            { types && templates ? ( // todo: @Incomplete: add error case
+            {types && templates ? ( // todo: @Incomplete: add error case
                 <List>
                     {types.map(type => (
                         <ListItem key={type.type}>
-                            <Box sx={{
-                                width: 1,
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                            }}>
-                                <Typography>
-                                    {t(`document.template.type.${type.type}`)}
-                                </Typography>
+                            <Box
+                                sx={{
+                                    width: 1,
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}>
+                                <Typography>{t(`document.template.type.${type.type}`)}</Typography>
                                 <Select
                                     value={type.assignedTemplate?.value ?? 'none'}
-                                    onChange={(e) => {
+                                    onChange={e => {
                                         const value = e.target.value as string
                                         if (value === 'none') {
                                             updateTemplateAssignment(type.type)
                                         } else {
                                             updateTemplateAssignment(type.type, value)
                                         }
-                                    }}
-                                >
+                                    }}>
                                     <MenuItem value={'none'}>
                                         {t('document.template.none')}
                                     </MenuItem>

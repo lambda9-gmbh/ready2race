@@ -96,9 +96,7 @@ const ParticipantRequirementForEventTable = (
         }
     }
 
-    const customEntityActions = (
-        entity: ParticipantRequirementForEventDto,
-    ): EntityAction[] => [
+    const customEntityActions = (entity: ParticipantRequirementForEventDto): EntityAction[] => [
         entity.active ? (
             <GridActionsCellItem
                 icon={<Cancel />}

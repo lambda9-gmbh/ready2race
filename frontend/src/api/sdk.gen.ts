@@ -85,6 +85,9 @@ import type {
     GetEventInvoicesData,
     GetEventInvoicesError,
     GetEventInvoicesResponse,
+    GetEventMatchesData,
+    GetEventMatchesError,
+    GetEventMatchesResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -151,6 +154,9 @@ import type {
     UpdateMatchDataData,
     UpdateMatchDataError,
     UpdateMatchDataResponse,
+    UpdateMatchRunningStateData,
+    UpdateMatchRunningStateError,
+    UpdateMatchRunningStateResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -482,6 +488,27 @@ import type {
     DeleteStartListConfigData,
     DeleteStartListConfigError,
     DeleteStartListConfigResponse,
+    GetUpcomingMatchesData,
+    GetUpcomingMatchesError,
+    GetUpcomingMatchesResponse,
+    GetLatestMatchResultsData,
+    GetLatestMatchResultsError,
+    GetLatestMatchResultsResponse,
+    GetRunningMatchesData,
+    GetRunningMatchesError,
+    GetRunningMatchesResponse,
+    GetInfoViewsData,
+    GetInfoViewsError,
+    GetInfoViewsResponse,
+    CreateInfoViewData,
+    CreateInfoViewError,
+    CreateInfoViewResponse,
+    UpdateInfoViewData,
+    UpdateInfoViewError,
+    UpdateInfoViewResponse,
+    DeleteInfoViewData,
+    DeleteInfoViewError,
+    DeleteInfoViewResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -769,6 +796,19 @@ export const getEventInvoices = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getEventMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventMatchesResponse,
+        GetEventMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/matches',
+    })
+}
+
 export const addEventDay = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddEventDayData, ThrowOnError>,
 ) => {
@@ -1040,6 +1080,19 @@ export const updateMatchData = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data',
+    })
+}
+
+export const updateMatchRunningState = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchRunningStateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchRunningStateResponse,
+        UpdateMatchRunningStateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state',
     })
 }
 
@@ -2422,5 +2475,92 @@ export const deleteStartListConfig = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/startListConfig/{startListConfigId}',
+    })
+}
+
+export const getUpcomingMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetUpcomingMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetUpcomingMatchesResponse,
+        GetUpcomingMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/upcoming-matches',
+    })
+}
+
+export const getLatestMatchResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLatestMatchResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLatestMatchResultsResponse,
+        GetLatestMatchResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/latest-match-results',
+    })
+}
+
+export const getRunningMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRunningMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRunningMatchesResponse,
+        GetRunningMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+export const getInfoViews = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetInfoViewsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetInfoViewsResponse, GetInfoViewsError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/info-views',
+    })
+}
+
+export const createInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateInfoViewResponse,
+        CreateInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views',
+    })
+}
+
+export const updateInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateInfoViewResponse,
+        UpdateInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views/{viewId}',
+    })
+}
+
+export const deleteInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteInfoViewResponse,
+        DeleteInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views/{viewId}',
     })
 }

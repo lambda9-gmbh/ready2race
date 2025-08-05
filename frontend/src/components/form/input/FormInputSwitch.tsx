@@ -1,8 +1,9 @@
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {SwitchElement, SwitchElementProps} from 'react-hook-form-mui'
-import {RefAttributes} from "react";
+import {RefAttributes} from 'react'
 
-export type FormInputSwitchProps = SwitchElementProps & RefAttributes<HTMLLabelElement> & {horizontal?: boolean; reverse?: boolean}
+export type FormInputSwitchProps = SwitchElementProps &
+    RefAttributes<HTMLLabelElement> & {horizontal?: boolean; reverse?: boolean}
 
 const FormInputSwitch = ({label, horizontal, reverse, ...props}: FormInputSwitchProps) => {
     return (
@@ -11,12 +12,9 @@ const FormInputSwitch = ({label, horizontal, reverse, ...props}: FormInputSwitch
             required={true}
             horizontal={horizontal}
             reverse={reverse}>
-            <SwitchElement
-                {...props}
-                label={null}
-            />
+            <SwitchElement {...props} label={null} />
         </FormInputLabel>
     )
 }
 
-export default FormInputSwitch;
+export default FormInputSwitch

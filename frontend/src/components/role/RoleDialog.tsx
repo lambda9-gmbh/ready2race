@@ -8,8 +8,8 @@ import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {addRole, getPrivileges, updateRole} from '@api/sdk.gen.ts'
 import {RoleDto, RoleRequest} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
-import {useFetch} from "@utils/hooks.ts";
-import {scopeLevel} from "@utils/helpers.ts";
+import {useFetch} from '@utils/hooks.ts'
+import {scopeLevel} from '@utils/helpers.ts'
 
 type RoleForm = {
     name: string
@@ -46,7 +46,6 @@ const editAction = (formData: RoleForm, entity: RoleDto) =>
         body: mapFormToRequest(formData),
     })
 
-
 const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
     const {t} = useTranslation()
     const formContext = useForm<RoleForm>()
@@ -67,35 +66,37 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={t('role.name')} required/>
-                <FormInputText name={'description'} label={t('role.description')}/>
+                <FormInputText name={'name'} label={t('role.name')} required />
+                <FormInputText name={'description'} label={t('role.description')} />
                 <MultiSelectElement
                     name={'privileges'}
                     label={'Rechte'}
                     options={
-                        data?.sort((a, b) => {
-                            if (a.resource > b.resource) {
-                                return 1
-                            } else if (a.resource < b.resource) {
-                                return -1
-                            } else {
-                                if (a.action > b.action) {
+                        data
+                            ?.sort((a, b) => {
+                                if (a.resource > b.resource) {
                                     return 1
-                                } else if (a.action < b.action) {
+                                } else if (a.resource < b.resource) {
                                     return -1
                                 } else {
-                                    const scopeDiff = scopeLevel[a.scope] - scopeLevel[b.scope]
-                                    if (scopeDiff >= 0) {
+                                    if (a.action > b.action) {
                                         return 1
-                                    } else {
+                                    } else if (a.action < b.action) {
                                         return -1
+                                    } else {
+                                        const scopeDiff = scopeLevel[a.scope] - scopeLevel[b.scope]
+                                        if (scopeDiff >= 0) {
+                                            return 1
+                                        } else {
+                                            return -1
+                                        }
                                     }
                                 }
-                            }
-                        }).map(p => ({
-                            id: p.id,
-                            label: p.action + '.' + p.resource + '.' + p.scope
-                        })) ?? []
+                            })
+                            .map(p => ({
+                                id: p.id,
+                                label: p.action + '.' + p.resource + '.' + p.scope,
+                            })) ?? []
                     }
                     itemKey={'id'}
                     itemValue={'id'}

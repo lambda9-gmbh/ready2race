@@ -1,6 +1,6 @@
 import {createContext, useContext} from 'react'
 import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
-import {Language} from "@i18n/config.ts";
+import {Language} from '@i18n/config.ts'
 
 export type AuthenticatedUser = {
     language: Language

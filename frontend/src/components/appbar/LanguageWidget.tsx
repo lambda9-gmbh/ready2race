@@ -1,12 +1,11 @@
-import React, {useState} from "react";
-import {useTranslation} from "react-i18next";
-import {IconButton, Menu, MenuItem, Tooltip, Typography} from "@mui/material";
-import {Language} from "@mui/icons-material";
-import {languageNames, LANGUAGES} from "@i18n/config.ts";
-import {useUser} from "@contexts/user/UserContext.ts";
+import React, {useState} from 'react'
+import {useTranslation} from 'react-i18next'
+import {IconButton, Menu, MenuItem, Tooltip, Typography} from '@mui/material'
+import {Language} from '@mui/icons-material'
+import {languageNames, LANGUAGES} from '@i18n/config.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const LanguageWidget = () => {
-
     const {t} = useTranslation()
     const {language, changeLanguage} = useUser()
 
@@ -45,19 +44,17 @@ const LanguageWidget = () => {
                         },
                     },
                 }}>
-                {LANGUAGES.map((lng) => (
+                {LANGUAGES.map(lng => (
                     <MenuItem
                         key={lng}
                         onClick={() => changeLanguage(lng)}
-                        selected={language === lng}
-                    >
+                        selected={language === lng}>
                         <Typography>{languageNames[lng]}</Typography>
                     </MenuItem>
                 ))}
             </Menu>
         </>
     )
-
 }
 
 export default LanguageWidget

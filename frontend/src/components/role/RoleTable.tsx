@@ -3,8 +3,8 @@ import {BaseEntityTableProps} from '@utils/types.ts'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {useTranslation} from 'react-i18next'
-import {RoleDto} from "@api/types.gen.ts";
-import {deleteRole, getRoles} from "@api/sdk.gen.ts";
+import {RoleDto} from '@api/types.gen.ts'
+import {deleteRole, getRoles} from '@api/sdk.gen.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
