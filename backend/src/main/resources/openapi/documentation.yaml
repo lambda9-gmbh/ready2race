@@ -4557,6 +4557,115 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+
+
+  /ratingCategory:
+    post:
+      operationId: addRatingCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoryRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getRatingCategories
+      responses:
+        200:
+          description: rating category page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RatingCategoryDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /ratingCategory/{ratingCategoryId}:
+    parameters:
+      - in: path
+        name: ratingCategoryId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateRatingCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoryRequest'
+      responses:
+        204:
+          description: rating category updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteRatingCategory
+      responses:
+        204:
+          description: Rating category successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+
 components:
 
   parameters:
@@ -8275,3 +8384,23 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/RegistrationInvoiceType'
+
+    RatingCategoryRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+
+    RatingCategoryDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
