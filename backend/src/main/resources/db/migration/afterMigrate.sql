@@ -481,6 +481,7 @@ select cr.id,
        cr.club,
        cr.name                                                                   as team_name,
        cr.team_number,
+       cr.is_late,
        coalesce(array_agg(rctp) filter ( where rctp.team_id is not null ), '{}') as participants
 from competition_registration cr
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id

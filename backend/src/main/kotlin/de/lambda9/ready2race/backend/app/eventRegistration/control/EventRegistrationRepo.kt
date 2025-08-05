@@ -168,71 +168,66 @@ object EventRegistrationRepo {
     fun getLockedEventRegistration(eventId: UUID, clubId: UUID, type: OpenForRegistrationType) = Jooq.query {
 
         val filter = when (type) {
-            OpenForRegistrationType.REGULAR -> null
+            OpenForRegistrationType.REGULAR -> RegistrationFilter.LATE
             OpenForRegistrationType.LATE -> RegistrationFilter.REGULAR
             OpenForRegistrationType.CLOSED -> RegistrationFilter.ALL
         }
 
-        if (filter == null) {
-            EventRegistrationLockedDto(emptyList(), emptyList())
-        } else {
+        val fees = selectFeesForEventRegistration()
 
-            val fees = selectFeesForEventRegistration()
-
-            val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
-                CompetitionRegistrationSingleLockedDto(
-                    it[COMPETITION_VIEW.ID]!!,
-                    it[fees],
-                    it[COMPETITION_REGISTRATION.IS_LATE]!!,
-                )
-            }
-
-            val namedParticipants = selectNamedParticipantsForEventRegistration {
-                CompetitionRegistrationNamedParticipantLockedDto(
-                    it[COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT]!!,
-                    it[DSL.arrayAgg(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT)].filterNotNull()
-                )
-            }
-
-            val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
-                CompetitionRegistrationTeamLockedDto(
-                    it[COMPETITION_REGISTRATION.ID]!!,
-                    it[fees],
-                    it[namedParticipants],
-                    it[COMPETITION_REGISTRATION.IS_LATE]!!,
-                )
-            }
-
-            val teamCompetitions = selectTeamCompetitionsForEventRegistration(teams) {
-                CompetitionRegistrationLockedDto(
-                    it[COMPETITION_VIEW.ID]!!,
-                    it[teams],
-                )
-            }
-
-            val participants = selectParticipantsForEventRegistration(singleCompetitions, clubId) {
-                EventRegistrationParticipantLockedDto(
-                    id = it[PARTICIPANT.ID]!!,
-                    competitionsSingle = it[singleCompetitions],
-                )
-            }
-
-            select(
-                participants,
-                teamCompetitions,
-                EVENT_REGISTRATION.MESSAGE
+        val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
+            CompetitionRegistrationSingleLockedDto(
+                it[COMPETITION_VIEW.ID]!!,
+                it[fees],
+                it[COMPETITION_REGISTRATION.IS_LATE]!!,
             )
-                .from(EVENT)
-                .leftJoin(EVENT_REGISTRATION)
-                .on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID).and(EVENT_REGISTRATION.CLUB.eq(clubId)))
-                .where(EVENT.ID.eq(eventId))
-                .fetchOne {
-                    EventRegistrationLockedDto(
-                        it[participants],
-                        it[teamCompetitions]
-                    )
-                }
         }
+
+        val namedParticipants = selectNamedParticipantsForEventRegistration {
+            CompetitionRegistrationNamedParticipantLockedDto(
+                it[COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT]!!,
+                it[DSL.arrayAgg(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT)].filterNotNull()
+            )
+        }
+
+        val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
+            CompetitionRegistrationTeamLockedDto(
+                it[COMPETITION_REGISTRATION.ID]!!,
+                it[fees],
+                it[namedParticipants],
+                it[COMPETITION_REGISTRATION.IS_LATE]!!,
+            )
+        }
+
+        val teamCompetitions = selectTeamCompetitionsForEventRegistration(teams) {
+            CompetitionRegistrationLockedDto(
+                it[COMPETITION_VIEW.ID]!!,
+                it[teams],
+            )
+        }
+
+        val participants = selectParticipantsForEventRegistration(singleCompetitions, clubId) {
+            EventRegistrationParticipantLockedDto(
+                id = it[PARTICIPANT.ID]!!,
+                competitionsSingle = it[singleCompetitions],
+            )
+        }
+
+        select(
+            participants,
+            teamCompetitions,
+            EVENT_REGISTRATION.MESSAGE
+        )
+            .from(EVENT)
+            .leftJoin(EVENT_REGISTRATION)
+            .on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID).and(EVENT_REGISTRATION.CLUB.eq(clubId)))
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne {
+                EventRegistrationLockedDto(
+                    it[participants],
+                    it[teamCompetitions]
+                )
+            }
     }
 
     fun getEventRegistrationForUpdate(eventId: UUID, clubId: UUID, type: OpenForRegistrationType) = Jooq.query {

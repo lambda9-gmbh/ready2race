@@ -17,6 +17,7 @@ import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -31,6 +32,10 @@ object CompetitionRegistrationRepo {
     // TODO: @What?: Why also competitionId? id is already unique
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
         COMPETITION_REGISTRATION.findOneBy { ID.eq(id).and(COMPETITION.eq(competitionId)) }
+
+    fun getByClub(clubId: UUID) = COMPETITION_REGISTRATION.select { CLUB.eq(clubId) }
+
+    fun update(id: UUID, f: CompetitionRegistrationRecord.() -> Unit) = COMPETITION_REGISTRATION.update(f) { ID.eq(id) }
 
     fun allForEvent(eventId: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
         select(COMPETITION_REGISTRATION)

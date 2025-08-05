@@ -47,7 +47,7 @@ const EventSingleCompetitionField = (props: {
         if (checked) {
             formContext.setValue(`participants.${props.participantIndex}.competitionsSingle`, [
                 ...(singleCompetitions ?? []),
-                {competitionId: props.option.id, locked: false, isLate: props.isLate},
+                {competitionId: props.option.id, locked: false, isLate: props.isLate, optionalFees: []},
             ])
         } else {
             formContext.setValue(

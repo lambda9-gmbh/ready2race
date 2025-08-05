@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationResultViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamRecord
 
 data class EventRegistrationResultData(
     val competitionRegistrations: List<CompetitionRegistrationData>,
@@ -37,6 +38,7 @@ data class EventRegistrationResultData(
 
         fun fromPersisted(
             result: EventRegistrationResultViewRecord,
+            filterTeams: (RegisteredCompetitionTeamRecord) -> Boolean = { true }
         ): EventRegistrationResultData = EventRegistrationResultData(
             competitionRegistrations = result.competitions!!.map { competition ->
                 CompetitionRegistrationData(
@@ -46,7 +48,7 @@ data class EventRegistrationResultData(
                     clubRegistrations = competition.clubRegistrations!!.map { club ->
                         ClubRegistrationData(
                             name = club!!.name!!,
-                            teams = club.teams!!.map {
+                            teams = club.teams!!.filter { filterTeams(it!!) }.map {
                                 TeamRegistrationData(
                                     name = it!!.teamName,
                                     participants = it.participants!!.map {

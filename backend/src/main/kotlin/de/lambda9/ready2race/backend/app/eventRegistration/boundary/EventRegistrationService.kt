@@ -106,7 +106,7 @@ object EventRegistrationService {
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
         val type = !EventService.getOpenForRegistrationType(eventId).failIf({
-            it == OpenForRegistrationType.CLOSED
+            it == OpenForRegistrationType.CLOSED || user.club == null
         }) { EventRegistrationError.RegistrationClosed }
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
@@ -127,7 +127,7 @@ object EventRegistrationService {
             )
         ).orDie() to false)
 
-        if (isUpdate) {
+        val remainingRegistrations = if (isUpdate) {
             !EventRegistrationRepo.update(persistedRegistrationId) {
                 message = registrationDto.message
                 updatedAt = now
@@ -135,14 +135,38 @@ object EventRegistrationService {
             }.orDie()
 
             !CompetitionRegistrationRepo.deleteForEventRegistrationUpdate(persistedRegistrationId, type).orDie()
+
+            val clubRegistrations = !CompetitionRegistrationRepo.getByClub(user.club!!).orDie()
+            val grouped = clubRegistrations.groupBy { it.competition }
+
+            val compIdsWithNewRegistrations = registrationDto.participants.flatMap { it.competitionsSingle?.map { it.competitionId } ?: emptyList() } +
+                registrationDto.competitionRegistrations.mapNotNull { if (it.teams?.isNotEmpty() == true) it.competitionId else null }
+            grouped.values
+                .forEach { regs ->
+                    if (regs.size == 1) {
+                        regs.first().let {
+                            it.name = if (compIdsWithNewRegistrations.contains(regs.first().competition)) "#1" else null
+                            it.update()
+                        }
+                    } else {
+                        regs.sortedWith(lexiNumberComp { it.name }).forEachIndexed { idx, rec ->
+                            rec.name = "#${idx + 1}"
+                            rec.update()
+                        }
+                    }
+                }
+
+            grouped.mapValues { (_, regs) -> regs.size }
+        } else {
+            null
         }
 
         val singleCompetitionMultipleCounts =
             registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
                 .groupingBy { it.competitionId }
                 .eachCount()
-                .filter { it.value > 1 }
-                .mapValues { 0 }.toMutableMap()
+                .filter { (remainingRegistrations?.get(it.key) ?: 0) + it.value > 1 }
+                .mapValues { remainingRegistrations?.get(it.key) ?: 0 }.toMutableMap()
 
         val userInfoMap = !registrationDto.participants.traverse { pDto ->
             handleSingleCompetitionRegistration(
@@ -167,6 +191,7 @@ object EventRegistrationService {
                 user.id!!,
                 userInfoMap,
                 type,
+                remainingRegistrations
             )
         }
 
@@ -340,6 +365,7 @@ object EventRegistrationService {
         userId: UUID,
         participantIdMap: MutableMap<UUID, PersistedIdAndGender>,
         type: OpenForRegistrationType,
+        regularRegistrations: Map<UUID, Int>?,
     ): App<EventRegistrationError, Unit> = KIO.comprehension {
 
         val userIdsList =
@@ -353,7 +379,9 @@ object EventRegistrationService {
         val competition = template?.competitionsTeam?.first { it.id == competitionRegistrationDto.competitionId }
             ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid competition"))
 
-        var count = competitionRegistrationDto.teams?.takeIf { it.size > 1 }?.let { 0 }
+        var count = competitionRegistrationDto.teams
+            ?.takeIf { (regularRegistrations?.get(competitionRegistrationDto.competitionId) ?: 0) + it.size > 1 }
+            ?.let { regularRegistrations?.get(competitionRegistrationDto.competitionId) ?: 0 }
 
         competitionRegistrationDto.teams?.traverse { teamDto ->
             KIO.comprehension {
@@ -557,7 +585,7 @@ object EventRegistrationService {
     fun finalizeRegistrations(
         userId: UUID,
         eventId: UUID,
-        keepNumbers: Boolean
+        keepNumbers: Boolean,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
@@ -626,7 +654,7 @@ object EventRegistrationService {
         }.pdf"
 
         val bytes = buildPdf(
-            data = EventRegistrationResultData.fromPersisted(result),
+            data = EventRegistrationResultData.fromPersisted(result) { it.isLate == false },
             template = pdfTemplate,
         )
 
@@ -713,7 +741,7 @@ object EventRegistrationService {
                         ) { "Competition cancelled" }
                     } else {
                         competition.clubRegistrations.forEach { club ->
-                            club.teams.forEach { team ->
+                            club.teams.sortedWith(lexiNumberComp { it.name }).forEach { team ->
                                 block(
                                     padding = Padding(0f, 0f, 0f, 15f)
                                 ) {
@@ -721,7 +749,7 @@ object EventRegistrationService {
                                     text(
                                         fontStyle = FontStyle.BOLD
                                     ) { club.name }
-                                    team.name?.let {
+                                    team.name.takeIf { club.teams.size > 1 }?.let {
                                         text(
                                             newLine = false,
                                         ) { " $it" }
