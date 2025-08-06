@@ -273,13 +273,13 @@ const EventPage = () => {
                     </TabPanel>
                     <TabPanel index={'organization'} activeTab={activeTab}>
                         <Stack spacing={2}>
-                            <Shiftplan />
-                            <TaskTable {...taskProps.table} title={t('task.tasks')} />
-                            <TaskDialog {...taskProps.dialog} eventId={eventId} />
                             <AppUserWithQrCodeTable
                                 {...appUserWithQrCodeProps.table}
                                 title={t('qrCode.appUsersWithQrCode')}
                             />
+                            <TaskTable {...taskProps.table} title={t('task.tasks')} />
+                            <TaskDialog {...taskProps.dialog} eventId={eventId} />
+                            <Shiftplan />
                         </Stack>
                     </TabPanel>
                     <TabPanel index={'settings'} activeTab={activeTab}>

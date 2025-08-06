@@ -749,11 +749,6 @@
     },
     "firstname": "Vorname",
     "lastname": "Nachname",
-    "qrCode": {
-      "qrCode": "Qr-Code",
-      "value": "Qr-Code Wert",
-      "show": "QR-Code anzeigen"
-    },
     "password": {
       "password": "Passwort",
       "confirm": "Passwort bestätigen",
@@ -992,10 +987,11 @@
   },
   "qrCode": {
     "qrCode": "QR-Code",
-    "qrCodeId": "QR-Code-Wert",
+    "value": "QR-Code-Wert",
     "appUsersWithQrCode": "Benutzer mit QR-Codes",
     "edit": "QR-Code bearbeiten",
     "delete": "QR-Code löschen",
+    "show": "QR-Code anzeigen",
     "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
     "noQrCodeAssigned": "Kein QR-Code zugewiesen"
   },
