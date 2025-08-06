@@ -254,7 +254,7 @@
         "categories": "Kategorien",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen das Sortieren und Filtern von Wettkämpfen (noch nicht implementiert)."
+        "tableHint": "Ermöglichen das Kategorisieren und damit Sortieren und Filtern von Wettkämpfen."
       },
       "count": {
         "males": "Anzahl Männer",
@@ -325,7 +325,8 @@
             "LATE": "Nachmeldung"
           }
         },
-        "isLate": "als Nachmeldung"
+        "isLate": "als Nachmeldung",
+        "ratingCategory": "Wertungskategorie"
       },
       "setup": {
         "setup": "Wettbewerbsablauf",
@@ -920,6 +921,13 @@
       "eventElements": "Komponenten Veranstaltung",
       "competitionElements": "Komponenten Wettkampf",
       "globalSettings": "Globale Einstellungen"
+    },
+    "ratingCategory": {
+      "ratingCategory": "Wertungskategorie",
+      "ratingCategories": "Wertungskategorien",
+      "name": "Name",
+      "description": "Beschreibung",
+      "tableHint": "Können Wettkampf-Teams zugewiesen werden."
     },
     "export": {
       "startlist": {

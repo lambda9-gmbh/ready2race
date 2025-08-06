@@ -83,6 +83,18 @@ const CompetitionRegistrationTable = (
                 valueGetter: value => value ?? '-',
             },
             {
+                field: 'ratingCategory',
+                headerName: t('event.competition.registration.ratingCategory'),
+                minWidth: 150,
+                renderCell: ({row}) => (
+                    <Tooltip title={row.ratingCategory?.description}>
+                        <Typography>
+                            {row.ratingCategory?.name ?? '-'}
+                        </Typography>
+                    </Tooltip>
+                )
+            },
+            {
                 field: 'namedParticipants',
                 headerName: t('club.participant.title'),
                 flex: 1,

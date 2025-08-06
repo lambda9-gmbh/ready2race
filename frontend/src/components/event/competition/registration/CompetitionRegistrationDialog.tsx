@@ -1,4 +1,4 @@
-import {BaseEntityDialogProps} from '@utils/types.ts'
+import {AutocompleteOption, BaseEntityDialogProps} from '@utils/types.ts'
 import {
     ClubSearchDto,
     CompetitionDto,
@@ -17,14 +17,14 @@ import {
     addCompetitionRegistration,
     getClubNames,
     getClubParticipants,
-    getCompetitionRegistrations,
+    getCompetitionRegistrations, getRatingCategories,
     updateCompetitionRegistration,
 } from '@api/sdk.gen.ts'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {updateRegistrationGlobal} from '@authorization/privileges.ts'
+import {readEventGlobal, updateRegistrationGlobal} from '@authorization/privileges.ts'
 import {FormInputSelect} from "@components/form/input/FormInputSelect.tsx";
 
 const registrationTypes: RegistrationInvoiceType[] = ['REGULAR', 'LATE']
@@ -36,6 +36,7 @@ type CompetitionRegistrationForm = {
     optionalFees?: Array<string>
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
     asRegistrationType: RegistrationType
+    ratingCategory: AutocompleteOption
 }
 
 const CompetitionRegistrationDialog = ({
@@ -53,6 +54,7 @@ const CompetitionRegistrationDialog = ({
     const formContext = useForm<CompetitionRegistrationForm>()
 
     const globalPrivilege = user.checkPrivilege(updateRegistrationGlobal)
+    const categoryPrivilege = globalPrivilege && user.checkPrivilege(readEventGlobal)
 
     const clubId = useWatch({
         control: formContext.control,
@@ -155,11 +157,28 @@ const CompetitionRegistrationDialog = ({
         [participants],
     )
 
+    const {data: ratingCategories, pending: ratingCategoriesPending} = useFetch(
+        signal => getRatingCategories({signal}),
+        {
+            preCondition: () => categoryPrivilege,
+            mapData: data => data.data.map(dto => ({
+                id: dto.id,
+                label: dto.name
+            })),
+            onResponse: ({error}) => error && feedback.error(
+                t('common.load.error.multiple.short', {entity: t('configuration.ratingCategory.ratingCategories')})
+            )
+        },
+    )
+
     const addAction = (formData: CompetitionRegistrationForm) => {
         return addCompetitionRegistration({
             path: {eventId: eventData.id, competitionId: competition.id},
             body: mapFormToRequest(formData),
-            query: {registrationType: globalPrivilege ? formData.asRegistrationType : undefined}
+            query: {
+                registrationType: globalPrivilege ? formData.asRegistrationType : undefined,
+                ratingCategory: categoryPrivilege ? formData.ratingCategory?.id : undefined,
+            }
         })
     }
 
@@ -174,7 +193,10 @@ const CompetitionRegistrationDialog = ({
                 competitionRegistrationId: entity.id,
             },
             body: mapFormToRequest(formData),
-            query: {registrationType: globalPrivilege ? formData.asRegistrationType : undefined}
+            query: {
+                registrationType: globalPrivilege ? formData.asRegistrationType : undefined,
+                ratingCategory: categoryPrivilege ? formData.ratingCategory?.id : undefined,
+            }
         })
     }
 
@@ -183,6 +205,7 @@ const CompetitionRegistrationDialog = ({
         optionalFees: [],
         clubId: user.loggedIn ? user.clubId : undefined,
         asRegistrationType: 'LATE',
+        ratingCategory: null,
     }
 
     const optionalFees = useMemo(
@@ -204,17 +227,31 @@ const CompetitionRegistrationDialog = ({
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                {globalPrivilege && competition.properties.lateRegistrationAllowed && eventData.registrationAvailableTo && new Date(eventData.registrationAvailableTo) < new Date() &&
-                    <FormInputSelect
-                        name={'asRegistrationType'}
-                        label={t('event.competition.registration.dialog.registrationType.label')}
-                        options={registrationTypes.map( type => ({
-                            id: type,
-                            label: t(`event.competition.registration.dialog.registrationType.${type}`)
-                        } satisfies {id: RegistrationType, label: string} ))}
-                        required
-                    />
-                }
+                <Stack spacing={2}>
+                    {globalPrivilege && competition.properties.lateRegistrationAllowed && eventData.registrationAvailableTo && new Date(eventData.registrationAvailableTo) < new Date() &&
+                        <FormInputSelect
+                            name={'asRegistrationType'}
+                            label={t('event.competition.registration.dialog.registrationType.label')}
+                            options={registrationTypes.map( type => ({
+                                id: type,
+                                label: t(`event.competition.registration.dialog.registrationType.${type}`)
+                            } satisfies {id: RegistrationType, label: string} ))}
+                            required
+                        />
+                    }
+                    {categoryPrivilege &&
+                        <FormInputAutocomplete
+                            name={'ratingCategory'}
+                            label={t('event.competition.registration.ratingCategory')}
+                            options={ratingCategories ?? []}
+                            loading={ratingCategoriesPending}
+                            autocompleteProps={{
+                                getOptionKey: option => option.id
+                            }}
+                        />
+                    }
+                </Stack>
+
                 <Stack spacing={2}>
                     {props.entity?.id == null && globalPrivilege && (
                         <FormInputAutocomplete
@@ -309,6 +346,10 @@ function mapDtoToForm(dto: CompetitionRegistrationTeamDto): CompetitionRegistrat
             participantIds: np.participants.map(p => p.id),
         })),
         asRegistrationType: dto.isLate ? 'LATE' : 'REGULAR',
+        ratingCategory: dto.ratingCategory ? {
+            id: dto.ratingCategory.id,
+            label: dto.ratingCategory.name
+        } : null
     }
 }
 

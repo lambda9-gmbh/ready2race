@@ -254,7 +254,7 @@
         "categories": "Categories",
         "name": "Name",
         "description": "Description",
-        "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
+        "tableHint": "Enable categorising for sorting and filtering of competitions."
       },
       "count": {
         "males": "Number of men",
@@ -325,7 +325,8 @@
             "LATE": "Late registration"
           }
         },
-        "isLate": "registered late"
+        "isLate": "registered late",
+        "ratingCategory": "Rating category"
       },
       "setup": {
         "setup": "Competition Setup",
@@ -920,6 +921,13 @@
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings"
+    },
+    "ratingCategory": {
+      "ratingCategory": "Rating category",
+      "ratingCategories": "Rating categories",
+      "name": "Name",
+      "description": "Description",
+      "tableHint": "Can be assigned to competition teams."
     },
     "export": {
       "startlist": {

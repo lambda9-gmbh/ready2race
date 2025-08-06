@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.control.Competi
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationOptionalFeeRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationError
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationRequestProperties
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamDto
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
@@ -68,19 +69,23 @@ object CompetitionRegistrationService {
         competitionId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
-        diffRegType: RegistrationInvoiceType?,
+        requestProperties: CompetitionRegistrationRequestProperties,
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
 
-        val type = diffRegType.takeIf { scope == Privilege.Scope.GLOBAL }
-            ?: !EventService.getOpenForRegistrationType(eventId).map {
-                when (it) {
-                    OpenForRegistrationType.REGULAR -> RegistrationInvoiceType.REGULAR
-                    OpenForRegistrationType.LATE -> RegistrationInvoiceType.LATE
-                    OpenForRegistrationType.CLOSED -> null
-                }
-            }.onNullDie("Already validated: Either global permission with specified type or failed on own permission when closed")
+        val (type, ratingCategory) = when (requestProperties) {
+            CompetitionRegistrationRequestProperties.None ->
+                !EventService.getOpenForRegistrationType(eventId).map {
+                    when (it) {
+                        OpenForRegistrationType.REGULAR -> RegistrationInvoiceType.REGULAR
+                        OpenForRegistrationType.LATE -> RegistrationInvoiceType.LATE
+                        OpenForRegistrationType.CLOSED -> null
+                    }
+                }.onNullDie("Already validated: Either global permission with specified type or failed on own permission when closed") to null
+
+            is CompetitionRegistrationRequestProperties.Permitted -> requestProperties.registrationType to requestProperties.ratingCategory
+        }
 
         val isLate = type == RegistrationInvoiceType.LATE
 
@@ -120,6 +125,7 @@ object CompetitionRegistrationService {
                 now,
                 user.id,
                 isLate = isLate,
+                ratingCategory = ratingCategory,
             )
         ).orDie()
 
@@ -141,7 +147,7 @@ object CompetitionRegistrationService {
         competitionRegistrationId: UUID,
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
-        diffRegType: RegistrationInvoiceType?,
+        requestProperties: CompetitionRegistrationRequestProperties,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
@@ -150,13 +156,19 @@ object CompetitionRegistrationService {
             !CompetitionRegistrationRepo.findByIdAndCompetitionId(competitionRegistrationId, competitionId).orDie()
                 .onNullFail { CompetitionRegistrationError.NotFound }
 
-        if (scope == Privilege.Scope.GLOBAL) {
-            registration.isLate = diffRegType == RegistrationInvoiceType.LATE
-            registration.update()
-        } else {
-            val type = !EventService.getOpenForRegistrationType(eventId)
-            val changeIsLate = type == OpenForRegistrationType.LATE
-            !KIO.failOn(registration.isLate != changeIsLate ) { CompetitionRegistrationError.RegistrationClosed }
+        when (requestProperties) {
+            CompetitionRegistrationRequestProperties.None -> {
+                val type = !EventService.getOpenForRegistrationType(eventId)
+                val changeIsLate = type == OpenForRegistrationType.LATE
+                !KIO.failOn(registration.isLate != changeIsLate ) { CompetitionRegistrationError.RegistrationClosed }
+            }
+            is CompetitionRegistrationRequestProperties.Permitted -> {
+                registration.isLate = requestProperties.registrationType == RegistrationInvoiceType.LATE
+                registration.ratingCategory = requestProperties.ratingCategory
+                registration.updatedAt = LocalDateTime.now()
+                registration.updatedBy = user.id!!
+                registration.update()
+            }
         }
 
         !CompetitionRegistrationNamedParticipantRepo.deleteAllByRegistrationId(registration.id).orDie()

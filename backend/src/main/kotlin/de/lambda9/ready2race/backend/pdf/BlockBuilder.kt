@@ -16,6 +16,7 @@ class BlockBuilder {
         fontSize: Float = 10F,
         lineHeight: Float = 1.8F,
         newLine: Boolean = true,
+        centered: Boolean = false,
         content: () -> String,
     ) {
         children.add(
@@ -26,6 +27,7 @@ class BlockBuilder {
                 fontSize = fontSize,
                 padding = Padding(0F),
                 newLine = newLine || !inline,
+                centered = centered,
             )
         )
         inline = true

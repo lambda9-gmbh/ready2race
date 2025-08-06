@@ -211,13 +211,13 @@ object EventRegistrationService {
         }.trimMargin()
 
         val summaryCompetitions = competitions.joinToString("\n") { c ->
-            val teams = c.clubRegistrations!!.flatMap { it!!.teams!!.map { it!! } }.filter { it.club == user.club }
+            val teams = c.teams!!.filter { it!!.clubId == user.club }
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
-                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName })
+                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it?.teamName })
                     .joinToString("\n|        ") { t ->
-                        val ps = t.participants!!.map { it!! }.sortedBy { it.role }
+                        val ps = t!!.participants!!.map { it!! }.sortedBy { it.role }
                         """
                         |->${t.teamName?.let { " $it" } ?: ""}
                         |            ${
@@ -559,20 +559,18 @@ object EventRegistrationService {
         val result = mutableListOf<CompetitionRegistrationsWithoutTeamNumberDto>()
 
         eventRegistrationResult?.competitions?.forEach { competition ->
-            competition?.clubRegistrations?.forEach { clubRegistration ->
-                clubRegistration?.teams?.forEach { registrationTeam ->
-                    if (registrationTeam?.teamNumber == null) {
-                        result.add(
-                            CompetitionRegistrationsWithoutTeamNumberDto(
-                                competitionId = competition.id!!,
-                                competitionIdentifier = competition.identifier!!,
-                                competitionName = competition.name!!,
-                                registrationId = registrationTeam?.id!!,
-                                registrationClub = clubRegistration.name!!,
-                                registrationName = registrationTeam.teamName,
-                            )
+            competition?.teams?.forEach { registrationTeam ->
+                if (registrationTeam?.teamNumber == null) {
+                    result.add(
+                        CompetitionRegistrationsWithoutTeamNumberDto(
+                            competitionId = competition.id!!,
+                            competitionIdentifier = competition.identifier!!,
+                            competitionName = competition.name!!,
+                            registrationId = registrationTeam?.id!!,
+                            registrationClub = registrationTeam.clubName!!,
+                            registrationName = registrationTeam.teamName,
                         )
-                    }
+                    )
                 }
             }
         }
@@ -731,7 +729,7 @@ object EventRegistrationService {
                         }
                     }
 
-                    if (competition.clubRegistrations.isEmpty()) {
+                    if (competition.teams.isEmpty()) {
                         text(
                             fontStyle = FontStyle.BOLD,
                             fontSize = 11f,
@@ -740,60 +738,80 @@ object EventRegistrationService {
                             newLine = false,
                         ) { "Competition cancelled" }
                     } else {
-                        competition.clubRegistrations.forEach { club ->
-                            club.teams.sortedWith(lexiNumberComp { it.name }).forEach { team ->
+                        val categories = competition.teams.groupBy { it.ratingCategory?.id }
+                        categories.toList().sortedBy { it.second.first().ratingCategory?.name }.forEach { (_, categoryTeams) ->
+                            val category = categoryTeams.first().ratingCategory
+
+                            block(
+                                padding = Padding(bottom = 20f)
+                            ) {
+
                                 block(
-                                    padding = Padding(0f, 0f, 0f, 15f)
+                                    padding = Padding(bottom = 5f)
                                 ) {
-
                                     text(
-                                        fontStyle = FontStyle.BOLD
-                                    ) { club.name }
-                                    team.name.takeIf { club.teams.size > 1 }?.let {
-                                        text(
-                                            newLine = false,
-                                        ) { " $it" }
-                                    }
+                                        fontStyle = FontStyle.BOLD,
+                                        centered = true,
+                                    ) { category?.name ?: "Unkategorisiert" }
+                                }
 
-                                    table(
-                                        padding = Padding(5f, 0f, 0f, 0f),
-                                        withBorder = true,
-                                    ) {
-                                        column(0.15f)
-                                        column(0.05f)
-                                        column(0.2f)
-                                        column(0.2f)
-                                        column(0.1f)
-                                        column(0.3f)
+                                categoryTeams.groupBy { it.clubId }.forEach { (_, clubTeams) ->
+                                    clubTeams.sortedWith(lexiNumberComp { it.name }).forEach { team ->
+                                        block(
+                                            padding = Padding(0f, 0f, 0f, 7.5f)
+                                        ) {
 
-                                        team.participants
-                                            .sortedBy { it.role }
-                                            .forEachIndexed { idx, member ->
-                                                row(
-                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
-                                                ) {
-                                                    cell {
-                                                        text { member.role }
-                                                    }
-                                                    cell {
-                                                        text { member.gender.name }
-                                                    }
-                                                    cell {
-                                                        text { member.firstname }
-                                                    }
-                                                    cell {
-                                                        text { member.lastname }
-                                                    }
-                                                    cell {
-                                                        text { member.year.toString() }
-                                                    }
-                                                    cell {
-                                                        text { member.externalClubName ?: club.name }
-                                                    }
-                                                }
+                                            text(
+                                                fontStyle = FontStyle.BOLD
+                                            ) { team.clubName }
+                                            team.name?.let {
+                                                text(
+                                                    newLine = false,
+                                                ) { " $it" }
                                             }
+
+                                            table(
+                                                padding = Padding(5f, 0f, 0f, 0f),
+                                                withBorder = true,
+                                            ) {
+                                                column(0.15f)
+                                                column(0.05f)
+                                                column(0.2f)
+                                                column(0.2f)
+                                                column(0.1f)
+                                                column(0.3f)
+
+                                                team.participants
+                                                    .sortedBy { it.role }
+                                                    .forEachIndexed { idx, member ->
+                                                        row(
+                                                            color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                        ) {
+                                                            cell {
+                                                                text { member.role }
+                                                            }
+                                                            cell {
+                                                                text { member.gender.name }
+                                                            }
+                                                            cell {
+                                                                text { member.firstname }
+                                                            }
+                                                            cell {
+                                                                text { member.lastname }
+                                                            }
+                                                            cell {
+                                                                text { member.year.toString() }
+                                                            }
+                                                            cell {
+                                                                text { member.externalClubName ?: team.clubName }
+                                                            }
+                                                        }
+                                                    }
+                                            }
+                                        }
                                     }
                                 }
+
                             }
                         }
                     }

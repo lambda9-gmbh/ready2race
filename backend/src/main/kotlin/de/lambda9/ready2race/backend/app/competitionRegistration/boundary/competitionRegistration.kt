@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationRequestProperties
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
@@ -35,14 +36,19 @@ fun Route.competitionRegistration() {
                 val eventId = !pathParam("eventId", uuid)
                 val body = !receiveKIO(CompetitionRegistrationTeamUpsertDto.example)
 
-                val differentRegistrationType = when (scope) {
-                    Privilege.Scope.OWN -> null
+                val requestProperties = when (scope) {
+                    Privilege.Scope.OWN -> CompetitionRegistrationRequestProperties.None
                     Privilege.Scope.GLOBAL -> {
-                        !queryParam("registrationType", enum<RegistrationInvoiceType>())
+                        val registrationType = !queryParam("registrationType", enum<RegistrationInvoiceType>())
+                        val ratingCategory = !optionalQueryParam("ratingCategory", uuid)
+                        CompetitionRegistrationRequestProperties.Permitted(
+                            registrationType = registrationType,
+                            ratingCategory = ratingCategory,
+                        )
                     }
                 }
 
-                CompetitionRegistrationService.create(body, eventId, competitionId, scope, user, differentRegistrationType)
+                CompetitionRegistrationService.create(body, eventId, competitionId, scope, user, requestProperties)
             }
         }
 
@@ -56,14 +62,19 @@ fun Route.competitionRegistration() {
                     val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
                     val body = !receiveKIO(CompetitionRegistrationTeamUpsertDto.example)
 
-                    val differentRegistrationType = when (scope) {
-                        Privilege.Scope.OWN -> null
+                    val requestProperties = when (scope) {
+                        Privilege.Scope.OWN -> CompetitionRegistrationRequestProperties.None
                         Privilege.Scope.GLOBAL -> {
-                            !queryParam("registrationType", enum<RegistrationInvoiceType>())
+                            val registrationType = !queryParam("registrationType", enum<RegistrationInvoiceType>())
+                            val ratingCategory = !optionalQueryParam("ratingCategory", uuid)
+                            CompetitionRegistrationRequestProperties.Permitted(
+                                registrationType = registrationType,
+                                ratingCategory = ratingCategory,
+                            )
                         }
                     }
 
-                    CompetitionRegistrationService.update(body, eventId, competitionId, competitionRegistrationId, scope, user, differentRegistrationType)
+                    CompetitionRegistrationService.update(body, eventId, competitionId, competitionRegistrationId, scope, user, requestProperties)
                 }
             }
 

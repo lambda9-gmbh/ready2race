@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.findOneBy
@@ -28,7 +29,7 @@ import java.util.*
 
 object CompetitionRegistrationRepo {
 
-    private val searchFieldsForCompetition = listOf(CLUB.NAME, COMPETITION_REGISTRATION.NAME)
+    private val searchFieldsForCompetition = listOf(CLUB.NAME, COMPETITION_REGISTRATION.NAME, RATING_CATEGORY.NAME)
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
 
@@ -129,11 +130,15 @@ object CompetitionRegistrationRepo {
             optionalFees,
             namedParticipants,
             COMPETITION_REGISTRATION.IS_LATE,
+            RATING_CATEGORY.ID,
+            RATING_CATEGORY.NAME,
+            RATING_CATEGORY.DESCRIPTION,
             COMPETITION_REGISTRATION.CREATED_AT,
             COMPETITION_REGISTRATION.UPDATED_AT
         )
             .from(COMPETITION_REGISTRATION)
-            .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
+            .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)) // also user for sort + search
+            .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)) // also user for sort + search
             .page(params, searchFieldsForCompetition) {
                 COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                     .and(filterScope(scope, user.club))
@@ -147,6 +152,13 @@ object CompetitionRegistrationRepo {
                     optionalFees = it[optionalFees],
                     namedParticipants = it[namedParticipants],
                     isLate = it[COMPETITION_REGISTRATION.IS_LATE]!!,
+                    ratingCategory = it[RATING_CATEGORY.ID]?.run {
+                        RatingCategoryDto(
+                            id = this,
+                            name = it[RATING_CATEGORY.NAME]!!,
+                            description = it[RATING_CATEGORY.DESCRIPTION]
+                        )
+                    },
                     createdAt = it[COMPETITION_REGISTRATION.CREATED_AT]!!,
                     updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!
                 )

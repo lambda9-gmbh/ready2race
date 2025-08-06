@@ -478,22 +478,18 @@ from competition_registration_named_participant crnp
 create view registered_competition_team as
 select cr.id,
        cr.competition,
-       cr.club,
+       c.id                                                                      as club_id,
+       c.name                                                                    as club_name,
        cr.name                                                                   as team_name,
        cr.team_number,
        cr.is_late,
+       rc                                                                        as rating_category,
        coalesce(array_agg(rctp) filter ( where rctp.team_id is not null ), '{}') as participants
 from competition_registration cr
+         join club c on cr.club = c.id
+         left join rating_category rc on cr.rating_category = rc.id
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
-group by cr.id;
-
-create view competition_club_registration as
-select rct.competition,
-       c.name,
-       coalesce(array_agg(rct), '{}') as teams
-from registered_competition_team rct
-         join club c on rct.club = c.id
-group by rct.competition, c.id;
+group by cr.id, rc.id, c.id;
 
 create view event_competition_registration as
 select c.id,
@@ -501,12 +497,12 @@ select c.id,
        cp.identifier,
        cp.name,
        cp.short_name,
-       cc.name                                                                     as category_name,
-       coalesce(array_agg(ccr) filter ( where ccr.competition is not null ), '{}') as club_registrations
+       cc.name                                                            as category_name,
+       coalesce(array_agg(rct) filter ( where rct.id is not null ), '{}') as teams
 from competition c
          join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
-         left join competition_club_registration ccr on c.id = ccr.competition
+         left join registered_competition_team rct on c.id = rct.competition
 group by c.id, cp.id, cc.id;
 
 create view event_registration_result_view as
