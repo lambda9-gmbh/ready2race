@@ -13,6 +13,7 @@ fun RatingCategoryRequest.toRecord(userId: UUID): App<Nothing, RatingCategoryRec
         RatingCategoryRecord(
             id = UUID.randomUUID(),
             name = name,
+            description = description,
             createdAt = now,
             createdBy = userId,
             updatedAt = now,
@@ -25,5 +26,6 @@ fun RatingCategoryRecord.toDto(): App<Nothing, RatingCategoryDto> = KIO.ok(
     RatingCategoryDto(
         id = id,
         name = name,
+        description = description,
     )
 )

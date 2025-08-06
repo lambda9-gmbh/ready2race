@@ -51,6 +51,7 @@ object RatingCategoryService {
     ): App<RatingCategoryError, ApiResponse.NoData> =
         RatingCategoryRepo.update(id) {
             name = request.name
+            description = request.description
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()

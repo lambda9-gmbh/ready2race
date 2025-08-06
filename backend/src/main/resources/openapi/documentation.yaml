@@ -1111,6 +1111,12 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/RegistrationInvoiceType'
+        - in: query
+          name: ratingCategory
+          required: false
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -1143,8 +1149,15 @@ paths:
         - in: query
           name: registrationType
           required: false
+          description: required as managing with global permission
           schema:
             $ref: '#/components/schemas/RegistrationInvoiceType'
+        - in: query
+          name: ratingCategory
+          required: false
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -5883,6 +5896,8 @@ components:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantDto'
         isLate:
           type: boolean
+        ratingCategory:
+          $ref: '#/components/schemas/RatingCategoryDto'
         updatedAt:
           type: string
           format: date-time
@@ -8392,6 +8407,8 @@ components:
       properties:
         name:
           type: string
+        description:
+          type: string
 
     RatingCategoryDto:
       type: object
@@ -8403,4 +8420,6 @@ components:
           type: string
           format: uuid
         name:
+          type: string
+        description:
           type: string

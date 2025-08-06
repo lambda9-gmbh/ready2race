@@ -7,13 +7,17 @@ import de.lambda9.ready2race.backend.validation.validators.StringValidators.notB
 
 data class RatingCategoryRequest(
     val name: String,
+    val description: String?,
 ) : Validatable {
-    override fun validate(): ValidationResult =
-        this::name validate notBlank
+    override fun validate(): ValidationResult = ValidationResult.allOf(
+        this::name validate notBlank,
+        this::description validate notBlank,
+    )
 
     companion object {
         val example get() = RatingCategoryRequest(
             name = "Meisterschaften",
+            description = null
         )
     }
 }

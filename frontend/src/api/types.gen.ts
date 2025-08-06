@@ -274,6 +274,7 @@ export type CompetitionRegistrationTeamDto = {
     optionalFees: Array<CompetitionRegistrationFeeDto>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
     isLate: boolean
+    ratingCategory?: RatingCategoryDto
     updatedAt: string
     createdAt: string
 }
@@ -1062,6 +1063,17 @@ export type PrivilegeDto = {
 
 export type ProduceInvoicesRequest = {
     type: RegistrationInvoiceType
+}
+
+export type RatingCategoryDto = {
+    id: string
+    name: string
+    description?: string
+}
+
+export type RatingCategoryRequest = {
+    name: string
+    description?: string
 }
 
 export type RegisterRequest = {
@@ -2022,6 +2034,7 @@ export type AddCompetitionRegistrationData = {
         eventId: string
     }
     query?: {
+        ratingCategory?: string
         registrationType?: RegistrationInvoiceType
     }
 }
@@ -2038,6 +2051,10 @@ export type UpdateCompetitionRegistrationData = {
         eventId: string
     }
     query?: {
+        ratingCategory?: string
+        /**
+         * required as managing with global permission
+         */
         registrationType?: RegistrationInvoiceType
     }
 }
@@ -3749,3 +3766,60 @@ export type DeleteInfoViewData = {
 export type DeleteInfoViewResponse = void
 
 export type DeleteInfoViewError = ApiError
+
+export type AddRatingCategoryData = {
+    body: RatingCategoryRequest
+}
+
+export type AddRatingCategoryResponse = string
+
+export type AddRatingCategoryError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRatingCategoriesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRatingCategoriesResponse = {
+    data: Array<RatingCategoryDto>
+    pagination: Pagination
+}
+
+export type GetRatingCategoriesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateRatingCategoryData = {
+    body: RatingCategoryRequest
+    path: {
+        ratingCategoryId: string
+    }
+}
+
+export type UpdateRatingCategoryResponse = void
+
+export type UpdateRatingCategoryError = BadRequestError | ApiError
+
+export type DeleteRatingCategoryData = {
+    path: {
+        ratingCategoryId: string
+    }
+}
+
+export type DeleteRatingCategoryResponse = void
+
+export type DeleteRatingCategoryError = BadRequestError | ApiError

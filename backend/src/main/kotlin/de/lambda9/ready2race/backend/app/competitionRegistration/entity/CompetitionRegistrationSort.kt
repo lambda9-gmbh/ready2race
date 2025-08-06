@@ -8,12 +8,14 @@ import org.jooq.Field
 enum class CompetitionRegistrationSort : Sortable {
     CLUB_NAME,
     NAME,
+    RATING_CATEGORY,
     CREATED_AT,
     UPDATED_AT;
 
     override fun toFields(): List<Field<*>> = when (this) {
         CLUB_NAME -> listOf(CLUB.NAME, COMPETITION_REGISTRATION.IS_LATE)
         NAME -> listOf(COMPETITION_REGISTRATION.NAME)
+        RATING_CATEGORY -> listOf(de.lambda9.ready2race.backend.database.generated.tables.references.RATING_CATEGORY.NAME, CLUB.NAME)
         CREATED_AT -> listOf(COMPETITION_REGISTRATION.CREATED_AT)
         UPDATED_AT -> listOf(COMPETITION_REGISTRATION.UPDATED_AT)
     }

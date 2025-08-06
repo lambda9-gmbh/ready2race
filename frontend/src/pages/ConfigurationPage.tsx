@@ -47,6 +47,7 @@ import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
 import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
 import {a11yProps} from "@utils/helpers.ts";
+import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -145,6 +146,7 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.category.tableHint')]}
                     />
                     <CompetitionCategoryDialog {...competitionCategoryAdministrationProps.dialog} />
+                    <RatingCategoryPanel />
                     <NamedParticipantTable
                         {...namedParticipantAdministrationProps.table}
                         title={t('event.competition.namedParticipant.namedParticipants')}
