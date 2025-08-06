@@ -12,9 +12,6 @@ import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
     Box,
     Chip,
     Stack,
@@ -23,12 +20,12 @@ import {
     TableCell,
     TableHead,
     TableRow,
-    Tooltip,
     Typography,
 } from '@mui/material'
-import {ExpandMore, Login, Logout, Warning} from '@mui/icons-material'
+import {CheckCircle, Login, Logout, Warning} from '@mui/icons-material'
 import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -72,9 +69,9 @@ const CompetitionRegistrationTable = (
                     eventId,
                     competitionRegistrationId: team.id,
                 },
-                query: { checkIn: true }
+                query: {checkIn: true},
             })
-            
+
             if (result.data?.success) {
                 feedback.success(t('team.checkIn.success'))
                 props.reloadData()
@@ -165,74 +162,63 @@ const CompetitionRegistrationTable = (
                 minWidth: 300,
                 sortable: false,
                 renderCell: ({row}) => {
-                    const totalParticipants = row.namedParticipants.reduce(
-                        (acc, np) => acc + np.participants.length,
-                        0,
-                    )
-
-                    // Check if any participant has a QR code
-                    const hasQrCode = row.namedParticipants.some(np =>
-                        np.participants.some(participant => participant.qrCodeId),
-                    )
-
                     return (
-                        <Box sx={{width: '100%', py: 1}}>
-                            <Accordion elevation={0}>
-                                <AccordionSummary
-                                    expandIcon={<ExpandMore />}
-                                    sx={{
-                                        minHeight: 0,
-                                        '& .MuiAccordionSummary-content': {margin: 0},
-                                    }}>
-                                    <Stack direction="row" alignItems="center" spacing={1}>
-                                        <Typography variant="body2">
-                                            {t('team.participantCount', {count: totalParticipants})}
-                                        </Typography>
-                                        {!hasQrCode && (
-                                            <Tooltip title={t('qrCode.noQrCodeAssigned')}>
-                                                <Warning
-                                                    fontSize="small"
-                                                    sx={{color: 'warning.main'}}
-                                                />
-                                            </Tooltip>
-                                        )}
-                                    </Stack>
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Table size="small">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>{t('entity.name')}</TableCell>
-                                                <TableCell>
-                                                    {t(
-                                                        'event.competition.namedParticipant.namedParticipant',
-                                                    )}
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {row.namedParticipants.map(np =>
-                                                np.participants.map(participant => (
-                                                    <TableRow key={participant.id}>
-                                                        <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
-                                                        <TableCell>
-                                                            {np.namedParticipantName}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                )),
-                                            )}
-                                        </TableBody>
-                                    </Table>
-                                </AccordionDetails>
-                            </Accordion>
-                        </Box>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>{t('entity.name')}</TableCell>
+                                    <TableCell>
+                                        {t('event.competition.namedParticipant.namedParticipant')}
+                                    </TableCell>
+                                    <TableCell>{t('qrCode.qrCode')}</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {row.namedParticipants.map(np =>
+                                    np.participants.map(participant => (
+                                        <TableRow key={participant.id}>
+                                            <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                            <TableCell>{np.namedParticipantName}</TableCell>
+                                            <TableCell>
+                                                {participant.qrCodeId ? (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <Box sx={{p: 1}}>
+                                                                <Typography
+                                                                    fontWeight={'bold'}
+                                                                    gutterBottom>
+                                                                    {t('qrCode.value')}:
+                                                                </Typography>
+                                                                <Typography>
+                                                                    {participant.qrCodeId}
+                                                                </Typography>
+                                                            </Box>
+                                                        }>
+                                                        <CheckCircle color={'success'} />
+                                                    </HtmlTooltip>
+                                                ) : (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <Typography>
+                                                                {t('qrCode.noQrCodeAssigned')}
+                                                            </Typography>
+                                                        }>
+                                                        <Warning color={'warning'} />
+                                                    </HtmlTooltip>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    )),
+                                )}
+                            </TableBody>
+                        </Table>
                     )
                 },
             },
             {
                 field: 'statusAndScan',
                 headerName: t('team.statusText'),
-                minWidth: 220,
+                minWidth: 200,
                 renderCell: params => {
                     const row = params.row
                     if (!row.currentStatus) return '-'
