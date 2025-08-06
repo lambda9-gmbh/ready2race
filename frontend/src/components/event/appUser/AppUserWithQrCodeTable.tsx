@@ -70,11 +70,13 @@ const AppUserWithQrCodeTable = (props: BaseEntityTableProps<AppUserWithQrCodeDto
                 sortable: false,
                 renderCell: ({row}) =>
                     row.qrCodeId ? (
-                        <HtmlTooltip title={
-                            <Box sx={{p: 1}}>
-                            <Typography>{row.qrCodeId}</Typography>
-                            </Box>
-                        }>
+                        <HtmlTooltip
+                            title={
+                                <Box sx={{p: 1}}>
+                                    <Typography fontWeight={'bold'} gutterBottom>{t('qrCode.value')}:</Typography>
+                                    <Typography>{row.qrCodeId}</Typography>
+                                </Box>
+                            }>
                             <QrCodeIcon />
                         </HtmlTooltip>
                     ) : (

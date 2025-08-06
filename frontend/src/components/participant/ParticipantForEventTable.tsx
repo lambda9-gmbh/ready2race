@@ -21,12 +21,13 @@ import ParticipantRequirementApproveManuallyForEventDialog, {
 import ParticipantRequirementCheckForEventUploadFileDialog
     from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
-import {Stack, Typography} from '@mui/material'
+import {Box, Stack, Typography} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {deleteQrCode} from '../../api/sdk.gen'
+import {deleteQrCode} from '@api/sdk.gen.ts'
 import {QrCodeEditDialog} from "@components/participant/QrCodeEditDialog.tsx";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -198,10 +199,20 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
             },
             {
                 field: 'qrCodeId',
-                headerName: t('club.participant.qrCodeId'),
-                minWidth: 150,
+                headerName: t('qrCode.qrCode'),
+                minWidth: 100,
                 sortable: false,
-                flex: 1,
+                renderCell: ({row}) => row.qrCodeId ? (
+                    <HtmlTooltip
+                        title={
+                            <Box sx={{p: 1}}>
+                                <Typography fontWeight={'bold'} gutterBottom>{t('qrCode.value')}:</Typography>
+                                <Typography>{row.qrCodeId}</Typography>
+                            </Box>
+                        }>
+                        <CheckCircleIcon color={'success'}/>
+                    </HtmlTooltip>
+                ) : <>-</>
             },
         ],
         [requirementsData?.data, namedParticipantsForEvent, t],
