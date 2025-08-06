@@ -56,7 +56,7 @@ export const AppUserQrCodeEditDialog = ({
         >
             <TextFieldElement
                 name="qrCodeId"
-                label={t('user.qrCodeId')}
+                label={t('user.qrCode.value')}
                 fullWidth
             />
             <Typography variant="body2" sx={{mt: 2}}>

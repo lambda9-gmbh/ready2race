@@ -5124,7 +5124,6 @@ components:
         - firstname
         - lastname
         - roles
-        - qrCodeId
       properties:
         id:
           type: string

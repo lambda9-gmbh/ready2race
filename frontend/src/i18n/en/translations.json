@@ -749,9 +749,11 @@
     },
     "firstname": "Firstname",
     "lastname": "Lastname",
-    "qrCodeId": "Qr Code Value",
-    "showQrCode": "Show QR Code",
-    "qrCodeFor": "QR Code for",
+    "qrCode": {
+      "qrCode": "Qr Code",
+      "value": "Qr Code Value",
+      "show": "Show QR Code"
+    },
     "password": {
       "password": "Password",
       "confirm": "Passwort bestätigen",

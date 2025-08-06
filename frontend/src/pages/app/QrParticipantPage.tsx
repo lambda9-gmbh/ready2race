@@ -1,6 +1,6 @@
 import {Alert, Button, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
-import {qrEventRoute, router} from '@routes'
+import {qrEventRoute} from '@routes'
 import {
     approveParticipantRequirementsForEvent,
     checkInOutTeam,
@@ -35,14 +35,9 @@ const QrParticipantPage = () => {
     const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const [reloadTeams, setReloadTeams] = useState(false)
-    const navigate = router.navigate
     const feedback = useFeedback()
 
     useEffect(() => {
-        if (!appFunction) {
-            navigate({to: '/app/function'})
-            return
-        }
         if (!qr.received) {
             qr.reset(eventId)
         }

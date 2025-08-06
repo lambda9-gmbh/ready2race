@@ -63,7 +63,7 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
             <GridActionsCellItem
                 key="show-qr"
                 icon={<QrCode2/>}
-                label={t('user.showQrCode')}
+                label={t('user.qrCode.show')}
                 onClick={() => handleShowQr(entity)}
                 showInMenu
             />,

@@ -3,12 +3,12 @@ import {useUser} from '@contexts/user/UserContext';
 import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx';
 import {useEffect, useState} from 'react';
 import {router} from "@routes";
-import { updateAppQrManagementGlobal, updateAppCompetitionCheckGlobal, updateAppEventRequirementGlobal, updateAppCatererGlobal } from '@authorization/privileges';
 import { useTranslation } from 'react-i18next';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
+import {getAppRights} from "@components/qrApp/common.ts";
 
 const APP_FUNCTIONS = [
     {
@@ -44,15 +44,13 @@ const AppFunctionSelectPage = () => {
 
     useEffect(() => {
         // Prüfe, welche App-Funktionen der User hat
-        const rights: AppFunction[] = [];
-        if (user.checkPrivilege(updateAppQrManagementGlobal)) rights.push('APP_QR_MANAGEMENT');
-        if (user.checkPrivilege(updateAppCompetitionCheckGlobal)) rights.push('APP_COMPETITION_CHECK');
-        if (user.checkPrivilege(updateAppEventRequirementGlobal)) rights.push('APP_EVENT_REQUIREMENT');
-        if (user.checkPrivilege(updateAppCatererGlobal)) rights.push('APP_CATERER');
+        const rights = getAppRights(user)
         setAvailable(rights);
         // Wenn kein Recht, ggf. Forbidden
         if (rights.length === 0) {
             navigate({to: '/app/forbidden'});
+        } else if(rights.length === 1){
+            setAppFunction(rights[0])
         }
     }, [user, setAppFunction, navigate]);
 

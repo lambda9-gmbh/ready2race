@@ -43,10 +43,6 @@ const QrAssignPage = () => {
     const {eventId} = qrEventRoute.useParams()
 
     useEffect(() => {
-        if (!appFunction) {
-            window.location.href = '/app/function';
-            return;
-        }
         if (!qr.received) {
             qr.reset(eventId)
         }

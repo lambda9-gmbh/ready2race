@@ -30,10 +30,6 @@ const QrAppuserPage = () => {
     const navigate = router.navigate
 
     useEffect(() => {
-        if (!appFunction) {
-            navigate({to: "/app/function"})
-            return;
-        }
         if (!qr.received) {
             qr.reset(eventId)
         }

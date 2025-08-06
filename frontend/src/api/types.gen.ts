@@ -22,7 +22,7 @@ export type AppUserDto = {
     firstname: string
     lastname: string
     roles: Array<RoleDto>
-    qrCodeId: string
+    qrCodeId?: string
 }
 
 export type AppUserInvitationDto = {

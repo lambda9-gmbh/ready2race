@@ -10,7 +10,12 @@ import {AuthenticatedUser, User} from './contexts/user/UserContext.ts'
 import RootLayout from './layouts/RootLayout.tsx'
 import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
-import {readInvoiceGlobal,readUserGlobal, updateEventGlobal, updateUserGlobal,} from './authorization/privileges.ts'
+import {
+    readInvoiceGlobal,
+    readUserGlobal,
+    updateEventGlobal,
+    updateUserGlobal,
+} from './authorization/privileges.ts'
 import UsersPage from './pages/user/UsersPage.tsx'
 import UserPage from './pages/user/UserPage.tsx'
 import RolesPage from './pages/user/RolesPage.tsx'
@@ -71,7 +76,7 @@ const checkAuthApp = (context: User, location: ParsedLocation, privilege?: Privi
         throw redirect({to: '/app/login', search: {redirect: location.href}})
     }
     if (privilege && !context.checkPrivilege(privilege)) {
-        //throw redirect({to: '/app/login'})
+        throw redirect({to: '/app/function'})
     }
 }
 
@@ -410,6 +415,9 @@ export const appFunctionSelectRoute = createRoute({
     getParentRoute: () => appRoute,
     path: 'function',
     component: () => <AppFunctionSelectPage/>,
+    beforeLoad: ({context, location}) => {
+        checkAuthApp(context, location)
+    }
 });
 
 export const invoicesRoute = createRoute({
