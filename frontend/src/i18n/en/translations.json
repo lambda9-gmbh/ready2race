@@ -929,6 +929,20 @@
       "description": "Description",
       "tableHint": "Can be assigned to competition teams."
     },
+    "import": {
+      "matchResult": {
+        "config": "Match result import configuration",
+        "configs": "Match result import configurations",
+        "tableHint": "Define the columns for the XLS import of match results when conducting competitions.",
+        "name": "Name",
+        "col": {
+          "team": {
+            "startNumber": "Start number",
+            "place": "Place"
+          }
+        }
+      }
+    },
     "export": {
       "startlist": {
         "startlist": "Start-list configuration",

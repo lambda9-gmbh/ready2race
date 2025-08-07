@@ -821,6 +821,11 @@ object CompetitionExecutionService {
                                     newLine = false,
                                 ) { " $it" }
                             }
+                            team.ratingCategory?.let {
+                                text(
+                                    newLine = false,
+                                ) { " ${it.name}" }
+                            }
                             if (data.startTimeOffset != null) {
                                 text {
                                     "startet ${
@@ -904,6 +909,7 @@ object CompetitionExecutionService {
 
                 optionalColumn(config.colTeamName) { teamName ?: "" }
                 optionalColumn(config.colTeamStartNumber) { startNumber.toString() }
+                optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
 
                 optionalColumn(config.colMatchName) { data.matchName ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->

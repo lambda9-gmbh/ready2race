@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 import kotlin.String
 
@@ -30,22 +31,22 @@ data class StartListConfigRequest(
         ValidationResult.allOf(
             this::name validate notBlank,
             ValidationResult.anyOf(
-                this::colParticipantFirstname validate notNull,
-                this::colParticipantLastname validate notNull,
-                this::colParticipantGender validate notNull,
-                this::colParticipantRole validate notNull,
-                this::colParticipantYear validate notNull,
-                this::colParticipantClub validate notNull,
-                this::colClubName validate notNull,
-                this::colTeamName validate notNull,
-                this::colTeamStartNumber validate notNull,
-                this::colMatchName validate notNull,
-                this::colMatchStartTime validate notNull,
-                this::colRoundName validate notNull,
-                this::colCompetitionIdentifier validate notNull,
-                this::colCompetitionName validate notNull,
-                this::colCompetitionShortName validate notNull,
-                this::colCompetitionCategory validate notNull,
+                this::colParticipantFirstname validate allOf(notNull, notBlank),
+                this::colParticipantLastname validate allOf(notNull, notBlank),
+                this::colParticipantGender validate allOf(notNull, notBlank),
+                this::colParticipantRole validate allOf(notNull, notBlank),
+                this::colParticipantYear validate allOf(notNull, notBlank),
+                this::colParticipantClub validate allOf(notNull, notBlank),
+                this::colClubName validate allOf(notNull, notBlank),
+                this::colTeamName validate allOf(notNull, notBlank),
+                this::colTeamStartNumber validate allOf(notNull, notBlank),
+                this::colMatchName validate allOf(notNull, notBlank),
+                this::colMatchStartTime validate allOf(notNull, notBlank),
+                this::colRoundName validate allOf(notNull, notBlank),
+                this::colCompetitionIdentifier validate allOf(notNull, notBlank),
+                this::colCompetitionName validate allOf(notNull, notBlank),
+                this::colCompetitionShortName validate allOf(notNull, notBlank),
+                this::colCompetitionCategory validate allOf(notNull, notBlank),
             )
         )
 

@@ -48,6 +48,7 @@ import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
 import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
 import {a11yProps} from "@utils/helpers.ts";
 import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
+import MatchResultImportConfigPanel from "@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -166,6 +167,7 @@ const ConfigurationPage = () => {
                     />
                     <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
                     <StartListConfigPanel />
+                    <MatchResultImportConfigPanel />
                 </Stack>
             </TabPanel>
             <TabPanel index={'event-elements'} activeTab={activeTab}>

@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumen
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.eventInfo
 import de.lambda9.ready2race.backend.app.fee.boundary.fee
 import de.lambda9.ready2race.backend.app.invoice.boundary.invoice
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.boundary.matchResultImportConfig
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
@@ -51,6 +52,7 @@ fun Application.configureRouting() {
             invoice()
             startListConfig()
             ratingCategory()
+            matchResultImportConfig()
         }
     }
 }

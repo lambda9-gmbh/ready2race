@@ -929,10 +929,24 @@
       "description": "Beschreibung",
       "tableHint": "Können Wettkampf-Teams zugewiesen werden."
     },
+    "import": {
+      "matchResult": {
+        "config": "Rennergebnisse Import",
+        "configs": "Rennergebnisse Imports",
+        "tableHint": "Definieren die Spalten für den XLS-Import von Rennergebnissen bei der Durchführung von Wettkämpfen.",
+        "name": "Name",
+        "col": {
+          "team": {
+            "startNumber": "Startnummer",
+            "place": "Platz"
+          }
+        }
+      }
+    },
     "export": {
       "startlist": {
-        "startlist": "Startlistenkonfiguration",
-        "startlists": "Startlistenkonfigurationen",
+        "startlist": "Startlisten Export",
+        "startlists": "Startlisten Exports",
         "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
         "name": "Name",
         "col": {

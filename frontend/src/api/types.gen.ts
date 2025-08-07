@@ -812,6 +812,19 @@ export type MatchForRunningStatusDto = {
     startTime?: string
 }
 
+export type MatchResultImportConfigDto = {
+    id: string
+    name: string
+    colTeamStartNumber: string
+    colTeamPlace: string
+}
+
+export type MatchResultImportConfigRequest = {
+    name: string
+    colTeamStartNumber: string
+    colTeamPlace: string
+}
+
 export type MatchResultTeamInfo = {
     teamId: string
     teamName?: string | null
@@ -3823,3 +3836,60 @@ export type DeleteRatingCategoryData = {
 export type DeleteRatingCategoryResponse = void
 
 export type DeleteRatingCategoryError = BadRequestError | ApiError
+
+export type AddMatchResultImportConfigData = {
+    body: MatchResultImportConfigRequest
+}
+
+export type AddMatchResultImportConfigResponse = string
+
+export type AddMatchResultImportConfigError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetMatchResultImportConfigsData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetMatchResultImportConfigsResponse = {
+    data: Array<MatchResultImportConfigDto>
+    pagination: Pagination
+}
+
+export type GetMatchResultImportConfigsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateMatchResultImportConfigData = {
+    body: MatchResultImportConfigRequest
+    path: {
+        matchResultImportConfigId: string
+    }
+}
+
+export type UpdateMatchResultImportConfigResponse = void
+
+export type UpdateMatchResultImportConfigError = BadRequestError | ApiError
+
+export type DeleteMatchResultImportConfigData = {
+    path: {
+        matchResultImportConfigId: string
+    }
+}
+
+export type DeleteMatchResultImportConfigResponse = void
+
+export type DeleteMatchResultImportConfigError = BadRequestError | ApiError
