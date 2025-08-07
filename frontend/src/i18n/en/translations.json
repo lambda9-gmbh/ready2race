@@ -494,6 +494,25 @@
           "submit": {
             "error": "An error has occurred when entering the results",
             "success": "Results successfully saved"
+          },
+          "dialog": {
+            "title": "Select configuration",
+            "config": "Configuration",
+            "alert": {
+              "1": "You can create and update configurations ",
+              "2": "here",
+              "3": "."
+            },
+            "file": {
+              "missing": "Please provide a file.",
+              "change": "Change .xls file",
+              "choose": "Choose .xls file"
+            }
+          },
+          "upload": "Upload match results",
+          "type": {
+            "form": "into Form",
+            "XLS": "as XLS-File"
           }
         },
         "matchData": {

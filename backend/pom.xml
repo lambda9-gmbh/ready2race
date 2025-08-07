@@ -45,6 +45,7 @@
         <password4j.version>1.8.2</password4j.version>
         <pdfbox.version>3.0.4</pdfbox.version>
         <opencsv.version>5.11.2</opencsv.version>
+        <poi.version>5.4.1</poi.version>
     </properties>
     <dependencies>
         <dependency>
@@ -243,6 +244,12 @@
             <groupId>com.opencsv</groupId>
             <artifactId>opencsv</artifactId>
             <version>${opencsv.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>${poi.version}</version>
         </dependency>
 
     </dependencies>

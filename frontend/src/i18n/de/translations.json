@@ -494,6 +494,25 @@
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
             "success": "Ergebnis gespeichert"
+          },
+          "dialog": {
+            "title": "Konfiguration auswählen",
+            "config": "Konfiguration",
+            "alert": {
+              "1": "Konfigurationen können ",
+              "2": "hier",
+              "3": " erstellt und bearbeitet werden."
+            },
+            "file": {
+              "missing": "Please provide a file.",
+              "change": "Change .xls file",
+              "choose": "Choose .xls file"
+            }
+          },
+          "upload": "Ergebnisse hochladen",
+          "type": {
+            "form": "mit Eingabeformular",
+            "XLS": "als XLS-Datei"
           }
         },
         "matchData": {

@@ -35,6 +35,7 @@ import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import Checkbox from '@mui/material/Checkbox'
+import MatchResultUploadDialog from "@components/event/competition/excecution/MatchResultUploadDialog.tsx";
 
 type Props = {
     round: CompetitionRoundDto
@@ -48,6 +49,10 @@ type Props = {
     accordionsExpanded: boolean[] | undefined
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
 }
+
+const MATCH_RESULT_OPTIONS = ['form', 'XLS'] as const
+type MatchResultOption = (typeof MATCH_RESULT_OPTIONS)[number]
+
 const CompetitionExecutionRound = ({
     round,
     roundIndex,
@@ -69,6 +74,10 @@ const CompetitionExecutionRound = ({
     const [startListMatch, setStartListMatch] = useState<string | null>(null)
     const showStartListConfigDialog = startListMatch !== null
     const closeStartListConfigDialog = () => setStartListMatch(null)
+
+    const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
+    const showMatchResultImportConfigDialog = resultImportMatch !== null
+    const closeMAtchResultImportConfigDialog = () => setResultImportMatch(null)
 
     const deleteCurrentRound = async () => {
         confirmAction(
@@ -136,6 +145,14 @@ const CompetitionExecutionRound = ({
             anchor.href = ''
             anchor.download = ''
         }
+    }
+
+    const handleUploadMatchResults = async (
+        competitionMatchId: string,
+        file: File,
+        config: string,
+    ) => {
+
     }
 
     const handleToggleRunningState = async (match: CompetitionMatchDto) => {
@@ -324,13 +341,40 @@ const CompetitionExecutionRound = ({
                                 </Stack>
                                 <Stack direction={'column'} spacing={1}>
                                     {roundIndex === 0 && (
-                                        <LoadingButton
-                                            disabled={submitting}
-                                            onClick={() => props.openResultsDialog(matchIndex)}
-                                            variant={'outlined'}
-                                            pending={submitting}>
-                                            {t('event.competition.execution.results.enter')}
-                                        </LoadingButton>
+                                        <SelectionMenu
+                                            anchor={{
+                                                button: {
+                                                    vertical: 'bottom',
+                                                    horizontal: 'right',
+                                                },
+                                                menu: {
+                                                    vertical: 'top',
+                                                    horizontal: 'right',
+                                                },
+                                            }}
+                                            buttonContent={t(
+                                                'event.competition.execution.results.enter',
+                                            )}
+                                            keyLabel={'competition-execution-results-enter'}
+                                            onSelectItem={async (value: string) => {
+                                                const v = value as MatchResultOption
+                                                switch (v) {
+                                                    case "form":
+                                                        props.openResultsDialog(matchIndex)
+                                                        break;
+                                                    case "XLS":
+                                                        setResultImportMatch(match.id)
+                                                        break;
+
+                                                }
+                                            }}
+                                            items={
+                                                MATCH_RESULT_OPTIONS.map(o => ({
+                                                    id: o,
+                                                    label: t(`event.competition.execution.results.type.${o}`),
+                                                } satisfies {id: MatchResultOption, label: string}))
+                                            }
+                                        />
                                     )}
                                     <LoadingButton
                                         onClick={() =>
@@ -436,6 +480,11 @@ const CompetitionExecutionRound = ({
                 open={showStartListConfigDialog}
                 onClose={closeStartListConfigDialog}
                 onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
+            />
+            <MatchResultUploadDialog
+                open={showMatchResultImportConfigDialog}
+                onClose={closeMAtchResultImportConfigDialog}
+                onSuccess={async (config, file) => handleUploadMatchResults(resultImportMatch!, file, config)}
             />
         </Fragment>
     )

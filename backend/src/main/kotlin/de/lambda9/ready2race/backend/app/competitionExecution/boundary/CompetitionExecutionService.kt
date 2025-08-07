@@ -20,14 +20,18 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
+import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.hr
@@ -37,6 +41,7 @@ import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
@@ -372,12 +377,10 @@ object CompetitionExecutionService {
         noData
     }
 
-    fun updateMatchResult(
+    private fun checkUpdateMatchResult(
         competitionId: UUID,
         matchId: UUID,
-        userId: UUID,
-        request: UpdateCompetitionMatchResultRequest,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, Unit> = KIO.comprehension {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -397,11 +400,28 @@ object CompetitionExecutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
         }
 
-        !CompetitionMatchRepo.update(matchId) {
+        unit
+    }
+
+    private fun unsetCurrentlyRunning(
+        matchId: UUID,
+        userId: UUID,
+    ): App<Nothing, Unit> =
+        CompetitionMatchRepo.update(matchId) {
             currentlyRunning = false
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie()
+        }.orDie().map {}
+
+    fun updateMatchResult(
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchResultRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        !checkUpdateMatchResult(competitionId, matchId)
+        !unsetCurrentlyRunning(matchId, userId)
 
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
@@ -409,7 +429,24 @@ object CompetitionExecutionService {
                 updatedBy = userId
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
-        }.map { ApiResponse.NoData }
+        }.noDataResponse()
+    }
+
+    fun updateMatchResultByFile(
+        competitionId: UUID,
+        matchId: UUID,
+        file: FileUpload,
+        request: UploadMatchResultRequest,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        !checkUpdateMatchResult(competitionId, matchId)
+        !unsetCurrentlyRunning(matchId, userId)
+
+        val config = !MatchResultImportConfigRepo.get(request.config).orDie().onNullFail { MatchResultImportConfigError.NotFound }
+
+        noData
+
     }
 
     fun updateMatchRunningState(
