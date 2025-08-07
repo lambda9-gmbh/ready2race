@@ -352,6 +352,9 @@ import type {
     GetTeamsByParticipantQrCodeData,
     GetTeamsByParticipantQrCodeError,
     GetTeamsByParticipantQrCodeResponse,
+    CheckInOutParticipantData,
+    CheckInOutParticipantError,
+    CheckInOutParticipantResponse,
     UpdateParticipantRequirementData,
     UpdateParticipantRequirementError,
     UpdateParticipantRequirementResponse,
@@ -511,9 +514,6 @@ import type {
     GetQrAssignmentParticipantsData,
     GetQrAssignmentParticipantsError,
     GetQrAssignmentParticipantsResponse,
-    CheckInOutTeamData,
-    CheckInOutTeamError,
-    CheckInOutTeamResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1913,6 +1913,19 @@ export const getTeamsByParticipantQrCode = <ThrowOnError extends boolean = false
     })
 }
 
+export const checkInOutParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckInOutParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CheckInOutParticipantResponse,
+        CheckInOutParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/checkInOut',
+    })
+}
+
 export const updateParticipantRequirement = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateParticipantRequirementData, ThrowOnError>,
 ) => {
@@ -2580,18 +2593,5 @@ export const getQrAssignmentParticipants = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/app/qr-assignment/participants',
-    })
-}
-
-export const checkInOutTeam = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<CheckInOutTeamData, ThrowOnError>,
-) => {
-    return (options?.client ?? client).post<
-        CheckInOutTeamResponse,
-        CheckInOutTeamError,
-        ThrowOnError
-    >({
-        ...options,
-        url: '/event/{eventId}/competitionRegistration/{competitionRegistrationId}/checkInOut',
     })
 }

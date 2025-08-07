@@ -294,9 +294,6 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
     updatedAt: string
     createdAt: string
-    currentStatus?: TeamScanType
-    lastScanAt?: string
-    scannedBy?: string
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -890,6 +887,9 @@ export type ParticipantForEventDto = {
     participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
     qrCodeId?: string
     namedParticipantIds?: Array<string>
+    currentStatus?: ParticipantScanType
+    lastScanAt?: string
+    lastScanBy?: AppUserNameDto
 }
 
 export type ParticipantForExecutionDto = {
@@ -974,6 +974,8 @@ export type ParticipantRequirementUpsertDto = {
      */
     checkInApp?: boolean
 }
+
+export type ParticipantScanType = 'ENTRY' | 'EXIT'
 
 export type ParticipantUpsertDto = {
     firstname: string
@@ -1157,46 +1159,29 @@ export type TaskUpsertDto = {
     responsibleUsers: Array<string>
 }
 
+export type TeamForScanOverviewDto = {
+    competitionRegistrationId: string
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    clubId: string
+    clubName: string
+    teamName?: string
+    participants: Array<TeamParticipantDto>
+}
+
 export type TeamParticipantDto = {
     participantId: string
-    firstname: string
-    lastname: string
+    firstName: string
+    lastName: string
     year: number
     gender: Gender
-    role?: string
-}
-
-export type TeamScanType = 'ENTRY' | 'EXIT'
-
-export type TeamStatusDto = {
-    competitionRegistrationId: string
-    teamName: string
-    currentStatus?: TeamScanType
+    external: boolean
+    externalClubName?: string
+    roleId: string
+    role: string
+    currentStatus?: ParticipantScanType
     lastScanAt?: string
-    scannedBy?: string
-}
-
-export type TeamStatusWithParticipantsDto = {
-    id: string
-    competitionRegistrationId: string
-    eventRegistrationId: string
-    competitionId: string
-    clubName?: string
-    teamName: string
-    participants: Array<TeamParticipantDto>
-    currentStatus?: TeamScanType
-    lastScanAt?: string
-    scannedBy?: string
-}
-
-export type TeamTrackingScanDto = {
-    competitionRegistrationId: string
-    eventId: string
-    scanType: TeamScanType
-    success: boolean
-    message?: string
-    teamName?: string
-    currentStatus?: TeamStatusDto
 }
 
 export type TooManyRequestsError = ApiError & {
@@ -3008,9 +2993,23 @@ export type GetTeamsByParticipantQrCodeData = {
     }
 }
 
-export type GetTeamsByParticipantQrCodeResponse = Array<TeamStatusWithParticipantsDto>
+export type GetTeamsByParticipantQrCodeResponse = Array<TeamForScanOverviewDto>
 
 export type GetTeamsByParticipantQrCodeError = BadRequestError | ApiError
+
+export type CheckInOutParticipantData = {
+    path: {
+        eventId: string
+        participantId: string
+    }
+    query: {
+        checkIn: boolean
+    }
+}
+
+export type CheckInOutParticipantResponse = unknown
+
+export type CheckInOutParticipantError = BadRequestError | ApiError
 
 export type UpdateParticipantRequirementData = {
     body: ParticipantRequirementUpsertDto
@@ -3673,17 +3672,3 @@ export type GetQrAssignmentParticipantsData = {
 export type GetQrAssignmentParticipantsResponse = Array<GroupedParticipantQrAssignmentDto>
 
 export type GetQrAssignmentParticipantsError = BadRequestError | ApiError
-
-export type CheckInOutTeamData = {
-    path: {
-        competitionRegistrationId: string
-        eventId: string
-    }
-    query: {
-        checkIn: boolean
-    }
-}
-
-export type CheckInOutTeamResponse = TeamTrackingScanDto
-
-export type CheckInOutTeamError = BadRequestError | ApiError | UnprocessableEntityError

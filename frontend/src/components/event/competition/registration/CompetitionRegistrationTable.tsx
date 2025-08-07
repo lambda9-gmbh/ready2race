@@ -1,15 +1,14 @@
 import {useTranslation} from 'react-i18next'
-import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
-    checkInOutTeam,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
     getCompetitionRegistrations,
 } from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {Fragment, useMemo, useState} from 'react'
+import {Fragment, useMemo} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
@@ -22,8 +21,7 @@ import {
     TableRow,
     Typography,
 } from '@mui/material'
-import {CheckCircle, Login, Logout, Warning} from '@mui/icons-material'
-import {useFeedback} from '@utils/hooks.ts'
+import {CheckCircle, Warning} from '@mui/icons-material'
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
@@ -38,8 +36,6 @@ const CompetitionRegistrationTable = (
     props: BaseEntityTableProps<CompetitionRegistrationTeamDto>,
 ) => {
     const {t} = useTranslation()
-    const feedback = useFeedback()
-    const [loadingTeams, setLoadingTeams] = useState<Set<string>>(new Set())
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -60,89 +56,6 @@ const CompetitionRegistrationTable = (
                 competitionRegistrationId: dto.id,
             },
         })
-
-    const handleCheckIn = async (team: CompetitionRegistrationTeamDto) => {
-        setLoadingTeams(prev => new Set(prev).add(team.id))
-        try {
-            const result = await checkInOutTeam({
-                path: {
-                    eventId,
-                    competitionRegistrationId: team.id,
-                },
-                query: {checkIn: true},
-            })
-
-            if (result.data?.success) {
-                feedback.success(t('team.checkIn.success'))
-                props.reloadData()
-            } else {
-                feedback.error(result.data?.message || t('team.checkIn.error'))
-            }
-        } catch (error) {
-            feedback.error(t('team.checkIn.error'))
-        } finally {
-            setLoadingTeams(prev => {
-                const newSet = new Set(prev)
-                newSet.delete(team.id)
-                return newSet
-            })
-        }
-    }
-
-    // TODO: Merge with prev Function, remove try-catches, change setLoadingTeams
-    const handleCheckOut = async (team: CompetitionRegistrationTeamDto) => {
-        setLoadingTeams(prev => new Set(prev).add(team.id))
-        try {
-            const result = await checkInOutTeam({
-                path: {
-                    eventId,
-                    competitionRegistrationId: team.id,
-                },
-                query: {
-                    checkIn: false,
-                },
-            })
-
-            if (result.data?.success) {
-                feedback.success(t('team.checkOut.success'))
-                props.reloadData()
-            } else {
-                feedback.error(result.data?.message || t('team.checkOut.error'))
-            }
-        } catch (error) {
-            feedback.error(t('team.checkOut.error'))
-        } finally {
-            setLoadingTeams(prev => {
-                const newSet = new Set(prev)
-                newSet.delete(team.id)
-                return newSet
-            })
-        }
-    }
-
-    const customEntityActions = (team: CompetitionRegistrationTeamDto) => {
-        const isLoading = loadingTeams.has(team.id)
-        const isCheckedIn = team.currentStatus === 'ENTRY'
-
-        return [
-            <GridActionsCellItem
-                key="check-in"
-                icon={<Login />}
-                label={t('team.checkInText')}
-                onClick={() => handleCheckIn(team)}
-                disabled={isLoading || isCheckedIn}
-                showInMenu
-            />,
-            <GridActionsCellItem
-                key="check-out"
-                icon={<Logout />}
-                label={t('team.checkOutText')}
-                onClick={() => handleCheckOut(team)}
-                disabled={isLoading || !isCheckedIn}
-                showInMenu
-            />,
-        ]
-    }
 
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
@@ -166,20 +79,28 @@ const CompetitionRegistrationTable = (
                         <Table size="small">
                             <TableHead>
                                 <TableRow>
-                                    <TableCell>{t('entity.name')}</TableCell>
-                                    <TableCell>
+                                    <TableCell sx={{width: '40%'}}>{t('entity.name')}</TableCell>
+                                    <TableCell sx={{width: '40%'}}>
                                         {t('event.competition.namedParticipant.namedParticipant')}
                                     </TableCell>
-                                    <TableCell>{t('qrCode.qrCode')}</TableCell>
+                                    <TableCell sx={{width: '20%'}}>{t('qrCode.qrCode')}</TableCell>
+                                    <TableCell sx={{width: '20%'}}>
+                                        {t('team.statusText')}
+                                    </TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {row.namedParticipants.map(np =>
                                     np.participants.map(participant => (
                                         <TableRow key={participant.id}>
-                                            <TableCell>{`${participant.firstname} ${participant.lastname}`}</TableCell>
-                                            <TableCell>{np.namedParticipantName}</TableCell>
-                                            <TableCell>
+                                            <TableCell
+                                                sx={{
+                                                    width: '40%',
+                                                }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                            <TableCell sx={{width: '40%'}}>
+                                                {np.namedParticipantName}
+                                            </TableCell>
+                                            <TableCell sx={{width: '20%'}}>
                                                 {participant.qrCodeId ? (
                                                     <HtmlTooltip
                                                         title={
@@ -207,36 +128,66 @@ const CompetitionRegistrationTable = (
                                                     </HtmlTooltip>
                                                 )}
                                             </TableCell>
+                                            <TableCell sx={{width: '20%'}}>
+                                                {participant.currentStatus !== undefined && (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <>
+                                                                {participant.lastScanAt && (
+                                                                    <>
+                                                                        <Typography variant={'h6'}>
+                                                                            {t('team.lastScan')}
+                                                                        </Typography>
+                                                                        <Typography>
+                                                                            {format(
+                                                                                new Date(
+                                                                                    participant.lastScanAt,
+                                                                                ),
+                                                                                t(
+                                                                                    'format.datetime',
+                                                                                ),
+                                                                            )}
+                                                                        </Typography>
+                                                                    </>
+                                                                )}
+                                                                {participant.lastScanBy && (
+                                                                    <Typography>
+                                                                        {t('common.by')}:{' '}
+                                                                        {
+                                                                            participant.lastScanBy
+                                                                                .firstname
+                                                                        }{' '}
+                                                                        {
+                                                                            participant.lastScanBy
+                                                                                .lastname
+                                                                        }
+                                                                    </Typography>
+                                                                )}
+                                                            </>
+                                                        }>
+                                                        <Chip
+                                                            label={
+                                                                participant.currentStatus ===
+                                                                'ENTRY'
+                                                                    ? t('team.status.in')
+                                                                    : t('team.status.out')
+                                                            }
+                                                            color={
+                                                                participant.currentStatus ===
+                                                                'ENTRY'
+                                                                    ? 'success'
+                                                                    : 'default'
+                                                            }
+                                                            size="small"
+                                                        />
+                                                    </HtmlTooltip>
+                                                )}
+                                            </TableCell>
                                         </TableRow>
                                     )),
                                 )}
                             </TableBody>
                         </Table>
-                    )
-                },
-            },
-            {
-                field: 'statusAndScan',
-                headerName: t('team.statusText'),
-                minWidth: 200,
-                renderCell: params => {
-                    const row = params.row
-                    if (!row.currentStatus) return '-'
-                    const isIn = row.currentStatus === 'ENTRY'
-                    const scanTime = row.lastScanAt ? new Date(row.lastScanAt).toLocaleString() : ''
-                    return (
-                        <Stack spacing={0.5}>
-                            <Chip
-                                label={isIn ? t('team.status.in') : t('team.status.out')}
-                                color={isIn ? 'success' : 'default'}
-                                size="small"
-                            />
-                            {scanTime && (
-                                <Typography variant="caption" color="text.secondary">
-                                    {scanTime}
-                                </Typography>
-                            )}
-                        </Stack>
                     )
                 },
             },
@@ -276,7 +227,6 @@ const CompetitionRegistrationTable = (
                 columns={columns}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
-                customEntityActions={customEntityActions}
                 entityName={t('event.registration.registration')}
             />
         </Fragment>

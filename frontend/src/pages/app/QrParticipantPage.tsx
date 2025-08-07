@@ -3,11 +3,9 @@ import {useEffect, useState} from 'react'
 import {qrEventRoute} from '@routes'
 import {
     approveParticipantRequirementsForEvent,
-    checkInOutTeam,
     deleteQrCode,
     getParticipantRequirementsForEvent,
     getParticipantsForEvent,
-    getTeamsByParticipantQrCode,
 } from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
@@ -17,7 +15,6 @@ import {
     updateAppEventRequirementGlobal,
     updateAppQrManagementGlobal,
 } from '@authorization/privileges'
-import {TeamStatusWithParticipantsDto} from '@api/types.gen.ts'
 import {Cancel} from '@mui/icons-material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo'
@@ -34,7 +31,6 @@ const QrParticipantPage = () => {
     const [checkedRequirements, setCheckedRequirements] = useState<string[]>([])
     const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
     const [submitting, setSubmitting] = useState(false)
-    const [reloadTeams, setReloadTeams] = useState(false)
     const feedback = useFeedback()
 
     useEffect(() => {
@@ -89,30 +85,6 @@ const QrParticipantPage = () => {
         },
     )
 
-    const {data: teamsData, pending: teamsPending} = useFetch(
-        signal =>
-            getTeamsByParticipantQrCode({
-                signal,
-                path: {
-                    eventId,
-                    qrCode: qr.qrCodeId!,
-                },
-            }),
-        {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(
-                        t('common.load.error.multiple.short', {
-                            entity: t('team.teams'),
-                        }),
-                    )
-                }
-            },
-            preCondition: () => appFunction === 'APP_COMPETITION_CHECK' && qr.qrCodeId !== null,
-            deps: [eventId, qr, reloadTeams],
-        },
-    )
-
     const handleRequirementChange = async (requirementId: string, checked: boolean) => {
         if (!qr.response?.id) return
         setSubmitting(true)
@@ -164,26 +136,6 @@ const QrParticipantPage = () => {
         setSubmitting(false)
     }
 
-    const handleTeamCheckInOut = async (team: TeamStatusWithParticipantsDto, checkIn: boolean) => {
-        setSubmitting(true)
-        const {error} = await checkInOutTeam({
-            path: {
-                eventId,
-                competitionRegistrationId: team.competitionRegistrationId,
-            },
-            query: {
-                checkIn: checkIn,
-            },
-        })
-
-        setSubmitting(false)
-        if (error) {
-            feedback.error(checkIn ? t('team.checkIn.error') : t('team.checkOut.error'))
-        } else {
-            feedback.success(checkIn ? t('team.checkIn.success') : t('team.checkOut.success'))
-        }
-        setReloadTeams(prev => !prev)
-    }
 
     return (
         <Stack
@@ -208,13 +160,7 @@ const QrParticipantPage = () => {
             {!allowed && <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>}
 
             {canCheck && (
-                <TeamCheckInOut
-                    teams={teamsData ?? []}
-                    loading={teamsPending}
-                    teamActionLoading={submitting}
-                    onCheckIn={team => handleTeamCheckInOut(team, true)}
-                    onCheckOut={team => handleTeamCheckInOut(team, false)}
-                />
+                <TeamCheckInOut/>
             )}
 
             {canEditRequirements && (

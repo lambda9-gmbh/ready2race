@@ -69,7 +69,6 @@
     "saveAndNext": "Speichern und weiter",
     "search": "Suchen",
     "back": "Zurück",
-    "reset": "Zurücksetzen",
     "next": "Weiter",
     "and": "und",
     "remove": "Entfernen",
@@ -80,10 +79,10 @@
       "menu": "Sprache auswählen"
     },
     "actions": "Aktionen",
-    "noClub": "Kein Verein",
     "hide": "Ausblenden",
     "show": "Anzeigen",
-    "name": "Name"
+    "name": "Name",
+    "by": "Von"
   },
   "format": {
     "date": "dd.MM.yyyy",

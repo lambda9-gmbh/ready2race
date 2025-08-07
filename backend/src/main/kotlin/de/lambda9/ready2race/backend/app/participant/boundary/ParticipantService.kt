@@ -58,12 +58,12 @@ object ParticipantService {
         val total = !ParticipantForEventRepo.count(params.search, eventId, user, scope).orDie()
         val page = !ParticipantForEventRepo.page(params, eventId, user, scope).orDie()
 
-        page.traverse { it.toDto() }.map {
+        KIO.ok(
             ApiResponse.Page(
-                data = it,
+                data = page,
                 pagination = params.toPagination(total)
             )
-        }
+        )
     }
 
     fun getParticipant(

@@ -1,7 +1,11 @@
 package de.lambda9.ready2race.backend.app.participant.control
 
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventSort
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.ParticipantForEvent
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
@@ -50,14 +54,48 @@ object ParticipantForEventRepo {
         eventId: UUID,
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope
-    ): JIO<List<ParticipantForEventRecord>> = Jooq.query {
+    ): JIO<List<ParticipantForEventDto>> = Jooq.query {
+        val participantTracking = CompetitionRegistrationRepo.selectParticipantTrackings()
+
         with(PARTICIPANT_FOR_EVENT) {
-            selectFrom(this)
+            select(
+                this.asterisk(),
+                participantTracking
+            )
+                .from(this)
                 .page(params, searchFields()) {
                     EVENT_ID.eq(eventId)
                         .and(filterScope(scope, user.club))
                 }
-                .fetch()
+                .fetch {
+                    ParticipantForEventDto(
+                        id = it[PARTICIPANT_FOR_EVENT.ID]!!,
+                        clubId = it[PARTICIPANT_FOR_EVENT.CLUB_ID]!!,
+                        clubName = it[PARTICIPANT_FOR_EVENT.CLUB_NAME]!!,
+                        firstname = it[PARTICIPANT_FOR_EVENT.FIRSTNAME]!!,
+                        lastname = it[PARTICIPANT_FOR_EVENT.LASTNAME]!!,
+                        year = it[PARTICIPANT_FOR_EVENT.YEAR],
+                        gender = it[PARTICIPANT_FOR_EVENT.GENDER]!!,
+                        external = it[PARTICIPANT_FOR_EVENT.EXTERNAL],
+                        externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
+                        participantRequirementsChecked = emptyList(),
+                        qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],
+                        namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
+                            ?: emptyList(),
+                        currentStatus = it[participantTracking]?.firstOrNull()
+                            ?.let { latestScan -> ParticipantScanType.valueOf(latestScan.value1()!!) },
+                        lastScanAt = it[participantTracking]?.firstOrNull()?.value2(),
+                        lastScanBy = it[participantTracking]?.firstOrNull().let { tracking ->
+                            if (tracking?.value3() != null && tracking.value4() != null && tracking.value5() != null) {
+                                AppUserNameDto(
+                                    id = tracking.value3()!!,
+                                    firstname = tracking.value4()!!,
+                                    lastname = tracking.value5()!!,
+                                )
+                            } else null
+                        }
+                    )
+                }
         }
     }
 

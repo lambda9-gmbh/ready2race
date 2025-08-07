@@ -3070,7 +3070,35 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/TeamStatusWithParticipantsDto'
+                  $ref: '#/components/schemas/TeamForScanOverviewDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{participantId}/checkInOut:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: checkIn
+        required: true
+        schema:
+          type: boolean
+    post:
+      operationId: checkInOutParticipant
+      responses:
+        200:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -4560,37 +4588,6 @@ paths:
           $ref: '#/components/responses/500'
 
 
-  # Competition Registration Check-In/Check-Out endpoints
-  /event/{eventId}/competitionRegistration/{competitionRegistrationId}/checkInOut:
-    parameters:
-      - $ref: '#/components/parameters/eventId'
-      - $ref: '#/components/parameters/competitionRegistrationId'
-      - name: checkIn
-        in: query
-        required: true
-        schema:
-          type: boolean
-    post:
-      operationId: checkInOutTeam
-      responses:
-        200:
-          description: Team check-in-out result
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TeamTrackingScanDto'
-        400:
-          $ref: '#/components/responses/400'
-        401:
-          $ref: '#/components/responses/401'
-        403:
-          $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
-        422:
-          $ref: '#/components/responses/422'
-        500:
-          $ref: '#/components/responses/500'
 
 components:
 
@@ -5817,14 +5814,6 @@ components:
         createdAt:
           type: string
           format: date-time
-        currentStatus:
-          $ref: '#/components/schemas/TeamScanType'
-        lastScanAt:
-          type: string
-          format: date-time
-        scannedBy:
-          type: string
-          format: uuid
 
     CompetitionRegistrationFeeDto:
       type: object
@@ -6603,6 +6592,14 @@ components:
           items:
             type: string
             format: uuid
+        currentStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+        lastScanBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
 
     # participant
 
@@ -7921,119 +7918,83 @@ components:
 
     # Team Tracking schemas
 
-    TeamScanType:
+    ParticipantScanType:
       type: string
       enum:
         - ENTRY
         - EXIT
 
-    TeamTrackingScanDto:
-      type: object
-      required:
-        - competitionRegistrationId
-        - eventId
-        - scanType
-        - success
-      properties:
-        competitionRegistrationId:
-          type: string
-          format: uuid
-        eventId:
-          type: string
-          format: uuid
-        scanType:
-          $ref: '#/components/schemas/TeamScanType'
-        success:
-          type: boolean
-        message:
-          type: string
-        teamName:
-          type: string
-        currentStatus:
-          $ref: '#/components/schemas/TeamStatusDto'
 
-    TeamStatusDto:
+    TeamForScanOverviewDto:
       type: object
       required:
         - competitionRegistrationId
-        - teamName
-      properties:
-        competitionRegistrationId:
-          type: string
-          format: uuid
-        teamName:
-          type: string
-        currentStatus:
-          $ref: '#/components/schemas/TeamScanType'
-        lastScanAt:
-          type: string
-          format: date-time
-        scannedBy:
-          type: string
-          format: uuid
-
-    TeamStatusWithParticipantsDto:
-      type: object
-      required:
-        - id
-        - competitionRegistrationId
-        - eventRegistrationId
         - competitionId
-        - teamName
+        - competitionIdentifier
+        - competitionName
+        - clubId
+        - clubName
         - participants
       properties:
-        id:
-          type: string
-          format: uuid
         competitionRegistrationId:
-          type: string
-          format: uuid
-        eventRegistrationId:
           type: string
           format: uuid
         competitionId:
           type: string
           format: uuid
-        clubName:
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        clubId:
           type: string
           format: uuid
+        clubName:
+          type: string
         teamName:
           type: string
         participants:
           type: array
           items:
             $ref: '#/components/schemas/TeamParticipantDto'
-        currentStatus:
-          $ref: '#/components/schemas/TeamScanType'
-        lastScanAt:
-          type: string
-          format: date-time
-        scannedBy:
-          type: string
-          format: uuid
 
     TeamParticipantDto:
       type: object
       required:
         - participantId
-        - firstname
-        - lastname
+        - firstName
+        - lastName
         - year
         - gender
+        - external
+        - roleId
+        - role
       properties:
         participantId:
           type: string
           format: uuid
-        firstname:
+        firstName:
           type: string
-        lastname:
+        lastName:
           type: string
         year:
           type: integer
         gender:
           $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+        roleId:
+          type: string
+          format: uuid
         role:
           type: string
+        currentStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        lastScanAt:
+          type: string
+          format: date-time
 
     ParticipantQrAssignmentDto:
       type: object
