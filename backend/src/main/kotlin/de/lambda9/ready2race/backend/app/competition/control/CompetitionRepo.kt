@@ -41,18 +41,28 @@ object CompetitionRepo {
 
     fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {
         fetchExists(
-            COMPETITION
-                .join(EVENT).on(COMPETITION.EVENT.eq(EVENT.ID))
+            COMPETITION_VIEW
+                .join(EVENT).on(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
                 .where(
-                    COMPETITION.ID.eq(id)
-                        .and(EVENT.REGISTRATION_AVAILABLE_FROM.le(at))
-                        .and(
-                            DSL.or(
-                                EVENT.REGISTRATION_AVAILABLE_TO.isNull,
-                                EVENT.REGISTRATION_AVAILABLE_TO.ge(at)
-                            )
-                        )
-                        .and(EVENT.PUBLISHED.isTrue)
+                    DSL.and(
+                        COMPETITION_VIEW.ID.eq(id),
+                        DSL.or(
+                            DSL.and(
+                                COMPETITION_VIEW.LATE_REGISTRATION_ALLOWED.isTrue,
+                                EVENT.REGISTRATION_AVAILABLE_TO.le(at),
+                                EVENT.LATE_REGISTRATION_AVAILABLE_TO.ge(at),
+                            ),
+                            DSL.and(
+                                COMPETITION_VIEW.LATE_REGISTRATION_ALLOWED.isFalse,
+                                EVENT.REGISTRATION_AVAILABLE_FROM.le(at),
+                                DSL.or(
+                                    EVENT.REGISTRATION_AVAILABLE_TO.isNull,
+                                    EVENT.REGISTRATION_AVAILABLE_TO.ge(at),
+                                )
+                            ),
+                        ),
+                        EVENT.PUBLISHED.isTrue,
+                    )
                 )
         )
     }

@@ -201,7 +201,8 @@
     "registerNow": "Zur Meldung",
     "invoice": {
       "prefix": "Rechnungspräfix",
-      "paymentDueBy": "Zahlungstermin Meldegebühren"
+      "paymentDueBy": "Zahlungstermin Meldegebühren",
+      "latePaymentDueBy": "Zahlungstermin Nachmeldegebühren"
     },
     "location": "Ort",
     "upcoming": "Anstehende Veranstaltungen",
@@ -209,6 +210,8 @@
       "timespan": "Anmeldezeitraum",
       "timespanFrom": "Anmeldezeitraum von",
       "timespanTo": "Anmeldezeitraum bis",
+      "lateTimespan": "Nachmeldezeitraum",
+      "lateTo": "Nachmeldezeitraum bis",
       "from": "ab",
       "to": "bis",
       "unknown": "Noch nicht bekannt gegeben"
@@ -231,6 +234,7 @@
       "identifier": "Kennung",
       "name": "Name",
       "description": "Beschreibung",
+      "lateRegistrationAllowed": "zur Nachmeldung erlaubt",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
       "tableHint": {
@@ -250,7 +254,7 @@
         "categories": "Kategorien",
         "name": "Name",
         "description": "Beschreibung",
-        "tableHint": "Ermöglichen das Sortieren und Filtern von Wettkämpfen (noch nicht implementiert)."
+        "tableHint": "Ermöglichen das Kategorisieren und damit Sortieren und Filtern von Wettkämpfen."
       },
       "count": {
         "males": "Anzahl Männer",
@@ -289,13 +293,16 @@
         "name": "Name",
         "description": "Beschreibung",
         "amount": "Betrag",
+        "lateAmount": "Abweichender Betrag bei Nachmeldung",
         "add": "Gebühr hinzufügen",
         "type": "Gebührenart",
         "tableHint": "Definieren mögliche Gebühren eines Wettkampfs.",
         "required": {
           "notRequired": "Gebühr ist nicht verpflichtend",
           "required": "Gebühr ist verpflichtend"
-        }
+        },
+        "asRegular": "bei Meldung: {{amount}}€",
+        "asLate": "bei Nachmeldung: {{amount}}€"
       },
       "template": {
         "template": "Wettkampf Vorlage",
@@ -311,6 +318,15 @@
       },
       "registration": {
         "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
+        "dialog": {
+          "registrationType": {
+            "label": "Hinzufügen als",
+            "REGULAR": "Meldung",
+            "LATE": "Nachmeldung"
+          }
+        },
+        "isLate": "als Nachmeldung",
+        "ratingCategory": "Wertungskategorie",
         "infos": "Infos",
         "deregister": {
           "deregister": "Abmelden",
@@ -669,6 +685,7 @@
       "message": "Nachricht",
       "optionalFee": "Optional",
       "totalFees": "Meldegebühr",
+      "lateTotalFees": "Nachmeldegebühr",
       "acceptDocuments": "Ich akzeptiere Folgendes:",
       "infoDocuments": "Weitere Informationen",
       "finish": "Anmeldung abschicken",
@@ -924,6 +941,13 @@
       "competitionElements": "Komponenten Wettkampf",
       "globalSettings": "Globale Einstellungen"
     },
+    "ratingCategory": {
+      "ratingCategory": "Wertungskategorie",
+      "ratingCategories": "Wertungskategorien",
+      "name": "Name",
+      "description": "Beschreibung",
+      "tableHint": "Können Wettkampf-Teams zugewiesen werden."
+    },
     "export": {
       "startlist": {
         "startlist": "Startlistenkonfiguration",
@@ -1011,6 +1035,11 @@
       "setNotPaid": "Zahlungseingang zurücknehmen"
     },
     "produce": {
+      "for": "für {{type}}",
+      "type": {
+        "REGULAR": "Meldungen",
+        "LATE": "Nachmeldungen"
+      },
       "info": {
         "paymentDueBy": {
           "title": "Standard Zahlungsziel für Rechnungen",

@@ -57,8 +57,14 @@ export const resources = {
     },
 } as const
 
-i18next.use(I18nextBrowserLanguageDetector).use(initReactI18next).init({
-    resources,
-    defaultNS,
-    fallbackLng,
-})
+i18next
+    .use(I18nextBrowserLanguageDetector)
+    .use(initReactI18next)
+    .init({
+        resources,
+        defaultNS,
+        fallbackLng,
+        interpolation: {
+            skipOnVariables: false,
+        },
+    })

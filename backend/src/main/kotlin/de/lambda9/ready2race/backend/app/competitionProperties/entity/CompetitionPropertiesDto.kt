@@ -9,5 +9,6 @@ data class CompetitionPropertiesDto(
     val description: String?,
     val competitionCategory: CompetitionCategoryDto?,
     val namedParticipants: List<NamedParticipantForCompetitionDto>,
-    val fees: List<FeeForCompetitionDto>
+    val fees: List<FeeForCompetitionDto>,
+    val lateRegistrationAllowed: Boolean,
 )

@@ -2,7 +2,6 @@ import {useFormContext, useWatch} from 'react-hook-form-mui'
 import {Box, IconButton, Paper, Stack, Tooltip, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {useTranslation} from 'react-i18next'
-import {EventRegistrationParticipantUpsertDto, EventRegistrationUpsertDto} from '../../api'
 import {FormInputText} from '../form/input/FormInputText.tsx'
 import {AutocompleteClub} from '../club/AutocompleteClub.tsx'
 import FormInputNumber from '../form/input/FormInputNumber.tsx'
@@ -11,6 +10,10 @@ import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioBu
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {Edit, HelpOutline} from '@mui/icons-material'
 import {grey} from '@mui/material/colors'
+import {
+    EventRegistrationFormData,
+    EventRegistrationParticipantFormData
+} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
 
 export const EventRegistrationParticipantForm = (props: {
     index: number
@@ -23,10 +26,10 @@ export const EventRegistrationParticipantForm = (props: {
     const [isNew, setIsNew] = useState<boolean>(true)
 
     const [existingParticipantValues, setExistingParticipantValues] = useState<
-        EventRegistrationParticipantUpsertDto | undefined
+        EventRegistrationParticipantFormData | undefined
     >(undefined)
 
-    const formContext = useFormContext<EventRegistrationUpsertDto>()
+    const formContext = useFormContext<EventRegistrationFormData>()
 
     const currentYear = useMemo(() => new Date().getFullYear(), [])
 

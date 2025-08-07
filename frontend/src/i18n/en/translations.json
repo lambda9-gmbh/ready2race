@@ -201,7 +201,8 @@
     "registerNow": "To Registration",
     "invoice": {
       "prefix": "Invoice prefix",
-      "paymentDueBy": "Payment due by"
+      "paymentDueBy": "Registration payment due by",
+      "latePaymentDueBy": "Late registration payment due by"
     },
     "location": "Location",
     "upcoming": "Upcoming events",
@@ -209,6 +210,8 @@
       "timespan": "Registration period",
       "timespanFrom": "Registration period start",
       "timespanTo": "Registration period end",
+      "lateTimespan": "Late registration period",
+      "lateTo": "Late registration period end",
       "from": "from",
       "to": "until",
       "unknown": "Not announced yet"
@@ -231,6 +234,7 @@
       "identifier": "Identifier",
       "name": "Name",
       "description": "Description",
+      "lateRegistrationAllowed": "Late registration allowed",
       "registrationCount": "Registrations",
       "shortName": "Short name",
       "tableHint": {
@@ -250,7 +254,7 @@
         "categories": "Categories",
         "name": "Name",
         "description": "Description",
-        "tableHint": "Enable sorting and filtering of competitions (not yet implemented)."
+        "tableHint": "Enable categorising for sorting and filtering of competitions."
       },
       "count": {
         "males": "Number of men",
@@ -289,13 +293,16 @@
         "name": "Name",
         "description": "Description",
         "amount": "Amount",
+        "lateAmount": "Different amount for late registration",
         "add": "Add Fee",
         "type": "Fee type",
         "tableHint": "Defines possible fees for a competition.",
         "required": {
           "notRequired": "Fee is optional",
           "required": "Fee is mandatory"
-        }
+        },
+        "asRegular": "registered in time: {{amount}}€",
+        "asLate": "registered late: {{amount}}€"
       },
       "template": {
         "template": "Competition Template",
@@ -311,6 +318,15 @@
       },
       "registration": {
         "noEventRegistration": "No registration from your club has been made for this event yet.",
+        "dialog": {
+          "registrationType": {
+            "label": "Add as",
+            "REGULAR": "Registration",
+            "LATE": "Late registration"
+          }
+        },
+        "isLate": "registered late",
+        "ratingCategory": "Rating category",
         "infos": "Infos",
         "deregister": {
           "deregister": "Deregister",
@@ -669,6 +685,7 @@
       "message": "Message",
       "optionalFee": "Optional",
       "totalFees": "Registration Fee",
+      "lateTotalFees": "Late Registration Fee",
       "acceptDocuments": "I accept the following:",
       "infoDocuments": "Additional info",
       "finish": "Submit registration",
@@ -924,6 +941,13 @@
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings"
     },
+    "ratingCategory": {
+      "ratingCategory": "Rating category",
+      "ratingCategories": "Rating categories",
+      "name": "Name",
+      "description": "Description",
+      "tableHint": "Can be assigned to competition teams."
+    },
     "export": {
       "startlist": {
         "startlist": "Start-list configuration",
@@ -1011,6 +1035,11 @@
       "setNotPaid": "Cancel payment receipt"
     },
     "produce": {
+      "for": "for {{type}}",
+      "type": {
+        "REGULAR": "Registrations",
+        "LATE": "Late registrations"
+      },
       "info": {
         "paymentDueBy": {
           "title": "Default deadline for payment",

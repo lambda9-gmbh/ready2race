@@ -62,6 +62,9 @@ export const arrayOfNotNull = <T>(...args: (T | null)[]): T[] => {
     return args.filter(a => a !== null)
 }
 
+export const ifDefined = <T, R>(value: T | null | undefined, f: (value: T) => R): R | null =>
+    value !== null && value !== undefined ? f(value) : null
+
 export const shuffle = <T>(list: T[]) => {
     const newList: T[] = {...list}
     let currentIndex = list.length
@@ -76,7 +79,7 @@ export const shuffle = <T>(list: T[]) => {
     return newList
 }
 
-export const a11yProps = <TabType> (name: string, index: TabType) => {
+export const a11yProps = <TabType>(name: string, index: TabType) => {
     return {
         value: index,
         id: `${name}-tab-${index}`,

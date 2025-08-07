@@ -12,21 +12,27 @@ data class FeeForCompetitionRequestDto(
     val fee: UUID,
     val required: Boolean,
     val amount: BigDecimal,
+    val lateAmount: BigDecimal?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
-            this::amount validate allOf(
-                BigDecimalValidators.notNegative,
-                BigDecimalValidators.currency,
-            ),
+            this::amount validate amountValidator,
+            this::lateAmount validate amountValidator,
         )
 
     companion object {
+
+        private val amountValidator = allOf(
+            BigDecimalValidators.notNegative,
+            BigDecimalValidators.currency,
+        )
+
         val example
             get() = FeeForCompetitionRequestDto(
                 fee = UUID.randomUUID(),
                 required = true,
-                amount = BigDecimal("5.50")
+                amount = BigDecimal("5.50"),
+                lateAmount = BigDecimal("11.50"),
             )
     }
 }

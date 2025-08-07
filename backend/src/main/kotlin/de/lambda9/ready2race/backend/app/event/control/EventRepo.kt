@@ -128,6 +128,15 @@ object EventRepo {
         }
     }
 
+    fun isOpenForLateRegistration(id: UUID, at: LocalDateTime) = EVENT.exists {
+        DSL.and(
+            ID.eq(id),
+            REGISTRATION_AVAILABLE_TO.le(at),
+            LATE_REGISTRATION_AVAILABLE_TO.ge(at),
+            PUBLISHED.isTrue
+        )
+    }
+
     private fun filterScopeView(
         scope: Privilege.Scope?,
     ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT_VIEW.PUBLISHED.eq(true) else DSL.trueCondition()

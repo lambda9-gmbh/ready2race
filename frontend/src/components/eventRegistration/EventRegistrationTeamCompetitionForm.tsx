@@ -1,18 +1,18 @@
 import * as React from 'react'
 import {useCallback} from 'react'
 import {Alert, Box, Stack, ToggleButton, ToggleButtonGroup, Typography} from '@mui/material'
-import {EventRegistrationInfoDto} from '../../api'
 import EventRegistrationTeamsForm from './EventRegistrationTeamsForm.tsx'
 import {useTranslation} from 'react-i18next'
 import {FilterAlt} from '@mui/icons-material'
+import {useEventRegistration} from "@contexts/eventRegistration/EventRegistrationContext.ts";
 
-export const EventRegistrationTeamCompetitionForm = (props: {
-    registrationInfo: EventRegistrationInfoDto | null
-}) => {
+export const EventRegistrationTeamCompetitionForm = () => {
     const ALL_CATEGORIES = 'show_all_categories'
 
     const {t} = useTranslation()
     const [category, setCategory] = React.useState<string>(ALL_CATEGORIES)
+
+    const {info} = useEventRegistration()
 
     const handleChange = (_: any, newCategory: string | null) => {
         if (newCategory !== null) {
@@ -22,7 +22,7 @@ export const EventRegistrationTeamCompetitionForm = (props: {
 
     const getToggleButtons = useCallback(() => {
         const allCategories = new Set(
-            props.registrationInfo?.competitionsTeam.map(c => c.competitionCategory),
+            info?.competitionsTeam.map(c => c.competitionCategory),
         )
         if (allCategories.size > 1) {
             return (
@@ -47,25 +47,26 @@ export const EventRegistrationTeamCompetitionForm = (props: {
                 </Alert>
             )
         }
-    }, [props.registrationInfo?.competitionsTeam, category])
+    }, [info?.competitionsTeam, category])
 
     const getForms = useCallback(() => {
-        return props.registrationInfo?.competitionsTeam.map((competition, index) => {
+        return info?.competitionsTeam.map((competition, index) => {
             return (
                 <Box
+                    key={competition.id}
                     // We just hide the input, so fields are still validated
                     hidden={
                         category !== ALL_CATEGORIES && competition.competitionCategory !== category
                     }>
                     <EventRegistrationTeamsForm
-                        key={competition.id}
                         index={index}
                         competition={competition}
+                        isLate={info?.state === 'LATE'}
                     />
                 </Box>
             )
         })
-    }, [props.registrationInfo?.competitionsTeam, category])
+    }, [info?.competitionsTeam, category])
 
     return (
         <React.Fragment>

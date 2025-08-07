@@ -28,11 +28,7 @@ import de.lambda9.ready2race.backend.app.invoice.control.InvoicePositionRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
 import de.lambda9.ready2race.backend.app.invoice.control.ProduceInvoiceForRegistrationRepo
 import de.lambda9.ready2race.backend.app.invoice.control.toDto
-import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceData
-import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceDto
-import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceError
-import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
-import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
+import de.lambda9.ready2race.backend.app.invoice.entity.*
 import de.lambda9.ready2race.backend.app.sequence.control.SequenceRepo
 import de.lambda9.ready2race.backend.app.sequence.entity.SequenceConsumer
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
@@ -164,18 +160,25 @@ object InvoiceService {
 
     fun createRegistrationInvoicesForEventJobs(
         eventId: UUID,
+        request: ProduceInvoicesRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+        val type = request.type
 
         !KIO.failOn(
-            event.published == true &&
-                event.registrationAvailableTo?.let { it > LocalDateTime.now() } == true
+            when (type) {
+                RegistrationInvoiceType.REGULAR -> event.registrationAvailableTo?.let { it > LocalDateTime.now() } != false
+                RegistrationInvoiceType.LATE -> event.lateRegistrationAvailableTo?.let { it > LocalDateTime.now() } != false
+            }
         ) { InvoiceError.Registration.Ongoing }
 
         !KIO.failOn(
-            event.invoicesProduced != null
+            when (type) {
+                RegistrationInvoiceType.REGULAR -> event.invoicesProduced != null
+                RegistrationInvoiceType.LATE -> event.lateInvoicesProduced != null
+            }
         ) { InvoiceError.Registration.AlreadyProduced }
 
         val payeeBankAccount = !PayeeBankAccountRepo.getByEvent(eventId).orDie()
@@ -194,11 +197,13 @@ object InvoiceService {
 
         val contact = !ContactInformationRepo.get(contactUsage.contactInformation).orDie().onNullDie("foreign key constraint")
 
-        val registrations = !EventRegistrationRepo.getIdsByEvent(eventId).orDie()
+        val registrations = !EventRegistrationRepo.getIdsForInvoicing(eventId, type).orDie()
 
         !ProduceInvoiceForRegistrationRepo.create(
             registrations.map {
                 ProduceInvoiceForRegistrationRecord(
+                    id = UUID.randomUUID(),
+                    mode = type.name,
                     eventRegistration = it,
                     contactName = contact.name,
                     contactEmail = contact.email,
@@ -215,7 +220,11 @@ object InvoiceService {
             }
         ).orDie()
 
-        event.invoicesProduced = LocalDateTime.now()
+        when (type) {
+            RegistrationInvoiceType.REGULAR -> event.invoicesProduced = LocalDateTime.now()
+            RegistrationInvoiceType.LATE -> event.lateInvoicesProduced = LocalDateTime.now()
+        }
+
         event.update()
 
         noData
@@ -227,110 +236,131 @@ object InvoiceService {
 
         val registration = !EventRegistrationForInvoiceRepo.get(job.eventRegistration).orDie().onNullDie("foreign key constraint")
 
+        val type = RegistrationInvoiceType.valueOf(job.mode!!)
+
+        val invoiceCompetitions = when (type) {
+            RegistrationInvoiceType.REGULAR -> registration.competitions!!.filter { it!!.isLate == false }
+            RegistrationInvoiceType.LATE -> registration.competitions!!.filter { it!!.isLate == true }
+        }
+
         val recipient = registration.recipient
 
-        if (recipient == null) {
-
-            job.lastErrorAt = LocalDateTime.now()
-            job.lastError = "missing recipient"
-            job.update()
-
-            KIO.fail(ProduceInvoiceError.MissingRecipient(registration.id!!))
-        } else {
-            val event = !EventRepo.get(registration.event!!).orDie().onNullDie("foreign key constraint")
-
-            KIO.comprehension {
-                val seq = !SequenceRepo.getAndIncrement(SequenceConsumer.INVOICE).orDie()
-
-                val invoiceNumber = (event.invoicePrefix ?: "") + seq.toString()
-
-                val filename = "invoice_$invoiceNumber.pdf"
-
-                val invoice = InvoiceRecord(
-                    id = UUID.randomUUID(),
-                    invoiceNumber = invoiceNumber,
-                    filename = filename,
-                    billedToName = recipient.fullName(),
-                    billedToOrganization = registration.clubName,
-                    paymentDueBy = event.paymentDueBy ?: LocalDate.now().plusDays(14),
-                    payeeHolder = job.payeeHolder,
-                    payeeIban = job.payeeIban,
-                    payeeBic = job.payeeBic,
-                    payeeBank = job.payeeBank,
-                    contactName = job.contactName,
-                    contactZip = job.contactAddressZip,
-                    contactCity = job.contactAddressCity,
-                    contactStreet = job.contactAddressStreet,
-                    contactEmail = job.contactEmail,
-                    createdAt = LocalDateTime.now(),
-                    createdBy = job.createdBy
-                )
-
-                val id = !InvoiceRepo.create(invoice).orDie()
-
-                !EventRegistrationInvoiceRepo.create(
-                    EventRegistrationInvoiceRecord(
-                        eventRegistration = registration.id!!,
-                        invoice = id,
-                    )
-                ).orDie()
-
-                var position = 0
-                val positions = registration.competitions!!.groupBy { it!!.propertiesId }.values.flatMap { sameCompetitions ->
-                    val compRef = sameCompetitions.first()!!
-                    val allFees = sameCompetitions.flatMap { competition -> competition!!.appliedFees!!.toList() }
-                    allFees.groupBy { it!!.id }.values.map { sameFees ->
-                        val ref = sameFees.first()!!
-                        InvoicePositionRecord(
-                            invoice = id,
-                            position = ++position,
-                            item = ref.name!!,
-                            description = "${compRef.identifier} - ${compRef.name}",
-                            quantity = sameFees.size.toBigDecimal(),
-                            unitPrice = ref.amount!!
-                        )
-                    }
-                }
-
-                !InvoicePositionRepo.create(positions).orDie()
-
-                val bytes = !generateInvoiceDocument(event, invoice, positions)
-
-                !InvoiceDocumentDataRepo.create(
-                    InvoiceDocumentDataRecord(
-                        invoice = id,
-                        data = bytes
-                    )
-                ).orDie()
-
-                val content = !EmailService.getTemplate(
-                    EmailTemplateKey.EVENT_REGISTRATION_INVOICE,
-                    EmailLanguage.valueOf(recipient.language)
-                ).map { mailTemplate ->
-                    mailTemplate.toContent(
-                        EmailTemplatePlaceholder.EVENT to event.name,
-                        EmailTemplatePlaceholder.RECIPIENT to recipient.fullName(),
-                        EmailTemplatePlaceholder.DATE to invoice.paymentDueBy.hr(),
-                    )
-                }
-
-                !EmailService.enqueue(
-                    recipient = recipient.email,
-                    content = content,
-                    attachments = listOf(
-                        EmailAttachment(filename, bytes)
-                    ),
-                )
-
+        when {
+            invoiceCompetitions.all { it!!.appliedFees!!.isEmpty() } -> {
                 job.delete()
 
-                unit
-            }.transact()
+                KIO.fail(ProduceInvoiceError.NoPositions)
+            }
+
+            recipient == null -> {
+                job.lastErrorAt = LocalDateTime.now()
+                job.lastError = "missing recipient"
+                job.update()
+
+                KIO.fail(ProduceInvoiceError.MissingRecipient(registration.id!!))
+            }
+
+            else -> {
+                val event = !EventRepo.get(registration.event!!).orDie().onNullDie("foreign key constraint")
+
+                KIO.comprehension {
+                    val seq = !SequenceRepo.getAndIncrement(SequenceConsumer.INVOICE).orDie()
+
+                    val invoiceNumber = (event.invoicePrefix ?: "") + seq.toString()
+
+                    val filename = "invoice_$invoiceNumber.pdf"
+
+                    val invoice = InvoiceRecord(
+                        id = UUID.randomUUID(),
+                        invoiceNumber = invoiceNumber,
+                        filename = filename,
+                        billedToName = recipient.fullName(),
+                        billedToOrganization = registration.clubName,
+                        paymentDueBy = when (type) {
+                            RegistrationInvoiceType.REGULAR -> event.paymentDueBy
+                            RegistrationInvoiceType.LATE -> event.latePaymentDueBy
+                        } ?: LocalDate.now().plusDays(14),
+                        payeeHolder = job.payeeHolder,
+                        payeeIban = job.payeeIban,
+                        payeeBic = job.payeeBic,
+                        payeeBank = job.payeeBank,
+                        contactName = job.contactName,
+                        contactZip = job.contactAddressZip,
+                        contactCity = job.contactAddressCity,
+                        contactStreet = job.contactAddressStreet,
+                        contactEmail = job.contactEmail,
+                        createdAt = LocalDateTime.now(),
+                        createdBy = job.createdBy
+                    )
+
+                    val id = !InvoiceRepo.create(invoice).orDie()
+
+                    !EventRegistrationInvoiceRepo.create(
+                        EventRegistrationInvoiceRecord(
+                            eventRegistration = registration.id!!,
+                            invoice = id,
+                        )
+                    ).orDie()
+
+                    var position = 0
+                    val positions = invoiceCompetitions.groupBy { it!!.propertiesId }.values.flatMap { sameCompetitions ->
+                        val compRef = sameCompetitions.first()!!
+                        val allFees = sameCompetitions.flatMap { competition -> competition!!.appliedFees!!.map { it!! to competition.isLate!! } }
+                        allFees.groupBy { it.first.id to it.second }.values.map { sameFees ->
+                            val ref = sameFees.first().first
+                            val isLate = sameFees.first().second
+                            InvoicePositionRecord(
+                                invoice = id,
+                                position = ++position,
+                                item = ref.name!!,
+                                description = "${compRef.identifier} - ${compRef.name}",
+                                quantity = sameFees.size.toBigDecimal(),
+                                unitPrice = ref.lateAmount.takeIf { isLate } ?: ref.amount!!,
+                            )
+                        }
+                    }
+
+                    !InvoicePositionRepo.create(positions).orDie()
+
+                    val bytes = !generateInvoiceDocument(event, type, invoice, positions)
+
+                    !InvoiceDocumentDataRepo.create(
+                        InvoiceDocumentDataRecord(
+                            invoice = id,
+                            data = bytes
+                        )
+                    ).orDie()
+
+                    val content = !EmailService.getTemplate(
+                        EmailTemplateKey.EVENT_REGISTRATION_INVOICE,
+                        EmailLanguage.valueOf(recipient.language)
+                    ).map { mailTemplate ->
+                        mailTemplate.toContent(
+                            EmailTemplatePlaceholder.EVENT to event.name,
+                            EmailTemplatePlaceholder.RECIPIENT to recipient.fullName(),
+                            EmailTemplatePlaceholder.DATE to invoice.paymentDueBy.hr(),
+                        )
+                    }
+
+                    !EmailService.enqueue(
+                        recipient = recipient.email,
+                        content = content,
+                        attachments = listOf(
+                            EmailAttachment(filename, bytes)
+                        ),
+                    )
+
+                    job.delete()
+
+                    unit
+                }.transact()
+            }
         }
     }
 
     private fun generateInvoiceDocument(
         event: EventRecord,
+        type: RegistrationInvoiceType,
         invoice: InvoiceRecord,
         positions: List<InvoicePositionRecord>,
     ): App<Nothing, ByteArray> = KIO.comprehension {
@@ -345,6 +375,7 @@ object InvoiceService {
                 positions,
             ),
             template = pdfTemplate,
+            type = type,
         )
 
         KIO.ok(bytes)
@@ -353,6 +384,7 @@ object InvoiceService {
     fun buildPdf(
         data: InvoiceData,
         template: PageTemplate?,
+        type: RegistrationInvoiceType,
     ): ByteArray {
         val totalAmount = data.positions.sumOf { pos -> pos.unitPrice * pos.quantity }
         val doc = document(template) {
@@ -415,14 +447,19 @@ object InvoiceService {
                     ) { "Rechnungsnummer: ${data.invoiceNumber}" }
                 }
 
+                val subject = when (type) {
+                    RegistrationInvoiceType.REGULAR -> "Meldung"
+                    RegistrationInvoiceType.LATE -> "Nachmeldung"
+                }
+
                 block(
                     padding = Padding(top = 20f),
                 ) {
                     text { "Sehr geehrte Damen und Herren," }
                     text { "" }
-                    text { "vielen Dank für die Meldung zu ${data.eventName}." }
+                    text { "vielen Dank für die $subject zu ${data.eventName}." }
                     text { "" }
-                    text { "Für die Meldung wird ein Gesamtbetrag von $totalAmount € fällig." }
+                    text { "Für die $subject wird ein Gesamtbetrag von $totalAmount € fällig." }
                     text { "Wir bitten um Überweisung des entsprechenden Betrags auf das nachfolgende Konto bis zum ${data.paymentDueBy.hr()}. Eine Aufschlüsselung der einzelnen Position finden Sie weiter unten." }
                     text { "" }
                     text { "" }

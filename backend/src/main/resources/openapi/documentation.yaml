@@ -1105,6 +1105,18 @@ paths:
           $ref: '#/components/responses/500'
     post:
       operationId: addCompetitionRegistration
+      parameters:
+        - in: query
+          name: registrationType
+          required: false
+          schema:
+            $ref: '#/components/schemas/RegistrationInvoiceType'
+        - in: query
+          name: ratingCategory
+          required: false
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -1133,6 +1145,19 @@ paths:
       - $ref: '#/components/parameters/competitionRegistrationId'
     put:
       operationId: updateCompetitionRegistration
+      parameters:
+        - in: query
+          name: registrationType
+          required: false
+          description: required as managing with global permission
+          schema:
+            $ref: '#/components/schemas/RegistrationInvoiceType'
+        - in: query
+          name: ratingCategory
+          required: false
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
@@ -3768,6 +3793,12 @@ paths:
       - $ref: '#/components/parameters/eventId'
     post:
       operationId: produceInvoicesForEventRegistrations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProduceInvoicesRequest'
       responses:
         204:
           description: invoice produce jobs successfully created
@@ -4582,6 +4613,115 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+
+
+  /ratingCategory:
+    post:
+      operationId: addRatingCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoryRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getRatingCategories
+      responses:
+        200:
+          description: rating category page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RatingCategoryDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /ratingCategory/{ratingCategoryId}:
+    parameters:
+      - in: path
+        name: ratingCategoryId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateRatingCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoryRequest'
+      responses:
+        204:
+          description: rating category updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteRatingCategory
+      responses:
+        204:
+          description: Rating category successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+
 components:
 
   parameters:
@@ -4815,6 +4955,19 @@ components:
         - M
         - F
         - D
+
+    RegistrationInvoiceType:
+      type: string
+      enum:
+        - 'REGULAR'
+        - 'LATE'
+
+    OpenForRegistrationType:
+      type: string
+      enum:
+        - 'REGULAR'
+        - 'LATE'
+        - 'CLOSED'
 
     # error
 
@@ -5372,6 +5525,9 @@ components:
         registrationAvailableTo:
           type: string
           format: date-time
+        lateRegistrationAvailableTo:
+          type: string
+          format: date-time
         invoicePrefix:
           type: string
         published:
@@ -5379,7 +5535,13 @@ components:
         invoicesProduced:
           type: string
           format: date-time
+        lateInvoicesProduced:
+          type: string
+          format: date-time
         paymentDueBy:
+          type: string
+          format: date
+        latePaymentDueBy:
           type: string
           format: date
         registrationCount:
@@ -5408,6 +5570,9 @@ components:
           type: string
           format: date-time
         registrationAvailableTo:
+          type: string
+          format: date-time
+        lateRegistrationAvailableTo:
           type: string
           format: date-time
         createdAt:
@@ -5479,6 +5644,9 @@ components:
         registrationAvailableTo:
           type: string
           format: date-time
+        lateRegistrationAvailableTo:
+          type: string
+          format: date-time
         invoicePrefix:
           type: string
         published:
@@ -5486,7 +5654,9 @@ components:
         paymentDueBy:
           type: string
           format: date
-
+        latePaymentDueBy:
+          type: string
+          format: date
 
 
     # eventDay
@@ -5548,6 +5718,7 @@ components:
         - name
         - namedParticipants
         - fees
+        - lateRegistrationAllowed
       properties:
         identifier:
           type: string
@@ -5567,6 +5738,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionDto'
+        lateRegistrationAllowed:
+          type: boolean
 
 
     NamedParticipantForCompetitionDto:
@@ -5615,6 +5788,9 @@ components:
         amount:
           type: string
           format: decimal
+        lateAmount:
+          type: string
+          format: decimal
 
 
     CompetitionPropertiesRequest:
@@ -5624,6 +5800,7 @@ components:
         - name
         - namedParticipants
         - fees
+        - lateRegistrationAllowed
       properties:
         identifier:
           type: string
@@ -5644,6 +5821,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/FeeForCompetitionRequestDto'
+        lateRegistrationAllowed:
+          type: boolean
         setupTemplate:
           type: string
           format: uuid
@@ -5685,7 +5864,9 @@ components:
         amount:
           type: string
           format: decimal
-
+        lateAmount:
+          type: string
+          format: decimal
 
 
     # competition
@@ -5733,6 +5914,7 @@ components:
         - clubId
         - optionalFees
         - namedParticipants
+        - isLate
         - updatedAt
         - createdAt
       properties:
@@ -5754,6 +5936,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantDto'
+        isLate:
+          type: boolean
+        ratingCategory:
+          $ref: '#/components/schemas/RatingCategoryDto'
         updatedAt:
           type: string
           format: date-time
@@ -6471,13 +6657,18 @@ components:
           $ref: '#/components/schemas/EventRegistrationInfoDto'
         upsertableRegistration:
           $ref: '#/components/schemas/EventRegistrationUpsertDto'
+        lockedRegistration:
+          $ref: '#/components/schemas/EventRegistrationLockedDto'
       required:
         - info
         - upsertableRegistration
+        - lockedRegistration
 
     EventRegistrationInfoDto:
       type: object
       properties:
+        state:
+          $ref: '#/components/schemas/OpenForRegistrationType'
         name:
           type: string
         description:
@@ -6501,6 +6692,7 @@ components:
           items:
             $ref: '#/components/schemas/EventRegistrationCompetitionDto'
       required:
+        - state
         - name
         - days
         - competitionsSingle
@@ -6573,14 +6765,6 @@ components:
           type: string
         description:
           type: string
-        countMales:
-          type: integer
-        countFemales:
-          type: integer
-        countNonBinary:
-          type: integer
-        countMixed:
-          type: integer
         competitionCategory:
           type: string
         namedParticipant:
@@ -6596,15 +6780,14 @@ components:
           items:
             type: string
             format: uuid
+        lateRegistrationAllowed:
+          type: boolean
       required:
         - id
         - name
         - identifier
-        - countMales
-        - countFemales
-        - countMixed
-        - countNonBinary
         - days
+        - lateRegistrationAllowed
 
     EventRegistrationNamedParticipantDto:
       type: object
@@ -6653,7 +6836,11 @@ components:
         required:
           type: boolean
         amount:
-          type: number
+          type: string
+          format: decimal
+        lateAmount:
+          type: string
+          format: decimal
 
     EventRegistrationUpsertDto:
       type: object
@@ -6769,6 +6956,105 @@ components:
             format: uuid
       required:
         - competitionId
+
+    EventRegistrationLockedDto:
+      type: object
+      properties:
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventRegistrationParticipantLockedDto'
+        competitionRegistrations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationLockedDto'
+      required:
+        - participants
+        - competitionRegistrations
+
+    CompetitionRegistrationLockedDto:
+      type: object
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationTeamLockedDto'
+      required:
+        - id
+        - teams
+
+    CompetitionRegistrationTeamLockedDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantLockedDto'
+        isLate:
+          type: boolean
+      required:
+        - id
+        - optionalFees
+        - namedParticipants
+        - isLate
+
+    CompetitionRegistrationNamedParticipantLockedDto:
+      type: object
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        participantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+      required:
+        - namedParticipantId
+        - participantIds
+
+    EventRegistrationParticipantLockedDto:
+      type: object
+      required:
+        - id
+        - competitionsSingle
+      properties:
+        id:
+          type: string
+          format: uuid
+        competitionsSingle:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationSingleLockedDto'
+
+    CompetitionRegistrationSingleLockedDto:
+      type: object
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        optionalFees:
+          type: array
+          items:
+            type: string
+            format: uuid
+        isLate:
+          type: boolean
+      required:
+        - competitionId
+        - optionalFees
+        - isLate
 
     DocumentType:
       type: string
@@ -7433,7 +7719,7 @@ components:
         namedParticipantId:
           type: string
           format: uuid
-        namedParticipanName:
+        namedParticipantName:
           type: string
         participants:
           type: array
@@ -8185,3 +8471,35 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UpcomingMatchParticipantInfo'
+
+    ProduceInvoicesRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/RegistrationInvoiceType'
+
+    RatingCategoryRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    RatingCategoryDto:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string

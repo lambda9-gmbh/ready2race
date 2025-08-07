@@ -28,7 +28,7 @@ data class Cell(
         val x = left
         val h = context.page.mediaBox.height - context.parentsPadding.y
         val y = context.page.mediaBox.height - top - h
-        val w = cellWidth + padding.x
+        val w = cellWidth
 
         val c = context.content
         if (color != null) {
@@ -70,7 +70,7 @@ data class Cell(
 
         val height = lastCtx.startPosition.y + padding.y
 
-        context.startPosition.x += cellWidth + padding.x
+        context.startPosition.x += cellWidth
         context.startPosition.y += height
 
         return context

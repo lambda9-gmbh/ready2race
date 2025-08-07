@@ -15,6 +15,7 @@ fun CompetitionPropertiesRequest.toRecord(competitionId: UUID?, competitionTempl
     shortName = shortName,
     description = description,
     competitionCategory = competitionCategory,
+    lateRegistrationAllowed = lateRegistrationAllowed,
 )
 
 fun NamedParticipantForCompetitionRequestDto.toRecord(propertiesId: UUID) = CompetitionPropertiesHasNamedParticipantRecord(
@@ -32,6 +33,7 @@ fun FeeForCompetitionRequestDto.toRecord(propertiesId: UUID) = CompetitionProper
     fee = fee,
     required = required,
     amount = amount,
+    lateAmount = lateAmount,
 )
 
 fun NamedParticipantForCompetitionPropertiesRecord.toDto(): App<Nothing, NamedParticipantForCompetitionDto> = KIO.ok(
@@ -53,6 +55,7 @@ fun FeeForCompetitionPropertiesRecord.toDto(): App<Nothing, FeeForCompetitionDto
         description = description,
         required = required!!,
         amount = amount!!,
+        lateAmount = lateAmount,
     )
 )
 
@@ -63,5 +66,6 @@ fun CompetitionPropertiesRequest.toUpdateFunction(): CompetitionPropertiesRecord
         shortName = it.shortName
         description = it.description
         competitionCategory = it.competitionCategory
+        lateRegistrationAllowed = it.lateRegistrationAllowed
     }
 }

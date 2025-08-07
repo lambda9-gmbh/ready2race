@@ -515,6 +515,18 @@ import type {
     DeleteInfoViewData,
     DeleteInfoViewError,
     DeleteInfoViewResponse,
+    AddRatingCategoryData,
+    AddRatingCategoryError,
+    AddRatingCategoryResponse,
+    GetRatingCategoriesData,
+    GetRatingCategoriesError,
+    GetRatingCategoriesResponse,
+    UpdateRatingCategoryData,
+    UpdateRatingCategoryError,
+    UpdateRatingCategoryResponse,
+    DeleteRatingCategoryData,
+    DeleteRatingCategoryError,
+    DeleteRatingCategoryResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2594,5 +2606,57 @@ export const deleteInfoView = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/info-views/{viewId}',
+    })
+}
+
+export const addRatingCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRatingCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddRatingCategoryResponse,
+        AddRatingCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory',
+    })
+}
+
+export const getRatingCategories = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRatingCategoriesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRatingCategoriesResponse,
+        GetRatingCategoriesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory',
+    })
+}
+
+export const updateRatingCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRatingCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRatingCategoryResponse,
+        UpdateRatingCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory/{ratingCategoryId}',
+    })
+}
+
+export const deleteRatingCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteRatingCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteRatingCategoryResponse,
+        DeleteRatingCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory/{ratingCategoryId}',
     })
 }

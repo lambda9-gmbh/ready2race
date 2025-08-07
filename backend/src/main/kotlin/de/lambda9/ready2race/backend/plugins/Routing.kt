@@ -18,6 +18,7 @@ import de.lambda9.ready2race.backend.app.invoice.boundary.invoice
 import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticipant
 import de.lambda9.ready2race.backend.app.participant.boundary.participant
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.ratingCategory
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import de.lambda9.ready2race.backend.app.startListConfig.boundary.startListConfig
 import de.lambda9.ready2race.backend.app.workType.boundary.workType
@@ -49,6 +50,7 @@ fun Application.configureRouting() {
             workType()
             invoice()
             startListConfig()
+            ratingCategory()
         }
     }
 }

@@ -67,6 +67,7 @@ class CompetitionSetupTemplateServiceTest {
                 competitionCategory = null,
                 namedParticipants = emptyList(),
                 fees = emptyList(),
+                lateRegistrationAllowed = false,
                 setupTemplate = null
             ),
             userId = SYSTEM_USER

@@ -1,11 +1,10 @@
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
-import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
+import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto, OpenForRegistrationType} from '@api/types.gen.ts'
 import {eventRegistrationPossible} from '@utils/helpers.ts'
 import {useTranslation} from 'react-i18next'
 import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
-import {eventRoute} from '@routes'
 import {Link} from '@tanstack/react-router'
 import {Box, Button, Typography} from '@mui/material'
 import {Forward} from '@mui/icons-material'
@@ -18,26 +17,27 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
 
-    const {eventId} = eventRoute.useParams()
+    const registrationState: OpenForRegistrationType =
+        eventRegistrationPossible(
+            eventData.registrationAvailableFrom,
+            eventData.registrationAvailableTo,
+        ) ? 'REGULAR' : competitionData.properties.lateRegistrationAllowed && eventRegistrationPossible(
+            eventData.registrationAvailableTo,
+            eventData.lateRegistrationAvailableTo,
+        ) ? 'LATE' : 'CLOSED'
 
-    const registrationPossible = eventRegistrationPossible(
-        eventData.registrationAvailableFrom,
-        eventData.registrationAvailableTo,
-    )
+    const registrationPossible = registrationState !== 'CLOSED'
 
-    const createRegistrationScope = user.getPrivilegeScope('CREATE', 'REGISTRATION')
-    const updateRegistrationScope = user.getPrivilegeScope('CREATE', 'REGISTRATION')
+    const registrationScope = user.getPrivilegeScope('UPDATE', 'REGISTRATION')
+    const actionsAllowed = registrationScope === 'GLOBAL' || (registrationScope === 'OWN' && registrationPossible)
 
     const competitionRegistrationTeamsProps =
         useEntityAdministration<CompetitionRegistrationTeamDto>(
             t('event.registration.registration'),
             {
-                entityCreate:
-                    createRegistrationScope === 'GLOBAL' ||
-                    (createRegistrationScope === 'OWN' && registrationPossible),
-                entityUpdate:
-                    updateRegistrationScope === 'GLOBAL' ||
-                    (updateRegistrationScope === 'OWN' && registrationPossible),
+                entityCreate: actionsAllowed,
+                entityUpdate: actionsAllowed,
+                entityDelete: actionsAllowed,
             },
         )
 
@@ -47,18 +47,16 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
                 <CompetitionRegistrationDialog
                     {...competitionRegistrationTeamsProps.dialog}
                     competition={competitionData}
-                    eventId={eventId}
+                    eventData={eventData}
                 />
                 <CompetitionRegistrationTable
                     {...competitionRegistrationTeamsProps.table}
-                    registrationPossible={registrationPossible}
+                    competition={competitionData}
+                    registrationState={registrationState}
                 />
             </>
         )) ||
-        (eventRegistrationPossible(
-            eventData.registrationAvailableFrom,
-            eventData.registrationAvailableTo,
-        ) && (
+        (registrationPossible && (
             <Box>
                 <Typography sx={{mb: 1}}>
                     {t('event.competition.registration.noEventRegistration')}

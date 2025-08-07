@@ -2,17 +2,22 @@ import {useTranslation} from 'react-i18next'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
+    CompetitionDto,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
-    getCompetitionRegistrations,
     revertCompetitionDeregistration,
+    getCompetitionRegistrations,
+    OpenForRegistrationType,
 } from '../../../../api'
 import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
-import {Stack, Typography} from '@mui/material'
+import {Stack, Tooltip, Typography} from '@mui/material'
 import {format} from 'date-fns'
+import {useUser} from "@contexts/user/UserContext.ts";
+import {updateRegistrationGlobal} from "@authorization/privileges.ts";
+import {PendingActions} from "@mui/icons-material";
 import Cancel from '@mui/icons-material/Cancel'
 import GroupRemoveIcon from '@mui/icons-material/GroupRemove'
 import GroupAddIcon from '@mui/icons-material/GroupAdd'
@@ -28,11 +33,15 @@ const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
-    registrationPossible: boolean
+    registrationState: OpenForRegistrationType
+    competition: CompetitionDto
 }
 
-const CompetitionRegistrationTable = ({registrationPossible, ...props}: Props) => {
+const CompetitionRegistrationTable = (
+    {registrationState, ...props}: Props,
+) => {
     const {t} = useTranslation()
+    const user = useUser()
     const feedback = useFeedback()
 
     const {eventId} = eventRoute.useParams()
@@ -61,11 +70,38 @@ const CompetitionRegistrationTable = ({registrationPossible, ...props}: Props) =
                 field: 'clubName',
                 headerName: t('club.club'),
                 minWidth: 200,
+                renderCell: ({row}) => (
+                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                        <Typography>
+                            {row.clubName}
+                        </Typography>
+                        {row.isLate ? (
+                            <Tooltip title={t('event.competition.registration.isLate')}>
+                                <PendingActions />
+                            </Tooltip>
+                            ) : (
+                                <></>
+                            )
+                        }
+                    </Stack>
+                ),
             },
             {
                 field: 'name',
                 headerName: t('entity.name'),
                 valueGetter: value => value ?? '-',
+            },
+            {
+                field: 'ratingCategory',
+                headerName: t('event.competition.registration.ratingCategory'),
+                minWidth: 150,
+                renderCell: ({row}) => (
+                    <Tooltip title={row.ratingCategory?.description}>
+                        <Typography>
+                            {row.ratingCategory?.name ?? '-'}
+                        </Typography>
+                    </Tooltip>
+                )
             },
             {
                 field: 'namedParticipants',
@@ -196,9 +232,13 @@ const CompetitionRegistrationTable = ({registrationPossible, ...props}: Props) =
     }
 
     // todo: only allow revert if no next round has been created since
+    // comment: validated in api?
+
+    const afterRegistration = (isLate: boolean) =>
+        isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
 
     const customEntityActions = (entity: CompetitionRegistrationTeamDto): EntityAction[] => [
-        entity.deregistration === undefined && !registrationPossible ? (
+        entity.deregistration === undefined && afterRegistration(entity.isLate) ? (
             <GridActionsCellItem
                 icon={<GroupRemoveIcon />}
                 label={t('event.competition.registration.deregister.deregister')}
@@ -216,11 +256,14 @@ const CompetitionRegistrationTable = ({registrationPossible, ...props}: Props) =
         ) : undefined,
     ]
 
+    // closed is already checked in parent component
+    const writable = (dto: CompetitionRegistrationTeamDto) =>
+        dto.isLate === (registrationState === 'LATE') || user.checkPrivilege(updateRegistrationGlobal)
+
     return (
         <Fragment>
             <EntityTable
                 {...props}
-                withSearch={false}
                 parentResource={'REGISTRATION'}
                 initialPagination={initialPagination}
                 pageSizeOptions={pageSizeOptions}
@@ -229,6 +272,8 @@ const CompetitionRegistrationTable = ({registrationPossible, ...props}: Props) =
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
                 entityName={t('event.registration.registration')}
+                deletableIf={writable}
+                editableIf={writable}
                 customEntityActions={customEntityActions}
             />
             <CompetitionDeregistrationDialog

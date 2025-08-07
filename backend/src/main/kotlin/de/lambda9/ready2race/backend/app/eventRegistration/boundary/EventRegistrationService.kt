@@ -35,7 +35,6 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noDat
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -84,29 +83,33 @@ object EventRegistrationService {
 
     fun getEventRegistrationTemplate(
         eventId: UUID, clubId: UUID
-    ): App<EventRegistrationError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
-        val info = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
+    ): App<ServiceError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
+
+        val type = !EventService.getOpenForRegistrationType(eventId)
+
+        val info = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
 
-        val upsertableRegistration = !EventRegistrationRepo.getEventRegistrationForUpdate(eventId, clubId).orDie()
+        val upsertableRegistration = !EventRegistrationRepo.getEventRegistrationForUpdate(eventId, clubId, type).orDie()
             .onNullFail { EventRegistrationError.EventNotFound }
 
-        ok(EventRegistrationTemplateDto(info, upsertableRegistration)).map { ApiResponse.Dto(it) }
+        val lockedRegistration = !EventRegistrationRepo.getLockedEventRegistration(eventId, clubId, type).orDie()
+            .onNullFail { EventRegistrationError.EventNotFound }
+
+        ok(EventRegistrationTemplateDto(info, upsertableRegistration, lockedRegistration)).map { ApiResponse.Dto(it) }
     }
 
     fun upsertRegistrationForEvent(
         eventId: UUID,
         registrationDto: EventRegistrationUpsertDto,
         user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope,
-    ): App<EventRegistrationError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
-        if (scope == Privilege.Scope.OWN) {
-            !EventRepo.isOpenForRegistration(eventId, LocalDateTime.now()).orDie()
-                .onFalseFail { EventRegistrationError.RegistrationClosed }
-        }
+        val type = !EventService.getOpenForRegistrationType(eventId).failIf({
+            it == OpenForRegistrationType.CLOSED || user.club == null
+        }) { EventRegistrationError.RegistrationClosed }
 
-        val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId).orDie()
+        val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
 
         val now = LocalDateTime.now()
 
@@ -124,22 +127,46 @@ object EventRegistrationService {
             )
         ).orDie() to false)
 
-        if (isUpdate) {
+        val remainingRegistrations = if (isUpdate) {
             !EventRegistrationRepo.update(persistedRegistrationId) {
                 message = registrationDto.message
                 updatedAt = now
                 updatedBy = user.id!!
             }.orDie()
 
-            !CompetitionRegistrationRepo.deleteByEventRegistration(persistedRegistrationId).orDie()
+            !CompetitionRegistrationRepo.deleteForEventRegistrationUpdate(persistedRegistrationId, type).orDie()
+
+            val clubRegistrations = !CompetitionRegistrationRepo.getByClub(user.club!!).orDie()
+            val grouped = clubRegistrations.groupBy { it.competition }
+
+            val compIdsWithNewRegistrations = registrationDto.participants.flatMap { it.competitionsSingle?.map { it.competitionId } ?: emptyList() } +
+                registrationDto.competitionRegistrations.mapNotNull { if (it.teams?.isNotEmpty() == true) it.competitionId else null }
+            grouped.values
+                .forEach { regs ->
+                    if (regs.size == 1) {
+                        regs.first().let {
+                            it.name = if (compIdsWithNewRegistrations.contains(regs.first().competition)) "#1" else null
+                            it.update()
+                        }
+                    } else {
+                        regs.sortedWith(lexiNumberComp { it.name }).forEachIndexed { idx, rec ->
+                            rec.name = "#${idx + 1}"
+                            rec.update()
+                        }
+                    }
+                }
+
+            grouped.mapValues { (_, regs) -> regs.size }
+        } else {
+            null
         }
 
         val singleCompetitionMultipleCounts =
             registrationDto.participants.flatMap { it.competitionsSingle ?: emptyList() }
                 .groupingBy { it.competitionId }
                 .eachCount()
-                .filter { it.value > 1 }
-                .mapValues { 0 }.toMutableMap()
+                .filter { (remainingRegistrations?.get(it.key) ?: 0) + it.value > 1 }
+                .mapValues { remainingRegistrations?.get(it.key) ?: 0 }.toMutableMap()
 
         val userInfoMap = !registrationDto.participants.traverse { pDto ->
             handleSingleCompetitionRegistration(
@@ -149,7 +176,8 @@ object EventRegistrationService {
                 template,
                 persistedRegistrationId,
                 now,
-                singleCompetitionMultipleCounts
+                singleCompetitionMultipleCounts,
+                type,
             )
         }.map { it.toMap(mutableMapOf()) }
 
@@ -161,7 +189,9 @@ object EventRegistrationService {
                 user.club!!,
                 now,
                 user.id!!,
-                userInfoMap
+                userInfoMap,
+                type,
+                remainingRegistrations
             )
         }
 
@@ -181,13 +211,13 @@ object EventRegistrationService {
         }.trimMargin()
 
         val summaryCompetitions = competitions.joinToString("\n") { c ->
-            val teams = c.clubRegistrations!!.flatMap { it!!.teams!!.map { it!! } }.filter { it.club == user.club }
+            val teams = c.teams!!.filter { it!!.clubId == user.club }
             """
                 |    ${c.identifier} ${c.name}${c.shortName?.let { " ($it)" } ?: ""}
                 |        ${
-                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it.teamName })
+                if (teams.isEmpty()) "---" else teams.sortedWith(lexiNumberComp { it?.teamName })
                     .joinToString("\n|        ") { t ->
-                        val ps = t.participants!!.map { it!! }.sortedBy { it.role }
+                        val ps = t!!.participants!!.map { it!! }.sortedBy { it.role }
                         """
                         |->${t.teamName?.let { " $it" } ?: ""}
                         |            ${
@@ -248,7 +278,8 @@ object EventRegistrationService {
         template: EventRegistrationInfoDto?,
         persistedRegistrationId: UUID,
         now: LocalDateTime,
-        singleCompetitionMultiCounts: MutableMap<UUID, Int>
+        singleCompetitionMultiCounts: MutableMap<UUID, Int>,
+        type: OpenForRegistrationType,
     ): App<EventRegistrationError, Pair<UUID, PersistedIdAndGender>> = KIO.comprehension {
         val persistedUserInfo = if (pDto.isNew == true) {
             !ParticipantRepo.create(!pDto.toRecord(userId, clubId)).orDie().map {
@@ -297,7 +328,8 @@ object EventRegistrationService {
                         now,
                         userId,
                         now,
-                        userId
+                        userId,
+                        isLate = type == OpenForRegistrationType.LATE,
                     )
                 ).orDie()
 
@@ -331,7 +363,9 @@ object EventRegistrationService {
         clubId: UUID,
         now: LocalDateTime,
         userId: UUID,
-        participantIdMap: MutableMap<UUID, PersistedIdAndGender>
+        participantIdMap: MutableMap<UUID, PersistedIdAndGender>,
+        type: OpenForRegistrationType,
+        regularRegistrations: Map<UUID, Int>?,
     ): App<EventRegistrationError, Unit> = KIO.comprehension {
 
         val userIdsList =
@@ -345,7 +379,9 @@ object EventRegistrationService {
         val competition = template?.competitionsTeam?.first { it.id == competitionRegistrationDto.competitionId }
             ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid competition"))
 
-        var count = competitionRegistrationDto.teams?.takeIf { it.size > 1 }?.let { 0 }
+        var count = competitionRegistrationDto.teams
+            ?.takeIf { (regularRegistrations?.get(competitionRegistrationDto.competitionId) ?: 0) + it.size > 1 }
+            ?.let { regularRegistrations?.get(competitionRegistrationDto.competitionId) ?: 0 }
 
         competitionRegistrationDto.teams?.traverse { teamDto ->
             KIO.comprehension {
@@ -366,7 +402,8 @@ object EventRegistrationService {
                         now,
                         userId,
                         now,
-                        userId
+                        userId,
+                        isLate = type == OpenForRegistrationType.LATE,
                     )
                 ).orDie()
 
@@ -522,20 +559,18 @@ object EventRegistrationService {
         val result = mutableListOf<CompetitionRegistrationsWithoutTeamNumberDto>()
 
         eventRegistrationResult?.competitions?.forEach { competition ->
-            competition?.clubRegistrations?.forEach { clubRegistration ->
-                clubRegistration?.teams?.forEach { registrationTeam ->
-                    if (registrationTeam?.teamNumber == null) {
-                        result.add(
-                            CompetitionRegistrationsWithoutTeamNumberDto(
-                                competitionId = competition.id!!,
-                                competitionIdentifier = competition.identifier!!,
-                                competitionName = competition.name!!,
-                                registrationId = registrationTeam?.id!!,
-                                registrationClub = clubRegistration.name!!,
-                                registrationName = registrationTeam.teamName,
-                            )
+            competition?.teams?.forEach { registrationTeam ->
+                if (registrationTeam?.teamNumber == null) {
+                    result.add(
+                        CompetitionRegistrationsWithoutTeamNumberDto(
+                            competitionId = competition.id!!,
+                            competitionIdentifier = competition.identifier!!,
+                            competitionName = competition.name!!,
+                            registrationId = registrationTeam?.id!!,
+                            registrationClub = registrationTeam.clubName!!,
+                            registrationName = registrationTeam.teamName,
                         )
-                    }
+                    )
                 }
             }
         }
@@ -548,7 +583,7 @@ object EventRegistrationService {
     fun finalizeRegistrations(
         userId: UUID,
         eventId: UUID,
-        keepNumbers: Boolean
+        keepNumbers: Boolean,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !EventService.checkEventExisting(eventId)
@@ -617,7 +652,7 @@ object EventRegistrationService {
         }.pdf"
 
         val bytes = buildPdf(
-            data = EventRegistrationResultData.fromPersisted(result),
+            data = EventRegistrationResultData.fromPersisted(result) { it.isLate == false },
             template = pdfTemplate,
         )
 
@@ -694,7 +729,7 @@ object EventRegistrationService {
                         }
                     }
 
-                    if (competition.clubRegistrations.isEmpty()) {
+                    if (competition.teams.isEmpty()) {
                         text(
                             fontStyle = FontStyle.BOLD,
                             fontSize = 11f,
@@ -703,60 +738,80 @@ object EventRegistrationService {
                             newLine = false,
                         ) { "Competition cancelled" }
                     } else {
-                        competition.clubRegistrations.forEach { club ->
-                            club.teams.forEach { team ->
+                        val categories = competition.teams.groupBy { it.ratingCategory?.id }
+                        categories.toList().sortedBy { it.second.first().ratingCategory?.name }.forEach { (_, categoryTeams) ->
+                            val category = categoryTeams.first().ratingCategory
+
+                            block(
+                                padding = Padding(bottom = 20f)
+                            ) {
+
                                 block(
-                                    padding = Padding(0f, 0f, 0f, 15f)
+                                    padding = Padding(bottom = 5f)
                                 ) {
-
                                     text(
-                                        fontStyle = FontStyle.BOLD
-                                    ) { club.name }
-                                    team.name?.let {
-                                        text(
-                                            newLine = false,
-                                        ) { " $it" }
-                                    }
+                                        fontStyle = FontStyle.BOLD,
+                                        centered = true,
+                                    ) { category?.name ?: "Unkategorisiert" }
+                                }
 
-                                    table(
-                                        padding = Padding(5f, 0f, 0f, 0f),
-                                        withBorder = true,
-                                    ) {
-                                        column(0.15f)
-                                        column(0.05f)
-                                        column(0.2f)
-                                        column(0.2f)
-                                        column(0.1f)
-                                        column(0.3f)
+                                categoryTeams.groupBy { it.clubId }.forEach { (_, clubTeams) ->
+                                    clubTeams.sortedWith(lexiNumberComp { it.name }).forEach { team ->
+                                        block(
+                                            padding = Padding(0f, 0f, 0f, 7.5f)
+                                        ) {
 
-                                        team.participants
-                                            .sortedBy { it.role }
-                                            .forEachIndexed { idx, member ->
-                                                row(
-                                                    color = if (idx % 2 == 1) Color(230, 230, 230) else null,
-                                                ) {
-                                                    cell {
-                                                        text { member.role }
-                                                    }
-                                                    cell {
-                                                        text { member.gender.name }
-                                                    }
-                                                    cell {
-                                                        text { member.firstname }
-                                                    }
-                                                    cell {
-                                                        text { member.lastname }
-                                                    }
-                                                    cell {
-                                                        text { member.year.toString() }
-                                                    }
-                                                    cell {
-                                                        text { member.externalClubName ?: club.name }
-                                                    }
-                                                }
+                                            text(
+                                                fontStyle = FontStyle.BOLD
+                                            ) { team.clubName }
+                                            team.name?.let {
+                                                text(
+                                                    newLine = false,
+                                                ) { " $it" }
                                             }
+
+                                            table(
+                                                padding = Padding(5f, 0f, 0f, 0f),
+                                                withBorder = true,
+                                            ) {
+                                                column(0.15f)
+                                                column(0.05f)
+                                                column(0.2f)
+                                                column(0.2f)
+                                                column(0.1f)
+                                                column(0.3f)
+
+                                                team.participants
+                                                    .sortedBy { it.role }
+                                                    .forEachIndexed { idx, member ->
+                                                        row(
+                                                            color = if (idx % 2 == 1) Color(230, 230, 230) else null,
+                                                        ) {
+                                                            cell {
+                                                                text { member.role }
+                                                            }
+                                                            cell {
+                                                                text { member.gender.name }
+                                                            }
+                                                            cell {
+                                                                text { member.firstname }
+                                                            }
+                                                            cell {
+                                                                text { member.lastname }
+                                                            }
+                                                            cell {
+                                                                text { member.year.toString() }
+                                                            }
+                                                            cell {
+                                                                text { member.externalClubName ?: team.clubName }
+                                                            }
+                                                        }
+                                                    }
+                                            }
+                                        }
                                     }
                                 }
+
                             }
                         }
                     }

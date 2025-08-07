@@ -23,8 +23,10 @@ export type CompetitionForm = {
         fee: AutocompleteOption
         required: boolean
         amount: string
+        lateAmount: string
     }[]
     setupTemplate: AutocompleteOption
+    lateRegistrationAllowed: boolean
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -36,6 +38,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     namedParticipants: [],
     fees: [],
     setupTemplate: null,
+    lateRegistrationAllowed: false,
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
@@ -58,8 +61,10 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             fee: value.fee?.id ?? '',
             required: value.required,
             amount: value.amount.replace(',', '.'),
+            lateAmount: takeIfNotEmpty(value.lateAmount.replace(',', '.')),
         })),
         setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id),
+        lateRegistrationAllowed: formData.lateRegistrationAllowed,
     }
 }
 
@@ -90,6 +95,7 @@ export function mapCompetitionPropertiesToCompetitionForm(
             fee: {id: value.id, label: value.name},
             required: value.required,
             amount: value.amount.replace('.', decimalPoint),
+            lateAmount: value.lateAmount?.replace('.', decimalPoint) ?? '',
         })),
         setupTemplate: setupTemplate
             ? {
@@ -97,6 +103,7 @@ export function mapCompetitionPropertiesToCompetitionForm(
                   label: setupTemplate.name,
               }
             : null,
+        lateRegistrationAllowed: dto.lateRegistrationAllowed,
     }
 }
 

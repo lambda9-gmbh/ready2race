@@ -47,7 +47,7 @@ sealed class Privilege(
     data object UpdateClubOwn: Privilege(Action.UPDATE, Resource.CLUB, Scope.OWN)
     data object DeleteClubGlobal: Privilege(Action.DELETE, Resource.CLUB, Scope.GLOBAL)
 
-    data object CreateRegistrationGlobal: Privilege(Action.CREATE, Resource.REGISTRATION, Scope.GLOBAL)
+    data object CreateRegistrationGlobal: Privilege(Action.CREATE, Resource.REGISTRATION, Scope.GLOBAL) // TODO: remove, so that registration can only be created by themselves
     data object CreateRegistrationOwn: Privilege(Action.CREATE, Resource.REGISTRATION, Scope.OWN)
     data object ReadRegistrationGlobal: Privilege(Action.READ, Resource.REGISTRATION, Scope.GLOBAL)
     data object ReadRegistrationOwn: Privilege(Action.READ, Resource.REGISTRATION, Scope.OWN)

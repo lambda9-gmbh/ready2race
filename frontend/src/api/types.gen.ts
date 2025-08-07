@@ -217,6 +217,7 @@ export type CompetitionPropertiesDto = {
     competitionCategory?: CompetitionCategoryDto
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
+    lateRegistrationAllowed: boolean
 }
 
 export type CompetitionPropertiesRequest = {
@@ -227,6 +228,7 @@ export type CompetitionPropertiesRequest = {
     competitionCategory?: string
     namedParticipants: Array<NamedParticipantForCompetitionRequestDto>
     fees: Array<FeeForCompetitionRequestDto>
+    lateRegistrationAllowed: boolean
     setupTemplate?: string
 }
 
@@ -235,15 +237,31 @@ export type CompetitionRegistrationFeeDto = {
     feeName: string
 }
 
+export type CompetitionRegistrationLockedDto = {
+    competitionId?: string
+    teams: Array<CompetitionRegistrationTeamLockedDto>
+}
+
 export type CompetitionRegistrationNamedParticipantDto = {
     namedParticipantId: string
     namedParticipantName: string
     participants: Array<ParticipantForEventDto>
 }
 
+export type CompetitionRegistrationNamedParticipantLockedDto = {
+    namedParticipantId: string
+    participantIds: Array<string>
+}
+
 export type CompetitionRegistrationNamedParticipantUpsertDto = {
     namedParticipantId: string
     participantIds: Array<string>
+}
+
+export type CompetitionRegistrationSingleLockedDto = {
+    competitionId: string
+    optionalFees: Array<string>
+    isLate: boolean
 }
 
 export type CompetitionRegistrationSingleUpsertDto = {
@@ -267,9 +285,18 @@ export type CompetitionRegistrationTeamDto = {
     clubName: string
     optionalFees: Array<CompetitionRegistrationFeeDto>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
+    isLate: boolean
+    ratingCategory?: RatingCategoryDto
     updatedAt: string
     createdAt: string
     deregistration?: CompetitionDeregistrationDto
+}
+
+export type CompetitionRegistrationTeamLockedDto = {
+    id: string
+    optionalFees: Array<string>
+    namedParticipants: Array<CompetitionRegistrationNamedParticipantLockedDto>
+    isLate: boolean
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -361,7 +388,7 @@ export type CompetitionSetupTemplateRequest = {
 
 export type CompetitionTeamNamedParticipantDto = {
     namedParticipantId: string
-    namedParticipanName?: string
+    namedParticipantName: string
     participants: Array<CompetitionTeamParticipantDto>
 }
 
@@ -500,10 +527,13 @@ export type EventDto = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
     invoicePrefix?: string
     published?: boolean
     invoicesProduced?: string
+    lateInvoicesProduced?: string
     paymentDueBy?: string
+    latePaymentDueBy?: string
     registrationCount?: number
     registrationsFinalized: boolean
 }
@@ -515,6 +545,7 @@ export type EventPublicDto = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
     createdAt: string
     competitionCount: number
     eventFrom?: string
@@ -527,14 +558,11 @@ export type EventRegistrationCompetitionDto = {
     name: string
     shortName?: string
     description?: string
-    countMales: number
-    countFemales: number
-    countNonBinary: number
-    countMixed: number
     competitionCategory?: string
     namedParticipant?: Array<EventRegistrationNamedParticipantDto>
     fees?: Array<EventRegistrationFeeDto>
     days: Array<string>
+    lateRegistrationAllowed: boolean
 }
 
 export type EventRegistrationDayDto = {
@@ -562,10 +590,12 @@ export type EventRegistrationFeeDto = {
     label: string
     description?: string | null
     required: boolean
-    amount: number
+    amount: string
+    lateAmount?: string
 }
 
 export type EventRegistrationInfoDto = {
+    state: OpenForRegistrationType
     name: string
     description?: string
     location?: string
@@ -573,6 +603,11 @@ export type EventRegistrationInfoDto = {
     documentTypes?: Array<EventRegistrationDocumentTypeDto>
     competitionsSingle: Array<EventRegistrationCompetitionDto>
     competitionsTeam: Array<EventRegistrationCompetitionDto>
+}
+
+export type EventRegistrationLockedDto = {
+    participants: Array<EventRegistrationParticipantLockedDto>
+    competitionRegistrations: Array<CompetitionRegistrationLockedDto>
 }
 
 export type EventRegistrationNamedParticipantDto = {
@@ -584,6 +619,11 @@ export type EventRegistrationNamedParticipantDto = {
     countFemales: number
     countNonBinary: number
     countMixed: number
+}
+
+export type EventRegistrationParticipantLockedDto = {
+    id: string
+    competitionsSingle: Array<CompetitionRegistrationSingleLockedDto>
 }
 
 export type EventRegistrationParticipantUpsertDto = {
@@ -602,6 +642,7 @@ export type EventRegistrationParticipantUpsertDto = {
 export type EventRegistrationTemplateDto = {
     info: EventRegistrationInfoDto
     upsertableRegistration: EventRegistrationUpsertDto
+    lockedRegistration: EventRegistrationLockedDto
 }
 
 export type EventRegistrationUpsertDto = {
@@ -629,9 +670,11 @@ export type EventRequest = {
     location?: string
     registrationAvailableFrom?: string
     registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
     invoicePrefix?: string
     published: boolean
     paymentDueBy?: string
+    latePaymentDueBy?: string
 }
 
 export type FeeDto = {
@@ -646,12 +689,14 @@ export type FeeForCompetitionDto = {
     description?: string
     required: boolean
     amount: string
+    lateAmount?: string
 }
 
 export type FeeForCompetitionRequestDto = {
     fee: string
     required: boolean
     amount: string
+    lateAmount?: string
 }
 
 export type FeeRequest = {
@@ -830,6 +875,8 @@ export type NamedParticipantRequest = {
     name: string
     description?: string
 }
+
+export type OpenForRegistrationType = 'REGULAR' | 'LATE' | 'CLOSED'
 
 export type Order = {
     field: string
@@ -1029,6 +1076,21 @@ export type PrivilegeDto = {
     scope: Scope
 }
 
+export type ProduceInvoicesRequest = {
+    type: RegistrationInvoiceType
+}
+
+export type RatingCategoryDto = {
+    id: string
+    name: string
+    description?: string
+}
+
+export type RatingCategoryRequest = {
+    name: string
+    description?: string
+}
+
 export type RegisterRequest = {
     email: string
     password: string
@@ -1038,6 +1100,8 @@ export type RegisterRequest = {
     language: EmailLanguage
     callbackUrl: string
 }
+
+export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
 
 export type Resource = 'USER' | 'EVENT' | 'CLUB' | 'REGISTRATION' | 'INVOICE' | 'SUBSTITUTION'
 
@@ -1986,6 +2050,10 @@ export type AddCompetitionRegistrationData = {
         competitionId: string
         eventId: string
     }
+    query?: {
+        ratingCategory?: string
+        registrationType?: RegistrationInvoiceType
+    }
 }
 
 export type AddCompetitionRegistrationResponse = string
@@ -1998,6 +2066,13 @@ export type UpdateCompetitionRegistrationData = {
         competitionId: string
         competitionRegistrationId: string
         eventId: string
+    }
+    query?: {
+        ratingCategory?: string
+        /**
+         * required as managing with global permission
+         */
+        registrationType?: RegistrationInvoiceType
     }
 }
 
@@ -3365,6 +3440,7 @@ export type AssignBankAccountResponse = void
 export type AssignBankAccountError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type ProduceInvoicesForEventRegistrationsData = {
+    body: ProduceInvoicesRequest
     path: {
         eventId: string
     }
@@ -3732,3 +3808,60 @@ export type DeleteInfoViewData = {
 export type DeleteInfoViewResponse = void
 
 export type DeleteInfoViewError = ApiError
+
+export type AddRatingCategoryData = {
+    body: RatingCategoryRequest
+}
+
+export type AddRatingCategoryResponse = string
+
+export type AddRatingCategoryError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetRatingCategoriesData = {
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetRatingCategoriesResponse = {
+    data: Array<RatingCategoryDto>
+    pagination: Pagination
+}
+
+export type GetRatingCategoriesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type UpdateRatingCategoryData = {
+    body: RatingCategoryRequest
+    path: {
+        ratingCategoryId: string
+    }
+}
+
+export type UpdateRatingCategoryResponse = void
+
+export type UpdateRatingCategoryError = BadRequestError | ApiError
+
+export type DeleteRatingCategoryData = {
+    path: {
+        ratingCategoryId: string
+    }
+}
+
+export type DeleteRatingCategoryResponse = void
+
+export type DeleteRatingCategoryError = BadRequestError | ApiError
