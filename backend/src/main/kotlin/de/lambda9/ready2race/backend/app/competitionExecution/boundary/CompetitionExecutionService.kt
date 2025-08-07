@@ -824,7 +824,7 @@ object CompetitionExecutionService {
                             if (data.startTimeOffset != null) {
                                 text {
                                     "startet ${
-                                        data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds)
+                                        data.startTime.plusSeconds(data.startTimeOffset * index)
                                             .hrTime()
                                     }"
                                 }
@@ -907,7 +907,7 @@ object CompetitionExecutionService {
 
                 optionalColumn(config.colMatchName) { data.matchName ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->
-                    val offsetSeconds = (idx * (data.startTimeOffset ?: 0)).milliseconds.inWholeSeconds
+                    val offsetSeconds = idx * (data.startTimeOffset ?: 0)
                     data.startTime.toLocalTime().plusSeconds(offsetSeconds)
                         .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 }
