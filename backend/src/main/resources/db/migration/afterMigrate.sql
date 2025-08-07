@@ -806,6 +806,9 @@ select pt.id,
        pt.event as event_id,
        pt.scan_type,
        pt.scanned_at,
+       pt.scanned_by as scanned_by_id,
+       au.firstname as scanned_by_firstname,
+       au.lastname as scanned_by_lastname,
        p.id     as participant_id,
        p.firstname,
        p.lastname,
@@ -817,7 +820,8 @@ select pt.id,
        c.name   as club_name
 from participant_tracking pt
          left join participant p on pt.participant = p.id
-         left join club c on p.club = c.id;
+         left join club c on p.club = c.id
+         left join app_user au on pt.scanned_by = au.id;
 
 
 create view competition_registration_team_participant as

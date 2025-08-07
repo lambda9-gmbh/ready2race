@@ -190,6 +190,9 @@ import type {
     DeleteDocumentData,
     DeleteDocumentError,
     DeleteDocumentResponse,
+    GetParticipantTrackingsData,
+    GetParticipantTrackingsError,
+    GetParticipantTrackingsResponse,
     AddCompetitionTemplateData,
     AddCompetitionTemplateError,
     AddCompetitionTemplateResponse,
@@ -1238,6 +1241,19 @@ export const deleteDocument = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/eventDocument/{eventDocumentId}',
+    })
+}
+
+export const getParticipantTrackings = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantTrackingsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantTrackingsResponse,
+        GetParticipantTrackingsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantTracking',
     })
 }
 

@@ -201,7 +201,31 @@
       "userQrCode": "User QR Code",
       "qrCode": "QR Code",
       "id": "Participant ID",
-      "foodNotAllowed": "This person is NOT allowed to receive food"
+      "foodNotAllowed": "This person is NOT allowed to receive food",
+      "tracking": {
+        "log": "Participant Status Log",
+        "entry": "Log entry",
+        "status": "Status",
+        "in": "In",
+        "out": "Out",
+        "teams": "Teams",
+        "lastScan": {
+          "at": "Last scan at",
+          "by": "Scanned by"
+        },
+        "checkInText": "Check in",
+        "checkOutText": "Check out",
+        "checkIn": {
+          "success": "Participant checked in successfully",
+          "error": "Error checking in participant"
+        },
+        "checkOut": {
+          "success": "Participant checked out successfully",
+          "error": "Error checking out participant"
+        },
+        "noTeamsFound": "No teams found",
+        "participantNotFound": "Participant not found"
+      }
     }
   },
   "event": {
@@ -1017,29 +1041,6 @@
     "removeAssignmentConfirm": "Do you really want to remove the assignment?",
     "deleteError": "Error while deleting the QR code.",
     "assignmentInfo": "Assignment information"
-  },
-  "team": {
-    "teams": "Teams",
-    "name": "Team name",
-    "statusText": "Status",
-    "status": {
-      "in": "In",
-      "out": "Out"
-    },
-    "lastScan": "Last scan",
-    "checkInText": "Check in team",
-    "checkOutText": "Check out team",
-    "checkIn": {
-      "success": "Team checked in successfully",
-      "error": "Error checking in team"
-    },
-    "checkOut": {
-      "success": "Team checked out successfully",
-      "error": "Error checking out team"
-    },
-    "participants": "Participants",
-    "participantCount": "{{count}} participants",
-    "noTeamsFound": "No teams found"
   },
   "qrScanner": {
     "title": "Scanner"

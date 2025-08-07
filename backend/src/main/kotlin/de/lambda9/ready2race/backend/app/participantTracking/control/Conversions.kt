@@ -1,11 +1,14 @@
 package de.lambda9.ready2race.backend.app.participantTracking.control
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantTrackingDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.TeamForScanOverviewDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.TeamParticipantDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingViewRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 
@@ -28,7 +31,7 @@ fun CompetitionRegistrationTeamRecord.toTeamForScanOverviewDtos() = KIO.ok(
                 roleId = p.roleId!!,
                 role = p.role!!,
                 external = p.external!!,
-                externalClubName = p.externalClubName!!,
+                externalClubName = p.externalClubName,
                 currentStatus = p.trackings!!.maxByOrNull { it!!.scannedAt }?.scanType.let {
                     if (it != null) ParticipantScanType.valueOf(
                         it
@@ -76,5 +79,30 @@ fun ParticipantForExecutionDto.toTeamForScanOverviewDto(
         role = namedParticipantName,
         currentStatus = currentStatus,
         lastScanAt = lastScanAt
+    )
+)
+
+fun ParticipantTrackingViewRecord.toDto(): App<Nothing, ParticipantTrackingDto> = KIO.ok(
+    ParticipantTrackingDto(
+        id = id!!,
+        eventId = eventId!!,
+        participantId = participantId!!,
+        firstName = firstname!!,
+        lastName = lastname!!,
+        year = year!!,
+        gender = gender!!,
+        clubId = clubId!!,
+        clubName = clubName!!,
+        external = external!!,
+        externalClubName = externalClubName,
+        scanType = if (scanType != null) ParticipantScanType.valueOf(
+            scanType!!
+        ) else null,
+        scannedAt = scannedAt,
+        lastScanBy = if(scannedById != null && scannedByFirstname != null && scannedByLastname != null) AppUserNameDto(
+            id = scannedById!!,
+            firstname = scannedByFirstname!!,
+            lastname = scannedByLastname!!
+        ) else null
     )
 )

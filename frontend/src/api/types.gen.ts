@@ -977,6 +977,23 @@ export type ParticipantRequirementUpsertDto = {
 
 export type ParticipantScanType = 'ENTRY' | 'EXIT'
 
+export type ParticipantTrackingDto = {
+    id: string
+    eventId: string
+    participantId: string
+    firstName: string
+    lastName: string
+    year: number
+    gender: Gender
+    clubId: string
+    clubName: string
+    external: boolean
+    externalClubName?: string
+    scanType?: ParticipantScanType
+    scannedAt?: string
+    lastScanBy?: AppUserNameDto
+}
+
 export type ParticipantUpsertDto = {
     firstname: string
     lastname: string
@@ -2224,6 +2241,37 @@ export type DeleteDocumentData = {
 export type DeleteDocumentResponse = void
 
 export type DeleteDocumentError = BadRequestError | ApiError
+
+export type GetParticipantTrackingsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetParticipantTrackingsResponse = {
+    data: Array<ParticipantTrackingDto>
+    pagination: Pagination
+}
+
+export type GetParticipantTrackingsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddCompetitionTemplateData = {
     body: CompetitionPropertiesRequest

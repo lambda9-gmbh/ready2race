@@ -201,7 +201,31 @@
       "userQrCode": "Benutzer QR-Code",
       "qrCode": "QR-Code",
       "id": "Teilnehmer-ID",
-      "foodNotAllowed": "Diese Person darf KEIN Essen erhalten"
+      "foodNotAllowed": "Diese Person darf KEIN Essen erhalten",
+      "tracking": {
+        "log": "Status Protokoll der Teilnehmenden",
+        "entry": "Protokolleintrag",
+        "status": "Status",
+        "in": "Drin",
+        "out": "Draußen",
+        "teams": "Teams",
+        "lastScan": {
+          "at": "Letzter Scan am",
+          "by": "Gescanned von"
+        },
+        "checkInText": "Einchecken",
+        "checkOutText": "Auschecken",
+        "checkIn": {
+          "success": "Teilnehmer erfolgreich eingecheckt",
+          "error": "Fehler beim Einchecken des Teilnehmenden"
+        },
+        "checkOut": {
+          "success": "Teilnehmer erfolgreich ausgecheckt",
+          "error": "Fehler beim Auschecken des Teilnehmenden"
+        },
+        "noTeamsFound": "Keine Teams gefunden",
+        "participantNotFound": "Teilnehmer nicht gefunden"
+      }
     }
   },
   "event": {
@@ -1009,7 +1033,7 @@
     "title": "Teilnehmer-QR-Code",
     "noRight": "Du hast für diesen QR-Code-Typ keine Berechtigung.",
     "loading": "Lade...",
-    "noRequirements": "Keine Requirements mit CheckInApp vorhanden.",
+    "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",
     "enterArea": "Eintritt Wettkampfbereich",
     "leaveArea": "Austritt Wettkampfbereich",
     "removeAssignment": "QR-Code-Zuordnung entfernen",
@@ -1017,29 +1041,6 @@
     "removeAssignmentConfirm": "Möchtest du die Zuordnung wirklich entfernen?",
     "deleteError": "Fehler beim Löschen des QR-Codes.",
     "assignmentInfo": "Zuordnungsinformationen"
-  },
-  "team": {
-    "teams": "Teams",
-    "name": "Teamname",
-    "statusText": "Status",
-    "status": {
-      "in": "Drin",
-      "out": "Draußen"
-    },
-    "lastScan": "Letzter Scan",
-    "checkInText": "Team einchecken",
-    "checkOutText": "Team auschecken",
-    "checkIn": {
-      "success": "Team erfolgreich eingecheckt",
-      "error": "Fehler beim Einchecken des Teams"
-    },
-    "checkOut": {
-      "success": "Team erfolgreich ausgecheckt",
-      "error": "Fehler beim Auschecken des Teams"
-    },
-    "participants": "Teilnehmer",
-    "participantCount": "{{count}} Teilnehmer",
-    "noTeamsFound": "Keine Teams gefunden"
   },
   "qrScanner": {
     "title": "Scanner"

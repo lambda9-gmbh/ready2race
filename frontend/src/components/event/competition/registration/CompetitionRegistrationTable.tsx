@@ -85,7 +85,7 @@ const CompetitionRegistrationTable = (
                                     </TableCell>
                                     <TableCell sx={{width: '20%'}}>{t('qrCode.qrCode')}</TableCell>
                                     <TableCell sx={{width: '20%'}}>
-                                        {t('team.statusText')}
+                                        {t('club.participant.tracking.status')}
                                     </TableCell>
                                 </TableRow>
                             </TableHead>
@@ -136,7 +136,7 @@ const CompetitionRegistrationTable = (
                                                                 {participant.lastScanAt && (
                                                                     <>
                                                                         <Typography variant={'h6'}>
-                                                                            {t('team.lastScan')}
+                                                                            {t('club.participant.tracking.lastScan.at')}
                                                                         </Typography>
                                                                         <Typography>
                                                                             {format(
@@ -169,8 +169,8 @@ const CompetitionRegistrationTable = (
                                                             label={
                                                                 participant.currentStatus ===
                                                                 'ENTRY'
-                                                                    ? t('team.status.in')
-                                                                    : t('team.status.out')
+                                                                    ? t('club.participant.tracking.in')
+                                                                    : t('club.participant.tracking.out')
                                                             }
                                                             color={
                                                                 participant.currentStatus ===

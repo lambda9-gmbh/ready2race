@@ -142,7 +142,7 @@ const QrParticipantPage = () => {
             spacing={2}
             alignItems="center"
             justifyContent="center"
-            sx={{width: '100%', maxWidth: 600}}>
+            sx={{maxWidth: 600, flex: 1, justifyContent: 'start'}}>
             <Typography variant="h4" textAlign="center" gutterBottom>
                 {t('qrParticipant.title')}
             </Typography>

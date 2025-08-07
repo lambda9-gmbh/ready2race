@@ -2,19 +2,21 @@ package de.lambda9.ready2race.backend.app.participantTracking.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
-import de.lambda9.ready2race.backend.app.participantTracking.control.toParticipantForExecutionDtos
-import de.lambda9.ready2race.backend.app.participantTracking.control.toTeamForScanOverviewDtos
+import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.participant.control.participantDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
+import de.lambda9.ready2race.backend.app.participantTracking.control.*
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
-import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo.insert
-import de.lambda9.ready2race.backend.app.participantTracking.control.toTeamForScanOverviewDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.*
+import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantTrackingRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
@@ -34,7 +36,12 @@ object ParticipantTrackingService {
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         !ParticipantRepo.exists(participantId).orDie().onFalseFail { ParticipantError.ParticipantNotFound }
 
-        val currentStatus = !ParticipantTrackingRepo.getCurrentStatus(participantId, eventId).orDie()
+        val currentStatus = !ParticipantTrackingRepo
+            .get(participantId, eventId)
+            .orDie()
+            .map{ list ->
+                list.maxByOrNull { it.scannedAt!! }?.scanType
+            }
         !KIO.failOn(currentStatus == ParticipantScanType.ENTRY.name && checkIn) { ParticipantTrackingError.TeamAlreadyCheckedIn }
         !KIO.failOn(currentStatus == ParticipantScanType.EXIT.name && !checkIn) { ParticipantTrackingError.TeamNotCheckedIn }
 
@@ -47,10 +54,28 @@ object ParticipantTrackingService {
             scannedAt = LocalDateTime.now(),
         )
 
-        insert(record).orDie()
+        !insert(record).orDie()
 
         noData
     }
+
+    fun page(
+        eventId: UUID,
+        params: PaginationParameters<ParticipantTrackingSort>,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+    ): App<Nothing, ApiResponse.Page<ParticipantTrackingDto, ParticipantTrackingSort>> = KIO.comprehension {
+        val total = !ParticipantTrackingRepo.count(params.search, eventId, user, scope).orDie()
+        val page = !ParticipantTrackingRepo.page(params, eventId, user, scope).orDie()
+
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
+
 
 
     fun getByParticipantQrCode(

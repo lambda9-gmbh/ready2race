@@ -1,4 +1,4 @@
-import {Stack, Typography, Card, CardContent, Box, Chip, Alert} from '@mui/material'
+import {Stack, Typography, Card, CardContent, Box, Chip, Alert, Divider} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {checkInOutParticipant, getTeamsByParticipantQrCode} from '@api/sdk.gen.ts'
@@ -33,7 +33,7 @@ export const TeamCheckInOut = () => {
                 if (error) {
                     feedback.error(
                         t('common.load.error.multiple.short', {
-                            entity: t('team.teams'),
+                            entity: t('club.participant.tracking.teams'),
                         }),
                     )
                 }
@@ -63,93 +63,115 @@ export const TeamCheckInOut = () => {
 
         setSubmitting(false)
         if (error) {
-            feedback.error(checkIn ? t('team.checkIn.error') : t('team.checkOut.error'))
+            feedback.error(
+                checkIn
+                    ? t('club.participant.tracking.checkIn.error')
+                    : t('club.participant.tracking.checkOut.error'),
+            )
         } else {
-            feedback.success(checkIn ? t('team.checkIn.success') : t('team.checkOut.success'))
+            feedback.success(
+                checkIn
+                    ? t('club.participant.tracking.checkIn.success')
+                    : t('club.participant.tracking.checkOut.success'),
+            )
         }
         setReloadTeams(prev => !prev)
     }
 
     return (
-        <Stack spacing={2} sx={{width: '100%'}}>
+        <Stack spacing={2} sx={{width: 1, flex: 1}}>
             {teamsPending ? (
                 <Throbber />
             ) : !teamsData || selectedParticipant === undefined ? (
-                <Alert severity="error">{t('team.noTeamsFound')}</Alert>
+                <Alert severity="error">{t('club.participant.tracking.participantNotFound')}</Alert>
             ) : teamsData.length === 0 ? (
-                <Alert severity="info">{t('team.noTeamsFound')}</Alert>
+                <Alert severity="info">{t('club.participant.tracking.noTeamsFound')}</Alert>
             ) : (
-                <>
-                    <Typography variant="h6">{t('team.teams')}</Typography>
-                    {teamsData.map(team => (
-                        <Card key={team.competitionRegistrationId} variant="outlined">
-                            <CardContent>
-                                <Stack
-                                    direction="row"
-                                    justifyContent="space-between"
-                                    alignItems="center">
-                                    <Box>
-                                        <Typography variant="h6">
-                                            {team.competitionIdentifier} | {team.competitionName}
-                                        </Typography>
-                                        <Typography>
-                                            {team.clubName +
-                                                (team.teamName ? ' ' + team.teamName : '')}
-                                        </Typography>
-                                    </Box>
-                                </Stack>
-                                {team.participants.map(participant => (
-                                    <Stack spacing={'row'}>
-                                        <Typography>
-                                            {participant.firstName} {participant.lastName}
-                                        </Typography>
-                                        {participant.currentStatus !== undefined && (
-                                            <>
-                                                <Chip
-                                                    label={
-                                                        participant.currentStatus === 'ENTRY'
-                                                            ? t('team.status.in')
-                                                            : t('team.status.out')
-                                                    }
-                                                    color={
-                                                        participant.currentStatus === 'ENTRY'
-                                                            ? 'success'
-                                                            : 'default'
-                                                    }
-                                                    size="small"
-                                                />
-                                                {participant.lastScanAt && (
-                                                    <Typography
-                                                        variant="caption"
-                                                        color="text.secondary">
-                                                        {t('team.lastScan')}:{' '}
-                                                        {new Date(
-                                                            participant.lastScanAt,
-                                                        ).toLocaleString()}
-                                                    </Typography>
-                                                )}
-                                            </>
-                                        )}
-                                    </Stack>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    ))}
+                <Stack spacing={2} sx={{justifyContent: 'space-between', flex: 1}}>
                     <Box>
-                        <LoadingButton
-                            pending={submitting || teamsPending}
-                            variant={'contained'}
-                            onClick={() =>
-                                handleCheckInOut(selectedParticipant.currentStatus !== 'ENTRY')
-                            }>
-                            {selectedParticipant.currentStatus === 'ENTRY'
-                                ? t('team.checkOutText')
-                                : t('team.checkInText')}
-                        </LoadingButton>
+                        <Typography variant="h6">{t('club.participant.tracking.teams')}</Typography>
+                        <Stack spacing={2}>
+                            {teamsData
+                                .sort((a, b) =>
+                                    a.competitionIdentifier > b.competitionIdentifier ? 1 : -1,
+                                )
+                                .map(team => (
+                                    <Card key={team.competitionRegistrationId} variant="outlined">
+                                        <CardContent>
+                                            <Stack
+                                                direction="row"
+                                                justifyContent="space-between"
+                                                alignItems="center">
+                                                <Box>
+                                                    <Typography variant="h6" gutterBottom>
+                                                        {team.competitionIdentifier} |{' '}
+                                                        {team.competitionName}
+                                                    </Typography>
+                                                    <Typography>
+                                                        {team.clubName +
+                                                            (team.teamName
+                                                                ? ' ' + team.teamName
+                                                                : '')}
+                                                    </Typography>
+                                                </Box>
+                                            </Stack>
+                                            <Divider sx={{my: 1}} />
+                                            <Stack spacing={1}>
+                                                {team.participants.map(participant => (
+                                                    <Stack
+                                                        key={
+                                                            participant.participantId +
+                                                            team.competitionRegistrationId
+                                                        }
+                                                        direction={'row'}
+                                                        spacing={2}
+                                                        sx={{justifyContent: 'space-between'}}>
+                                                        <Typography sx={{flex: 2}}>
+                                                            {participant.firstName}{' '}
+                                                            {participant.lastName}
+                                                        </Typography>
+                                                        {participant.currentStatus && (
+                                                            <Chip
+                                                                sx={{flex: 1}}
+                                                                label={
+                                                                    participant.currentStatus ===
+                                                                    'ENTRY'
+                                                                        ? t(
+                                                                              'club.participant.tracking.in',
+                                                                          )
+                                                                        : t(
+                                                                              'club.participant.tracking.out',
+                                                                          )
+                                                                }
+                                                                color={
+                                                                    participant.currentStatus ===
+                                                                    'ENTRY'
+                                                                        ? 'success'
+                                                                        : 'default'
+                                                                }
+                                                                size="small"
+                                                            />
+                                                        )}
+                                                    </Stack>
+                                                ))}
+                                            </Stack>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                        </Stack>
                     </Box>
-                </>
+                    <LoadingButton
+                        pending={submitting || teamsPending}
+                        variant={'contained'}
+                        onClick={() =>
+                            handleCheckInOut(selectedParticipant.currentStatus !== 'ENTRY')
+                        }>
+                        {selectedParticipant.currentStatus === 'ENTRY'
+                            ? t('club.participant.tracking.checkOutText')
+                            : t('club.participant.tracking.checkInText')}
+                    </LoadingButton>
+                </Stack>
             )}
-            )
         </Stack>
     )
 }

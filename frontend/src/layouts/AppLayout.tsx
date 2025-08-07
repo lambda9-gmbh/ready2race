@@ -12,8 +12,7 @@ const AppLayout: React.FC = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 py: { xs: 2, sm: 4 },
-                px: { xs: 2, sm: 3 },
-                mt: { xs: 2, sm: 3 },
+                px: { xs: 2, sm: 3 }
             }}
         >
             <Box 

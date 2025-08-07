@@ -1641,6 +1641,46 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantTracking:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getParticipantTrackings
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: ParticipantTracking page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantTrackingDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /competitionTemplate:
     post:
       operationId: addCompetitionTemplate
@@ -7995,6 +8035,56 @@ components:
         lastScanAt:
           type: string
           format: date-time
+
+    ParticipantTrackingDto:
+      type: object
+      required:
+        - id
+        - eventId
+        - participantId
+        - firstName
+        - lastName
+        - year
+        - gender
+        - clubId
+        - clubName
+        - external
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+        scanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        scannedAt:
+          type: string
+          format: date-time
+        lastScanBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+
 
     ParticipantQrAssignmentDto:
       type: object

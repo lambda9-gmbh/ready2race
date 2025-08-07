@@ -19,6 +19,7 @@ import {
     EventDocumentDto,
     ParticipantForEventDto,
     ParticipantRequirementForEventDto,
+    ParticipantTrackingDto,
     TaskDto,
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
@@ -50,7 +51,8 @@ import {format} from 'date-fns'
 import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
-import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
+import EventRegistrations from '@components/event/competition/registration/EventRegistrations.tsx'
+import ParticipantTrackingLogTable from '@components/event/participantTracking/ParticipantTrackingLogTable.tsx'
 
 const EVENT_TABS = [
     'general',
@@ -103,6 +105,10 @@ const EventPage = () => {
         {entityCreate: false, entityUpdate: false},
     )
 
+    const participantTrackingProps = useEntityAdministration<ParticipantTrackingDto>(
+        t('club.participant.tracking.entry'),
+        {entityCreate: false, entityUpdate: false},
+    )
 
     const taskProps = useEntityAdministration<TaskDto>(t('task.task'))
 
@@ -110,7 +116,6 @@ const EventPage = () => {
         t('qrCode.appUsersWithQrCode'),
         {entityCreate: false, entityUpdate: false},
     )
-
 
     const a11yProps = (index: EventTab) => {
         return {
@@ -263,13 +268,19 @@ const EventPage = () => {
                         <CompetitionsAndEventDays />
                     </TabPanel>
                     <TabPanel index={'registrations'} activeTab={activeTab}>
-                        <EventRegistrations registrationsFinalized={data.registrationsFinalized}/>
+                        <EventRegistrations registrationsFinalized={data.registrationsFinalized} />
                     </TabPanel>
                     <TabPanel index={'participants'} activeTab={activeTab}>
-                        <ParticipantForEventTable
-                            {...participantForEventProps.table}
-                            title={t('event.participants')}
-                        />
+                        <Stack spacing={2}>
+                            <ParticipantForEventTable
+                                {...participantForEventProps.table}
+                                title={t('event.participants')}
+                            />
+                            <ParticipantTrackingLogTable
+                                {...participantTrackingProps.table}
+                                title={t('club.participant.tracking.log')}
+                            />
+                        </Stack>
                     </TabPanel>
                     <TabPanel index={'organization'} activeTab={activeTab}>
                         <Stack spacing={2}>

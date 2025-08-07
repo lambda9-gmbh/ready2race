@@ -19,6 +19,7 @@ import de.lambda9.ready2race.backend.app.participant.boundary.participantForEven
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
 import de.lambda9.ready2race.backend.app.participantTracking.boundary.ParticipantTrackingService
+import de.lambda9.ready2race.backend.app.participantTracking.boundary.participantTracking
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -76,6 +77,7 @@ fun Route.event() {
             task()
             workShift()
             appUserWithQrCode()
+            participantTracking()
 
             get("/invoices") {
                 call.respondComprehension {
