@@ -314,6 +314,7 @@ object DocumentTemplateService {
                             startNumber = 1,
                             clubName = "Sportclub Musterhausen",
                             teamName = "#1",
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -329,6 +330,7 @@ object DocumentTemplateService {
                             startNumber = 2,
                             clubName = "Sportclub Musterhausen",
                             teamName = "#2",
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -344,6 +346,7 @@ object DocumentTemplateService {
                             startNumber = 3,
                             clubName = "Neustadt 101",
                             teamName = null,
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -359,6 +362,7 @@ object DocumentTemplateService {
                             startNumber = 4,
                             clubName = "Sportfreunde e.V.",
                             teamName = null,
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",

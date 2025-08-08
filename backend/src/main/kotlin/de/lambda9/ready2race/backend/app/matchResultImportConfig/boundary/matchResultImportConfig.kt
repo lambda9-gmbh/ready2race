@@ -1,6 +1,8 @@
-package de.lambda9.ready2race.backend.app.startListConfig.boundary
+package de.lambda9.ready2race.backend.app.matchResultImportConfig.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigRequest
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigSort
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigRequest
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigSort
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -16,43 +18,43 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 
-fun Route.startListConfig() {
-    route("/startListConfig") {
+fun Route.matchResultImportConfig() {
+    route("/matchResultImportConfig") {
 
         post {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateEventGlobal)
 
-                val body = !receiveKIO(StartListConfigRequest.example)
-                StartListConfigService.addConfig(body, user.id!!)
+                val body = !receiveKIO(MatchResultImportConfigRequest.example)
+                MatchResultImportConfigService.addConfig(body, user.id!!)
             }
         }
 
         get {
             call.respondComprehension {
                 !authenticate(Privilege.ReadEventGlobal)
-                val params = !pagination<StartListConfigSort>()
-                StartListConfigService.page(params)
+                val params = !pagination<MatchResultImportConfigSort>()
+                MatchResultImportConfigService.page(params)
             }
         }
 
-        route("/{startListConfigId}") {
+        route("/{matchResultImportConfigId}") {
 
             put {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
-                    val id = !pathParam("startListConfigId", uuid)
+                    val id = !pathParam("matchResultImportConfigId", uuid)
 
-                    val body = !receiveKIO(StartListConfigRequest.example)
-                    StartListConfigService.updateConfig(id, body, user.id!!)
+                    val body = !receiveKIO(MatchResultImportConfigRequest.example)
+                    MatchResultImportConfigService.updateConfig(id, body, user.id!!)
                 }
             }
 
             delete {
                 call.respondComprehension {
                     !authenticate(Privilege.UpdateEventGlobal)
-                    val id = !pathParam("startListConfigId", uuid)
-                    StartListConfigService.deleteConfig(id)
+                    val id = !pathParam("matchResultImportConfigId", uuid)
+                    MatchResultImportConfigService.deleteConfig(id)
                 }
             }
         }

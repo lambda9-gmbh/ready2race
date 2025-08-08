@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Startlist
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
+import java.util.UUID
 import kotlin.String
 
 data class CompetitionMatchData(
@@ -32,7 +33,13 @@ data class CompetitionMatchData(
         val startNumber: Int,
         val clubName: String,
         val teamName: String?,
+        val ratingCategory: CompetitionMatchTeamRatingCategory?,
         val participants: List<CompetitionMatchParticipant>,
+    )
+
+    data class CompetitionMatchTeamRatingCategory(
+        val id: UUID,
+        val name: String,
     )
 
     data class CompetitionMatchParticipant(
@@ -66,7 +73,7 @@ data class CompetitionMatchData(
                     shortName = persisted.competitionShortName,
                     category = persisted.competitionCategory,
                 ),
-                teams = teams.sortedBy { it.startNumber }
+                teams = teams
             )
         }
 
@@ -104,6 +111,12 @@ data class CompetitionMatchData(
                     clubName = clubName!!,
                     teamName = teamName,
                     participants = actuallyParticipatingParticipants,
+                    ratingCategory = ratingCategory?.let {
+                        CompetitionMatchTeamRatingCategory(
+                            id = it.id,
+                            name = it.name,
+                        )
+                    }
                 )
             )
         }

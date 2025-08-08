@@ -20,14 +20,18 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
+import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.hr
@@ -36,14 +40,20 @@ import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.int
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.maybe
+import de.lambda9.ready2race.backend.xls.XLS
+import de.lambda9.ready2race.backend.xls.XLSReadError
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
 
@@ -372,12 +382,10 @@ object CompetitionExecutionService {
         noData
     }
 
-    fun updateMatchResult(
+    private fun checkUpdateMatchResult(
         competitionId: UUID,
         matchId: UUID,
-        userId: UUID,
-        request: UpdateCompetitionMatchResultRequest,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, CompetitionMatchWithTeams> = KIO.comprehension {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -397,11 +405,38 @@ object CompetitionExecutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
         }
 
+        KIO.ok(match)
+    }
+
+    private fun prepareForNewPlaces(
+        matchId: UUID,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+
         !CompetitionMatchRepo.update(matchId) {
             currentlyRunning = false
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
+
+        !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
+            place = null
+        }.orDie()
+
+        unit
+    }
+
+    fun updateMatchResult(
+        competitionId: UUID,
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchResultRequest,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        !checkUpdateMatchResult(competitionId, matchId)
+        !prepareForNewPlaces(matchId, userId)
+
+        // TODO: validate team size, places continuous
 
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
@@ -409,7 +444,75 @@ object CompetitionExecutionService {
                 updatedBy = userId
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
-        }.map { ApiResponse.NoData }
+        }.noDataResponse()
+    }
+
+    fun updateMatchResultByFile(
+        competitionId: UUID,
+        matchId: UUID,
+        file: FileUpload,
+        request: UploadMatchResultRequest,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val match = !checkUpdateMatchResult(competitionId, matchId)
+        !prepareForNewPlaces(matchId, userId)
+
+        val config = !MatchResultImportConfigRepo.get(request.config).orDie().onNullFail { MatchResultImportConfigError.NotFound }
+
+        val iStream = file.bytes.inputStream()
+
+        val teams = !XLS.read(iStream) {
+            ParsedTeamResult(
+                startNumber = !cell(config.colTeamStartNumber, int),
+                place = !optionalCell(config.colTeamPlace, maybe(int)),
+            )
+        }.mapError {
+            when (it) {
+                is XLSReadError.CellError.ColumnUnknown -> CompetitionExecutionError.ResultUploadError.ColumnUnknown(it.expected)
+                is XLSReadError.CellError.ParseError.CellBlank -> CompetitionExecutionError.ResultUploadError.CellBlank(it.row, it.col)
+                is XLSReadError.CellError.ParseError.WrongCellType -> CompetitionExecutionError.ResultUploadError.WrongCellType(it.row, it. col, it.actual.name, it.expected.name)
+                XLSReadError.FileError -> CompetitionExecutionError.ResultUploadError.FileError
+                XLSReadError.NoHeaders -> CompetitionExecutionError.ResultUploadError.NoHeaders
+            }
+        }
+
+        !noDuplicates(teams.map { it.startNumber }).fold(
+            onValid = { unit },
+            onInvalid = { when (it) {
+                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedStartNumbers(it))
+                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+            } }
+        )
+
+        val places = teams.map { it.place }
+
+        !noDuplicates(places).fold(
+            onValid = { unit },
+            onInvalid = { when (it) {
+                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedPlaces(it))
+                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+            }}
+        )
+
+        !KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
+
+        places.filterNotNull().sorted().forEachIndexed { index, place ->
+            val expected = index + 1
+            !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
+        }
+
+        // TODO: deregistration on place == null
+        !teams.traverse { result ->
+            CompetitionMatchTeamRepo.updateByMatchAndStartNumber(matchId, result.startNumber) {
+                place = result.place
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }.map {  }
+        }
+
+        noData
+
     }
 
     fun updateMatchRunningState(
@@ -821,6 +924,11 @@ object CompetitionExecutionService {
                                     newLine = false,
                                 ) { " $it" }
                             }
+                            team.ratingCategory?.let {
+                                text(
+                                    newLine = false,
+                                ) { " ${it.name}" }
+                            }
                             if (data.startTimeOffset != null) {
                                 text {
                                     "startet ${
@@ -891,7 +999,7 @@ object CompetitionExecutionService {
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
-                data.teams
+                data.teams.sortedBy { it.startNumber }
             ) {
                 optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
@@ -904,6 +1012,7 @@ object CompetitionExecutionService {
 
                 optionalColumn(config.colTeamName) { teamName ?: "" }
                 optionalColumn(config.colTeamStartNumber) { startNumber.toString() }
+                optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
 
                 optionalColumn(config.colMatchName) { data.matchName ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->
