@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.calls.responses.ApiError
 import de.lambda9.ready2race.backend.calls.responses.ErrorCode
 import de.lambda9.ready2race.backend.validation.ValidationResult
-import de.lambda9.tailwind.core.Cause.Companion.expected
 import io.ktor.http.*
 
 sealed interface CompetitionExecutionError : ServiceError {
@@ -21,6 +20,7 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object RoundNotFound : CompetitionExecutionError
     data object MatchResultsLocked : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
+    data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
 
     // TODO: send out ErrorCodes for internationalization in frontend
     sealed interface ResultUploadError : CompetitionExecutionError {
@@ -108,6 +108,11 @@ sealed interface CompetitionExecutionError : ServiceError {
         StartTimeNotSet -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "StartTime not set",
+        )
+
+        TeamWasPreviouslyDeregistered -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Team has been deregistered before this round",
         )
 
         ResultUploadError.FileError -> ApiError(

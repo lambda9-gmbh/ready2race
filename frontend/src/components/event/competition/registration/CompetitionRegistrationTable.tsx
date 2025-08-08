@@ -1,21 +1,29 @@
 import {useTranslation} from 'react-i18next'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
     CompetitionDto,
     CompetitionRegistrationTeamDto,
     deleteCompetitionRegistration,
-    getCompetitionRegistrations, OpenForRegistrationType,
+    revertCompetitionDeregistration,
+    getCompetitionRegistrations,
+    OpenForRegistrationType,
 } from '../../../../api'
-import {BaseEntityTableProps} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {Fragment, useMemo} from 'react'
+import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {Stack, Tooltip, Typography} from '@mui/material'
 import {format} from 'date-fns'
 import {useUser} from "@contexts/user/UserContext.ts";
 import {updateRegistrationGlobal} from "@authorization/privileges.ts";
 import {PendingActions} from "@mui/icons-material";
+import Cancel from '@mui/icons-material/Cancel'
+import GroupRemoveIcon from '@mui/icons-material/GroupRemove'
+import GroupAddIcon from '@mui/icons-material/GroupAdd'
+import CompetitionDeregistrationDialog from '@components/event/competition/registration/CompetitionDeregistrationDialog.tsx'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import {useFeedback} from '@utils/hooks.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -34,6 +42,7 @@ const CompetitionRegistrationTable = (
 ) => {
     const {t} = useTranslation()
     const user = useUser()
+    const feedback = useFeedback()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -138,6 +147,29 @@ const CompetitionRegistrationTable = (
                 ),
             },
             {
+                field: 'infos',
+                headerName: t('event.competition.registration.infos'),
+                sortable: false,
+                minWidth: 200,
+                renderCell: ({row}) => (
+                    <Stack spacing={1}>
+                        {row.deregistration ? (
+                            <Stack direction={'row'} spacing={1}>
+                                <Cancel />
+                                <Typography>
+                                    {t('event.competition.registration.deregister.deregistered') +
+                                        (row.deregistration.reason
+                                            ? ` (${row.deregistration.reason})`
+                                            : '')}
+                                </Typography>
+                            </Stack>
+                        ) : (
+                            '-'
+                        )}
+                    </Stack>
+                ),
+            },
+            {
                 field: 'updatedAt',
                 headerName: t('entity.updatedAt'),
                 minWidth: 100,
@@ -148,6 +180,81 @@ const CompetitionRegistrationTable = (
         ],
         [],
     )
+
+    const [selectedRegForDeregistration, setSelectedRegForDeregistration] =
+        useState<CompetitionRegistrationTeamDto | null>(null)
+    const showDeregistrationDialog = selectedRegForDeregistration !== null
+
+    const handleCloseDeregistrationDialog = () => {
+        setSelectedRegForDeregistration(null)
+    }
+
+    const {confirmAction} = useConfirmation()
+
+    const revertDeregistration = async (selectedRegistration: CompetitionRegistrationTeamDto) => {
+        confirmAction(
+            async () => {
+                const {error} = await revertCompetitionDeregistration({
+                    path: {
+                        eventId: eventId,
+                        competitionId: competitionId,
+                        competitionRegistrationId: selectedRegistration.id,
+                    },
+                })
+                if (error) {
+                    if (error.status.value === 409) {
+                        feedback.error(
+                            t(
+                                'event.competition.registration.deregister.revertDeregistration.error.locked',
+                            ),
+                        )
+                    } else {
+                        feedback.error(
+                            t(
+                                'event.competition.registration.deregister.revertDeregistration.error.unexpected',
+                            ),
+                        )
+                    }
+                } else {
+                    feedback.success(
+                        t('event.competition.registration.deregister.revertDeregistration.success'),
+                    )
+                }
+                props.reloadData()
+            },
+            {
+                content: t(
+                    'event.competition.registration.deregister.revertDeregistration.confirmation',
+                ),
+                okText: t('event.competition.registration.deregister.revertDeregistration.revert'),
+            },
+        )
+    }
+
+    // todo: only allow revert if no next round has been created since
+    // comment: validated in api?
+
+    const afterRegistration = (isLate: boolean) =>
+        isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
+
+    const customEntityActions = (entity: CompetitionRegistrationTeamDto): EntityAction[] => [
+        entity.deregistration === undefined && afterRegistration(entity.isLate) ? (
+            <GridActionsCellItem
+                icon={<GroupRemoveIcon />}
+                label={t('event.competition.registration.deregister.deregister')}
+                onClick={() => setSelectedRegForDeregistration(entity)}
+                showInMenu
+            />
+        ) : undefined,
+        entity.deregistration !== undefined ? (
+            <GridActionsCellItem
+                icon={<GroupAddIcon />}
+                label={t('event.competition.registration.deregister.revertDeregistration.revertDeregistration')}
+                onClick={() => revertDeregistration(entity)}
+                showInMenu
+            />
+        ) : undefined,
+    ]
 
     // closed is already checked in parent component
     const writable = (dto: CompetitionRegistrationTeamDto) =>
@@ -167,6 +274,24 @@ const CompetitionRegistrationTable = (
                 entityName={t('event.registration.registration')}
                 deletableIf={writable}
                 editableIf={writable}
+                customEntityActions={customEntityActions}
+            />
+            <CompetitionDeregistrationDialog
+                open={showDeregistrationDialog}
+                competitionRegistration={
+                    selectedRegForDeregistration
+                        ? {
+                              id: selectedRegForDeregistration?.id,
+                              teamName:
+                                  selectedRegForDeregistration.clubName +
+                                  (selectedRegForDeregistration.name
+                                      ? ` ${selectedRegForDeregistration.name}`
+                                      : ''),
+                          }
+                        : null
+                }
+                onClose={handleCloseDeregistrationDialog}
+                reloadData={props.reloadData}
             />
         </Fragment>
     )

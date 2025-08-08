@@ -1194,6 +1194,49 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/deregistration:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    post:
+      operationId: deregisterCompetitionRegistration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompetitionDeregistrationRequest'
+      responses:
+        204:
+          description: Competition registration successfully deregistered
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: revertCompetitionDeregistration
+      responses:
+        204:
+          description: Competition deregistration successfully reverted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionSetup:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -6026,7 +6069,6 @@ components:
       type: object
       required:
         - id
-        - name
         - clubName
         - clubId
         - optionalFees
@@ -6063,6 +6105,9 @@ components:
         createdAt:
           type: string
           format: date-time
+        deregistration:
+          $ref: '#/components/schemas/CompetitionDeregistrationDto'
+
 
     CompetitionRegistrationFeeDto:
       type: object
@@ -6118,6 +6163,15 @@ components:
         registrationName:
           type: string
 
+
+    CompetitionDeregistrationDto:
+      type: object
+      properties:
+        competitionSetupRoundId:
+          type: string
+          format: uuid
+        reason:
+          type: string
 
 
     # competitionSetup
@@ -7658,6 +7712,7 @@ components:
         - clubId
         - clubName
         - startNumber
+        - deregistered
       properties:
         registrationId:
           type: string
@@ -7675,6 +7730,12 @@ components:
           type: integer
         place:
           type: integer
+        deregistered:
+          type: boolean
+        deregistrationLocked:
+          type: boolean
+        deregistrationReason:
+          type: string
 
 
     UpdateCompetitionMatchRequest:
@@ -7761,13 +7822,17 @@ components:
       type: object
       required:
         - registrationId
-        - place
+        - deregistered
       properties:
         registrationId:
           type: string
           format: uuid
         place:
           type: integer
+        deregistered:
+          type: boolean
+        deregistrationReason:
+          type: string
 
     CompetitionTeamPlaceDto:
       type: object
@@ -7778,6 +7843,7 @@ components:
         - clubName
         - namedParticipants
         - place
+        - deregistered
       properties:
         competitionRegistrationId:
           type: string
@@ -7797,6 +7863,10 @@ components:
             $ref: '#/components/schemas/CompetitionTeamNamedParticipantDto'
         place:
           type: integer
+        deregistered:
+          type: boolean
+        deregistrationReason:
+          type: string
 
     CompetitionTeamNamedParticipantDto:
       type: object
@@ -8068,6 +8138,16 @@ components:
         - PDF
         - CSV
 
+
+
+    CompetitionDeregistrationRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+
+
+
     StartListConfigRequest:
       type: object
       description: At least one column must be specified.
@@ -8093,6 +8173,8 @@ components:
         colTeamName:
           type: string
         colTeamStartNumber:
+          type: string
+        colTeamRatingCategory:
           type: string
         colMatchName:
           type: string
@@ -8137,6 +8219,8 @@ components:
         colTeamName:
           type: string
         colTeamStartNumber:
+          type: string
+        colTeamRatingCategory:
           type: string
         colMatchName:
           type: string

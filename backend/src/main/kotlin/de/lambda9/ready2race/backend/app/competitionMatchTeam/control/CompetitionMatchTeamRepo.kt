@@ -1,8 +1,11 @@
 package de.lambda9.ready2race.backend.app.competitionMatchTeam.control
 
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionMatchTeamRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_MATCH_TEAM
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.update
@@ -31,6 +34,12 @@ object CompetitionMatchTeamRepo {
         }
     }
 
+    fun getByMatchAndRegistration(matchId: UUID, competitionRegistrationId: UUID) = COMPETITION_MATCH_TEAM.selectOne {
+        COMPETITION_MATCH.eq(matchId).and(COMPETITION_REGISTRATION.eq(competitionRegistrationId))
+    }
+
+    fun getById(id: UUID) = COMPETITION_MATCH_TEAM.selectOne { ID.eq(id) }
+
     fun create(records: List<CompetitionMatchTeamRecord>) = COMPETITION_MATCH_TEAM.insert(records)
 
     fun update(record: CompetitionMatchTeamRecord, f: CompetitionMatchTeamRecord.() -> Unit) =
@@ -39,14 +48,6 @@ object CompetitionMatchTeamRepo {
     fun updateByMatchAndRegistrationId(matchId: UUID, registrationId: UUID, f: CompetitionMatchTeamRecord.() -> Unit) =
         COMPETITION_MATCH_TEAM.update(f) {
             COMPETITION_MATCH.eq(matchId).and(COMPETITION_REGISTRATION.eq(registrationId))
-        }
-
-    fun updateByMatchAndStartNumber(matchId: UUID, startNumber: Int, f: CompetitionMatchTeamRecord.() -> Unit) =
-        COMPETITION_MATCH_TEAM.update(f) {
-            DSL.and(
-                COMPETITION_MATCH.eq(matchId),
-                START_NUMBER.eq(startNumber)
-            )
         }
 
     fun updateManyByMatch(matchId: UUID, f: CompetitionMatchTeamRecord.() -> Unit) =

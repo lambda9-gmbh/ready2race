@@ -39,6 +39,12 @@ const CompetitionPlaces = () => {
                         <Card sx={{p: 2}}>
                             <Typography>
                                 {place.place}: {place.clubName + ' ' + place.teamName}
+                                {place.deregistered
+                                    ? ` ${t('event.competition.registration.deregister.deregistered')}` +
+                                      place.deregistrationReason
+                                        ? ` (${place.deregistrationReason})`
+                                        : ''
+                                    : ''}
                             </Typography>
                         </Card>
                     </ListItem>

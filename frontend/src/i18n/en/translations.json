@@ -326,7 +326,23 @@
           }
         },
         "isLate": "registered late",
-        "ratingCategory": "Rating category"
+        "ratingCategory": "Rating category",
+        "infos": "Infos",
+        "deregister": {
+          "deregister": "Deregister",
+          "revertDeregistration": {
+            "revertDeregistration": "Revert deregistration",
+            "revert": "Revert",
+            "confirmation": "Are you sure you want to revert this deregistration?",
+            "error": {
+              "locked": "The deregistration was created before the current round and is therefore locked",
+              "unexpected": "An error has occurred when reverting the deregistration"
+            },
+            "success": "Deregistration successfully reverted"
+          },
+          "deregistered": "Deregistered",
+          "reason": "Reason"
+        }
       },
       "setup": {
         "setup": "Competition Setup",
@@ -460,7 +476,10 @@
         "match": {
           "startTime": "Start time",
           "startTimeOffset": "Start time offset",
-          "startNumber": "Start number",
+          "startNumber": {
+            "startNumber": "Start number",
+            "short": "No."
+          },
           "team": "Team",
           "place": "Place",
           "manageRunning": "Manage Running Matches",
@@ -997,7 +1016,8 @@
           "team": {
             "heading": "Team",
             "name": "Name",
-            "startNumber": "Start number"
+            "startNumber": "Start number",
+            "ratingCategory": "Rating category"
           },
           "match": {
             "heading": "Match",

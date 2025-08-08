@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationFeeDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationNamedParticipantDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
@@ -9,8 +10,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistr
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.database.delete
-import de.lambda9.ready2race.backend.database.findOneBy
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -32,6 +32,8 @@ object CompetitionRegistrationRepo {
     private val searchFieldsForCompetition = listOf(CLUB.NAME, COMPETITION_REGISTRATION.NAME, RATING_CATEGORY.NAME)
 
     fun create(record: CompetitionRegistrationRecord) = COMPETITION_REGISTRATION.insertReturning(record) { ID }
+
+    fun exists(id: UUID) = COMPETITION_REGISTRATION.exists { ID.eq(id) }
 
     // TODO: @What?: Why also competitionId? id is already unique
     fun findByIdAndCompetitionId(id: UUID, competitionId: UUID) =
@@ -70,7 +72,8 @@ object CompetitionRegistrationRepo {
 
     fun getClub(id: UUID) = COMPETITION_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
 
-    fun getByCompetitionAndClub(competitionId: UUID, clubId: UUID) = COMPETITION_REGISTRATION.select { COMPETITION.eq(competitionId).and(CLUB.eq(clubId)) }
+    fun getByCompetitionAndClub(competitionId: UUID, clubId: UUID) =
+        COMPETITION_REGISTRATION.select { COMPETITION.eq(competitionId).and(CLUB.eq(clubId)) }
 
     fun countForCompetitionAndClub(
         competitionId: UUID,
@@ -102,7 +105,7 @@ object CompetitionRegistrationRepo {
     }
 
     fun getByCompetitionId(id: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
-        with(COMPETITION_REGISTRATION){
+        with(COMPETITION_REGISTRATION) {
             selectFrom(this)
                 .where(COMPETITION.eq(id))
                 .fetch()
@@ -134,11 +137,16 @@ object CompetitionRegistrationRepo {
             RATING_CATEGORY.NAME,
             RATING_CATEGORY.DESCRIPTION,
             COMPETITION_REGISTRATION.CREATED_AT,
-            COMPETITION_REGISTRATION.UPDATED_AT
+            COMPETITION_REGISTRATION.UPDATED_AT,
+            COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION,
+            COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND,
+            COMPETITION_DEREGISTRATION.REASON,
         )
             .from(COMPETITION_REGISTRATION)
             .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)) // also user for sort + search
             .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)) // also user for sort + search
+            .leftJoin(COMPETITION_DEREGISTRATION)
+            .on(COMPETITION_REGISTRATION.ID.eq(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION))
             .page(params, searchFieldsForCompetition) {
                 COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                     .and(filterScope(scope, user.club))
@@ -160,7 +168,13 @@ object CompetitionRegistrationRepo {
                         )
                     },
                     createdAt = it[COMPETITION_REGISTRATION.CREATED_AT]!!,
-                    updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!
+                    updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!,
+                    deregistration = if (it[COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION] != null) {
+                        CompetitionDeregistrationDto(
+                            competitionSetupRoundId = it[COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND],
+                            reason = it[COMPETITION_DEREGISTRATION.REASON],
+                        )
+                    } else null
                 )
             }
 

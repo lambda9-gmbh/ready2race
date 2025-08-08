@@ -14,9 +14,10 @@ data class UpdateCompetitionMatchResultRequest(
         this::teamResults validate noDuplicates(
             UpdateCompetitionMatchTeamResultRequest::registrationId
         ),
+        /* TODO: The implementation sees multiple nulls as duplicates -> Make that not happen
         this::teamResults validate noDuplicates(
             UpdateCompetitionMatchTeamResultRequest::place
-        ),
+        ),*/
     )
 
     companion object {

@@ -136,6 +136,12 @@ import type {
     DeleteCompetitionRegistrationData,
     DeleteCompetitionRegistrationError,
     DeleteCompetitionRegistrationResponse,
+    DeregisterCompetitionRegistrationData,
+    DeregisterCompetitionRegistrationError,
+    DeregisterCompetitionRegistrationResponse,
+    RevertCompetitionDeregistrationData,
+    RevertCompetitionDeregistrationError,
+    RevertCompetitionDeregistrationResponse,
     UpdateCompetitionSetupData,
     UpdateCompetitionSetupError,
     UpdateCompetitionSetupResponse,
@@ -1029,6 +1035,32 @@ export const deleteCompetitionRegistration = <ThrowOnError extends boolean = fal
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}',
+    })
+}
+
+export const deregisterCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeregisterCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        DeregisterCompetitionRegistrationResponse,
+        DeregisterCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/deregistration',
+    })
+}
+
+export const revertCompetitionDeregistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RevertCompetitionDeregistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RevertCompetitionDeregistrationResponse,
+        RevertCompetitionDeregistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/deregistration',
     })
 }
 
