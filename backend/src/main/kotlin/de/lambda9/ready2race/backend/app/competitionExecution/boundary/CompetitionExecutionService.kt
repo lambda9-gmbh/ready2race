@@ -46,6 +46,7 @@ import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.int
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.maybe
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.string
 import de.lambda9.ready2race.backend.xls.XLS
 import de.lambda9.ready2race.backend.xls.XLSReadError
 import de.lambda9.tailwind.core.KIO
@@ -481,7 +482,7 @@ object CompetitionExecutionService {
         }
 
         !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
-            place = place
+            this.place = place
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
@@ -533,6 +534,7 @@ object CompetitionExecutionService {
             ParsedTeamResult(
                 startNumber = !cell(config.colTeamStartNumber, int),
                 place = !optionalCell(config.colTeamPlace, maybe(int)),
+                noResultReason = !optionalCell(config.colTeamPlace, maybe(string))
             )
         }.mapError {
             when (it) {
@@ -581,8 +583,8 @@ object CompetitionExecutionService {
                     setupRoundId = currentRound.setupRoundId,
                     matchId = matchId,
                     registrationId = registrationId,
-                    deregistered = false,
-                    deregistrationReason = null,
+                    deregistered = result.place == null,
+                    deregistrationReason = result.noResultReason,
                     place = result.place,
                 )
             }
