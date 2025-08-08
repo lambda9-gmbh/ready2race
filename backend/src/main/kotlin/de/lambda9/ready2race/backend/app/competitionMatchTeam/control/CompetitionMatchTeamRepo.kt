@@ -14,6 +14,7 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.*
+import org.jooq.impl.DSL
 import java.util.UUID
 
 object CompetitionMatchTeamRepo {
@@ -48,6 +49,9 @@ object CompetitionMatchTeamRepo {
         COMPETITION_MATCH_TEAM.update(f) {
             COMPETITION_MATCH.eq(matchId).and(COMPETITION_REGISTRATION.eq(registrationId))
         }
+
+    fun updateManyByMatch(matchId: UUID, f: CompetitionMatchTeamRecord.() -> Unit) =
+        COMPETITION_MATCH_TEAM.updateMany(f) { COMPETITION_MATCH.eq(matchId) }
 
     fun getTeamsForMatchResult(matchId: UUID) =
         Jooq.query {

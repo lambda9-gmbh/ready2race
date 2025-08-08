@@ -26,6 +26,7 @@ object CollectionValidators : Validators<Collection<Any?>?>() {
             ?: ValidationResult.Valid
     }
 
+    // TODO: currently null-fields are distinct
     fun <T> noDuplicates(field: KProperty1<T, Any?>, vararg fields: KProperty1<T, Any?>) =
         noDuplicatesImpl<T, _> { item ->
                 fields.toMutableList().apply {
@@ -33,6 +34,7 @@ object CollectionValidators : Validators<Collection<Any?>?>() {
                 }.associate { it.name to it.get(item) }
             }
 
+    // TODO: currently nulls are not distinct
     val noDuplicates get() = noDuplicatesImpl<Any?, _> { it }
 
     fun <S, T> flatMap(validator: Validator<Collection<S>?>, field: KProperty1<T, Collection<S>>) = Validator<Collection<T>?> { collection ->

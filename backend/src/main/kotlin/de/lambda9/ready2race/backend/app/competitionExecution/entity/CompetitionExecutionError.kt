@@ -2,23 +2,47 @@ package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.calls.responses.ApiError
+import de.lambda9.ready2race.backend.calls.responses.ErrorCode
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import io.ktor.http.*
 
-enum class CompetitionExecutionError : ServiceError {
-    MatchNotFound,
-    MatchTeamNotFound,
-    NoRoundsInSetup,
-    AllRoundsCreated,
-    NoSetupMatchesInRound,
-    NoRegistrations,
-    RegistrationsNotFinalized,
-    NotEnoughTeamSpace,
-    NotAllPlacesSet,
-    TeamsNotMatching,
-    RoundNotFound,
-    MatchResultsLocked,
-    StartTimeNotSet,
-    TeamWasPreviouslyDeregistered;
+sealed interface CompetitionExecutionError : ServiceError {
+    data object MatchNotFound : CompetitionExecutionError
+    data object MatchTeamNotFound : CompetitionExecutionError
+    data object NoRoundsInSetup : CompetitionExecutionError
+    data object AllRoundsCreated : CompetitionExecutionError
+    data object NoSetupMatchesInRound : CompetitionExecutionError
+    data object NoRegistrations : CompetitionExecutionError
+    data object RegistrationsNotFinalized : CompetitionExecutionError
+    data object NotEnoughTeamSpace : CompetitionExecutionError
+    data object NotAllPlacesSet : CompetitionExecutionError
+    data object TeamsNotMatching : CompetitionExecutionError
+    data object RoundNotFound : CompetitionExecutionError
+    data object MatchResultsLocked : CompetitionExecutionError
+    data object StartTimeNotSet : CompetitionExecutionError
+    data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
+
+    // TODO: send out ErrorCodes for internationalization in frontend
+    sealed interface ResultUploadError : CompetitionExecutionError {
+        data object FileError : ResultUploadError
+        data object NoHeaders : ResultUploadError
+        data class ColumnUnknown(val expected: String) : ResultUploadError
+        data class CellBlank(val row: Int, val column: String): ResultUploadError
+        data class WrongCellType(val row: Int, val column: String, val actual: String, val expected: String) : ResultUploadError
+
+        data class WrongTeamCount(val actual: Int, val expected: Int) : ResultUploadError
+
+        sealed interface Invalid : ResultUploadError {
+
+            data class DuplicatedStartNumbers(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
+            data class DuplicatedPlaces(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
+
+            data class PlacesUncontinuous(val actual: Int, val expected: Int) : Invalid
+
+            data class Unexpected(val reason: ValidationResult.Invalid) : Invalid
+
+        }
+    }
 
     override fun respond(): ApiError = when (this) {
         MatchNotFound -> ApiError(
@@ -89,6 +113,68 @@ enum class CompetitionExecutionError : ServiceError {
         TeamWasPreviouslyDeregistered -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Team has been deregistered before this round",
+        )
+
+        ResultUploadError.FileError -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Cannot read given file",
+            errorCode = ErrorCode.FILE_ERROR
+        )
+        ResultUploadError.NoHeaders -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Cannot column headers, expected them in first row.",
+            errorCode = ErrorCode.SPREADSHEET_NO_HEADERS
+        )
+
+        is ResultUploadError.CellBlank -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Required value in row $row and column '$column' is missing.",
+            errorCode = ErrorCode.SPREADSHEET_CELL_BLANK,
+            details = mapOf("row" to row, "column" to column)
+        )
+        is ResultUploadError.ColumnUnknown -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Required column '$expected' is missing",
+            errorCode = ErrorCode.SPREADSHEET_COLUMN_UNKNOWN,
+            details = mapOf("expected" to expected)
+        )
+        is ResultUploadError.WrongCellType -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Wrong cell type in row $row and column '$column'; actual: $actual, expected: $expected.",
+            errorCode = ErrorCode.SPREADSHEET_WRONG_CELL_TYPE,
+            details = mapOf("row" to row, "column" to column, "expected" to expected, "actual" to actual)
+        )
+
+        is ResultUploadError.WrongTeamCount -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Wrong team count for this match; actual: $actual, expected: $expected.",
+            errorCode = ErrorCode.WRONG_TEAM_COUNT,
+            details = mapOf("actual" to actual, "expected" to expected)
+        )
+
+        is ResultUploadError.Invalid.DuplicatedPlaces -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "There are duplicate places in the given file.",
+            errorCode = ErrorCode.DUPLICATE_PLACES,
+            details = mapOf("reason" to duplicates)
+        )
+        is ResultUploadError.Invalid.DuplicatedStartNumbers -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "There are duplicate start numbers in the given file.",
+            errorCode = ErrorCode.DUPLICATE_START_NUMBERS,
+            details = mapOf("reason" to duplicates)
+        )
+        is ResultUploadError.Invalid.Unexpected -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Validation of given file unexpectedly failed",
+            details = mapOf("reason" to reason)
+        )
+
+        is ResultUploadError.Invalid.PlacesUncontinuous -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Places are not continuous: actual: $actual, expected: $expected.",
+            errorCode = ErrorCode.PLACES_UNCONTINUOUS,
+            details = mapOf("actual" to actual, "expected" to expected)
         )
     }
 }

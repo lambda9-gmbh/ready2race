@@ -513,6 +513,36 @@
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
             "success": "Ergebnis gespeichert"
+          },
+          "dialog": {
+            "title": "Konfiguration auswählen",
+            "config": "Konfiguration",
+            "alert": {
+              "1": "Konfigurationen können ",
+              "2": "hier",
+              "3": " erstellt und bearbeitet werden."
+            },
+            "file": {
+              "missing": "Bitte wählen Sie eine Datei aus.",
+              "change": ".xls Datei ändern",
+              "choose": ".xls Datei auswählen"
+            }
+          },
+          "upload": "Ergebnisse hochladen",
+          "type": {
+            "form": "mit Eingabeformular",
+            "XLS": "als XLS-Datei"
+          },
+          "error": {
+            "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
+            "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
+            "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
+            "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
+            "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
+            "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
+            "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
+            "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
+            "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}"
           }
         },
         "matchData": {
@@ -948,10 +978,24 @@
       "description": "Beschreibung",
       "tableHint": "Können Wettkampf-Teams zugewiesen werden."
     },
+    "import": {
+      "matchResult": {
+        "config": "Rennergebnisse Import",
+        "configs": "Rennergebnisse Imports",
+        "tableHint": "Definieren die Spalten für den XLS-Import von Rennergebnissen bei der Durchführung von Wettkämpfen.",
+        "name": "Name",
+        "col": {
+          "team": {
+            "startNumber": "Startnummer",
+            "place": "Platz"
+          }
+        }
+      }
+    },
     "export": {
       "startlist": {
-        "startlist": "Startlistenkonfiguration",
-        "startlists": "Startlistenkonfigurationen",
+        "startlist": "Startlisten Export",
+        "startlists": "Startlisten Exports",
         "tableHint": "Definieren die Spalten für den CSV-Export von Startlisten bei der Durchführung von Wettkämpfen.",
         "name": "Name",
         "col": {

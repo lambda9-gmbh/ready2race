@@ -735,15 +735,17 @@ select cmt.competition_match,
        cr.name as team_name,
        c.id as club_id,
        c.name as club_name,
+       rc as rating_Category,
        coalesce(array_agg(distinct rctp) filter (where rctp.team_id is not null), '{}') as participants,
        coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}') as substitutions
 from competition_match_team cmt
          join competition_registration cr on cmt.competition_registration = cr.id
          join club c on cr.club = c.id
          join competition_setup_match csm on cmt.competition_match = csm.id
+         left join rating_category rc on cr.rating_category = rc.id
          left join registered_competition_team_participant rctp on cmt.competition_registration = rctp.team_id
          left join substitution_view sv on cr.id = sv.competition_registration_id and csm.competition_setup_round = sv.competition_setup_round_id
-group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name;
+group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id;
 
 create view startlist_view as
 select csm.id,

@@ -19,8 +19,8 @@ object CSV {
             val header = columns.map { it.header }
             csvWriter.writeNext(header.toTypedArray())
 
-            data.forEach { item ->
-                val row = columns.mapIndexed { index, it -> it.f(item, index) }
+            data.forEachIndexed { index, item ->
+                val row = columns.map { it.f(item, index) }
                 csvWriter.writeNext(row.toTypedArray())
             }
 

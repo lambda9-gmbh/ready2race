@@ -1,4 +1,4 @@
-import {Alert, Button, DialogActions, DialogContent, DialogTitle} from "@mui/material";
+import {Alert, Button, DialogActions, DialogContent, DialogTitle, Stack} from "@mui/material";
 import {FormContainer, useForm} from "react-hook-form-mui";
 import BaseDialog from "@components/BaseDialog.tsx";
 import {SubmitButton} from "@components/form/SubmitButton.tsx";
@@ -31,13 +31,13 @@ const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
 
     const {data, pending} = useFetch(
         signal => getStartListConfigs({signal}),
+        {
+            mapData: (data) => data.data.map(dto => ({
+                id: dto.id,
+                label: dto.name,
+            }))
+        }
     )
-
-    const configs: AutocompleteOption[] =
-        data?.data.map(dto => ({
-            id: dto.id,
-            label: dto.name
-        })) ?? []
 
     useEffect(() => {
         if (open) {
@@ -64,21 +64,23 @@ const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
                 }}
             >
                 <DialogContent>
-                    <Alert variant={'outlined'} severity={'info'}>
-                        <Trans i18nKey={'event.competition.execution.startList.dialog.alert.1'} />
-                        <InlineLink to={'/config'} search={{tab: 'competition-elements'}} hash={'startlists'}>
-                            <Trans i18nKey={'event.competition.execution.startList.dialog.alert.2'} />
-                        </InlineLink>
-                        <Trans i18nKey={'event.competition.execution.startList.dialog.alert.3'} />
-                    </Alert>
+                    <Stack spacing={4}>
+                        <Alert variant={'outlined'} severity={'info'}>
+                            <Trans i18nKey={'event.competition.execution.startList.dialog.alert.1'} />
+                            <InlineLink to={'/config'} search={{tab: 'competition-elements'}} hash={'startlists'}>
+                                <Trans i18nKey={'event.competition.execution.startList.dialog.alert.2'} />
+                            </InlineLink>
+                            <Trans i18nKey={'event.competition.execution.startList.dialog.alert.3'} />
+                        </Alert>
 
-                    <FormInputAutocomplete
-                        name={'config'}
-                        options={configs}
-                        label={t('event.competition.execution.startList.dialog.config')}
-                        loading={pending}
-                        required
-                    />
+                        <FormInputAutocomplete
+                            name={'config'}
+                            options={data ?? []}
+                            label={t('event.competition.execution.startList.dialog.config')}
+                            loading={pending}
+                            required
+                        />
+                    </Stack>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onClose} disabled={submitting}>

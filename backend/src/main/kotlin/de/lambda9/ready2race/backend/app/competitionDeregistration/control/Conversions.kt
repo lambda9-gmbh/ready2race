@@ -26,21 +26,3 @@ fun CompetitionDeregistrationRequest.toRecord(
             )
         }
     )
-
-fun UpdateCompetitionMatchTeamResultRequest.toDeregistrationRecord(
-    userId: UUID,
-    competitionSetupRound: UUID
-): App<Nothing, CompetitionDeregistrationRecord> =
-    KIO.ok(
-        LocalDateTime.now().let { now ->
-            CompetitionDeregistrationRecord(
-                competitionRegistration = registrationId,
-                competitionSetupRound = competitionSetupRound,
-                reason = deregistrationReason,
-                createdAt = now,
-                createdBy = userId,
-                updatedAt = now,
-                updatedBy = userId,
-            )
-        }
-    )

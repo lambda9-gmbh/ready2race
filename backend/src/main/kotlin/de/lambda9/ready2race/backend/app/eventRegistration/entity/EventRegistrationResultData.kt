@@ -27,7 +27,6 @@ data class EventRegistrationResultData(
     data class RatingCategoryRegistrationData(
         val id: UUID,
         val name: String,
-        val description: String?,
     )
 
     data class ParticipantRegistrationData(
@@ -59,7 +58,6 @@ data class EventRegistrationResultData(
                                 RatingCategoryRegistrationData(
                                     id = it.id,
                                     name = it.name,
-                                    description = it.description,
                                 )
                             },
                             participants = team.participants!!.map {

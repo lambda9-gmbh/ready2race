@@ -513,6 +513,36 @@
           "submit": {
             "error": "An error has occurred when entering the results",
             "success": "Results successfully saved"
+          },
+          "dialog": {
+            "title": "Select configuration",
+            "config": "Configuration",
+            "alert": {
+              "1": "You can create and update configurations ",
+              "2": "here",
+              "3": "."
+            },
+            "file": {
+              "missing": "Please provide a file.",
+              "change": "Change .xls file",
+              "choose": "Choose .xls file"
+            }
+          },
+          "upload": "Upload match results",
+          "type": {
+            "form": "into Form",
+            "XLS": "as XLS-File"
+          },
+          "error": {
+            "FILE_ERROR": "File could not be read.",
+            "NO_HEADERS": "There are no valid columns in the given file.",
+            "COLUMN_UNKNOWN": "Could not find expected column '{{expected}}'.",
+            "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
+            "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
+            "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
+            "DUPLICATE_PLACES": "There are duplicate places among the teams",
+            "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",
+            "PLACES_UNCONTINUOUS": "The given places are not continuous - actual: {{actual}}, expected: {{expected}}"
           }
         },
         "matchData": {
@@ -947,6 +977,20 @@
       "name": "Name",
       "description": "Description",
       "tableHint": "Can be assigned to competition teams."
+    },
+    "import": {
+      "matchResult": {
+        "config": "Match result import configuration",
+        "configs": "Match result import configurations",
+        "tableHint": "Define the columns for the XLS import of match results when conducting competitions.",
+        "name": "Name",
+        "col": {
+          "team": {
+            "startNumber": "Start number",
+            "place": "Place"
+          }
+        }
+      }
     },
     "export": {
       "startlist": {

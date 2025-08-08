@@ -527,6 +527,21 @@ import type {
     DeleteRatingCategoryData,
     DeleteRatingCategoryError,
     DeleteRatingCategoryResponse,
+    AddMatchResultImportConfigData,
+    AddMatchResultImportConfigError,
+    AddMatchResultImportConfigResponse,
+    GetMatchResultImportConfigsData,
+    GetMatchResultImportConfigsError,
+    GetMatchResultImportConfigsResponse,
+    UpdateMatchResultImportConfigData,
+    UpdateMatchResultImportConfigError,
+    UpdateMatchResultImportConfigResponse,
+    DeleteMatchResultImportConfigData,
+    DeleteMatchResultImportConfigError,
+    DeleteMatchResultImportConfigResponse,
+    UploadResultFileData,
+    UploadResultFileError,
+    UploadResultFileResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2658,5 +2673,75 @@ export const deleteRatingCategory = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/ratingCategory/{ratingCategoryId}',
+    })
+}
+
+export const addMatchResultImportConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddMatchResultImportConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddMatchResultImportConfigResponse,
+        AddMatchResultImportConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig',
+    })
+}
+
+export const getMatchResultImportConfigs = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetMatchResultImportConfigsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetMatchResultImportConfigsResponse,
+        GetMatchResultImportConfigsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig',
+    })
+}
+
+export const updateMatchResultImportConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchResultImportConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchResultImportConfigResponse,
+        UpdateMatchResultImportConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig/{matchResultImportConfigId}',
+    })
+}
+
+export const deleteMatchResultImportConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteMatchResultImportConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteMatchResultImportConfigResponse,
+        DeleteMatchResultImportConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig/{matchResultImportConfigId}',
+    })
+}
+
+export const uploadResultFile = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UploadResultFileData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UploadResultFileResponse,
+        UploadResultFileError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file',
     })
 }

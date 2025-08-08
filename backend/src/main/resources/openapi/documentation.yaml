@@ -4721,6 +4721,156 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /matchResultImportConfig:
+    post:
+      operationId: addMatchResultImportConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchResultImportConfigRequest'
+      responses:
+        201:
+          $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getMatchResultImportConfigs
+      responses:
+        200:
+          description: match result import config page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MatchResultImportConfigDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /matchResultImportConfig/{matchResultImportConfigId}:
+    parameters:
+      - in: path
+        name: matchResultImportConfigId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: updateMatchResultImportConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchResultImportConfigRequest'
+      responses:
+        204:
+          description: configuration updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteMatchResultImportConfig
+      responses:
+        204:
+          description: Configuration successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: uploadResultFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/UploadMatchResultRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -4948,6 +5098,15 @@ components:
         - INVOICES_ALREADY_PRODUCED
         - NO_ASSIGNED_PAYEE_INFORMATION
         - NO_ASSIGNED_CONTACT_INFORMATION
+        - FILE_ERROR
+        - SPREADSHEET_NO_HEADERS
+        - SPREADSHEET_COLUMN_UNKNOWN
+        - SPREADSHEET_CELL_BLANK
+        - SPREADSHEET_WRONG_CELL_TYPE
+        - WRONG_TEAM_COUNT
+        - DUPLICATE_START_NUMBERS
+        - DUPLICATE_PLACES
+        - PLACES_UNCONTINUOUS
 
     Gender:
       type: string
@@ -5025,7 +5184,7 @@ components:
                   properties:
                     result:
                       $ref: '#/components/schemas/Invalid'
-
+                - { }
 
     TooManyRequestsError:
       allOf:
@@ -8073,6 +8232,7 @@ components:
           type: string
         colCompetitionCategory:
           type: string
+
     InfoViewType:
       type: string
       enum:
@@ -8503,3 +8663,44 @@ components:
           type: string
         description:
           type: string
+
+    MatchResultImportConfigRequest:
+      type: object
+      required:
+        - name
+        - colTeamStartNumber
+        - colTeamPlace
+      properties:
+        name:
+          type: string
+        colTeamStartNumber:
+          type: string
+        colTeamPlace:
+          type: string
+
+    MatchResultImportConfigDto:
+      type: object
+      required:
+        - id
+        - name
+        - colTeamStartNumber
+        - colTeamPlace
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        colTeamStartNumber:
+          type: string
+        colTeamPlace:
+          type: string
+
+    UploadMatchResultRequest:
+      type: object
+      required:
+        - config
+      properties:
+        config:
+          type: string
+          format: uuid

@@ -1,6 +1,13 @@
-package de.lambda9.ready2race.backend.app.startListConfig.boundary
+package de.lambda9.ready2race.backend.app.matchResultImportConfig.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.toDto
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.toRecord
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigDto
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigRequest
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigSort
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.control.toDto
 import de.lambda9.ready2race.backend.app.startListConfig.control.toRecord
@@ -20,21 +27,21 @@ import de.lambda9.tailwind.core.extensions.kio.traverse
 import java.time.LocalDateTime
 import java.util.UUID
 
-object StartListConfigService {
+object MatchResultImportConfigService {
 
     fun addConfig(
-        request: StartListConfigRequest,
+        request: MatchResultImportConfigRequest,
         userId: UUID,
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val record = !request.toRecord(userId)
-        StartListConfigRepo.create(record).orDie().createdResponse()
+        MatchResultImportConfigRepo.create(record).orDie().createdResponse()
     }
 
     fun page(
-        params: PaginationParameters<StartListConfigSort>,
-    ): App<Nothing, ApiResponse.Page<StartListConfigDto, StartListConfigSort>> = KIO.comprehension {
-        val total = !StartListConfigRepo.count(params.search).orDie()
-        val page = !StartListConfigRepo.page(params).orDie()
+        params: PaginationParameters<MatchResultImportConfigSort>,
+    ): App<Nothing, ApiResponse.Page<MatchResultImportConfigDto, MatchResultImportConfigSort>> = KIO.comprehension {
+        val total = !MatchResultImportConfigRepo.count(params.search).orDie()
+        val page = !MatchResultImportConfigRepo.page(params).orDie()
 
         page.traverse { it.toDto() }.map {
             ApiResponse.Page(
@@ -46,40 +53,26 @@ object StartListConfigService {
 
     fun updateConfig(
         id: UUID,
-        request: StartListConfigRequest,
+        request: MatchResultImportConfigRequest,
         userId: UUID,
-    ): App<StartListConfigError, ApiResponse.NoData> =
-        StartListConfigRepo.update(id) {
+    ): App<MatchResultImportConfigError, ApiResponse.NoData> =
+        MatchResultImportConfigRepo.update(id) {
             name = request.name
-            colParticipantFirstname = request.colParticipantFirstname
-            colParticipantLastname = request.colParticipantLastname
-            colParticipantGender = request.colParticipantGender
-            colParticipantRole = request.colParticipantRole
-            colParticipantYear = request.colParticipantYear
-            colParticipantClub = request.colParticipantClub
-            colClubName = request.colClubName
-            colTeamName = request.colTeamName
             colTeamStartNumber = request.colTeamStartNumber
-            colMatchName = request.colMatchName
-            colMatchStartTime = request.colMatchStartTime
-            colRoundName = request.colRoundName
-            colCompetitionIdentifier = request.colCompetitionIdentifier
-            colCompetitionName = request.colCompetitionName
-            colCompetitionShortName = request.colCompetitionShortName
-            colCompetitionCategory = request.colCompetitionCategory
+            colTeamPlace = request.colTeamPlace
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()
-            .onNullFail { StartListConfigError.NotFound }
+            .onNullFail { MatchResultImportConfigError.NotFound }
             .noDataResponse()
 
     fun deleteConfig(
         id: UUID,
-    ): App<StartListConfigError, ApiResponse.NoData> = KIO.comprehension {
-        val deleted = !StartListConfigRepo.delete(id).orDie()
+    ): App<MatchResultImportConfigError, ApiResponse.NoData> = KIO.comprehension {
+        val deleted = !MatchResultImportConfigRepo.delete(id).orDie()
 
         if (deleted < 1) {
-            KIO.fail(StartListConfigError.NotFound)
+            KIO.fail(MatchResultImportConfigError.NotFound)
         } else {
             noData
         }

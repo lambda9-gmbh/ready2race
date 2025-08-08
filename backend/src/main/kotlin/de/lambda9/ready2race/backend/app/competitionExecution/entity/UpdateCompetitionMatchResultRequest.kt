@@ -11,9 +11,13 @@ data class UpdateCompetitionMatchResultRequest(
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::teamResults validate collection,
-        /*this::teamResults validate noDuplicates( // TODO: This implementation sees multiple nulls as duplicates -> Make that not happen
+        this::teamResults validate noDuplicates(
+            UpdateCompetitionMatchTeamResultRequest::registrationId
+        ),
+        /* TODO: The implementation sees multiple nulls as duplicates -> Make that not happen
+        this::teamResults validate noDuplicates(
             UpdateCompetitionMatchTeamResultRequest::place
-        )*/
+        ),*/
     )
 
     companion object {

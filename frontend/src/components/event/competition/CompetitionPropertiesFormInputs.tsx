@@ -235,7 +235,7 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 label={t('event.competition.lateRegistrationAllowed')}
             />
             <Divider />
-            <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')}>
+            <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')} required>
                 {namedParticipantsError && (
                     <Typography color={'error'}>{namedParticipantsError}</Typography>
                 )}
