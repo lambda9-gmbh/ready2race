@@ -1,6 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
-drop table team_tracking;
+drop table team_tracking cascade;
 
 create table participant_tracking
 (
