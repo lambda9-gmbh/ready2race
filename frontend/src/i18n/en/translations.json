@@ -1000,7 +1000,7 @@
     "invalidUserQr": "Invalid User QR Code",
     "invalidQrFormat": "Invalid QR Code Format",
     "userAssigned": "User {{userId}} assigned",
-    "noPermission": "You don't have permission to assign this QR code.",
+    "notAssigned": "This QR Code has not been assigned to a person.",
     "successParticipant": "QR code successfully assigned to participant",
     "successUser": "QR code successfully assigned to user",
     "selectClub": "Select club",

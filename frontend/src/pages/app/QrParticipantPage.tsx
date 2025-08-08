@@ -1,4 +1,4 @@
-import {Alert, Box, Button, IconButton, Stack, Typography} from '@mui/material'
+import {Alert, Box, Button, Stack} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {qrEventRoute} from '@routes'
 import {
@@ -21,7 +21,7 @@ import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo'
 import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog'
 import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
 import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import AppTopTitle from "@components/qrApp/AppTopTitle.tsx";
 
 const QrParticipantPage = () => {
     const {t} = useTranslation()
@@ -148,19 +148,21 @@ const QrParticipantPage = () => {
             alignItems="center"
             justifyContent="center"
             sx={{flex: 1, justifyContent: 'start'}}>
-            <Stack direction={'row'} sx={{width: 1, justifyContent: 'space-between', mb: 1}}>
-                <IconButton onClick={() => qr.reset(eventId)}>
-                    <ArrowBackIcon />
-                </IconButton>
-                <Typography variant="h4" textAlign="center">
-                    {t('qrParticipant.title')}
-                </Typography>
-            </Stack>
+            <AppTopTitle title={t('qrParticipant.title')}/>
             {/* Caterer food restriction message */}
             {isCaterer && qr.response && (
                 <Box
-                    sx={{display: 'flex', width: 1, flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-                    <Alert severity="error" icon={<Cancel />} sx={{mb: 2, width: '100%', flex: 1, p: 2}}>
+                    sx={{
+                        display: 'flex',
+                        width: 1,
+                        flex: 1,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                    }}>
+                    <Alert
+                        severity="error"
+                        icon={<Cancel />}
+                        sx={{mb: 2, width: '100%', flex: 1, p: 2}}>
                         {t('club.participant.cateringNotAllowed')}
                     </Alert>
                 </Box>

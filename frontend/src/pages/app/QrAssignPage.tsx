@@ -21,6 +21,7 @@ import ParticipantAssignment from '@components/qrApp/assign/ParticipantAssignmen
 import UserAssignment from '@components/qrApp/assign/UserAssignment'
 import SystemUserScanner from '@components/qrApp/assign/SystemUserScanner'
 import {useFeedback} from "@utils/hooks.ts";
+import AppTopTitle from "@components/qrApp/AppTopTitle.tsx";
 
 type UserTyp = 'Participant' | 'User' | 'SystemUser'
 
@@ -169,9 +170,7 @@ const QrAssignPage = () => {
             justifyContent="flex-start"
             sx={{width: '100%', maxWidth: 600, px: 2, py: 3}}>
             <Box sx={{width: '100%', textAlign: 'center'}}>
-                <Typography variant="h4" gutterBottom>
-                    {t('qrAssign.title')}
-                </Typography>
+                <AppTopTitle title={t('qrAssign.title')} disableBackButton={scanningSystemUser}/>
                 <Typography variant="body2" color="text.secondary">
                     {qr.qrCodeId}
                 </Typography>
@@ -179,7 +178,7 @@ const QrAssignPage = () => {
 
             {!canAssign && (
                 <Alert severity="warning" sx={{width: '100%'}}>
-                    {t('qrAssign.noPermission')}
+                    {t('qrAssign.notAssigned')}
                 </Alert>
             )}
 
@@ -220,12 +219,6 @@ const QrAssignPage = () => {
                         <UserAssignment onSelectUser={handleUserClick} />
                     )}
                 </>
-            )}
-
-            {!scanningSystemUser && (
-                <Button variant="outlined" onClick={() => qr.reset(eventId)} fullWidth sx={{mt: 2}}>
-                    {t('common.back')}
-                </Button>
             )}
 
             {canAssign && scanningSystemUser && (

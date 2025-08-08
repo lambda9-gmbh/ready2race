@@ -1000,7 +1000,7 @@
     "userAssigned": "Benutzer {{userId}} zugewiesen",
     "participantQrDetected": "Teilnehmer-QR-Code erkannt",
     "appUserQrDetected": "Benutzer-QR-Code erkannt",
-    "noPermission": "Du hast keine Berechtigung, diesen QR-Code zuzuordnen.",
+    "notAssigned": "Dieser QR-Code wurde keiner Person zugewiesen.",
     "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
     "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen",
     "selectClub": "Verein auswählen",
