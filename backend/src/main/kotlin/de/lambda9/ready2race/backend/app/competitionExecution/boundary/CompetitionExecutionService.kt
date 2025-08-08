@@ -895,7 +895,7 @@ object CompetitionExecutionService {
 
         KIO.ok(
             ApiResponse.File(
-                name = "startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
+                name = "${data.startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}-startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
                 bytes = bytes,
             )
         )
