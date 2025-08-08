@@ -14,6 +14,7 @@ import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jooq.tools.csv.CSVReader
 import java.nio.charset.Charset
 import java.time.LocalDateTime
@@ -165,6 +166,8 @@ object ParticipantRequirementService {
         // Even if the @uncheckedParticipants list is empty, we should still try to parse and validate the uploaded csv and return any errors.
         val validParticipants = !parseParticipantListUpload(csvList, config)
 
+        KotlinLogging.logger {  }.error { validParticipants.size }
+
         // persist requirements for all matches
         !validParticipants.traverse { vp ->
             uncheckedParticipants.filter { up ->
@@ -214,8 +217,9 @@ object ParticipantRequirementService {
                     .filterNotNull()
                     .mapIndexedNotNull { index, arr ->
                         if (index == 0) {
+
                             header = arr.mapIndexed { headerIndex, value ->
-                                value.lowercase() to headerIndex
+                                value to headerIndex
                             }.toMap()
 
                             if (!header.keys.containsAll(config.getColNames())) {
@@ -231,26 +235,26 @@ object ParticipantRequirementService {
                         } else {
                             val valid =
                                 config.requirementColName == null || config.requirementIsValidValue == null || arr.getOrNull(
-                                header.getOrDefault(config.requirementColName.lowercase(), -1)
-                            ).equals(config.requirementIsValidValue, ignoreCase = true)
+                                header.getOrDefault(config.requirementColName, -1)
+                            ).equals(config.requirementIsValidValue)
 
                             if (valid) {
                                 ValidRequirementParticipant(
                                     firstname = arr.getOrNull(
                                         header.getOrDefault(
-                                            config.firstnameColName.lowercase(),
+                                            config.firstnameColName,
                                             -1
                                         )
                                     ),
                                     lastname = arr.getOrNull(
                                         header.getOrDefault(
-                                            config.lastnameColName.lowercase(),
+                                            config.lastnameColName,
                                             -1
                                         )
                                     ),
-                                    year = arr.getOrNull(header.getOrDefault(config.yearsColName?.lowercase(), -1))
+                                    year = arr.getOrNull(header.getOrDefault(config.yearsColName, -1))
                                         ?.toIntOrNull(),
-                                    club = arr.getOrNull(header.getOrDefault(config.clubColName?.lowercase(), -1)),
+                                    club = arr.getOrNull(header.getOrDefault(config.clubColName, -1)),
                                 )
                             } else {
                                 null

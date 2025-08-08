@@ -447,7 +447,6 @@ const CompetitionExecution = () => {
         )
     }
 
-
     const getRegistrationIsLocked = (registrationId: string) => {
         return (
             currentRound?.matches
@@ -723,7 +722,6 @@ const CompetitionExecution = () => {
                                                                 name={`teams[${fieldIndex}.startNumber`}
                                                                 required
                                                                 min={1}
-                                                                max={editMatchFields.length}
                                                                 integer
                                                             />
                                                         </TableCell>
