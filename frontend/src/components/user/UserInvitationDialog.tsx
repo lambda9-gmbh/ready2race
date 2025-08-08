@@ -30,6 +30,9 @@ const defaultValues: InvitationForm = {
     admin: false,
 }
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
     email: formData.email,
     firstname: formData.firstname,
@@ -37,7 +40,7 @@ const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
     roles: formData.admin ? [] : formData.roles,
     admin: formData.admin,
     language: languageMapping[i18nLanguage()],
-    callbackUrl: location.origin + '/invitation/',
+    callbackUrl: location.origin + (basepath ? `/${basepath}` : '') + '/invitation/',
 })
 
 const addAction = (formData: InvitationForm) =>
