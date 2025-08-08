@@ -59,6 +59,7 @@ const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
                 transformOrigin={anchor?.menu}>
                 {items?.map((item, idx) => (
                     <Tooltip
+                        key={item.id}
                         title={
                             item.problems &&
                             item.problems.length > 0 && (
