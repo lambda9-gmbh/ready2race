@@ -201,7 +201,7 @@
       "userQrCode": "User QR Code",
       "qrCode": "QR Code",
       "id": "Participant ID",
-      "foodNotAllowed": "This person is NOT allowed to receive food",
+      "cateringNotAllowed": "This person is not authorized",
       "tracking": {
         "log": "Participant Status Log",
         "entry": "Log entry",

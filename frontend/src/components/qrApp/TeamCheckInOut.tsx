@@ -17,8 +17,6 @@ export const TeamCheckInOut = () => {
     const {qr} = useAppSession()
     const {eventId} = qrEventRoute.useParams()
 
-    const [reloadTeams, setReloadTeams] = useState(false)
-
     const {data: teamsData, pending: teamsPending} = useFetch(
         signal =>
             getTeamsByParticipantQrCode({
@@ -39,7 +37,7 @@ export const TeamCheckInOut = () => {
                 }
             },
             preCondition: () => qr.qrCodeId !== null,
-            deps: [eventId, qr, reloadTeams],
+            deps: [eventId, qr],
         },
     )
 
@@ -75,7 +73,7 @@ export const TeamCheckInOut = () => {
                     : t('club.participant.tracking.checkOut.success'),
             )
         }
-        setReloadTeams(prev => !prev)
+        qr.reset(eventId)
     }
 
     return (
@@ -164,7 +162,7 @@ export const TeamCheckInOut = () => {
                         sx={{
                             position: 'sticky',
                             bottom: 0,
-                            flex: 1,
+                            width: 1,
                             display: 'flex',
                             justifyContent: 'center',
                             py: 1,

@@ -6,7 +6,7 @@ interface RequirementsChecklistProps {
     requirements: ParticipantRequirementForEventDto[];
     checkedRequirements: string[];
     pending: boolean;
-    onRequirementChange: (requirementId: string, checked: boolean) => void;
+    onRequirementChange: (requirementId: string, checked: boolean, namedParticipantId?: string) => void;
 }
 
 export const RequirementsChecklist = ({
@@ -37,7 +37,11 @@ export const RequirementsChecklist = ({
                     control={
                         <Checkbox
                             checked={checkedRequirements.includes(req.id)}
-                            onChange={e => onRequirementChange(req.id, e.target.checked)}
+                            onChange={e =>
+                                onRequirementChange(
+                                    req.id,
+                                    e.target.checked
+                                )}
                             disabled={pending}
                         />
                     }

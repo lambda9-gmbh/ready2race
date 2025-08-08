@@ -1,4 +1,4 @@
-import {Alert, Button, IconButton, Stack, Typography} from '@mui/material'
+import {Alert, Box, Button, IconButton, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {qrEventRoute} from '@routes'
 import {
@@ -21,7 +21,7 @@ import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo'
 import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog'
 import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
 import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 const QrParticipantPage = () => {
     const {t} = useTranslation()
@@ -86,7 +86,11 @@ const QrParticipantPage = () => {
         },
     )
 
-    const handleRequirementChange = async (requirementId: string, checked: boolean) => {
+    const handleRequirementChange = async (
+        requirementId: string,
+        checked: boolean,
+        namedParticipantId?: string,
+    ) => {
         if (!qr.response?.id) return
         setSubmitting(true)
         await approveParticipantRequirementsForEvent({
@@ -94,9 +98,10 @@ const QrParticipantPage = () => {
             body: {
                 requirementId,
                 approvedParticipants: checked ? [qr.response.id] : [],
+                namedParticipantId: namedParticipantId,
             },
-            throwOnError: true,
         })
+
         // Nach Änderung neu laden
         const {data: partData} = await getParticipantsForEvent({path: {eventId}})
         const participant = (partData?.data || []).find(p => p.id === qr.response?.id)
@@ -142,21 +147,23 @@ const QrParticipantPage = () => {
             spacing={2}
             alignItems="center"
             justifyContent="center"
-            sx={{maxWidth: 600, flex: 1, justifyContent: 'start'}}>
+            sx={{flex: 1, justifyContent: 'start'}}>
             <Stack direction={'row'} sx={{width: 1, justifyContent: 'space-between', mb: 1}}>
-
-                    <IconButton onClick={() => qr.reset(eventId)}>
-                        <ArrowBackIcon/>
-                    </IconButton>
-            <Typography variant="h4" textAlign="center">
-                {t('qrParticipant.title')}
-            </Typography>
+                <IconButton onClick={() => qr.reset(eventId)}>
+                    <ArrowBackIcon />
+                </IconButton>
+                <Typography variant="h4" textAlign="center">
+                    {t('qrParticipant.title')}
+                </Typography>
             </Stack>
             {/* Caterer food restriction message */}
             {isCaterer && qr.response && (
-                <Alert severity="error" icon={<Cancel />} sx={{mb: 2, width: '100%'}}>
-                    {t('club.participant.foodNotAllowed')}
-                </Alert>
+                <Box
+                    sx={{display: 'flex', width: 1, flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+                    <Alert severity="error" icon={<Cancel />} sx={{mb: 2, width: '100%', flex: 1, p: 2}}>
+                        {t('club.participant.cateringNotAllowed')}
+                    </Alert>
+                </Box>
             )}
 
             {/* QR Code Assignment Info Box */}
