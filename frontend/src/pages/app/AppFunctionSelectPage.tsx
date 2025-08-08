@@ -1,14 +1,12 @@
 import {Box, Card, CardActionArea, CardContent, Stack, Typography, useMediaQuery, useTheme} from '@mui/material';
-import {useUser} from '@contexts/user/UserContext';
 import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx';
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 import {router} from "@routes";
 import { useTranslation } from 'react-i18next';
 import QrCodeIcon from '@mui/icons-material/QrCode';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import {getAppRights} from "@components/qrApp/common.ts";
 
 const APP_FUNCTIONS = [
     {
@@ -35,34 +33,25 @@ const APP_FUNCTIONS = [
 
 const AppFunctionSelectPage = () => {
     const { t } = useTranslation();
-    const user = useUser();
-    const {appFunction, setAppFunction} = useAppSession();
+    const {setAppFunction, availableAppFunctions} = useAppSession();
     const navigate = router.navigate
-    const [available, setAvailable] = useState<AppFunction[]>([]);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     useEffect(() => {
-        // Prüfe, welche App-Funktionen der User hat
-        const rights = getAppRights(user)
-        setAvailable(rights);
         // Wenn kein Recht, ggf. Forbidden
-        if (rights.length === 0) {
+        if (availableAppFunctions.length === 0) {
             navigate({to: '/app/forbidden'});
-        } else if(rights.length === 1){
-            setAppFunction(rights[0])
+        } else if(availableAppFunctions.length === 1){
+            setAppFunction(availableAppFunctions[0])
         }
-    }, [user, setAppFunction, navigate]);
+    }, [setAppFunction, navigate, availableAppFunctions]);
+
+    console.log(availableAppFunctions);
 
     const handleSelect = (fn: AppFunction) => {
         setAppFunction(fn);
     };
-
-    useEffect(() => {
-        if(appFunction !== null){
-            navigate({to: '/app'})
-        }
-    }, [appFunction])
 
     return (
         <Stack 
@@ -91,7 +80,7 @@ const AppFunctionSelectPage = () => {
                 width="100%"
                 maxWidth="800px"
             >
-                {APP_FUNCTIONS.filter(f => available.includes(f.fn)).map(f => {
+                {APP_FUNCTIONS.filter(f => availableAppFunctions.includes(f.fn)).map(f => {
                     const Icon = f.icon;
                     return (
                         <Card 

@@ -160,16 +160,27 @@ export const TeamCheckInOut = () => {
                                 ))}
                         </Stack>
                     </Box>
-                    <LoadingButton
-                        pending={submitting || teamsPending}
-                        variant={'contained'}
-                        onClick={() =>
-                            handleCheckInOut(selectedParticipant.currentStatus !== 'ENTRY')
-                        }>
-                        {selectedParticipant.currentStatus === 'ENTRY'
-                            ? t('club.participant.tracking.checkOutText')
-                            : t('club.participant.tracking.checkInText')}
-                    </LoadingButton>
+                    <Box
+                        sx={{
+                            position: 'sticky',
+                            bottom: 0,
+                            flex: 1,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            py: 1,
+                        }}
+                        bgcolor={'background.default'}>
+                        <LoadingButton
+                            pending={submitting || teamsPending}
+                            variant={'contained'}
+                            onClick={() =>
+                                handleCheckInOut(selectedParticipant.currentStatus !== 'ENTRY')
+                            }>
+                            {selectedParticipant.currentStatus === 'ENTRY'
+                                ? t('club.participant.tracking.checkOutText')
+                                : t('club.participant.tracking.checkInText')}
+                        </LoadingButton>
+                    </Box>
                 </Stack>
             )}
         </Stack>

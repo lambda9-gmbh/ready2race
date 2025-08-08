@@ -1,4 +1,4 @@
-import {Alert, Button, Stack, Typography} from '@mui/material'
+import {Alert, Box, Button, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
 import {qrEventRoute} from '@routes'
 import {
@@ -136,7 +136,6 @@ const QrParticipantPage = () => {
         setSubmitting(false)
     }
 
-
     return (
         <Stack
             spacing={2}
@@ -159,9 +158,7 @@ const QrParticipantPage = () => {
 
             {!allowed && <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>}
 
-            {canCheck && (
-                <TeamCheckInOut/>
-            )}
+            {canCheck && <TeamCheckInOut />}
 
             {canEditRequirements && (
                 <RequirementsChecklist
@@ -182,9 +179,19 @@ const QrParticipantPage = () => {
                 </Button>
             )}
 
-            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>
-                {t('common.back')}
-            </Button>
+            <Box
+                sx={{
+                    position: 'sticky',
+                    bottom: 0,
+                    flex: 1,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    py: 1,
+                }}>
+                <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>
+                    {t('common.back')}
+                </Button>
+            </Box>
 
             {/*TODO useConfirmation()*/}
             <QrDeleteDialog

@@ -8,6 +8,8 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {useRouter, useSearch} from '@tanstack/react-router'
 import {appLoginRoute} from '@routes'
 import {useFeedback} from "@utils/hooks.ts";
+import {useAppSession} from "@contexts/app/AppSessionContext.tsx";
+import {getAppRights} from "@components/qrApp/common.ts";
 
 const AppLoginPage = () => {
     const {login} = useUser()
@@ -17,6 +19,7 @@ const AppLoginPage = () => {
     const [submitting, setSubmitting] = useState(false)
     const formContext = useForm<LoginRequest>()
     const feedback = useFeedback();
+    const {setAvailableAppFunctions} = useAppSession()
 
     const handleSubmit = async (formData: LoginRequest) => {
         setSubmitting(true)
@@ -24,10 +27,15 @@ const AppLoginPage = () => {
         setSubmitting(false)
         if (data !== undefined && response.ok) {
             login(data, response.headers)
+
+            const rights = getAppRights(data.privileges)
+            setAvailableAppFunctions(rights)
+            console.log("set available", rights);
+
             if (search && typeof search.redirect === 'string' && search.redirect) {
                 router.navigate({to: search.redirect})
             } else {
-                router.navigate({to: '/app'})
+                router.navigate({to: '/app/function'})
             }
         } else if (error) {
             if (error.status.value === 429) {
@@ -50,7 +58,8 @@ const AppLoginPage = () => {
                 justifyContent: 'center', 
                 alignItems: 'center',
                 minHeight: '80vh',
-                width: '100%'
+                width: '100%',
+                px: 4
             }}
         >
             <Paper

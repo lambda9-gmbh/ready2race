@@ -4,14 +4,15 @@ import {router} from '@routes'
 import {client} from './api'
 import Config from './Config'
 import {muiTheme} from './theme'
-import {ThemeProvider, CssBaseline} from '@mui/material'
-import {SnackbarProvider} from 'notistack'
+import {ThemeProvider, CssBaseline, IconButton} from '@mui/material'
+import {SnackbarProvider, closeSnackbar} from 'notistack'
 import {ConfirmationProvider} from './contexts/confirmation/ConfirmationProvider.tsx'
 import {LocalizationProvider} from '@mui/x-date-pickers'
 import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFnsV3'
 import i18next from 'i18next'
 import './i18n/config'
 import {isLanguage, locales} from './i18n/config.ts'
+import CloseIcon from '@mui/icons-material/Close';
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
@@ -37,7 +38,12 @@ const App = () => {
                 <CssBaseline />
                 <SnackbarProvider
                     maxSnack={1}
-                    anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}>
+                    anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
+                    action={(snackbarId) => (
+                        <IconButton onClick={() => closeSnackbar(snackbarId)}>
+                            <CloseIcon />
+                        </IconButton>
+                    )}>
                     <ConfirmationProvider>
                         <RouterProvider router={router} context={user}></RouterProvider>
                     </ConfirmationProvider>

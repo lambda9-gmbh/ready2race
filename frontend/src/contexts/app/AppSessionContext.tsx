@@ -4,8 +4,8 @@ import {router} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEvents} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
-import {getAppRights} from "@components/qrApp/common.ts";
-import {useUser} from "@contexts/user/UserContext.ts";
+import {useUser} from '@contexts/user/UserContext.ts'
+import {getUserAppRights} from "@components/qrApp/common.ts";
 
 export type AppFunction =
     | 'APP_QR_MANAGEMENT'
@@ -25,6 +25,8 @@ export type QrState = {
 interface AppSessionContextType {
     appFunction: AppFunction
     setAppFunction: (fn: AppFunction) => void
+    availableAppFunctions: AppFunction[]
+    setAvailableAppFunctions: (fns: AppFunction[]) => void
     qr: QrState
     goBack: () => void
     showBackButton: boolean
@@ -43,7 +45,11 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
         return (sessionStorage.getItem('appFunction') as AppFunction) || null
     })
 
-    const [goingBack, setGoingBack] = useState(false)
+    const [availableAppFunctions, setAvailableAppFunctions] = useState<AppFunction[]>(() => {
+        const persisted = (sessionStorage.getItem('appFunction') as AppFunction) || null
+        return persisted ? [persisted] : []
+    })
+
     const [showBackButton, setShowBackButton] = useState(true)
 
     const navigate = router.navigate
@@ -54,11 +60,29 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
                 feedback.error(t('common.load.error.multiple.short', {entity: t('event.event')}))
             }
         },
+        deps: [],
     })
 
+    const [goingBack, setGoingBack] = useState<boolean>(false)
     useEffect(() => {
-        const rights = getAppRights(user)
-        if(rights.length === 1 && (eventsData?.data.length ?? 0) < 2){
+        if (appFunction === null) {
+            setGoingBack(true)
+        } else{
+            if(eventsData && eventsData.data.length === 1 ){
+                navigate({to: '/app/$eventId/scanner', params: {eventId: eventsData.data[0].id}})
+            }
+        }
+    }, [appFunction])
+
+    useEffect(() => {
+        if(user){
+            const rights = getUserAppRights(user)
+            setAvailableAppFunctions(rights)
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (availableAppFunctions.length === 1 && (eventsData?.data.length ?? 0) < 2) {
             setShowBackButton(false)
         } else {
             setShowBackButton(true)
@@ -71,9 +95,18 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
             }
             setGoingBack(false)
         }
-    }, [goingBack, appFunction])
+    }, [availableAppFunctions, goingBack])
 
-
+    const goBack = () => {
+        console.log("Go back")
+        if ((eventsData?.data.length ?? 0) > 1) {
+            console.log("var1")
+            navigate({to: '/app'})
+        } else {
+            console.log("var2")
+            setAppFunction(null)
+        }
+    }
 
     const setAppFunction = (fn: AppFunction) => {
         setAppFunctionState(fn)
@@ -101,20 +134,13 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
 
     const qr: QrState = {...qrState, update, reset}
 
-    const goBack = () => {
-        setGoingBack(true)
-        if ((eventsData?.data.length ?? 0) > 1) {
-            navigate({to: '/app'})
-        } else {
-            setAppFunction(null)
-        }
-    }
-
     return eventsData ? (
         <AppSessionContext.Provider
             value={{
                 appFunction,
                 setAppFunction,
+                availableAppFunctions,
+                setAvailableAppFunctions,
                 qr,
                 goBack,
                 showBackButton,

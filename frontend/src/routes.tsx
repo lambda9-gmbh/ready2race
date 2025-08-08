@@ -71,12 +71,9 @@ const checkAuthWith = (
     }
 }
 
-const checkAuthApp = (context: User, location: ParsedLocation, privilege?: Privilege) => {
+const checkAuthApp = (context: User, location: ParsedLocation) => {
     if (!context.loggedIn) {
-        throw redirect({to: '/app/login', search: {redirect: location.href}})
-    }
-    if (privilege && !context.checkPrivilege(privilege)) {
-        throw redirect({to: '/app/function'})
+        throw redirect({to: '/appLogin', search: {redirect: location.href}})
     }
 }
 
@@ -240,6 +237,7 @@ export const qrEventRoute = createRoute({
     getParentRoute: () => appRoute,
     path: '$eventId',
     beforeLoad: ({context, location}) => {
+        console.log("Auth Check qrEventRoute", context.loggedIn, location.href)
         checkAuthApp(context, location)
     }
 })
@@ -249,6 +247,7 @@ export const qrEventsIndexRoute = createRoute({
     path: '/',
     component: () => <QrEventsPage/>,
     beforeLoad: ({context, location}) => {
+        console.log("Auth Check qrEventsIndexRoute", context.loggedIn, location.href)
         checkAuthApp(context, location)
     }
 })
@@ -384,7 +383,9 @@ export const qrParticipantRoute = createRoute({
     getParentRoute: () => qrEventRoute,
     path: 'participant',
     component: () => <QrParticipantPage/>,
-    beforeLoad: ({context, location}) => {
+    beforeLoad: ({context, location}) => {        console.log("Auth Check qrAssignRoute", context.loggedIn, location.href)
+        console.log("Auth Check qrParticipantRoute", context.loggedIn, location.href)
+
         checkAuthApp(context, location)
     }
 })
@@ -394,13 +395,15 @@ export const qrAssignRoute = createRoute({
     path: 'assign',
     component: () => <QrAssignPage/>,
     beforeLoad: ({context, location}) => {
+        console.log("Auth Check qrAssignRoute", context.loggedIn, location.href)
+
         checkAuthApp(context, location)
     }
 })
 
 export const appLoginRoute = createRoute({
-    getParentRoute: () => appRoute,
-    path: 'login',
+    getParentRoute: () => rootRoute,
+    path: 'appLogin',
     component: () => <AppLoginPage/>,
     validateSearch: ({redirect}: { redirect?: string } & SearchSchemaInput) => ({ redirect }),
 })
@@ -416,6 +419,8 @@ export const appFunctionSelectRoute = createRoute({
     path: 'function',
     component: () => <AppFunctionSelectPage/>,
     beforeLoad: ({context, location}) => {
+        console.log("Auth Check appFunctionSelectRoute", context.loggedIn, location.href)
+
         checkAuthApp(context, location)
     }
 });
@@ -453,8 +458,8 @@ const routeTree = rootRoute.addChildren([
         clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
         invoicesRoute,
     ]),
+    appLoginRoute,
     appRoute.addChildren([
-        appLoginRoute,
         qrEventsIndexRoute,
         qrEventRoute.addChildren([
             qrScanRoute,
