@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.xls
 
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.KIOException
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.WorkbookFactory
@@ -13,10 +12,12 @@ object XLS {
     fun <A> read(
         `in`: InputStream,
         reader: RowReader.() -> A
-    ): IO<XLSReadError, List<A>> {
+    ): IO<XLSReadError, List<A>> = KIO.comprehension {
 
-        val workbook = WorkbookFactory.create(`in`)
-        val sheet = workbook.getSheetAt(0)
+        val sheet = !KIO.effect {
+            val workbook = WorkbookFactory.create(`in`)
+            workbook.getSheetAt(0)
+        }.mapError { XLSReadError.FileError }
 
         val columns = sheet.firstOrNull()?.mapIndexedNotNull { idx, cell ->
             when (cell.cellType) {
@@ -26,43 +27,13 @@ object XLS {
         }?.toMap() ?: emptyMap()
 
         if (columns.isEmpty()) {
-            return KIO.fail(XLSReadError.NoHeaders)
-        }
-
-        return sheet.drop(1).traverse { row ->
-            KIO.effect {
-                RowReader(columns, row).reader()
-            }.mapError { t ->
-                when (t) {
-                    is KIOException -> t.error.fold(
-                        onExpected = { err -> err as? XLSReadError ?: throw t },
-                        onPanic = { throw it }
-                    )
-                    else -> throw t
+            KIO.fail(XLSReadError.NoHeaders)
+        } else {
+            sheet.drop(1).traverse { row ->
+                KIO.comprehension<Any?, XLSReadError.CellError, A> {
+                    KIO.ok(RowReader(this, columns, row).reader())
                 }
             }
         }
-    }
-
-    fun foo() {
-
-        val istr = ByteArray(0).inputStream()
-
-        val r = read(istr) {
-
-            val bar = cell("col1", CellParser {
-                when (it.cellType)
-                {
-                    CellType._NONE -> TODO()
-                    CellType.NUMERIC -> TODO()
-                    CellType.STRING -> TODO()
-                    CellType.FORMULA -> TODO()
-                    CellType.BLANK -> TODO()
-                    CellType.BOOLEAN -> TODO()
-                    CellType.ERROR -> TODO()
-                }
-            })
-        }
-
     }
 }

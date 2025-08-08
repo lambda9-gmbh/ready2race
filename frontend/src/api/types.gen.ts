@@ -1332,6 +1332,10 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     place: number
 }
 
+export type UploadMatchResultRequest = {
+    config: string
+}
+
 export type VerifyRegistrationRequest = {
     token: string
 }
@@ -3893,3 +3897,19 @@ export type DeleteMatchResultImportConfigData = {
 export type DeleteMatchResultImportConfigResponse = void
 
 export type DeleteMatchResultImportConfigError = BadRequestError | ApiError
+
+export type UploadResultFileData = {
+    body: {
+        request: UploadMatchResultRequest
+        files: Array<Blob | File>
+    }
+    path: {
+        competitionId: string
+        competitionMatchId: string
+        eventId: string
+    }
+}
+
+export type UploadResultFileResponse = void
+
+export type UploadResultFileError = BadRequestError | ApiError | UnprocessableEntityError

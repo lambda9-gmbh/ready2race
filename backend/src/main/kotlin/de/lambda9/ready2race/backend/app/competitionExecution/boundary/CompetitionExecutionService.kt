@@ -40,6 +40,12 @@ import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.int
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.maybe
+import de.lambda9.ready2race.backend.xls.XLS
+import de.lambda9.ready2race.backend.xls.XLSReadError
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
@@ -48,7 +54,6 @@ import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
 
@@ -380,7 +385,7 @@ object CompetitionExecutionService {
     private fun checkUpdateMatchResult(
         competitionId: UUID,
         matchId: UUID,
-    ): App<ServiceError, Unit> = KIO.comprehension {
+    ): App<ServiceError, CompetitionMatchWithTeams> = KIO.comprehension {
 
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
@@ -400,18 +405,26 @@ object CompetitionExecutionService {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
         }
 
-        unit
+        KIO.ok(match)
     }
 
-    private fun unsetCurrentlyRunning(
+    private fun prepareForNewPlaces(
         matchId: UUID,
         userId: UUID,
-    ): App<Nothing, Unit> =
-        CompetitionMatchRepo.update(matchId) {
+    ): App<Nothing, Unit> = KIO.comprehension {
+
+        !CompetitionMatchRepo.update(matchId) {
             currentlyRunning = false
             updatedBy = userId
             updatedAt = LocalDateTime.now()
-        }.orDie().map {}
+        }.orDie()
+
+        !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
+            place = null
+        }.orDie()
+
+        unit
+    }
 
     fun updateMatchResult(
         competitionId: UUID,
@@ -421,7 +434,7 @@ object CompetitionExecutionService {
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !checkUpdateMatchResult(competitionId, matchId)
-        !unsetCurrentlyRunning(matchId, userId)
+        !prepareForNewPlaces(matchId, userId)
 
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
@@ -440,10 +453,61 @@ object CompetitionExecutionService {
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        !checkUpdateMatchResult(competitionId, matchId)
-        !unsetCurrentlyRunning(matchId, userId)
+        val match = !checkUpdateMatchResult(competitionId, matchId)
+        !prepareForNewPlaces(matchId, userId)
 
         val config = !MatchResultImportConfigRepo.get(request.config).orDie().onNullFail { MatchResultImportConfigError.NotFound }
+
+        val iStream = file.bytes.inputStream()
+
+        val teams = !XLS.read(iStream) {
+            ParsedTeamResult(
+                startNumber = !cell(config.colTeamStartNumber, int),
+                place = !optionalCell(config.colTeamPlace, maybe(int)),
+            )
+        }.mapError {
+            when (it) {
+                is XLSReadError.CellError.ColumnUnknown -> CompetitionExecutionError.ResultUploadError.ColumnUnknown(it.expected)
+                is XLSReadError.CellError.ParseError.CellBlank -> CompetitionExecutionError.ResultUploadError.CellBlank(it.row, it.col)
+                is XLSReadError.CellError.ParseError.WrongCellType -> CompetitionExecutionError.ResultUploadError.WrongCellType(it.row, it. col, it.actual.name, it.expected.name)
+                XLSReadError.FileError -> CompetitionExecutionError.ResultUploadError.FileError
+                XLSReadError.NoHeaders -> CompetitionExecutionError.ResultUploadError.NoHeaders
+            }
+        }
+
+        !noDuplicates(teams.map { it.startNumber }).fold(
+            onValid = { unit },
+            onInvalid = { when (it) {
+                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedStartNumbers(it))
+                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+            } }
+        )
+
+        val places = teams.map { it.place }
+
+        !noDuplicates(places).fold(
+            onValid = { unit },
+            onInvalid = { when (it) {
+                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedPlaces(it))
+                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+            }}
+        )
+
+        !KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
+
+        places.filterNotNull().sorted().forEachIndexed { index, place ->
+            val expected = index + 1
+            !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
+        }
+
+        // TODO: deregistration on place == null
+        !teams.traverse { result ->
+            CompetitionMatchTeamRepo.updateByMatchAndStartNumber(matchId, result.startNumber) {
+                place = result.place
+                updatedBy = userId
+                updatedAt = LocalDateTime.now()
+            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }.map {  }
+        }
 
         noData
 
@@ -933,7 +997,7 @@ object CompetitionExecutionService {
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
-                data.teams
+                data.teams.sortedBy { it.startNumber }
             ) {
                 optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }

@@ -2,22 +2,46 @@ package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.calls.responses.ApiError
+import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.tailwind.core.Cause.Companion.expected
 import io.ktor.http.*
 
-enum class CompetitionExecutionError : ServiceError {
-    MatchNotFound,
-    MatchTeamNotFound,
-    NoRoundsInSetup,
-    AllRoundsCreated,
-    NoSetupMatchesInRound,
-    NoRegistrations,
-    RegistrationsNotFinalized,
-    NotEnoughTeamSpace,
-    NotAllPlacesSet,
-    TeamsNotMatching,
-    RoundNotFound,
-    MatchResultsLocked,
-    StartTimeNotSet;
+sealed interface CompetitionExecutionError : ServiceError {
+    data object MatchNotFound : CompetitionExecutionError
+    data object MatchTeamNotFound : CompetitionExecutionError
+    data object NoRoundsInSetup : CompetitionExecutionError
+    data object AllRoundsCreated : CompetitionExecutionError
+    data object NoSetupMatchesInRound : CompetitionExecutionError
+    data object NoRegistrations : CompetitionExecutionError
+    data object RegistrationsNotFinalized : CompetitionExecutionError
+    data object NotEnoughTeamSpace : CompetitionExecutionError
+    data object NotAllPlacesSet : CompetitionExecutionError
+    data object TeamsNotMatching : CompetitionExecutionError
+    data object RoundNotFound : CompetitionExecutionError
+    data object MatchResultsLocked : CompetitionExecutionError
+    data object StartTimeNotSet : CompetitionExecutionError
+
+    // TODO: send out ErrorCodes for internationalization in frontend
+    sealed interface ResultUploadError : CompetitionExecutionError {
+        data object FileError : ResultUploadError
+        data object NoHeaders : ResultUploadError
+        data class ColumnUnknown(val expected: String) : ResultUploadError
+        data class CellBlank(val row: Int, val column: String): ResultUploadError
+        data class WrongCellType(val row: Int, val column: String, val actual: String, val expected: String) : ResultUploadError
+
+        data class WrongTeamCount(val actual: Int, val expected: Int) : ResultUploadError
+
+        sealed interface Invalid : ResultUploadError {
+
+            data class DuplicatedStartNumbers(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
+            data class DuplicatedPlaces(val duplicates: ValidationResult.Invalid.Duplicates) : Invalid
+
+            data class PlacesUncontinuous(val actual: Int, val expected: Int) : Invalid
+
+            data class Unexpected(val reason: ValidationResult.Invalid) : Invalid
+
+        }
+    }
 
     override fun respond(): ApiError = when (this) {
         MatchNotFound -> ApiError(
@@ -83,6 +107,54 @@ enum class CompetitionExecutionError : ServiceError {
         StartTimeNotSet -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "StartTime not set",
+        )
+
+        ResultUploadError.FileError -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Cannot read given file"
+        )
+        ResultUploadError.NoHeaders -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Cannot column headers, expected them in first row."
+        )
+
+        is ResultUploadError.CellBlank -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Required value in row $row and column '$column' is missing.",
+        )
+        is ResultUploadError.ColumnUnknown -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Required column '$expected' is missing"
+        )
+        is ResultUploadError.WrongCellType -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Wrong cell type in row $row and column '$column'; actual: $actual, expected: $expected.",
+        )
+
+        is ResultUploadError.WrongTeamCount -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Wrong team count for this match; actual: $actual, expected: $expected.",
+        )
+
+        is ResultUploadError.Invalid.DuplicatedPlaces -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "There are duplicate places in the given file.",
+            details = mapOf("duplicates" to duplicates)
+        )
+        is ResultUploadError.Invalid.DuplicatedStartNumbers -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "There are duplicate start numbers in the given file.",
+            details = mapOf("duplicates" to duplicates)
+        )
+        is ResultUploadError.Invalid.Unexpected -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Validation of given file unexpectedly failed",
+            details = mapOf("reason" to reason)
+        )
+
+        is ResultUploadError.Invalid.PlacesUncontinuous -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Places are not continuous: actual: $actual, expected: $expected.",
         )
     }
 }

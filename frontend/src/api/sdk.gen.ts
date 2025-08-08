@@ -533,6 +533,9 @@ import type {
     DeleteMatchResultImportConfigData,
     DeleteMatchResultImportConfigError,
     DeleteMatchResultImportConfigResponse,
+    UploadResultFileData,
+    UploadResultFileError,
+    UploadResultFileResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -2690,5 +2693,23 @@ export const deleteMatchResultImportConfig = <ThrowOnError extends boolean = fal
     >({
         ...options,
         url: '/matchResultImportConfig/{matchResultImportConfigId}',
+    })
+}
+
+export const uploadResultFile = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UploadResultFileData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UploadResultFileResponse,
+        UploadResultFileError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file',
     })
 }

@@ -73,7 +73,7 @@ data class CompetitionMatchData(
                     shortName = persisted.competitionShortName,
                     category = persisted.competitionCategory,
                 ),
-                teams = teams.sortedBy { it.startNumber }
+                teams = teams
             )
         }
 

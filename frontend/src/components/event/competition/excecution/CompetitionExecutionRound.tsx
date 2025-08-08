@@ -27,7 +27,7 @@ import {Fragment, SyntheticEvent, useRef, useState} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
     downloadStartList,
-    updateMatchRunningState,
+    updateMatchRunningState, uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -77,7 +77,7 @@ const CompetitionExecutionRound = ({
 
     const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
     const showMatchResultImportConfigDialog = resultImportMatch !== null
-    const closeMAtchResultImportConfigDialog = () => setResultImportMatch(null)
+    const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
 
     const deleteCurrentRound = async () => {
         confirmAction(
@@ -152,7 +152,23 @@ const CompetitionExecutionRound = ({
         file: File,
         config: string,
     ) => {
+        const {error} = await uploadResultFile({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+            body: {
+                request: {config},
+                files: [file]
+            }
+        })
 
+        if (error) {
+            feedback.error(error.message)
+        }
+
+        props.reloadRoundDto()
     }
 
     const handleToggleRunningState = async (match: CompetitionMatchDto) => {
@@ -483,7 +499,7 @@ const CompetitionExecutionRound = ({
             />
             <MatchResultUploadDialog
                 open={showMatchResultImportConfigDialog}
-                onClose={closeMAtchResultImportConfigDialog}
+                onClose={closeMatchResultImportConfigDialog}
                 onSuccess={async (config, file) => handleUploadMatchResults(resultImportMatch!, file, config)}
             />
         </Fragment>

@@ -9,27 +9,35 @@ import org.apache.poi.ss.usermodel.CellType
 
 fun interface CellParser<A> {
 
-    fun parse(input: Cell): IO<XLSReadError.CellError.ParseError, A>
+    fun parse(input: Cell, row: Int, col: String): IO<XLSReadError.CellError.ParseError, A>
+
+    fun <B> map(f: (A) -> B) = let { p ->
+        CellParser { input, row, col ->
+            p.parse(input, row, col).map { f(it) }
+        }
+    }
 
     companion object {
 
-        val numeric get() = CellParser<Double> {
-            when (it.cellType) {
-                CellType.BLANK -> KIO.fail(XLSReadError.CellError.ParseError.CellBlank)
-                CellType.NUMERIC -> KIO.ok(it.numericCellValue)
-                else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType)
+        val int get() = numeric.map { it.toInt() }
+
+        val numeric get() = CellParser<Double> { input, row, col ->
+            when (input.cellType) {
+                CellType.BLANK -> KIO.fail(XLSReadError.CellError.ParseError.CellBlank(row, col))
+                CellType.NUMERIC -> KIO.ok(input.numericCellValue)
+                else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType(row, col, input.cellType, CellType.NUMERIC))
             }
         }
 
-        val string get() = CellParser<String> {
-            when (it.cellType) {
-                CellType.STRING, CellType.BLANK -> KIO.ok(it.stringCellValue)
-                else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType)
+        val string get() = CellParser<String> { input , row, col ->
+            when (input.cellType) {
+                CellType.STRING, CellType.BLANK -> KIO.ok(input.stringCellValue)
+                else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType(row, col, input.cellType, CellType.STRING))
             }
         }
 
-        fun <A> maybe(parser: CellParser<A>) = CellParser {
-            parser.parse(it).recoverDefault { null }
+        fun <A> maybe(parser: CellParser<A>) = CellParser { input, row, col ->
+            parser.parse(input, row, col).recoverDefault { null }
         }
 
     }

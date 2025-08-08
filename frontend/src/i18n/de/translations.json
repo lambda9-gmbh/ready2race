@@ -504,9 +504,9 @@
               "3": " erstellt und bearbeitet werden."
             },
             "file": {
-              "missing": "Please provide a file.",
-              "change": "Change .xls file",
-              "choose": "Choose .xls file"
+              "missing": "Bitte wählen Sie eine Datei aus.",
+              "change": ".xls Datei ändern",
+              "choose": ".xls Datei auswählen"
             }
           },
           "upload": "Ergebnisse hochladen",

@@ -4784,6 +4784,50 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - name: competitionMatchId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: uploadResultFile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/UploadMatchResultRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -8562,3 +8606,12 @@ components:
           type: string
         colTeamPlace:
           type: string
+
+    UploadMatchResultRequest:
+      type: object
+      required:
+        - config
+      properties:
+        config:
+          type: string
+          format: uuid
