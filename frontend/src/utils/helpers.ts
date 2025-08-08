@@ -86,3 +86,12 @@ export const a11yProps = <TabType>(name: string, index: TabType) => {
         'aria-controls': `${name}-tabpanel-${index}`,
     }
 }
+
+export const getFilename = (response: Response): string | undefined => {
+    const disposition = response.headers.get('Content-Disposition')
+
+    return (
+        disposition?.match(/attachment; filename="(.+)"/)?.[1] ??
+        disposition?.match(/attachment; filename=(.+)/)?.[1]
+    )
+}

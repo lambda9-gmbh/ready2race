@@ -27,7 +27,8 @@ import {Fragment, SyntheticEvent, useRef, useState} from 'react'
 import {
     deleteCurrentCompetitionExecutionRound,
     downloadStartList,
-    updateMatchRunningState, uploadResultFile,
+    updateMatchRunningState,
+    uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
@@ -35,7 +36,8 @@ import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
 import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import Checkbox from '@mui/material/Checkbox'
-import MatchResultUploadDialog from "@components/event/competition/excecution/MatchResultUploadDialog.tsx";
+import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
+import {getFilename} from '@utils/helpers.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -129,9 +131,6 @@ const CompetitionExecutionRound = ({
         })
         const anchor = downloadRef.current
 
-        const disposition = response.headers.get('Content-Disposition')
-        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
-
         if (error) {
             if (error.status.value === 409) {
                 feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
@@ -142,7 +141,7 @@ const CompetitionExecutionRound = ({
             // need Blob constructor for text/csv
             anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
             anchor.download =
-                filename ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
+                getFilename(response) ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
             anchor.click()
             anchor.href = ''
             anchor.download = ''
@@ -162,8 +161,8 @@ const CompetitionExecutionRound = ({
             },
             body: {
                 request: {config},
-                files: [file]
-            }
+                files: [file],
+            },
         })
 
         if (error) {
@@ -180,25 +179,59 @@ const CompetitionExecutionRound = ({
                         feedback.error(t('event.competition.execution.results.error.NO_HEADERS'))
                         break
                     case 'SPREADSHEET_COLUMN_UNKNOWN':
-                        feedback.error(t('event.competition.execution.results.error.COLUMN_UNKNOWN', details as {expected: string}))
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.COLUMN_UNKNOWN',
+                                details as {expected: string},
+                            ),
+                        )
                         break
                     case 'SPREADSHEET_CELL_BLANK':
-                        feedback.error(t('event.competition.execution.results.error.CELL_BLANK', details as {row: number, column: string}))
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.CELL_BLANK',
+                                details as {row: number; column: string},
+                            ),
+                        )
                         break
                     case 'SPREADSHEET_WRONG_CELL_TYPE':
-                        feedback.error(t('event.competition.execution.results.error.WRONG_CELL_TYPE', details as {row: number, column: string, actual: string, expected: string}))
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.WRONG_CELL_TYPE',
+                                details as {
+                                    row: number
+                                    column: string
+                                    actual: string
+                                    expected: string
+                                },
+                            ),
+                        )
                         break
                     case 'WRONG_TEAM_COUNT':
-                        feedback.error(t('event.competition.execution.results.error.WRONG_TEAM_COUNT', details as {actual: number, expected: number}))
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.WRONG_TEAM_COUNT',
+                                details as {actual: number; expected: number},
+                            ),
+                        )
                         break
                     case 'DUPLICATE_PLACES':
-                        feedback.error(t('event.competition.execution.results.error.DUPLICATE_PLACES'))
+                        feedback.error(
+                            t('event.competition.execution.results.error.DUPLICATE_PLACES'),
+                        )
                         break
                     case 'DUPLICATE_START_NUMBERS':
-                        feedback.error(t('event.competition.execution.results.error.DUPLICATE_START_NUMBERS'))
+                        feedback.error(
+                            t('event.competition.execution.results.error.DUPLICATE_START_NUMBERS'),
+                        )
                         break
                     case 'PLACES_UNCONTINUOUS':
-                        feedback.error(t('event.competition.execution.results.error.PLACES_UNCONTINUOUS', details as {actual: number, expected: number}))
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.PLACES_UNCONTINUOUS',
+                                details as {actual: number; expected: number},
+                            ),
+                        )
                         break
                     default:
                         feedback.error(t('common.error.unexpected'))
@@ -420,21 +453,26 @@ const CompetitionExecutionRound = ({
                                             onSelectItem={async (value: string) => {
                                                 const v = value as MatchResultOption
                                                 switch (v) {
-                                                    case "form":
+                                                    case 'form':
                                                         props.openResultsDialog(matchIndex)
-                                                        break;
-                                                    case "XLS":
+                                                        break
+                                                    case 'XLS':
                                                         setResultImportMatch(match.id)
-                                                        break;
-
+                                                        break
                                                 }
                                             }}
-                                            items={
-                                                MATCH_RESULT_OPTIONS.map(o => ({
-                                                    id: o,
-                                                    label: t(`event.competition.execution.results.type.${o}`),
-                                                } satisfies {id: MatchResultOption, label: string}))
-                                            }
+                                            items={MATCH_RESULT_OPTIONS.map(
+                                                o =>
+                                                    ({
+                                                        id: o,
+                                                        label: t(
+                                                            `event.competition.execution.results.type.${o}`,
+                                                        ),
+                                                    }) satisfies {
+                                                        id: MatchResultOption
+                                                        label: string
+                                                    },
+                                            )}
                                         />
                                     )}
                                     <LoadingButton
@@ -560,7 +598,9 @@ const CompetitionExecutionRound = ({
             <MatchResultUploadDialog
                 open={showMatchResultImportConfigDialog}
                 onClose={closeMatchResultImportConfigDialog}
-                onSuccess={async (config, file) => handleUploadMatchResults(resultImportMatch!, file, config)}
+                onSuccess={async (config, file) =>
+                    handleUploadMatchResults(resultImportMatch!, file, config)
+                }
             />
         </Fragment>
     )

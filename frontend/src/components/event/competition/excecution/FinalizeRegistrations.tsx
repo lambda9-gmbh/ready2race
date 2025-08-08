@@ -33,6 +33,7 @@ import DownloadIcon from '@mui/icons-material/Download'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Info} from '@mui/icons-material'
 import BaseDialog from '@components/BaseDialog.tsx'
+import {getFilename} from '@utils/helpers.ts'
 
 type Props = {
     registrationsFinalized: boolean
@@ -74,14 +75,11 @@ const FinalizeRegistrations = ({registrationsFinalized}: Props) => {
         })
         const anchor = downloadRef.current
 
-        const disposition = response.headers.get('Content-Disposition')
-        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
-
         if (error) {
             feedback.error(t('event.document.download.error'))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
-            anchor.download = filename ?? 'registration-result.pdf'
+            anchor.download = getFilename(response) ?? 'registration-result.pdf'
             anchor.click()
             anchor.href = ''
             anchor.download = ''
