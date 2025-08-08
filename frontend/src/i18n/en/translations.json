@@ -1016,7 +1016,8 @@
           "team": {
             "heading": "Team",
             "name": "Name",
-            "startNumber": "Start number"
+            "startNumber": "Start number",
+            "ratingCategory": "Rating category"
           },
           "match": {
             "heading": "Match",

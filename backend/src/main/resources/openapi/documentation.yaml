@@ -8174,6 +8174,8 @@ components:
           type: string
         colTeamStartNumber:
           type: string
+        colTeamRatingCategory:
+          type: string
         colMatchName:
           type: string
         colMatchStartTime:
@@ -8217,6 +8219,8 @@ components:
         colTeamName:
           type: string
         colTeamStartNumber:
+          type: string
+        colTeamRatingCategory:
           type: string
         colMatchName:
           type: string

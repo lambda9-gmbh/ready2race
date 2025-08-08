@@ -1,22 +1,22 @@
-import {BaseEntityDialogProps} from "@utils/types.ts";
+import {BaseEntityDialogProps} from '@utils/types.ts'
 import {
     AddStartListConfigError,
     StartListConfigDto,
     StartListConfigRequest,
-    UpdateStartListConfigError
-} from "@api/types.gen.ts";
-import EntityDialog from "@components/EntityDialog.tsx";
-import {useForm} from "react-hook-form-mui";
-import {useCallback, useState} from "react";
-import {Stack, Tab} from "@mui/material";
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import {addStartListConfig, updateStartListConfig} from "@api/sdk.gen.ts";
-import {takeIfNotEmpty} from "@utils/ApiUtils.ts";
-import {useFeedback} from "@utils/hooks.ts";
-import {useTranslation} from "react-i18next";
-import TabSelectionContainer from "@components/tab/TabSelectionContainer.tsx";
-import {a11yProps} from "@utils/helpers.ts";
-import TabPanel from "@components/tab/TabPanel.tsx";
+    UpdateStartListConfigError,
+} from '@api/types.gen.ts'
+import EntityDialog from '@components/EntityDialog.tsx'
+import {useForm} from 'react-hook-form-mui'
+import {useCallback, useState} from 'react'
+import {Stack, Tab} from '@mui/material'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {addStartListConfig, updateStartListConfig} from '@api/sdk.gen.ts'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {useFeedback} from '@utils/hooks.ts'
+import {useTranslation} from 'react-i18next'
+import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
+import {a11yProps} from '@utils/helpers.ts'
+import TabPanel from '@components/tab/TabPanel.tsx'
 
 type Form = {
     name: string
@@ -29,6 +29,7 @@ type Form = {
     colClubName: string
     colTeamName: string
     colTeamStartNumber: string
+    colTeamRatingCategory: string
     colMatchName: string
     colMatchStartTime: string
     colRoundName: string
@@ -49,6 +50,7 @@ const defaultValues: Form = {
     colClubName: '',
     colTeamName: '',
     colTeamStartNumber: '',
+    colTeamRatingCategory: '',
     colMatchName: '',
     colMatchStartTime: '',
     colRoundName: '',
@@ -60,20 +62,19 @@ const defaultValues: Form = {
 
 const addAction = (formData: Form) =>
     addStartListConfig({
-        body: mapFormToRequest(formData)
+        body: mapFormToRequest(formData),
     })
 
 const editAction = (formData: Form, entity: StartListConfigDto) =>
     updateStartListConfig({
         path: {startListConfigId: entity.id},
-        body: mapFormToRequest(formData)
+        body: mapFormToRequest(formData),
     })
 
 const FORM_TABS = ['participant', 'club', 'team', 'match', 'round', 'competition'] as const
 type FormTab = (typeof FORM_TABS)[number]
 
-const tabProps = (tab: FormTab) =>
-    a11yProps('startlistDialog', tab)
+const tabProps = (tab: FormTab) => a11yProps('startlistDialog', tab)
 
 const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>) => {
     const {t} = useTranslation()
@@ -107,54 +108,113 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
             editAction={editAction}
             maxWidth={'md'}
             sx={{
-                '& .MuiDialog-paper': {height: 1}
-            }}
-        >
+                '& .MuiDialog-paper': {height: 1},
+            }}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={t('configuration.export.startlist.name')} required />
+                <FormInputText
+                    name={'name'}
+                    label={t('configuration.export.startlist.name')}
+                    required
+                />
                 <TabSelectionContainer activeTab={activeTab} setActiveTab={setActiveTab}>
-                    { FORM_TABS.map(tab => (
-                        <Tab key={tab} label={t(`configuration.export.startlist.col.${tab}.heading`)} {...tabProps(tab)} />
+                    {FORM_TABS.map(tab => (
+                        <Tab
+                            key={tab}
+                            label={t(`configuration.export.startlist.col.${tab}.heading`)}
+                            {...tabProps(tab)}
+                        />
                     ))}
                 </TabSelectionContainer>
                 <TabPanel index={'participant'} activeTab={activeTab}>
                     <Stack spacing={4}>
-                        <FormInputText name={'colParticipantFirstname'} label={t('configuration.export.startlist.col.participant.firstname')} />
-                        <FormInputText name={'colParticipantLastname'} label={t('configuration.export.startlist.col.participant.lastname')} />
-                        <FormInputText name={'colParticipantGender'} label={t('configuration.export.startlist.col.participant.gender')} />
-                        <FormInputText name={'colParticipantRole'} label={t('configuration.export.startlist.col.participant.role')} />
-                        <FormInputText name={'colParticipantYear'} label={t('configuration.export.startlist.col.participant.year')} />
-                        <FormInputText name={'colParticipantClub'} label={t('configuration.export.startlist.col.participant.club')} />
+                        <FormInputText
+                            name={'colParticipantFirstname'}
+                            label={t('configuration.export.startlist.col.participant.firstname')}
+                        />
+                        <FormInputText
+                            name={'colParticipantLastname'}
+                            label={t('configuration.export.startlist.col.participant.lastname')}
+                        />
+                        <FormInputText
+                            name={'colParticipantGender'}
+                            label={t('configuration.export.startlist.col.participant.gender')}
+                        />
+                        <FormInputText
+                            name={'colParticipantRole'}
+                            label={t('configuration.export.startlist.col.participant.role')}
+                        />
+                        <FormInputText
+                            name={'colParticipantYear'}
+                            label={t('configuration.export.startlist.col.participant.year')}
+                        />
+                        <FormInputText
+                            name={'colParticipantClub'}
+                            label={t('configuration.export.startlist.col.participant.club')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'club'} activeTab={activeTab}>
                     <Stack spacing={4}>
-                        <FormInputText name={'colClubName'} label={t('configuration.export.startlist.col.club.name')} />
+                        <FormInputText
+                            name={'colClubName'}
+                            label={t('configuration.export.startlist.col.club.name')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'team'} activeTab={activeTab}>
                     <Stack spacing={4}>
-                        <FormInputText name={'colTeamName'} label={t('configuration.export.startlist.col.team.name')} />
-                        <FormInputText name={'colTeamStartNumber'} label={t('configuration.export.startlist.col.team.startNumber')} />
+                        <FormInputText
+                            name={'colTeamName'}
+                            label={t('configuration.export.startlist.col.team.name')}
+                        />
+                        <FormInputText
+                            name={'colTeamStartNumber'}
+                            label={t('configuration.export.startlist.col.team.startNumber')}
+                        />
+                        <FormInputText
+                            name={'colTeamRatingCategory'}
+                            label={t('configuration.export.startlist.col.team.ratingCategory')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'match'} activeTab={activeTab}>
                     <Stack spacing={4}>
-                        <FormInputText name={'colMatchName'} label={t('configuration.export.startlist.col.match.name')} />
-                        <FormInputText name={'colMatchStartTime'} label={t('configuration.export.startlist.col.match.startTime')} />
+                        <FormInputText
+                            name={'colMatchName'}
+                            label={t('configuration.export.startlist.col.match.name')}
+                        />
+                        <FormInputText
+                            name={'colMatchStartTime'}
+                            label={t('configuration.export.startlist.col.match.startTime')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'round'} activeTab={activeTab}>
                     <Stack spacing={4}>
-                        <FormInputText name={'colRoundName'} label={t('configuration.export.startlist.col.round.name')} />
+                        <FormInputText
+                            name={'colRoundName'}
+                            label={t('configuration.export.startlist.col.round.name')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'competition'} activeTab={activeTab}>
                     <Stack spacing={4}>
-                        <FormInputText name={'colCompetitionIdentifier'} label={t('configuration.export.startlist.col.competition.identifier')} />
-                        <FormInputText name={'colCompetitionName'} label={t('configuration.export.startlist.col.competition.name')} />
-                        <FormInputText name={'colCompetitionShortName'} label={t('configuration.export.startlist.col.competition.shortName')} />
-                        <FormInputText name={'colCompetitionCategory'} label={t('configuration.export.startlist.col.competition.category')} />
+                        <FormInputText
+                            name={'colCompetitionIdentifier'}
+                            label={t('configuration.export.startlist.col.competition.identifier')}
+                        />
+                        <FormInputText
+                            name={'colCompetitionName'}
+                            label={t('configuration.export.startlist.col.competition.name')}
+                        />
+                        <FormInputText
+                            name={'colCompetitionShortName'}
+                            label={t('configuration.export.startlist.col.competition.shortName')}
+                        />
+                        <FormInputText
+                            name={'colCompetitionCategory'}
+                            label={t('configuration.export.startlist.col.competition.category')}
+                        />
                     </Stack>
                 </TabPanel>
             </Stack>
@@ -173,6 +233,7 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     colClubName: takeIfNotEmpty(formData.colClubName),
     colTeamName: takeIfNotEmpty(formData.colTeamName),
     colTeamStartNumber: takeIfNotEmpty(formData.colTeamStartNumber),
+    colTeamRatingCategory: takeIfNotEmpty(formData.colTeamRatingCategory),
     colMatchName: takeIfNotEmpty(formData.colMatchName),
     colMatchStartTime: takeIfNotEmpty(formData.colMatchStartTime),
     colRoundName: takeIfNotEmpty(formData.colRoundName),
@@ -193,6 +254,7 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     colClubName: dto.colClubName ?? '',
     colTeamName: dto.colTeamName ?? '',
     colTeamStartNumber: dto.colTeamStartNumber ?? '',
+    colTeamRatingCategory: dto.colTeamRatingCategory ?? '',
     colMatchName: dto.colMatchName ?? '',
     colMatchStartTime: dto.colMatchStartTime ?? '',
     colRoundName: dto.colRoundName ?? '',
