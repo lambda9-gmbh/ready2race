@@ -513,6 +513,17 @@
           "type": {
             "form": "into Form",
             "XLS": "as XLS-File"
+          },
+          "error": {
+            "FILE_ERROR": "File could not be read.",
+            "NO_HEADERS": "There are no valid columns in the given file.",
+            "COLUMN_UNKNOWN": "Could not find expected column '{{expected}}'.",
+            "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
+            "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
+            "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
+            "DUPLICATE_PLACES": "There are duplicate places among the teams",
+            "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",
+            "PLACES_UNCONTINUOUS": "The given places are not continuous - actual: {{actual}}, expected: {{expected}}"
           }
         },
         "matchData": {

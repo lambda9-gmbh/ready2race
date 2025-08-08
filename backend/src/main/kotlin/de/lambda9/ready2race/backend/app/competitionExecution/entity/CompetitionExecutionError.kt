@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.calls.responses.ApiError
+import de.lambda9.ready2race.backend.calls.responses.ErrorCode
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.tailwind.core.Cause.Companion.expected
 import io.ktor.http.*
@@ -111,40 +112,52 @@ sealed interface CompetitionExecutionError : ServiceError {
 
         ResultUploadError.FileError -> ApiError(
             status = HttpStatusCode.BadRequest,
-            message = "Cannot read given file"
+            message = "Cannot read given file",
+            errorCode = ErrorCode.FILE_ERROR
         )
         ResultUploadError.NoHeaders -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
-            message = "Cannot column headers, expected them in first row."
+            message = "Cannot column headers, expected them in first row.",
+            errorCode = ErrorCode.SPREADSHEET_NO_HEADERS
         )
 
         is ResultUploadError.CellBlank -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Required value in row $row and column '$column' is missing.",
+            errorCode = ErrorCode.SPREADSHEET_CELL_BLANK,
+            details = mapOf("row" to row, "column" to column)
         )
         is ResultUploadError.ColumnUnknown -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
-            message = "Required column '$expected' is missing"
+            message = "Required column '$expected' is missing",
+            errorCode = ErrorCode.SPREADSHEET_COLUMN_UNKNOWN,
+            details = mapOf("expected" to expected)
         )
         is ResultUploadError.WrongCellType -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Wrong cell type in row $row and column '$column'; actual: $actual, expected: $expected.",
+            errorCode = ErrorCode.SPREADSHEET_WRONG_CELL_TYPE,
+            details = mapOf("row" to row, "column" to column, "expected" to expected, "actual" to actual)
         )
 
         is ResultUploadError.WrongTeamCount -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Wrong team count for this match; actual: $actual, expected: $expected.",
+            errorCode = ErrorCode.WRONG_TEAM_COUNT,
+            details = mapOf("actual" to actual, "expected" to expected)
         )
 
         is ResultUploadError.Invalid.DuplicatedPlaces -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "There are duplicate places in the given file.",
-            details = mapOf("duplicates" to duplicates)
+            errorCode = ErrorCode.DUPLICATE_PLACES,
+            details = mapOf("reason" to duplicates)
         )
         is ResultUploadError.Invalid.DuplicatedStartNumbers -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "There are duplicate start numbers in the given file.",
-            details = mapOf("duplicates" to duplicates)
+            errorCode = ErrorCode.DUPLICATE_START_NUMBERS,
+            details = mapOf("reason" to duplicates)
         )
         is ResultUploadError.Invalid.Unexpected -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
@@ -155,6 +168,8 @@ sealed interface CompetitionExecutionError : ServiceError {
         is ResultUploadError.Invalid.PlacesUncontinuous -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Places are not continuous: actual: $actual, expected: $expected.",
+            errorCode = ErrorCode.PLACES_UNCONTINUOUS,
+            details = mapOf("actual" to actual, "expected" to expected)
         )
     }
 }

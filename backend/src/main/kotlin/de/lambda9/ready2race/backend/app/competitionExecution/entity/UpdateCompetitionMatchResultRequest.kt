@@ -12,8 +12,11 @@ data class UpdateCompetitionMatchResultRequest(
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::teamResults validate collection,
         this::teamResults validate noDuplicates(
+            UpdateCompetitionMatchTeamResultRequest::registrationId
+        ),
+        this::teamResults validate noDuplicates(
             UpdateCompetitionMatchTeamResultRequest::place
-        )
+        ),
     )
 
     companion object {

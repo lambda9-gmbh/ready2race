@@ -165,7 +165,48 @@ const CompetitionExecutionRound = ({
         })
 
         if (error) {
-            feedback.error(error.message)
+            if (error.status.value === 400) {
+                if (error.errorCode === 'FILE_ERROR') {
+                    feedback.error(t('event.competition.execution.results.error.FILE_ERROR'))
+                } else {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            } else if (error.status.value === 422) {
+                const details = 'details' in error && error.details
+                switch (error.errorCode) {
+                    case 'SPREADSHEET_NO_HEADERS':
+                        feedback.error(t('event.competition.execution.results.error.NO_HEADERS'))
+                        break
+                    case 'SPREADSHEET_COLUMN_UNKNOWN':
+                        feedback.error(t('event.competition.execution.results.error.COLUMN_UNKNOWN', details as {expected: string}))
+                        break
+                    case 'SPREADSHEET_CELL_BLANK':
+                        feedback.error(t('event.competition.execution.results.error.CELL_BLANK', details as {row: number, column: string}))
+                        break
+                    case 'SPREADSHEET_WRONG_CELL_TYPE':
+                        feedback.error(t('event.competition.execution.results.error.WRONG_CELL_TYPE', details as {row: number, column: string, actual: string, expected: string}))
+                        break
+                    case 'WRONG_TEAM_COUNT':
+                        feedback.error(t('event.competition.execution.results.error.WRONG_TEAM_COUNT', details as {actual: number, expected: number}))
+                        break
+                    case 'DUPLICATE_PLACES':
+                        feedback.error(t('event.competition.execution.results.error.DUPLICATE_PLACES'))
+                        break
+                    case 'DUPLICATE_START_NUMBERS':
+                        feedback.error(t('event.competition.execution.results.error.DUPLICATE_START_NUMBERS'))
+                        break
+                    case 'PLACES_UNCONTINUOUS':
+                        feedback.error(t('event.competition.execution.results.error.PLACES_UNCONTINUOUS', details as {actual: number, expected: number}))
+                        break
+                    default:
+                        feedback.error(t('common.error.unexpected'))
+                        break
+                }
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.submit.success'))
         }
 
         props.reloadRoundDto()

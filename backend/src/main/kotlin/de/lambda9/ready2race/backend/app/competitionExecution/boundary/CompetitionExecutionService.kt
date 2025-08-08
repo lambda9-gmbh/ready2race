@@ -436,6 +436,8 @@ object CompetitionExecutionService {
         !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
 
+        // TODO: validate team size, places continuous
+
         request.teamResults.traverse { result ->
             CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
                 place = result.place

@@ -461,6 +461,15 @@ export type ErrorCode =
     | 'INVOICES_ALREADY_PRODUCED'
     | 'NO_ASSIGNED_PAYEE_INFORMATION'
     | 'NO_ASSIGNED_CONTACT_INFORMATION'
+    | 'FILE_ERROR'
+    | 'SPREADSHEET_NO_HEADERS'
+    | 'SPREADSHEET_COLUMN_UNKNOWN'
+    | 'SPREADSHEET_CELL_BLANK'
+    | 'SPREADSHEET_WRONG_CELL_TYPE'
+    | 'WRONG_TEAM_COUNT'
+    | 'DUPLICATE_START_NUMBERS'
+    | 'DUPLICATE_PLACES'
+    | 'PLACES_UNCONTINUOUS'
 
 export type EventDayDto = {
     id: string
@@ -1265,6 +1274,7 @@ export type UnprocessableEntityError = ApiError & {
         | {
               result: Invalid
           }
+        | unknown
 }
 
 export type UpcomingCompetitionMatchInfo = {

@@ -513,6 +513,17 @@
           "type": {
             "form": "mit Eingabeformular",
             "XLS": "als XLS-Datei"
+          },
+          "error": {
+            "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
+            "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
+            "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
+            "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
+            "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
+            "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
+            "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
+            "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
+            "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}"
           }
         },
         "matchData": {
