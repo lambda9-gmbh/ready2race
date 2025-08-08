@@ -22,7 +22,7 @@ import {
     Typography,
 } from '@mui/material'
 import {Warning} from '@mui/icons-material'
-import QrCodeIcon from '@mui/icons-material/QrCode';
+import QrCodeIcon from '@mui/icons-material/QrCode'
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
@@ -118,6 +118,10 @@ const CompetitionRegistrationTable = (
                                                         }>
                                                         <QrCodeIcon />
                                                     </HtmlTooltip>
+                                                ) : row.namedParticipants
+                                                      .flatMap(np => np.participants)
+                                                      .some(p => p.qrCodeId !== undefined) ? (
+                                                    <></>
                                                 ) : (
                                                     <HtmlTooltip
                                                         title={
@@ -137,7 +141,9 @@ const CompetitionRegistrationTable = (
                                                                 {participant.lastScanAt && (
                                                                     <>
                                                                         <Typography variant={'h6'}>
-                                                                            {t('club.participant.tracking.lastScan.at')}
+                                                                            {t(
+                                                                                'club.participant.tracking.lastScan.at',
+                                                                            )}
                                                                         </Typography>
                                                                         <Typography>
                                                                             {format(
@@ -170,8 +176,12 @@ const CompetitionRegistrationTable = (
                                                             label={
                                                                 participant.currentStatus ===
                                                                 'ENTRY'
-                                                                    ? t('club.participant.tracking.in')
-                                                                    : t('club.participant.tracking.out')
+                                                                    ? t(
+                                                                          'club.participant.tracking.in',
+                                                                      )
+                                                                    : t(
+                                                                          'club.participant.tracking.out',
+                                                                      )
                                                             }
                                                             color={
                                                                 participant.currentStatus ===

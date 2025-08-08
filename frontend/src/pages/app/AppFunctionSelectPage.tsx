@@ -47,8 +47,6 @@ const AppFunctionSelectPage = () => {
         }
     }, [setAppFunction, navigate, availableAppFunctions]);
 
-    console.log(availableAppFunctions);
-
     const handleSelect = (fn: AppFunction) => {
         setAppFunction(fn);
     };

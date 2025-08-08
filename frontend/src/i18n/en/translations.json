@@ -1006,7 +1006,8 @@
     "selectClub": "Select club",
     "search": "Search...",
     "confirmSelection": "Confirm selection",
-    "confirm": "Add"
+    "confirm": "Add",
+    "success": "QR Code successfully assigned"
   },
   "qrCode": {
     "qrCode": "QR Code",

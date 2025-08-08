@@ -81,9 +81,8 @@ const QrNimiqScanner = (props: {
                     scannerRef.current.start();
                 }
             })
-            .catch(err => {
+            .catch(_ => {
                 feedback.error('Kamera konnte nicht geöffnet werden');
-                console.log('getUserMedia error', err);
             });
         return () => {
             stopped = true;

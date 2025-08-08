@@ -20,6 +20,7 @@ import PersonIcon from '@mui/icons-material/Person'
 import ParticipantAssignment from '@components/qrApp/assign/ParticipantAssignment'
 import UserAssignment from '@components/qrApp/assign/UserAssignment'
 import SystemUserScanner from '@components/qrApp/assign/SystemUserScanner'
+import {useFeedback} from "@utils/hooks.ts";
 
 type UserTyp = 'Participant' | 'User' | 'SystemUser'
 
@@ -38,6 +39,7 @@ const QrAssignPage = () => {
     const [confirmationOpen, setConfirmationOpen] = useState(false)
     const [selectedPerson, setSelectedPerson] = useState<ConfirmationData | null>(null)
     const {eventId} = qrEventRoute.useParams()
+    const feedback = useFeedback()
 
     useEffect(() => {
         if (!qr.received) {
@@ -119,34 +121,43 @@ const QrAssignPage = () => {
     }
 
     const handleSystemUserScan = async (qrCodeContent: string) => {
-        try {
-            const data = JSON.parse(qrCodeContent)
-            if (data.appUserId) {
-                setScanningSystemUser(false)
-                await updateQrCodeAppuser({
-                    body: {
-                        qrCodeId: qr.qrCodeId!,
-                        eventId: eventId,
-                        id: data.appUserId,
-                    },
-                })
-                qr.reset(eventId)
-            } else if (data.participantId) {
-                setScanningSystemUser(false)
-                await updateQrCodeParticipant({
-                    body: {
-                        qrCodeId: qr.qrCodeId!,
-                        eventId: eventId,
-                        id: data.participantId,
-                    },
-                })
-                qr.reset(eventId)
-            } else {
-                alert(t('qrAssign.invalidUserQr'))
+
+        const data = JSON.parse(qrCodeContent)
+        setScanningSystemUser(false)
+        if (data.appUserId) {
+            setScanningSystemUser(false)
+            const {error} = await updateQrCodeAppuser({
+                body: {
+                    qrCodeId: qr.qrCodeId!,
+                    eventId: eventId,
+                    id: data.appUserId,
+                },
+            })
+            if(error){
+                feedback.error(t('qrAssign.invalidQrFormat'))
+            } else{
+                feedback.success(t('qrAssign.success'))
             }
-        } catch {
-            alert(t('qrAssign.invalidQrFormat'))
+            qr.reset(eventId)
+        } else if (data.participantId) {
+            setScanningSystemUser(false)
+            const {error} = await updateQrCodeParticipant({
+                body: {
+                    qrCodeId: qr.qrCodeId!,
+                    eventId: eventId,
+                    id: data.participantId,
+                },
+            })
+            qr.reset(eventId)
+            if(error){
+                feedback.error(t('qrAssign.invalidQrFormat'))
+            } else{
+                feedback.success(t('qrAssign.success'))
+            }
+        } else {
+            feedback.error(t('qrAssign.invalidUserQr'))
         }
+        qr.reset(eventId)
     }
 
     const canAssign = appFunction === 'APP_QR_MANAGEMENT'

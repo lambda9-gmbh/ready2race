@@ -91,12 +91,9 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
     }, [appFunction]);
 
     const goBack = () => {
-        console.log('Go back')
         if ((eventsData?.data.length ?? 0) > 1) {
-            console.log('var1')
             navigate({to: '/app'})
         } else {
-            console.log('var2')
             setAppFunction(null)
         }
     }

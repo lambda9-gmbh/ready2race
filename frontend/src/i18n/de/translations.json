@@ -1006,7 +1006,8 @@
     "selectClub": "Verein auswählen",
     "search": "Suchen...",
     "confirmSelection": "Auswahl bestätigen",
-    "confirm": "Hinzufügen"
+    "confirm": "Hinzufügen",
+    "success": "QR-Code erfolgreich zugewiesen"
   },
   "qrCode": {
     "qrCode": "QR-Code",

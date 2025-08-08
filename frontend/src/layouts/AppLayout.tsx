@@ -1,9 +1,8 @@
-import React from 'react';
 import {Outlet} from "@tanstack/react-router";
 import {Container, Box} from "@mui/material";
 import {AppSessionProvider} from "@contexts/app/AppSessionContext.tsx";
 
-const AppLayout: React.FC = () => {
+const AppLayout = () => {
     return (
         <Container
             maxWidth="lg"

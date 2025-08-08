@@ -30,7 +30,6 @@ const AppLoginPage = () => {
 
             const rights = getAppRights(data.privileges)
             setAvailableAppFunctions(rights)
-            console.log("set available", rights);
 
             if (search && typeof search.redirect === 'string' && search.redirect) {
                 router.navigate({to: search.redirect})

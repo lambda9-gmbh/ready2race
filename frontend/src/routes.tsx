@@ -237,7 +237,6 @@ export const qrEventRoute = createRoute({
     getParentRoute: () => appRoute,
     path: '$eventId',
     beforeLoad: ({context, location}) => {
-        console.log("Auth Check qrEventRoute", context.loggedIn, location.href)
         checkAuthApp(context, location)
     }
 })
@@ -247,7 +246,6 @@ export const qrEventsIndexRoute = createRoute({
     path: '/',
     component: () => <QrEventsPage/>,
     beforeLoad: ({context, location}) => {
-        console.log("Auth Check qrEventsIndexRoute", context.loggedIn, location.href)
         checkAuthApp(context, location)
     }
 })
@@ -383,9 +381,7 @@ export const qrParticipantRoute = createRoute({
     getParentRoute: () => qrEventRoute,
     path: 'participant',
     component: () => <QrParticipantPage/>,
-    beforeLoad: ({context, location}) => {        console.log("Auth Check qrAssignRoute", context.loggedIn, location.href)
-        console.log("Auth Check qrParticipantRoute", context.loggedIn, location.href)
-
+    beforeLoad: ({context, location}) => {
         checkAuthApp(context, location)
     }
 })
@@ -395,9 +391,7 @@ export const qrAssignRoute = createRoute({
     path: 'assign',
     component: () => <QrAssignPage/>,
     beforeLoad: ({context, location}) => {
-        console.log("Auth Check qrAssignRoute", context.loggedIn, location.href)
-
-        checkAuthApp(context, location)
+       checkAuthApp(context, location)
     }
 })
 
@@ -419,9 +413,7 @@ export const appFunctionSelectRoute = createRoute({
     path: 'function',
     component: () => <AppFunctionSelectPage/>,
     beforeLoad: ({context, location}) => {
-        console.log("Auth Check appFunctionSelectRoute", context.loggedIn, location.href)
-
-        checkAuthApp(context, location)
+       checkAuthApp(context, location)
     }
 });
 
