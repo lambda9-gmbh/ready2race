@@ -3,8 +3,8 @@ import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} fro
 import {eventIndexRoute} from '@routes'
 import {
     getActiveParticipantRequirementsForEvent,
-    getParticipantsForEvent,
     getNamedParticipantsForEvent,
+    getParticipantsForEvent,
     ParticipantForEventDto,
     ParticipantRequirementCheckForEventConfigDto,
 } from '../../api'
@@ -18,22 +18,21 @@ import {useEntityAdministration, useFetch} from '@utils/hooks.ts'
 import ParticipantRequirementApproveManuallyForEventDialog, {
     ParticipantRequirementApproveManuallyForEventForm,
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
-import ParticipantRequirementCheckForEventUploadFileDialog
-    from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
+import ParticipantRequirementCheckForEventUploadFileDialog from '@components/event/participantRequirement/ParticipantRequirementCheckForEventUploadFileDialog.tsx'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {Box, Stack, Typography} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateEventGlobal} from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {deleteQrCode} from '@api/sdk.gen.ts'
-import {QrCodeEditDialog} from "@components/participant/QrCodeEditDialog.tsx";
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import {QrCodeEditDialog} from '@components/participant/QrCodeEditDialog.tsx'
+import QrCodeIcon from '@mui/icons-material/QrCode'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
     pageSize: 10,
 }
-const pageSizeOptions: (number | { value: number; label: string })[] = [10]
+const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEventDto>) => {
@@ -113,27 +112,28 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 sortable: false,
                 renderCell: ({row}) => {
                     const globalRequirements = requirementsData?.data || []
-                    
+
                     // Find all named participants for this specific row
-                    const rowNamedParticipants = namedParticipantsForEvent?.filter(np => 
-                        row.namedParticipantIds?.includes(np.id)
-                    ) || []
-                    
+                    const rowNamedParticipants =
+                        namedParticipantsForEvent?.filter(np =>
+                            row.namedParticipantIds?.includes(np.id),
+                        ) || []
+
                     // Get requirements specific to this participant's named participants
-                    const namedParticipantRequirements = rowNamedParticipants.flatMap(np => 
-                        (np.requirements || []).map(req => ({...req, participantName: np.name}))
+                    const namedParticipantRequirements = rowNamedParticipants.flatMap(np =>
+                        (np.requirements || []).map(req => ({...req, participantName: np.name})),
                     )
-                    
+
                     // Get all named participant requirement IDs across all named participants
                     const allNamedRequirementIds = new Set(
-                        namedParticipantsForEvent?.flatMap(np => 
-                            np.requirements?.map(r => r.requirementId) || []
-                        ) || []
+                        namedParticipantsForEvent?.flatMap(
+                            np => np.requirements?.map(r => r.requirementId) || [],
+                        ) || [],
                     )
-                    
+
                     // Create a map to deduplicate requirements and track their assignment type
                     const requirementMap = new Map()
-                    
+
                     // Add global requirements ONLY if they are not assigned to any named participant
                     globalRequirements.forEach(r => {
                         if (!allNamedRequirementIds.has(r.id)) {
@@ -141,7 +141,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                 id: r.id,
                                 name: r.name,
                                 assignmentType: 'global',
-                                qrCodeRequired: false
+                                qrCodeRequired: false,
                             })
                         }
                     })
@@ -153,16 +153,16 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                             name: req.requirementName,
                             assignmentType: 'named',
                             participantName: req.participantName || 'Unknown',
-                            qrCodeRequired: req.qrCodeRequired
+                            qrCodeRequired: req.qrCodeRequired,
                         })
                     })
-                    
+
                     const deduplicatedRequirements = Array.from(requirementMap.values())
-                    
+
                     if (deduplicatedRequirements.length === 0) {
                         return ' - '
                     }
-                    
+
                     return (
                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
                             <Typography>
@@ -178,41 +178,48 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                                 {row.participantRequirementsChecked?.some(
                                                     c => c.id === req.id,
                                                 ) ? (
-                                                    <CheckCircle color={'success'}/>
+                                                    <CheckCircle color={'success'} />
                                                 ) : (
-                                                    <Cancel color={'error'}/>
+                                                    <Cancel color={'error'} />
                                                 )}
                                                 <Typography>
-                                                    {req.name} 
-                                                    ({req.assignmentType === 'global' ? 'Global' : req.participantName})
-                                                    {req.qrCodeRequired && ' (QR)'}
+                                                    {req.name}(
+                                                    {req.assignmentType === 'global'
+                                                        ? 'Global'
+                                                        : req.participantName}
+                                                    ){req.qrCodeRequired && ' (QR)'}
                                                 </Typography>
                                             </Stack>
                                         ))}
                                     </Stack>
                                 }>
-                                <Info color={'info'} fontSize={'small'}/>
+                                <Info color={'info'} fontSize={'small'} />
                             </HtmlTooltip>
                         </Stack>
                     )
-                }
+                },
             },
             {
                 field: 'qrCodeId',
                 headerName: t('qrCode.qrCode'),
                 minWidth: 100,
                 sortable: false,
-                renderCell: ({row}) => row.qrCodeId ? (
-                    <HtmlTooltip
-                        title={
-                            <Box sx={{p: 1}}>
-                                <Typography fontWeight={'bold'} gutterBottom>{t('qrCode.value')}:</Typography>
-                                <Typography>{row.qrCodeId}</Typography>
-                            </Box>
-                        }>
-                        <CheckCircleIcon color={'success'}/>
-                    </HtmlTooltip>
-                ) : <>-</>
+                renderCell: ({row}) =>
+                    row.qrCodeId ? (
+                        <HtmlTooltip
+                            title={
+                                <Box sx={{p: 1}}>
+                                    <Typography fontWeight={'bold'} gutterBottom>
+                                        {t('qrCode.value')}:
+                                    </Typography>
+                                    <Typography>{row.qrCodeId}</Typography>
+                                </Box>
+                            }>
+                            <QrCodeIcon />
+                        </HtmlTooltip>
+                    ) : (
+                        <>-</>
+                    ),
             },
         ],
         [requirementsData?.data, namedParticipantsForEvent, t],
@@ -232,14 +239,14 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
 
     const splitOptions: SplitButtonOption[] = useMemo(() => {
         const options: SplitButtonOption[] = []
-        
+
         // Get all named participant requirement IDs
         const namedRequirementIds = new Set(
-            namedParticipantsForEvent?.flatMap(np => 
-                np.requirements?.map(r => r.requirementId) || []
-            ) || []
+            namedParticipantsForEvent?.flatMap(
+                np => np.requirements?.map(r => r.requirementId) || [],
+            ) || [],
         )
-        
+
         // Add global requirements (those not assigned to any named participant)
         requirementsData?.data
             .filter(r => !namedRequirementIds.has(r.id))
@@ -256,13 +263,13 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                     },
                 })
             })
-        
+
         // Add named participant requirements
         namedParticipantsForEvent?.forEach(np => {
             np.requirements?.forEach(req => {
                 options.push({
                     label: t('event.participantRequirement.checkManually', {
-                        name: `${req.requirementName} (${np.name})`
+                        name: `${req.requirementName} (${np.name})`,
                     }),
                     onClick: () => {
                         participantRequirementApproveManuallyForEventProps.table.openDialog({
@@ -277,9 +284,14 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 })
             })
         })
-        
+
         return options
-    }, [requirementsData?.data, namedParticipantsForEvent, participantRequirementApproveManuallyForEventProps.table, t])
+    }, [
+        requirementsData?.data,
+        namedParticipantsForEvent,
+        participantRequirementApproveManuallyForEventProps.table,
+        t,
+    ])
 
     const handleEditQr = (participant: ParticipantForEventDto) => {
         setEditQrParticipant(participant)
@@ -289,8 +301,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
         setEditDialogOpen(false)
         setEditQrParticipant(null)
     }
-    const handleEditQrOpen = () => {
-    }
+    const handleEditQrOpen = () => {}
     const handleEditQrReload = () => {
         setEditDialogOpen(false)
         setEditQrParticipant(null)
@@ -298,34 +309,35 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
     }
 
     const handleDeleteQr = (participant: ParticipantForEventDto) => {
-        confirmAction(async () => {
-            await deleteQrCode({
-                path: {qrCodeId: participant.qrCodeId!},
-            })
-            props.reloadData()
-        }, {
-            content: t('club.participant.qrCodeDeleteConfirm'),
-            okText: t('common.delete'),
-        })
+        confirmAction(
+            async () => {
+                await deleteQrCode({
+                    path: {qrCodeId: participant.qrCodeId!},
+                })
+                props.reloadData()
+            },
+            {
+                content: t('club.participant.qrCodeDeleteConfirm'),
+                okText: t('common.delete'),
+            },
+        )
     }
 
     const customEntityActions = (entity: ParticipantForEventDto) => {
-        const actions = [
+        return [
             <GridActionsCellItem
-                icon={<Edit/>}
+                icon={<Edit />}
                 label={t('club.participant.qrCodeEdit')}
                 onClick={() => handleEditQr(entity)}
                 showInMenu
             />,
             <GridActionsCellItem
-                icon={<Delete/>}
+                icon={<Delete />}
                 label={t('club.participant.qrCodeDelete')}
                 onClick={() => handleDeleteQr(entity)}
                 showInMenu
             />,
         ]
-
-        return actions
     }
 
     return (
@@ -352,7 +364,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                     user.checkPrivilege(updateEventGlobal) && (
                         <SplitButton
                             main={{
-                                icon: <VerifiedUser/>,
+                                icon: <VerifiedUser />,
                                 label: t('event.participantRequirement.checkUpload'),
                                 onClick: () =>
                                     participantRequirementCheckForEventConfigProps.table.openDialog(

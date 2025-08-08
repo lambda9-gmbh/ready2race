@@ -73,7 +73,7 @@ const checkAuthWith = (
 
 const checkAuthApp = (context: User, location: ParsedLocation) => {
     if (!context.loggedIn) {
-        throw redirect({to: '/appLogin', search: {redirect: location.href}})
+        throw redirect({to: '/app/login', search: {redirect: location.href}})
     }
 }
 
@@ -402,8 +402,8 @@ export const qrAssignRoute = createRoute({
 })
 
 export const appLoginRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: 'appLogin',
+    getParentRoute: () => appRoute,
+    path: 'login',
     component: () => <AppLoginPage/>,
     validateSearch: ({redirect}: { redirect?: string } & SearchSchemaInput) => ({ redirect }),
 })
@@ -458,8 +458,8 @@ const routeTree = rootRoute.addChildren([
         clubsRoute.addChildren([clubsIndexRoute, clubRoute.addChildren([clubIndexRoute])]),
         invoicesRoute,
     ]),
-    appLoginRoute,
     appRoute.addChildren([
+        appLoginRoute,
         qrEventsIndexRoute,
         qrEventRoute.addChildren([
             qrScanRoute,

@@ -21,7 +21,8 @@ import {
     TableRow,
     Typography,
 } from '@mui/material'
-import {CheckCircle, Warning} from '@mui/icons-material'
+import {Warning} from '@mui/icons-material'
+import QrCodeIcon from '@mui/icons-material/QrCode';
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
@@ -115,7 +116,7 @@ const CompetitionRegistrationTable = (
                                                                 </Typography>
                                                             </Box>
                                                         }>
-                                                        <CheckCircle color={'success'} />
+                                                        <QrCodeIcon />
                                                     </HtmlTooltip>
                                                 ) : (
                                                     <HtmlTooltip

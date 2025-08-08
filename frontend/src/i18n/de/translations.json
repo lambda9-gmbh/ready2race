@@ -1030,7 +1030,7 @@
     "assignmentInfo": "Zuordnungsinformationen"
   },
   "qrParticipant": {
-    "title": "Teilnehmer-QR-Code",
+    "title": "Teilnehmer",
     "noRight": "Du hast für diesen QR-Code-Typ keine Berechtigung.",
     "loading": "Lade...",
     "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",

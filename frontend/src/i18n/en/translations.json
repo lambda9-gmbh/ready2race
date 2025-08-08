@@ -1030,7 +1030,7 @@
     "assignmentInfo": "Assignment information"
   },
   "qrParticipant": {
-    "title": "Participant QR Code",
+    "title": "Participant",
     "noRight": "You are not authorized for this QR code type.",
     "loading": "Loading...",
     "noRequirements": "No requirements with CheckInApp available.",

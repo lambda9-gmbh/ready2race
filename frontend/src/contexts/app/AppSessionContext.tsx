@@ -5,7 +5,7 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEvents} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {getUserAppRights} from "@components/qrApp/common.ts";
+import {getUserAppRights} from '@components/qrApp/common.ts'
 
 export type AppFunction =
     | 'APP_QR_MANAGEMENT'
@@ -63,23 +63,12 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
         deps: [],
     })
 
-    const [goingBack, setGoingBack] = useState<boolean>(false)
     useEffect(() => {
-        if (appFunction === null) {
-            setGoingBack(true)
-        } else{
-            if(eventsData && eventsData.data.length === 1 ){
-                navigate({to: '/app/$eventId/scanner', params: {eventId: eventsData.data[0].id}})
-            }
-        }
-    }, [appFunction])
-
-    useEffect(() => {
-        if(user){
+        if (user) {
             const rights = getUserAppRights(user)
             setAvailableAppFunctions(rights)
         }
-    }, [user]);
+    }, [user])
 
     useEffect(() => {
         if (availableAppFunctions.length === 1 && (eventsData?.data.length ?? 0) < 2) {
@@ -87,23 +76,27 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
         } else {
             setShowBackButton(true)
         }
-        if (goingBack) {
-            if (appFunction === null) {
-                navigate({to: '/app/function'})
+    }, [availableAppFunctions])
+
+    useEffect(() => {
+        if (appFunction === null) {
+            navigate({to: '/app/function'})
+        } else {
+            if (eventsData && eventsData.data.length === 1) {
+                navigate({to: '/app/$eventId/scanner', params: {eventId: eventsData.data[0].id}})
             } else {
                 navigate({to: '/app'})
             }
-            setGoingBack(false)
         }
-    }, [availableAppFunctions, goingBack])
+    }, [appFunction]);
 
     const goBack = () => {
-        console.log("Go back")
+        console.log('Go back')
         if ((eventsData?.data.length ?? 0) > 1) {
-            console.log("var1")
+            console.log('var1')
             navigate({to: '/app'})
         } else {
-            console.log("var2")
+            console.log('var2')
             setAppFunction(null)
         }
     }

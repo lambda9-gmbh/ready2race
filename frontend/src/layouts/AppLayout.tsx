@@ -1,11 +1,9 @@
 import React from 'react';
 import {Outlet} from "@tanstack/react-router";
 import {Container, Box} from "@mui/material";
-import {useUser} from "@contexts/user/UserContext.ts";
+import {AppSessionProvider} from "@contexts/app/AppSessionContext.tsx";
 
 const AppLayout: React.FC = () => {
-    const user = useUser()
-    console.log("User view ", user.loggedIn)
     return (
         <Container
             maxWidth="lg"
@@ -27,9 +25,9 @@ const AppLayout: React.FC = () => {
                     flexDirection: 'column'
                 }}
             >
-                {user.loggedIn && (
-                    <Outlet/>
-                )}
+                    <AppSessionProvider>
+                        <Outlet/>
+                    </AppSessionProvider>
             </Box>
         </Container>
     );
