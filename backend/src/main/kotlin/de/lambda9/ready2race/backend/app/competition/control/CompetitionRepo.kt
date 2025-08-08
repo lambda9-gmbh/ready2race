@@ -21,7 +21,7 @@ object CompetitionRepo {
         listOf(
             NAME,
             SHORT_NAME,
-            DSL.concat(IDENTIFIER_PREFIX, DSL.coalesce(IDENTIFIER_SUFFIX.cast(String::class.java), "")),
+            IDENTIFIER,
             CATEGORY_NAME
         )
 

@@ -148,9 +148,10 @@ from competition_properties_has_fee cphf
 create view competition_view as
 select c.id,
        c.event,
+       cp.identifier,
        substring(cp.identifier for length(cp.identifier) -
                                    length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
-       cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix,
+       cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix_no_leading_zeros,
        cp.name,
        cp.short_name,
        cp.description,
@@ -190,6 +191,9 @@ create view competition_for_club_view as
 select c.id,
        c.event,
        cp.identifier,
+       substring(cp.identifier for length(cp.identifier) -
+                                   length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
+       cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix_no_leading_zeros,
        cp.name,
        cp.short_name,
        cp.description,
@@ -230,6 +234,9 @@ create view competition_public_view as
 select c.id,
        c.event,
        cp.identifier,
+       substring(cp.identifier for length(cp.identifier) -
+                                   length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
+       cast(nullif(substring(cp.identifier from '\d*$'), '') as int)             as identifier_suffix_no_leading_zeros,
        cp.name,
        cp.short_name,
        cp.description,
