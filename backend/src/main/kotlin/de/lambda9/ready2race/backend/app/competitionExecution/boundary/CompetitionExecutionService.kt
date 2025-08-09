@@ -35,6 +35,7 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
@@ -55,6 +56,7 @@ import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -1084,6 +1086,12 @@ object CompetitionExecutionService {
         return bytes
     }
 
+    private fun Gender.order() = when (this) {
+        Gender.M -> 2
+        Gender.F -> 1
+        Gender.D -> 3
+    }
+
     fun buildCsv(
         data: CompetitionMatchData,
         config: StartlistExportConfigRecord,
@@ -1096,7 +1104,7 @@ object CompetitionExecutionService {
             ) {
                 optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
-                optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSet().joinToString("/") }
+                optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSortedSet { a ,b -> compareValues(a.order(), b.order()) }.joinToString("/") }
                 optionalColumn(config.colParticipantYear) { participants.joinToString(",") { p -> p.year.toString() } }
                 optionalColumn(config.colParticipantRole) { participants.map { p -> p.role }.toSet().joinToString(",") }
                 optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: clubName }.toSet().joinToString(",") }
@@ -1110,7 +1118,9 @@ object CompetitionExecutionService {
                 optionalColumn(config.colMatchName) { data.matchName ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->
                     val offsetSeconds = idx * (data.startTimeOffset ?: 0)
-                    data.startTime.toLocalTime().plusSeconds(offsetSeconds)
+                    // TODO: make this configurable
+                    LocalTime.ofSecondOfDay(offsetSeconds)
+                    //data.startTime.toLocalTime().plusSeconds(offsetSeconds)
                         .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 }
 
