@@ -183,9 +183,9 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                                     <Cancel color={'error'} />
                                                 )}
                                                 <Typography>
-                                                    {req.name}(
+                                                    {req.name} (
                                                     {req.assignmentType === 'global'
-                                                        ? 'Global'
+                                                        ? t('participantRequirement.global')
                                                         : req.participantName}
                                                     ){req.qrCodeRequired && ' (QR)'}
                                                 </Typography>

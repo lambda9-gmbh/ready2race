@@ -30,6 +30,9 @@ const defaultValues: InvitationForm = {
     admin: false,
 }
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
     email: formData.email,
     firstname: formData.firstname,
@@ -37,7 +40,7 @@ const mapFormToRequest = (formData: InvitationForm): InviteRequest => ({
     roles: formData.admin ? [] : formData.roles,
     admin: formData.admin,
     language: languageMapping[i18nLanguage()],
-    callbackUrl: location.origin + '/invitation/',
+    callbackUrl: location.origin + (basepath ? `/${basepath}` : '') + '/invitation/',
 })
 
 const addAction = (formData: InvitationForm) =>
@@ -58,7 +61,7 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
         formContext.reset(defaultValues)
     }, [props.entity])
 
-    const onAddError = (error: InviteUserError) => {
+    const onAddError = (error: InviteUserError): boolean => {
         if (error.status.value === 409) {
             if (error.errorCode === 'EMAIL_IN_USE') {
                 formContext.setError('email', {
@@ -70,9 +73,12 @@ const UserInvitationDialog = (props: BaseEntityDialogProps<AppUserInvitationDto>
                 })
             } else if (error.errorCode === 'CANNOT_ASSIGN_ROLES') {
                 feedback.error(t('role.error.cannotAssign'))
+            } else {
+                return false
             }
+            return true
         } else {
-            feedback.error(t('entity.add.error', {entity: props.entityName}))
+            return false
         }
     }
 

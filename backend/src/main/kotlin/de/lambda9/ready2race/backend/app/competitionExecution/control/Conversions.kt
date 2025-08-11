@@ -7,8 +7,11 @@ import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionPartici
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupRoundWithMatchesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.tailwind.core.KIO
+import java.util.*
 
-fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
+fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
+    checkDeregistrationIsLocked: (competitionRegistrationId: UUID) -> Boolean
+) = KIO.ok(
     CompetitionRoundDto(
         setupRoundId = setupRoundId,
         name = setupRoundName,
@@ -25,13 +28,17 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                             clubName = team.clubName,
                             name = team.registrationName,
                             startNumber = team.startNumber,
-                            place = team.place
+                            place = team.place,
+                            deregistered = team.deregistered,
+                            deregistrationLocked = if (team.deregistered) checkDeregistrationIsLocked(team.competitionRegistration) else null,
+                            deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
                         )
                     },
                     weighting = match.second.weighting,
                     executionOrder = match.second.executionOrder,
                     startTime = match.first.startTime,
                     startTimeOffset = match.second.startTimeOffset,
+                    currentlyRunning = match.first.currentlyRunning,
                 )
             },
         required = required,
@@ -63,6 +70,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
             CompetitionMatchWithTeams(
                 competitionSetupMatch = match.competitionSetupMatch!!,
                 startTime = match.startTime,
+                currentlyRunning = match.currentlyRunning ?: false,
                 teams = match.teams!!.filterNotNull().map { team ->
                     CompetitionMatchTeamWithRegistration(
                         id = team.id!!,
@@ -87,7 +95,9 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                                 external = p.external,
                                 externalClubName = p.externalClubName,
                             )
-                        }
+                        },
+                        deregistered = team.deregistered!!,
+                        deregistrationReason = team.deregistrationReason
                     )
                 }
             )
@@ -139,6 +149,8 @@ fun CompetitionMatchTeamWithRegistration.toCompetitionTeamPlaceDto(place: Int) =
                 }
             )
         },
-        place = place
+        place = place,
+        deregistered = deregistered,
+        deregistrationReason = deregistrationReason,
     )
 )

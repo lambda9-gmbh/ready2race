@@ -1,10 +1,10 @@
-import EntityTable from "@components/EntityTable.tsx";
-import {BaseEntityTableProps} from "@utils/types.ts";
-import {BankAccountDto} from "@api/types.gen.ts";
-import {GridColDef, GridPaginationModel, GridSortModel} from "@mui/x-data-grid";
-import {PaginationParameters} from "@utils/ApiUtils.ts";
-import {deleteBankAccount, getBankAccounts} from "@api/sdk.gen.ts";
-import {useTranslation} from "react-i18next";
+import EntityTable from '@components/EntityTable.tsx'
+import {BaseEntityTableProps} from '@utils/types.ts'
+import {BankAccountDto} from '@api/types.gen.ts'
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {PaginationParameters} from '@utils/ApiUtils.ts'
+import {deleteBankAccount, getBankAccounts} from '@api/sdk.gen.ts'
+import {useTranslation} from 'react-i18next'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -16,14 +16,13 @@ const initialSort: GridSortModel = [{field: 'holder', sort: 'asc'}]
 const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) =>
     getBankAccounts({
         signal,
-        query: paginationParameters
+        query: paginationParameters,
     })
 
 const deleteRequest = (entity: BankAccountDto) =>
     deleteBankAccount({path: {bankAccountId: entity.id}})
 
 const BankAccountTable = (props: BaseEntityTableProps<BankAccountDto>) => {
-
     const {t} = useTranslation()
 
     const columns: GridColDef<BankAccountDto>[] = [
@@ -31,7 +30,7 @@ const BankAccountTable = (props: BaseEntityTableProps<BankAccountDto>) => {
             field: 'holder',
             headerName: t('invoice.bank.accountData.holder'),
             minWidth: 200,
-            flex: 1
+            flex: 1,
         },
         {
             field: 'iban',
@@ -51,7 +50,7 @@ const BankAccountTable = (props: BaseEntityTableProps<BankAccountDto>) => {
             field: 'bank',
             headerName: t('invoice.bank.accountData.bank'),
             minWidth: 200,
-            flex: 1
+            flex: 1,
         },
     ]
 

@@ -21,7 +21,7 @@ export const AutocompleteUser = (props: {
                     {field: 'FIRSTNAME', direction: 'ASC'},
                     {field: 'LASTNAME', direction: 'ASC'},
                 ]),
-                noClub: props.noClubRepresentatives
+                noClub: props.noClubRepresentatives,
             },
             signal,
         }),
@@ -31,9 +31,7 @@ export const AutocompleteUser = (props: {
         <FormInputAutocomplete
             name={props.name}
             label={props.label}
-            options={
-                data?.data ?? []
-            }
+            options={data?.data ?? []}
             loading={pending}
             matchId
             required={props.required}

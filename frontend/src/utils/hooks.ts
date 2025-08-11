@@ -6,7 +6,8 @@ import {useTranslation} from 'react-i18next'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {newCaptcha} from '@api/sdk.gen.ts'
 
-type UseFetchOptions<T, E> = {
+type UseFetchOptions<T, E, R> = {
+    mapData?: (data: T) => R
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
     preCondition?: () => boolean
     deps?: DependencyList
@@ -40,11 +41,11 @@ const fetchPending: UseFetchReturn<unknown, unknown> = {
     data: null,
 }
 
-export const useFetch = <T, E>(
+export const useFetch = <T, E, R = T>(
     req: (abortSignal: AbortSignal) => RequestResult<T, E, false>,
-    options?: UseFetchOptions<T, E>,
-): UseFetchReturn<T, E> => {
-    const [result, setResult] = useState<UseFetchReturn<T, E>>(fetchPending)
+    options?: UseFetchOptions<T, E, R>,
+): UseFetchReturn<R, E> => {
+    const [result, setResult] = useState<UseFetchReturn<R, E>>(fetchPending)
 
     useEffect(() => {
         if (options?.preCondition?.() != false) {
@@ -59,7 +60,8 @@ export const useFetch = <T, E>(
                         setResult({
                             pending: false,
                             error: null,
-                            data,
+                            // @ts-ignore
+                            data: options?.mapData ? options.mapData(data) : data,
                         })
                     } else if (error !== undefined) {
                         setResult({
@@ -113,6 +115,7 @@ export const useParamDialogState = <T>(defaultOpen: boolean): UseParamDialogStat
 export type UseEntityAdministrationOptions = {
     entityCreate?: boolean
     entityUpdate?: boolean
+    entityDelete?: boolean
 }
 
 export type UseEntityAdministrationReturn<T> = {
@@ -134,7 +137,7 @@ export type UseEntityAdministrationReturn<T> = {
 
 export const useEntityAdministration = <T extends GridValidRowModel | undefined = undefined>(
     entityName: string,
-    {entityCreate = true, entityUpdate = true}: UseEntityAdministrationOptions = {},
+    {entityCreate = true, entityUpdate = true, entityDelete = true}: UseEntityAdministrationOptions = {},
 ): UseEntityAdministrationReturn<T> => {
     const [dialogIsOpen, openDialog, closeDialog, entity] = useParamDialogState<T>(false)
 
@@ -145,6 +148,7 @@ export const useEntityAdministration = <T extends GridValidRowModel | undefined 
     const options: UseEntityAdministrationOptions = {
         entityCreate,
         entityUpdate,
+        entityDelete
     }
 
     return {

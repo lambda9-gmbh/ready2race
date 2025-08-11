@@ -13,10 +13,10 @@ import {deDE as deDataGrid} from '@mui/x-data-grid/locales/deDE'
 import {enUS as enDatePicker} from '@mui/x-date-pickers/locales/enUS'
 import {deDE as deDatePicker} from '@mui/x-date-pickers/locales/deDE'
 import {PickersLocaleText} from '@mui/x-date-pickers'
-import {isFromUnion} from "@utils/helpers.ts";
+import {isFromUnion} from '@utils/helpers.ts'
 
 export const LANGUAGES = ['de', 'en'] as const
-export type Language = typeof LANGUAGES[number]
+export type Language = (typeof LANGUAGES)[number]
 export const isLanguage = (s: string | undefined) => isFromUnion(s, LANGUAGES)
 
 export type Locale = {
@@ -42,8 +42,8 @@ export const locales: Record<Language, Locale> = {
 }
 
 export const languageNames: Record<Language, string> = {
-    de: "deutsch",
-    en: "english",
+    de: 'deutsch',
+    en: 'english',
 }
 
 export const fallbackLng: Language = 'en'
@@ -57,8 +57,14 @@ export const resources = {
     },
 } as const
 
-i18next.use(I18nextBrowserLanguageDetector).use(initReactI18next).init({
-    resources,
-    defaultNS,
-    fallbackLng,
-})
+i18next
+    .use(I18nextBrowserLanguageDetector)
+    .use(initReactI18next)
+    .init({
+        resources,
+        defaultNS,
+        fallbackLng,
+        interpolation: {
+            skipOnVariables: false,
+        },
+    })

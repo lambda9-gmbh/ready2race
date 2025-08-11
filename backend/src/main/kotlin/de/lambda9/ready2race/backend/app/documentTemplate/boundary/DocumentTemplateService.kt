@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistr
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationResultData
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceData
+import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -88,165 +89,168 @@ object DocumentTemplateService {
 
         when (type) {
             DocumentType.REGISTRATION_REPORT -> EventRegistrationService.buildPdf(
-                EventRegistrationResultData(
-                    competitionRegistrations = listOf(
-                        EventRegistrationResultData.CompetitionRegistrationData(
-                            identifier = "S",
-                            name = "Einzelrennen",
-                            shortName = "Solo",
-                            clubRegistrations = listOf(
-                                EventRegistrationResultData.ClubRegistrationData(
-                                    name = "Ruderclub",
-                                    teams = listOf(
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = "#1",
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Max",
-                                                    lastname = "Mustermann",
-                                                    year = 1990,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                )
-                                            )
-                                        ),
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = "#2",
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Marcus",
-                                                    lastname = "Mustermann",
-                                                    year = 2000,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                )
-                                            )
-                                        ),
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = "#3",
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Manfred",
-                                                    lastname = "Mustermann",
-                                                    year = 1970,
-                                                    gender = Gender.M,
-                                                    externalClubName = "1. RC"
-                                                )
+                (UUID.randomUUID() to UUID.randomUUID()).let { (club1, club2) ->
+                    EventRegistrationResultData(
+                        competitionRegistrations = listOf(
+                            EventRegistrationResultData.CompetitionRegistrationData(
+                                identifier = "S",
+                                name = "Einzelrennen",
+                                shortName = "Solo",
+                                teams = listOf(
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = "#1",
+                                        clubId = club1,
+                                        clubName = "Ruderclub",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Max",
+                                                lastname = "Mustermann",
+                                                year = 1990,
+                                                gender = Gender.M,
+                                                externalClubName = null
                                             )
                                         )
-                                    )
-                                ),
-                                EventRegistrationResultData.ClubRegistrationData(
-                                    name = "Rudern",
-                                    teams = listOf(
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = null,
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Sebastian",
-                                                    lastname = "Jensen",
-                                                    year = 1994,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                )
+                                    ),
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = "#2",
+                                        clubId = club1,
+                                        clubName = "Ruderclub",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Marcus",
+                                                lastname = "Mustermann",
+                                                year = 2000,
+                                                gender = Gender.M,
+                                                externalClubName = null
                                             )
                                         )
-                                    )
-                                )
-                            )
-                        ),
-                        EventRegistrationResultData.CompetitionRegistrationData(
-                            identifier = "D",
-                            name = "Teamrennen",
-                            shortName = "Duo",
-                            clubRegistrations = listOf(
-                                EventRegistrationResultData.ClubRegistrationData(
-                                    name = "Ruderclub",
-                                    teams = listOf(
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = "#1",
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Max",
-                                                    lastname = "Mustermann",
-                                                    year = 1990,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                ),
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Marcus",
-                                                    lastname = "Mustermann",
-                                                    year = 2000,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                )
-                                            )
-                                        ),
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = "#2",
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Manfred",
-                                                    lastname = "Mustermann",
-                                                    year = 1970,
-                                                    gender = Gender.M,
-                                                    externalClubName = "1. RC"
-                                                ),
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Bettina",
-                                                    lastname = "Mustermann",
-                                                    year = 1974,
-                                                    gender = Gender.F,
-                                                    externalClubName = null
-                                                )
+                                    ),
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = "#3",
+                                        clubId = club1,
+                                        clubName = "Ruderclub",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Manfred",
+                                                lastname = "Mustermann",
+                                                year = 1970,
+                                                gender = Gender.M,
+                                                externalClubName = "1. RC"
                                             )
                                         )
-                                    )
-                                ),
-                                EventRegistrationResultData.ClubRegistrationData(
-                                    name = "Rudern",
-                                    teams = listOf(
-                                        EventRegistrationResultData.TeamRegistrationData(
-                                            name = null,
-                                            participants = listOf(
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Sebastian",
-                                                    lastname = "Jensen",
-                                                    year = 1994,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                ),
-                                                EventRegistrationResultData.ParticipantRegistrationData(
-                                                    role = "Teilnehmer",
-                                                    firstname = "Harald",
-                                                    lastname = "Jensen",
-                                                    year = 1979,
-                                                    gender = Gender.M,
-                                                    externalClubName = null
-                                                )
+                                    ),
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = null,
+                                        clubId = club2,
+                                        clubName = "Rudern",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Sebastian",
+                                                lastname = "Jensen",
+                                                year = 1994,
+                                                gender = Gender.M,
+                                                externalClubName = null
                                             )
                                         )
                                     )
                                 )
+                            ),
+                            EventRegistrationResultData.CompetitionRegistrationData(
+                                identifier = "D",
+                                name = "Teamrennen",
+                                shortName = "Duo",
+                                teams = listOf(
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = "#1",
+                                        clubId = club1,
+                                        clubName = "Ruderclub",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Max",
+                                                lastname = "Mustermann",
+                                                year = 1990,
+                                                gender = Gender.M,
+                                                externalClubName = null
+                                            ),
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Marcus",
+                                                lastname = "Mustermann",
+                                                year = 2000,
+                                                gender = Gender.M,
+                                                externalClubName = null
+                                            )
+                                        )
+                                    ),
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = "#2",
+                                        clubId = club1,
+                                        clubName = "Ruderclub",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Manfred",
+                                                lastname = "Mustermann",
+                                                year = 1970,
+                                                gender = Gender.M,
+                                                externalClubName = "1. RC"
+                                            ),
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Bettina",
+                                                lastname = "Mustermann",
+                                                year = 1974,
+                                                gender = Gender.F,
+                                                externalClubName = null
+                                            )
+                                        )
+                                    ),
+                                    EventRegistrationResultData.TeamRegistrationData(
+                                        name = null,
+                                        clubId = club2,
+                                        clubName = "Rudern",
+                                        ratingCategory = null,
+                                        participants = listOf(
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Sebastian",
+                                                lastname = "Jensen",
+                                                year = 1994,
+                                                gender = Gender.M,
+                                                externalClubName = null
+                                            ),
+                                            EventRegistrationResultData.ParticipantRegistrationData(
+                                                role = "Teilnehmer",
+                                                firstname = "Harald",
+                                                lastname = "Jensen",
+                                                year = 1979,
+                                                gender = Gender.M,
+                                                externalClubName = null
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            EventRegistrationResultData.CompetitionRegistrationData(
+                                identifier = "N",
+                                name = "KeinRennen",
+                                shortName = "No",
+                                teams = emptyList(),
                             )
-                        ),
-                        EventRegistrationResultData.CompetitionRegistrationData(
-                            identifier = "N",
-                            name = "KeinRennen",
-                            shortName = "No",
-                            clubRegistrations = emptyList(),
                         )
                     )
-                ),
+                },
                 template,
             )
 
@@ -289,6 +293,7 @@ object DocumentTemplateService {
                     )
                 ),
                 template,
+                RegistrationInvoiceType.REGULAR
             )
 
             DocumentType.START_LIST -> CompetitionExecutionService.buildPdf(
@@ -309,6 +314,7 @@ object DocumentTemplateService {
                             startNumber = 1,
                             clubName = "Sportclub Musterhausen",
                             teamName = "#1",
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -324,6 +330,7 @@ object DocumentTemplateService {
                             startNumber = 2,
                             clubName = "Sportclub Musterhausen",
                             teamName = "#2",
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -339,6 +346,7 @@ object DocumentTemplateService {
                             startNumber = 3,
                             clubName = "Neustadt 101",
                             teamName = null,
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -354,6 +362,7 @@ object DocumentTemplateService {
                             startNumber = 4,
                             clubName = "Sportfreunde e.V.",
                             teamName = null,
+                            ratingCategory = null,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",

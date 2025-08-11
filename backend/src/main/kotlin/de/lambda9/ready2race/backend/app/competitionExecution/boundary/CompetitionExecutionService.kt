@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
+import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationError.IsLocked
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
@@ -19,13 +21,20 @@ import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
+import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
+import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
+import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
+import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
@@ -33,15 +42,33 @@ import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.int
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.maybe
+import de.lambda9.ready2race.backend.xls.CellParser.Companion.string
+import de.lambda9.ready2race.backend.xls.XLS
+import de.lambda9.ready2race.backend.xls.XLSReadError
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.*
 import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 
 object CompetitionExecutionService {
+
+    fun getMatchesByEvent(
+        eventId: UUID,
+        currentlyRunning: Boolean? = null,
+        withoutPlaces: Boolean? = null
+    ): App<ServiceError, ApiResponse.ListDto<MatchForRunningStatusDto>> = KIO.comprehension {
+        val matches = !CompetitionMatchRepo.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces).orDie()
+        KIO.ok(ApiResponse.ListDto(matches))
+    }
 
     fun createNewRound(
         competitionId: UUID,
@@ -126,9 +153,13 @@ object CompetitionExecutionService {
 
                 val currentTeamsWithOutcome =
                     currentRoundMatches.filter { it.second != null }.mapIndexed { matchIdx, match ->
-                        match.second!!.teams.sortedBy { team -> team.place }.mapIndexed { teamIdx, team ->
-                            team to currentRoundOutcomes[matchIdx][teamIdx]
-                        }
+                        match.second!!.teams
+                            .sortedWith(compareBy<CompetitionMatchTeamWithRegistration> { team ->
+                                team.place ?: Int.MAX_VALUE
+                            }.thenBy { team -> team.startNumber }) // This is required for teams that are deregistered but would still move on to the next round (f.e. losers bracket / both teams deregistered)
+                            .mapIndexed { teamIdx, team ->
+                                team to currentRoundOutcomes[matchIdx][teamIdx]
+                            }
                     }.flatten()
 
                 // --- Create next round
@@ -199,18 +230,15 @@ object CompetitionExecutionService {
 
             val currentAndNextRound = getCurrentAndNextRound(setupRounds)
 
-            val registrationsIfFirst = if (currentAndNextRound.first == null) {
-                !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
-            } else {
-                null
-            }
+            val registrations = !CompetitionRegistrationRepo.getByCompetitionId(competitionId).orDie()
+
 
             val canNotCreateRoundReasons = !checkRoundCreation(
                 false,
                 setupRounds,
                 currentAndNextRound.first,
                 currentAndNextRound.second,
-                registrationsIfFirst,
+                registrations,
             )
 
             val lastRoundFinished =
@@ -221,8 +249,14 @@ object CompetitionExecutionService {
 
             val sortedRounds = sortRounds(setupRounds)
 
+            val deregistrations = !CompetitionDeregistrationRepo.getByRegistrations(registrations.map { it.id }).orDie()
+
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
-                round.toCompetitionRoundDto()
+                round.toCompetitionRoundDto(
+                    checkDeregistrationIsLocked = { regId ->
+                        deregistrations.first { it.competitionRegistration == regId }.competitionSetupRound != round.setupRoundId
+                    }
+                )
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
@@ -294,9 +328,16 @@ object CompetitionExecutionService {
 
         } else {
             val currentRoundPlaces =
-                currentRound.matches.flatMap { match -> match.teams.map { team -> team.place } }
+                currentRound.matches.flatMap { match ->
+                    match.teams.filter { !it.deregistered }.map { team -> team.place }
+                }
 
-            if (currentRoundPlaces.contains(null))
+            val placesAreMissing = currentRound.matches.map { match ->
+                match.teams.map { it.place }.containsAll((1..match.teams.filter { !it.deregistered }.size).toList())
+            }.any { !it }
+
+
+            if (currentRoundPlaces.contains(null) || placesAreMissing)
                 reasons.add(CompetitionExecutionCanNotCreateRoundReason.NOT_ALL_PLACES_SET to CompetitionExecutionError.NotAllPlacesSet)
         }
 
@@ -359,6 +400,97 @@ object CompetitionExecutionService {
         noData
     }
 
+    private fun checkUpdateMatchResult(
+        competitionId: UUID,
+        matchId: UUID,
+    ): App<ServiceError, Pair<CompetitionMatchWithTeams, CompetitionSetupRoundWithMatches>> = KIO.comprehension {
+
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+
+        !KIO.failOn(setupRounds.flatMap { it.setupMatches.toList() }
+            .find { it.id == matchId } == null) { CompetitionExecutionError.MatchNotFound }
+
+        val currentRound = getCurrentAndNextRound(setupRounds).first
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
+
+        val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
+            ?: return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
+
+        !KIO.failOn(!currentRound.required && match.teams.size == 1) { CompetitionExecutionError.MatchResultsLocked }
+
+
+        KIO.ok(match to currentRound)
+    }
+
+    private fun prepareForNewPlaces(
+        matchId: UUID,
+        userId: UUID,
+    ): App<Nothing, Unit> = KIO.comprehension {
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = false
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        !CompetitionMatchTeamRepo.updateManyByMatch(matchId) {
+            place = null
+        }.orDie()
+
+        unit
+    }
+
+    private fun updateTeamResult(
+        userId: UUID,
+        setupRoundId: UUID,
+        matchId: UUID,
+        registrationId: UUID,
+        deregistered: Boolean,
+        deregistrationReason: String?,
+        place: Int?,
+    ): App<ServiceError, Unit> = KIO.comprehension {
+
+        if (deregistered) {
+            // Create Deregistration (Remove a possible old entry and replace it with a new one)
+            !CompetitionDeregistrationRepo.delete(registrationId).orDie()
+
+            // Differentiate if in a previous round the team was already deregistered... if so, do not create a new one
+            val prevDeregistration = !CompetitionDeregistrationRepo.get(registrationId).orDie()
+            if (!(prevDeregistration != null && prevDeregistration.competitionSetupRound != setupRoundId)) {
+                val now = LocalDateTime.now()
+                val record = CompetitionDeregistrationRecord(
+                    competitionRegistration = registrationId,
+                    competitionSetupRound = setupRoundId,
+                    reason = deregistrationReason,
+                    createdAt = now,
+                    createdBy = userId,
+                    updatedAt = now,
+                    updatedBy = userId,
+                )
+                !CompetitionDeregistrationRepo.create(record).orDie()
+            }
+
+        } else {
+            val deregistration = !CompetitionDeregistrationRepo.get(registrationId).orDie()
+
+            if (deregistration != null) {
+
+                !KIO.failOn(deregistration.competitionSetupRound != setupRoundId) { IsLocked }
+                !KIO.failOn(deregistration.competitionSetupRound != setupRoundId) { CompetitionExecutionError.TeamWasPreviouslyDeregistered }
+
+                !CompetitionDeregistrationRepo.delete(registrationId).orDie()
+            }
+        }
+
+        !CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
+            this.place = place
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+
+        unit
+    }
+
     fun updateMatchResult(
         competitionId: UUID,
         matchId: UUID,
@@ -366,31 +498,118 @@ object CompetitionExecutionService {
         request: UpdateCompetitionMatchResultRequest,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+        val (_, currentRound) = !checkUpdateMatchResult(competitionId, matchId)
+        !prepareForNewPlaces(matchId, userId)
 
-        if (setupRounds.flatMap { it.setupMatches.toList() }.find { it.id == matchId } == null) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchNotFound)
-        }
-
-        val currentRound = getCurrentAndNextRound(setupRounds).first
-            ?: return@comprehension KIO.fail(CompetitionExecutionError.NoRoundsInSetup)
-
-        val match = currentRound.matches.find { it.competitionSetupMatch == matchId }
-        if (match == null) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
-        }
-
-        if (!currentRound.required && match.teams.size == 1) {
-            return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
-        }
+        // TODO: validate team size, places continuous
 
         request.teamResults.traverse { result ->
-            CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
-                place = result.place
-                updatedBy = userId
-                updatedAt = LocalDateTime.now()
-            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
-        }.map { ApiResponse.NoData }
+            updateTeamResult(
+                userId = userId,
+                setupRoundId = currentRound.setupRoundId,
+                matchId = matchId,
+                registrationId = result.registrationId,
+                deregistered =  result.deregistered,
+                deregistrationReason = result.deregistrationReason,
+                place = result.place,
+            )
+        }.noDataResponse()
+    }
+
+    fun updateMatchResultByFile(
+        competitionId: UUID,
+        matchId: UUID,
+        file: FileUpload,
+        request: UploadMatchResultRequest,
+        userId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val (match, currentRound) = !checkUpdateMatchResult(competitionId, matchId)
+        !prepareForNewPlaces(matchId, userId)
+
+        val config = !MatchResultImportConfigRepo.get(request.config).orDie().onNullFail { MatchResultImportConfigError.NotFound }
+
+        val iStream = file.bytes.inputStream()
+
+        val teams = !XLS.read(iStream) {
+            ParsedTeamResult(
+                startNumber = !cell(config.colTeamStartNumber, int),
+                place = !optionalCell(config.colTeamPlace, maybe(int)),
+                noResultReason = !optionalCell(config.colTeamPlace, maybe(string))
+            )
+        }.mapError {
+            when (it) {
+                is XLSReadError.CellError.ColumnUnknown -> CompetitionExecutionError.ResultUploadError.ColumnUnknown(it.expected)
+                is XLSReadError.CellError.ParseError.CellBlank -> CompetitionExecutionError.ResultUploadError.CellBlank(it.row, it.col)
+                is XLSReadError.CellError.ParseError.WrongCellType -> CompetitionExecutionError.ResultUploadError.WrongCellType(it.row, it. col, it.actual.name, it.expected.name)
+                XLSReadError.FileError -> CompetitionExecutionError.ResultUploadError.FileError
+                XLSReadError.NoHeaders -> CompetitionExecutionError.ResultUploadError.NoHeaders
+            }
+        }
+
+        !noDuplicates(teams.map { it.startNumber }).fold(
+            onValid = { unit },
+            onInvalid = { when (it) {
+                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedStartNumbers(it))
+                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+            } }
+        )
+
+        val places = teams.map { it.place }
+
+        !noDuplicates(places).fold(
+            onValid = { unit },
+            onInvalid = { when (it) {
+                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedPlaces(it))
+                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+            }}
+        )
+
+        !KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
+
+        places.filterNotNull().sorted().forEachIndexed { index, place ->
+            val expected = index + 1
+            !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
+        }
+
+        !teams.traverse { result ->
+
+            KIO.comprehension {
+
+                // TODO: better error for frontend
+                val registrationId = !KIO.failOnNull(match.teams.find { it.startNumber == result.startNumber }?.competitionRegistration) { CompetitionExecutionError.MatchTeamNotFound }
+
+                updateTeamResult(
+                    userId = userId,
+                    setupRoundId = currentRound.setupRoundId,
+                    matchId = matchId,
+                    registrationId = registrationId,
+                    deregistered = result.place == null,
+                    deregistrationReason = result.noResultReason,
+                    place = result.place,
+                )
+            }
+        }
+
+        noData
+
+    }
+
+    fun updateMatchRunningState(
+        matchId: UUID,
+        userId: UUID,
+        request: UpdateCompetitionMatchRunningStateRequest
+    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+
+        !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
+
+        !CompetitionMatchRepo.update(matchId) {
+            currentlyRunning = request.currentlyRunning
+            updatedBy = userId
+            updatedAt = LocalDateTime.now()
+        }.orDie()
+
+        noData
     }
 
 
@@ -509,11 +728,11 @@ object CompetitionExecutionService {
                 val nonAdvancingTeamsToMatchIndex = sortedRoundMatches.flatMapIndexed { matchIdx, match ->
                     match.teams.map { it to matchIdx }
                 }
-                    .filter { team -> // Filter teams that will move on to the next round or have no place set in the last round
+                    .filter { team -> // Filter out teams that will move on to the next round or have not yet a set place in the last round / are not deregistered
                         if (!isLastRound) {
                             setupRounds[roundIdx + 1].matches.toList().flatMap { m -> m.teams.toList() }
                                 .find { it.competitionRegistration == team.first.competitionRegistration } == null
-                        } else team.first.place != null
+                        } else team.first.place != null || team.first.deregistered
                     }
 
                 val seedingList =
@@ -528,6 +747,20 @@ object CompetitionExecutionService {
 
                 val teamsToPlaces = nonAdvancingTeamsToMatchIndex.map { team ->
 
+                    val teamsInSameMatch = nonAdvancingTeamsToMatchIndex.filter{ it.second == team.second }
+                    // Place can only be null here if this team is deregistered
+                    val (deregisteredTeamsInSameMatch, teamsWithPlacesInSameMatch) =
+                        teamsInSameMatch.partition { it.first.deregistered }
+
+                    val realPlace = team.first.place
+                        ?: (teamsWithPlacesInSameMatch.size
+                            + (deregisteredTeamsInSameMatch
+                            .sortedBy { it.first.startNumber }
+                            .map { it.first.competitionRegistration }
+                            .indexOf(team.first.competitionRegistration))
+                            + 1)
+
+
                     val teamToPlace = when (round.placesOption) {
                         CompetitionSetupPlacesOption.EQUAL.name -> {
                             team.first to if (!isLastRound) {
@@ -536,10 +769,10 @@ object CompetitionExecutionService {
                         }
 
                         CompetitionSetupPlacesOption.ASCENDING.name ->
-                            team.first to seedingList!![team.second][team.first.place!! - 1]
+                            team.first to seedingList!![team.second][realPlace - 1]
 
                         else ->
-                            team.first to round.places.first { it.roundOutcome == seedingList!![team.second][team.first.place!! - 1] }.place
+                            team.first to round.places.first { it.roundOutcome == seedingList!![team.second][realPlace - 1] }.place
                     }
                     teamToPlace
                 }
@@ -646,7 +879,7 @@ object CompetitionExecutionService {
     fun downloadStartlist(
         matchId: UUID,
         type: StartListFileType,
-    ): App<CompetitionExecutionError, ApiResponse.File> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
 
         val match = !CompetitionMatchRepo.getForStartList(matchId).orDie()
             .onNullFail { CompetitionExecutionError.MatchNotFound }
@@ -662,12 +895,16 @@ object CompetitionExecutionService {
                 buildPdf(data, pdfTemplate) to "pdf"
             }
 
-            StartListFileType.CSV -> buildCsv(data) to "csv"
+            is StartListFileType.CSV -> {
+                val config = !StartListConfigRepo.get(type.config).orDie()
+                    .onNullFail { StartListConfigError.NotFound }
+                buildCsv(data, config) to "csv"
+            }
         }
 
         KIO.ok(
             ApiResponse.File(
-                name = "startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
+                name = "${data.startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}-startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
                 bytes = bytes,
             )
         )
@@ -789,10 +1026,15 @@ object CompetitionExecutionService {
                                     newLine = false,
                                 ) { " $it" }
                             }
+                            team.ratingCategory?.let {
+                                text(
+                                    newLine = false,
+                                ) { " ${it.name}" }
+                            }
                             if (data.startTimeOffset != null) {
                                 text {
                                     "startet ${
-                                        data.startTime.plusSeconds((data.startTimeOffset * index).milliseconds.inWholeSeconds)
+                                        data.startTime.plusSeconds(data.startTimeOffset * index)
                                             .hrTime()
                                     }"
                                 }
@@ -851,30 +1093,51 @@ object CompetitionExecutionService {
         return bytes
     }
 
+    private fun Gender.order() = when (this) {
+        Gender.M -> 2
+        Gender.F -> 1
+        Gender.D -> 3
+    }
+
     fun buildCsv(
         data: CompetitionMatchData,
+        config: StartlistExportConfigRecord,
     ): ByteArray {
 
         val bytes = ByteArrayOutputStream().use { out ->
             CSV.write(
                 out,
-                data.teams
+                data.teams.sortedBy { it.startNumber }
             ) {
-                if (data.teams.first().participants.size == 1) {
-                    column("First name") { participants.first().firstname }
-                    column("Last name") { participants.first().lastname }
-                    column("Gender") { participants.first().gender.name }
-                } else {
-                    column("Name") { participants.joinToString(",") { p -> p.lastname } }
-                    column("Gender") { participants.map { p -> p.gender }.toSet().joinToString("/") }
+                optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
+                optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
+                optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSortedSet { a ,b -> compareValues(a.order(), b.order()) }.joinToString("/") }
+                optionalColumn(config.colParticipantYear) { participants.joinToString(",") { p -> p.year.toString() } }
+                optionalColumn(config.colParticipantRole) { participants.map { p -> p.role }.toSet().joinToString(",") }
+                optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: clubName }.toSet().joinToString(",") }
+
+                optionalColumn(config.colClubName) { clubName }
+
+                optionalColumn(config.colTeamName) { teamName ?: "" }
+                optionalColumn(config.colTeamStartNumber) { startNumber.toString() }
+                optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
+
+                optionalColumn(config.colMatchName) { data.matchName ?: "" }
+                optionalColumn(config.colMatchStartTime) { idx ->
+                    val offsetSeconds = idx * (data.startTimeOffset ?: 0)
+                    // TODO: make this configurable
+                    LocalTime.ofSecondOfDay(offsetSeconds)
+                    //data.startTime.toLocalTime().plusSeconds(offsetSeconds)
+                        .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 }
-                column("Team name") { clubName }
-                column("Team name 2") { teamName ?: "" }
-                column("Category") { data.competition.category ?: "" }
-                column("Bib") { startNumber.toString() }
-                if (data.startTimeOffset != null) {
-                    column("Start time") { idx -> (idx * data.startTimeOffset).milliseconds.toIsoString() }
-                }
+
+                optionalColumn(config.colRoundName) { data.roundName }
+
+                optionalColumn(config.colCompetitionIdentifier) { data.competition.identifier }
+                optionalColumn(config.colCompetitionName) { data.competition.name }
+                optionalColumn(config.colCompetitionShortName) { data.competition.shortName ?: "" }
+                optionalColumn(config.colCompetitionCategory) { data.competition.category ?: "" }
+
             }
 
             out.toByteArray()

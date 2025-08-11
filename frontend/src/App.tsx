@@ -18,7 +18,7 @@ client.setConfig({
     baseUrl: Config.api.baseUrl,
 })
 
-const language = (document.getElementById('ready2race-root')!.dataset.lng)
+const language = document.getElementById('ready2race-root')!.dataset.lng
 if (isLanguage(language)) {
     i18next.changeLanguage(language).then()
 }

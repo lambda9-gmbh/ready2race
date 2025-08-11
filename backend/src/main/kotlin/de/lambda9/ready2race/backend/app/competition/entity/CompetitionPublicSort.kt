@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competition.entity
 
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PUBLIC_VIEW
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_VIEW
 import org.jooq.Field
 
 enum class CompetitionPublicSort : CompetitionSortable {
@@ -17,7 +18,7 @@ enum class CompetitionPublicSort : CompetitionSortable {
         EVENT -> listOf(COMPETITION_PUBLIC_VIEW.EVENT)
         NAME -> listOf(COMPETITION_PUBLIC_VIEW.NAME)
         SHORT_NAME -> listOf(COMPETITION_PUBLIC_VIEW.SHORT_NAME)
-        IDENTIFIER -> listOf(COMPETITION_PUBLIC_VIEW.IDENTIFIER)
+        IDENTIFIER -> listOf(COMPETITION_PUBLIC_VIEW.IDENTIFIER_PREFIX, COMPETITION_PUBLIC_VIEW.IDENTIFIER_SUFFIX_NO_LEADING_ZEROS)
         COMPETITION_CATEGORY -> listOf(COMPETITION_PUBLIC_VIEW.CATEGORY_NAME)
     }
 }

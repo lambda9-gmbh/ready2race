@@ -45,6 +45,10 @@ import ContactInformationDialog from '@components/contactInformation/ContactInfo
 import AssignContactInformation from '@components/contactInformation/AssignContactInformation.tsx'
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
+import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
+import {a11yProps} from "@utils/helpers.ts";
+import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
+import MatchResultImportConfigPanel from "@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -65,13 +69,8 @@ const ConfigurationPage = () => {
         navigate({from: configurationIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const a11yProps = (index: ConfigurationTab) => {
-        return {
-            value: index,
-            id: `configuration-tab-${index}`,
-            'aria-controls': `configuration-tabpanel-${index}`,
-        }
-    }
+    const tabProps = (tab: ConfigurationTab) =>
+        a11yProps('configuration', tab)
 
     const competitionTemplateAdministrationProps = useEntityAdministration<CompetitionTemplateDto>(
         t('event.competition.template.template'),
@@ -117,19 +116,19 @@ const ConfigurationPage = () => {
             <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                 <Tab
                     label={t('configuration.tabs.competitionTemplates')}
-                    {...a11yProps('competition-templates')}
+                    {...tabProps('competition-templates')}
                 />
                 <Tab
                     label={t('configuration.tabs.competitionElements')}
-                    {...a11yProps('competition-elements')}
+                    {...tabProps('competition-elements')}
                 />
                 <Tab
                     label={t('configuration.tabs.eventElements')}
-                    {...a11yProps('event-elements')}
+                    {...tabProps('event-elements')}
                 />
                 <Tab
                     label={t('configuration.tabs.globalSettings')}
-                    {...a11yProps('global-settings')}
+                    {...tabProps('global-settings')}
                 />
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>
@@ -148,6 +147,7 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.category.tableHint')]}
                     />
                     <CompetitionCategoryDialog {...competitionCategoryAdministrationProps.dialog} />
+                    <RatingCategoryPanel />
                     <NamedParticipantTable
                         {...namedParticipantAdministrationProps.table}
                         title={t('event.competition.namedParticipant.namedParticipants')}
@@ -166,6 +166,8 @@ const ConfigurationPage = () => {
                         hints={[t('event.competition.setup.tableHint')]}
                     />
                     <CompetitionSetupTemplateDialog {...competitionSetupTemplateProps.dialog} />
+                    <StartListConfigPanel />
+                    <MatchResultImportConfigPanel />
                 </Stack>
             </TabPanel>
             <TabPanel index={'event-elements'} activeTab={activeTab}>

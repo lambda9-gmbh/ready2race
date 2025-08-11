@@ -1,18 +1,22 @@
-import {ReactNode} from 'react'
+import {PropsWithChildren} from 'react'
 import {Box} from '@mui/material'
 
-const TabPanel = <TabType extends string,>(props: {children?: ReactNode; index: TabType; activeTab: TabType}) => {
-    const {children, activeTab, index, ...other} = props
+type Props<TabType> = {
+    index: TabType
+    activeTab: TabType
+}
+
+const TabPanel = <TabType extends string,> ({children, activeTab, index}: PropsWithChildren<Props<TabType>>) => {
 
     return (
         <div
             role="tabpanel"
             hidden={activeTab !== index}
             id={`simple-tabpanel-${index}`}
-            aria-labelledby={`simple-tab-${index}`}
-            {...other}>
+            aria-labelledby={`simple-tab-${index}`}>
             {activeTab === index && <Box>{children}</Box>}
         </div>
     )
 }
+
 export default TabPanel

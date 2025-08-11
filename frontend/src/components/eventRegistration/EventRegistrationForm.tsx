@@ -1,5 +1,4 @@
 import * as React from 'react'
-import {useMemo} from 'react'
 import {
     Alert,
     AlertTitle,
@@ -13,11 +12,6 @@ import {
 } from '@mui/material'
 import {FormContainer, useFieldArray, UseFormReturn} from 'react-hook-form-mui'
 import {PersonAdd} from '@mui/icons-material'
-import {
-    EventRegistrationCompetitionDto,
-    EventRegistrationInfoDto,
-    EventRegistrationUpsertDto,
-} from '../../api'
 import {EventRegistrationParticipantForm} from './EventRegistrationParticipantForm.tsx'
 import {useTranslation} from 'react-i18next'
 import {v4 as uuid} from 'uuid'
@@ -27,10 +21,12 @@ import {EventRegistrationSingleCompetitionForm} from './EventRegistrationSingleC
 import EventRegistrationTeamCompetitionForm from './EventRegistrationTeamCompetitionForm.tsx'
 import {EventRegistrationFeeDisplay} from '@components/eventRegistration/EventRegistrationFeeDisplay.tsx'
 import {EventRegistrationConfirmDocumentsForm} from '@components/eventRegistration/EventRegistrationConfirmDocumentsForm.tsx'
+import {EventRegistrationFormData} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
+import {useEventRegistration} from "@contexts/eventRegistration/EventRegistrationContext.ts";
 
 export type EventRegistrationStep = {
     label: string
-    validateKeys: Array<keyof EventRegistrationUpsertDto>
+    validateKeys: Array<keyof EventRegistrationFormData>
     content: React.ReactNode
 }
 
@@ -52,18 +48,17 @@ function RegistrationEventDayInfo(props: {
 const EventRegistrationForm = ({
     stepsBefore,
     onSubmit,
-    info,
     formContext,
     adminEdit,
 }: {
     stepsBefore?: EventRegistrationStep[]
-    onSubmit: (data: Partial<EventRegistrationUpsertDto>) => void
-    info: EventRegistrationInfoDto | null
-    formContext: UseFormReturn<EventRegistrationUpsertDto>
+    onSubmit: (data: Partial<EventRegistrationFormData>) => void
+    formContext: UseFormReturn<EventRegistrationFormData>
     adminEdit?: boolean
 }) => {
     const {t} = useTranslation()
     const [activeStep, setActiveStep] = React.useState(0)
+    const {info} = useEventRegistration()
 
     const handleNext = () => {
         formContext.trigger(steps[activeStep]?.validateKeys, {shouldFocus: true}).then(valid => {
@@ -76,30 +71,6 @@ const EventRegistrationForm = ({
     const handleBack = () => {
         setActiveStep(prevActiveStep => prevActiveStep - 1)
     }
-
-    const competitionsSingle: Map<string, Array<EventRegistrationCompetitionDto>> = useMemo(() => {
-        return new Map([
-            [
-                'M',
-                info?.competitionsSingle?.filter(
-                    c =>
-                        c.namedParticipant?.[0].countMales === 1 ||
-                        c.namedParticipant?.[0].countMixed === 1 ||
-                        c.namedParticipant?.[0].countNonBinary === 1,
-                ) ?? [],
-            ],
-            [
-                'F',
-                info?.competitionsSingle?.filter(
-                    c =>
-                        c.namedParticipant?.[0].countFemales === 1 ||
-                        c.namedParticipant?.[0].countMixed === 1 ||
-                        c.namedParticipant?.[0].countNonBinary === 1,
-                ) ?? [],
-            ],
-            ['D', info?.competitionsSingle ?? []],
-        ])
-    }, [info?.competitionsSingle])
 
     const {
         fields: participantFields,
@@ -148,13 +119,13 @@ const EventRegistrationForm = ({
             label: t('event.registration.singleCompetition'),
             validateKeys: ['participants'],
             content: (
-                <EventRegistrationSingleCompetitionForm competitionsSingle={competitionsSingle} />
+                <EventRegistrationSingleCompetitionForm />
             ),
         },
         {
             label: t('event.registration.teamCompetition'),
             validateKeys: ['competitionRegistrations'],
-            content: <EventRegistrationTeamCompetitionForm registrationInfo={info} />,
+            content: <EventRegistrationTeamCompetitionForm />,
         },
         ...(adminEdit
             ? []
@@ -171,9 +142,9 @@ const EventRegistrationForm = ({
                                               {t('event.registration.schedule')}
                                           </AlertTitle>
                                           <Stack spacing={1}>
-                                              {info?.days.map(day => (
+                                              {info?.days.map((day) => (
                                                   <RegistrationEventDayInfo
-                                                      key={day.name}
+                                                      key={day.id}
                                                       name={day.name}
                                                       description={day.description}
                                                       date={day.date}
@@ -217,7 +188,7 @@ const EventRegistrationForm = ({
                         alignItems={'center'}
                         p={2}>
                         <Typography variant={'h2'}>{info?.name}</Typography>
-                        <EventRegistrationFeeDisplay registrationInfo={info} />
+                        <EventRegistrationFeeDisplay />
                     </Stack>
                     <Stepper activeStep={activeStep}>
                         {steps.map(({label}) => {

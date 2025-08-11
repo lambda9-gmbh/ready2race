@@ -7,7 +7,7 @@ import {
 import {
     Box,
     Button,
-    Dialog,
+    Checkbox,
     Divider,
     Stack,
     Table,
@@ -17,13 +17,15 @@ import {
     TableHead,
     TableRow,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
 import {BaseSyntheticEvent, Fragment, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
-import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
+import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import {groupBy, shuffle} from '@utils/helpers.ts'
@@ -40,6 +42,8 @@ import WarningIcon from '@mui/icons-material/Warning'
 import Info from '@mui/icons-material/Info'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import BaseDialog from '@components/BaseDialog.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -54,6 +58,8 @@ type EditMatchForm = {
 type EnterResultsTeam = {
     registrationId: string
     place: string
+    deregistered: boolean
+    deregistrationReason: string
 }
 type EnterResultsForm = {
     selectedMatchDto: CompetitionMatchDto | null
@@ -63,6 +69,9 @@ type EnterResultsForm = {
 const CompetitionExecution = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const theme = useTheme()
+
+    const smallScreenLayout = useMediaQuery(`(max-width:${theme.breakpoints.values.md}px)`)
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -140,7 +149,8 @@ const CompetitionExecution = () => {
         name: 'teamResults',
         rules: {
             validate: values => {
-                const duplicatePlaces = Array.from(groupBy(values, val => val.place))
+                const validValues = values.filter(val => val.deregistered === false)
+                const duplicatePlaces = Array.from(groupBy(validValues, val => val.place))
                     .filter(([, items]) => items.length > 1)
                     .map(([place]) => place)
 
@@ -164,12 +174,21 @@ const CompetitionExecution = () => {
         },
     })
 
+    const watchResultFields = resultsFormContext.watch('teamResults')
+
+    const controlledResultFields = resultFields.map((field, index) => ({
+        ...field,
+        ...watchResultFields?.[index],
+    }))
+
     const mapTeamDtoToFormTeamResults = (teams: CompetitionMatchTeamDto[]): EnterResultsTeam[] => {
         return teams
             .sort((a, b) => a.startNumber - b.startNumber)
             .map(team => ({
                 registrationId: team.registrationId,
                 place: team.place?.toString() ?? '',
+                deregistered: team.deregistered,
+                deregistrationReason: team.deregistrationReason ?? '',
             }))
     }
 
@@ -204,7 +223,11 @@ const CompetitionExecution = () => {
                 body: {
                     teamResults: formData.teamResults.map(results => ({
                         registrationId: results.registrationId,
-                        place: Number(results.place),
+                        place: results.deregistered ? undefined : Number(results.place),
+                        deregistered: results.deregistered,
+                        deregistrationReason: results.deregistered
+                            ? takeIfNotEmpty(results.deregistrationReason)
+                            : undefined,
                     })),
                 },
             })
@@ -232,6 +255,7 @@ const CompetitionExecution = () => {
             }
         } else {
             closeResultsDialog()
+            resultsFormContext.reset()
         }
     }
 
@@ -349,6 +373,7 @@ const CompetitionExecution = () => {
             }
         } else {
             closeEditMatchDialog()
+            editMatchFormContext.reset()
         }
     }
 
@@ -422,6 +447,14 @@ const CompetitionExecution = () => {
         )
     }
 
+    const getRegistrationIsLocked = (registrationId: string) => {
+        return (
+            currentRound?.matches
+                .flatMap(m => m.teams)
+                .find(t => t.registrationId === registrationId)?.deregistrationLocked ?? false
+        )
+    }
+
     return progressDto && sortedRounds ? (
         <Box>
             {!allRoundsCreated && (
@@ -477,16 +510,16 @@ const CompetitionExecution = () => {
                         handleAccordionExpandedChange={(accordionIndex, isExpanded) =>
                             handleAccordionExpandedChange({roundIndex, accordionIndex, isExpanded})
                         }
+                        smallScreenLayout={smallScreenLayout}
                     />
                 ))}
             </Stack>
-            <Dialog
+            <BaseDialog
                 open={resultsDialogOpen}
-                fullWidth
-                maxWidth={'sm'}
+                maxWidth={'md'}
                 onClose={closeResultsDialog}
-                className="ready2race">
-                <Box sx={{m: 2}}>
+                fullScreen={smallScreenLayout}>
+                <Box sx={{[theme.breakpoints.up('md')]: {m: 2}}}>
                     <FormContainer formContext={resultsFormContext} onSuccess={onSubmitResults}>
                         {selectedResultsMatch && currentRoundMatches && (
                             <CompetitionExecutionMatchDialog
@@ -510,45 +543,109 @@ const CompetitionExecution = () => {
                                     <Table>
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell width="25%">
-                                                    {t(
-                                                        'event.competition.execution.match.startNumber',
-                                                    )}
+                                                <TableCell width="10%">
+                                                    {smallScreenLayout
+                                                        ? t(
+                                                              'event.competition.execution.match.startNumber.short',
+                                                          )
+                                                        : t(
+                                                              'event.competition.execution.match.startNumber.startNumber',
+                                                          )}
                                                 </TableCell>
-                                                <TableCell width="50%">
+                                                <TableCell width="40%">
                                                     {t('event.competition.execution.match.team')}
                                                 </TableCell>
-                                                <TableCell width="25%">
+                                                <TableCell width="40%">
                                                     {t('event.competition.execution.match.place')}
+                                                </TableCell>
+                                                <TableCell width="10%">
+                                                    {t(
+                                                        'event.competition.registration.deregister.deregister',
+                                                    )}
                                                 </TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {resultFields.map((value, fieldIndex) => (
-                                                <TableRow key={value.id}>
-                                                    <TableCell width="25%">
-                                                        {
-                                                            selectedResultsMatch.teams[fieldIndex]
-                                                                .startNumber
-                                                        }
-                                                    </TableCell>
-                                                    <TableCell width="50%">
-                                                        {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
-                                                            (selectedResultsMatch.teams[fieldIndex]
-                                                                .name
-                                                                ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
-                                                                : '')}
-                                                    </TableCell>
-                                                    <TableCell width="25%">
-                                                        <FormInputNumber
-                                                            name={`teamResults[${fieldIndex}.place`}
-                                                            required
-                                                            min={1}
-                                                            max={resultFields.length}
-                                                            integer
-                                                        />
-                                                    </TableCell>
-                                                </TableRow>
+                                            {controlledResultFields.map((value, fieldIndex) => (
+                                                <Controller
+                                                    key={value.id}
+                                                    name={`teamResults[${fieldIndex}.deregistered`}
+                                                    render={({
+                                                        field: {
+                                                            onChange: deregisteredOnChange,
+                                                            value: deregisteredValue = false,
+                                                        },
+                                                    }) => (
+                                                        <TableRow key={value.id}>
+                                                            <TableCell width="10%">
+                                                                {
+                                                                    selectedResultsMatch.teams[
+                                                                        fieldIndex
+                                                                    ].startNumber
+                                                                }
+                                                            </TableCell>
+                                                            <TableCell width="40%">
+                                                                {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
+                                                                    (selectedResultsMatch.teams[
+                                                                        fieldIndex
+                                                                    ].name
+                                                                        ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
+                                                                        : '')}
+                                                            </TableCell>
+                                                            <TableCell width="40%">
+                                                                {!deregisteredValue ? (
+                                                                    <Box sx={{maxWidth: 100}}>
+                                                                        {controlledResultFields && (
+                                                                            <FormInputNumber
+                                                                                name={`teamResults[${fieldIndex}.place`}
+                                                                                required
+                                                                                min={1}
+                                                                                max={
+                                                                                    controlledResultFields.filter(
+                                                                                        r =>
+                                                                                            !r.deregistered,
+                                                                                    ).length
+                                                                                }
+                                                                                integer
+                                                                            />
+                                                                        )}
+                                                                    </Box>
+                                                                ) : (
+                                                                    !getRegistrationIsLocked(
+                                                                        value.registrationId,
+                                                                    ) && (
+                                                                        <FormInputText
+                                                                            name={`teamResults[${fieldIndex}.deregistrationReason`}
+                                                                            label={t(
+                                                                                'event.competition.registration.deregister.reason',
+                                                                            )}
+                                                                            placeholder={t(
+                                                                                'event.competition.registration.deregister.reason',
+                                                                            )}
+                                                                        />
+                                                                    )
+                                                                )}
+                                                            </TableCell>
+                                                            <TableCell width="10%">
+                                                                <Checkbox
+                                                                    checked={deregisteredValue}
+                                                                    disabled={getRegistrationIsLocked(
+                                                                        value.registrationId,
+                                                                    )}
+                                                                    onChange={e => {
+                                                                        deregisteredOnChange(e)
+                                                                        resultsFormContext.setValue(
+                                                                            `teamResults.${fieldIndex}.deregistered`,
+                                                                            Boolean(
+                                                                                e.target.checked,
+                                                                            ),
+                                                                        )
+                                                                    }}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                />
                                             ))}
                                         </TableBody>
                                     </Table>
@@ -557,13 +654,12 @@ const CompetitionExecution = () => {
                         )}
                     </FormContainer>
                 </Box>
-            </Dialog>
-            <Dialog
+            </BaseDialog>
+            <BaseDialog
                 open={editMatchDialogOpen}
-                fullWidth
                 maxWidth={'sm'}
                 onClose={closeEditMatchDialog}
-                className="ready2race">
+                fullScreen={smallScreenLayout}>
                 <Box sx={{m: 2}}>
                     <FormContainer formContext={editMatchFormContext} onSuccess={onSubmitEditMatch}>
                         {selectedEditMatch && currentRoundMatches && (
@@ -603,9 +699,13 @@ const CompetitionExecution = () => {
                                             <TableHead>
                                                 <TableRow>
                                                     <TableCell width="25%">
-                                                        {t(
-                                                            'event.competition.execution.match.startNumber',
-                                                        )}
+                                                        {smallScreenLayout
+                                                            ? t(
+                                                                  'event.competition.execution.match.startNumber.short',
+                                                              )
+                                                            : t(
+                                                                  'event.competition.execution.match.startNumber.startNumber',
+                                                              )}
                                                     </TableCell>
                                                     <TableCell width="75%">
                                                         {t(
@@ -622,7 +722,6 @@ const CompetitionExecution = () => {
                                                                 name={`teams[${fieldIndex}.startNumber`}
                                                                 required
                                                                 min={1}
-                                                                max={editMatchFields.length}
                                                                 integer
                                                             />
                                                         </TableCell>
@@ -643,7 +742,7 @@ const CompetitionExecution = () => {
                         )}
                     </FormContainer>
                 </Box>
-            </Dialog>
+            </BaseDialog>
         </Box>
     ) : (
         progressDtoPending && <Throbber />

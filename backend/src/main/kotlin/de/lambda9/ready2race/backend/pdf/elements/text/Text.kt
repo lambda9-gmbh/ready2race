@@ -7,6 +7,7 @@ import kotlin.streams.toList
 
 data class Text(
     val newLine: Boolean,
+    val centered: Boolean,
     val content: String,
     val fontSize: Float,
     val lineHeight: Float,
@@ -183,6 +184,12 @@ data class Text(
                 y = yStart - height
                 c = currentContext.content
                 c.setFont(font, fontSize)
+            }
+
+            if (centered) {
+                val space = getXMax(currentContext) - x
+                val lineWidth = fontSize * font.getStringWidth(line) / 1000
+                x = x + (space - lineWidth) / 2
             }
 
             c.beginText()

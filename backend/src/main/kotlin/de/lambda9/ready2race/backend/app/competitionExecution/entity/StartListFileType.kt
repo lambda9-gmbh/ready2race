@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.entity
 
-enum class StartListFileType {
-    PDF,
-    CSV
+import java.util.UUID
+
+sealed interface StartListFileType {
+
+    data object PDF : StartListFileType
+    data class CSV(val config: UUID) : StartListFileType
 }

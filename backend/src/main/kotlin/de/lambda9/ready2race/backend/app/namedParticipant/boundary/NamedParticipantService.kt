@@ -83,7 +83,7 @@ object NamedParticipantService {
         }
     }
 
-    fun getNamedParticipantWithRequirements(
+    private fun getNamedParticipantWithRequirements(
         namedParticipantId: UUID,
         eventId: UUID
     ): App<NamedParticipantError, ApiResponse.Dto<NamedParticipantWithRequirementsDto>> = KIO.comprehension {
@@ -94,12 +94,12 @@ object NamedParticipantService {
             !ParticipantRequirementForEventRepo.getRequirementsForNamedParticipant(eventId, namedParticipantId).orDie()
 
         val requirementDtos = !requirements.traverse { record ->
-            ParticipantRequirementRepo.get(record.participantRequirement!!).orDie()
+            ParticipantRequirementRepo.get(record.participantRequirement).orDie()
                 .onNullFail { NamedParticipantError.NotFound }
                 .map { requirement ->
                     EventParticipantRequirementDto(
-                        requirementId = requirement.id!!,
-                        requirementName = requirement.name!!,
+                        requirementId = requirement.id,
+                        requirementName = requirement.name,
                         requirementDescription = requirement.description,
                         namedParticipantId = record.namedParticipant,
                         qrCodeRequired = record.qrCodeRequired!!
@@ -111,8 +111,8 @@ object NamedParticipantService {
             requirementDtos.any { it.namedParticipantId == namedParticipantId && it.qrCodeRequired }
 
         val dto = NamedParticipantWithRequirementsDto(
-            id = namedParticipant.id!!,
-            name = namedParticipant.name!!,
+            id = namedParticipant.id,
+            name = namedParticipant.name,
             description = namedParticipant.description,
             requirements = requirementDtos.filter { it.namedParticipantId == namedParticipantId },
             qrCodeRequired = hasQrCodeRequirement

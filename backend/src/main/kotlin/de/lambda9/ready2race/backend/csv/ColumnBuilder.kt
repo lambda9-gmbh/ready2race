@@ -10,4 +10,9 @@ class ColumnBuilder<A: Any> {
     ) {
         columns.add(Column(header, f))
     }
+
+    fun optionalColumn(
+        header: String?,
+        f: A.(index: Int) -> String,
+    ) = header?.let { column(it, f) } ?: Unit
 }

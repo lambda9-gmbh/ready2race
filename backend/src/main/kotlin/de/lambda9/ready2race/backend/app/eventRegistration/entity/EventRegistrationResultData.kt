@@ -2,6 +2,8 @@ package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationResultViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.RegisteredCompetitionTeamRecord
+import java.util.UUID
 
 data class EventRegistrationResultData(
     val competitionRegistrations: List<CompetitionRegistrationData>,
@@ -11,17 +13,20 @@ data class EventRegistrationResultData(
         val identifier: String,
         val name: String,
         val shortName: String?,
-        val clubRegistrations: List<ClubRegistrationData>,
-    )
-
-    data class ClubRegistrationData(
-        val name: String,
-        val teams: List<TeamRegistrationData>
+        val teams: List<TeamRegistrationData>,
     )
 
     data class TeamRegistrationData(
         val name: String?,
+        val clubId: UUID,
+        val clubName: String,
+        val ratingCategory: RatingCategoryRegistrationData?,
         val participants: List<ParticipantRegistrationData>,
+    )
+
+    data class RatingCategoryRegistrationData(
+        val id: UUID,
+        val name: String,
     )
 
     data class ParticipantRegistrationData(
@@ -37,28 +42,32 @@ data class EventRegistrationResultData(
 
         fun fromPersisted(
             result: EventRegistrationResultViewRecord,
+            filterTeams: (RegisteredCompetitionTeamRecord) -> Boolean = { true }
         ): EventRegistrationResultData = EventRegistrationResultData(
             competitionRegistrations = result.competitions!!.map { competition ->
                 CompetitionRegistrationData(
                     identifier = competition!!.identifier!!,
                     name = competition.name!!,
                     shortName = competition.shortName,
-                    clubRegistrations = competition.clubRegistrations!!.map { club ->
-                        ClubRegistrationData(
-                            name = club!!.name!!,
-                            teams = club.teams!!.map {
-                                TeamRegistrationData(
-                                    name = it!!.teamName,
-                                    participants = it.participants!!.map {
-                                        ParticipantRegistrationData(
-                                            role = it!!.role!!,
-                                            firstname = it.firstname!!,
-                                            lastname = it.lastname!!,
-                                            year = it.year!!,
-                                            gender = it.gender!!,
-                                            externalClubName = it.externalClubName,
-                                        )
-                                    }
+                    teams = competition.teams!!.filter { filterTeams(it!!) }.map { team ->
+                        TeamRegistrationData(
+                            name = team!!.teamName,
+                            clubId = team.clubId!!,
+                            clubName = team.clubName!!,
+                            ratingCategory = team.ratingCategory?.let {
+                                RatingCategoryRegistrationData(
+                                    id = it.id,
+                                    name = it.name,
+                                )
+                            },
+                            participants = team.participants!!.map {
+                                ParticipantRegistrationData(
+                                    role = it!!.role!!,
+                                    firstname = it.firstname!!,
+                                    lastname = it.lastname!!,
+                                    year = it.year!!,
+                                    gender = it.gender!!,
+                                    externalClubName = it.externalClubName,
                                 )
                             }
                         )

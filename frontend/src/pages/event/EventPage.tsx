@@ -24,7 +24,7 @@ import {
 } from '@api/types.gen.ts'
 import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
-import {Forward} from '@mui/icons-material'
+import {Forward, InfoOutlined, PlayCircleOutlined} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
 import {useMemo, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
@@ -42,7 +42,7 @@ import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
-import {eventRegistrationPossible} from '@utils/helpers.ts'
+import {a11yProps, arrayOfNotNull, eventRegistrationPossible, ifDefined} from '@utils/helpers.ts'
 import PlaceIcon from '@mui/icons-material/Place'
 import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays.tsx'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -51,8 +51,9 @@ import {format} from 'date-fns'
 import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
 import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
 import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
-import EventRegistrations from '@components/event/competition/registration/EventRegistrations.tsx'
 import ParticipantTrackingLogTable from '@components/event/participantTracking/ParticipantTrackingLogTable.tsx'
+import EventRegistrations from "@components/event/competition/registration/EventRegistrations.tsx";
+import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
 
 const EVENT_TABS = [
     'general',
@@ -82,6 +83,8 @@ const EventPage = () => {
 
     const [lastRequested, setLastRequested] = useState(Date.now())
     const reload = () => setLastRequested(Date.now())
+
+    const [manageRunningMatchesOpen, setManageRunningMatchesOpen] = useState(false)
     const {data, pending} = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
         onResponse: ({error}) => {
             if (error) {
@@ -117,13 +120,8 @@ const EventPage = () => {
         {entityCreate: false, entityUpdate: false},
     )
 
-    const a11yProps = (index: EventTab) => {
-        return {
-            value: index,
-            id: `event-tab-${index}`,
-            'aria-controls': `event-tabpanel-${index}`,
-        }
-    }
+    const tabProps = (tab: EventTab) =>
+        a11yProps('event', tab)
 
     const canRegister = useMemo(
         () =>
@@ -136,14 +134,42 @@ const EventPage = () => {
         [data, user],
     )
 
-    const regAvailableFrom = data?.registrationAvailableFrom
-        ? format(new Date(data.registrationAvailableFrom), t('format.datetime'))
-        : undefined
-    const regAvailableTo = data?.registrationAvailableTo
-        ? format(new Date(data.registrationAvailableTo), t('format.datetime'))
-        : undefined
+    const registrationPeriod =
+        !data?.registrationAvailableFrom && !data?.registrationAvailableTo
+            ? t('event.registrationAvailable.unknown')
+            : arrayOfNotNull(
+                ifDefined(
+                    data.registrationAvailableFrom,
+                    from =>
+                        t('event.registrationAvailable.from') +
+                        ' ' +
+                        format(new Date(from), t('format.datetime')),
+                ),
+                ifDefined(
+                    data.registrationAvailableTo,
+                    to =>
+                        t('event.registrationAvailable.to') +
+                        ' ' +
+                        format(new Date(to), t('format.datetime')),
+                ),
+            ).join(' ')
+
+    const lateRegistrationPeriod = ifDefined(data?.lateRegistrationAvailableTo, lateTo =>
+        ifDefined(
+            data?.registrationAvailableTo,
+            to =>
+                t('event.registrationAvailable.from') +
+                ' ' +
+                format(new Date(to), t('format.datetime')) +
+                ' ' +
+                t('event.registrationAvailable.to') +
+                ' ' +
+                format(new Date(lateTo), t('format.datetime')),
+        ),
+    )
 
     return (
+        <Box>
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {data ? (
                 <Stack spacing={4}>
@@ -159,33 +185,33 @@ const EventPage = () => {
                         </Link>
                     </Stack>
                     <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
-                        <Tab label={t('event.tabs.general')} {...a11yProps('general')} />
+                        <Tab label={t('event.tabs.general')} {...tabProps('general')} />
                         <Tab
                             label={t('event.competition.competitions')}
-                            {...a11yProps('competitions')}
+                            {...tabProps('competitions')}
                         />
                         {(user.checkPrivilege(readRegistrationGlobal) ||
                             user.checkPrivilege(readRegistrationOwn)) && (
-                            <Tab label={t('event.participants')} {...a11yProps('participants')} />
+                            <Tab label={t('event.participants')} {...tabProps('participants')} />
                         )}
                         {user.checkPrivilege(readEventGlobal) && (
                             <Tab
                                 label={t('event.tabs.registrations')}
-                                {...a11yProps('registrations')}
+                                {...tabProps('registrations')}
                             />
                         )}
                         {user.checkPrivilege(readEventGlobal) &&
                             user.checkPrivilege(readUserGlobal) && (
                                 <Tab
                                     label={t('event.tabs.organisation')}
-                                    {...a11yProps('organization')}
+                                    {...tabProps('organization')}
                                 />
                             )}
                         {user.checkPrivilege(readEventGlobal) && (
-                            <Tab label={t('event.tabs.settings')} {...a11yProps('settings')} />
+                            <Tab label={t('event.tabs.settings')} {...tabProps('settings')} />
                         )}
                         {user.getPrivilegeScope('READ', 'INVOICE') && (
-                            <Tab label={t('event.tabs.invoices')} {...a11yProps('invoices')} />
+                            <Tab label={t('event.tabs.invoices')} {...tabProps('invoices')} />
                         )}
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>
@@ -223,21 +249,16 @@ const EventPage = () => {
                                                 </ListItemIcon>
                                                 <ListItemText
                                                     primary={
-                                                        regAvailableFrom && regAvailableTo
-                                                            ? t(
-                                                                  'event.registrationAvailable.timespan',
-                                                              ) +
-                                                              ': ' +
-                                                              regAvailableFrom +
-                                                              ' - ' +
-                                                              regAvailableTo
-                                                            : regAvailableFrom
-                                                              ? t(
-                                                                    'event.registrationAvailable.timespanFrom',
-                                                                ) + ` ${regAvailableFrom}`
-                                                              : t(
-                                                                    'event.registrationAvailable.timespanTo',
-                                                                ) + ` ${regAvailableTo}`
+                                                        t('event.registrationAvailable.timespan') +
+                                                            ': ' +
+                                                            registrationPeriod
+                                                    }
+                                                    secondary={
+                                                        lateRegistrationPeriod && (
+                                                            t('event.registrationAvailable.lateTimespan') +
+                                                            ': ' +
+                                                            lateRegistrationPeriod
+                                                        )
                                                     }
                                                 />
                                             </ListItem>
@@ -262,6 +283,35 @@ const EventPage = () => {
                                     </List>
                                 </Box>
                             </Card>
+                            {user.checkPrivilege(readEventGlobal) && (
+                                <Card sx={{p: 2}}>
+                                    <Typography variant="h6" sx={{mb: 1}}>
+                                        {t('event.info.sectionTitle')}
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{mb: 2}}>
+                                        {t('event.info.pageDescription')}
+                                    </Typography>
+                                    <Link to={'/event/$eventId/info'} params={{eventId}}>
+                                        <Button
+                                            startIcon={<InfoOutlined />}
+                                            variant="outlined"
+                                            fullWidth>
+                                            {t('event.info.manageInfoViews')}
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        startIcon={<PlayCircleOutlined />}
+                                        variant="outlined"
+                                        fullWidth
+                                        sx={{mt: 1}}
+                                        onClick={() => setManageRunningMatchesOpen(true)}>
+                                        {t('event.competition.execution.match.manageRunning')}
+                                    </Button>
+                                </Card>
+                            )}
                         </Stack>
                     </TabPanel>
                     <TabPanel index={'competitions'} activeTab={activeTab}>
@@ -333,6 +383,14 @@ const EventPage = () => {
                 </Stack>
             ) : (
                 pending && <Throbber />
+            )}
+        </Box>
+            {manageRunningMatchesOpen && (
+                <ManageRunningMatchesDialog
+                    open={manageRunningMatchesOpen}
+                    onClose={() => setManageRunningMatchesOpen(false)}
+                    eventId={eventId}
+                />
             )}
         </Box>
     )

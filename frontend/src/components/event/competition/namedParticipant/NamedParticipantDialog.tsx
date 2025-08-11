@@ -7,7 +7,7 @@ import {useCallback} from 'react'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {addNamedParticipant, updateNamedParticipant} from '@api/sdk.gen'
-import {NamedParticipantDto, NamedParticipantRequest} from "@api/types.gen.ts";
+import {NamedParticipantDto, NamedParticipantRequest} from '@api/types.gen.ts'
 
 type NamedParticipantForm = {
     name: string
@@ -41,7 +41,6 @@ const NamedParticipantDialog = (props: BaseEntityDialogProps<NamedParticipantDto
         formContext.reset(props.entity ? mapDtoToForm(props.entity) : defaultValues)
     }, [props.entity])
 
-
     return (
         <EntityDialog
             {...props}
@@ -50,8 +49,15 @@ const NamedParticipantDialog = (props: BaseEntityDialogProps<NamedParticipantDto
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name="name" label={t('event.competition.namedParticipant.name')} required />
-                <FormInputText name="description" label={t('event.competition.namedParticipant.description')} />
+                <FormInputText
+                    name="name"
+                    label={t('event.competition.namedParticipant.name')}
+                    required
+                />
+                <FormInputText
+                    name="description"
+                    label={t('event.competition.namedParticipant.description')}
+                />
             </Stack>
         </EntityDialog>
     )

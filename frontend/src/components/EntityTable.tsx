@@ -46,10 +46,14 @@ type ExtendedEntityTableProps<
         paginationParameters: PaginationParameters,
     ) => RequestResult<PageResponse<Entity>, GetError, false>
     customTableActions?: ReactNode
-    customEntityActions?: (entity: Entity, checkPrivilege: (privilege: Privilege) => boolean) => EntityAction[]
+    customEntityActions?: (
+        entity: Entity,
+        checkPrivilege: (privilege: Privilege) => boolean,
+    ) => EntityAction[]
     linkColumn?: (entity: Entity) => PartialRequired<LinkComponentProps<'a'>, 'to' | 'params'>
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
+    editableIf?: (entity: Entity) => boolean
 } & (
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false>
@@ -172,6 +176,7 @@ const EntityTableInternal = <
     onDelete,
     onDeleteError,
     deletableIf,
+    editableIf,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
     const {t} = useTranslation()
@@ -201,17 +206,13 @@ const EntityTableInternal = <
                   },
               ]
             : []),
-        ...columns.filter(
-            c =>
-                !c.requiredPrivilege || (user.checkPrivilege(c.requiredPrivilege)),
-        ),
+        ...columns.filter(c => !c.requiredPrivilege || user.checkPrivilege(c.requiredPrivilege)),
         {
             field: 'actions',
             type: 'actions' as 'actions',
             getActions: (params: GridRowParams<Entity>) => [
-                ...customEntityActions(params.row, user.checkPrivilege)
-                    .filter(action => !!action),
-                ...(crud.update && options.entityUpdate
+                ...customEntityActions(params.row, user.checkPrivilege).filter(action => !!action),
+                ...(crud.update && options.entityUpdate && (editableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
                               icon={<Edit />}
@@ -221,7 +222,7 @@ const EntityTableInternal = <
                           />,
                       ]
                     : []),
-                ...(deleteRequest && crud.delete && (deletableIf?.(params.row) ?? true)
+                ...(deleteRequest && crud.delete && options.entityDelete && (deletableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
                               icon={<Delete />}
@@ -234,7 +235,9 @@ const EntityTableInternal = <
                                       if (error) {
                                           onDeleteError
                                               ? onDeleteError(error)
-                                              : feedback.error(t('entity.delete.error', {entity: entityName}))
+                                              : feedback.error(
+                                                    t('entity.delete.error', {entity: entityName}),
+                                                )
                                       } else {
                                           onDelete?.()
                                           feedback.success(
@@ -347,7 +350,7 @@ const EntityTableInternal = <
                                     py: '22px',
                                 },
                                 '& .MuiDataGrid-columnHeader': {
-                                    backgroundColor: t => t.palette.primary.light
+                                    backgroundColor: t => t.palette.primary.light,
                                 },
                             }}
                             {...gridProps}

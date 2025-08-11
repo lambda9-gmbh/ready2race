@@ -11,4 +11,5 @@ data class CompetitionMatchDto(
     val executionOrder: Int,
     val startTime: LocalDateTime?,
     val startTimeOffset: Long?,
+    val currentlyRunning: Boolean,
 )

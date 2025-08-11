@@ -11,5 +11,6 @@ data class EventRegistrationCompetitionDto(
     val competitionCategory: String?,
     val namedParticipant: List<EventRegistrationNamedParticipantDto>?,
     val fees: List<EventRegistrationFeeDto>,
-    val days: List<UUID>
+    val days: List<UUID>,
+    val lateRegistrationAllowed: Boolean,
 )

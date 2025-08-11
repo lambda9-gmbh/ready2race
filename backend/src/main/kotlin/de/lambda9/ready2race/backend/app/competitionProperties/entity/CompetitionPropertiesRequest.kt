@@ -18,6 +18,7 @@ data class CompetitionPropertiesRequest(
     val competitionCategory: UUID?,
     val namedParticipants: List<NamedParticipantForCompetitionRequestDto>,
     val fees: List<FeeForCompetitionRequestDto>,
+    val lateRegistrationAllowed: Boolean,
     val setupTemplate: UUID?, // Only relevant for add/edit template and add competition
 ) : Validatable {
     override fun validate(): ValidationResult =
@@ -46,6 +47,7 @@ data class CompetitionPropertiesRequest(
                 competitionCategory = UUID.randomUUID(),
                 namedParticipants = listOf(NamedParticipantForCompetitionRequestDto.example),
                 fees = listOf(FeeForCompetitionRequestDto.example),
+                lateRegistrationAllowed = true,
                 setupTemplate = UUID.randomUUID(),
             )
     }

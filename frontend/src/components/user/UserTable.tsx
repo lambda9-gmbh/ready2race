@@ -87,7 +87,7 @@ const UserTable = (props: BaseEntityTableProps<AppUserDto>) => {
                 resource={'USER'}
                 linkColumn={entity => ({
                     to: '/user/$userId',
-                    params: {userId: entity.id}
+                    params: {userId: entity.id},
                 })}
                 customEntityActions={customEntityActions}
             />

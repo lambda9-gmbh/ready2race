@@ -50,4 +50,17 @@ fun Route.participantForEvent() {
             }
         }
     }
+
+    // todo: Remove this on refactoring - this is just a quick solution to provide the participants to the
+    //  eventRequirements check page in the app with a different Privilege
+    route("/participant-app"){
+        get {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateAppEventRequirementGlobal)
+                val eventId = !pathParam("eventId", uuid)
+                val params = !pagination<ParticipantForEventSort>()
+                ParticipantService.pageForEvent(params, eventId, user, Privilege.Scope.GLOBAL)
+            }
+        }
+    }
 }

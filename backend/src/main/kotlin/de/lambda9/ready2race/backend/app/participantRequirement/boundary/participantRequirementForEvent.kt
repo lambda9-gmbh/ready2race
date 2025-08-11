@@ -6,12 +6,10 @@ import de.lambda9.ready2race.backend.app.participantRequirement.entity.Participa
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventSort
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.UpdateQrCodeRequirementDto
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -23,7 +21,7 @@ fun Route.participantRequirementForEvent() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadEventGlobal)
+                !authenticateAny(Privilege.ReadEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
                 val params = !pagination<ParticipantRequirementForEventSort>()
                 val eventId = !pathParam("eventId", uuid)
                 ParticipantRequirementService.pageForEvent(params, eventId)
@@ -90,7 +88,7 @@ fun Route.participantRequirementForEvent() {
         route("/approve") {
             post {
                 call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val body = !receiveKIO(ParticipantRequirementCheckForEventUpsertDto.example)
                     ParticipantRequirementService.approveRequirementForEvent(eventId, body, user.id!!)
@@ -98,7 +96,6 @@ fun Route.participantRequirementForEvent() {
             }
         }
 
-        // Todo: Merge the following 2 Requests into one endpoint
         route("/{participantRequirementId}") {
 
             get {
@@ -168,6 +165,19 @@ fun Route.participantRequirementForEvent() {
                         body.namedParticipantId,
                         body.qrCodeRequired
                     )
+                }
+            }
+        }
+
+        route("/participant/{participantId}") {
+            get {
+                call.respondComprehension {
+                    !authenticateAny(Privilege.ReadEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val participantId = !pathParam("participantId", uuid)
+                    val onlyForApp = !queryParam("onlyForApp", boolean)
+
+                    ParticipantRequirementService.getForParticipant(eventId, participantId, onlyForApp)
                 }
             }
         }

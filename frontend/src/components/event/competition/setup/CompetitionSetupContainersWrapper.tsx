@@ -1,7 +1,7 @@
 import {PropsWithChildren, RefObject} from 'react'
 import {FormContainer, UseFormReturn} from 'react-hook-form-mui'
 import {CompetitionSetupForm} from '@components/event/competition/setup/common.ts'
-import {Box} from "@mui/material";
+import {Box} from '@mui/material'
 
 type Props = {
     formContext: UseFormReturn<CompetitionSetupForm>

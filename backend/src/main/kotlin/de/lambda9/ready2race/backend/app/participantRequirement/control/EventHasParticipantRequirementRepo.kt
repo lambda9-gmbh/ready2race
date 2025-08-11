@@ -7,23 +7,19 @@ import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_HAS_PARTICIPANT_REQUIREMENT
 import de.lambda9.ready2race.backend.database.insert
-import org.jooq.impl.DSL
 import java.util.*
 
 object EventHasParticipantRequirementRepo {
 
     fun create(record: EventHasParticipantRequirementRecord) = EVENT_HAS_PARTICIPANT_REQUIREMENT.insert(record)
 
-    // todo: DSL.trueCondition() -> NAMED_PARTICIPANT.isNull
     fun exists(eventId: UUID, participantRequirementId: UUID, namedParticipantId: UUID? = null) =
         EVENT_HAS_PARTICIPANT_REQUIREMENT.exists {
             EVENT.eq(eventId)
                 .and(PARTICIPANT_REQUIREMENT.eq(participantRequirementId))
                 .and(
-                    if (namedParticipantId != null)
-                        NAMED_PARTICIPANT.eq(namedParticipantId)
-                    else
-                        DSL.trueCondition()
+                    namedParticipantId?.let { NAMED_PARTICIPANT.eq(it) }
+                        ?: NAMED_PARTICIPANT.isNull
                 )
         }
 

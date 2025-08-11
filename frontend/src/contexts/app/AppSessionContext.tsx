@@ -25,8 +25,6 @@ export type QrState = {
 interface AppSessionContextType {
     appFunction: AppFunction
     setAppFunction: (fn: AppFunction) => void
-    availableAppFunctions: AppFunction[]
-    setAvailableAppFunctions: (fns: AppFunction[]) => void
     qr: QrState
     goBack: () => void
     showBackButton: boolean
@@ -45,12 +43,7 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
         return (sessionStorage.getItem('appFunction') as AppFunction) || null
     })
 
-    const [availableAppFunctions, setAvailableAppFunctions] = useState<AppFunction[]>(() => {
-        const persisted = (sessionStorage.getItem('appFunction') as AppFunction) || null
-        return persisted ? [persisted] : []
-    })
-
-    const [showBackButton, setShowBackButton] = useState(true)
+    const availableAppFunctions = getUserAppRights(user)
 
     const navigate = router.navigate
 
@@ -63,20 +56,7 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
         deps: [],
     })
 
-    useEffect(() => {
-        if (user) {
-            const rights = getUserAppRights(user)
-            setAvailableAppFunctions(rights)
-        }
-    }, [user])
-
-    useEffect(() => {
-        if (availableAppFunctions.length === 1 && (eventsData?.data.length ?? 0) < 2) {
-            setShowBackButton(false)
-        } else {
-            setShowBackButton(true)
-        }
-    }, [availableAppFunctions])
+    const showBackButton = !(availableAppFunctions.length === 1 && (eventsData?.data.length ?? 0) < 2)
 
     useEffect(() => {
         if (appFunction === null) {
@@ -88,7 +68,7 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
                 navigate({to: '/app'})
             }
         }
-    }, [appFunction]);
+    }, [appFunction])
 
     const goBack = () => {
         if ((eventsData?.data.length ?? 0) > 1) {
@@ -129,8 +109,6 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
             value={{
                 appFunction,
                 setAppFunction,
-                availableAppFunctions,
-                setAvailableAppFunctions,
                 qr,
                 goBack,
                 showBackButton,

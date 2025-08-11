@@ -1,10 +1,13 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.participantRequirement.control.*
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
@@ -157,7 +160,8 @@ object ParticipantRequirementService {
     ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
 
         // Load namedParticipantId from database if this is a named participant requirement
-        val namedParticipantId = !EventHasParticipantRequirementRepo.getNamedParticipantId(eventId, config.requirementId).orDie()
+        val namedParticipantId =
+            !EventHasParticipantRequirementRepo.getNamedParticipantId(eventId, config.requirementId).orDie()
 
         if (!!EventHasParticipantRequirementRepo.exists(eventId, config.requirementId, namedParticipantId).orDie()) {
             return@comprehension KIO.fail(ParticipantRequirementError.InvalidConfig("Missing requirement" to config.requirementId.toString()))
@@ -220,8 +224,9 @@ object ParticipantRequirementService {
                     .filterNotNull()
                     .mapIndexedNotNull { index, arr ->
                         if (index == 0) {
+
                             header = arr.mapIndexed { headerIndex, value ->
-                                value.lowercase() to headerIndex
+                                value to headerIndex
                             }.toMap()
 
                             if (!header.keys.containsAll(config.getColNames())) {
@@ -237,26 +242,26 @@ object ParticipantRequirementService {
                         } else {
                             val valid =
                                 config.requirementColName == null || config.requirementIsValidValue == null || arr.getOrNull(
-                                    header.getOrDefault(config.requirementColName.lowercase(), -1)
-                                ).equals(config.requirementIsValidValue, ignoreCase = true)
+                                    header.getOrDefault(config.requirementColName, -1)
+                                ).equals(config.requirementIsValidValue)
 
                             if (valid) {
                                 ValidRequirementParticipant(
                                     firstname = arr.getOrNull(
                                         header.getOrDefault(
-                                            config.firstnameColName.lowercase(),
+                                            config.firstnameColName,
                                             -1
                                         )
                                     ),
                                     lastname = arr.getOrNull(
                                         header.getOrDefault(
-                                            config.lastnameColName.lowercase(),
+                                            config.lastnameColName,
                                             -1
                                         )
                                     ),
-                                    year = arr.getOrNull(header.getOrDefault(config.yearsColName?.lowercase(), -1))
+                                    year = arr.getOrNull(header.getOrDefault(config.yearsColName, -1))
                                         ?.toIntOrNull(),
-                                    club = arr.getOrNull(header.getOrDefault(config.clubColName?.lowercase(), -1)),
+                                    club = arr.getOrNull(header.getOrDefault(config.clubColName, -1)),
                                 )
                             } else {
                                 null
@@ -343,6 +348,31 @@ object ParticipantRequirementService {
             qrCodeRequired = qrCodeRequired
         ).orDie()
         noData
+    }
+
+    fun getForParticipant(
+        eventId: UUID,
+        participantId: UUID,
+        onlyForApp: Boolean,
+    ): App<ParticipantError, ApiResponse.ListDto<ParticipantRequirementForEventDto>> = KIO.comprehension {
+        val participantForEvent = !CompetitionRegistrationRepo.selectParticipantForEvent(eventId, participantId).orDie()
+            .onNullFail { ParticipantError.ParticipantNotFound }
+
+        val requirementsForEvent = !ParticipantRequirementForEventRepo.get(
+            eventId = eventId,
+            onlyActive = true,
+            onlyForApp = onlyForApp
+        ).orDie()
+
+        val requirementsForParticipant = requirementsForEvent.filter { eventReq ->
+            eventReq.requirements!!.any { npReq -> participantForEvent.namedParticipantIds!!.any { it == npReq!!.id } } || eventReq.requirements?.size == 0
+        }
+
+        ok(
+            ApiResponse.ListDto(
+                !requirementsForParticipant.traverse { it.toDto() }
+            )
+        )
     }
 
 }

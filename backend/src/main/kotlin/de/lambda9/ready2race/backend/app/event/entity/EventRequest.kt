@@ -13,9 +13,11 @@ data class EventRequest(
     val location: String?,
     val registrationAvailableFrom: LocalDateTime?,
     val registrationAvailableTo: LocalDateTime?,
+    val lateRegistrationAvailableTo: LocalDateTime?,
     val invoicePrefix: String?,
     val published: Boolean,
     val paymentDueBy: LocalDate?,
+    val latePaymentDueBy: LocalDate?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -33,9 +35,11 @@ data class EventRequest(
                 location = "Town",
                 registrationAvailableFrom = LocalDateTime.now(),
                 registrationAvailableTo = LocalDateTime.now().plusDays(7),
+                lateRegistrationAvailableTo = LocalDateTime.now().plusDays(21),
                 invoicePrefix = "Invoice-Prefix",
                 published = false,
                 paymentDueBy = LocalDate.now().plusDays(14),
+                latePaymentDueBy = LocalDate.now().minusDays(28),
             )
     }
 }

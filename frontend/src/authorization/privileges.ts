@@ -68,22 +68,22 @@ export const deleteRegistrationOwn: Privilege = {
 export const createInvoiceGlobal: Privilege = {
     action: 'CREATE',
     resource: 'INVOICE',
-    scope: 'GLOBAL'
+    scope: 'GLOBAL',
 }
 export const readInvoiceGlobal: Privilege = {
     action: 'READ',
     resource: 'INVOICE',
-    scope: 'GLOBAL'
+    scope: 'GLOBAL',
 }
 export const readInvoiceOwn: Privilege = {
     action: 'READ',
     resource: 'INVOICE',
-    scope: 'OWN'
+    scope: 'OWN',
 }
 export const updateInvoiceGlobal: Privilege = {
     action: 'UPDATE',
     resource: 'INVOICE',
-    scope: 'GLOBAL'
+    scope: 'GLOBAL',
 }
 
 export const createSubstitutionGlobal: Privilege = {

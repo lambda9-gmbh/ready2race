@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.control
 
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
+import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
@@ -13,6 +14,7 @@ import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
 import org.jooq.Field
+import org.jooq.Record
 import org.jooq.impl.DSL
 import java.util.*
 
@@ -28,17 +30,20 @@ object EventRegistrationRepo {
 
     fun delete(id: UUID) = EVENT_REGISTRATION.delete { ID.eq(id) }
 
-    fun getIdsByEvent(
-        eventId: UUID
-    ): JIO<List<UUID>> = Jooq.query {
-        with(EVENT_REGISTRATION) {
-            select(ID)
-                .from(this)
-                .where(EVENT.eq(eventId))
-                .fetch {
-                    it.value1()
-                }
-        }
+    fun getIdsForInvoicing(eventId: UUID, type: RegistrationInvoiceType) = EVENT_REGISTRATION.select({ ID }) {
+        DSL.and(
+            EVENT.eq(eventId),
+            DSL.exists(
+                DSL.selectFrom(COMPETITION_REGISTRATION)
+                    .where(COMPETITION_REGISTRATION.EVENT_REGISTRATION.eq(ID))
+                    .and(
+                        when (type) {
+                            RegistrationInvoiceType.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                            RegistrationInvoiceType.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                        }
+                    )
+            )
+        )
     }
 
     fun update(id: UUID, f: EventRegistrationRecord.() -> Unit) =
@@ -100,7 +105,7 @@ object EventRegistrationRepo {
 
     fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
-    fun getEventRegistrationInfo(eventId: UUID): JIO<EventRegistrationInfoDto?> = Jooq.query {
+    fun getEventRegistrationInfo(eventId: UUID, type: OpenForRegistrationType): JIO<EventRegistrationInfoDto?> = Jooq.query {
 
         val eventDays = selectEventDaysForEventRegistrationInfo()
 
@@ -143,6 +148,7 @@ object EventRegistrationRepo {
             .where(EVENT.ID.eq(eventId))
             .fetch {
                 EventRegistrationInfoDto(
+                    type,
                     it[EVENT.NAME]!!,
                     it[EVENT.DESCRIPTION],
                     it[EVENT.LOCATION],
@@ -155,19 +161,59 @@ object EventRegistrationRepo {
 
     }
 
-    fun getEventRegistrationForUpdate(eventId: UUID, clubId: UUID) = Jooq.query {
+    enum class RegistrationFilter {
+        REGULAR,
+        LATE,
+        ALL,
+    }
+
+    fun getLockedEventRegistration(eventId: UUID, clubId: UUID, type: OpenForRegistrationType) = Jooq.query {
+
+        val filter = when (type) {
+            OpenForRegistrationType.REGULAR -> RegistrationFilter.LATE
+            OpenForRegistrationType.LATE -> RegistrationFilter.REGULAR
+            OpenForRegistrationType.CLOSED -> RegistrationFilter.ALL
+        }
 
         val fees = selectFeesForEventRegistration()
 
-        val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees)
+        val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
+            CompetitionRegistrationSingleLockedDto(
+                it[COMPETITION_VIEW.ID]!!,
+                it[fees],
+                it[COMPETITION_REGISTRATION.IS_LATE]!!,
+            )
+        }
 
-        val namedParticipants = selectNamedParticipantsForEventRegistration()
+        val namedParticipants = selectNamedParticipantsForEventRegistration {
+            CompetitionRegistrationNamedParticipantLockedDto(
+                it[COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT]!!,
+                it[DSL.arrayAgg(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT)].filterNotNull()
+            )
+        }
 
-        val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId)
+        val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
+            CompetitionRegistrationTeamLockedDto(
+                it[COMPETITION_REGISTRATION.ID]!!,
+                it[fees],
+                it[namedParticipants],
+                it[COMPETITION_REGISTRATION.IS_LATE]!!,
+            )
+        }
 
-        val teamCompetitions = selectTeamCompetitionsForEventRegistration(teams)
+        val teamCompetitions = selectTeamCompetitionsForEventRegistration(teams) {
+            CompetitionRegistrationLockedDto(
+                it[COMPETITION_VIEW.ID]!!,
+                it[teams],
+            )
+        }
 
-        val participants = selectParticipantsForEventRegistration(singleCompetitions, clubId)
+        val participants = selectParticipantsForEventRegistration(singleCompetitions, clubId) {
+            EventRegistrationParticipantLockedDto(
+                id = it[PARTICIPANT.ID]!!,
+                competitionsSingle = it[singleCompetitions],
+            )
+        }
 
         select(
             participants,
@@ -178,14 +224,91 @@ object EventRegistrationRepo {
             .leftJoin(EVENT_REGISTRATION)
             .on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID).and(EVENT_REGISTRATION.CLUB.eq(clubId)))
             .where(EVENT.ID.eq(eventId))
-            .fetch {
-                EventRegistrationUpsertDto(
+            .fetchOne {
+                EventRegistrationLockedDto(
                     it[participants],
-                    it[teamCompetitions],
-                    it[EVENT_REGISTRATION.MESSAGE]
+                    it[teamCompetitions]
                 )
-            }.firstOrNull()
+            }
+    }
 
+    fun getEventRegistrationForUpdate(eventId: UUID, clubId: UUID, type: OpenForRegistrationType) = Jooq.query {
+
+        val filter = when (type) {
+            OpenForRegistrationType.REGULAR -> RegistrationFilter.REGULAR
+            OpenForRegistrationType.LATE -> RegistrationFilter.LATE
+            OpenForRegistrationType.CLOSED -> null
+        }
+
+        if (filter == null) {
+            EventRegistrationUpsertDto(emptyList(), emptyList(), null)
+        } else {
+
+            val fees = selectFeesForEventRegistration()
+
+            val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
+                CompetitionRegistrationSingleUpsertDto(
+                    it[COMPETITION_VIEW.ID]!!,
+                    it[fees]
+                )
+            }
+
+            val namedParticipants = selectNamedParticipantsForEventRegistration {
+                CompetitionRegistrationNamedParticipantUpsertDto(
+                    it[COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT]!!,
+                    it[DSL.arrayAgg(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT)].filterNotNull()
+                        .toList()
+                )
+            }
+
+            val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
+                CompetitionRegistrationTeamUpsertDto(
+                    it[COMPETITION_REGISTRATION.ID]!!,
+                    null,
+                    it[fees],
+                    it[namedParticipants]
+                )
+            }
+
+            val teamCompetitions = selectTeamCompetitionsForEventRegistration(teams) {
+                CompetitionRegistrationUpsertDto(
+                    it[COMPETITION_VIEW.ID]!!,
+                    it[teams],
+                )
+            }
+
+            val participants = selectParticipantsForEventRegistration(singleCompetitions, clubId) {
+                EventRegistrationParticipantUpsertDto(
+                    id = it[PARTICIPANT.ID]!!,
+                    isNew = false,
+                    hasChanged = false,
+                    firstname = it[PARTICIPANT.FIRSTNAME]!!,
+                    lastname = it[PARTICIPANT.LASTNAME]!!,
+                    year = it[PARTICIPANT.YEAR]!!,
+                    gender = it[PARTICIPANT.GENDER]!!,
+                    external = it[PARTICIPANT.EXTERNAL],
+                    externalClubName = it[PARTICIPANT.EXTERNAL_CLUB_NAME],
+                    competitionsSingle = it[singleCompetitions],
+                )
+            }
+
+            select(
+                participants,
+                teamCompetitions,
+                EVENT_REGISTRATION.MESSAGE
+            )
+                .from(EVENT)
+                .leftJoin(EVENT_REGISTRATION)
+                .on(EVENT_REGISTRATION.EVENT.eq(EVENT.ID).and(EVENT_REGISTRATION.CLUB.eq(clubId)))
+                .where(EVENT.ID.eq(eventId))
+                .fetchOne {
+                    EventRegistrationUpsertDto(
+                        it[participants],
+                        it[teamCompetitions],
+                        it[EVENT_REGISTRATION.MESSAGE]
+                    )
+                }
+        }
     }
 
     private fun selectDocumentTypesForEventRegistrationInfo(
@@ -238,12 +361,12 @@ object EventRegistrationRepo {
         alias: String
     ) = DSL.select(
         COMPETITION_VIEW.ID,
-        COMPETITION_VIEW.IDENTIFIER_PREFIX,
-        COMPETITION_VIEW.IDENTIFIER_SUFFIX,
+        COMPETITION_VIEW.IDENTIFIER,
         COMPETITION_VIEW.NAME,
         COMPETITION_VIEW.SHORT_NAME,
         COMPETITION_VIEW.DESCRIPTION,
         COMPETITION_VIEW.CATEGORY_NAME,
+        COMPETITION_VIEW.LATE_REGISTRATION_ALLOWED,
         namedParticipants,
         fees,
         competitionDays,
@@ -257,14 +380,15 @@ object EventRegistrationRepo {
             it.map {
                 EventRegistrationCompetitionDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[COMPETITION_VIEW.IDENTIFIER_PREFIX]!! + (it[COMPETITION_VIEW.IDENTIFIER_SUFFIX] ?: ""),
+                    it[COMPETITION_VIEW.IDENTIFIER]!!,
                     it[COMPETITION_VIEW.NAME]!!,
                     it[COMPETITION_VIEW.SHORT_NAME],
                     it[COMPETITION_VIEW.DESCRIPTION],
                     it[COMPETITION_VIEW.CATEGORY_NAME],
                     it[namedParticipants],
                     it[fees],
-                    it[competitionDays]
+                    it[competitionDays],
+                    it[COMPETITION_VIEW.LATE_REGISTRATION_ALLOWED]!!,
                 )
             }
         }
@@ -302,6 +426,7 @@ object EventRegistrationRepo {
         FEE_FOR_COMPETITION.DESCRIPTION,
         FEE_FOR_COMPETITION.REQUIRED,
         FEE_FOR_COMPETITION.AMOUNT,
+        FEE_FOR_COMPETITION.LATE_AMOUNT,
     )
         .from(FEE_FOR_COMPETITION)
         .where(COMPETITION_VIEW.ID.eq(FEE_FOR_COMPETITION.COMPETITION_ID))
@@ -314,7 +439,8 @@ object EventRegistrationRepo {
                     it[FEE_FOR_COMPETITION.NAME]!!,
                     it[FEE_FOR_COMPETITION.DESCRIPTION],
                     it[FEE_FOR_COMPETITION.REQUIRED]!!,
-                    it[FEE_FOR_COMPETITION.AMOUNT]!!
+                    it[FEE_FOR_COMPETITION.AMOUNT]!!,
+                    it[FEE_FOR_COMPETITION.LATE_AMOUNT]
                 )
             }
         }
@@ -348,9 +474,10 @@ object EventRegistrationRepo {
         }
 
 
-    private fun selectParticipantsForEventRegistration(
-        singleCompetitions: Field<MutableList<CompetitionRegistrationSingleUpsertDto>>,
-        clubId: UUID
+    private fun <A, SC> selectParticipantsForEventRegistration(
+        singleCompetitions: Field<MutableList<SC>>,
+        clubId: UUID,
+        convert: (Record) -> A,
     ) = DSL.select(
         PARTICIPANT.ID,
         PARTICIPANT.FIRSTNAME,
@@ -366,23 +493,13 @@ object EventRegistrationRepo {
         .orderBy(PARTICIPANT.FIRSTNAME, PARTICIPANT.LASTNAME)
         .asMultiset("participants")
         .convertFrom {
-            it!!.map {
-                EventRegistrationParticipantUpsertDto(
-                    id = it[PARTICIPANT.ID]!!,
-                    isNew = false,
-                    hasChanged = false,
-                    firstname = it[PARTICIPANT.FIRSTNAME]!!,
-                    lastname = it[PARTICIPANT.LASTNAME]!!,
-                    year = it[PARTICIPANT.YEAR]!!,
-                    gender = it[PARTICIPANT.GENDER]!!,
-                    external = it[PARTICIPANT.EXTERNAL],
-                    externalClubName = it[PARTICIPANT.EXTERNAL_CLUB_NAME],
-                    competitionsSingle = it[singleCompetitions],
-                )
-            }
+            it!!.map { convert(it) }
         }
 
-    private fun selectTeamCompetitionsForEventRegistration(teams: Field<MutableList<CompetitionRegistrationTeamUpsertDto>>) =
+    private fun <A, T> selectTeamCompetitionsForEventRegistration(
+        teams: Field<MutableList<T>>,
+        convert: (Record) -> A
+    ) =
         DSL.select(
             COMPETITION_VIEW.ID,
             teams
@@ -392,39 +509,39 @@ object EventRegistrationRepo {
             .orderBy(COMPETITION_VIEW.NAME)
             .asMultiset("teamCompetitions")
             .convertFrom {
-                it!!.map {
-                    CompetitionRegistrationUpsertDto(
-                        it[COMPETITION_VIEW.ID]!!,
-                        it[teams],
-                    )
-                }
+                it!!.map { convert(it) }
             }
 
-    private fun selectTeamsForEventRegistration(
+    private fun <A, NP> selectTeamsForEventRegistration(
         fees: Field<MutableList<UUID>>,
-        namedParticipants: Field<MutableList<CompetitionRegistrationNamedParticipantUpsertDto>>,
-        clubId: UUID
+        namedParticipants: Field<MutableList<NP>>,
+        clubId: UUID,
+        filter: RegistrationFilter,
+        convert: (Record) -> A
     ) = DSL.select(
         COMPETITION_REGISTRATION.ID,
+        COMPETITION_REGISTRATION.IS_LATE,
         fees,
         namedParticipants
     )
         .from(COMPETITION_REGISTRATION)
         .where(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION_VIEW.ID))
         .and(COMPETITION_REGISTRATION.CLUB.eq(clubId))
+        .and(
+            when (filter) {
+                RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                RegistrationFilter.ALL -> DSL.trueCondition()
+            }
+        )
         .asMultiset("teams")
         .convertFrom {
-            it!!.map {
-                CompetitionRegistrationTeamUpsertDto(
-                    it[COMPETITION_REGISTRATION.ID]!!,
-                    null,
-                    it[fees],
-                    it[namedParticipants]
-                )
-            }
+            it!!.map { convert(it) }
         }
 
-    private fun selectNamedParticipantsForEventRegistration() = DSL.select(
+    private fun <A> selectNamedParticipantsForEventRegistration(
+        convert: (Record) -> A
+    ) = DSL.select(
         COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT,
         DSL.arrayAgg(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT)
     )
@@ -436,17 +553,16 @@ object EventRegistrationRepo {
         .orderBy(NAMED_PARTICIPANT.NAME)
         .asMultiset("namedParticipants")
         .convertFrom {
-            it!!.map {
-                CompetitionRegistrationNamedParticipantUpsertDto(
-                    it[COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT]!!,
-                    it[DSL.arrayAgg(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT)].filterNotNull()
-                        .toList()
-                )
-            }
+            it!!.map { convert(it) }
         }
 
-    private fun selectSingleCompetitionsForEventRegistration(fees: Field<MutableList<UUID>>) = DSL.select(
+    private fun <A> selectSingleCompetitionsForEventRegistration(
+        fees: Field<MutableList<UUID>>,
+        filter: RegistrationFilter,
+        convert: (Record) -> A,
+    ) = DSL.select(
         COMPETITION_VIEW.ID,
+        COMPETITION_REGISTRATION.IS_LATE,
         fees
     ).from(COMPETITION_VIEW)
         .join(COMPETITION_REGISTRATION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION_VIEW.ID))
@@ -458,14 +574,16 @@ object EventRegistrationRepo {
         .where(COMPETITION_VIEW.TOTAL_COUNT.eq(1))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
         .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
+        .and(
+            when (filter) {
+                RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                RegistrationFilter.ALL -> DSL.trueCondition()
+            }
+        )
         .asMultiset("singleCompetitions")
         .convertFrom {
-            it!!.map {
-                CompetitionRegistrationSingleUpsertDto(
-                    it[COMPETITION_VIEW.ID]!!,
-                    it[fees]
-                )
-            }
+            it!!.map { convert(it) }
         }
 
     private fun selectFeesForEventRegistration() = DSL.select(

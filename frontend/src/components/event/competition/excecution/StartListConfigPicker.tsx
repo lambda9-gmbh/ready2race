@@ -1,0 +1,98 @@
+import {Alert, Button, DialogActions, DialogContent, DialogTitle, Stack} from "@mui/material";
+import {FormContainer, useForm} from "react-hook-form-mui";
+import BaseDialog from "@components/BaseDialog.tsx";
+import {SubmitButton} from "@components/form/SubmitButton.tsx";
+import {useEffect, useState} from "react";
+import FormInputAutocomplete from "@components/form/input/FormInputAutocomplete.tsx";
+import {AutocompleteOption} from "@utils/types.ts";
+import {useFetch} from "@utils/hooks.ts";
+import {getStartListConfigs} from "@api/sdk.gen.ts";
+import {Trans, useTranslation} from "react-i18next";
+import InlineLink from "@components/InlineLink.tsx";
+
+type Props = {
+    open: boolean
+    onSuccess: (config: string) => Promise<void>
+    onClose: () => void
+}
+
+type Form = {
+    config: AutocompleteOption
+}
+
+const defaultValues: Form = {
+    config: null
+}
+
+const StartListConfigPicker = ({open, onSuccess, onClose}: Props) => {
+    const {t} = useTranslation()
+    const formContext = useForm<Form>()
+    const [submitting, setSubmitting] = useState(false)
+
+    const {data, pending} = useFetch(
+        signal => getStartListConfigs({signal}),
+        {
+            mapData: (data) => data.data.map(dto => ({
+                id: dto.id,
+                label: dto.name,
+            }))
+        }
+    )
+
+    useEffect(() => {
+        if (open) {
+            formContext.reset(defaultValues)
+        }
+    }, [open])
+
+    return (
+        <BaseDialog
+            open={open}
+            onClose={onClose}
+            maxWidth={'sm'}
+        >
+            <DialogTitle>
+                <Trans i18nKey={'event.competition.execution.startList.dialog.title'} />
+            </DialogTitle>
+            <FormContainer
+                formContext={formContext}
+                onSuccess={async (data: Form) => {
+                    setSubmitting(true)
+                    await onSuccess(data.config!.id)
+                    setSubmitting(false)
+                    onClose()
+                }}
+            >
+                <DialogContent>
+                    <Stack spacing={4}>
+                        <Alert variant={'outlined'} severity={'info'}>
+                            <Trans i18nKey={'event.competition.execution.startList.dialog.alert.1'} />
+                            <InlineLink to={'/config'} search={{tab: 'competition-elements'}} hash={'startlists'}>
+                                <Trans i18nKey={'event.competition.execution.startList.dialog.alert.2'} />
+                            </InlineLink>
+                            <Trans i18nKey={'event.competition.execution.startList.dialog.alert.3'} />
+                        </Alert>
+
+                        <FormInputAutocomplete
+                            name={'config'}
+                            options={data ?? []}
+                            label={t('event.competition.execution.startList.dialog.config')}
+                            loading={pending}
+                            required
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onClose} disabled={submitting}>
+                        <Trans i18nKey={'common.cancel'} />
+                    </Button>
+                    <SubmitButton submitting={submitting}>
+                        <Trans i18nKey={'event.competition.execution.startList.download'} />
+                    </SubmitButton>
+                </DialogActions>
+            </FormContainer>
+        </BaseDialog>
+    )
+}
+
+export default StartListConfigPicker

@@ -85,6 +85,9 @@ import type {
     GetEventInvoicesData,
     GetEventInvoicesError,
     GetEventInvoicesResponse,
+    GetEventMatchesData,
+    GetEventMatchesError,
+    GetEventMatchesResponse,
     GetEventCatererTransactionsData,
     GetEventCatererTransactionsError,
     GetEventCatererTransactionsResponse,
@@ -136,6 +139,12 @@ import type {
     DeleteCompetitionRegistrationData,
     DeleteCompetitionRegistrationError,
     DeleteCompetitionRegistrationResponse,
+    DeregisterCompetitionRegistrationData,
+    DeregisterCompetitionRegistrationError,
+    DeregisterCompetitionRegistrationResponse,
+    RevertCompetitionDeregistrationData,
+    RevertCompetitionDeregistrationError,
+    RevertCompetitionDeregistrationResponse,
     UpdateCompetitionSetupData,
     UpdateCompetitionSetupError,
     UpdateCompetitionSetupResponse,
@@ -154,6 +163,9 @@ import type {
     UpdateMatchDataData,
     UpdateMatchDataError,
     UpdateMatchDataResponse,
+    UpdateMatchRunningStateData,
+    UpdateMatchRunningStateError,
+    UpdateMatchRunningStateResponse,
     UpdateMatchResultsData,
     UpdateMatchResultsError,
     UpdateMatchResultsResponse,
@@ -349,9 +361,15 @@ import type {
     UpdateQrCodeRequirementData,
     UpdateQrCodeRequirementError,
     UpdateQrCodeRequirementResponse,
+    GetParticipantRequirementsForParticipantData,
+    GetParticipantRequirementsForParticipantError,
+    GetParticipantRequirementsForParticipantResponse,
     GetParticipantsForEventData,
     GetParticipantsForEventError,
     GetParticipantsForEventResponse,
+    GetParticipantsForEventInAppData,
+    GetParticipantsForEventInAppError,
+    GetParticipantsForEventInAppResponse,
     GetTeamsByParticipantQrCodeData,
     GetTeamsByParticipantQrCodeError,
     GetTeamsByParticipantQrCodeResponse,
@@ -492,6 +510,7 @@ import type {
     GetWorkShiftsForUserData,
     GetWorkShiftsForUserError,
     GetWorkShiftsForUserResponse,
+    GetInvoicesData,
     GetInvoicesError,
     GetInvoicesResponse,
     DownloadInvoiceError,
@@ -499,6 +518,66 @@ import type {
     SetInvoicePaidData,
     SetInvoicePaidError,
     SetInvoicePaidResponse,
+    AddStartListConfigData,
+    AddStartListConfigError,
+    AddStartListConfigResponse,
+    GetStartListConfigsData,
+    GetStartListConfigsError,
+    GetStartListConfigsResponse,
+    UpdateStartListConfigData,
+    UpdateStartListConfigError,
+    UpdateStartListConfigResponse,
+    DeleteStartListConfigData,
+    DeleteStartListConfigError,
+    DeleteStartListConfigResponse,
+    GetUpcomingMatchesData,
+    GetUpcomingMatchesError,
+    GetUpcomingMatchesResponse,
+    GetLatestMatchResultsData,
+    GetLatestMatchResultsError,
+    GetLatestMatchResultsResponse,
+    GetRunningMatchesData,
+    GetRunningMatchesError,
+    GetRunningMatchesResponse,
+    GetInfoViewsData,
+    GetInfoViewsError,
+    GetInfoViewsResponse,
+    CreateInfoViewData,
+    CreateInfoViewError,
+    CreateInfoViewResponse,
+    UpdateInfoViewData,
+    UpdateInfoViewError,
+    UpdateInfoViewResponse,
+    DeleteInfoViewData,
+    DeleteInfoViewError,
+    DeleteInfoViewResponse,
+    AddRatingCategoryData,
+    AddRatingCategoryError,
+    AddRatingCategoryResponse,
+    GetRatingCategoriesData,
+    GetRatingCategoriesError,
+    GetRatingCategoriesResponse,
+    UpdateRatingCategoryData,
+    UpdateRatingCategoryError,
+    UpdateRatingCategoryResponse,
+    DeleteRatingCategoryData,
+    DeleteRatingCategoryError,
+    DeleteRatingCategoryResponse,
+    AddMatchResultImportConfigData,
+    AddMatchResultImportConfigError,
+    AddMatchResultImportConfigResponse,
+    GetMatchResultImportConfigsData,
+    GetMatchResultImportConfigsError,
+    GetMatchResultImportConfigsResponse,
+    UpdateMatchResultImportConfigData,
+    UpdateMatchResultImportConfigError,
+    UpdateMatchResultImportConfigResponse,
+    DeleteMatchResultImportConfigData,
+    DeleteMatchResultImportConfigError,
+    DeleteMatchResultImportConfigResponse,
+    UploadResultFileData,
+    UploadResultFileError,
+    UploadResultFileResponse,
     CheckQrCodeData,
     CheckQrCodeError,
     CheckQrCodeResponse,
@@ -804,6 +883,19 @@ export const getEventInvoices = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getEventMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventMatchesResponse,
+        GetEventMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/matches',
+    })
+}
+
 export const getEventCatererTransactions = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetEventCatererTransactionsData, ThrowOnError>,
 ) => {
@@ -1013,6 +1105,32 @@ export const deleteCompetitionRegistration = <ThrowOnError extends boolean = fal
     })
 }
 
+export const deregisterCompetitionRegistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeregisterCompetitionRegistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        DeregisterCompetitionRegistrationResponse,
+        DeregisterCompetitionRegistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/deregistration',
+    })
+}
+
+export const revertCompetitionDeregistration = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RevertCompetitionDeregistrationData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RevertCompetitionDeregistrationResponse,
+        RevertCompetitionDeregistrationError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/deregistration',
+    })
+}
+
 export const updateCompetitionSetup = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<UpdateCompetitionSetupData, ThrowOnError>,
 ) => {
@@ -1088,6 +1206,19 @@ export const updateMatchData = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/data',
+    })
+}
+
+export const updateMatchRunningState = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchRunningStateData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchRunningStateResponse,
+        UpdateMatchRunningStateError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/running-state',
     })
 }
 
@@ -1903,6 +2034,19 @@ export const updateQrCodeRequirement = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getParticipantRequirementsForParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantRequirementsForParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantRequirementsForParticipantResponse,
+        GetParticipantRequirementsForParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/participant/{participantId}',
+    })
+}
+
 export const getParticipantsForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetParticipantsForEventData, ThrowOnError>,
 ) => {
@@ -1913,6 +2057,19 @@ export const getParticipantsForEvent = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/participant',
+    })
+}
+
+export const getParticipantsForEventInApp = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantsForEventInAppData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantsForEventInAppResponse,
+        GetParticipantsForEventInAppError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant-app',
     })
 }
 
@@ -2504,7 +2661,7 @@ export const getWorkShiftsForUser = <ThrowOnError extends boolean = false>(
 }
 
 export const getInvoices = <ThrowOnError extends boolean = false>(
-    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+    options?: OptionsLegacyParser<GetInvoicesData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<GetInvoicesResponse, GetInvoicesError, ThrowOnError>({
         ...options,
@@ -2535,6 +2692,267 @@ export const setInvoicePaid = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/invoice/{invoiceId}',
+    })
+}
+
+export const addStartListConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddStartListConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddStartListConfigResponse,
+        AddStartListConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig',
+    })
+}
+
+export const getStartListConfigs = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetStartListConfigsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetStartListConfigsResponse,
+        GetStartListConfigsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig',
+    })
+}
+
+export const updateStartListConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateStartListConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateStartListConfigResponse,
+        UpdateStartListConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig/{startListConfigId}',
+    })
+}
+
+export const deleteStartListConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteStartListConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteStartListConfigResponse,
+        DeleteStartListConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/startListConfig/{startListConfigId}',
+    })
+}
+
+export const getUpcomingMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetUpcomingMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetUpcomingMatchesResponse,
+        GetUpcomingMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/upcoming-matches',
+    })
+}
+
+export const getLatestMatchResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetLatestMatchResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetLatestMatchResultsResponse,
+        GetLatestMatchResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/latest-match-results',
+    })
+}
+
+export const getRunningMatches = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRunningMatchesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRunningMatchesResponse,
+        GetRunningMatchesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info/running-matches',
+    })
+}
+
+export const getInfoViews = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetInfoViewsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetInfoViewsResponse, GetInfoViewsError, ThrowOnError>({
+        ...options,
+        url: '/event/{eventId}/info-views',
+    })
+}
+
+export const createInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateInfoViewResponse,
+        CreateInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views',
+    })
+}
+
+export const updateInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateInfoViewResponse,
+        UpdateInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views/{viewId}',
+    })
+}
+
+export const deleteInfoView = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteInfoViewData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteInfoViewResponse,
+        DeleteInfoViewError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/info-views/{viewId}',
+    })
+}
+
+export const addRatingCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddRatingCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddRatingCategoryResponse,
+        AddRatingCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory',
+    })
+}
+
+export const getRatingCategories = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetRatingCategoriesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRatingCategoriesResponse,
+        GetRatingCategoriesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory',
+    })
+}
+
+export const updateRatingCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateRatingCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateRatingCategoryResponse,
+        UpdateRatingCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory/{ratingCategoryId}',
+    })
+}
+
+export const deleteRatingCategory = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteRatingCategoryData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteRatingCategoryResponse,
+        DeleteRatingCategoryError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/ratingCategory/{ratingCategoryId}',
+    })
+}
+
+export const addMatchResultImportConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AddMatchResultImportConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AddMatchResultImportConfigResponse,
+        AddMatchResultImportConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig',
+    })
+}
+
+export const getMatchResultImportConfigs = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<GetMatchResultImportConfigsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetMatchResultImportConfigsResponse,
+        GetMatchResultImportConfigsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig',
+    })
+}
+
+export const updateMatchResultImportConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateMatchResultImportConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateMatchResultImportConfigResponse,
+        UpdateMatchResultImportConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig/{matchResultImportConfigId}',
+    })
+}
+
+export const deleteMatchResultImportConfig = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteMatchResultImportConfigData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteMatchResultImportConfigResponse,
+        DeleteMatchResultImportConfigError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/matchResultImportConfig/{matchResultImportConfigId}',
+    })
+}
+
+export const uploadResultFile = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UploadResultFileData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UploadResultFileResponse,
+        UploadResultFileError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file',
     })
 }
 

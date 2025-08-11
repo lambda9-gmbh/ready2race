@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.caterer.boundary.CatererService
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
@@ -15,6 +16,8 @@ import de.lambda9.ready2race.backend.app.eventRegistration.boundary.eventRegistr
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationViewSort
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
+import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoicesRequest
+import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
@@ -79,6 +82,17 @@ fun Route.event() {
             appUserWithQrCode()
             participantTracking()
 
+            get("/matches") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val currentlyRunning = !optionalQueryParam("currentlyRunning", boolean)
+                    val withoutPlaces = !optionalQueryParam("withoutPlaces", boolean)
+
+                    CompetitionExecutionService.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces)
+                }
+            }
+
             get("/invoices") {
                 call.respondComprehension {
                     val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
@@ -127,7 +141,8 @@ fun Route.event() {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.CreateInvoiceGlobal)
                     val id = !pathParam("eventId", uuid)
-                    InvoiceService.createRegistrationInvoicesForEventJobs(id, user.id!!)
+                    val body = !receiveKIO(ProduceInvoicesRequest.example)
+                    InvoiceService.createRegistrationInvoicesForEventJobs(id, body, user.id!!)
                 }
             }
         }

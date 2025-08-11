@@ -4,8 +4,8 @@ import {qrEventRoute} from '@routes'
 import {
     approveParticipantRequirementsForEvent,
     deleteQrCode,
-    getParticipantRequirementsForEvent,
-    getParticipantsForEvent,
+    getParticipantRequirementsForParticipant,
+    getParticipantsForEventInApp,
 } from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
@@ -21,7 +21,7 @@ import {QrAssignmentInfo} from '@components/qrApp/QrAssignmentInfo'
 import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog'
 import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
 import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
-import AppTopTitle from "@components/qrApp/AppTopTitle.tsx";
+import AppTopTitle from '@components/qrApp/AppTopTitle.tsx'
 
 const QrParticipantPage = () => {
     const {t} = useTranslation()
@@ -30,6 +30,7 @@ const QrParticipantPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false)
     const [deleteQrCodeError, setDeleteQrCodeError] = useState<string | null>(null)
     const [checkedRequirements, setCheckedRequirements] = useState<string[]>([])
+    const [participantRoles, setParticipantRoles] = useState<string[]>([])
     const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
     const [submitting, setSubmitting] = useState(false)
     const feedback = useFeedback()
@@ -43,9 +44,10 @@ const QrParticipantPage = () => {
     const {data: participantRequirementsData} = useFetch(
         signal => {
             setParticipantRequirementsPending(true)
-            return getParticipantRequirementsForEvent({
+            return getParticipantRequirementsForParticipant({
                 signal,
-                path: {eventId, participantId: qr.response?.id},
+                path: {eventId, participantId: qr.response?.id ?? ""},
+                query: {onlyForApp: true},
             })
         },
         {
@@ -57,7 +59,7 @@ const QrParticipantPage = () => {
                         }),
                     )
                 } else {
-                    const {data: participantsData} = await getParticipantsForEvent({
+                    const {data: participantsData} = await getParticipantsForEventInApp({
                         path: {eventId},
                     })
                     if (participantsData) {
@@ -71,6 +73,7 @@ const QrParticipantPage = () => {
                                       .filter((id: string | undefined): id is string => !!id)
                                 : [],
                         )
+                        setParticipantRoles(participant?.namedParticipantIds ?? [])
                     } else {
                         feedback.error(
                             t('common.load.error.multiple.short', {
@@ -103,7 +106,7 @@ const QrParticipantPage = () => {
         })
 
         // Nach Änderung neu laden
-        const {data: partData} = await getParticipantsForEvent({path: {eventId}})
+        const {data: partData} = await getParticipantsForEventInApp({path: {eventId}})
         const participant = (partData?.data || []).find(p => p.id === qr.response?.id)
         setCheckedRequirements(
             Array.isArray(participant?.participantRequirementsChecked)
@@ -148,7 +151,7 @@ const QrParticipantPage = () => {
             alignItems="center"
             justifyContent="center"
             sx={{flex: 1, justifyContent: 'start'}}>
-            <AppTopTitle title={t('qrParticipant.title')}/>
+            <AppTopTitle title={t('qrParticipant.title')} />
             {/* Caterer food restriction message */}
             {isCaterer && qr.response && (
                 <Box
@@ -177,10 +180,11 @@ const QrParticipantPage = () => {
 
             {canEditRequirements && (
                 <RequirementsChecklist
-                    requirements={participantRequirementsData?.data ?? []}
+                    requirements={participantRequirementsData ?? []}
                     checkedRequirements={checkedRequirements}
                     pending={participantRequirementsPending}
                     onRequirementChange={handleRequirementChange}
+                    namedParticipantIds={participantRoles}
                 />
             )}
 

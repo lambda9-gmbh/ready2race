@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.app.event.control.eventDto
 import de.lambda9.ready2race.backend.app.event.control.eventPublicDto
 import de.lambda9.ready2race.backend.app.event.control.toRecord
 import de.lambda9.ready2race.backend.app.event.entity.*
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -81,9 +82,11 @@ object EventService {
             location = request.location
             registrationAvailableFrom = request.registrationAvailableFrom
             registrationAvailableTo = request.registrationAvailableTo
+            lateRegistrationAvailableTo = request.lateRegistrationAvailableTo
             invoicePrefix = request.invoicePrefix
             published = request.published
             paymentDueBy = request.paymentDueBy
+            latePaymentDueBy = request.latePaymentDueBy
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
@@ -107,4 +110,25 @@ object EventService {
     ): App<EventError, Unit> = EventRepo.exists(eventId)
         .orDie()
         .onFalseFail { EventError.NotFound }
+
+    fun getOpenForRegistrationType(
+        eventId: UUID,
+    ): App<EventError, OpenForRegistrationType> = KIO.comprehension {
+
+        !checkEventExisting(eventId)
+
+        val isRegular = !EventRepo.isOpenForRegistration(eventId, LocalDateTime.now()).orDie()
+        val type = if (isRegular) {
+            OpenForRegistrationType.REGULAR
+        } else {
+            val isLate = !EventRepo.isOpenForLateRegistration(eventId, LocalDateTime.now()).orDie()
+            if (isLate) {
+                OpenForRegistrationType.LATE
+            } else {
+                OpenForRegistrationType.CLOSED
+            }
+        }
+
+        KIO.ok(type)
+    }
 }

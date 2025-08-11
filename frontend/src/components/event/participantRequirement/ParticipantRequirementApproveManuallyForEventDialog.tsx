@@ -2,7 +2,10 @@ import EntityDialog from '@components/EntityDialog.tsx'
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {ParticipantForEventDto} from '@api/types.gen.ts'
 import {Stack} from '@mui/material'
-import {approveParticipantRequirementsForEvent, getParticipantsForEvent} from '@api/sdk.gen.ts'
+import {
+    approveParticipantRequirementsForEvent,
+    getParticipantsForEventInApp
+} from '@api/sdk.gen.ts'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback, useMemo} from 'react'
 import {eventRoute} from '@routes'
@@ -40,7 +43,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
 
     const {data: participantsData, pending: participantsPending} = useFetch(
         signal =>
-            getParticipantsForEvent({
+            getParticipantsForEventInApp({
                 signal,
                 path: {eventId},
                 query: {

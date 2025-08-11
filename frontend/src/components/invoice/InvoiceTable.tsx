@@ -11,7 +11,8 @@ import {ReactNode, useRef} from 'react'
 import {Link, Tooltip} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
-import {updateInvoiceGlobal} from "@authorization/privileges.ts";
+import {updateInvoiceGlobal} from '@authorization/privileges.ts'
+import {getFilename} from '@utils/helpers.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -61,14 +62,11 @@ const InvoiceTable = (props: Props) => {
             headerName: t('invoice.paid'),
             flex: 0,
             renderCell: ({value}) => (
-                <Tooltip title={value ? format(new Date(value), t('format.datetime')) : t('common.no')}>
-                    { value === undefined ? (
-                        <Close />
-                    ) : (
-                        <Check />
-                    )}
+                <Tooltip
+                    title={value ? format(new Date(value), t('format.datetime')) : t('common.no')}>
+                    {value === undefined ? <Close /> : <Check />}
                 </Tooltip>
-            )
+            ),
         },
     ]
 
@@ -76,14 +74,11 @@ const InvoiceTable = (props: Props) => {
         const {data, error, response} = await downloadInvoice({path: {invoiceId}})
         const anchor = downloadRef.current
 
-        const disposition = response.headers.get('Content-Disposition')
-        const filename = disposition?.match(/attachment; filename="?(.+)"?/)?.[1]
-
         if (error) {
             feedback.error(t('invoice.downloadError'))
         } else if (data !== undefined && anchor) {
             anchor.href = URL.createObjectURL(data)
-            anchor.download = filename ?? 'invoice.pdf'
+            anchor.download = getFilename(response) ?? 'invoice.pdf'
             anchor.click()
             anchor.href = ''
             anchor.download = ''
@@ -99,15 +94,18 @@ const InvoiceTable = (props: Props) => {
         props.reloadData()
     }
 
-    const customEntityActions = (entity: InvoiceDto, checkPrivilege: (privilege: Privilege) => boolean): EntityAction[] => [
+    const customEntityActions = (
+        entity: InvoiceDto,
+        checkPrivilege: (privilege: Privilege) => boolean,
+    ): EntityAction[] => [
         <GridActionsCellItem
             icon={<Download />}
             label={t('invoice.download')}
             onClick={() => handleDownload(entity.id)}
             showInMenu
         />,
-        checkPrivilege(updateInvoiceGlobal) && (
-            !entity.paidAt ? (
+        checkPrivilege(updateInvoiceGlobal) &&
+            (!entity.paidAt ? (
                 <GridActionsCellItem
                     icon={<Payment />}
                     label={t('invoice.action.setPaid')}
@@ -121,9 +119,7 @@ const InvoiceTable = (props: Props) => {
                     onClick={() => handlePaid(entity.id, false)}
                     showInMenu
                 />
-            )
-        )
-
+            )),
     ]
 
     return (

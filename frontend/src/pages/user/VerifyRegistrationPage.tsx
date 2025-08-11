@@ -15,7 +15,8 @@ const VerifyRegistrationPage = () => {
         'NotFound' | 'Unexpected' | 'Success' | null
     >(null)
 
-    useEffect(() => { // todo: should this be useFetch instead?
+    useEffect(() => {
+        // todo: should this be useFetch instead?
         ;(async () => {
             const result = await verifyUserRegistration({
                 body: {

@@ -8,7 +8,7 @@ import {useEntityAdministration} from '@utils/hooks.ts'
 import {CompetitionDto, EventDayDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {Stack} from "@mui/material";
+import {Stack} from '@mui/material'
 
 const CompetitionsAndEventDays = () => {
     const {t} = useTranslation()

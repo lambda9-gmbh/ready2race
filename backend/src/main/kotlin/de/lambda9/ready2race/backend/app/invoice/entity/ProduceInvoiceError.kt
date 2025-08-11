@@ -6,5 +6,6 @@ sealed interface ProduceInvoiceError {
 
     data class MissingRecipient(val registrationId: UUID): ProduceInvoiceError
     data object NoOpenJobs : ProduceInvoiceError
+    data object NoPositions : ProduceInvoiceError
 
 }

@@ -272,9 +272,7 @@ const ParticipantRequirementForEventTable = (
         }
     }
 
-    const customEntityActions = (
-        entity: ParticipantRequirementForEventDto,
-    ): EntityAction[] => {
+    const customEntityActions = (entity: ParticipantRequirementForEventDto): EntityAction[] => {
         // Get already assigned named participants from the requirement's data
         const assignedNamedParticipants = entity.requirements || []
 

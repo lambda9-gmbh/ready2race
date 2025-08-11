@@ -3,11 +3,23 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
 import {router} from '@routes'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
+import {getUserAppRights} from "@components/qrApp/common.ts";
+import {useUser} from "@contexts/user/UserContext.ts";
+import {useEffect} from "react";
 
 const QrEventsPage = () => {
     const {t} = useTranslation()
     const navigate = router.navigate
-    const {availableAppFunctions, setAppFunction, events} = useAppSession()
+    const {setAppFunction, events} = useAppSession()
+    const user = useUser()
+
+    const availableAppFunctions = getUserAppRights(user)
+
+    useEffect(() => {
+        if (events.length === 1) {
+            navigate({to: '/app/$eventId/scanner', params: {eventId: events[0].id}})
+        }
+    }, [events, navigate])
 
     return (
         <Box sx={{width: 1, maxWidth: 600}}>
@@ -31,7 +43,7 @@ const QrEventsPage = () => {
                     </Button>
                 ))}
             </Stack>
-            {availableAppFunctions.length > 1 && (
+            {(availableAppFunctions.length ?? 0) > 1 && (
                 <Button
                     onClick={() => {
                         setAppFunction(null)

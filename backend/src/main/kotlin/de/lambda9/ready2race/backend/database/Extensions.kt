@@ -77,7 +77,7 @@ fun <R : Record, T : TableImpl<R>> T.select(
 fun <R : Record, T : TableImpl<R>, A> T.select(
     selection: T.() -> TableField<R, A>,
     condition: T.() -> Condition,
-): JIO<List<A>> = Jooq.query {
+): JIO<List<A & Any>> = Jooq.query {
     select(selection())
         .from(this@select)
         .where(condition())
