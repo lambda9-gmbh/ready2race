@@ -31,7 +31,8 @@ data class CompetitionMatchData(
 
     data class CompetitionMatchTeam(
         val startNumber: Int,
-        val clubName: String,
+        val registeringClubName: String,
+        val actualClubName: String?,
         val teamName: String?,
         val ratingCategory: CompetitionMatchTeamRatingCategory?,
         val participants: List<CompetitionMatchParticipant>,
@@ -59,7 +60,7 @@ data class CompetitionMatchData(
         fun fromPersisted(
             persisted: StartlistViewRecord,
         ): App<Nothing, CompetitionMatchData> = persisted.teams!!.toList().traverse {
-            it!!.toData()
+            it!!.toData(persisted.mixedTeamTerm)
         }.map { teams ->
             CompetitionMatchData(
                 matchName = persisted.name,
@@ -77,7 +78,7 @@ data class CompetitionMatchData(
             )
         }
 
-        private fun StartlistTeamRecord.toData(): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
+        private fun StartlistTeamRecord.toData(mixedTeamTerm: String?): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
 
             val participantsWithData = participants!!.filterNotNull().map{
                 !it.toParticipantForExecutionDto(
@@ -104,11 +105,19 @@ data class CompetitionMatchData(
                 }
             }
 
+            val clubs = actuallyParticipatingParticipants.map { it.externalClubName }.toSet()
+
+            val actualClubName = if (clubs.size == 1) {
+                clubs.first()
+            } else {
+                mixedTeamTerm
+            }
 
             KIO.ok(
                 CompetitionMatchTeam(
                     startNumber = startNumber!!,
-                    clubName = clubName!!,
+                    registeringClubName = clubName!!,
+                    actualClubName = actualClubName,
                     teamName = teamName,
                     participants = actuallyParticipatingParticipants,
                     ratingCategory = ratingCategory?.let {

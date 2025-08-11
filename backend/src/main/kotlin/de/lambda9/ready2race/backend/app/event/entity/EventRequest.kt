@@ -18,6 +18,7 @@ data class EventRequest(
     val published: Boolean,
     val paymentDueBy: LocalDate?,
     val latePaymentDueBy: LocalDate?,
+    val mixedTeamTerm: String?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -25,6 +26,7 @@ data class EventRequest(
             this::description validate notBlank,
             this::location validate notBlank,
             this::invoicePrefix validate notBlank,
+            this::mixedTeamTerm validate notBlank,
         )
 
     companion object {
@@ -40,6 +42,7 @@ data class EventRequest(
                 published = false,
                 paymentDueBy = LocalDate.now().plusDays(14),
                 latePaymentDueBy = LocalDate.now().minusDays(28),
+                mixedTeamTerm = "Renngemeinschaft",
             )
     }
 }

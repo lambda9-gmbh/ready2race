@@ -23,6 +23,7 @@ type EventForm = {
     published: boolean
     paymentDueBy: string
     latePaymentDueBy: string
+    mixedTeamTerm: string
 }
 
 const addAction = (formData: EventForm) => {
@@ -52,6 +53,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
         published: false,
         paymentDueBy: '',
         latePaymentDueBy: '',
+        mixedTeamTerm: '',
     }
 
     const formContext = useForm<EventForm>()
@@ -107,6 +109,7 @@ function mapFormToRequest(formData: EventForm): EventRequest {
         published: formData.published,
         paymentDueBy: takeIfNotEmpty(formData.paymentDueBy),
         latePaymentDueBy: takeIfNotEmpty(formData.latePaymentDueBy),
+        mixedTeamTerm: takeIfNotEmpty(formData.mixedTeamTerm),
     }
 }
 
@@ -122,6 +125,7 @@ function mapDtoToForm(dto: EventDto): EventForm {
         published: dto.published ?? false,
         paymentDueBy: dto.paymentDueBy ?? '',
         latePaymentDueBy: dto.latePaymentDueBy ?? '',
+        mixedTeamTerm: dto.mixedTeamTerm ?? '',
     }
 }
 
