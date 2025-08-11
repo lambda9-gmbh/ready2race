@@ -257,6 +257,7 @@
       }
     },
     "location": "Location",
+    "mixedTeamTerm": "Term for club-mixed teams",
     "upcoming": "Upcoming events",
     "registrationAvailable": {
       "timespan": "Registration period",

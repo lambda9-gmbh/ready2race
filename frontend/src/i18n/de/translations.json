@@ -257,6 +257,7 @@
       }
     },
     "location": "Ort",
+    "mixedTeamTerm": "Bezeichnung vereins-gemischter Teams",
     "upcoming": "Anstehende Veranstaltungen",
     "registrationAvailable": {
       "timespan": "Anmeldezeitraum",
