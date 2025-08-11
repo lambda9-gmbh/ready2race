@@ -568,12 +568,17 @@ object CompetitionExecutionService {
         // TODO: disabled for now, because it helps with parallel matches (can upload results to multiple matches with the same file)
         //!KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
 
-        places.filterNotNull().sorted().forEachIndexed { index, place ->
+        // TODO: disabled for now, because it forbids upload of same results for parallel races
+        /*places.filterNotNull().sorted().forEachIndexed { index, place ->
             val expected = index + 1
             !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
-        }
+        }*/
+        // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
+        val validTeams = teams.filter { team -> match.teams.any {team.startNumber == it.startNumber} }
+        val (teamWithoutPlace, teamWithPlace) = validTeams.partition { it.place == null }
+        val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }.mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
-        !teams.traverse { result ->
+        !correctedTeams.traverse { result ->
 
             KIO.comprehension {
 
