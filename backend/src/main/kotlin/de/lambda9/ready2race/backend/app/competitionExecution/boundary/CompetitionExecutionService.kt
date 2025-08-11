@@ -575,6 +575,7 @@ object CompetitionExecutionService {
         }*/
         // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
         val validTeams = teams.filter { team -> match.teams.any {team.startNumber == it.startNumber} }
+        !KIO.failOn(validTeams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
         val (teamWithoutPlace, teamWithPlace) = validTeams.partition { it.place == null }
         val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }.mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
