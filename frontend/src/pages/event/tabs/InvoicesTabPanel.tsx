@@ -1,17 +1,18 @@
 import TabPanel from '@components/tab/TabPanel.tsx'
 import {EventTab} from '../EventPage.tsx'
 import InvoiceTable from '@components/invoice/InvoiceTable.tsx'
-import {useEntityAdministration, useFeedback} from '@utils/hooks.ts'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {EventDto, InvoiceDto, RegistrationInvoiceType} from '@api/types.gen.ts'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {getEventInvoices, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
+import {getEventInvoices, getEventInvoicingInfo, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createInvoiceGlobal} from '@authorization/privileges.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {arrayOfNotNull, eventRegistrationPossible} from '@utils/helpers.ts'
 import InlineLink from '@components/InlineLink.tsx'
 import SelectionMenu from '@components/SelectionMenu.tsx'
+import {Alert, Card, CardContent, Stack, Typography} from "@mui/material";
 
 type Props = {
     activeTab: EventTab
@@ -28,10 +29,10 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
     const {checkPrivilege} = useUser()
     const {confirmAction} = useConfirmation()
 
-    const invoiceAdministrationProps = useEntityAdministration<InvoiceDto>(t('invoice.invoice'), {
+    const {reloadData, ...invoiceAdministrationTableProps} = useEntityAdministration<InvoiceDto>(t('invoice.invoice'), {
         entityCreate: false,
         entityUpdate: false,
-    })
+    }).table
 
     const handleProduceInvoices = (type: RegistrationInvoiceType) => {
         confirmAction(
@@ -89,69 +90,94 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
         ),
     }
 
+    const {data, reload: reloadInvoicingInfo} = useFetch( signal => getEventInvoicingInfo({signal, path: {eventId: event.id}}))
+
     return (
         <TabPanel index={'invoices'} activeTab={activeTab}>
-            <InvoiceTable
-                {...invoiceAdministrationProps.table}
-                title={t('invoice.invoices')}
-                hints={[
-                    t('invoice.tableHint.1'),
-                    <>
-                        {t('invoice.tableHint.2')}
-                        <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
-                            {t('invoice.tableHint.3')}
-                        </InlineLink>
-                        {t('invoice.tableHint.4')}
-                    </>,
-                    <>
-                        {t('invoice.tableHint.5')}
-                        <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
-                            {t('invoice.tableHint.6')}
-                        </InlineLink>
-                        {t('invoice.tableHint.7')}
-                    </>,
-                ]}
-                dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
-                    getEventInvoices({
-                        signal,
-                        path: {eventId: event.id},
-                        query: {...params},
-                    })
-                }
-                customTableActions={
-                    checkPrivilege(createInvoiceGlobal) ? (
-                        <SelectionMenu
-                            anchor={{
-                                button: {
-                                    vertical: 'bottom',
-                                    horizontal: 'right',
-                                },
-                                menu: {
-                                    vertical: 'top',
-                                    horizontal: 'right',
-                                },
-                            }}
-                            buttonContent={t('event.action.produceInvoices')}
-                            keyLabel={'event-action-produceInvoices'}
-                            onSelectItem={async (type: string) => {
-                                const invoiceType = type as RegistrationInvoiceType
-                                handleProduceInvoices(invoiceType)
-                            }}
-                            items={
-                                invoiceTypes.map(id => ({
-                                    id,
-                                    label: t('invoice.produce.for', {
-                                        type: `$t(invoice.produce.type.${id})`,
-                                    }),
-                                    problems: problems[id].map(p =>
-                                        t(`invoice.produce.error.${p}`),
-                                    ),
-                                })) satisfies {id: InvoiceType; label: string; problems: string[]}[]
+            <Stack spacing={4}>
+                {data &&
+                    <Card>
+                        <CardContent>
+                            <Typography>
+                                <Trans i18nKey={'event.invoices.infoCard.totalAmount'} values={{amount: data?.totalAmount}} />
+                            </Typography>
+                            <Typography>
+                                <Trans i18nKey={'event.invoices.infoCard.paidAmount'} values={{amount: data?.paidAmount}} />
+                            </Typography>
+                            {data?.producing &&
+                                <Alert severity={'warning'}>
+                                    <Trans i18nKey={'event.invoices.infoCard.alert'} />
+                                </Alert>
                             }
-                        />
-                    ) : undefined
+                        </CardContent>
+                    </Card>
                 }
-            />
+                <InvoiceTable
+                    {...invoiceAdministrationTableProps}
+                    reloadData={() => {
+                        reloadInvoicingInfo()
+                        reloadData()
+                    }}
+                    title={t('invoice.invoices')}
+                    hints={[
+                        t('invoice.tableHint.1'),
+                        <>
+                            {t('invoice.tableHint.2')}
+                            <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
+                                {t('invoice.tableHint.3')}
+                            </InlineLink>
+                            {t('invoice.tableHint.4')}
+                        </>,
+                        <>
+                            {t('invoice.tableHint.5')}
+                            <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
+                                {t('invoice.tableHint.6')}
+                            </InlineLink>
+                            {t('invoice.tableHint.7')}
+                        </>,
+                    ]}
+                    dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
+                        getEventInvoices({
+                            signal,
+                            path: {eventId: event.id},
+                            query: {...params},
+                        })
+                    }
+                    customTableActions={
+                        checkPrivilege(createInvoiceGlobal) ? (
+                            <SelectionMenu
+                                anchor={{
+                                    button: {
+                                        vertical: 'bottom',
+                                        horizontal: 'right',
+                                    },
+                                    menu: {
+                                        vertical: 'top',
+                                        horizontal: 'right',
+                                    },
+                                }}
+                                buttonContent={t('event.action.produceInvoices')}
+                                keyLabel={'event-action-produceInvoices'}
+                                onSelectItem={async (type: string) => {
+                                    const invoiceType = type as RegistrationInvoiceType
+                                    handleProduceInvoices(invoiceType)
+                                }}
+                                items={
+                                    invoiceTypes.map(id => ({
+                                        id,
+                                        label: t('invoice.produce.for', {
+                                            type: `$t(invoice.produce.type.${id})`,
+                                        }),
+                                        problems: problems[id].map(p =>
+                                            t(`invoice.produce.error.${p}`),
+                                        ),
+                                    })) satisfies {id: InvoiceType; label: string; problems: string[]}[]
+                                }
+                            />
+                        ) : undefined
+                    }
+                />
+            </Stack>
         </TabPanel>
     )
 }

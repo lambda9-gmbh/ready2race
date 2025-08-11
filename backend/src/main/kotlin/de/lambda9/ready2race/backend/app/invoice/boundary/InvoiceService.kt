@@ -17,6 +17,7 @@ import de.lambda9.ready2race.backend.app.email.entity.EmailAttachment
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
@@ -34,6 +35,7 @@ import de.lambda9.ready2race.backend.app.sequence.entity.SequenceConsumer
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.dtoResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationInvoiceRecord
@@ -125,6 +127,15 @@ object InvoiceService {
             )
         }
 
+    }
+
+    fun getInfoForEvent(id: UUID): App<ServiceError, ApiResponse.Dto<EventInvoicesInfoDto>> = KIO.comprehension {
+
+        val record = !InvoiceRepo.getEventInvoicesInfo(id)
+            .orDie()
+            .onNullFail { EventError.NotFound }
+
+        record.toDto().dtoResponse()
     }
 
     fun getDownload(

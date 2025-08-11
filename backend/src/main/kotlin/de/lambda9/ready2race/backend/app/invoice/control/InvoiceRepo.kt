@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.InvoiceForEventRe
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceForEventRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_INVOICES_INFO
 import de.lambda9.ready2race.backend.database.generated.tables.references.INVOICE
 import de.lambda9.ready2race.backend.database.generated.tables.references.INVOICE_DOWNLOAD
 import de.lambda9.ready2race.backend.database.generated.tables.references.INVOICE_FOR_EVENT_REGISTRATION
@@ -32,6 +33,8 @@ object InvoiceRepo {
     fun getDownload(id: UUID) = INVOICE_DOWNLOAD.selectOne { ID.eq(id) }
 
     fun getClubForRegistration(id: UUID) = INVOICE_FOR_EVENT_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
+
+    fun getEventInvoicesInfo(eventId: UUID) = EVENT_INVOICES_INFO.selectOne { EVENT.eq(eventId) }
 
     fun count(
         search: String?,

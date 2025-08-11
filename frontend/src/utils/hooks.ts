@@ -19,6 +19,9 @@ export type FetchError<E> = {
 }
 
 export type UseFetchReturn<T, E> =
+    {
+        reload: () => void
+    } & (
     | {
           pending: true
           error: null
@@ -34,17 +37,22 @@ export type UseFetchReturn<T, E> =
           error: null
           data: T
       }
-
-const fetchPending: UseFetchReturn<unknown, unknown> = {
-    pending: true,
-    error: null,
-    data: null,
-}
+    )
 
 export const useFetch = <T, E, R = T>(
     req: (abortSignal: AbortSignal) => RequestResult<T, E, false>,
     options?: UseFetchOptions<T, E, R>,
 ): UseFetchReturn<R, E> => {
+
+    const [lastTry, setLastTry] = useState(Date.now())
+    const reload = () => setLastTry(Date.now())
+    const fetchPending: UseFetchReturn<unknown, unknown> = {
+        reload,
+        pending: true,
+        error: null,
+        data: null,
+    }
+
     const [result, setResult] = useState<UseFetchReturn<R, E>>(fetchPending)
 
     useEffect(() => {
@@ -58,6 +66,7 @@ export const useFetch = <T, E, R = T>(
                     options?.onResponse?.(result)
                     if (data !== undefined) {
                         setResult({
+                            reload,
                             pending: false,
                             error: null,
                             // @ts-ignore
@@ -65,6 +74,7 @@ export const useFetch = <T, E, R = T>(
                         })
                     } else if (error !== undefined) {
                         setResult({
+                            reload,
                             pending: false,
                             error: {
                                 status: response.status,
@@ -85,7 +95,7 @@ export const useFetch = <T, E, R = T>(
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [...(options?.deps ?? [])])
+    }, [lastTry, ...(options?.deps ?? [])])
 
     return result
 }

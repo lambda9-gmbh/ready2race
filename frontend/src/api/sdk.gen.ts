@@ -85,6 +85,9 @@ import type {
     GetEventInvoicesData,
     GetEventInvoicesError,
     GetEventInvoicesResponse,
+    GetEventInvoicingInfoData,
+    GetEventInvoicingInfoError,
+    GetEventInvoicingInfoResponse,
     GetEventMatchesData,
     GetEventMatchesError,
     GetEventMatchesResponse,
@@ -826,6 +829,19 @@ export const getEventInvoices = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/invoices',
+    })
+}
+
+export const getEventInvoicingInfo = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventInvoicingInfoData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventInvoicingInfoResponse,
+        GetEventInvoicingInfoError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/invoicingInfo',
     })
 }
 

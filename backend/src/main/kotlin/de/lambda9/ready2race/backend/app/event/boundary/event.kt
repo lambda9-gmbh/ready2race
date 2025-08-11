@@ -74,15 +74,23 @@ fun Route.event() {
             participantForEvent()
             task()
             workShift()
-            
+
             get("/matches") {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val currentlyRunning = !optionalQueryParam("currentlyRunning", boolean)
                     val withoutPlaces = !optionalQueryParam("withoutPlaces", boolean)
-                    
+
                     CompetitionExecutionService.getMatchesByEvent(eventId, currentlyRunning, withoutPlaces)
+                }
+            }
+
+            get("/invoicingInfo") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadInvoiceGlobal)
+                    val id = !pathParam("eventId", uuid)
+                    InvoiceService.getInfoForEvent(id)
                 }
             }
 
