@@ -711,6 +711,18 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/invoicingInfo:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventInvoicingInfo
+      responses:
+        200:
+          description: Invoices info for this event retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInvoicesInfoDto'
   /event/{eventId}/matches:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -8708,3 +8720,19 @@ components:
         config:
           type: string
           format: uuid
+
+    EventInvoicesInfoDto:
+      type: object
+      required:
+        - totalAmount
+        - paidAmount
+        - producing
+      properties:
+        totalAmount:
+          type: string
+          format: decimal
+        paidAmount:
+          type: string
+          format: decimal
+        producing:
+          type: boolean

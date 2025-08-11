@@ -204,6 +204,13 @@
       "paymentDueBy": "Zahlungstermin Meldegebühren",
       "latePaymentDueBy": "Zahlungstermin Nachmeldegebühren"
     },
+    "invoices": {
+      "infoCard": {
+        "totalAmount": "Summe aller in Rechnung gestellter Beträge: {{amount}}€",
+        "paidAmount": "Davon bereits bezahlt: {{amount}}€",
+        "alert": "Die Rechnungserstellung ist noch nicht abgeschlossen."
+      }
+    },
     "location": "Ort",
     "upcoming": "Anstehende Veranstaltungen",
     "registrationAvailable": {

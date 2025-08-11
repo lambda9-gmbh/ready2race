@@ -2,6 +2,7 @@ set search_path to ready2race, pg_catalog, public;
 
 drop view if exists startlist_view;
 drop view if exists startlist_team;
+drop view if exists event_invoices_info;
 drop view if exists invoice_download;
 drop view if exists invoice_for_event_registration;
 drop view if exists competition_setup_round_with_matches;
@@ -734,6 +735,15 @@ select i.id,
 from invoice i
          join invoice_document_data idd on i.id = idd.invoice;
 
+create view event_invoices_info as
+select ifer.event,
+       round(coalesce(sum(ifer.total_amount), 0), 2) as total_amount,
+       round(coalesce(sum(ifer.total_amount) filter ( where ifer.paid_at is not null ), 0), 2) as paid_amount,
+       exists(
+           select 1 from produce_invoice_for_registration pifr join event_registration er on pifr.event_registration = er.id where er.event = ifer.event
+       ) as producing
+from invoice_for_event_registration ifer
+group by ifer.event;
 
 create view startlist_team as
 select cmt.competition_match,
