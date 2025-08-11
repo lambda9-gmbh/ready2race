@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.control
 
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationFeeDto
@@ -8,6 +9,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
+import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
@@ -26,6 +28,10 @@ import org.jooq.Condition
 import org.jooq.Field
 import org.jooq.impl.DSL
 import java.util.*
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
+import org.jooq.Record3
+import org.jooq.Record5
+import java.time.LocalDateTime
 
 object CompetitionRegistrationRepo {
 
@@ -121,9 +127,14 @@ object CompetitionRegistrationRepo {
 
         val optionalFees = selectFees()
 
-        val participants = selectParticipants()
+        // Subquery to get the latest team tracking data
+        val participantTracking = selectParticipantTrackings()
+
+        val participants = selectParticipants(participantTracking)
 
         val namedParticipants = selectNamedParticipants(participants)
+
+
 
         select(
             COMPETITION_REGISTRATION.ID,
@@ -144,7 +155,8 @@ object CompetitionRegistrationRepo {
         )
             .from(COMPETITION_REGISTRATION)
             .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)) // also user for sort + search
-            .leftJoin(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)) // also user for sort + search
+            .leftJoin(RATING_CATEGORY)
+            .on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)) // also user for sort + search
             .leftJoin(COMPETITION_DEREGISTRATION)
             .on(COMPETITION_REGISTRATION.ID.eq(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION))
             .page(params, searchFieldsForCompetition) {
@@ -219,23 +231,9 @@ object CompetitionRegistrationRepo {
         }
 
 
-    private fun selectParticipants() = DSL.select(
-        PARTICIPANT_FOR_EVENT.ID,
-        PARTICIPANT_FOR_EVENT.CLUB_ID,
-        PARTICIPANT_FOR_EVENT.CLUB_NAME,
-        PARTICIPANT_FOR_EVENT.FIRSTNAME,
-        PARTICIPANT_FOR_EVENT.LASTNAME,
-        PARTICIPANT_FOR_EVENT.YEAR,
-        PARTICIPANT_FOR_EVENT.GENDER,
-        PARTICIPANT_FOR_EVENT.EXTERNAL,
-        PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME
-    )
-        .from(PARTICIPANT_FOR_EVENT)
-        .join(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-        .on(PARTICIPANT_FOR_EVENT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
-        .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.eq(NAMED_PARTICIPANT.ID))
-        .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
-        .groupBy(
+    private fun selectParticipants(participantTracking: Field<List<Record5<String?, LocalDateTime?, UUID?, String?, String?>>?>) =
+        DSL.select(
+            PARTICIPANT_FOR_EVENT.EVENT_ID,
             PARTICIPANT_FOR_EVENT.ID,
             PARTICIPANT_FOR_EVENT.CLUB_ID,
             PARTICIPANT_FOR_EVENT.CLUB_NAME,
@@ -244,30 +242,96 @@ object CompetitionRegistrationRepo {
             PARTICIPANT_FOR_EVENT.YEAR,
             PARTICIPANT_FOR_EVENT.GENDER,
             PARTICIPANT_FOR_EVENT.EXTERNAL,
-            PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME
+            PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
+            PARTICIPANT_FOR_EVENT.QR_CODE_ID,
+            PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS,
+            participantTracking
         )
-        .orderBy(PARTICIPANT_FOR_EVENT.FIRSTNAME, PARTICIPANT_FOR_EVENT.LASTNAME)
-        .asMultiset("participants")
-        .convertFrom {
-            it.map {
-                ParticipantForEventDto(
-                    id = it[PARTICIPANT_FOR_EVENT.ID]!!,
-                    clubId = it[PARTICIPANT_FOR_EVENT.CLUB_ID]!!,
-                    clubName = it[PARTICIPANT_FOR_EVENT.CLUB_NAME]!!,
-                    firstname = it[PARTICIPANT_FOR_EVENT.FIRSTNAME]!!,
-                    lastname = it[PARTICIPANT_FOR_EVENT.LASTNAME]!!,
-                    year = it[PARTICIPANT_FOR_EVENT.YEAR],
-                    gender = it[PARTICIPANT_FOR_EVENT.GENDER]!!,
-                    external = it[PARTICIPANT_FOR_EVENT.EXTERNAL],
-                    externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
-                    participantRequirementsChecked = emptyList()
-                )
+            .from(PARTICIPANT_FOR_EVENT)
+            .join(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+            .on(PARTICIPANT_FOR_EVENT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
+            .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT.eq(NAMED_PARTICIPANT.ID))
+            .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .groupBy(
+                PARTICIPANT_FOR_EVENT.EVENT_ID,
+                PARTICIPANT_FOR_EVENT.ID,
+                PARTICIPANT_FOR_EVENT.CLUB_ID,
+                PARTICIPANT_FOR_EVENT.CLUB_NAME,
+                PARTICIPANT_FOR_EVENT.FIRSTNAME,
+                PARTICIPANT_FOR_EVENT.LASTNAME,
+                PARTICIPANT_FOR_EVENT.YEAR,
+                PARTICIPANT_FOR_EVENT.GENDER,
+                PARTICIPANT_FOR_EVENT.EXTERNAL,
+                PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
+                PARTICIPANT_FOR_EVENT.QR_CODE_ID,
+                PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS
+            )
+            .orderBy(PARTICIPANT_FOR_EVENT.FIRSTNAME, PARTICIPANT_FOR_EVENT.LASTNAME)
+            .asMultiset("participants")
+            .convertFrom {
+                it.map {
+                    ParticipantForEventDto(
+                        id = it[PARTICIPANT_FOR_EVENT.ID]!!,
+                        clubId = it[PARTICIPANT_FOR_EVENT.CLUB_ID]!!,
+                        clubName = it[PARTICIPANT_FOR_EVENT.CLUB_NAME]!!,
+                        firstname = it[PARTICIPANT_FOR_EVENT.FIRSTNAME]!!,
+                        lastname = it[PARTICIPANT_FOR_EVENT.LASTNAME]!!,
+                        year = it[PARTICIPANT_FOR_EVENT.YEAR],
+                        gender = it[PARTICIPANT_FOR_EVENT.GENDER]!!,
+                        external = it[PARTICIPANT_FOR_EVENT.EXTERNAL],
+                        externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
+                        participantRequirementsChecked = emptyList(),
+                        qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],
+                        namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
+                            ?: emptyList(),
+                        currentStatus = it[participantTracking]?.firstOrNull()
+                            ?.let { latestScan -> ParticipantScanType.valueOf(latestScan.value1()!!) },
+                        lastScanAt = it[participantTracking]?.firstOrNull()?.value2(),
+                        lastScanBy = it[participantTracking]?.firstOrNull().let { tracking ->
+                            if (tracking?.value3() != null && tracking.value4() != null && tracking.value5() != null) {
+                                AppUserNameDto(
+                                    id = tracking.value3()!!,
+                                    firstname = tracking.value4()!!,
+                                    lastname = tracking.value5()!!,
+                                )
+                            } else null
+                        }
+                    )
+                }
             }
-        }
+
+    fun selectParticipantTrackings() = DSL.select(
+        PARTICIPANT_TRACKING.SCAN_TYPE,
+        PARTICIPANT_TRACKING.SCANNED_AT,
+        PARTICIPANT_TRACKING.SCANNED_BY,
+        APP_USER.FIRSTNAME,
+        APP_USER.LASTNAME
+    )
+        .from(PARTICIPANT_TRACKING)
+        .leftJoin(APP_USER).on(PARTICIPANT_TRACKING.SCANNED_BY.eq(APP_USER.ID))
+        .where(
+            PARTICIPANT_TRACKING.EVENT.eq(PARTICIPANT_FOR_EVENT.EVENT_ID).and(
+                PARTICIPANT_TRACKING.PARTICIPANT.eq(
+                    PARTICIPANT_FOR_EVENT.ID
+                )
+            )
+        )
+        .orderBy(PARTICIPANT_TRACKING.SCANNED_AT.desc())
+        .limit(1)
+        .asMultiset("participantTracking")
+        .convertFrom { it?.toList() }
+
+
+    fun selectParticipantForEvent(eventId: UUID, participantId: UUID) =
+        PARTICIPANT_FOR_EVENT.selectOne { EVENT_ID.eq(eventId).and(ID.eq(participantId)) }
 
     private fun filterScope(
         scope: Privilege.Scope,
         clubId: UUID?,
     ): Condition = if (scope == Privilege.Scope.OWN) COMPETITION_REGISTRATION.CLUB.eq(clubId) else DSL.trueCondition()
 
+
+    fun getCompetitionRegistrationTeams(
+        eventId: UUID
+    ): JIO<List<CompetitionRegistrationTeamRecord>> = COMPETITION_REGISTRATION_TEAM.select { EVENT_ID.eq(eventId) }
 }

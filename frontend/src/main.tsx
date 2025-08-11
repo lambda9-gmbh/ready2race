@@ -12,7 +12,7 @@ import './index.scss'
 createRoot(getRootElement()).render(
     <StrictMode>
         <UserProvider>
-            <App />
+            <App/>
         </UserProvider>
     </StrictMode>,
 )

@@ -9,9 +9,7 @@ import de.lambda9.ready2race.backend.calls.pagination.Order
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.pagination.Sortable
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
-import de.lambda9.ready2race.backend.config.ParseEnvException
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.kio.unwrap
 import de.lambda9.ready2race.backend.parsing.Parser
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.json
@@ -62,6 +60,23 @@ fun ApplicationCall.authenticate(
                         && it.resource == privilege.resource.name
                         && Privilege.Scope.valueOf(it.scope).level >= privilege.scope.level
                 }
+        },
+        transform = { AuthError.PrivilegeMissing },
+    )
+
+fun ApplicationCall.authenticateAny(
+    vararg privileges: Privilege,
+): App<AuthError, AppUserWithPrivilegesRecord> =
+    AuthService.useSessionToken(sessions.get<UserSession>()?.token).failIf(
+        condition = { user ->
+            privileges.none { privilege ->
+                user.privileges!!
+                    .any {
+                        it!!.action == privilege.action.name
+                            && it.resource == privilege.resource.name
+                            && Privilege.Scope.valueOf(it.scope).level >= privilege.scope.level
+                    }
+            }
         },
         transform = { AuthError.PrivilegeMissing },
     )

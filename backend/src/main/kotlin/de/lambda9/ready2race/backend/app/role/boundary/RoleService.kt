@@ -29,9 +29,20 @@ object RoleService {
         userId: UUID,
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val record = !request.toRecord(userId)
-        RoleRepo.create(record).orDie().map {
-            ApiResponse.Created(it)
+        val roleId = !RoleRepo.create(record).orDie()
+
+        val records = request.privileges.map {
+            RoleHasPrivilegeRecord(
+                role = roleId,
+                privilege = it
+            )
         }
+
+        !RoleHasPrivilegeRepo.create(records).orDie()
+
+        KIO.ok(
+            ApiResponse.Created(roleId)
+        )
     }
 
     fun page(

@@ -1,6 +1,9 @@
 package de.lambda9.ready2race.backend.app.event.boundary
 
+import de.lambda9.ready2race.backend.app.appUserWithQrCode.boundary.appUserWithQrCode
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.caterer.boundary.CatererService
+import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
@@ -18,6 +21,8 @@ import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
+import de.lambda9.ready2race.backend.app.participantTracking.boundary.ParticipantTrackingService
+import de.lambda9.ready2race.backend.app.participantTracking.boundary.participantTracking
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -74,6 +79,8 @@ fun Route.event() {
             participantForEvent()
             task()
             workShift()
+            appUserWithQrCode()
+            participantTracking()
 
             get("/matches") {
                 call.respondComprehension {
@@ -100,6 +107,15 @@ fun Route.event() {
                     val id = !pathParam("eventId", uuid)
                     val params = !pagination<InvoiceForEventRegistrationSort>()
                     InvoiceService.pageForEvent(id, params, user, scope)
+                }
+            }
+
+            get("/caterer-transactions") {
+                call.respondComprehension {
+                    !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
+                    val eventId = !pathParam("eventId", uuid)
+                    val params = !pagination<CatererTransactionViewSort>()
+                    CatererService.pageByEventId(eventId, params)
                 }
             }
 

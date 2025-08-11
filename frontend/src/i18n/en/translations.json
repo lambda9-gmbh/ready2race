@@ -72,6 +72,9 @@
     "next": "Next",
     "and": "and",
     "remove": "Remove",
+    "assign": "Assign",
+    "noResults": "No results",
+    "tryDifferentSearch": "Try a different search",
     "items": "Items",
     "more": "More",
     "create": "Create",
@@ -83,7 +86,12 @@
     "exitFullscreen": "Exit Fullscreen",
     "language": {
       "menu": "Select language"
-    }
+    },
+    "actions": "Actions",
+    "hide": "Hide",
+    "show": "Show",
+    "name": "Name",
+    "by": "By"
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -186,11 +194,48 @@
     "participants": "Members",
     "participant": {
       "title": "Member",
+      "name": "Name",
+      "yearOfBirth": "Year of birth",
+      "gender": "Gender",
+      "role": "Role",
       "year": "Year of birth",
       "external": "External",
       "externalClub": "External club",
       "externalHint": "Select this option if you want to register a member of another club.",
-      "usedInRegistration": "In Registration"
+      "usedInRegistration": "In Registration",
+      "qrCodeId": "Qr Code Value",
+      "qrCodeEdit": "Edit QR Code value",
+      "qrCodeDelete": "Delete QR Code value",
+      "qrCodeDeleteConfirm": "Do you really want to delete the QR Code?",
+      "qrCodeEditDescription": "Please enter the new QR Code value.",
+      "userQrCode": "User QR Code",
+      "qrCode": "QR Code",
+      "id": "Participant ID",
+      "cateringNotAllowed": "This person is not authorized",
+      "tracking": {
+        "log": "Participant Status Log",
+        "entry": "Log entry",
+        "status": "Status",
+        "in": "In",
+        "out": "Out",
+        "teams": "Teams",
+        "lastScan": {
+          "at": "Last scan at",
+          "by": "Scanned by"
+        },
+        "checkInText": "Check in",
+        "checkOutText": "Check out",
+        "checkIn": {
+          "success": "Participant checked in successfully",
+          "error": "Error checking in participant"
+        },
+        "checkOut": {
+          "success": "Participant checked out successfully",
+          "error": "Error checking out participant"
+        },
+        "noTeamsFound": "No teams found",
+        "participantNotFound": "Participant not found"
+      }
     }
   },
   "event": {
@@ -645,7 +690,8 @@
         "part1": "Requirements can be created or edited ",
         "part2Link": "here",
         "part3": "."
-      }
+      },
+      "checkInApp": "Checkable in app"
     },
     "action": {
       "registrationsReport": {
@@ -829,10 +875,44 @@
     "participantRequirement": "Participant requirement",
     "participantRequirements": "Participant requirements",
     "active": "Active",
-    "activate": "Activate for event",
+    "activate": "Assign to event (for all participants)",
     "remove": "Remove from event",
-    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" including all successful verifications for this event?",
-    "tableHint": "Can be enabled for events."
+    "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" from the event? This affects all assigned participants and removes all successful verifications.",
+    "confirmRemoveGlobal": "Do you want to remove the global assignment of the requirement \"{{requirement}}\"? The requirement will remain for individually assigned participants.",
+    "tableHint": "Can be enabled for events.",
+    "namedParticipantAssignments": "Assignments",
+    "qrCodeRequirement": "QR Code",
+    "global": "Global",
+    "toggleQrCode": "Toggle QR code requirement",
+    "assignTo": "Assign to {{name}}",
+    "assignToWithQr": "Assign to {{name}} (with QR code)",
+    "assignedToNamedParticipant": "Requirement assigned to named participant",
+    "assignToParticipant": "Assign to participant",
+    "manageParticipants": "Manage participants",
+    "assignedParticipants": "Assigned participants",
+    "availableParticipants": "Available participants",
+    "requireQrCode": "Require QR code",
+    "allParticipantsAssigned": "All participants are already assigned",
+    "removeFrom": "Remove from {{name}}",
+    "removedFromNamedParticipant": "Requirement removed from named participant",
+    "toggleQrCodeFor": "Toggle QR code for {{name}}",
+    "toggleQrCodeForGlobal": "Toggle QR code for global assignment",
+    "assignGlobal": "Assign globally",
+    "assignGlobalWithQr": "Assign globally (with QR code)",
+    "removeGlobal": "Remove global assignment",
+    "removedGlobal": "Global assignment removed",
+    "checkRequirements": "Check requirements",
+    "checkInApp": "Checkable in app",
+    "namedParticipantRequirements": {
+      "title": "Named Participant Requirements",
+      "description": "Manage specific requirements for named participants",
+      "noNamedParticipants": "No named participants available",
+      "qrCodeRequired": "QR code required",
+      "assignedRequirements": "Assigned requirements",
+      "noRequirementsAssigned": "No requirements assigned",
+      "availableRequirements": "Available requirements",
+      "allRequirementsAssigned": "All requirements assigned"
+    }
   },
   "user": {
     "user": "User",
@@ -1135,5 +1215,106 @@
       "notFound": "The CAPTCHA is outdated"
     },
     "loading": "Loading CAPTCHA..."
+  },
+  "qrAssign": {
+    "title": "Assign QR Code",
+    "participant": "Participant",
+    "user": "User",
+    "participantQrDetected": "Participant QR code detected",
+    "appUserQrDetected": "User QR code detected",
+    "clubs": "Clubs",
+    "participants": "Participants",
+    "users": "Users",
+    "noData": "No data",
+    "team": "Team",
+    "scanSystemUser": "Scan User from System",
+    "scanUserQr": "Scan User QR Code",
+    "invalidUserQr": "Invalid User QR Code",
+    "invalidQrFormat": "Invalid QR Code Format",
+    "userAssigned": "User {{userId}} assigned",
+    "notAssigned": "This QR Code has not been assigned to a person.",
+    "successParticipant": "QR code successfully assigned to participant",
+    "successUser": "QR code successfully assigned to user",
+    "selectClub": "Select club",
+    "search": "Search...",
+    "confirmSelection": "Confirm selection",
+    "confirm": "Add",
+    "success": "QR Code successfully assigned"
+  },
+  "qrCode": {
+    "qrCode": "QR Code",
+    "value": "QR Code Value",
+    "appUsersWithQrCode": "Users with QR Codes",
+    "edit": "Edit QR Code",
+    "delete": "Delete QR Code",
+    "show": "Show QR Code",
+    "deleteConfirm": "Do you really want to delete the QR code?",
+    "noQrCodeAssigned": "No QR code assigned"
+  },
+  "qrAppuser": {
+    "title": "QR Appuser",
+    "user": "User",
+    "underConstruction": "Site under construction",
+    "removeAssignment": "Remove QR code assignment",
+    "removeAssignmentTitle": "Remove QR code assignment",
+    "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
+    "deleteError": "Error while deleting",
+    "deleteSuccess": "QR code assignment successfully removed",
+    "assignmentInfo": "Assignment information"
+  },
+  "qrParticipant": {
+    "title": "Participant",
+    "noRight": "You are not authorized for this QR code type.",
+    "loading": "Loading...",
+    "noRequirements": "No requirements with CheckInApp available.",
+    "enterArea": "Enter competition area",
+    "leaveArea": "Leave competition area",
+    "removeAssignment": "Remove QR code assignment",
+    "removeAssignmentTitle": "Remove assignment",
+    "removeAssignmentConfirm": "Do you really want to remove the assignment?",
+    "deleteError": "Error while deleting the QR code.",
+    "assignmentInfo": "Assignment information"
+  },
+  "qrScanner": {
+    "title": "Scanner"
+  },
+  "qrEvents": {
+    "title": "Events",
+    "switchApp": "Switch app"
+  },
+  "app": {
+    "functionSelect": {
+      "title": "Your Task",
+      "functions": {
+        "qrManagement": "QR Code Management",
+        "competitionCheck": "Competition Check",
+        "eventRequirement": "Event Requirements",
+        "caterer": "Catering"
+      }
+    },
+    "forbidden": {
+      "title": "Not authorized",
+      "message": "You are not authorized for this page.",
+      "backButton": "Back to login"
+    }
+  },
+  "caterer": {
+    "canReceiveFood": "User can receive food",
+    "cannotReceiveFood": "User cannot receive food",
+    "price": "Price (€)",
+    "priceHelper": "Optional",
+    "confirm": "Transact",
+    "previousTransactions": "Previous Transactions",
+    "scanError": "Error scanning user",
+    "transactionError": "Error creating transaction",
+    "transactionSuccess": "Transaction successfully completed"
+  },
+  "catererTransaction": {
+    "catererTransaction": "Caterer Transaction",
+    "catererTransactions": "Caterer Transactions",
+    "catererName": "Caterer",
+    "userName": "User",
+    "price": "Amount",
+    "createdAt": "Time"
   }
 }

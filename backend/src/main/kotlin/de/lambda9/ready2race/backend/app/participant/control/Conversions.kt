@@ -45,27 +45,6 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
         externalClubName = externalClubName,
         usedInRegistration = usedInRegistration!!,
         createdAt = createdAt!!,
-        updatedAt = updatedAt!!
+        updatedAt = updatedAt!!,
     )
 )
-
-fun ParticipantForEventRecord.toDto(): App<Nothing, ParticipantForEventDto> =
-    KIO.ok(
-        ParticipantForEventDto(
-            id = id!!,
-            clubId = clubId!!,
-            clubName = clubName!!,
-            firstname = firstname!!,
-            lastname = lastname!!,
-            year = year,
-            gender = gender!!,
-            external = external,
-            externalClubName = externalClubName,
-            participantRequirementsChecked = participantRequirementsChecked?.map {
-                ParticipantRequirementReducedDto(
-                    it?.id!!,
-                    it.name
-                )
-            }
-        )
-    )

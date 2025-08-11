@@ -1,11 +1,14 @@
 package de.lambda9.ready2race.backend.competitionSetup
 
+import de.lambda9.ready2race.backend.app.competition.boundary.CompetitionService
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.CompetitionTemplateService
 import de.lambda9.ready2race.backend.app.competitionTemplate.control.CompetitionTemplateRepo
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
@@ -14,6 +17,7 @@ import de.lambda9.ready2race.testing.testComprehension
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.jooq.Jooq
 import org.junit.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.test.assertEquals
@@ -58,7 +62,20 @@ class CompetitionSetupTemplateServiceTest {
 
     @Test
     fun testUpdateCompetitionSetup() = testComprehension {
-        val template = !CompetitionTemplateService.addCompetitionTemplate(
+        val event = !EventService.addEvent(
+            EventRequest(
+                name = "Event",
+                description = "descr",
+                location = "Loc",
+                registrationAvailableFrom = LocalDateTime.now(),
+                registrationAvailableTo = LocalDateTime.now(),
+                invoicePrefix = "A2",
+                published = false,
+                paymentDueBy = LocalDate.now(),
+            ),
+            userId = SYSTEM_USER
+        )
+        val competition = !CompetitionService.addCompetition(
             CompetitionPropertiesRequest(
                 identifier = "001",
                 name = "Name",
@@ -70,7 +87,8 @@ class CompetitionSetupTemplateServiceTest {
                 lateRegistrationAllowed = false,
                 setupTemplate = null
             ),
-            userId = SYSTEM_USER
+            userId = SYSTEM_USER,
+            eventId = event.id
         )
 
         !CompetitionSetupService.updateCompetitionSetup(
@@ -134,30 +152,30 @@ class CompetitionSetupTemplateServiceTest {
                     )
             ),
             userId = SYSTEM_USER,
-            key = template.id
+            key = competition.id
         )
 
-        val roundsCount = !Jooq.query {
+        val rounds = !Jooq.query {
             with(COMPETITION_SETUP_ROUND) {
-                fetchCount(this)
+                fetch(this.where(COMPETITION_SETUP_ROUND.COMPETITION_SETUP_TEMPLATE.isNull))
             }
         }
-        assertEquals(roundsCount, 2)
+        assertEquals(2, rounds.size)
 
-        val matchesCount = !Jooq.query {
+        val matches = !Jooq.query {
             with(COMPETITION_SETUP_MATCH) {
-                fetchCount(this)
+                fetch(this.where(COMPETITION_SETUP_ROUND.`in`(rounds.map { it.id })))
             }
         }
-        assertEquals(matchesCount, 3)
+        assertEquals(3, matches.size)
 
         val outcomesResult = !Jooq.query {
             with(COMPETITION_SETUP_PARTICIPANT) {
-                fetch(this)
+                fetch(this.where(COMPETITION_SETUP_MATCH.`in`(matches.map { it.id })))
             }
         }
-        val outcomesList = outcomesResult.toList()
-        assertEquals(outcomesList.size, 10)
+
+        assertEquals(10, outcomesResult.size)
         // todo: more asserts
     }
 

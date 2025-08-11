@@ -1,10 +1,13 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.participantRequirement.control.*
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
@@ -14,7 +17,6 @@ import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jooq.tools.csv.CSVReader
 import java.nio.charset.Charset
 import java.time.LocalDateTime
@@ -50,18 +52,22 @@ object ParticipantRequirementService {
         requirementId: UUID,
         eventId: UUID,
         userId: UUID,
-    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        namedParticipantId: UUID? = null,
+        qrCodeRequired: Boolean = false
+    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+        val checkExists = !EventHasParticipantRequirementRepo.exists(eventId, requirementId, namedParticipantId).orDie()
+        !KIO.failOn(checkExists) { ParticipantRequirementError.InUse }
 
-        if (!!EventHasParticipantRequirementRepo.exists(eventId, requirementId).orDie()) {
-            !EventHasParticipantRequirementRepo.create(
-                EventHasParticipantRequirementRecord(
-                    event = eventId,
-                    participantRequirement = requirementId,
-                    createdAt = LocalDateTime.now(),
-                    createdBy = userId
-                )
-            ).orDie()
-        }
+        !EventHasParticipantRequirementRepo.create(
+            EventHasParticipantRequirementRecord(
+                event = eventId,
+                participantRequirement = requirementId,
+                namedParticipant = namedParticipantId,
+                qrCodeRequired = qrCodeRequired,
+                createdAt = LocalDateTime.now(),
+                createdBy = userId
+            )
+        ).orDie()
 
         noData
 
@@ -69,16 +75,14 @@ object ParticipantRequirementService {
 
     fun removeRequirementForEvent(
         requirementId: UUID,
-        eventId: UUID
-    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
-
-        if (!EventHasParticipantRequirementRepo.exists(eventId, requirementId).orDie()) {
-            !EventHasParticipantRequirementRepo.delete(eventId, requirementId).orDie()
-            !ParticipantHasRequirementForEventRepo.deleteWhereParticipantNotInList(eventId, requirementId, emptyList()).orDie()
-        }
+        eventId: UUID,
+        namedParticipantId: UUID? = null
+    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+        val checkExists = !EventHasParticipantRequirementRepo.exists(eventId, requirementId, namedParticipantId).orDie()
+        !KIO.failOn(!checkExists) { ParticipantRequirementError.NotFound }
+        !EventHasParticipantRequirementRepo.delete(eventId, requirementId, namedParticipantId).orDie()
 
         noData
-
     }
 
     fun pageForEvent(
@@ -119,7 +123,7 @@ object ParticipantRequirementService {
         userId: UUID
     ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
 
-        if (!!EventHasParticipantRequirementRepo.exists(eventId, dto.requirementId).orDie()) {
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, dto.requirementId, dto.namedParticipantId).orDie()) {
             return@comprehension KIO.fail(ParticipantRequirementError.NotFound)
         }
 
@@ -155,7 +159,11 @@ object ParticipantRequirementService {
         userId: UUID
     ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
 
-        if (!!EventHasParticipantRequirementRepo.exists(eventId, config.requirementId).orDie()) {
+        // Load namedParticipantId from database if this is a named participant requirement
+        val namedParticipantId =
+            !EventHasParticipantRequirementRepo.getNamedParticipantId(eventId, config.requirementId).orDie()
+
+        if (!!EventHasParticipantRequirementRepo.exists(eventId, config.requirementId, namedParticipantId).orDie()) {
             return@comprehension KIO.fail(ParticipantRequirementError.InvalidConfig("Missing requirement" to config.requirementId.toString()))
         }
 
@@ -166,8 +174,6 @@ object ParticipantRequirementService {
         // Even if the @uncheckedParticipants list is empty, we should still try to parse and validate the uploaded csv and return any errors.
         val validParticipants = !parseParticipantListUpload(csvList, config)
 
-        KotlinLogging.logger {  }.error { validParticipants.size }
-
         // persist requirements for all matches
         !validParticipants.traverse { vp ->
             uncheckedParticipants.filter { up ->
@@ -175,6 +181,7 @@ object ParticipantRequirementService {
                     && up.lastname.equals(vp.lastname, ignoreCase = true)
                     && vp.club?.let { (up.externalClubName ?: up.clubName!!).equals(it, ignoreCase = true) } ?: true
                     && vp.year?.let { up.year?.equals(it) } ?: true
+                    && (namedParticipantId == null || up.namedParticipantIds?.contains(namedParticipantId) == true)
             }.traverse { candidate ->
                 ParticipantHasRequirementForEventRepo.create(
                     ParticipantHasRequirementForEventRecord(
@@ -235,8 +242,8 @@ object ParticipantRequirementService {
                         } else {
                             val valid =
                                 config.requirementColName == null || config.requirementIsValidValue == null || arr.getOrNull(
-                                header.getOrDefault(config.requirementColName, -1)
-                            ).equals(config.requirementIsValidValue)
+                                    header.getOrDefault(config.requirementColName, -1)
+                                ).equals(config.requirementIsValidValue)
 
                             if (valid) {
                                 ValidRequirementParticipant(
@@ -309,6 +316,63 @@ object ParticipantRequirementService {
         } else {
             noData
         }
+    }
+
+    fun assignRequirementToNamedParticipant(
+        eventId: UUID,
+        requirementId: UUID,
+        namedParticipantId: UUID,
+        qrCodeRequired: Boolean,
+        userId: UUID
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        !ParticipantRequirementForEventRepo.assignRequirementToNamedParticipant(
+            eventId = eventId,
+            participantRequirementId = requirementId,
+            namedParticipantId = namedParticipantId,
+            qrCodeRequired = qrCodeRequired,
+            createdBy = userId
+        ).orDie()
+        noData
+    }
+
+    fun updateQrCodeRequirement(
+        eventId: UUID,
+        requirementId: UUID,
+        namedParticipantId: UUID?,
+        qrCodeRequired: Boolean
+    ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
+        !ParticipantRequirementForEventRepo.updateQrCodeRequirement(
+            eventId = eventId,
+            participantRequirementId = requirementId,
+            namedParticipantId = namedParticipantId,
+            qrCodeRequired = qrCodeRequired
+        ).orDie()
+        noData
+    }
+
+    fun getForParticipant(
+        eventId: UUID,
+        participantId: UUID,
+        onlyForApp: Boolean,
+    ): App<ParticipantError, ApiResponse.ListDto<ParticipantRequirementForEventDto>> = KIO.comprehension {
+        val participantForEvent = !CompetitionRegistrationRepo.selectParticipantForEvent(eventId, participantId).orDie()
+            .onNullFail { ParticipantError.ParticipantNotFound }
+
+        val requirementsForEvent = !ParticipantRequirementForEventRepo.get(
+            eventId = eventId,
+            onlyActive = true,
+            onlyForApp = onlyForApp
+        ).orDie()
+
+        val requirementsForParticipant = requirementsForEvent.filter { eventReq ->
+            eventReq.requirements!!.any { npReq -> participantForEvent.namedParticipantIds!!.any { it == npReq!!.id } } || eventReq.requirements?.size == 0
+        }
+
+        ok(
+            ApiResponse.ListDto(
+                !requirementsForParticipant.traverse { it.toDto() }
+            )
+        )
     }
 
 }

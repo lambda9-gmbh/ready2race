@@ -47,6 +47,8 @@ object ParticipantRepo {
         ID.eq(id).and(clubId?.let { PARTICIPANT.CLUB.eq(it) } ?: DSL.trueCondition()).and(filterScope(scope, user.club))
     }
 
+    fun exists(id: UUID) = PARTICIPANT.exists { PARTICIPANT.ID.eq(id) }
+
     fun existsByIdAndClub(id: UUID, clubId: UUID) =
         PARTICIPANT.exists { PARTICIPANT.ID.eq(id).and(PARTICIPANT.CLUB.eq(clubId)) }
 

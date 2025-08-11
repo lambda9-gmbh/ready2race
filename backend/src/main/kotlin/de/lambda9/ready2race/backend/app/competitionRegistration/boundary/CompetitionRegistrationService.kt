@@ -211,7 +211,10 @@ object CompetitionRegistrationService {
     ) = KIO.comprehension {
 
         val requirements =
-            !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionAndNamedParticipantId(competitionId, namedParticipantDto.namedParticipantId)
+            !CompetitionPropertiesHasNamedParticipantRepo.getByCompetitionAndNamedParticipantId(
+                competitionId,
+                namedParticipantDto.namedParticipantId
+            )
                 .orDie()
                 .onNullFail { CompetitionRegistrationError.RegistrationInvalid }
         val counts: MutableMap<Gender, Int> = mutableMapOf(

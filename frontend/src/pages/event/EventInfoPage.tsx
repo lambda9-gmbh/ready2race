@@ -5,7 +5,6 @@ import {
     FullscreenExit as FullscreenExitIcon,
     Settings as SettingsIcon,
 } from '@mui/icons-material'
-import {useParams} from '@tanstack/react-router'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks'
 import InfoViewConfiguration from '@components/event/info/InfoViewConfiguration'
@@ -13,10 +12,11 @@ import InfoViewDisplay from '@components/event/info/InfoViewDisplay'
 import ViewRotationControl from '@components/event/info/ViewRotationControl'
 import {InfoViewConfigurationDto} from '@api/types.gen'
 import {getInfoViews} from '@api/sdk.gen'
+import {eventInfoRoute} from "@routes";
 
 const EventInfoPage = () => {
     const {t} = useTranslation()
-    const {eventId} = useParams({from: '/event/$eventId/info'})
+    const {eventId} = eventInfoRoute.useParams()
 
     const [configOpen, setConfigOpen] = useState(false)
     const [fullscreen, setFullscreen] = useState(false)
