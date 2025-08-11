@@ -31,7 +31,8 @@ data class CompetitionMatchData(
 
     data class CompetitionMatchTeam(
         val startNumber: Int,
-        val clubName: String,
+        val registeringClubName: String,
+        val actualClubName: String?,
         val teamName: String?,
         val ratingCategory: CompetitionMatchTeamRatingCategory?,
         val participants: List<CompetitionMatchParticipant>,
@@ -104,11 +105,20 @@ data class CompetitionMatchData(
                 }
             }
 
+            val clubs = actuallyParticipatingParticipants.map { it.externalClubName }.toSet()
+
+            val actualClubName = if (clubs.size == 1) {
+                clubs.first()
+            } else {
+                // TODO: read from configuration
+                "Renngemeinschaft"
+            }
 
             KIO.ok(
                 CompetitionMatchTeam(
                     startNumber = startNumber!!,
-                    clubName = clubName!!,
+                    registeringClubName = clubName!!,
+                    actualClubName = actualClubName,
                     teamName = teamName,
                     participants = actuallyParticipatingParticipants,
                     ratingCategory = ratingCategory?.let {

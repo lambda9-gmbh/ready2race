@@ -566,7 +566,8 @@ object CompetitionExecutionService {
             }}
         )
 
-        !KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
+        // TODO: disabled for now, because it helps with parallel matches (can upload results to multiple matches with the same file)
+        //!KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
 
         places.filterNotNull().sorted().forEachIndexed { index, place ->
             val expected = index + 1
@@ -1013,11 +1014,16 @@ object CompetitionExecutionService {
                         ) {
                             text(
                                 fontStyle = FontStyle.BOLD
-                            ) { team.clubName }
+                            ) { team.registeringClubName }
                             team.teamName?.let {
                                 text(
                                     newLine = false,
                                 ) { " $it" }
+                            }
+                            team.actualClubName?.let {
+                                text(
+                                    newLine = false,
+                                ) { " [$it]" }
                             }
                             team.ratingCategory?.let {
                                 text(
@@ -1067,7 +1073,7 @@ object CompetitionExecutionService {
                                             text { member.year.toString() }
                                         }
                                         cell {
-                                            text { member.externalClubName ?: team.clubName }
+                                            text { member.externalClubName ?: team.registeringClubName }
                                         }
                                     }
                                 }
@@ -1107,9 +1113,9 @@ object CompetitionExecutionService {
                 optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSortedSet { a ,b -> compareValues(a.order(), b.order()) }.joinToString("/") }
                 optionalColumn(config.colParticipantYear) { participants.joinToString(",") { p -> p.year.toString() } }
                 optionalColumn(config.colParticipantRole) { participants.map { p -> p.role }.toSet().joinToString(",") }
-                optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: clubName }.toSet().joinToString(",") }
+                optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: registeringClubName }.toSet().joinToString(",") }
 
-                optionalColumn(config.colClubName) { clubName }
+                optionalColumn(config.colClubName) { registeringClubName }
 
                 optionalColumn(config.colTeamName) { teamName ?: "" }
                 optionalColumn(config.colTeamStartNumber) { startNumber.toString() }

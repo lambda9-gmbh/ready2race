@@ -21,10 +21,6 @@ import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateUsageRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentTemplateUsageRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationResultViewRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.InvoicePositionRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -312,7 +308,8 @@ object DocumentTemplateService {
                     teams = listOf(
                         CompetitionMatchData.CompetitionMatchTeam(
                             startNumber = 1,
-                            clubName = "Sportclub Musterhausen",
+                            registeringClubName = "Sportclub Musterhausen",
+                            actualClubName = null,
                             teamName = "#1",
                             ratingCategory = null,
                             participants = listOf(
@@ -328,7 +325,8 @@ object DocumentTemplateService {
                         ),
                         CompetitionMatchData.CompetitionMatchTeam(
                             startNumber = 2,
-                            clubName = "Sportclub Musterhausen",
+                            registeringClubName = "Sportclub Musterhausen",
+                            actualClubName = null,
                             teamName = "#2",
                             ratingCategory = null,
                             participants = listOf(
@@ -344,7 +342,8 @@ object DocumentTemplateService {
                         ),
                         CompetitionMatchData.CompetitionMatchTeam(
                             startNumber = 3,
-                            clubName = "Neustadt 101",
+                            registeringClubName = "Neustadt 101",
+                            actualClubName = null,
                             teamName = null,
                             ratingCategory = null,
                             participants = listOf(
@@ -360,7 +359,8 @@ object DocumentTemplateService {
                         ),
                         CompetitionMatchData.CompetitionMatchTeam(
                             startNumber = 4,
-                            clubName = "Sportfreunde e.V.",
+                            registeringClubName = "Sportfreunde e.V.",
+                            actualClubName = null,
                             teamName = null,
                             ratingCategory = null,
                             participants = listOf(
