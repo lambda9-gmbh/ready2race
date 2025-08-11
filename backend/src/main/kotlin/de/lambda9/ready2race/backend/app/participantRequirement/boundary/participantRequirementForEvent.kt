@@ -1,15 +1,15 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.AssignRequirementToNamedParticipantDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventConfigDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventSort
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.UpdateQrCodeRequirementDto
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.http.content.*
 import io.ktor.server.request.*
@@ -21,7 +21,7 @@ fun Route.participantRequirementForEvent() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadEventGlobal)
+                !authenticateAny(Privilege.ReadEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
                 val params = !pagination<ParticipantRequirementForEventSort>()
                 val eventId = !pathParam("eventId", uuid)
                 ParticipantRequirementService.pageForEvent(params, eventId)
@@ -88,7 +88,7 @@ fun Route.participantRequirementForEvent() {
         route("/approve") {
             post {
                 call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val user = !authenticateAny(Privilege.UpdateEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val body = !receiveKIO(ParticipantRequirementCheckForEventUpsertDto.example)
                     ParticipantRequirementService.approveRequirementForEvent(eventId, body, user.id!!)
@@ -96,7 +96,6 @@ fun Route.participantRequirementForEvent() {
             }
         }
 
-        // Todo: Merge the following 2 Requests into one endpoint
         route("/{participantRequirementId}") {
 
             get {
@@ -118,6 +117,67 @@ fun Route.participantRequirementForEvent() {
                     val participantRequirementId = !pathParam("participantRequirementId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     ParticipantRequirementService.removeRequirementForEvent(participantRequirementId, eventId)
+                }
+            }
+        }
+
+        route("/namedParticipant/{namedParticipantId}") {
+            post {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
+                    val body = !receiveKIO(AssignRequirementToNamedParticipantDto.example)
+                    ParticipantRequirementService.assignRequirementToNamedParticipant(
+                        eventId,
+                        body.requirementId,
+                        namedParticipantId,
+                        body.qrCodeRequired,
+                        user.id!!
+                    )
+                }
+            }
+
+            delete {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val namedParticipantId = !pathParam("namedParticipantId", uuid)
+                    val body = !receiveKIO(AssignRequirementToNamedParticipantDto.example)
+                    ParticipantRequirementService.removeRequirementForEvent(
+                        body.requirementId,
+                        eventId,
+                        namedParticipantId
+                    )
+                }
+            }
+        }
+
+        route("/qrCode") {
+            put {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val body = !receiveKIO(UpdateQrCodeRequirementDto.example)
+                    ParticipantRequirementService.updateQrCodeRequirement(
+                        eventId,
+                        body.requirementId,
+                        body.namedParticipantId,
+                        body.qrCodeRequired
+                    )
+                }
+            }
+        }
+
+        route("/participant/{participantId}") {
+            get {
+                call.respondComprehension {
+                    !authenticateAny(Privilege.ReadEventGlobal, Privilege.UpdateAppEventRequirementGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val participantId = !pathParam("participantId", uuid)
+                    val onlyForApp = !queryParam("onlyForApp", boolean)
+
+                    ParticipantRequirementService.getForParticipant(eventId, participantId, onlyForApp)
                 }
             }
         }

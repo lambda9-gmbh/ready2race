@@ -14,6 +14,7 @@ type ParticipantRequirementForm = {
     name: string
     description: string
     optional: boolean
+    checkInApp: boolean
 }
 
 const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRequirementDto>) => {
@@ -39,6 +40,7 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
         name: '',
         description: '',
         optional: false,
+        checkInApp: false,
     }
 
     const formContext = useForm<ParticipantRequirementForm>()
@@ -58,6 +60,7 @@ const ParticipantRequirementDialog = (props: BaseEntityDialogProps<ParticipantRe
                 <FormInputText name="name" label={t('event.name')} required />
                 <FormInputText name="description" label={t('entity.description')} />
                 <FormInputCheckbox name="optional" label={t('entity.optional')} />
+                <FormInputCheckbox name="checkInApp" label={t('participantRequirement.checkInApp')} />
             </Stack>
         </EntityDialog>
     )
@@ -68,6 +71,7 @@ function mapFormToRequest(formData: ParticipantRequirementForm): ParticipantRequ
         name: formData.name,
         description: takeIfNotEmpty(formData.description),
         optional: formData.optional,
+        checkInApp: formData.checkInApp,
     }
 }
 
@@ -76,6 +80,7 @@ function mapDtoToForm(dto: ParticipantRequirementDto): ParticipantRequirementFor
         name: dto.name,
         description: dto.description ?? '',
         optional: dto.optional,
+        checkInApp: dto.checkInApp,
     }
 }
 

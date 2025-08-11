@@ -2,17 +2,18 @@ import TabPanel from '@components/tab/TabPanel.tsx'
 import {EventTab} from '../EventPage.tsx'
 import InvoiceTable from '@components/invoice/InvoiceTable.tsx'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
-import {EventDto, InvoiceDto, RegistrationInvoiceType} from '@api/types.gen.ts'
+import {EventDto, InvoiceDto, RegistrationInvoiceType, CatererTransactionViewDto} from '@api/types.gen.ts'
 import {Trans, useTranslation} from 'react-i18next'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {getEventInvoices, getEventInvoicingInfo, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
+import {getEventCatererTransactions, getEventInvoices, getEventInvoicingInfo, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createInvoiceGlobal} from '@authorization/privileges.ts'
+import CatererTransactionTable from '@components/caterertransaction/CatererTransactionTable.tsx';
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {arrayOfNotNull, eventRegistrationPossible} from '@utils/helpers.ts'
 import InlineLink from '@components/InlineLink.tsx'
 import SelectionMenu from '@components/SelectionMenu.tsx'
-import {Alert, Card, CardContent, Stack, Typography} from "@mui/material";
+import {Alert, Box, Card, CardContent, Stack, Typography} from "@mui/material";
 
 type Props = {
     activeTab: EventTab
@@ -33,6 +34,11 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
         entityCreate: false,
         entityUpdate: false,
     }).table
+
+    const catererTransactionAdministrationProps = useEntityAdministration<CatererTransactionViewDto>(t('catererTransaction.catererTransaction'), {
+        entityCreate: false,
+        entityUpdate: false,
+    })
 
     const handleProduceInvoices = (type: RegistrationInvoiceType) => {
         confirmAction(
@@ -177,6 +183,19 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
                         ) : undefined
                     }
                 />
+                <Box sx={{ mt: 4 }}>
+                    <CatererTransactionTable
+                        {...catererTransactionAdministrationProps.table}
+                        title={t('catererTransaction.catererTransactions')}
+                        dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
+                            getEventCatererTransactions({
+                                signal,
+                                path: {eventId: event.id},
+                                query: {...params},
+                            })
+                        }
+                    />
+                </Box>
             </Stack>
         </TabPanel>
     )

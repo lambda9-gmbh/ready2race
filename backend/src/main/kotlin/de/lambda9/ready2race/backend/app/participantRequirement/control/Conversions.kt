@@ -1,10 +1,12 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.control
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.NamedParticipantRequirmentForEventDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementUpsertDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementForEventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
@@ -18,6 +20,7 @@ fun ParticipantRequirementUpsertDto.toRecord(userId: UUID): App<Nothing, Partici
                 name = name,
                 description = description,
                 optional = optional ?: false,
+                checkInApp = checkInApp ?: false,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -32,6 +35,7 @@ fun ParticipantRequirementRecord.toDto(): App<Nothing, ParticipantRequirementDto
         name = name,
         description = description,
         optional = optional,
+        checkInApp = checkInApp ?: false,
     )
 )
 
@@ -41,6 +45,17 @@ fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequir
         name = name!!,
         description = description,
         optional = optional!!,
-        active = active!!
+        active = active!!,
+        checkInApp = checkInApp!!,
+        requirements = requirements?.filterNotNull()?.map { it.toNamedParticipantRequirementDto() } ?: emptyList(),
     )
 )
+
+fun ParticipantRequirementNamedParticipantRecord.toNamedParticipantRequirementDto(): NamedParticipantRequirmentForEventDto =
+    NamedParticipantRequirmentForEventDto(
+        id = id!!,
+        name = name!!,
+        qrCodeRequired = qrCodeRequired ?: false,
+        event = event!!,
+        participantRequirement = participantRequirement!!
+    )

@@ -91,6 +91,9 @@ import type {
     GetEventMatchesData,
     GetEventMatchesError,
     GetEventMatchesResponse,
+    GetEventCatererTransactionsData,
+    GetEventCatererTransactionsError,
+    GetEventCatererTransactionsResponse,
     AddEventDayData,
     AddEventDayError,
     AddEventDayResponse,
@@ -202,6 +205,9 @@ import type {
     DeleteDocumentData,
     DeleteDocumentError,
     DeleteDocumentResponse,
+    GetParticipantTrackingsData,
+    GetParticipantTrackingsError,
+    GetParticipantTrackingsResponse,
     AddCompetitionTemplateData,
     AddCompetitionTemplateError,
     AddCompetitionTemplateResponse,
@@ -239,6 +245,9 @@ import type {
     DeleteNamedParticipantData,
     DeleteNamedParticipantError,
     DeleteNamedParticipantResponse,
+    GetNamedParticipantsForEventData,
+    GetNamedParticipantsForEventError,
+    GetNamedParticipantsForEventResponse,
     NewCaptchaError,
     NewCaptchaResponse,
     AddClubData,
@@ -346,9 +355,30 @@ import type {
     RemoveParticipantRequirementForEventData,
     RemoveParticipantRequirementForEventError,
     RemoveParticipantRequirementForEventResponse,
+    AssignRequirementToNamedParticipantData,
+    AssignRequirementToNamedParticipantError,
+    AssignRequirementToNamedParticipantResponse,
+    RemoveRequirementFromNamedParticipantData,
+    RemoveRequirementFromNamedParticipantError,
+    RemoveRequirementFromNamedParticipantResponse,
+    UpdateQrCodeRequirementData,
+    UpdateQrCodeRequirementError,
+    UpdateQrCodeRequirementResponse,
+    GetParticipantRequirementsForParticipantData,
+    GetParticipantRequirementsForParticipantError,
+    GetParticipantRequirementsForParticipantResponse,
     GetParticipantsForEventData,
     GetParticipantsForEventError,
     GetParticipantsForEventResponse,
+    GetParticipantsForEventInAppData,
+    GetParticipantsForEventInAppError,
+    GetParticipantsForEventInAppResponse,
+    GetTeamsByParticipantQrCodeData,
+    GetTeamsByParticipantQrCodeError,
+    GetTeamsByParticipantQrCodeResponse,
+    CheckInOutParticipantData,
+    CheckInOutParticipantError,
+    CheckInOutParticipantResponse,
     UpdateParticipantRequirementData,
     UpdateParticipantRequirementError,
     UpdateParticipantRequirementResponse,
@@ -430,6 +460,12 @@ import type {
     AssignBankAccountData,
     AssignBankAccountError,
     AssignBankAccountResponse,
+    GetAppUsersWithQrCodeForEventData,
+    GetAppUsersWithQrCodeForEventError,
+    GetAppUsersWithQrCodeForEventResponse,
+    DeleteQrCodeForEventData,
+    DeleteQrCodeForEventError,
+    DeleteQrCodeForEventResponse,
     ProduceInvoicesForEventRegistrationsData,
     ProduceInvoicesForEventRegistrationsError,
     ProduceInvoicesForEventRegistrationsResponse,
@@ -545,6 +581,24 @@ import type {
     UploadResultFileData,
     UploadResultFileError,
     UploadResultFileResponse,
+    CheckQrCodeData,
+    CheckQrCodeError,
+    CheckQrCodeResponse,
+    DeleteQrCodeData,
+    DeleteQrCodeError,
+    DeleteQrCodeResponse,
+    UpdateQrCodeAppuserData,
+    UpdateQrCodeAppuserError,
+    UpdateQrCodeAppuserResponse,
+    UpdateQrCodeParticipantData,
+    UpdateQrCodeParticipantError,
+    UpdateQrCodeParticipantResponse,
+    CreateCateringTransactionData,
+    CreateCateringTransactionError,
+    CreateCateringTransactionResponse,
+    GetQrAssignmentParticipantsData,
+    GetQrAssignmentParticipantsError,
+    GetQrAssignmentParticipantsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -855,6 +909,19 @@ export const getEventMatches = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/matches',
+    })
+}
+
+export const getEventCatererTransactions = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetEventCatererTransactionsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventCatererTransactionsResponse,
+        GetEventCatererTransactionsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/caterer-transactions',
     })
 }
 
@@ -1324,6 +1391,19 @@ export const deleteDocument = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getParticipantTrackings = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantTrackingsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantTrackingsResponse,
+        GetParticipantTrackingsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantTracking',
+    })
+}
+
 export const addCompetitionTemplate = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddCompetitionTemplateData, ThrowOnError>,
 ) => {
@@ -1490,6 +1570,19 @@ export const deleteNamedParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/namedParticipant/{namedParticipantId}',
+    })
+}
+
+export const getNamedParticipantsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetNamedParticipantsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetNamedParticipantsForEventResponse,
+        GetNamedParticipantsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/namedParticipant/event/{eventId}',
     })
 }
 
@@ -1918,6 +2011,58 @@ export const removeParticipantRequirementForEvent = <ThrowOnError extends boolea
     })
 }
 
+export const assignRequirementToNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignRequirementToNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AssignRequirementToNamedParticipantResponse,
+        AssignRequirementToNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}',
+    })
+}
+
+export const removeRequirementFromNamedParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveRequirementFromNamedParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveRequirementFromNamedParticipantResponse,
+        RemoveRequirementFromNamedParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}',
+    })
+}
+
+export const updateQrCodeRequirement = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateQrCodeRequirementData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateQrCodeRequirementResponse,
+        UpdateQrCodeRequirementError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/qrCode',
+    })
+}
+
+export const getParticipantRequirementsForParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantRequirementsForParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantRequirementsForParticipantResponse,
+        GetParticipantRequirementsForParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participantRequirement/participant/{participantId}',
+    })
+}
+
 export const getParticipantsForEvent = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetParticipantsForEventData, ThrowOnError>,
 ) => {
@@ -1928,6 +2073,45 @@ export const getParticipantsForEvent = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/participant',
+    })
+}
+
+export const getParticipantsForEventInApp = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetParticipantsForEventInAppData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetParticipantsForEventInAppResponse,
+        GetParticipantsForEventInAppError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant-app',
+    })
+}
+
+export const getTeamsByParticipantQrCode = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetTeamsByParticipantQrCodeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetTeamsByParticipantQrCodeResponse,
+        GetTeamsByParticipantQrCodeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{qrCode}/teams',
+    })
+}
+
+export const checkInOutParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckInOutParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CheckInOutParticipantResponse,
+        CheckInOutParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/checkInOut',
     })
 }
 
@@ -2281,6 +2465,32 @@ export const assignBankAccount = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/assignedBankAccount',
+    })
+}
+
+export const getAppUsersWithQrCodeForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetAppUsersWithQrCodeForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetAppUsersWithQrCodeForEventResponse,
+        GetAppUsersWithQrCodeForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/appUserWithQrCode',
+    })
+}
+
+export const deleteQrCodeForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteQrCodeForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteQrCodeForEventResponse,
+        DeleteQrCodeForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/appUserWithQrCode/qrCode/{qrCodeId}',
     })
 }
 
@@ -2759,5 +2969,79 @@ export const uploadResultFile = <ThrowOnError extends boolean = false>(
             ...options?.headers,
         },
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/{competitionMatchId}/results-file',
+    })
+}
+
+export const checkQrCode = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CheckQrCodeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<CheckQrCodeResponse, CheckQrCodeError, ThrowOnError>({
+        ...options,
+        url: '/app/{qrCodeId}',
+    })
+}
+
+export const deleteQrCode = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DeleteQrCodeData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteQrCodeResponse,
+        DeleteQrCodeError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/{qrCodeId}',
+    })
+}
+
+export const updateQrCodeAppuser = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateQrCodeAppuserData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateQrCodeAppuserResponse,
+        UpdateQrCodeAppuserError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/appuser',
+    })
+}
+
+export const updateQrCodeParticipant = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<UpdateQrCodeParticipantData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        UpdateQrCodeParticipantResponse,
+        UpdateQrCodeParticipantError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/participant',
+    })
+}
+
+export const createCateringTransaction = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<CreateCateringTransactionData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        CreateCateringTransactionResponse,
+        CreateCateringTransactionError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/caterer/transactions',
+    })
+}
+
+export const getQrAssignmentParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetQrAssignmentParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetQrAssignmentParticipantsResponse,
+        GetQrAssignmentParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/app/qr-assignment/participants',
     })
 }

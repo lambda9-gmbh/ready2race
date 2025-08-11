@@ -758,6 +758,46 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/caterer-transactions:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getEventCatererTransactions
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Caterer transactions page for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CatererTransactionViewDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/eventDay:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -1756,6 +1796,46 @@ paths:
           $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantTracking:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getParticipantTrackings
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: ParticipantTracking page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantTrackingDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /competitionTemplate:
     post:
       operationId: addCompetitionTemplate
@@ -2076,6 +2156,33 @@ paths:
           $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /namedParticipant/event/{eventId}:
+    parameters:
+      - name: eventId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getNamedParticipantsForEvent
+      responses:
+        200:
+          description: Named participants for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NamedParticipantWithRequirementsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
   /captcha:
@@ -3022,6 +3129,116 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/namedParticipant/{namedParticipantId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: namedParticipantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: assignRequirementToNamedParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequirementToNamedParticipantDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: removeRequirementFromNamedParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignRequirementToNamedParticipantDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/qrCode:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    put:
+      operationId: updateQrCodeRequirement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateQrCodeRequirementDto'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participantRequirement/participant/{participantId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: participantId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: onlyForApp
+        in: query
+        required: true
+        schema:
+          type: boolean
+    get:
+      operationId: getParticipantRequirementsForParticipant
+      responses:
+        200:
+          description: ParticipantRequirements for participant successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantRequirementForEventDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /event/{eventId}/participant:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -3049,10 +3266,108 @@ paths:
                       $ref: '#/components/schemas/ParticipantForEventDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant-app:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getParticipantsForEventInApp
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: Participant page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ParticipantForEventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{qrCode}/teams:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: qrCode
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getTeamsByParticipantQrCode
+      responses:
+        200:
+          description: Teams associated with participant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeamForScanOverviewDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/participant/{participantId}/checkInOut:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: checkIn
+        required: true
+        schema:
+          type: boolean
+    post:
+      operationId: checkInOutParticipant
+      responses:
+        200:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
   /participantRequirement/{participantRequirementId}:
@@ -3800,6 +4115,67 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/appUserWithQrCode:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/limit'
+      - $ref: '#/components/parameters/offset'
+      - $ref: '#/components/parameters/sort'
+      - $ref: '#/components/parameters/search'
+    get:
+      operationId: getAppUsersWithQrCodeForEvent
+      responses:
+        200:
+          description: App users with QR codes successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppUserWithQrCodeDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/appUserWithQrCode/qrCode/{qrCodeId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: qrCodeId
+        in: path
+        required: true
+        schema:
+          type: string
+    delete:
+      operationId: deleteQrCodeForEvent
+      responses:
+        204:
+          description: QR code successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/produceInvoices:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -4087,12 +4463,7 @@ paths:
 
   /event/{eventId}/workshift:
     parameters:
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     post:
       operationId: addWorkShift
       requestBody:
@@ -4166,12 +4537,7 @@ paths:
         schema:
           type: string
           format: uuid
-      - name: eventId
-        in: path
-        required: true
-        schema:
-          type: string
-          format: uuid
+      - $ref: '#/components/parameters/eventId'
     put:
       operationId: updateWorkShift
       requestBody:
@@ -4884,6 +5250,163 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /app/{qrCodeId}:
+    parameters:
+      - name: qrCodeId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: checkQrCode
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/QrCodeParticipantResponse'
+                  - $ref: '#/components/schemas/QrCodeAppuserResponse'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    delete:
+      operationId: deleteQrCode
+      responses:
+        204:
+          description: QR-Code successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /app/appuser:
+    put:
+      operationId: updateQrCodeAppuser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrCodeAppuserUpdate'
+      responses:
+        204:
+          description: QR-Code successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /app/participant:
+    put:
+      operationId: updateQrCodeParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrCodeParticipantUpdate'
+      responses:
+        204:
+          description: QR-Code successfully updated
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  # Caterer endpoints
+  /caterer/transactions:
+    post:
+      operationId: createCateringTransaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatererTransactionRequest'
+      responses:
+        204:
+          description: Catering transaction successfully created
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+
+  /app/qr-assignment/participants:
+    parameters:
+      - name: eventId
+        in: query
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: clubId
+        in: query
+        required: false
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: getQrAssignmentParticipants
+      responses:
+        200:
+          description: Grouped participants for QR assignment
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupedParticipantQrAssignmentDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
+
+
 components:
 
   parameters:
@@ -5087,6 +5610,10 @@ components:
         - REGISTRATION
         - INVOICE
         - SUBSTITUTION
+        - APP_EVENT_REQUIREMENT
+        - APP_QR_MANAGEMENT
+        - APP_COMPETITION_CHECK
+        - APP_CATERER
 
     Scope:
       type: string
@@ -5448,6 +5975,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/RoleDto'
+        qrCodeId:
+          type: string
 
     UpdateAppUserRequest:
       type: object
@@ -5465,6 +5994,46 @@ components:
           items:
             type: string
             format: uuid
+
+    AppUserWithQrCodeDto:
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - email
+        - roles
+        - qrCodeId
+        - eventId
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        club:
+          type: string
+          format: uuid
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleDto'
+        qrCodeId:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        createdBy:
+          type: string
+          format: uuid
 
     AppUserRegistrationDto:
       type: object
@@ -6441,6 +7010,74 @@ components:
         description:
           type: string
 
+    NamedParticipantWithRequirementsDto:
+      type: object
+      required:
+        - id
+        - name
+        - requirements
+        - qrCodeRequired
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventParticipantRequirementDto'
+        qrCodeRequired:
+          type: boolean
+
+    EventParticipantRequirementDto:
+      type: object
+      required:
+        - requirementId
+        - requirementName
+        - qrCodeRequired
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        requirementName:
+          type: string
+        requirementDescription:
+          type: string
+        namedParticipantId:
+          type: string
+          format: uuid
+        qrCodeRequired:
+          type: boolean
+
+    AssignRequirementToNamedParticipantDto:
+      type: object
+      required:
+        - requirementId
+        - qrCodeRequired
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        qrCodeRequired:
+          type: boolean
+
+    UpdateQrCodeRequirementDto:
+      type: object
+      required:
+        - requirementId
+        - qrCodeRequired
+      properties:
+        requirementId:
+          type: string
+          format: uuid
+        namedParticipantId:
+          type: string
+          format: uuid
+        qrCodeRequired:
+          type: boolean
 
     # fee
 
@@ -6476,6 +7113,7 @@ components:
         - id
         - name
         - optional
+        - checkInApp
       properties:
         id:
           type: string
@@ -6486,6 +7124,9 @@ components:
           type: string
         optional:
           type: boolean
+        checkInApp:
+          type: boolean
+          description: "Per App prüfbar"
 
     ParticipantRequirementReducedDto:
       type: object
@@ -6506,6 +7147,7 @@ components:
         - name
         - optional
         - active
+        - checkInApp
       properties:
         id:
           type: string
@@ -6518,6 +7160,36 @@ components:
           type: boolean
         active:
           type: boolean
+        checkInApp:
+          type: boolean
+          description: "Per App prüfbar"
+        requirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/NamedParticipantRequirmentForEventDto'
+
+    NamedParticipantRequirmentForEventDto:
+      type: object
+      required:
+        - id
+        - name
+        - qrCodeRequired
+        - event
+        - participantRequirement
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        qrCodeRequired:
+          type: boolean
+        event:
+          type: string
+          format: uuid
+        participantRequirement:
+          type: string
+          format: uuid
 
     ParticipantRequirementUpsertDto:
       type: object
@@ -6530,6 +7202,9 @@ components:
           type: string
         optional:
           type: boolean
+        checkInApp:
+          type: boolean
+          description: "Per App prüfbar"
 
     ParticipantRequirementCheckForEventConfigDto:
       type: object
@@ -6572,6 +7247,10 @@ components:
           items:
             type: string
             format: uuid
+        namedParticipantId:
+          type: string
+          format: uuid
+          nullable: true
 
     # captcha
 
@@ -6794,6 +7473,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantRequirementReducedDto'
+        qrCodeId:
+          type: string
+        namedParticipantIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        currentStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+        lastScanBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
 
     # participant
 
@@ -8148,6 +8842,8 @@ components:
         paid:
           type: boolean
 
+
+
     StartListFileType:
       type: string
       enum:
@@ -8744,3 +9440,294 @@ components:
           format: decimal
         producing:
           type: boolean
+
+
+
+    CatererTransactionViewDto:
+      type: object
+      required:
+        - id
+        - catererId
+        - catererFirstname
+        - catererLastname
+        - appUserId
+        - userFirstname
+        - userLastname
+        - eventId
+        - price
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        catererId:
+          type: string
+          format: uuid
+        catererFirstname:
+          type: string
+        catererLastname:
+          type: string
+        appUserId:
+          type: string
+          format: uuid
+        userFirstname:
+          type: string
+        userLastname:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+        price:
+          type: string
+          format: decimal
+        createdAt:
+          type: string
+          format: date-time
+
+    CatererTransactionRequest:
+      type: object
+      required:
+        - appUserId
+        - eventId
+        - price
+      properties:
+        appUserId:
+          type: string
+          format: uuid
+        price:
+          type: string
+          format: decimal
+        eventId:
+          type: string
+          format: uuid
+
+
+    QrCodeParticipantResponse:
+      type: object
+      required: [ firstname, lastname, uuid, qrCodeId ]
+      properties:
+        firstname: { type: string }
+        lastname: { type: string }
+        id: { type: string, format: uuid }
+        qrCodeId: { type: string }
+        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        clubName: { type: string, nullable: true }
+        competitions:
+          type: array
+          items:
+            type: string
+
+    QrCodeAppuserResponse:
+      type: object
+      required: [ firstname, lastname, uuid, qrCodeId ]
+      properties:
+        firstname: { type: string }
+        lastname: { type: string }
+        id: { type: string, format: uuid }
+        qrCodeId: { type: string }
+        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        clubName: { type: string, nullable: true }
+
+    QrCodeAppuserUpdate:
+      type: object
+      required: [ id, qrCodeId, eventId ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        qrCodeId:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+
+
+    QrCodeParticipantUpdate:
+      type: object
+      required: [ id, qrCodeId, eventId ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        qrCodeId:
+          type: string
+        eventId:
+          type: string
+          format: uuid
+
+    QrCodeDtoType:
+      type: string
+      enum: [Participant, User]
+
+    # Team Tracking schemas
+
+    ParticipantScanType:
+      type: string
+      enum:
+        - ENTRY
+        - EXIT
+
+
+    TeamForScanOverviewDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - clubId
+        - clubName
+        - participants
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        teamName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamParticipantDto'
+
+    TeamParticipantDto:
+      type: object
+      required:
+        - participantId
+        - firstName
+        - lastName
+        - year
+        - gender
+        - external
+        - roleId
+        - role
+      properties:
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+        roleId:
+          type: string
+          format: uuid
+        role:
+          type: string
+        currentStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+
+    ParticipantTrackingDto:
+      type: object
+      required:
+        - id
+        - eventId
+        - participantId
+        - firstName
+        - lastName
+        - year
+        - gender
+        - clubId
+        - clubName
+        - external
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        participantId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+        scanType:
+          $ref: '#/components/schemas/ParticipantScanType'
+        scannedAt:
+          type: string
+          format: date-time
+        lastScanBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+
+
+    ParticipantQrAssignmentDto:
+      type: object
+      required:
+        - participantId
+        - firstname
+        - lastname
+        - namedParticipant
+        - competitionRegistration
+        - competitionName
+      properties:
+        participantId:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        qrCodeValue:
+          type: string
+          nullable: true
+        namedParticipant:
+          type: string
+        competitionRegistration:
+          type: string
+        competitionName:
+          type: string
+
+    GroupedParticipantQrAssignmentDto:
+      type: object
+      required:
+        - competitionRegistration
+        - competitionName
+        - participants
+      properties:
+        competitionRegistration:
+          type: string
+        competitionName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantQrAssignmentDto'
+

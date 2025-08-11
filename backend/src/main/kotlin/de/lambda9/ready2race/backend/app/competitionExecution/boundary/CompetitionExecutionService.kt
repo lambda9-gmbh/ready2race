@@ -9,13 +9,12 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
-import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupParticipantRepo
-import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
-import de.lambda9.ready2race.backend.app.competitionSetup.control.applyCompetitionMatch
 import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
-import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupMatchRepo
+import de.lambda9.ready2race.backend.app.competitionSetup.control.*
+import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
@@ -869,6 +868,14 @@ object CompetitionExecutionService {
 
             KIO.ok(mappedParticipantsStillIn + subbedInParticipants)
         }
+
+
+    fun getCurrentRoundId(competitionId: UUID): App<ServiceError, UUID?> = KIO.comprehension {
+        val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
+
+        KIO.ok(getCurrentAndNextRound(setupRounds).first?.setupRoundId)
+    }
+
 
     fun downloadStartlist(
         matchId: UUID,

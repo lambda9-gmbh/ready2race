@@ -13,8 +13,22 @@ import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
-import {Stack, Tooltip, Typography} from '@mui/material'
+import {
+    Box,
+    Chip,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    Tooltip,
+    Typography,
+} from '@mui/material'
+import {Warning} from '@mui/icons-material'
+import QrCodeIcon from '@mui/icons-material/QrCode'
 import {format} from 'date-fns'
+import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import {useUser} from "@contexts/user/UserContext.ts";
 import {updateRegistrationGlobal} from "@authorization/privileges.ts";
 import {PendingActions} from "@mui/icons-material";
@@ -68,23 +82,26 @@ const CompetitionRegistrationTable = (
         () => [
             {
                 field: 'clubName',
-                headerName: t('club.club'),
-                minWidth: 200,
-                renderCell: ({row}) => (
-                    <Stack direction={'row'} alignItems={'center'} spacing={1}>
-                        <Typography>
-                            {row.clubName}
-                        </Typography>
-                        {row.isLate ? (
-                            <Tooltip title={t('event.competition.registration.isLate')}>
-                                <PendingActions />
-                            </Tooltip>
+                headerName: t('club.club') + ' / ' + t('entity.name'),
+                minWidth: 250,
+                renderCell: ({row}) => {
+                    const teamName = row.name ? ` - ${row.name}` : ''
+                    return (
+                        <Stack direction={'row'} alignItems={'center'} spacing={1}>
+                            <Typography>
+                                {row.clubName}{teamName}
+                            </Typography>
+                            {row.isLate ? (
+                                <Tooltip title={t('event.competition.registration.isLate')}>
+                                    <PendingActions />
+                                </Tooltip>
                             ) : (
                                 <></>
                             )
-                        }
-                    </Stack>
-                ),
+                            }
+                        </Stack>
+                    )
+                },
             },
             {
                 field: 'name',
@@ -106,33 +123,135 @@ const CompetitionRegistrationTable = (
             {
                 field: 'namedParticipants',
                 headerName: t('club.participant.title'),
-                flex: 1,
-                minWidth: 120,
+                flex: 2,
+                minWidth: 300,
                 sortable: false,
-                renderCell: ({row}) => (
-                    <Stack spacing={1}>
-                        {row.namedParticipants.map(np => (
-                            <Fragment key={np.namedParticipantId}>
-                                {row.namedParticipants.length > 1 && (
-                                    <Typography variant={'subtitle2'}>
-                                        {np.namedParticipantName}:
-                                    </Typography>
+                renderCell: ({row}) => {
+                    return (
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell sx={{width: '40%'}}>{t('entity.name')}</TableCell>
+                                    <TableCell sx={{width: '40%'}}>
+                                        {t('event.competition.namedParticipant.namedParticipant')}
+                                    </TableCell>
+                                    <TableCell sx={{width: '20%'}}>{t('qrCode.qrCode')}</TableCell>
+                                    <TableCell sx={{width: '20%'}}>
+                                        {t('club.participant.tracking.status')}
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {row.namedParticipants.map(np =>
+                                    np.participants.map(participant => (
+                                        <TableRow key={participant.id}>
+                                            <TableCell
+                                                sx={{
+                                                    width: '40%',
+                                                }}>{`${participant.firstname} ${participant.lastname}`}</TableCell>
+                                            <TableCell sx={{width: '40%'}}>
+                                                {np.namedParticipantName}
+                                            </TableCell>
+                                            <TableCell sx={{width: '20%'}}>
+                                                {participant.qrCodeId ? (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <Box sx={{p: 1}}>
+                                                                <Typography
+                                                                    fontWeight={'bold'}
+                                                                    gutterBottom>
+                                                                    {t('qrCode.value')}:
+                                                                </Typography>
+                                                                <Typography>
+                                                                    {participant.qrCodeId}
+                                                                </Typography>
+                                                            </Box>
+                                                        }>
+                                                        <QrCodeIcon />
+                                                    </HtmlTooltip>
+                                                ) : row.namedParticipants
+                                                      .flatMap(np => np.participants)
+                                                      .some(p => p.qrCodeId !== undefined) ? (
+                                                    <></>
+                                                ) : (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <Typography>
+                                                                {t('qrCode.noQrCodeAssigned')}
+                                                            </Typography>
+                                                        }>
+                                                        <Warning color={'warning'} />
+                                                    </HtmlTooltip>
+                                                )}
+                                            </TableCell>
+                                            <TableCell sx={{width: '20%'}}>
+                                                {participant.currentStatus !== undefined && (
+                                                    <HtmlTooltip
+                                                        title={
+                                                            <>
+                                                                {participant.lastScanAt && (
+                                                                    <>
+                                                                        <Typography variant={'h6'}>
+                                                                            {t(
+                                                                                'club.participant.tracking.lastScan.at',
+                                                                            )}
+                                                                        </Typography>
+                                                                        <Typography>
+                                                                            {format(
+                                                                                new Date(
+                                                                                    participant.lastScanAt,
+                                                                                ),
+                                                                                t(
+                                                                                    'format.datetime',
+                                                                                ),
+                                                                            )}
+                                                                        </Typography>
+                                                                    </>
+                                                                )}
+                                                                {participant.lastScanBy && (
+                                                                    <Typography>
+                                                                        {t('common.by')}:{' '}
+                                                                        {
+                                                                            participant.lastScanBy
+                                                                                .firstname
+                                                                        }{' '}
+                                                                        {
+                                                                            participant.lastScanBy
+                                                                                .lastname
+                                                                        }
+                                                                    </Typography>
+                                                                )}
+                                                            </>
+                                                        }>
+                                                        <Chip
+                                                            label={
+                                                                participant.currentStatus ===
+                                                                'ENTRY'
+                                                                    ? t(
+                                                                          'club.participant.tracking.in',
+                                                                      )
+                                                                    : t(
+                                                                          'club.participant.tracking.out',
+                                                                      )
+                                                            }
+                                                            color={
+                                                                participant.currentStatus ===
+                                                                'ENTRY'
+                                                                    ? 'success'
+                                                                    : 'default'
+                                                            }
+                                                            size="small"
+                                                        />
+                                                    </HtmlTooltip>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    )),
                                 )}
-                                <Stack
-                                    direction={'column'}
-                                    spacing={0.5}
-                                    sx={{pl: row.namedParticipants.length > 1 ? 2 : undefined}}>
-                                    {np.participants.map(p => (
-                                        <Typography variant={'body2'} key={p.id}>
-                                            {p.firstname} {p.lastname}{' '}
-                                            {p.externalClubName && `(${p.externalClubName})`}
-                                        </Typography>
-                                    ))}
-                                </Stack>
-                            </Fragment>
-                        ))}
-                    </Stack>
-                ),
+                            </TableBody>
+                        </Table>
+                    )
+                },
             },
             {
                 field: 'optionalFees',
