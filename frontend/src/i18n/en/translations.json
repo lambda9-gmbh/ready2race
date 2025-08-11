@@ -1024,7 +1024,8 @@
             "heading": "Team",
             "name": "Name",
             "startNumber": "Start number",
-            "ratingCategory": "Rating category"
+            "ratingCategory": "Rating category",
+            "club": "Club (summarized)"
           },
           "match": {
             "heading": "Match",

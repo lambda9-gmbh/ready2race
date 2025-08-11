@@ -20,4 +20,5 @@ data class EventDto(
     val latePaymentDueBy: LocalDate?,
     val registrationCount: Int?,
     val registrationsFinalized: Boolean,
+    val mixedTeamTerm: String?,
 )

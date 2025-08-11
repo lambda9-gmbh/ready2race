@@ -432,6 +432,7 @@ select e.id,
        e.late_invoices_produced,
        e.payment_due_by,
        e.late_payment_due_by,
+       e.mixed_team_term,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        err.event is not null                                                            as registrations_finalized
 from event e
@@ -776,12 +777,14 @@ select csm.id,
        cp.short_name as competition_short_name,
        cc.name as competition_category,
        c.event,
+       e.mixed_team_term,
        coalesce(array_agg(st) filter ( where st.competition_match is not null ), '{}') as teams
 from competition_setup_match csm
          join competition_setup_round csr on csm.competition_setup_round = csr.id
          join competition_match cm on csm.id = cm.competition_setup_match
          join competition_properties cp on csr.competition_setup = cp.id
          join competition c on cp.competition = c.id
+         join event e on c.event = e.id
          left join competition_category cc on cp.competition_category = cc.id
          left join startlist_team st on csm.id = st.competition_match
-group by csm.id, csr.id, cm.competition_setup_match, cp.id, cc.id, c.event;
+group by csm.id, csr.id, cm.competition_setup_match, cp.id, cc.id, c.event, e.id;

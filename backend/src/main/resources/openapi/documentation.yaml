@@ -5719,6 +5719,8 @@ components:
           type: number
         registrationsFinalized:
           type: boolean
+        mixedTeamTerm:
+          type: string
 
     EventPublicDto:
       type: object
@@ -5828,6 +5830,8 @@ components:
         latePaymentDueBy:
           type: string
           format: date
+        mixedTeamTerm:
+          type: string
 
 
     # eventDay
@@ -8188,6 +8192,8 @@ components:
           type: string
         colTeamRatingCategory:
           type: string
+        colTeamClub:
+          type: string
         colMatchName:
           type: string
         colMatchStartTime:
@@ -8233,6 +8239,8 @@ components:
         colTeamStartNumber:
           type: string
         colTeamRatingCategory:
+          type: string
+        colTeamClub:
           type: string
         colMatchName:
           type: string

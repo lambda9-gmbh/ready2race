@@ -30,6 +30,7 @@ type Form = {
     colTeamName: string
     colTeamStartNumber: string
     colTeamRatingCategory: string
+    colTeamClub: string
     colMatchName: string
     colMatchStartTime: string
     colRoundName: string
@@ -51,6 +52,7 @@ const defaultValues: Form = {
     colTeamName: '',
     colTeamStartNumber: '',
     colTeamRatingCategory: '',
+    colTeamClub: '',
     colMatchName: '',
     colMatchStartTime: '',
     colRoundName: '',
@@ -175,6 +177,10 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                             name={'colTeamRatingCategory'}
                             label={t('configuration.export.startlist.col.team.ratingCategory')}
                         />
+                        <FormInputText
+                            name={'colTeamClub'}
+                            label={t('configuration.export.startlist.col.team.club')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'match'} activeTab={activeTab}>
@@ -234,6 +240,7 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     colTeamName: takeIfNotEmpty(formData.colTeamName),
     colTeamStartNumber: takeIfNotEmpty(formData.colTeamStartNumber),
     colTeamRatingCategory: takeIfNotEmpty(formData.colTeamRatingCategory),
+    colTeamClub: takeIfNotEmpty(formData.colTeamClub),
     colMatchName: takeIfNotEmpty(formData.colMatchName),
     colMatchStartTime: takeIfNotEmpty(formData.colMatchStartTime),
     colRoundName: takeIfNotEmpty(formData.colRoundName),
@@ -255,6 +262,7 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     colTeamName: dto.colTeamName ?? '',
     colTeamStartNumber: dto.colTeamStartNumber ?? '',
     colTeamRatingCategory: dto.colTeamRatingCategory ?? '',
+    colTeamClub: dto.colTeamClub ?? '',
     colMatchName: dto.colMatchName ?? '',
     colMatchStartTime: dto.colMatchStartTime ?? '',
     colRoundName: dto.colRoundName ?? '',

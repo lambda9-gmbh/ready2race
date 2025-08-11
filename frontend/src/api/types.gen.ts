@@ -545,6 +545,7 @@ export type EventDto = {
     latePaymentDueBy?: string
     registrationCount?: number
     registrationsFinalized: boolean
+    mixedTeamTerm?: string
 }
 
 export type EventInvoicesInfoDto = {
@@ -690,6 +691,7 @@ export type EventRequest = {
     published: boolean
     paymentDueBy?: string
     latePaymentDueBy?: string
+    mixedTeamTerm?: string
 }
 
 export type FeeDto = {
@@ -1190,6 +1192,7 @@ export type StartListConfigDto = {
     colTeamName?: string
     colTeamStartNumber?: string
     colTeamRatingCategory?: string
+    colTeamClub?: string
     colMatchName?: string
     colMatchStartTime?: string
     colRoundName?: string
@@ -1214,6 +1217,7 @@ export type StartListConfigRequest = {
     colTeamName?: string
     colTeamStartNumber?: string
     colTeamRatingCategory?: string
+    colTeamClub?: string
     colMatchName?: string
     colMatchStartTime?: string
     colRoundName?: string

@@ -61,6 +61,7 @@ object StartListConfigService {
             colTeamName = request.colTeamName
             colTeamStartNumber = request.colTeamStartNumber
             colTeamRatingCategory = request.colTeamRatingCategory
+            colTeamClub = request.colTeamClub
             colMatchName = request.colMatchName
             colMatchStartTime = request.colMatchStartTime
             colRoundName = request.colRoundName

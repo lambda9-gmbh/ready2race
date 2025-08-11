@@ -87,6 +87,7 @@ object EventService {
             published = request.published
             paymentDueBy = request.paymentDueBy
             latePaymentDueBy = request.latePaymentDueBy
+            mixedTeamTerm = request.mixedTeamTerm
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()

@@ -60,7 +60,7 @@ data class CompetitionMatchData(
         fun fromPersisted(
             persisted: StartlistViewRecord,
         ): App<Nothing, CompetitionMatchData> = persisted.teams!!.toList().traverse {
-            it!!.toData()
+            it!!.toData(persisted.mixedTeamTerm)
         }.map { teams ->
             CompetitionMatchData(
                 matchName = persisted.name,
@@ -78,7 +78,7 @@ data class CompetitionMatchData(
             )
         }
 
-        private fun StartlistTeamRecord.toData(): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
+        private fun StartlistTeamRecord.toData(mixedTeamTerm: String?): App<Nothing, CompetitionMatchTeam> = KIO.comprehension {
 
             val participantsWithData = participants!!.filterNotNull().map{
                 !it.toParticipantForExecutionDto(
@@ -110,8 +110,7 @@ data class CompetitionMatchData(
             val actualClubName = if (clubs.size == 1) {
                 clubs.first()
             } else {
-                // TODO: read from configuration
-                "Renngemeinschaft"
+                mixedTeamTerm
             }
 
             KIO.ok(

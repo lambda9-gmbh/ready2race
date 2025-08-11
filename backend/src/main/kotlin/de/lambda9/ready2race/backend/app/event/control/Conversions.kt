@@ -27,6 +27,7 @@ fun EventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 published = published,
                 paymentDueBy = paymentDueBy,
                 latePaymentDueBy = latePaymentDueBy,
+                mixedTeamTerm = mixedTeamTerm,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -56,6 +57,7 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
             null -> null
         },
         registrationsFinalized = registrationsFinalized!!,
+        mixedTeamTerm = mixedTeamTerm,
     )
 )
 

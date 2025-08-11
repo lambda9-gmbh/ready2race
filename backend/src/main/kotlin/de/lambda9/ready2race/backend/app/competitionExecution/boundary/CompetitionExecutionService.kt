@@ -502,7 +502,7 @@ object CompetitionExecutionService {
         val (_, currentRound) = !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
 
-        // TODO: validate team size, places continuous
+        // TODO: validate places continuous
 
         request.teamResults.traverse { result ->
             updateTeamResult(
@@ -1120,6 +1120,7 @@ object CompetitionExecutionService {
                 optionalColumn(config.colTeamName) { teamName ?: "" }
                 optionalColumn(config.colTeamStartNumber) { startNumber.toString() }
                 optionalColumn(config.colTeamRatingCategory) { ratingCategory?.name ?: "" }
+                optionalColumn(config.colTeamClub) { actualClubName ?: registeringClubName }
 
                 optionalColumn(config.colMatchName) { data.matchName ?: "" }
                 optionalColumn(config.colMatchStartTime) { idx ->
