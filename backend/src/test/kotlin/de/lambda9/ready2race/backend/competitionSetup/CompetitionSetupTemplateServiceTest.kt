@@ -72,6 +72,9 @@ class CompetitionSetupTemplateServiceTest {
                 invoicePrefix = "A2",
                 published = false,
                 paymentDueBy = LocalDate.now(),
+                latePaymentDueBy = null,
+                lateRegistrationAvailableTo = null,
+                mixedTeamTerm = null,
             ),
             userId = SYSTEM_USER
         )
