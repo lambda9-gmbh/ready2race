@@ -24,6 +24,7 @@ private val logger = KotlinLogging.logger {}
 fun <R, E, A> KIO<R, E, A>.noDataResponse() = map { ApiResponse.NoData }
 fun <R, E> KIO<R, E, UUID>.createdResponse() = map { ApiResponse.Created(it) }
 fun <R, E, A> KIO<R, E, A>.createdResponse(f: A.() -> UUID) = map { ApiResponse.Created(f(it)) }
+fun <R, E, A : Any> KIO<R, E, A>.dtoResponse() = map { ApiResponse.Dto(it) }
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,

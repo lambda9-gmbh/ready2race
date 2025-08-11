@@ -585,6 +585,12 @@ export type EventDto = {
     registrationsFinalized: boolean
 }
 
+export type EventInvoicesInfoDto = {
+    totalAmount: string
+    paidAmount: string
+    producing: boolean
+}
+
 export type EventParticipantRequirementDto = {
     requirementId: string
     requirementName: string
@@ -2023,6 +2029,16 @@ export type GetEventInvoicesResponse = {
 }
 
 export type GetEventInvoicesError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetEventInvoicingInfoData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetEventInvoicingInfoResponse = EventInvoicesInfoDto
+
+export type GetEventInvoicingInfoError = unknown
 
 export type GetEventMatchesData = {
     path: {

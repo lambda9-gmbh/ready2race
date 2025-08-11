@@ -93,6 +93,14 @@ fun Route.event() {
                 }
             }
 
+            get("/invoicingInfo") {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadInvoiceGlobal)
+                    val id = !pathParam("eventId", uuid)
+                    InvoiceService.getInfoForEvent(id)
+                }
+            }
+
             get("/invoices") {
                 call.respondComprehension {
                     val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)

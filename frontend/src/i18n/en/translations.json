@@ -249,6 +249,13 @@
       "paymentDueBy": "Registration payment due by",
       "latePaymentDueBy": "Late registration payment due by"
     },
+    "invoices": {
+      "infoCard": {
+        "totalAmount": "Total of all invoiced amounts: {{amount}}€",
+        "paidAmount": "Of which already paid: {{amount}}€",
+        "alert": "Invoice creation is not finished yet."
+      }
+    },
     "location": "Location",
     "upcoming": "Upcoming events",
     "registrationAvailable": {
