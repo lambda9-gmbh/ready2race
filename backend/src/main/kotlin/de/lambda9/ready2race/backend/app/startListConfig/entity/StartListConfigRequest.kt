@@ -21,6 +21,8 @@ data class StartListConfigRequest(
     val colTeamStartNumber: String?,
     val colTeamRatingCategory: String?,
     val colTeamClub: String?,
+    val colTeamDeregistered: String?,
+    val valueTeamDeregistered: String?,
     val colMatchName: String?,
     val colMatchStartTime: String?,
     val colRoundName: String?,
@@ -43,6 +45,8 @@ data class StartListConfigRequest(
             this::colTeamStartNumber validate notBlank,
             this::colTeamRatingCategory validate notBlank,
             this::colTeamClub validate notBlank,
+            this::colTeamDeregistered validate notBlank,
+            this::valueTeamDeregistered validate notBlank,
             this::colMatchName validate notBlank,
             this::colMatchStartTime validate notBlank,
             this::colRoundName validate notBlank,
@@ -62,6 +66,8 @@ data class StartListConfigRequest(
                 this::colTeamStartNumber validate notNull,
                 this::colTeamRatingCategory validate notNull,
                 this::colTeamClub validate notNull,
+                this::colTeamDeregistered validate notNull,
+                this::valueTeamDeregistered validate notNull,
                 this::colMatchName validate notNull,
                 this::colMatchStartTime validate notNull,
                 this::colRoundName validate notNull,
@@ -69,7 +75,7 @@ data class StartListConfigRequest(
                 this::colCompetitionName validate notNull,
                 this::colCompetitionShortName validate notNull,
                 this::colCompetitionCategory validate notNull,
-            )
+            ),
         )
 
     companion object {
@@ -87,6 +93,8 @@ data class StartListConfigRequest(
             colTeamName = null,
             colTeamRatingCategory = null,
             colTeamClub = null,
+            colTeamDeregistered = null,
+            valueTeamDeregistered = null,
             colMatchName = null,
             colMatchStartTime = null,
             colRoundName = null,

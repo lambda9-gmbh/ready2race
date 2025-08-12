@@ -16,6 +16,8 @@ data class StartListConfigDto(
     val colTeamStartNumber: String?,
     val colTeamRatingCategory: String?,
     val colTeamClub: String?,
+    val colTeamDeregistered: String?,
+    val valueTeamDeregistered: String?,
     val colMatchName: String?,
     val colMatchStartTime: String?,
     val colRoundName: String?,

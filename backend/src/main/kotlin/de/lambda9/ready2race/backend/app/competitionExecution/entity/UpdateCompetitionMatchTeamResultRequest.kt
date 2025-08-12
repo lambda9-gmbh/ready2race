@@ -13,23 +13,23 @@ import java.util.*
 data class UpdateCompetitionMatchTeamResultRequest(
     val registrationId: UUID,
     val place: Int?,
-    val deregistered: Boolean,
-    val deregistrationReason: String?
+    val failed: Boolean,
+    val failedReason: String?
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.allOf(
         this::place validate min(1),
         ValidationResult.oneOf(
             this::place validate notNull,
-            this::deregistered validate isValue(true)
+            this::failed validate isValue(true)
         ),
         ValidationResult.oneOf(
-            this::deregistered validate isValue(true),
+            this::failed validate isValue(true),
             ValidationResult.allOf(
-                this::deregistered validate isValue(false),
-                this::deregistrationReason validate isNull
+                this::failed validate isValue(false),
+                this::failedReason validate isNull
             ),
         ),
-        this::deregistrationReason validate notBlank,
+        this::failedReason validate notBlank,
     )
 
     companion object {
@@ -37,8 +37,8 @@ data class UpdateCompetitionMatchTeamResultRequest(
             get() = UpdateCompetitionMatchTeamResultRequest(
                 registrationId = UUID.randomUUID(),
                 place = 1,
-                deregistered = false,
-                deregistrationReason = null
+                failed = false,
+                failedReason = null
             )
     }
 }

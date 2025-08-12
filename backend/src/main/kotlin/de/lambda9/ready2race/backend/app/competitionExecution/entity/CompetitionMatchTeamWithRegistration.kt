@@ -15,4 +15,7 @@ data class CompetitionMatchTeamWithRegistration(
     val participants: List<CompetitionMatchTeamParticipant>,
     val deregistered: Boolean,
     val deregistrationReason: String?,
+    val out: Boolean,
+    val failed: Boolean,
+    val failedReason: String?,
 )
