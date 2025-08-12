@@ -32,7 +32,7 @@ import {groupBy, shuffle} from '@utils/helpers.ts'
 import {
     CompetitionExecutionCanNotCreateRoundReason,
     CompetitionMatchDto,
-    CompetitionMatchTeamDto,
+    CompetitionMatchTeamDto, CompetitionRoundDto,
 } from '@api/types.gen.ts'
 import CompetitionExecutionMatchDialog from '@components/event/competition/excecution/CompetitionExecutionMatchDialog.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
@@ -121,14 +121,14 @@ const CompetitionExecution = () => {
         setReloadData(!reloadData)
     }
 
-    const matchesFiltered = (matches: CompetitionMatchDto[]) => {
-        return matches
-            .filter(match => match.teams.length > 1)
+    const matchesFiltered = (round: CompetitionRoundDto): CompetitionMatchDto[] => {
+        return round.matches
+            .filter(match => match.teams.length > 1 || round.required)
             .sort((a, b) => a.executionOrder - b.executionOrder)
     }
 
     const currentRound = progressDto?.rounds[progressDto?.rounds.length - 1]
-    const currentRoundMatches = currentRound ? matchesFiltered(currentRound.matches) : undefined
+    const currentRoundMatches = currentRound ? matchesFiltered(currentRound) : undefined
 
     const resultsFormContext = useForm<EnterResultsForm>({
         values: {
@@ -313,7 +313,8 @@ const CompetitionExecution = () => {
 
     const [editMatchDialogOpen, setEditMatchDialogOpen] = useState(false)
     const openEditMatchDialog = (roundIndex: number, matchIndex: number) => {
-        const selectedMatch = matchesFiltered(sortedRounds?.[roundIndex].matches ?? [])[matchIndex]
+        const round = sortedRounds?.[roundIndex]
+        const selectedMatch = round ? matchesFiltered(round)[matchIndex] : null
         if (selectedMatch) {
             setEditMatchDialogOpen(true)
             editMatchFormContext.reset({
@@ -500,7 +501,7 @@ const CompetitionExecution = () => {
                         key={round.setupRoundId}
                         round={round}
                         roundIndex={roundIndex}
-                        filteredMatches={matchesFiltered(round.matches)}
+                        filteredMatches={matchesFiltered(round)}
                         reloadRoundDto={() => setReloadData(!reloadData)}
                         setSubmitting={setSubmitting}
                         submitting={submitting}

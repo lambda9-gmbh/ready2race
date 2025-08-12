@@ -8890,6 +8890,10 @@ components:
           type: string
         colTeamClub:
           type: string
+        colTeamDeregistered:
+          type: string
+        valueTeamDeregistered:
+          type: string
         colMatchName:
           type: string
         colMatchStartTime:
@@ -8937,6 +8941,10 @@ components:
         colTeamRatingCategory:
           type: string
         colTeamClub:
+          type: string
+        colTeamDeregistered:
+          type: string
+        valueTeamDeregistered:
           type: string
         colMatchName:
           type: string

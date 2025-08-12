@@ -357,7 +357,7 @@ const CompetitionRegistrationTable = (
         isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
 
     const customEntityActions = (entity: CompetitionRegistrationTeamDto): EntityAction[] => [
-        entity.deregistration === undefined && afterRegistration(entity.isLate) ? (
+        entity.deregistration === undefined && user.checkPrivilege(updateRegistrationGlobal) && afterRegistration(entity.isLate) ? (
             <GridActionsCellItem
                 icon={<GroupRemoveIcon />}
                 label={t('event.competition.registration.deregister.deregister')}
@@ -365,7 +365,7 @@ const CompetitionRegistrationTable = (
                 showInMenu
             />
         ) : undefined,
-        entity.deregistration !== undefined ? (
+        entity.deregistration !== undefined && user.checkPrivilege(updateRegistrationGlobal) ? (
             <GridActionsCellItem
                 icon={<GroupAddIcon />}
                 label={t('event.competition.registration.deregister.revertDeregistration.revertDeregistration')}

@@ -10,11 +10,9 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetit
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
-import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
-import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupError
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
@@ -109,7 +107,7 @@ object CompetitionExecutionService {
                 val newTeamRecords = sortedRegistrations.mapIndexed { index, reg ->
                     val matchIndex = seedingList.indexOfFirst { it.contains(index + 1) }
 
-                    val automaticFirstPlace = seedingList[matchIndex].filter { it <= registrations.size }.size == 1
+                    val automaticFirstPlace = !nextRound.required && seedingList[matchIndex].filter { it <= registrations.size }.size == 1
 
                     CompetitionMatchTeamRecord(
                         id = UUID.randomUUID(),
@@ -185,6 +183,7 @@ object CompetitionExecutionService {
                     val nextRoundTeam = team.second!!
 
                     val automaticFirstPlace =
+                        !nextRound.required &&
                         currentTeamsToParticipantId.filter {
                             it.second!!.competitionSetupMatch == nextRoundTeam.competitionSetupMatch
                         }.size == 1
@@ -575,7 +574,6 @@ object CompetitionExecutionService {
         }*/
         // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
         val validTeams = teams.filter { team -> match.teams.any {team.startNumber == it.startNumber} }
-        !KIO.failOn(validTeams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(validTeams.size, match.teams.size) }
         val (teamWithoutPlace, teamWithPlace) = validTeams.partition { it.place == null }
         val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }.mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
@@ -994,7 +992,8 @@ object CompetitionExecutionService {
 
                 }
 
-                data.teams.forEachIndexed { index, team ->
+                var startingIndex = 0
+                data.teams.sortedBy { it.startNumber }.forEach { team ->
                     block(
                         padding = Padding(0f, 0f, 0f, 25f)
                     ) {
@@ -1020,6 +1019,12 @@ object CompetitionExecutionService {
                                 fontStyle = FontStyle.BOLD,
                                 fontSize = 12f,
                             ) { "  ${team.startNumber}" }
+
+                            if (team.deregistered) {
+                                text(
+                                    newLine = false,
+                                ) { "    ABGEMELDET" }
+                            }
                         }
 
                         block(
@@ -1043,13 +1048,14 @@ object CompetitionExecutionService {
                                     newLine = false,
                                 ) { " ${it.name}" }
                             }
-                            if (data.startTimeOffset != null) {
+                            if (data.startTimeOffset != null && !team.deregistered) {
                                 text {
                                     "startet ${
-                                        data.startTime.plusSeconds(data.startTimeOffset * index)
+                                        data.startTime.plusSeconds(data.startTimeOffset * startingIndex)
                                             .hrTime()
                                     }"
                                 }
+                                startingIndex += 1
                             }
                         }
 
@@ -1151,6 +1157,12 @@ object CompetitionExecutionService {
                 optionalColumn(config.colCompetitionShortName) { data.competition.shortName ?: "" }
                 optionalColumn(config.colCompetitionCategory) { data.competition.category ?: "" }
 
+                config.colTeamDeregistered?.let {
+                    overrideColumn(
+                        header = it,
+                        cellCondition = { deregistered },
+                    ) { if (deregistered) config.valueTeamDeregistered ?: "X" else "" }
+                }
             }
 
             out.toByteArray()

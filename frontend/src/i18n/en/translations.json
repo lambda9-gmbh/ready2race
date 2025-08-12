@@ -1106,7 +1106,9 @@
             "name": "Name",
             "startNumber": "Start number",
             "ratingCategory": "Rating category",
-            "club": "Club (summarized)"
+            "club": "Club (summarized)",
+            "deregistered": "Deregistered",
+            "deregisteredValue": "Deregistered Value"
           },
           "match": {
             "heading": "Match",

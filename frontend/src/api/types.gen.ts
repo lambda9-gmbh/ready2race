@@ -1352,6 +1352,8 @@ export type StartListConfigDto = {
     colTeamStartNumber?: string
     colTeamRatingCategory?: string
     colTeamClub?: string
+    colTeamDeregistered?: string
+    valueTeamDeregistered?: string
     colMatchName?: string
     colMatchStartTime?: string
     colRoundName?: string
@@ -1377,6 +1379,8 @@ export type StartListConfigRequest = {
     colTeamStartNumber?: string
     colTeamRatingCategory?: string
     colTeamClub?: string
+    colTeamDeregistered?: string
+    valueTeamDeregistered?: string
     colMatchName?: string
     colMatchStartTime?: string
     colRoundName?: string

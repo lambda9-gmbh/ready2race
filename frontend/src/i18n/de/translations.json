@@ -1106,7 +1106,9 @@
             "name": "Name",
             "startNumber": "Startnummer",
             "ratingCategory": "Wertungskategorie",
-            "club": "Verein (zusammengefasst)"
+            "club": "Verein (zusammengefasst)",
+            "deregistered": "Abgemeldet",
+            "deregisteredValue": "Abgemeldet Wert"
           },
           "match": {
             "heading": "Partie",

@@ -294,7 +294,7 @@ const CompetitionExecutionRound = ({
                     <Typography>{t('event.competition.setup.round.required')}</Typography>
                 )}
                 <Box>
-                    {round.matches.filter(match => match.teams.length === 1).length > 0 && (
+                    {!round.required && round.matches.filter(match => match.teams.length === 1).length > 0 && (
                         <Accordion
                             expanded={props.accordionsExpanded?.[0] ?? false}
                             onChange={handleAccordionExpandedChange(0)}>
