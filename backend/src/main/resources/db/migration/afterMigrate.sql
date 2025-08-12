@@ -698,10 +698,11 @@ select cmt.id,
        (cd.competition_registration is not null)                                     as deregistered,
        cd.reason                                                               as deregistration_reason
 from competition_match_team cmt
+         join competition_setup_match csm on cmt.competition_match = csm.id
          left join competition_registration cr on cr.id = cmt.competition_registration
          left join club c on c.id = cr.club
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
-         left join competition_deregistration cd on cr.id = cd.competition_registration
+         left join competition_deregistration cd on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
          cr.name, cr.team_number, cd.competition_registration, cd.reason
 ;
