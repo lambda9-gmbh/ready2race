@@ -148,6 +148,9 @@ import type {
     RevertCompetitionDeregistrationData,
     RevertCompetitionDeregistrationError,
     RevertCompetitionDeregistrationResponse,
+    GetCompetitionRegistrationTeamsData,
+    GetCompetitionRegistrationTeamsError,
+    GetCompetitionRegistrationTeamsResponse,
     UpdateCompetitionSetupData,
     UpdateCompetitionSetupError,
     UpdateCompetitionSetupResponse,
@@ -1144,6 +1147,19 @@ export const revertCompetitionDeregistration = <ThrowOnError extends boolean = f
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/{competitionRegistrationId}/deregistration',
+    })
+}
+
+export const getCompetitionRegistrationTeams = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionRegistrationTeamsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionRegistrationTeamsResponse,
+        GetCompetitionRegistrationTeamsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionRegistration/teams',
     })
 }
 

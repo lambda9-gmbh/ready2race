@@ -15,6 +15,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.PARTIC
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -79,12 +81,13 @@ object ParticipantForEventRepo {
                         gender = it[PARTICIPANT_FOR_EVENT.GENDER]!!,
                         external = it[PARTICIPANT_FOR_EVENT.EXTERNAL],
                         externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
-                        participantRequirementsChecked = it[PARTICIPANT_FOR_EVENT.PARTICIPANT_REQUIREMENTS_CHECKED]?.filterNotNull()?.map{ pr ->
-                            ParticipantRequirementReducedDto(
-                                id = pr.id,
-                                name = pr.name,
-                            )
-                        } ?: emptyList(),
+                        participantRequirementsChecked = it[PARTICIPANT_FOR_EVENT.PARTICIPANT_REQUIREMENTS_CHECKED]?.filterNotNull()
+                            ?.map { pr ->
+                                ParticipantRequirementReducedDto(
+                                    id = pr.id,
+                                    name = pr.name,
+                                )
+                            } ?: emptyList(),
                         qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],
                         namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
                             ?: emptyList(),

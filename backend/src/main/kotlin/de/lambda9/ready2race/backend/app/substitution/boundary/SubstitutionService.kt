@@ -458,7 +458,11 @@ object SubstitutionService {
     ): App<Nothing, List<PossibleSubstitutionParticipantDto>> = KIO.comprehension {
         KIO.ok(
             this@filterGender.filter { p ->
-                !p.checkGender(requirements, participantOut, actualRegistrationTeams, p.namedParticipantId != null)
+                !p.checkGender(
+                    requirements,
+                    participantOut,
+                    actualRegistrationTeams,
+                    p.namedParticipantId != null && actualRegistrationTeams.any { team -> team.value.any { it.id == p.id } })
             }
         )
     }
@@ -485,8 +489,8 @@ object SubstitutionService {
         )
 
         val pOutCurrentRegistrationId = actualRegistrationTeams.toList()
-            .first { registrations ->
-                registrations.second.map { participants -> participants.id }.contains(participantOut.id)
+            .first { registration ->
+                registration.second.any { it.id == participantOut.id }
             }.first
         val actualPOutTeam = actualRegistrationTeams[pOutCurrentRegistrationId]!!
 

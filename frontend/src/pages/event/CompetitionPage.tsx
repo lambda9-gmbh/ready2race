@@ -21,8 +21,9 @@ import CompetitionRegistrations from '@components/event/competition/registration
 import {a11yProps, eventRegistrationPossible} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
+import CompetitionRegistrationTeams from "@components/event/competition/registration/CompetitionRegistrationTeams.tsx";
 
-const COMPETITION_TABS = ['general', 'registrations', 'setup', 'execution', 'places'] as const
+const COMPETITION_TABS = ['general', 'registrations', 'teams', 'setup', 'execution', 'places'] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
 
 const CompetitionPage = () => {
@@ -140,6 +141,12 @@ const CompetitionPage = () => {
                             <Tab
                                 label={t('event.registration.registrations')}
                                 {...tabProps('registrations')}
+                            />
+                        )}
+                        {user.loggedIn && showRegistrationsTab && (
+                            <Tab
+                                label={t('event.registration.teams')}
+                                {...tabProps('teams')}
                             />
                         )}
                         {user.checkPrivilege(updateEventGlobal) && (
@@ -315,6 +322,11 @@ const CompetitionPage = () => {
                                 eventData={eventData}
                                 competitionData={competitionData}
                             />
+                        </TabPanel>
+                    )}
+                    {user.loggedIn && showRegistrationsTab && (
+                        <TabPanel index={'teams'} activeTab={activeTab}>
+                            <CompetitionRegistrationTeams eventData={eventData}/>
                         </TabPanel>
                     )}
                     {user.checkPrivilege(updateEventGlobal) && (

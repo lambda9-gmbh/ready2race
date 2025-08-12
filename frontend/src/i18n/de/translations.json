@@ -777,7 +777,9 @@
         "title": "Erfolgreich angemeldet!",
         "subtitle": "Sie bekommen eine Bestätigung per Mail."
       },
-      "mostRecent": "Neuste Anmeldungen"
+      "mostRecent": "Neuste Anmeldungen",
+      "teams": "Teams",
+      "teamMembers": "Teammitglieder"
     },
     "participants": "Teilnehmende",
     "tabs": {
@@ -876,7 +878,7 @@
     "participantRequirement": "Teilnahmebedingung",
     "participantRequirements": "Teilnahmebedingungen",
     "active": "Aktiv",
-    "activate": "Event zuweisen (für alle Teilnehmer)",
+    "activate": "Event zuweisen (für alle Rollen)",
     "remove": "Von Event entfernen",
     "confirmRemove": "Möchten Sie die Bedingung \"{{requirement}}\" vom Event entfernen? Dies betrifft alle zugewiesenen Teilnehmer und entfernt alle erfolgreichen Überprüfungen.",
     "confirmRemoveGlobal": "Möchten Sie die globale Zuweisung der Bedingung \"{{requirement}}\" entfernen? Die Bedingung bleibt für individuell zugewiesene Teilnehmer bestehen.",

@@ -1,10 +1,7 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.control
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.NamedParticipantRequirmentForEventDto
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementDto
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementForEventDto
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementUpsertDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord
@@ -51,11 +48,30 @@ fun ParticipantRequirementForEventRecord.toDto(): App<Nothing, ParticipantRequir
     )
 )
 
-fun ParticipantRequirementNamedParticipantRecord.toNamedParticipantRequirementDto(): NamedParticipantRequirmentForEventDto =
-    NamedParticipantRequirmentForEventDto(
+
+fun ParticipantRequirementForEventRecord.toRequirementDto() =
+    ParticipantRequirementDto(
+        id = id!!,
+        name = name!!,
+        description = description,
+        optional = optional!!,
+        checkInApp = checkInApp ?: false,
+    )
+
+fun ParticipantRequirementForEventRecord.toNamedParticipantRequirementDto(namedParticipantId: UUID) =
+    CompetitionRegistrationNamedParticipantRequirementDto(
+        id = id!!,
+        name = name!!,
+        description = description,
+        optional = optional!!,
+        checkInApp = checkInApp ?: false,
+        qrCodeRequired = requirements?.find { it!!.id == namedParticipantId }?.qrCodeRequired ?: false
+    )
+
+
+fun ParticipantRequirementNamedParticipantRecord.toNamedParticipantRequirementDto(): NamedParticipantRequirementForEventDto =
+    NamedParticipantRequirementForEventDto(
         id = id!!,
         name = name!!,
         qrCodeRequired = qrCodeRequired ?: false,
-        event = event!!,
-        participantRequirement = participantRequirement!!
     )

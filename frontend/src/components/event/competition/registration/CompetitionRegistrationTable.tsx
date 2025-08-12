@@ -2,20 +2,17 @@ import {useTranslation} from 'react-i18next'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
 import {
-    CompetitionDto,
-    CompetitionRegistrationTeamDto,
+    CompetitionRegistrationDto,
     deleteCompetitionRegistration,
-    revertCompetitionDeregistration,
     getCompetitionRegistrations,
     OpenForRegistrationType,
+    revertCompetitionDeregistration,
 } from '../../../../api'
 import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
-    Box,
-    Chip,
     Stack,
     Table,
     TableBody,
@@ -25,13 +22,10 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import {Warning} from '@mui/icons-material'
-import QrCodeIcon from '@mui/icons-material/QrCode'
+import {PendingActions} from '@mui/icons-material'
 import {format} from 'date-fns'
-import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
-import {useUser} from "@contexts/user/UserContext.ts";
-import {updateRegistrationGlobal} from "@authorization/privileges.ts";
-import {PendingActions} from "@mui/icons-material";
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateRegistrationGlobal} from '@authorization/privileges.ts'
 import Cancel from '@mui/icons-material/Cancel'
 import GroupRemoveIcon from '@mui/icons-material/GroupRemove'
 import GroupAddIcon from '@mui/icons-material/GroupAdd'
@@ -46,14 +40,11 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
-type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
+type Props = BaseEntityTableProps<CompetitionRegistrationDto> & {
     registrationState: OpenForRegistrationType
-    competition: CompetitionDto
 }
 
-const CompetitionRegistrationTable = (
-    {registrationState, ...props}: Props,
-) => {
+const CompetitionRegistrationTable = ({registrationState, ...props}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
@@ -69,7 +60,7 @@ const CompetitionRegistrationTable = (
         })
     }
 
-    const deleteRequest = (dto: CompetitionRegistrationTeamDto) =>
+    const deleteRequest = (dto: CompetitionRegistrationDto) =>
         deleteCompetitionRegistration({
             path: {
                 eventId: eventId,
@@ -78,35 +69,33 @@ const CompetitionRegistrationTable = (
             },
         })
 
-    const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
+    const columns: GridColDef<CompetitionRegistrationDto>[] = useMemo(
         () => [
             {
                 field: 'clubName',
-                headerName: t('club.club') + ' / ' + t('entity.name'),
-                minWidth: 250,
+                headerName: t('club.club'),
+                minWidth: 150,
+            },
+            {
+                field: 'name',
+                headerName: t('entity.name'),
+                valueGetter: value => value ?? '-',
                 renderCell: ({row}) => {
-                    const teamName = row.name ? ` - ${row.name}` : ''
                     return (
                         <Stack direction={'row'} alignItems={'center'} spacing={1}>
-                            <Typography>
-                                {row.clubName}{teamName}
-                            </Typography>
+                            {row.name && (<Typography>
+                                {row.name}
+                            </Typography>)}
                             {row.isLate ? (
                                 <Tooltip title={t('event.competition.registration.isLate')}>
                                     <PendingActions />
                                 </Tooltip>
                             ) : (
                                 <></>
-                            )
-                            }
+                            )}
                         </Stack>
                     )
                 },
-            },
-            {
-                field: 'name',
-                headerName: t('entity.name'),
-                valueGetter: value => value ?? '-',
             },
             {
                 field: 'ratingCategory',
@@ -114,15 +103,13 @@ const CompetitionRegistrationTable = (
                 minWidth: 150,
                 renderCell: ({row}) => (
                     <Tooltip title={row.ratingCategory?.description}>
-                        <Typography>
-                            {row.ratingCategory?.name ?? '-'}
-                        </Typography>
+                        <Typography>{row.ratingCategory?.name ?? '-'}</Typography>
                     </Tooltip>
-                )
+                ),
             },
             {
                 field: 'namedParticipants',
-                headerName: t('club.participant.title'),
+                headerName: t('event.registration.teamMembers'),
                 flex: 2,
                 minWidth: 300,
                 sortable: false,
@@ -134,10 +121,6 @@ const CompetitionRegistrationTable = (
                                     <TableCell sx={{width: '40%'}}>{t('entity.name')}</TableCell>
                                     <TableCell sx={{width: '40%'}}>
                                         {t('event.competition.namedParticipant.namedParticipant')}
-                                    </TableCell>
-                                    <TableCell sx={{width: '20%'}}>{t('qrCode.qrCode')}</TableCell>
-                                    <TableCell sx={{width: '20%'}}>
-                                        {t('club.participant.tracking.status')}
                                     </TableCell>
                                 </TableRow>
                             </TableHead>
@@ -152,99 +135,6 @@ const CompetitionRegistrationTable = (
                                             <TableCell sx={{width: '40%'}}>
                                                 {np.namedParticipantName}
                                             </TableCell>
-                                            <TableCell sx={{width: '20%'}}>
-                                                {participant.qrCodeId ? (
-                                                    <HtmlTooltip
-                                                        title={
-                                                            <Box sx={{p: 1}}>
-                                                                <Typography
-                                                                    fontWeight={'bold'}
-                                                                    gutterBottom>
-                                                                    {t('qrCode.value')}:
-                                                                </Typography>
-                                                                <Typography>
-                                                                    {participant.qrCodeId}
-                                                                </Typography>
-                                                            </Box>
-                                                        }>
-                                                        <QrCodeIcon />
-                                                    </HtmlTooltip>
-                                                ) : row.namedParticipants
-                                                      .flatMap(np => np.participants)
-                                                      .some(p => p.qrCodeId !== undefined) ? (
-                                                    <></>
-                                                ) : (
-                                                    <HtmlTooltip
-                                                        title={
-                                                            <Typography>
-                                                                {t('qrCode.noQrCodeAssigned')}
-                                                            </Typography>
-                                                        }>
-                                                        <Warning color={'warning'} />
-                                                    </HtmlTooltip>
-                                                )}
-                                            </TableCell>
-                                            <TableCell sx={{width: '20%'}}>
-                                                {participant.currentStatus !== undefined && (
-                                                    <HtmlTooltip
-                                                        title={
-                                                            <>
-                                                                {participant.lastScanAt && (
-                                                                    <>
-                                                                        <Typography variant={'h6'}>
-                                                                            {t(
-                                                                                'club.participant.tracking.lastScan.at',
-                                                                            )}
-                                                                        </Typography>
-                                                                        <Typography>
-                                                                            {format(
-                                                                                new Date(
-                                                                                    participant.lastScanAt,
-                                                                                ),
-                                                                                t(
-                                                                                    'format.datetime',
-                                                                                ),
-                                                                            )}
-                                                                        </Typography>
-                                                                    </>
-                                                                )}
-                                                                {participant.lastScanBy && (
-                                                                    <Typography>
-                                                                        {t('common.by')}:{' '}
-                                                                        {
-                                                                            participant.lastScanBy
-                                                                                .firstname
-                                                                        }{' '}
-                                                                        {
-                                                                            participant.lastScanBy
-                                                                                .lastname
-                                                                        }
-                                                                    </Typography>
-                                                                )}
-                                                            </>
-                                                        }>
-                                                        <Chip
-                                                            label={
-                                                                participant.currentStatus ===
-                                                                'ENTRY'
-                                                                    ? t(
-                                                                          'club.participant.tracking.in',
-                                                                      )
-                                                                    : t(
-                                                                          'club.participant.tracking.out',
-                                                                      )
-                                                            }
-                                                            color={
-                                                                participant.currentStatus ===
-                                                                'ENTRY'
-                                                                    ? 'success'
-                                                                    : 'default'
-                                                            }
-                                                            size="small"
-                                                        />
-                                                    </HtmlTooltip>
-                                                )}
-                                            </TableCell>
                                         </TableRow>
                                     )),
                                 )}
@@ -257,6 +147,7 @@ const CompetitionRegistrationTable = (
                 field: 'optionalFees',
                 headerName: t('event.registration.optionalFee'),
                 sortable: false,
+                minWidth: 120,
                 renderCell: ({row}) => (
                     <Stack>
                         {row.optionalFees.length >= 1
@@ -269,7 +160,7 @@ const CompetitionRegistrationTable = (
                 field: 'infos',
                 headerName: t('event.competition.registration.infos'),
                 sortable: false,
-                minWidth: 200,
+                minWidth: 150,
                 renderCell: ({row}) => (
                     <Stack spacing={1}>
                         {row.deregistration ? (
@@ -301,7 +192,7 @@ const CompetitionRegistrationTable = (
     )
 
     const [selectedRegForDeregistration, setSelectedRegForDeregistration] =
-        useState<CompetitionRegistrationTeamDto | null>(null)
+        useState<CompetitionRegistrationDto | null>(null)
     const showDeregistrationDialog = selectedRegForDeregistration !== null
 
     const handleCloseDeregistrationDialog = () => {
@@ -310,7 +201,7 @@ const CompetitionRegistrationTable = (
 
     const {confirmAction} = useConfirmation()
 
-    const revertDeregistration = async (selectedRegistration: CompetitionRegistrationTeamDto) => {
+    const revertDeregistration = async (selectedRegistration: CompetitionRegistrationDto) => {
         confirmAction(
             async () => {
                 const {error} = await revertCompetitionDeregistration({
@@ -356,7 +247,7 @@ const CompetitionRegistrationTable = (
     const afterRegistration = (isLate: boolean) =>
         isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
 
-    const customEntityActions = (entity: CompetitionRegistrationTeamDto): EntityAction[] => [
+    const customEntityActions = (entity: CompetitionRegistrationDto): EntityAction[] => [
         entity.deregistration === undefined && afterRegistration(entity.isLate) ? (
             <GridActionsCellItem
                 icon={<GroupRemoveIcon />}
@@ -368,7 +259,9 @@ const CompetitionRegistrationTable = (
         entity.deregistration !== undefined ? (
             <GridActionsCellItem
                 icon={<GroupAddIcon />}
-                label={t('event.competition.registration.deregister.revertDeregistration.revertDeregistration')}
+                label={t(
+                    'event.competition.registration.deregister.revertDeregistration.revertDeregistration',
+                )}
                 onClick={() => revertDeregistration(entity)}
                 showInMenu
             />
@@ -376,8 +269,9 @@ const CompetitionRegistrationTable = (
     ]
 
     // closed is already checked in parent component
-    const writable = (dto: CompetitionRegistrationTeamDto) =>
-        dto.isLate === (registrationState === 'LATE') || user.checkPrivilege(updateRegistrationGlobal)
+    const writable = (dto: CompetitionRegistrationDto) =>
+        dto.isLate === (registrationState === 'LATE') ||
+        user.checkPrivilege(updateRegistrationGlobal)
 
     return (
         <Fragment>

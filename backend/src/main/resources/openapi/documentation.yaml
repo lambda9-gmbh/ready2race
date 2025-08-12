@@ -1140,7 +1140,7 @@ paths:
                   data:
                     type: array
                     items:
-                      $ref: '#/components/schemas/CompetitionRegistrationTeamDto'
+                      $ref: '#/components/schemas/CompetitionRegistrationDto'
                   pagination:
                     $ref: '#/components/schemas/Pagination'
         400:
@@ -1287,6 +1287,47 @@ paths:
           $ref: '#/components/responses/404'
         409:
           $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/competition/{competitionId}/competitionRegistration/teams:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+    get:
+      operationId: getCompetitionRegistrationTeams
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: CompetitionRegistrationTeam page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionRegistrationTeamDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/competition/{competitionId}/competitionSetup:
@@ -6650,7 +6691,7 @@ components:
             type: string
             format: uuid
 
-    CompetitionRegistrationTeamDto:
+    CompetitionRegistrationDto:
       type: object
       required:
         - id
@@ -6757,6 +6798,126 @@ components:
           format: uuid
         reason:
           type: string
+
+
+    CompetitionRegistrationTeamDto:
+      type: object
+      required:
+        - id
+        - clubId
+        - clubName
+        - namedParticipants
+        - globalParticipantRequirements
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationTeamNamedParticipantDto'
+        deregistration:
+          $ref: '#/components/schemas/CompetitionDeregistrationDto'
+        globalParticipantRequirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantRequirementDto'
+
+
+    CompetitionRegistrationTeamNamedParticipantDto:
+      type: object
+      required:
+        - namedParticipantId
+        - namedParticipantName
+        - participants
+        - participantRequirements
+      properties:
+        namedParticipantId:
+          type: string
+          format: uuid
+        namedParticipantName:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParticipantForCompetitionRegistrationTeam'
+        participantRequirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantRequirementDto'
+
+    ParticipantForCompetitionRegistrationTeam:
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - year
+        - gender
+        - external
+        - participantRequirementsChecked
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        year:
+          type: integer
+        gender:
+          $ref: '#/components/schemas/Gender'
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+        qrCodeId:
+          type: string
+        participantRequirementsChecked:
+          type: array
+          items:
+            type: string
+            format: uuid
+        currentStatus:
+          $ref: '#/components/schemas/ParticipantScanType'
+        lastScanAt:
+          type: string
+          format: date-time
+        lastScanBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+
+
+    CompetitionRegistrationNamedParticipantRequirementDto:
+      type: object
+      required:
+        - id
+        - name
+        - optional
+        - checkInApp
+        - qrCodeRequired
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        optional:
+          type: boolean
+        checkInApp:
+          type: boolean
+        qrCodeRequired:
+          type: boolean
+
 
 
     # competitionSetup
@@ -7166,16 +7327,14 @@ components:
         requirements:
           type: array
           items:
-            $ref: '#/components/schemas/NamedParticipantRequirmentForEventDto'
+            $ref: '#/components/schemas/NamedParticipantRequirementForEventDto'
 
-    NamedParticipantRequirmentForEventDto:
+    NamedParticipantRequirementForEventDto:
       type: object
       required:
         - id
         - name
         - qrCodeRequired
-        - event
-        - participantRequirement
       properties:
         id:
           type: string
@@ -7184,12 +7343,6 @@ components:
           type: string
         qrCodeRequired:
           type: boolean
-        event:
-          type: string
-          format: uuid
-        participantRequirement:
-          type: string
-          format: uuid
 
     ParticipantRequirementUpsertDto:
       type: object

@@ -290,6 +290,7 @@ object ParticipantRequirementService {
             name = request.name
             description = request.description
             optional = request.optional ?: false
+            checkInApp = request.checkInApp ?: false
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()
