@@ -556,6 +556,8 @@
             "named": "Ergebnis für {{matchName}}",
             "unnamed": "Partie Ergebnis"
           },
+          "failed": "Ausgeschieden",
+          "failedReason": "Grund für Ausscheiden",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",

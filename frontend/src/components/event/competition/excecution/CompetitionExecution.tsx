@@ -58,8 +58,8 @@ type EditMatchForm = {
 type EnterResultsTeam = {
     registrationId: string
     place: string
-    deregistered: boolean
-    deregistrationReason: string
+    failed: boolean
+    failedReason: string
 }
 type EnterResultsForm = {
     selectedMatchDto: CompetitionMatchDto | null
@@ -123,7 +123,7 @@ const CompetitionExecution = () => {
 
     const matchesFiltered = (round: CompetitionRoundDto): CompetitionMatchDto[] => {
         return round.matches
-            .filter(match => match.teams.length > 1 || round.required)
+            .filter(match => match.teams.length > 0 && (match.teams.length > 1 || round.required))
             .sort((a, b) => a.executionOrder - b.executionOrder)
     }
 
@@ -149,7 +149,7 @@ const CompetitionExecution = () => {
         name: 'teamResults',
         rules: {
             validate: values => {
-                const validValues = values.filter(val => val.deregistered === false)
+                const validValues = values.filter(val => val.failed === false)
                 const duplicatePlaces = Array.from(groupBy(validValues, val => val.place))
                     .filter(([, items]) => items.length > 1)
                     .map(([place]) => place)
@@ -183,12 +183,13 @@ const CompetitionExecution = () => {
 
     const mapTeamDtoToFormTeamResults = (teams: CompetitionMatchTeamDto[]): EnterResultsTeam[] => {
         return teams
+            .filter(t => !t.deregistered)
             .sort((a, b) => a.startNumber - b.startNumber)
             .map(team => ({
                 registrationId: team.registrationId,
                 place: team.place?.toString() ?? '',
-                deregistered: team.deregistered,
-                deregistrationReason: team.deregistrationReason ?? '',
+                failed: team.failed,
+                failedReason: team.failedReason ?? '',
             }))
     }
 
@@ -223,10 +224,10 @@ const CompetitionExecution = () => {
                 body: {
                     teamResults: formData.teamResults.map(results => ({
                         registrationId: results.registrationId,
-                        place: results.deregistered ? undefined : Number(results.place),
-                        deregistered: results.deregistered,
-                        deregistrationReason: results.deregistered
-                            ? takeIfNotEmpty(results.deregistrationReason)
+                        place: results.failed ? undefined : Number(results.place),
+                        failed: results.failed,
+                        failedReason: results.failed
+                            ? takeIfNotEmpty(results.failedReason)
                             : undefined,
                     })),
                 },
@@ -448,14 +449,6 @@ const CompetitionExecution = () => {
         )
     }
 
-    const getRegistrationIsLocked = (registrationId: string) => {
-        return (
-            currentRound?.matches
-                .flatMap(m => m.teams)
-                .find(t => t.registrationId === registrationId)?.deregistrationLocked ?? false
-        )
-    }
-
     return progressDto && sortedRounds ? (
         <Box>
             {!allRoundsCreated && (
@@ -561,7 +554,7 @@ const CompetitionExecution = () => {
                                                 </TableCell>
                                                 <TableCell width="10%">
                                                     {t(
-                                                        'event.competition.registration.deregister.deregister',
+                                                        'event.competition.execution.results.failed',
                                                     )}
                                                 </TableCell>
                                             </TableRow>
@@ -570,11 +563,11 @@ const CompetitionExecution = () => {
                                             {controlledResultFields.map((value, fieldIndex) => (
                                                 <Controller
                                                     key={value.id}
-                                                    name={`teamResults[${fieldIndex}.deregistered`}
+                                                    name={`teamResults.${fieldIndex}.failed`}
                                                     render={({
                                                         field: {
-                                                            onChange: deregisteredOnChange,
-                                                            value: deregisteredValue = false,
+                                                            onChange: failedOnChange,
+                                                            value: failedValue = false,
                                                         },
                                                     }) => (
                                                         <TableRow key={value.id}>
@@ -594,17 +587,17 @@ const CompetitionExecution = () => {
                                                                         : '')}
                                                             </TableCell>
                                                             <TableCell width="40%">
-                                                                {!deregisteredValue ? (
+                                                                {!failedValue ? (
                                                                     <Box sx={{maxWidth: 100}}>
                                                                         {controlledResultFields && (
                                                                             <FormInputNumber
-                                                                                name={`teamResults[${fieldIndex}.place`}
+                                                                                name={`teamResults.${fieldIndex}.place`}
                                                                                 required
                                                                                 min={1}
                                                                                 max={
                                                                                     controlledResultFields.filter(
                                                                                         r =>
-                                                                                            !r.deregistered,
+                                                                                            !r.failed,
                                                                                     ).length
                                                                                 }
                                                                                 integer
@@ -612,31 +605,21 @@ const CompetitionExecution = () => {
                                                                         )}
                                                                     </Box>
                                                                 ) : (
-                                                                    !getRegistrationIsLocked(
-                                                                        value.registrationId,
-                                                                    ) && (
-                                                                        <FormInputText
-                                                                            name={`teamResults[${fieldIndex}.deregistrationReason`}
-                                                                            label={t(
-                                                                                'event.competition.registration.deregister.reason',
-                                                                            )}
-                                                                            placeholder={t(
-                                                                                'event.competition.registration.deregister.reason',
-                                                                            )}
-                                                                        />
-                                                                    )
+                                                                    <FormInputText
+                                                                        name={`teamResults.${fieldIndex}.failedReason`}
+                                                                        label={t(
+                                                                            'event.competition.execution.results.failedReason',
+                                                                        )}
+                                                                    />
                                                                 )}
                                                             </TableCell>
                                                             <TableCell width="10%">
                                                                 <Checkbox
-                                                                    checked={deregisteredValue}
-                                                                    disabled={getRegistrationIsLocked(
-                                                                        value.registrationId,
-                                                                    )}
+                                                                    checked={failedValue}
                                                                     onChange={e => {
-                                                                        deregisteredOnChange(e)
+                                                                        failedOnChange(e)
                                                                         resultsFormContext.setValue(
-                                                                            `teamResults.${fieldIndex}.deregistered`,
+                                                                            `teamResults.${fieldIndex}.failed`,
                                                                             Boolean(
                                                                                 e.target.checked,
                                                                             ),

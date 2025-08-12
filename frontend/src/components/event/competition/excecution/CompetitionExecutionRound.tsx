@@ -564,14 +564,16 @@ const CompetitionExecutionRound = ({
                                                             (team.name ? ` ${team.name}` : '')}
                                                     </TableCell>
                                                     <TableCell width="30%">
-                                                        {!team.deregistered
-                                                            ? team.place
-                                                            : t(
-                                                                  'event.competition.registration.deregister.deregistered',
-                                                              ) +
-                                                              (team.deregistrationReason
-                                                                  ? ` (${team.deregistrationReason})`
-                                                                  : '')}
+                                                        {team.deregistered
+                                                            ? t(
+                                                                'event.competition.registration.deregister.deregistered',
+                                                                ) +
+                                                                (team.deregistrationReason
+                                                                    ? ` (${team.deregistrationReason})`
+                                                                    : '')
+                                                            : team.failed ? t('event.competition.execution.results.failed') + (team.failedReason ? ` (${team.failedReason})`: '')
+                                                            : team.place
+                                                        }
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

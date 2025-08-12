@@ -245,6 +245,8 @@ export type CompetitionMatchTeamDto = {
     deregistered: boolean
     deregistrationLocked?: boolean
     deregistrationReason?: string
+    failed: boolean
+    failedReason?: string
 }
 
 export type CompetitionPropertiesDto = {
@@ -1555,8 +1557,8 @@ export type UpdateCompetitionMatchTeamRequest = {
 export type UpdateCompetitionMatchTeamResultRequest = {
     registrationId: string
     place?: number
-    deregistered: boolean
-    deregistrationReason?: string
+    failed?: boolean
+    failedReason?: string
 }
 
 export type UpdateQrCodeRequirementDto = {
