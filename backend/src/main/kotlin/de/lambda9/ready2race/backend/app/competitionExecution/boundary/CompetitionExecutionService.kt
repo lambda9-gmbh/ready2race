@@ -186,9 +186,9 @@ object CompetitionExecutionService {
                     val nextRoundTeam = team.second!!
 
                     val automaticFirstPlace =
-                        !nextRound.required &&
+                        !nextRound.required && !prevTeam.deregistered && !prevTeam.out && !prevTeam.failed &&
                         currentTeamsToParticipantId.filter {
-                            it.second!!.competitionSetupMatch == nextRoundTeam.competitionSetupMatch
+                            it.second!!.competitionSetupMatch == nextRoundTeam.competitionSetupMatch && !it.first.out && !it.first.failed && !it.first.deregistered
                         }.size == 1
 
                     CompetitionMatchTeamRecord(
@@ -215,7 +215,7 @@ object CompetitionExecutionService {
                 }
                 !SubstitutionRepo.insert(substitutionsRelevantForNextRound).orDie()
 
-                if (newTeamRecords.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
+                if (newTeamRecords.filter { !it.out!! }.size > nextRoundSetupMatches.size || nextRound.required || nextRound.nextRound == null
                 ) {
                     createFollowingRound = false
                 }
@@ -328,11 +328,11 @@ object CompetitionExecutionService {
             // TODO: @Evaluate: is this not implicitly checked by the following check?
             val currentRoundPlaces =
                 currentRound.matches.flatMap { match ->
-                    match.teams.filter { !it.deregistered && !it.failed }.map { team -> team.place }
+                    match.teams.filter { !it.deregistered && !it.failed && !it.out }.map { team -> team.place }
                 }
 
             val placesAreMissing = currentRound.matches.map { match ->
-                match.teams.map { it.place }.containsAll((1..match.teams.filter { !it.deregistered && !it.failed }.size).toList())
+                match.teams.map { it.place }.containsAll((1..match.teams.filter { !it.deregistered && !it.failed && !it.out }.size).toList())
             }.any { !it }
 
 
@@ -362,6 +362,7 @@ object CompetitionExecutionService {
             .onNullFail { CompetitionExecutionError.RoundNotFound }
 
         val teamRecords = !CompetitionMatchTeamRepo.getByMatch(matchId).orDie()
+        val (expectedTeams, outTeams) = teamRecords.partition { !it.out!! }
 
         if (!setupRound.required && teamRecords.size == 1) {
             return@comprehension KIO.fail(CompetitionExecutionError.MatchResultsLocked)
@@ -373,10 +374,10 @@ object CompetitionExecutionService {
             updatedAt = LocalDateTime.now()
         }.orDie()
 
-        if (teamRecords.size != request.teams.size) {
+        if (expectedTeams.size != request.teams.size) {
             return@comprehension KIO.fail(CompetitionExecutionError.TeamsNotMatching)
         }
-        teamRecords.forEach { tr ->
+        expectedTeams.forEach { tr ->
             if (request.teams.filter { it.registrationId == tr.competitionRegistration }.size != 1)
                 return@comprehension KIO.fail(CompetitionExecutionError.TeamsNotMatching)
         }
@@ -387,10 +388,17 @@ object CompetitionExecutionService {
             }.orDie()
         }
 
+        val highestStartNumber = request.teams.maxOfOrNull { it.startNumber } ?: 0
+        val outStartNumbers = outTeams.sortedBy { it.startNumber }.mapIndexed { index, team -> team.id to index + highestStartNumber + 1 }.toMap()
+
         !teamRecords.traverse { team ->
             CompetitionMatchTeamRepo.update(team) {
                 startNumber =
-                    request.teams.find { it.registrationId == team.competitionRegistration }!!.startNumber // Can be guaranteed by previous checks
+                    if (team.out!!) {
+                        outStartNumbers[team.id]!!
+                    } else {
+                        request.teams.find { it.registrationId == team.competitionRegistration }!!.startNumber // Can be guaranteed by previous checks
+                    }
                 updatedBy = userId
                 updatedAt = LocalDateTime.now()
             }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
@@ -520,7 +528,7 @@ object CompetitionExecutionService {
             !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
         }*/
         // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
-        val validTeams = teams.filter { team -> match.teams.any {team.startNumber == it.startNumber} }
+        val validTeams = teams.filter { team -> match.teams.any {team.startNumber == it.startNumber && !it.deregistered} }
         val (teamWithoutPlace, teamWithPlace) = validTeams.partition { it.place == null }
         val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }.mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
@@ -667,7 +675,7 @@ object CompetitionExecutionService {
             setupRounds.filterIndexed { roundIdx, round -> // filters out rounds for which there was no following round created yet
                 if (roundIdx < setupRounds.size - 1) {
                     setupRounds[roundIdx + 1].matches.isNotEmpty()
-                } else round.matches.isNotEmpty()
+                } else round.matches.flatMap { it.teams }.none { it.place == null && !it.deregistered && !it.out && !it.failed }
             }.mapIndexed { roundIdx, round ->
 
                 val isLastRound = roundIdx >= setupRounds.size - 1
