@@ -2,10 +2,7 @@ import EntityDialog from '@components/EntityDialog.tsx'
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {ParticipantForEventDto} from '@api/types.gen.ts'
 import {Stack} from '@mui/material'
-import {
-    approveParticipantRequirementsForEvent,
-    getParticipantsForEventInApp
-} from '@api/sdk.gen.ts'
+import {approveParticipantRequirementsForEvent, getParticipantsForEventInApp} from '@api/sdk.gen.ts'
 import {useForm} from 'react-hook-form-mui'
 import {useCallback, useMemo} from 'react'
 import {eventRoute} from '@routes'
@@ -20,7 +17,7 @@ export type ParticipantRequirementApproveManuallyForEventForm = {
     isGlobal: boolean
     namedParticipantId?: string
     namedParticipantName?: string
-    approvedParticipants: Array<ParticipantForEventDto>
+    approvedParticipants: Array<ParticipantForEventDto & {note?: string}>
 }
 
 const ParticipantRequirementApproveManuallyForEventDialog = (
@@ -35,7 +32,10 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
             path: {eventId},
             body: {
                 requirementId: formData.requirementId,
-                approvedParticipants: formData.approvedParticipants.map(p => ({id: p.id})),
+                approvedParticipants: formData.approvedParticipants.map(p => ({
+                    id: p.id,
+                    note: p.note,
+                })),
                 namedParticipantId: formData.namedParticipantId,
             },
         })
@@ -71,7 +71,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
     // Filter participants based on requirement type
     const filteredParticipants = useMemo(() => {
         if (!participantsData?.data) return []
-        
+
         return participantsData.data.filter(p => {
             // If it's a named participant requirement, only show participants with matching namedParticipantId
             if (!props.entity?.isGlobal && props.entity?.namedParticipantId) {
@@ -84,17 +84,22 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
 
     const formContext = useForm<ParticipantRequirementApproveManuallyForEventForm>()
 
+    const options = filteredParticipants.map(p => ({
+        ...p,
+        note: p.participantRequirementsChecked?.find(r => r.id === props.entity?.requirementId)
+            ?.note,
+    }))
+
     const onOpen = useCallback(() => {
         formContext.reset(
             props.entity
                 ? {
                       ...props.entity,
-                      approvedParticipants:
-                          filteredParticipants.filter(p =>
-                              p.participantRequirementsChecked?.some(
-                                  r => r.id === props.entity?.requirementId,
-                              ),
-                          ) ?? [],
+                      approvedParticipants: options.filter(p =>
+                          p.participantRequirementsChecked?.some(
+                              r => r.id === props.entity?.requirementId,
+                          ),
+                      ),
                   }
                 : {},
         )
@@ -109,8 +114,8 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
             maxWidth={'xl'}
             fullWidth={true}
             title={`${props.entity?.requirementName}${
-                props.entity && !props.entity.isGlobal && props.entity.namedParticipantName 
-                    ? ` (${props.entity.namedParticipantName})` 
+                props.entity && !props.entity.isGlobal && props.entity.namedParticipantName
+                    ? ` (${props.entity.namedParticipantName})`
                     : ''
             }`}>
             <Stack>
@@ -119,7 +124,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
                 ) : (
                     <FormInputTransferList
                         name={'approvedParticipants'}
-                        options={filteredParticipants}
+                        options={options}
                         labelLeft={t('event.participantRequirement.participantsOpen')}
                         labelRight={t('event.participantRequirement.participantsApproved')}
                         renderValue={v => ({

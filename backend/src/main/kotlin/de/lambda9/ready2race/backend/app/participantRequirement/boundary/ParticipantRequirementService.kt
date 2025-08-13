@@ -137,7 +137,9 @@ object ParticipantRequirementService {
             !ParticipantHasRequirementForEventRepo.getApprovedParticipantIds(eventId, dto.requirementId)
                 .map { it.toSet() }.orDie()
 
-        !dto.approvedParticipants.filterNot { it.id in alreadyApproved }.traverse {
+        val (forUpdate, forCreate) = dto.approvedParticipants.partition { it.id in alreadyApproved }
+
+        !forCreate.traverse {
             ParticipantHasRequirementForEventRepo.create(
                 ParticipantHasRequirementForEventRecord(
                     event = eventId,
@@ -148,6 +150,12 @@ object ParticipantRequirementService {
                     createdAt = LocalDateTime.now(),
                 )
             )
+        }.orDie()
+
+        !forUpdate.traverse {
+            ParticipantHasRequirementForEventRepo.update(it.id, eventId, dto.requirementId) {
+                note = it.note
+            }
         }.orDie()
 
         noData

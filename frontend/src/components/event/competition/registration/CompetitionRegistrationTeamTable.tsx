@@ -213,32 +213,43 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
                                                                         }),
                                                                     ),
                                                                     ...np.participantRequirements,
-                                                                ].map(req => (
-                                                                    <Stack
-                                                                        direction={'row'}
-                                                                        spacing={1}
-                                                                        key={req.id}>
-                                                                        {participant.participantRequirementsChecked.some(
+                                                                ].map(req => {
+                                                                    const note =
+                                                                        participant.participantRequirementsChecked.find(
                                                                             c => c.id === req.id,
-                                                                        ) ? (
-                                                                            <CheckCircle
-                                                                                color={'success'}
-                                                                            />
-                                                                        ) : (
-                                                                            <Cancel
-                                                                                color={'error'}
-                                                                            />
-                                                                        )}
-                                                                        <Typography>
-                                                                            {req.name}{' '}
-                                                                            {req.optional
-                                                                                ? ` (${t('entity.optional')})`
-                                                                                : ''}
-                                                                            {req.qrCodeRequired &&
-                                                                                ' (QR)'}
-                                                                        </Typography>
-                                                                    </Stack>
-                                                                ))}
+                                                                        )?.note
+                                                                    return (
+                                                                        <Stack
+                                                                            direction={'row'}
+                                                                            spacing={1}
+                                                                            key={req.id}>
+                                                                            {participant.participantRequirementsChecked.some(
+                                                                                c =>
+                                                                                    c.id === req.id,
+                                                                            ) ? (
+                                                                                <CheckCircle
+                                                                                    color={
+                                                                                        'success'
+                                                                                    }
+                                                                                />
+                                                                            ) : (
+                                                                                <Cancel
+                                                                                    color={'error'}
+                                                                                />
+                                                                            )}
+                                                                            <Typography>
+                                                                                {req.name}{' '}
+                                                                                {req.optional
+                                                                                    ? ` (${t('entity.optional')})`
+                                                                                    : ''}
+                                                                                {req.qrCodeRequired &&
+                                                                                    ' (QR)'}
+                                                                                {note &&
+                                                                                    ` [ ${note} ]`}
+                                                                            </Typography>
+                                                                        </Stack>
+                                                                    )
+                                                                })}
                                                             </Stack>
                                                         }>
                                                         <Info color={'info'} fontSize={'small'} />

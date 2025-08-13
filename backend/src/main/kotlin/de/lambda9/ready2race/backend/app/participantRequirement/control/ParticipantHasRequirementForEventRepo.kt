@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.CHECKE
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
 import java.util.*
@@ -14,6 +15,19 @@ import java.util.*
 object ParticipantHasRequirementForEventRepo {
 
     fun create(record: ParticipantHasRequirementForEventRecord) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.insert(record)
+
+    fun update(
+        participantId: UUID,
+        eventId: UUID,
+        participantRequirementId: UUID,
+        f: ParticipantHasRequirementForEventRecord.() -> Unit,
+    ) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.update(f) {
+        DSL.and(
+            PARTICIPANT.eq(participantId),
+            EVENT.eq(eventId),
+            PARTICIPANT_REQUIREMENT.eq(participantRequirementId),
+        )
+    }
 
     fun exists(eventId: UUID, participantRequirementId: UUID, participantId: UUID) =
         PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.exists {
