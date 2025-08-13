@@ -6884,8 +6884,7 @@ components:
         participantRequirementsChecked:
           type: array
           items:
-            type: string
-            format: uuid
+            $ref: '#/components/schemas/CheckedParticipantRequirement'
         currentStatus:
           $ref: '#/components/schemas/ParticipantScanType'
         lastScanAt:
@@ -7289,16 +7288,15 @@ components:
           type: boolean
           description: "Per App prüfbar"
 
-    ParticipantRequirementReducedDto:
+    CheckedParticipantRequirement:
       type: object
       required:
         - id
-        - name
       properties:
         id:
           type: string
           format: uuid
-        name:
+        note:
           type: string
 
     ParticipantRequirementForEventDto:
@@ -7398,8 +7396,7 @@ components:
         approvedParticipants:
           type: array
           items:
-            type: string
-            format: uuid
+            $ref: '#/components/schemas/CheckedParticipantRequirement'
         namedParticipantId:
           type: string
           format: uuid
@@ -7625,7 +7622,7 @@ components:
         participantRequirementsChecked:
           type: array
           items:
-            $ref: '#/components/schemas/ParticipantRequirementReducedDto'
+            $ref: '#/components/schemas/CheckedParticipantRequirement'
         qrCodeId:
           type: string
         namedParticipantIds:

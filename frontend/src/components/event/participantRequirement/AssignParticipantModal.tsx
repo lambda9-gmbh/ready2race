@@ -23,7 +23,7 @@ import {
 } from '@mui/material'
 import { Search, Person, QrCode, Clear, Delete } from '@mui/icons-material'
 import { useTranslation } from 'react-i18next'
-import { NamedParticipantDto, NamedParticipantRequirmentForEventDto } from '@api/types.gen.ts'
+import { NamedParticipantDto, NamedParticipantRequirementForEventDto } from '@api/types.gen.ts'
 
 interface AssignParticipantModalProps {
     open: boolean
@@ -33,7 +33,7 @@ interface AssignParticipantModalProps {
     onRemove: (namedParticipantId: string) => Promise<void>
     namedParticipants: NamedParticipantDto[]
     requirementName: string
-    assignedRequirements: NamedParticipantRequirmentForEventDto[]
+    assignedRequirements: NamedParticipantRequirementForEventDto[]
 }
 
 const AssignParticipantModal: React.FC<AssignParticipantModalProps> = ({

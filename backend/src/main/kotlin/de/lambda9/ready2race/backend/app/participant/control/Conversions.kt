@@ -2,10 +2,7 @@ package de.lambda9.ready2race.backend.app.participant.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
-import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
-import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
 import de.lambda9.tailwind.core.KIO

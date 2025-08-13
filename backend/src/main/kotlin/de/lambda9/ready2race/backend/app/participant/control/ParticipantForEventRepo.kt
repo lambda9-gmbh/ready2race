@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventSort
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.ParticipantForEvent
@@ -15,8 +15,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.PARTIC
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.select
-import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -83,9 +81,9 @@ object ParticipantForEventRepo {
                         externalClubName = it[PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME],
                         participantRequirementsChecked = it[PARTICIPANT_FOR_EVENT.PARTICIPANT_REQUIREMENTS_CHECKED]?.filterNotNull()
                             ?.map { pr ->
-                                ParticipantRequirementReducedDto(
-                                    id = pr.id,
-                                    name = pr.name,
+                                CheckedParticipantRequirement(
+                                    id = pr.id!!,
+                                    note = pr.note,
                                 )
                             } ?: emptyList(),
                         qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],

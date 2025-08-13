@@ -142,6 +142,11 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                 name: r.name,
                                 assignmentType: 'global',
                                 qrCodeRequired: false,
+                                checked:
+                                    row.participantRequirementsChecked?.some(c => c.id === r.id) ??
+                                    false,
+                                note: row.participantRequirementsChecked?.find(c => c.id === r.id)
+                                    ?.note,
                             })
                         }
                     })
@@ -154,6 +159,13 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                             assignmentType: 'named',
                             participantName: req.participantName || 'Unknown',
                             qrCodeRequired: req.qrCodeRequired,
+                            checked:
+                                row.participantRequirementsChecked?.some(
+                                    c => c.id === req.requirementId,
+                                ) ?? false,
+                            note: row.participantRequirementsChecked?.find(
+                                c => c.id === req.requirementId,
+                            )?.note,
                         })
                     })
 
@@ -166,7 +178,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                     return (
                         <Stack direction={'row'} spacing={1} alignItems={'center'}>
                             <Typography>
-                                {row.participantRequirementsChecked?.length}/
+                                {row.participantRequirementsChecked?.length ?? 0}/
                                 {deduplicatedRequirements.length}{' '}
                             </Typography>
                             <HtmlTooltip
@@ -175,9 +187,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                     <Stack spacing={1} p={1}>
                                         {deduplicatedRequirements.map(req => (
                                             <Stack direction={'row'} spacing={1} key={req.id}>
-                                                {row.participantRequirementsChecked?.some(
-                                                    c => c.id === req.id,
-                                                ) ? (
+                                                {req.checked ? (
                                                     <CheckCircle color={'success'} />
                                                 ) : (
                                                     <Cancel color={'error'} />
@@ -188,6 +198,7 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                                                         ? t('participantRequirement.global')
                                                         : req.participantName}
                                                     ){req.qrCodeRequired && ' (QR)'}
+                                                    {req.note && ` [ ${req.note} ]`}
                                                 </Typography>
                                             </Stack>
                                         ))}

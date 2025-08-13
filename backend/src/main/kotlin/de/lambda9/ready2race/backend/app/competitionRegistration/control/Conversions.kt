@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.Competit
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.ParticipantForCompetitionRegistrationTeam
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toNamedParticipantRequirementDto
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toRequirementDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamParticipantRecord
@@ -72,7 +73,7 @@ fun CompetitionRegistrationTeamParticipantRecord.toParticipantForExecutionDto(
 
 fun ParticipantForExecutionDto.toParticipantForCompetitionRegistrationTeam(
     qrCodeId: String?,
-    participantRequirementsChecked: List<UUID>,
+    participantRequirementsChecked: List<CheckedParticipantRequirement>,
     currentStatus: ParticipantScanType?,
     lastScanAt: LocalDateTime?,
     lastScanBy: AppUserNameDto?

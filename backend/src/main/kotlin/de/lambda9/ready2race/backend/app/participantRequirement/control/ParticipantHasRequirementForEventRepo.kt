@@ -3,15 +3,31 @@ package de.lambda9.ready2race.backend.app.participantRequirement.control
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantHasRequirementForEventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.CHECKED_PARTICIPANT_REQUIREMENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object ParticipantHasRequirementForEventRepo {
 
     fun create(record: ParticipantHasRequirementForEventRecord) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.insert(record)
+
+    fun update(
+        participantId: UUID,
+        eventId: UUID,
+        participantRequirementId: UUID,
+        f: ParticipantHasRequirementForEventRecord.() -> Unit,
+    ) = PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.update(f) {
+        DSL.and(
+            PARTICIPANT.eq(participantId),
+            EVENT.eq(eventId),
+            PARTICIPANT_REQUIREMENT.eq(participantRequirementId),
+        )
+    }
 
     fun exists(eventId: UUID, participantRequirementId: UUID, participantId: UUID) =
         PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.exists {
@@ -45,6 +61,11 @@ object ParticipantHasRequirementForEventRepo {
     }
 
     fun getApprovedRequirements(eventId: UUID, participantId: UUID) =
-        PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.select { EVENT.eq(eventId).and(PARTICIPANT.eq(participantId)) }
+        CHECKED_PARTICIPANT_REQUIREMENT.select {
+            DSL.and(
+                EVENT.eq(eventId),
+                PARTICIPANT.eq(participantId)
+            )
+        }
 
 }

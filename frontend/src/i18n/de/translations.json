@@ -694,7 +694,9 @@
         "part2Link": "hier",
         "part3": " erstellt oder bearbeitet werden."
       },
-      "checkInApp": "Per App prüfbar"
+      "checkInApp": "Per App prüfbar",
+      "approve": "Bestätigen",
+      "checkedNote": "Bemerkung"
     },
     "action": {
       "registrationsReport": {

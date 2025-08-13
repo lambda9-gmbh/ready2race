@@ -19,6 +19,7 @@ import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantHasRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
+import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
@@ -37,6 +38,7 @@ import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -105,13 +107,14 @@ object CompetitionRegistrationService {
                             val qrCode = !QrCodeRepo.getQrCodeByParticipant(p.id, eventId).orDie().map{ it?.qrCodeId }
 
                             val requirementsChecked = !ParticipantHasRequirementForEventRepo.getApprovedRequirements(eventId, p.id).orDie()
+                                .andThen { records -> records.traverse { it.toDto() } }
 
                             val unknownParticipantTracking = !ParticipantTrackingRepo.get(p.id, eventId).orDie()
                             val lastScan = unknownParticipantTracking.maxByOrNull { it.scannedAt!! }
 
                             p.namedParticipantId to !p.toParticipantForCompetitionRegistrationTeam(
                                 qrCodeId = qrCode,
-                                participantRequirementsChecked = requirementsChecked.map { it.participantRequirement },
+                                participantRequirementsChecked = requirementsChecked,
                                 currentStatus = lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
                                 lastScanAt = lastScan?.scannedAt,
                                 lastScanBy = if (lastScan?.scannedById != null) {
@@ -124,20 +127,21 @@ object CompetitionRegistrationService {
 
                             )
                         } else {
+                            val requirementsChecked = !knownParticipant.participantRequirementsChecked!!.toList().traverse { it!!.toDto() }
                             knownParticipant.trackings!!.maxByOrNull { it!!.scannedAt!! }.let { lastScan ->
                                 p.namedParticipantId to !p.toParticipantForCompetitionRegistrationTeam(
-                                    qrCodeId = knownParticipant.qrCode,
-                                    participantRequirementsChecked = knownParticipant.participantRequirementsChecked!!.filterNotNull(),
-                                    currentStatus = lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
-                                    lastScanAt = lastScan?.scannedAt,
-                                    lastScanBy = if (lastScan?.scannedById != null) {
-                                        AppUserNameDto(
-                                            id = lastScan.scannedById!!,
-                                            firstname = lastScan.scannedByFirstname!!,
-                                            lastname = lastScan.scannedByLastname!!
-                                        )
-                                    } else null
-                                )
+                                        qrCodeId = knownParticipant.qrCode,
+                                        participantRequirementsChecked = requirementsChecked,
+                                        currentStatus = lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
+                                        lastScanAt = lastScan?.scannedAt,
+                                        lastScanBy = if (lastScan?.scannedById != null) {
+                                            AppUserNameDto(
+                                                id = lastScan.scannedById!!,
+                                                firstname = lastScan.scannedByFirstname!!,
+                                                lastname = lastScan.scannedByLastname!!
+                                            )
+                                        } else null
+                                    )
                             }
                         }
                     }
