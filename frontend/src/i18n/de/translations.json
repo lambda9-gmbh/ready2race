@@ -1248,7 +1248,8 @@
     "search": "Suchen...",
     "confirmSelection": "Auswahl bestätigen",
     "confirm": "Hinzufügen",
-    "success": "QR-Code erfolgreich zugewiesen"
+    "success": "QR-Code erfolgreich zugewiesen",
+    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben"
   },
   "qrCode": {
     "qrCode": "QR-Code",
@@ -1268,7 +1269,6 @@
     "removeAssignmentTitle": "QR-Code-Zuweisung aufheben",
     "removeAssignmentConfirm": "Möchten Sie die QR-Code-Zuweisung wirklich aufheben?",
     "deleteError": "Fehler beim Löschen",
-    "deleteSuccess": "QR-Code-Zuweisung erfolgreich aufgehoben",
     "assignmentInfo": "Zuordnungsinformationen"
   },
   "qrParticipant": {

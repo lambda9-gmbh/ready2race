@@ -12,7 +12,7 @@ import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFnsV3'
 import i18next from 'i18next'
 import './i18n/config'
 import {isLanguage, locales} from './i18n/config.ts'
-import CloseIcon from '@mui/icons-material/Close';
+import CloseIcon from '@mui/icons-material/Close'
 
 client.setConfig({
     baseUrl: Config.api.baseUrl,
@@ -39,11 +39,14 @@ const App = () => {
                 <SnackbarProvider
                     maxSnack={1}
                     anchorOrigin={{vertical: 'bottom', horizontal: 'right'}}
-                    action={(snackbarId) => (
+                    action={snackbarId => (
                         <IconButton onClick={() => closeSnackbar(snackbarId)}>
                             <CloseIcon />
                         </IconButton>
-                    )}>
+                    )}
+                    style={{
+                        flexWrap: 'nowrap',
+                    }}>
                     <ConfirmationProvider>
                         <RouterProvider router={router} context={user}></RouterProvider>
                     </ConfirmationProvider>

@@ -1,23 +1,24 @@
 import {Paper, Stack, Typography} from '@mui/material'
 import {Person, Business, EmojiEvents} from '@mui/icons-material'
 import {useTranslation} from 'react-i18next'
-import {CheckQrCodeResponse} from '@api/types.gen.ts'
+import {QrCodeAppuserResponse, QrCodeParticipantResponse} from '@api/types.gen.ts'
 import {useAppSession} from '@contexts/app/AppSessionContext.tsx'
 import {updateAppCompetitionCheckGlobal} from '@authorization/privileges.ts'
 
 interface QrAssignmentInfoProps {
-    response: CheckQrCodeResponse
+    response:  QrCodeParticipantResponse | QrCodeAppuserResponse
 }
 
 export const QrAssignmentInfo = ({response}: QrAssignmentInfoProps) => {
     const {t} = useTranslation()
     const {appFunction} = useAppSession()
 
+
     return (
         <Paper elevation={2} sx={{p: 2, width: '100%'}}>
             <Stack spacing={1.5}>
                 <Typography variant="h6" color="primary">
-                    {'type' in response && response.type === 'Participant'
+                    {response.type === 'Participant'
                         ? t('qrParticipant.assignmentInfo')
                         : t('qrAppuser.assignmentInfo')}
                 </Typography>
@@ -39,8 +40,7 @@ export const QrAssignmentInfo = ({response}: QrAssignmentInfoProps) => {
                     </Stack>
                 )}
 
-                {'type' in response &&
-                    response.type === 'Participant' &&
+                {response.type === 'Participant' &&
                     'competitions' in response &&
                     response.competitions &&
                     response.competitions.length > 0 &&

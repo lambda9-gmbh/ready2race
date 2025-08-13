@@ -90,21 +90,31 @@ const QrAssignPage = () => {
         if (!selectedPerson) return
 
         if (selectedPerson.type === 'participant') {
-            await updateQrCodeParticipant({
+            const {error} = await updateQrCodeParticipant({
                 body: {
                     qrCodeId: qr.qrCodeId!,
                     eventId: eventId,
                     id: selectedPerson.id,
                 },
             })
+            if(error){
+                feedback.error(t('common.error.unexpected'))
+            } else {
+                feedback.success(t('qrAssign.successParticipant'))
+            }
         } else {
-            await updateQrCodeAppuser({
+            const {error} = await updateQrCodeAppuser({
                 body: {
                     qrCodeId: qr.qrCodeId!,
                     eventId: eventId,
                     id: selectedPerson.id,
                 },
             })
+            if(error){
+                feedback.error(t('common.error.unexpected'))
+            } else {
+                feedback.success(t('qrAssign.successUser'))
+            }
         }
 
         setConfirmationOpen(false)

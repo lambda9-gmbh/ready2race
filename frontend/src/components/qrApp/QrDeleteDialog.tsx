@@ -3,8 +3,7 @@ import {
     DialogContent, 
     DialogActions, 
     Button, 
-    Typography, 
-    Alert 
+    Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import BaseDialog from "@components/BaseDialog.tsx";
@@ -14,7 +13,6 @@ interface QrDeleteDialogProps {
     onClose: () => void;
     onDelete: () => void;
     loading: boolean;
-    error: string | null;
     type: 'participant' | 'appuser';
 }
 
@@ -22,8 +20,7 @@ export const QrDeleteDialog = ({
     open, 
     onClose, 
     onDelete, 
-    loading, 
-    error,
+    loading,
     type 
 }: QrDeleteDialogProps) => {
     const { t } = useTranslation();
@@ -41,7 +38,6 @@ export const QrDeleteDialog = ({
             <DialogTitle>{t(titleKey)}</DialogTitle>
             <DialogContent>
                 <Typography>{t(confirmKey)}</Typography>
-                {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose} disabled={loading}>
