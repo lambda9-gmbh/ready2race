@@ -1,4 +1,5 @@
 package de.lambda9.ready2race.backend.app.participant.control
+
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantForEventRecord
@@ -26,10 +27,10 @@ object ParticipantForEventRepo {
 
     fun getByEvent(
         eventId: UUID,
-        user: AppUserWithPrivilegesRecord,
+        clubId: UUID?,
         scope: Privilege.Scope,
     ): JIO<List<ParticipantForEventRecord>> =
-        PARTICIPANT_FOR_EVENT.select { EVENT_ID.eq(eventId).and(filterScope(scope, user.club)) }
+        PARTICIPANT_FOR_EVENT.select { EVENT_ID.eq(eventId).and(filterScope(scope, clubId)) }
 
 
     fun getParticipantsForEventWithMissingRequirement(

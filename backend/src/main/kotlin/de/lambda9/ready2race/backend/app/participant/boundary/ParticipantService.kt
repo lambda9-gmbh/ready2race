@@ -28,12 +28,9 @@ import java.util.*
 
 object ParticipantService {
 
-    private fun searchFields(): List<(ParticipantForEventDto) -> String?> =
-        listOf(
-            { it.firstname },
-            { it.lastname },
-            { it.externalClubName }
-        )
+    private fun dtoSearchFields(): List<(ParticipantForEventDto) -> String?> =
+        listOf({ it.firstname }, { it.lastname }, { it.externalClubName }, { it.clubName })
+
 
     fun addParticipant(
         request: ParticipantUpsertDto,
@@ -67,28 +64,30 @@ object ParticipantService {
     fun pageForEvent(
         params: PaginationParameters<ParticipantForEventSort>,
         eventId: UUID,
-        user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope
+        clubId: UUID?,
+        scope: Privilege.Scope,
+        specificParticipantId: UUID? = null
     ): App<Nothing, ApiResponse.Page<ParticipantForEventDto, ParticipantForEventSort>> = KIO.comprehension {
 
-        val allRegisteredForEventScoped = !ParticipantForEventRepo.getByEvent(eventId, user, scope).orDie()
-
+        val allRegisteredForEventScoped = !ParticipantForEventRepo.getByEvent(eventId, clubId, scope).orDie()
 
         // Get Participants that were subbed in
-        val substitutionsForEventScoped = !SubstitutionRepo.getByEvent(eventId, user.club, scope).orDie()
+        val substitutionsForEventScoped = !SubstitutionRepo.getByEvent(eventId, clubId, scope).orDie()
 
         // If a participant was subbed into a role and subbed out again in a later round they will still be displayed with that role
         val participantInSubs = substitutionsForEventScoped
             .filter { sub ->
                 substitutionsForEventScoped.none { eventSub -> // Checks that this subIn was the last action of that participant or that the last action was a swap (which would mean that the participant is still in)
-                    eventSub.competitionRegistrationId == sub.competitionRegistrationId
-                        && eventSub.orderForRound!! > sub.orderForRound!!
-                        && (eventSub.participantIn!!.id == sub.participantIn!!.id
-                        || (eventSub.participantOut!!.id == sub.participantIn!!.id
-                        && SubstitutionService.getSwapSubstitution(
-                        substitution = eventSub,
-                        substitutions = substitutionsForEventScoped.filter { it.competitionRegistrationId == eventSub.competitionRegistrationId }
-                    ) == null))
+                    val sameReg = eventSub.competitionRegistrationId == sub.competitionRegistrationId
+                    val moreRecent = eventSub.orderForRound!! > sub.orderForRound!!
+                    val updatedSubIn = eventSub.participantIn!!.id == sub.participantIn!!.id
+                    val isNoSwapAndSubOut =
+                        !(eventSub.participantOut!!.id == sub.participantIn!!.id && SubstitutionService.getSwapSubstitution(
+                            substitution = eventSub,
+                            substitutions = substitutionsForEventScoped.filter { it.competitionRegistrationId == eventSub.competitionRegistrationId }
+                        ).let { it != null && it == sub.id })
+
+                    sameReg && moreRecent && (updatedSubIn || isNoSwapAndSubOut)
                 }
             }
 
@@ -119,6 +118,11 @@ object ParticipantService {
         val allRegisteredWithAddedRoles = !allRegisteredForEventScoped.traverse { p ->
             val newRoles =
                 knownParticipantSubs.filter { sub -> sub.participantIn!!.id == p.id && p.namedParticipantIds!!.none { it == sub.namedParticipantId } } // New roles that this participant got through substitutions
+
+
+            // Todo: val removedRoles - if a participant lost his role due to a substitution
+
+
             p.toDto(
                 overwriteNamedParticipantIds = if (newRoles.isEmpty()) {
                     null
@@ -128,18 +132,31 @@ object ParticipantService {
             )
         }
 
-        val allParticipants = allRegisteredWithAddedRoles + unknownParticipantsForEvent
+        val allParticipants = (allRegisteredWithAddedRoles + unknownParticipantsForEvent)
+            .filter {
+                if (specificParticipantId != null) {
+                    it.id == specificParticipantId // todo: refactor - this comes from participantRequirementService
+                } else true
+            }
 
 
         // Fake pagination to include subbedInParticipants that are not in the participant_for_event table
 
         // Search
         val searchedPs = params.search?.takeIf { it.isNotBlank() }?.let { searchText ->
-            val search = searchText.lowercase()
+            val searchTokens = searchText.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+            if (searchTokens.isEmpty()) return@let allParticipants
+
             allParticipants.filter { dto ->
-                searchFields().any { getter ->
-                    getter(dto)?.lowercase()?.contains(search) == true
-                }
+                val haystack =
+                    dtoSearchFields()   // e.g. listOf({ it.firstname }, { it.lastname }, { it.externalClubName })
+                        .asSequence()
+                        .map { getter -> getter(dto) }
+                        .filterNotNull()
+                        .joinToString(" ")
+                        .lowercase()
+
+                searchTokens.all { token -> haystack.contains(token) }
             }
         } ?: allParticipants
 
