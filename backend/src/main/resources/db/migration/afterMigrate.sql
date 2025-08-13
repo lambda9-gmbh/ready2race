@@ -441,7 +441,6 @@ from event_registration er
          left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
          left join participant_requirement pr on phrfe.participant_requirement = pr.id
          left join qr_codes qc on qc.participant = p.id
-         left join participant_tracking pt on pt.event = er.event and pt.participant = p.id
 group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name,
          qc.id
 order by c.name, p.firstname, p.lastname;
