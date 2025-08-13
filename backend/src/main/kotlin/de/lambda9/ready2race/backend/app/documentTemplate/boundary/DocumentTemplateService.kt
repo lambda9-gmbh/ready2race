@@ -312,6 +312,7 @@ object DocumentTemplateService {
                             actualClubName = null,
                             teamName = "#1",
                             ratingCategory = null,
+                            deregistered = false,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -329,6 +330,7 @@ object DocumentTemplateService {
                             actualClubName = null,
                             teamName = "#2",
                             ratingCategory = null,
+                            deregistered = false,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -346,6 +348,7 @@ object DocumentTemplateService {
                             actualClubName = null,
                             teamName = null,
                             ratingCategory = null,
+                            deregistered = true,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",
@@ -363,6 +366,7 @@ object DocumentTemplateService {
                             actualClubName = null,
                             teamName = null,
                             ratingCategory = null,
+                            deregistered = false,
                             participants = listOf(
                                 CompetitionMatchData.CompetitionMatchParticipant(
                                     role = "Teilnehmer",

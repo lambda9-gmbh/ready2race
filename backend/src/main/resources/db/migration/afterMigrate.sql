@@ -694,6 +694,9 @@ select cmt.id,
        cmt.start_number,
        cmt.place,
        cmt.competition_registration,
+       cmt.out,
+       cmt.failed,
+       cmt.failed_reason,
        cr.club                                                                 as club_id,
        c.name                                                                  as club_name,
        cr.name                                                                 as registration_name,
@@ -702,10 +705,11 @@ select cmt.id,
        (cd.competition_registration is not null)                               as deregistered,
        cd.reason                                                               as deregistration_reason
 from competition_match_team cmt
+         join competition_setup_match csm on cmt.competition_match = csm.id
          left join competition_registration cr on cr.id = cmt.competition_registration
          left join club c on c.id = cr.club
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
-         left join competition_deregistration cd on cr.id = cd.competition_registration
+         left join competition_deregistration cd on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
          cr.name, cr.team_number, cd.competition_registration, cd.reason
 ;
@@ -804,7 +808,8 @@ select cmt.competition_match,
        cr.name                                                                          as team_name,
        c.id                                                                             as club_id,
        c.name                                                                           as club_name,
-       rc                                                                               as rating_Category,
+       rc as rating_Category,
+       exists(select 1 from competition_deregistration where competition_registration = cr.id and competition_setup_round = csm.competition_setup_round) as deregistered,
        coalesce(array_agg(distinct rctp) filter (where rctp.team_id is not null), '{}') as participants,
        coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}')          as substitutions
 from competition_match_team cmt
@@ -813,9 +818,9 @@ from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join rating_category rc on cr.rating_category = rc.id
          left join registered_competition_team_participant rctp on cmt.competition_registration = rctp.team_id
-         left join substitution_view sv on cr.id = sv.competition_registration_id and
-                                           csm.competition_setup_round = sv.competition_setup_round_id
-group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id;
+         left join substitution_view sv on cr.id = sv.competition_registration_id and csm.competition_setup_round = sv.competition_setup_round_id
+where cmt.out is not true
+group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id, csm.id;
 
 create view startlist_view as
 select csm.id,

@@ -9,9 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.tailwind.core.KIO
 import java.util.*
 
-fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
-    checkDeregistrationIsLocked: (competitionRegistrationId: UUID) -> Boolean
-) = KIO.ok(
+fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
     CompetitionRoundDto(
         setupRoundId = setupRoundId,
         name = setupRoundName,
@@ -30,8 +28,9 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(
                             startNumber = team.startNumber,
                             place = team.place,
                             deregistered = team.deregistered,
-                            deregistrationLocked = if (team.deregistered) checkDeregistrationIsLocked(team.competitionRegistration) else null,
                             deregistrationReason = if (team.deregistered) team.deregistrationReason else null,
+                            failed = team.failed,
+                            failedReason = team.failedReason,
                         )
                     },
                     weighting = match.second.weighting,
@@ -97,7 +96,10 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                             )
                         },
                         deregistered = team.deregistered!!,
-                        deregistrationReason = team.deregistrationReason
+                        deregistrationReason = team.deregistrationReason,
+                        out = team.out!!,
+                        failed = team.failed!!,
+                        failedReason = team.failedReason,
                     )
                 }
             )

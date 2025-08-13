@@ -36,6 +36,7 @@ data class CompetitionMatchData(
         val teamName: String?,
         val ratingCategory: CompetitionMatchTeamRatingCategory?,
         val participants: List<CompetitionMatchParticipant>,
+        val deregistered: Boolean,
     )
 
     data class CompetitionMatchTeamRatingCategory(
@@ -119,6 +120,7 @@ data class CompetitionMatchData(
                     registeringClubName = clubName!!,
                     actualClubName = actualClubName,
                     teamName = teamName,
+                    deregistered = deregistered == true,
                     participants = actuallyParticipatingParticipants,
                     ratingCategory = ratingCategory?.let {
                         CompetitionMatchTeamRatingCategory(

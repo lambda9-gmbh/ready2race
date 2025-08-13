@@ -304,8 +304,8 @@ object SubstitutionService {
                 .onNullFail { CompetitionSetupError.RoundNotFound }
 
             val participants = setupRoundRecord.matches!!.filterNotNull().flatMap { match ->
-                match.teams!!.filterNotNull().flatMap { team ->
-                    team.participants!!.filterNotNull().map { participant ->
+                match.teams!!.filter { !it!!.deregistered!! && !it.out!! }.flatMap { team ->
+                    team!!.participants!!.filterNotNull().map { participant ->
                         !participant.toParticipantForExecutionDto(
                             clubId = team.clubId!!,
                             clubName = team.clubName!!,

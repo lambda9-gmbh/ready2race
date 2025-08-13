@@ -556,6 +556,8 @@
             "named": "Ergebnis für {{matchName}}",
             "unnamed": "Partie Ergebnis"
           },
+          "failed": "Ausgeschieden",
+          "failedReason": "Grund für Ausscheiden",
           "validation": {
             "duplicates": {
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
@@ -1108,7 +1110,9 @@
             "name": "Name",
             "startNumber": "Startnummer",
             "ratingCategory": "Wertungskategorie",
-            "club": "Verein (zusammengefasst)"
+            "club": "Verein (zusammengefasst)",
+            "deregistered": "Abgemeldet",
+            "deregisteredValue": "Abgemeldet Wert"
           },
           "match": {
             "heading": "Partie",

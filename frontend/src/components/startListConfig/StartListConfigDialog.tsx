@@ -31,6 +31,8 @@ type Form = {
     colTeamStartNumber: string
     colTeamRatingCategory: string
     colTeamClub: string
+    colTeamDeregistered: string
+    valueTeamDeregistered: string
     colMatchName: string
     colMatchStartTime: string
     colRoundName: string
@@ -53,6 +55,8 @@ const defaultValues: Form = {
     colTeamStartNumber: '',
     colTeamRatingCategory: '',
     colTeamClub: '',
+    colTeamDeregistered: '',
+    valueTeamDeregistered: '',
     colMatchName: '',
     colMatchStartTime: '',
     colRoundName: '',
@@ -181,6 +185,14 @@ const StartListConfigDialog = (props: BaseEntityDialogProps<StartListConfigDto>)
                             name={'colTeamClub'}
                             label={t('configuration.export.startlist.col.team.club')}
                         />
+                        <FormInputText
+                            name={'colTeamDeregistered'}
+                            label={t('configuration.export.startlist.col.team.deregistered')}
+                        />
+                        <FormInputText
+                            name={'valueTeamDeregistered'}
+                            label={t('configuration.export.startlist.col.team.deregisteredValue')}
+                        />
                     </Stack>
                 </TabPanel>
                 <TabPanel index={'match'} activeTab={activeTab}>
@@ -241,6 +253,8 @@ const mapFormToRequest = (formData: Form): StartListConfigRequest => ({
     colTeamStartNumber: takeIfNotEmpty(formData.colTeamStartNumber),
     colTeamRatingCategory: takeIfNotEmpty(formData.colTeamRatingCategory),
     colTeamClub: takeIfNotEmpty(formData.colTeamClub),
+    colTeamDeregistered: takeIfNotEmpty(formData.colTeamDeregistered),
+    valueTeamDeregistered: takeIfNotEmpty(formData.valueTeamDeregistered),
     colMatchName: takeIfNotEmpty(formData.colMatchName),
     colMatchStartTime: takeIfNotEmpty(formData.colMatchStartTime),
     colRoundName: takeIfNotEmpty(formData.colRoundName),
@@ -263,6 +277,8 @@ const mapDtoToForm = (dto: StartListConfigDto): Form => ({
     colTeamStartNumber: dto.colTeamStartNumber ?? '',
     colTeamRatingCategory: dto.colTeamRatingCategory ?? '',
     colTeamClub: dto.colTeamClub ?? '',
+    colTeamDeregistered: dto.colTeamDeregistered ?? '',
+    valueTeamDeregistered: dto.valueTeamDeregistered ?? '',
     colMatchName: dto.colMatchName ?? '',
     colMatchStartTime: dto.colMatchStartTime ?? '',
     colRoundName: dto.colRoundName ?? '',

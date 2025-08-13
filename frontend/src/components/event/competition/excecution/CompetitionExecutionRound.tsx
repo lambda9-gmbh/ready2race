@@ -294,7 +294,7 @@ const CompetitionExecutionRound = ({
                     <Typography>{t('event.competition.setup.round.required')}</Typography>
                 )}
                 <Box>
-                    {round.matches.filter(match => match.teams.length === 1).length > 0 && (
+                    {!round.required && round.matches.filter(match => match.teams.length === 1).length > 0 && (
                         <Accordion
                             expanded={props.accordionsExpanded?.[0] ?? false}
                             onChange={handleAccordionExpandedChange(0)}>
@@ -564,14 +564,16 @@ const CompetitionExecutionRound = ({
                                                             (team.name ? ` ${team.name}` : '')}
                                                     </TableCell>
                                                     <TableCell width="30%">
-                                                        {!team.deregistered
-                                                            ? team.place
-                                                            : t(
-                                                                  'event.competition.registration.deregister.deregistered',
-                                                              ) +
-                                                              (team.deregistrationReason
-                                                                  ? ` (${team.deregistrationReason})`
-                                                                  : '')}
+                                                        {team.deregistered
+                                                            ? t(
+                                                                'event.competition.registration.deregister.deregistered',
+                                                                ) +
+                                                                (team.deregistrationReason
+                                                                    ? ` (${team.deregistrationReason})`
+                                                                    : '')
+                                                            : team.failed ? t('event.competition.execution.results.failed') + (team.failedReason ? ` (${team.failedReason})`: '')
+                                                            : team.place
+                                                        }
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

@@ -8576,6 +8576,7 @@ components:
         - clubName
         - startNumber
         - deregistered
+        - failed
       properties:
         registrationId:
           type: string
@@ -8599,7 +8600,10 @@ components:
           type: boolean
         deregistrationReason:
           type: string
-
+        failed:
+          type: boolean
+        failedReason:
+          type: string
 
     UpdateCompetitionMatchRequest:
       type: object
@@ -8692,9 +8696,9 @@ components:
           format: uuid
         place:
           type: integer
-        deregistered:
+        failed:
           type: boolean
-        deregistrationReason:
+        failedReason:
           type: string
 
     CompetitionTeamPlaceDto:
@@ -9043,6 +9047,10 @@ components:
           type: string
         colTeamClub:
           type: string
+        colTeamDeregistered:
+          type: string
+        valueTeamDeregistered:
+          type: string
         colMatchName:
           type: string
         colMatchStartTime:
@@ -9090,6 +9098,10 @@ components:
         colTeamRatingCategory:
           type: string
         colTeamClub:
+          type: string
+        colTeamDeregistered:
+          type: string
+        valueTeamDeregistered:
           type: string
         colMatchName:
           type: string

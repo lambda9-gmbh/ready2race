@@ -556,6 +556,8 @@
             "named": "Results for {{matchName}}",
             "unnamed": "Match results"
           },
+          "failed": "Eliminated",
+          "failedReason": "Reason for elimination",
           "validation": {
             "duplicates": {
               "single": "The place: {{places}} is used several times.",
@@ -1108,7 +1110,9 @@
             "name": "Name",
             "startNumber": "Start number",
             "ratingCategory": "Rating category",
-            "club": "Club (summarized)"
+            "club": "Club (summarized)",
+            "deregistered": "Deregistered",
+            "deregisteredValue": "Deregistered Value"
           },
           "match": {
             "heading": "Match",
