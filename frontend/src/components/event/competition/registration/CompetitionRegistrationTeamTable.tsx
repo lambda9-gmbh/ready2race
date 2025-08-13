@@ -219,7 +219,7 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
                                                                         spacing={1}
                                                                         key={req.id}>
                                                                         {participant.participantRequirementsChecked.some(
-                                                                            c => c === req.id,
+                                                                            c => c.id === req.id,
                                                                         ) ? (
                                                                             <CheckCircle
                                                                                 color={'success'}

@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.entity
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import java.time.LocalDateTime
@@ -15,7 +16,7 @@ data class ParticipantForCompetitionRegistrationTeam(
     val external: Boolean,
     val externalClubName: String?,
     val qrCodeId: String?,
-    val participantRequirementsChecked: List<UUID>,
+    val participantRequirementsChecked: List<CheckedParticipantRequirement>,
     val currentStatus: ParticipantScanType?,
     val lastScanAt: LocalDateTime?,
     val lastScanBy: AppUserNameDto?,

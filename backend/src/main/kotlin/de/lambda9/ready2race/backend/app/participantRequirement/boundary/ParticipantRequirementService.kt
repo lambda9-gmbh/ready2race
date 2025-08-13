@@ -130,19 +130,20 @@ object ParticipantRequirementService {
         !ParticipantHasRequirementForEventRepo.deleteWhereParticipantNotInList(
             eventId,
             dto.requirementId,
-            dto.approvedParticipants
+            dto.approvedParticipants.map { it.id }
         ).orDie()
 
         val alreadyApproved =
             !ParticipantHasRequirementForEventRepo.getApprovedParticipantIds(eventId, dto.requirementId)
                 .map { it.toSet() }.orDie()
 
-        !dto.approvedParticipants.filterNot { it in alreadyApproved }.traverse {
+        !dto.approvedParticipants.filterNot { it.id in alreadyApproved }.traverse {
             ParticipantHasRequirementForEventRepo.create(
                 ParticipantHasRequirementForEventRecord(
                     event = eventId,
-                    participant = it,
+                    participant = it.id,
                     participantRequirement = dto.requirementId,
+                    note = it.note,
                     createdBy = userId,
                     createdAt = LocalDateTime.now(),
                 )
@@ -158,6 +159,8 @@ object ParticipantRequirementService {
         config: ParticipantRequirementCheckForEventConfigDto,
         userId: UUID
     ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+
+        // TODO: Add optional checked note
 
         // Load namedParticipantId from database if this is a named participant requirement
         val namedParticipantId =

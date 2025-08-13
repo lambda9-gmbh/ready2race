@@ -35,7 +35,7 @@ const ParticipantRequirementApproveManuallyForEventDialog = (
             path: {eventId},
             body: {
                 requirementId: formData.requirementId,
-                approvedParticipants: formData.approvedParticipants.map(p => p.id),
+                approvedParticipants: formData.approvedParticipants.map(p => ({id: p.id})),
                 namedParticipantId: formData.namedParticipantId,
             },
         })

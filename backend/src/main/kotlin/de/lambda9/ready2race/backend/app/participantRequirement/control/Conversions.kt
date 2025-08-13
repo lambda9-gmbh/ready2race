@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.participantRequirement.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
+import de.lambda9.ready2race.backend.database.generated.tables.records.CheckedParticipantRequirementRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRequirementRecord
@@ -75,3 +76,10 @@ fun ParticipantRequirementNamedParticipantRecord.toNamedParticipantRequirementDt
         name = name!!,
         qrCodeRequired = qrCodeRequired ?: false,
     )
+
+fun CheckedParticipantRequirementRecord.toDto(): App<Nothing, CheckedParticipantRequirement> = KIO.ok(
+    CheckedParticipantRequirement(
+        id = id!!,
+        note = note,
+    )
+)
