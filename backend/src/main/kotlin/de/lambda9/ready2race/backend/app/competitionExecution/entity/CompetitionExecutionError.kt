@@ -29,6 +29,7 @@ sealed interface CompetitionExecutionError : ServiceError {
         data class ColumnUnknown(val expected: String) : ResultUploadError
         data class CellBlank(val row: Int, val column: String): ResultUploadError
         data class WrongCellType(val row: Int, val column: String, val actual: String, val expected: String) : ResultUploadError
+        data class UnparsableString(val row: Int, val column: String, val value: String) : ResultUploadError
 
         data class WrongTeamCount(val actual: Int, val expected: Int) : ResultUploadError
 
@@ -143,6 +144,12 @@ sealed interface CompetitionExecutionError : ServiceError {
             message = "Wrong cell type in row $row and column '$column'; actual: $actual, expected: $expected.",
             errorCode = ErrorCode.SPREADSHEET_WRONG_CELL_TYPE,
             details = mapOf("row" to row, "column" to column, "expected" to expected, "actual" to actual)
+        )
+        is ResultUploadError.UnparsableString -> ApiError(
+            status = HttpStatusCode.UnprocessableEntity,
+            message = "Cannot parse '$value' in row $row and column '$column'.",
+            errorCode = ErrorCode.SPREADSHEET_UNPARSABLE_STRING,
+            details = mapOf("row" to row, "column" to column, "value" to value)
         )
 
         is ResultUploadError.WrongTeamCount -> ApiError(

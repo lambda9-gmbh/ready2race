@@ -307,6 +307,18 @@ const CompetitionExecution = () => {
                             ),
                         )
                         break
+                    case 'SPREADSHEET_UNPARSABLE_STRING':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.UNPARSABLE_STRING',
+                                details as {
+                                    row: number
+                                    column: string
+                                    value: string
+                                },
+                            ),
+                        )
+                        break
                     case 'WRONG_TEAM_COUNT':
                         feedback.error(
                             t(

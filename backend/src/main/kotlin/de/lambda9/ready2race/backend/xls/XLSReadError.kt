@@ -14,6 +14,7 @@ sealed interface XLSReadError {
         sealed interface ParseError : CellError {
             data class CellBlank(val row: Int, val col: String) : ParseError
             data class WrongCellType(val row: Int, val col: String, val actual: CellType, val expected: CellType) : ParseError
+            data class UnparsableStringValue(val row: Int, val col: String, val value: String) : ParseError
         }
 
     }

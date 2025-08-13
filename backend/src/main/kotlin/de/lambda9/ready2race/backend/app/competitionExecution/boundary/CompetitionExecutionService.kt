@@ -496,6 +496,7 @@ object CompetitionExecutionService {
                 is XLSReadError.CellError.ColumnUnknown -> CompetitionExecutionError.ResultUploadError.ColumnUnknown(it.expected)
                 is XLSReadError.CellError.ParseError.CellBlank -> CompetitionExecutionError.ResultUploadError.CellBlank(it.row, it.col)
                 is XLSReadError.CellError.ParseError.WrongCellType -> CompetitionExecutionError.ResultUploadError.WrongCellType(it.row, it. col, it.actual.name, it.expected.name)
+                is XLSReadError.CellError.ParseError.UnparsableStringValue -> CompetitionExecutionError.ResultUploadError.UnparsableString(it.row, it.col, it.value)
                 XLSReadError.FileError -> CompetitionExecutionError.ResultUploadError.FileError
                 XLSReadError.NoHeaders -> CompetitionExecutionError.ResultUploadError.NoHeaders
             }
