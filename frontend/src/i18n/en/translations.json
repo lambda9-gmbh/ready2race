@@ -14,7 +14,10 @@
     "all": "All",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
-      "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}."
+      "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}.",
+      "upload": {
+        "unsupportedType": "This file type is not supported."
+      }
     },
     "organisation": "Organisation",
     "form": {

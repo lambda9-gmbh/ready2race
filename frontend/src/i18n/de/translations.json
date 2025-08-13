@@ -14,7 +14,10 @@
     "all": "Alle",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
-      "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut."
+      "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
+      "upload": {
+        "unsupportedType": "Dieser Dateityp wird nicht unterstützt."
+      }
     },
     "organisation": "Organisation",
     "form": {

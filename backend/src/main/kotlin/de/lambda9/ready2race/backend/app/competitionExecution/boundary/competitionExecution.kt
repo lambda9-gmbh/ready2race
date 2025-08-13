@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.ready2race.backend.xls.checkValidXls
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.PartData
 import io.ktor.server.request.receiveMultipart
@@ -136,6 +137,8 @@ fun Route.competitionExecution() {
 
                     val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
                     val req = !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+
+                    !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
 
                     CompetitionExecutionService.updateMatchResultByFile(
                         competitionId,

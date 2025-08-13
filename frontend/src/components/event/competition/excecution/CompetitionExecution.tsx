@@ -266,6 +266,9 @@ const CompetitionExecution = () => {
             if (error.status.value === 400) {
                 if (error.errorCode === 'FILE_ERROR') {
                     feedback.error(t('event.competition.execution.results.error.FILE_ERROR'))
+                } else if (error.message === 'Unsupported file type') {
+                    // TODO: replace with error code!
+                    feedback.error(t('common.error.upload.unsupportedType'))
                 } else {
                     feedback.error(t('common.error.unexpected'))
                 }
