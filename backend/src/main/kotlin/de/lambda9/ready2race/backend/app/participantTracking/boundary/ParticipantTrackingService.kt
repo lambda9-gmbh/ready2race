@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.control.participantDto
@@ -13,6 +14,7 @@ import de.lambda9.ready2race.backend.app.participantTracking.control.*
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo.insert
 import de.lambda9.ready2race.backend.app.participantTracking.entity.*
+import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -39,7 +41,7 @@ object ParticipantTrackingService {
         val currentStatus = !ParticipantTrackingRepo
             .get(participantId, eventId)
             .orDie()
-            .map{ list ->
+            .map { list ->
                 list.maxByOrNull { it.scannedAt!! }?.scanType
             }
         !KIO.failOn(currentStatus == ParticipantScanType.ENTRY.name && checkIn) { ParticipantTrackingError.TeamAlreadyCheckedIn }
@@ -77,7 +79,6 @@ object ParticipantTrackingService {
     }
 
 
-
     fun getByParticipantQrCode(
         qrCode: String,
         eventId: UUID
@@ -94,10 +95,27 @@ object ParticipantTrackingService {
             team.competitionRegistrationId!! to team.substitutions!!.filterNotNull()
         }
 
+        val participantsForExecution = competitionRegistrationTeams.map { team ->
+            team.participants!!.filterNotNull().map {
+                !it.toParticipantForExecutionDto(
+                    clubId = team.clubId!!,
+                    clubName = team.clubName!!,
+                    registrationName = team.teamName
+                )
+            }
+        }.flatten()
+
+        val currentlyParticipatingParticipants = !SubstitutionService.getParticipantsCurrentlyParticipatingHelper(
+            registrationParticipants = participantsForExecution,
+            substitutions = competitionRegistrationTeams.flatMap { it.substitutions!!.filterNotNull() }
+        )
+
         val teamsWithParticipant =
             !competitionRegistrationTeams
-                .traverse { it.toTeamForScanOverviewDtos() }
-                .map { teams -> teams.filter { team -> team.participants.any { it.participantId == qrCodeRecord.participant!! } } }
+                .filter { team ->
+                    team.participants!!.any { it!!.participantId == qrCodeRecord.participant!! }
+                        || (currentlyParticipatingParticipants.find { it.id == qrCodeRecord.participant!! }?.competitionRegistrationId == team.competitionRegistrationId)
+                }.traverse { it.toTeamForScanOverviewDtos() }
 
         val teamsWithSubstitutions = teamsWithParticipant.map { team ->
             val participants = !team.toParticipantForExecutionDtos()

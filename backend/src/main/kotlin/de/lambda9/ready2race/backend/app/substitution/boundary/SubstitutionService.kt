@@ -135,7 +135,7 @@ object SubstitutionService {
             .map { ApiResponse.ListDto(it) }
     }
 
-    private fun getParticipantsCurrentlyParticipatingHelper(
+    fun getParticipantsCurrentlyParticipatingHelper(
         registrationParticipants: List<ParticipantForExecutionDto>,
         substitutions: List<SubstitutionViewRecord>,
     ): App<CompetitionSetupError, List<ParticipantForExecutionDto>> = KIO.comprehension {

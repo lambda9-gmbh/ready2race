@@ -23,7 +23,7 @@ const QrScannerPage = () => {
         if (qr.received) {
             const response = qr.response
 
-            if (response === null) {
+            if (response === null || response === undefined) {
                 navigate({to: '/app/$eventId/assign', params: {eventId: eventId}})
             } else if (response.type == 'Participant') {
                 navigate({to: '/app/$eventId/participant', params: {eventId: eventId}})
@@ -53,7 +53,6 @@ const QrScannerPage = () => {
                         entity: t('task.task'),
                     }),
                 )
-                console.error(error)
             }
         }
     }

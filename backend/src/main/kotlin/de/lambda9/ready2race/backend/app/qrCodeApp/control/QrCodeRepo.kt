@@ -72,7 +72,7 @@ object QrCodeRepo {
 
             appUserData?.let {
                 it.into(APP_USER_WITH_ROLES).toQrCodeAppuserWithClub(
-                    qrCodeId = qrCode.qrCodeId!!,
+                    qrCodeId = qrCode.qrCodeId,
                     clubName = it[CLUB.NAME]
                 )
             }
@@ -100,7 +100,7 @@ object QrCodeRepo {
 
             participantData?.let {
                 it.into(PARTICIPANT_VIEW).toQrCodeDtoWithDetails(
-                    qrCodeId = qrCode.qrCodeId!!,
+                    qrCodeId = qrCode.qrCodeId,
                     clubName = it[CLUB.NAME],
                     competitions = competitions
                 )

@@ -16,12 +16,10 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionReg
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
+import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
-import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantHasRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
-import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
-import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -102,23 +100,18 @@ object CompetitionRegistrationService {
                         if (knownParticipant == null) {
 
                             // Manually get all the needed data for the participant since he is possibly not in participants_for_event
-                            val qrCode = !QrCodeRepo.getQrCodeByParticipant(p.id, eventId).orDie().map{ it?.qrCodeId }
-
-                            val requirementsChecked = !ParticipantHasRequirementForEventRepo.getApprovedRequirements(eventId, p.id).orDie()
-
-                            val unknownParticipantTracking = !ParticipantTrackingRepo.get(p.id, eventId).orDie()
-                            val lastScan = unknownParticipantTracking.maxByOrNull { it.scannedAt!! }
+                            val missingData = !ParticipantService.getMissingDataForParticipant(p.id, eventId)
 
                             p.namedParticipantId to !p.toParticipantForCompetitionRegistrationTeam(
-                                qrCodeId = qrCode,
-                                participantRequirementsChecked = requirementsChecked.map { it.participantRequirement },
-                                currentStatus = lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
-                                lastScanAt = lastScan?.scannedAt,
-                                lastScanBy = if (lastScan?.scannedById != null) {
+                                qrCodeId = missingData.qrCode,
+                                participantRequirementsChecked = missingData.requirementsChecked.map { it.participantRequirement },
+                                currentStatus = missingData.lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
+                                lastScanAt = missingData.lastScan?.scannedAt,
+                                lastScanBy = if (missingData.lastScan?.scannedById != null) {
                                     AppUserNameDto(
-                                        id = lastScan.scannedById!!,
-                                        firstname = lastScan.scannedByFirstname!!,
-                                        lastname = lastScan.scannedByLastname!!
+                                        id = missingData.lastScan.scannedById!!,
+                                        firstname = missingData.lastScan.scannedByFirstname!!,
+                                        lastname = missingData.lastScan.scannedByLastname!!
                                     )
                                 } else null
 

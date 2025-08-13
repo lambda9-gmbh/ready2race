@@ -709,7 +709,8 @@ from competition_match_team cmt
          left join competition_registration cr on cr.id = cmt.competition_registration
          left join club c on c.id = cr.club
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
-         left join competition_deregistration cd on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
+         left join competition_deregistration cd
+                   on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
          cr.name, cr.team_number, cd.competition_registration, cd.reason
 ;
@@ -729,20 +730,22 @@ create view substitution_view as
 select s.id,
        s.reason,
        s.order_for_round,
-       np.id    as named_participant_id,
-       np.name  as named_participant_name,
-       csr.id   as competition_setup_round_id,
-       csr.name as competition_setup_round_name,
-       cr.id    as competition_registration_id,
-       cr.name  as competition_registration_name,
-       c.id     as club_id,
-       c.name   as club_name,
-       p_out    as participant_out,
-       p_in     as participant_in
+       np.id      as named_participant_id,
+       np.name    as named_participant_name,
+       csr.id     as competition_setup_round_id,
+       csr.name   as competition_setup_round_name,
+       cr.id      as competition_registration_id,
+       cr.name    as competition_registration_name,
+       c.id       as club_id,
+       c.name     as club_name,
+       p_out      as participant_out,
+       p_in       as participant_in,
+       comp.event as event_id
 from substitution s
          left join named_participant np on s.named_participant = np.id
          left join competition_setup_round csr on s.competition_setup_round = csr.id
          left join competition_registration cr on cr.id = s.competition_registration
+         left join competition comp on cr.competition = comp.id
          left join club c on c.id = cr.club
          join participant p_out on s.participant_out = p_out.id
          join participant p_in on s.participant_in = p_in.id
@@ -808,8 +811,11 @@ select cmt.competition_match,
        cr.name                                                                          as team_name,
        c.id                                                                             as club_id,
        c.name                                                                           as club_name,
-       rc as rating_Category,
-       exists(select 1 from competition_deregistration where competition_registration = cr.id and competition_setup_round = csm.competition_setup_round) as deregistered,
+       rc                                                                               as rating_Category,
+       exists(select 1
+              from competition_deregistration
+              where competition_registration = cr.id
+                and competition_setup_round = csm.competition_setup_round)              as deregistered,
        coalesce(array_agg(distinct rctp) filter (where rctp.team_id is not null), '{}') as participants,
        coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}')          as substitutions
 from competition_match_team cmt
@@ -818,7 +824,8 @@ from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join rating_category rc on cr.rating_category = rc.id
          left join registered_competition_team_participant rctp on cmt.competition_registration = rctp.team_id
-         left join substitution_view sv on cr.id = sv.competition_registration_id and csm.competition_setup_round = sv.competition_setup_round_id
+         left join substitution_view sv on cr.id = sv.competition_registration_id and
+                                           csm.competition_setup_round = sv.competition_setup_round_id
 where cmt.out is not true
 group by cmt.competition_match, cmt.start_number, cr.id, cr.name, c.id, c.name, rc.id, csm.id;
 
@@ -881,19 +888,19 @@ from participant_tracking pt
          left join app_user au on pt.scanned_by = au.id;
 
 create view competition_registration_team_participant as
-select crnp.competition_registration                                             as competition_registration_id,
-       p.id                                                                      as participant_id,
+select crnp.competition_registration                                                as competition_registration_id,
+       p.id                                                                         as participant_id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
        p.external,
        p.external_club_name,
-       np.id                                                                     as role_id,
-       np.name                                                                   as role,
-       qc.qr_code_id                                                             as qr_code,
+       np.id                                                                        as role_id,
+       np.name                                                                      as role,
+       qc.qr_code_id                                                                as qr_code,
        coalesce(array_agg(distinct pr.id) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
-       coalesce(array_agg(distinct pt) filter ( where pt.id is not null ), '{}')          as trackings
+       coalesce(array_agg(distinct pt) filter ( where pt.id is not null ), '{}')    as trackings
 from competition_registration_named_participant crnp
          left join named_participant np on crnp.named_participant = np.id
          left join participant p on crnp.participant = p.id
@@ -908,17 +915,19 @@ group by crnp.competition_registration, p.id, p.firstname, p.lastname, p.year, p
 ;
 
 create view competition_registration_team as
-select cr.id                                                                                         as competition_registration_id,
-       cr.competition                                                                                as competition_id,
-       cp.identifier                                                                                 as competition_identifier,
-       cp.name                                                                                       as competition_name,
-       co.event                                                                                      as event_id,
-       cl.id                                                                                         as club_id,
-       cl.name                                                                                       as club_name,
-       cr.name                                                                                       as team_name,
-       coalesce(array_agg(distinct crtp) filter ( where crtp.competition_registration_id is not null ), '{}') as participants,
-       coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}')                       as substitutions,
-       cd                                                                                            as deregistration
+select cr.id          as competition_registration_id,
+       cr.competition as competition_id,
+       cp.identifier  as competition_identifier,
+       cp.name        as competition_name,
+       co.event       as event_id,
+       cl.id          as club_id,
+       cl.name        as club_name,
+       cr.name        as team_name,
+       coalesce(array_agg(distinct crtp) filter ( where crtp.competition_registration_id is not null ),
+                '{}') as participants,
+       coalesce(array_agg(distinct sv) filter (where sv.id is not null),
+                '{}') as substitutions,
+       cd             as deregistration
 from competition_registration cr
          left join competition_registration_team_participant crtp on cr.id = crtp.competition_registration_id
          left join club cl on cr.club = cl.id
@@ -930,32 +939,34 @@ group by cr.id, cr.competition, cp.identifier, cp.name, co.event, cl.id, cl.name
 
 
 create view participant_qr_assignment_view as
-SELECT p.id          AS participant_id,
+select p.id                          as participant_id,
        p.firstname,
        p.lastname,
-       qc.qr_code_id AS qr_code_value,
-       np.name       AS named_participant,
-       crnp.competition_registration,
-       cp.name       AS competition_name,
-       er.event      AS event_id,
-       er.club       AS club_id
-FROM participant p
-         INNER JOIN competition_registration_named_participant crnp
-                    ON p.id = crnp.participant
-         INNER JOIN named_participant np
-                    ON crnp.named_participant = np.id
-         INNER JOIN competition_registration cr
-                    ON crnp.competition_registration = cr.id
-         INNER JOIN competition c
-                    ON cr.competition = c.id
-         INNER JOIN competition_properties cp
-                    ON c.id = cp.competition
-         INNER JOIN event_registration er
-                    ON cr.event_registration = er.id
-         LEFT JOIN qr_codes qc
-                   ON p.id = qc.participant
-                       AND qc.event = er.event
-ORDER BY crnp.competition_registration, p.lastname, p.firstname;
+       qc.qr_code_id                 as qr_code_value,
+       np.id                       as named_participant_id,
+       np.name                       as named_participant_name,
+       crnp.competition_registration as competition_registration_id,
+       cr.name                       as competition_registration_name,
+       cp.name                       as competition_name,
+       er.event                      as event_id,
+       er.club                       as club_id
+from participant p
+         inner join competition_registration_named_participant crnp
+                    on p.id = crnp.participant
+         inner join named_participant np
+                    on crnp.named_participant = np.id
+         inner join competition_registration cr
+                    on crnp.competition_registration = cr.id
+         inner join competition c
+                    on cr.competition = c.id
+         inner join competition_properties cp
+                    on c.id = cp.competition
+         inner join event_registration er
+                    on cr.event_registration = er.id
+         left join qr_codes qc
+                   on p.id = qc.participant
+                       and qc.event = er.event
+order by crnp.competition_registration, p.lastname, p.firstname;
 
 create view caterer_transaction_view as
 SELECT ct.id,

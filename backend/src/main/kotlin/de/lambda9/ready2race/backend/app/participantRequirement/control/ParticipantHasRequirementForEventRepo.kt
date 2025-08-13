@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.participantRequirement.control
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantHasRequirementForEventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_PARTICIPANT_REQUIREMENT_VIEW
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select

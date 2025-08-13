@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeUpdateDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 
 object QrCodeAppService {
@@ -17,24 +18,24 @@ object QrCodeAppService {
     fun loadQrCode(
         qrCodeId: String
     ): App<ServiceError, ApiResponse> = KIO.comprehension {
-        val user = !QrCodeRepo.getUserOrParticipantByQrCodeIdWithDetails(qrCodeId).orDie()
+        val userOrParticipant = !QrCodeRepo.getUserOrParticipantByQrCodeIdWithDetails(qrCodeId).orDie()
+            //.onNullFail { QrCodeError.QrCodeNotFound }
 
         when {
-            user != null -> KIO.ok(ApiResponse.Dto(user))
+            userOrParticipant != null -> KIO.ok(ApiResponse.Dto(userOrParticipant))
             else -> KIO.ok(ApiResponse.NoData)
         }
     }
 
     private fun isQrCodeInUse(qrCodeId: String): App<ServiceError, Unit> = KIO.comprehension {
-        val maybeUser = !QrCodeRepo.getUserOrParticipantByQrCodeId(qrCodeId).orDie()
-        !KIO.failOn(maybeUser != null) { QrCodeError.QrCodeAlreadyInUse }
+        val userOrParticipant = !QrCodeRepo.getUserOrParticipantByQrCodeId(qrCodeId).orDie()
+        !KIO.failOn(userOrParticipant != null) { QrCodeError.QrCodeAlreadyInUse }
         KIO.unit
     }
 
     fun updateQrCode(
         update: QrCodeUpdateDto,
         user: AppUserWithPrivilegesRecord,
-        scope: Privilege.Scope
     ): App<ServiceError, ApiResponse> = KIO.comprehension {
         val record = update.toRecord(user.id!!)
         !isQrCodeInUse(record.qrCodeId)

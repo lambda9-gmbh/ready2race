@@ -3,13 +3,21 @@ package de.lambda9.ready2race.backend.app.participant.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.control.*
 import de.lambda9.ready2race.backend.app.participant.entity.*
+import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantHasRequirementForEventRepo
+import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
+import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
+import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
+import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
+import de.lambda9.ready2race.backend.calls.pagination.Direction
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -19,6 +27,13 @@ import java.time.LocalDateTime
 import java.util.*
 
 object ParticipantService {
+
+    private fun searchFields(): List<(ParticipantForEventDto) -> String?> =
+        listOf(
+            { it.firstname },
+            { it.lastname },
+            { it.externalClubName }
+        )
 
     fun addParticipant(
         request: ParticipantUpsertDto,
@@ -55,13 +70,96 @@ object ParticipantService {
         user: AppUserWithPrivilegesRecord,
         scope: Privilege.Scope
     ): App<Nothing, ApiResponse.Page<ParticipantForEventDto, ParticipantForEventSort>> = KIO.comprehension {
-        val total = !ParticipantForEventRepo.count(params.search, eventId, user, scope).orDie()
-        val page = !ParticipantForEventRepo.page(params, eventId, user, scope).orDie()
+
+        val allRegisteredForEventScoped = !ParticipantForEventRepo.getByEvent(eventId, user, scope).orDie()
+
+
+        // Get Participants that were subbed in
+        val substitutionsForEventScoped = !SubstitutionRepo.getByEvent(eventId, user.club, scope).orDie()
+
+        // If a participant was subbed into a role and subbed out again in a later round they will still be displayed with that role
+        val participantInSubs = substitutionsForEventScoped
+            .filter { sub ->
+                substitutionsForEventScoped.none { eventSub -> // Checks that this subIn was the last action of that participant or that the last action was a swap (which would mean that the participant is still in)
+                    eventSub.competitionRegistrationId == sub.competitionRegistrationId
+                        && eventSub.orderForRound!! > sub.orderForRound!!
+                        && (eventSub.participantIn!!.id == sub.participantIn!!.id
+                        || (eventSub.participantOut!!.id == sub.participantIn!!.id
+                        && SubstitutionService.getSwapSubstitution(
+                        substitution = eventSub,
+                        substitutions = substitutionsForEventScoped.filter { it.competitionRegistrationId == eventSub.competitionRegistrationId }
+                    ) == null))
+                }
+            }
+
+        val (unknownParticipantSubs, knownParticipantSubs) = participantInSubs
+            .partition { sub -> allRegisteredForEventScoped.none { it.id == sub.participantIn!!.id } }
+
+        // This list contains participants that are not in the page and is unique by participantId and namedParticipantId - So a participant can be in this list multiple times with different roles
+        val unknownSubInsWithUniqueRole = mutableListOf<SubstitutionViewRecord>()
+        unknownParticipantSubs
+            .forEach { sub ->
+                if (unknownSubInsWithUniqueRole.none { it.participantIn!!.id == sub.participantIn!!.id && it.namedParticipantId == sub.namedParticipantId }) {
+                    unknownSubInsWithUniqueRole.add(sub)
+                }
+            }
+        val unknownParticipantsForEvent = unknownSubInsWithUniqueRole
+            .groupBy { it.participantIn!!.id }
+            .map { (participantId, subs) ->
+                val missingData = !getMissingDataForParticipant(participantId, eventId)
+
+                !subs.first().participantInToParticipantForEventDto(
+                    namedParticipantIds = subs.map { it.namedParticipantId!! },
+                    participantRequirementsChecked = missingData.requirementsChecked,
+                    qrCode = missingData.qrCode,
+                )
+            }
+
+
+        val allRegisteredWithAddedRoles = !allRegisteredForEventScoped.traverse { p ->
+            val newRoles =
+                knownParticipantSubs.filter { sub -> sub.participantIn!!.id == p.id && p.namedParticipantIds!!.none { it == sub.namedParticipantId } } // New roles that this participant got through substitutions
+            p.toDto(
+                overwriteNamedParticipantIds = if (newRoles.isEmpty()) {
+                    null
+                } else {
+                    p.namedParticipantIds!!.filterNotNull() + newRoles.map { it.namedParticipantId!! }
+                }
+            )
+        }
+
+        val allParticipants = allRegisteredWithAddedRoles + unknownParticipantsForEvent
+
+
+        // Fake pagination to include subbedInParticipants that are not in the participant_for_event table
+
+        // Search
+        val searchedPs = params.search?.takeIf { it.isNotBlank() }?.let { searchText ->
+            val search = searchText.lowercase()
+            allParticipants.filter { dto ->
+                searchFields().any { getter ->
+                    getter(dto)?.lowercase()?.contains(search) == true
+                }
+            }
+        } ?: allParticipants
+
+        // Sort
+        val sortedPs = params.sort?.let { orders ->
+            val comparator = orders
+                .map { if (it.direction == Direction.ASC) it.field.comparator() else it.field.comparator().reversed() }
+                .reduce { acc, comparator -> acc.thenComparing(comparator) }
+
+            searchedPs.sortedWith(comparator)
+        } ?: searchedPs
+
+        // Page
+        val offsetPs = params.offset?.let { sortedPs.drop(it) } ?: sortedPs
+        val limitedPs = params.limit?.let { offsetPs.take(it) } ?: offsetPs
 
         KIO.ok(
             ApiResponse.Page(
-                data = page,
-                pagination = params.toPagination(total)
+                data = limitedPs,
+                pagination = params.toPagination(allParticipants.size)
             )
         )
     }
@@ -122,4 +220,22 @@ object ParticipantService {
         }
     }
 
+    fun getMissingDataForParticipant(participantId: UUID, eventId: UUID): App<Nothing, MissingParticipantData> =
+        KIO.comprehension {
+            val qrCode = !QrCodeRepo.getQrCodeByParticipant(participantId, eventId).orDie().map { it?.qrCodeId }
+
+            val requirementsChecked =
+                !ParticipantHasRequirementForEventRepo.getApprovedRequirements(eventId, participantId).orDie()
+
+            val unknownParticipantTracking = !ParticipantTrackingRepo.get(participantId, eventId).orDie()
+            val lastScan = unknownParticipantTracking.maxByOrNull { it.scannedAt!! }
+
+            KIO.ok(
+                MissingParticipantData(
+                    qrCode = qrCode,
+                    requirementsChecked = requirementsChecked,
+                    lastScan = lastScan,
+                )
+            )
+        }
 }

@@ -34,19 +34,19 @@ fun Route.qrCodeApp() {
 
         put("/appuser") {
             call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_QR_MANAGEMENT)
+                val user = !authenticate(Privilege.UpdateAppQrManagementGlobal)
 
                 val payload = !receiveKIO(QrCodeUpdateDto.QrCodeAppuserUpdate.example)
-                QrCodeAppService.updateQrCode(payload, user, scope)
+                QrCodeAppService.updateQrCode(payload, user)
             }
         }
 
         put("/participant") {
             call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_QR_MANAGEMENT)
+                val user = !authenticate(Privilege.UpdateAppQrManagementGlobal)
 
                 val payload = !receiveKIO(QrCodeUpdateDto.QrCodeParticipantUpdate.example)
-                QrCodeAppService.updateQrCode(payload, user, scope)
+                QrCodeAppService.updateQrCode(payload, user)
             }
         }
 

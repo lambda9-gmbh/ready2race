@@ -5,9 +5,8 @@ import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
-import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantForEventRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
+import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
@@ -46,5 +45,55 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
         usedInRegistration = usedInRegistration!!,
         createdAt = createdAt!!,
         updatedAt = updatedAt!!,
+    )
+)
+
+fun SubstitutionViewRecord.participantInToParticipantForEventDto(
+    namedParticipantIds: List<UUID>,
+    participantRequirementsChecked: List<ParticipantHasRequirementForEventRecord>,
+    qrCode: String?,
+): App<Nothing, ParticipantForEventDto> = KIO.ok(
+    ParticipantForEventDto(
+        id = participantIn!!.id,
+        clubId = clubId!!,
+        clubName = clubName!!,
+        firstname = participantIn!!.firstname,
+        lastname = participantIn!!.lastname,
+        year = participantIn!!.year,
+        gender = participantIn!!.gender,
+        external = participantIn!!.external,
+        externalClubName = participantIn!!.externalClubName,
+        participantRequirementsChecked = participantRequirementsChecked.map {
+            ParticipantRequirementReducedDto(
+                id = it.participantRequirement,
+                name = "NO NAME" // todo: will be refactored anyway
+            )
+        },
+        namedParticipantIds = namedParticipantIds,
+        qrCodeId = qrCode,
+    )
+)
+
+fun ParticipantForEventRecord.toDto(
+    overwriteNamedParticipantIds: List<UUID>?,
+): App<Nothing, ParticipantForEventDto> = KIO.ok(
+    ParticipantForEventDto(
+        id = id!!,
+        clubId = clubId!!,
+        clubName = clubName!!,
+        firstname = firstname!!,
+        lastname = lastname!!,
+        year = year!!,
+        gender = gender!!,
+        external = external,
+        externalClubName = externalClubName,
+        participantRequirementsChecked = participantRequirementsChecked!!.map{ reqChecked ->
+            ParticipantRequirementReducedDto(
+                id = reqChecked!!.id,
+                name =  reqChecked.name,
+            )
+        },
+        namedParticipantIds = overwriteNamedParticipantIds ?: namedParticipantIds!!.filterNotNull(),
+        qrCodeId = qrCodeId
     )
 )
