@@ -4,6 +4,7 @@ drop view if exists caterer_transaction_view;
 drop view if exists participant_qr_assignment_view;
 drop view if exists competition_registration_team;
 drop view if exists competition_registration_team_participant;
+drop view if exists participant_tracking_for_team_participant;
 drop view if exists participant_tracking_view;
 drop view if exists startlist_view;
 drop view if exists startlist_team;
@@ -209,7 +210,8 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          left join competition_registration cr on c.id = cr.competition
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
+         cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees
 ;
 
@@ -224,14 +226,14 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
-       nps.total_count                        as total_count,
-       cc.id                                  as category_id,
-       cc.name                                as category_name,
-       cc.description                         as category_description,
-       coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees,
-       count(distinct cr.id)                  as registrations_count,
-       cb.id                                  as club
+       nps.total_count                                                           as total_count,
+       cc.id                                                                     as category_id,
+       cc.name                                                                   as category_name,
+       cc.description                                                            as category_description,
+       coalesce(nps.named_participants, '{}')                                    as named_participants,
+       coalesce(fs.fees, '{}')                                                   as fees,
+       count(distinct cr.id)                                                     as registrations_count,
+       cb.id                                                                     as club
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -253,7 +255,8 @@ from competition c
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          cross join club cb
          left join competition_registration cr on c.id = cr.competition and cb.id = cr.club
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
+         cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees, cb.id;
 
 create view competition_public_view as
@@ -267,12 +270,12 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
-       nps.total_count                        as total_count,
-       cc.id                                  as category_id,
-       cc.name                                as category_name,
-       cc.description                         as category_description,
-       coalesce(nps.named_participants, '{}') as named_participants,
-       coalesce(fs.fees, '{}')                as fees
+       nps.total_count                                                           as total_count,
+       cc.id                                                                     as category_id,
+       cc.name                                                                   as category_name,
+       cc.description                                                            as category_description,
+       coalesce(nps.named_participants, '{}')                                    as named_participants,
+       coalesce(fs.fees, '{}')                                                   as fees
 from competition c
          join event e on c.event = e.id
          left join competition_properties cp on c.id = cp.competition
@@ -294,7 +297,8 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
 where e.published is true
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id, cc.name,
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
+         cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees;
 
 create view competition_template_view as
@@ -451,9 +455,9 @@ select e.id,
        e.registration_available_to,
        e.late_registration_available_to,
        e.created_at,
-       count(distinct c.id)  as competition_count,
-       min(ed.date) as event_from,
-       max(ed.date) as event_to
+       count(distinct c.id) as competition_count,
+       min(ed.date)         as event_from,
+       max(ed.date)         as event_to
 from event e
          left join competition c on e.id = c.event
          left join event_day ed on e.id = ed.event
@@ -698,7 +702,7 @@ select cmt.id,
        cr.name                                                                 as registration_name,
        cr.team_number,
        coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants,
-       (cd.competition_registration is not null)                                     as deregistered,
+       (cd.competition_registration is not null)                               as deregistered,
        cd.reason                                                               as deregistration_reason
 from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
@@ -788,11 +792,12 @@ from invoice i
 
 create view event_invoices_info as
 select ifer.event,
-       round(coalesce(sum(ifer.total_amount), 0), 2) as total_amount,
+       round(coalesce(sum(ifer.total_amount), 0), 2)                                           as total_amount,
        round(coalesce(sum(ifer.total_amount) filter ( where ifer.paid_at is not null ), 0), 2) as paid_amount,
-       exists(
-           select 1 from produce_invoice_for_registration pifr join event_registration er on pifr.event_registration = er.id where er.event = ifer.event
-       ) as producing
+       exists(select 1
+              from produce_invoice_for_registration pifr
+                       join event_registration er on pifr.event_registration = er.id
+              where er.event = ifer.event)                                                     as producing
 from invoice_for_event_registration ifer
 group by ifer.event;
 
@@ -822,12 +827,12 @@ select csm.id,
        csm.name,
        csm.execution_order,
        csm.start_time_offset,
-       csr.name as round_name,
+       csr.name                                                                        as round_name,
        cm.start_time,
-       cp.identifier as competition_identifier,
-       cp.name as competition_name,
-       cp.short_name as competition_short_name,
-       cc.name as competition_category,
+       cp.identifier                                                                   as competition_identifier,
+       cp.name                                                                         as competition_name,
+       cp.short_name                                                                   as competition_short_name,
+       cc.name                                                                         as competition_category,
        c.event,
        e.mixed_team_term,
        coalesce(array_agg(st) filter ( where st.competition_match is not null ), '{}') as teams
@@ -843,47 +848,63 @@ group by csm.id, csr.id, cm.competition_setup_match, cp.id, cc.id, c.event, e.id
 
 create view participant_tracking_view as
 select pt.id,
-       pt.event as event_id,
+       pt.event      as event_id,
        pt.scan_type,
        pt.scanned_at,
        pt.scanned_by as scanned_by_id,
-       au.firstname as scanned_by_firstname,
-       au.lastname as scanned_by_lastname,
-       p.id     as participant_id,
+       au.firstname  as scanned_by_firstname,
+       au.lastname   as scanned_by_lastname,
+       p.id          as participant_id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
        p.external,
        p.external_club_name,
-       c.id     as club_id,
-       c.name   as club_name
+       c.id          as club_id,
+       c.name        as club_name
 from participant_tracking pt
          left join participant p on pt.participant = p.id
          left join club c on p.club = c.id
          left join app_user au on pt.scanned_by = au.id;
 
+create view participant_tracking_for_team_participant as
+select pt.id,
+       pt.scan_type,
+       pt.scanned_at,
+       pt.scanned_by  as scanned_by_id,
+       au.firstname   as scanned_by_firstname,
+       au.lastname    as scanned_by_lastname,
+       pt.participant as participant_id,
+       pt.event       as event_id
+from participant_tracking pt
+         left join app_user au on pt.scanned_by = au.id;
 
 create view competition_registration_team_participant as
-select crnp.competition_registration                                       as competition_registration_id,
-       p.id                                                                as participant_id,
+select crnp.competition_registration                                             as competition_registration_id,
+       p.id                                                                      as participant_id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
        p.external,
        p.external_club_name,
-       np.id                                                               as role_id,
-       np.name                                                             as role,
-       coalesce(array_agg(pt) filter ( where pt.event is not null ), '{}') as trackings
+       np.id                                                                     as role_id,
+       np.name                                                                   as role,
+       qc.qr_code_id                                                             as qr_code,
+       coalesce(array_agg(distinct pr.id) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
+       coalesce(array_agg(distinct pt) filter ( where pt.id is not null ), '{}')          as trackings
 from competition_registration_named_participant crnp
          left join named_participant np on crnp.named_participant = np.id
          left join participant p on crnp.participant = p.id
          left join competition_registration cr on crnp.competition_registration = cr.id
          left join competition c on cr.competition = c.id
-         left join participant_tracking pt on p.id = pt.participant and c.event = pt.event
+         left join participant_tracking_for_team_participant pt on p.id = pt.participant_id and c.event = pt.event_id
+         left join qr_codes qc on qc.participant = p.id
+         left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = c.event
+         left join participant_requirement pr on phrfe.participant_requirement = pr.id
 group by crnp.competition_registration, p.id, p.firstname, p.lastname, p.year, p.gender, p.external,
-         p.external_club_name, np.id, np.name
+         p.external_club_name, np.id, np.name, qc.qr_code_id
 ;
 
 create view competition_registration_team as
@@ -895,15 +916,17 @@ select cr.id                                                                    
        cl.id                                                                                         as club_id,
        cl.name                                                                                       as club_name,
        cr.name                                                                                       as team_name,
-       coalesce(array_agg(crtp) filter ( where crtp.competition_registration_id is not null ), '{}') as participants,
-       coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}')                       as substitutions
+       coalesce(array_agg(distinct crtp) filter ( where crtp.competition_registration_id is not null ), '{}') as participants,
+       coalesce(array_agg(distinct sv) filter (where sv.id is not null), '{}')                       as substitutions,
+       cd                                                                                            as deregistration
 from competition_registration cr
          left join competition_registration_team_participant crtp on cr.id = crtp.competition_registration_id
          left join club cl on cr.club = cl.id
          left join competition co on cr.competition = co.id
          left join competition_properties cp on co.id = cp.competition
          left join substitution_view sv on cr.id = sv.competition_registration_id
-group by cr.id, cr.competition, cp.identifier, cp.name, co.event, cl.id, cl.name, cr.name;
+         left join competition_deregistration cd on cr.id = cd.competition_registration
+group by cr.id, cr.competition, cp.identifier, cp.name, co.event, cl.id, cl.name, cr.name, cd;
 
 
 create view participant_qr_assignment_view as
@@ -947,4 +970,4 @@ SELECT ct.id,
        ct.created_at
 FROM caterer_transaction ct
          INNER JOIN app_user caterer ON ct.caterer_id = caterer.id
-         INNER JOIN app_user app_user ON ct.app_user_id = app_user.id;
+         INNER JOIN app_user ON ct.app_user_id = app_user.id;

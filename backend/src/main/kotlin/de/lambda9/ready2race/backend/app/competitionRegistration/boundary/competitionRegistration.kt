@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationRequestProperties
 import de.lambda9.ready2race.backend.app.competitionDeregistration.boundary.competitionDeregistration
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationSort
+import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationTeamSort
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -26,7 +27,7 @@ fun Route.competitionRegistration() {
                 val competitionId = !pathParam("competitionId", uuid)
                 val params = !pagination<CompetitionRegistrationSort>()
 
-                CompetitionRegistrationService.getByCompetition(params, competitionId, scope, user)
+                CompetitionRegistrationService.registrationPage(params, competitionId, scope, user)
             }
         }
 
@@ -75,7 +76,15 @@ fun Route.competitionRegistration() {
                         }
                     }
 
-                    CompetitionRegistrationService.update(body, eventId, competitionId, competitionRegistrationId, scope, user, requestProperties)
+                    CompetitionRegistrationService.update(
+                        body,
+                        eventId,
+                        competitionId,
+                        competitionRegistrationId,
+                        scope,
+                        user,
+                        requestProperties
+                    )
                 }
             }
 
@@ -87,11 +96,30 @@ fun Route.competitionRegistration() {
                     val competitionId = !pathParam("competitionId", uuid)
                     val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
 
-                    CompetitionRegistrationService.delete(eventId, competitionId, competitionRegistrationId, scope, user)
+                    CompetitionRegistrationService.delete(
+                        eventId,
+                        competitionId,
+                        competitionRegistrationId,
+                        scope,
+                        user
+                    )
                 }
             }
 
             competitionDeregistration()
+        }
+
+        route("/teams") {
+            get {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
+                    val eventId = !pathParam("eventId", uuid)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val params = !pagination<CompetitionRegistrationTeamSort>()
+
+                    CompetitionRegistrationService.teamPage(params, eventId, competitionId, scope, user)
+                }
+            }
         }
 
     }

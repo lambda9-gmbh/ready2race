@@ -32,12 +32,12 @@ fun CompetitionRegistrationTeamRecord.toTeamForScanOverviewDtos() = KIO.ok(
                 role = p.role!!,
                 external = p.external!!,
                 externalClubName = p.externalClubName,
-                currentStatus = p.trackings!!.maxByOrNull { it!!.scannedAt }?.scanType.let {
+                currentStatus = p.trackings!!.maxByOrNull { it!!.scannedAt!! }?.scanType.let {
                     if (it != null) ParticipantScanType.valueOf(
                         it
                     ) else null
                 },
-                lastScanAt = p.trackings!!.maxByOrNull { it!!.scannedAt }?.scannedAt
+                lastScanAt = p.trackings!!.maxByOrNull { it!!.scannedAt!! }?.scannedAt
             )
         }
     )

@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantHasRequirementForEventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*
 
@@ -42,5 +43,8 @@ object ParticipantHasRequirementForEventRepo {
         EVENT.eq(eventId).and(PARTICIPANT_REQUIREMENT.eq(participantRequirementId))
             .and(PARTICIPANT.notIn(approvedParticipants))
     }
+
+    fun getApprovedRequirements(eventId: UUID, participantId: UUID) =
+        PARTICIPANT_HAS_REQUIREMENT_FOR_EVENT.select { EVENT.eq(eventId).and(PARTICIPANT.eq(participantId)) }
 
 }

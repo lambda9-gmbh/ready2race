@@ -14,16 +14,20 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.PARTIC
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_REGISTRATION_NAMED_PARTICIPANT
 import de.lambda9.ready2race.backend.database.insertReturning
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import java.util.UUID
 
 object QrCodeRepo {
 
     fun update(qrCodeId: String, f: QrCodesRecord.() -> Unit) = QR_CODES.update(f) { QR_CODE_ID.eq(qrCodeId) }
     fun delete(qrCodeId: String) = QR_CODES.delete { QR_CODE_ID.eq(qrCodeId) }
     fun create(record: QrCodesRecord) = QR_CODES.insertReturning(record) { ID }
-    
+
+    fun getQrCodeByParticipant(participantId: UUID, eventId: UUID) = QR_CODES.selectOne { PARTICIPANT.eq(participantId).and(EVENT.eq(eventId)) }
+
     fun findByCode(qrCodeId: String): JIO<QrCodesRecord?> = Jooq.query {
         selectFrom(QR_CODES)
             .where(QR_CODES.QR_CODE_ID.eq(qrCodeId))

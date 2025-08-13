@@ -779,7 +779,9 @@
         "title": "Registration successful!",
         "subtitle": "You will receive a confirmation by e-mail."
       },
-      "mostRecent": "Latest registrations"
+      "mostRecent": "Latest registrations",
+      "teams": "Teams",
+      "teamMembers": "Team members"
     },
     "participants": "Participants",
     "tabs": {
@@ -878,7 +880,7 @@
     "participantRequirement": "Participant requirement",
     "participantRequirements": "Participant requirements",
     "active": "Active",
-    "activate": "Assign to event (for all participants)",
+    "activate": "Assign to event (for all roles)",
     "remove": "Remove from event",
     "confirmRemove": "Do you want to remove the requirement \"{{requirement}}\" from the event? This affects all assigned participants and removes all successful verifications.",
     "confirmRemoveGlobal": "Do you want to remove the global assignment of the requirement \"{{requirement}}\"? The requirement will remain for individually assigned participants.",

@@ -272,6 +272,20 @@ export type CompetitionPropertiesRequest = {
     setupTemplate?: string
 }
 
+export type CompetitionRegistrationDto = {
+    id: string
+    name?: string
+    clubId: string
+    clubName: string
+    optionalFees: Array<CompetitionRegistrationFeeDto>
+    namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
+    isLate: boolean
+    ratingCategory?: RatingCategoryDto
+    updatedAt: string
+    createdAt: string
+    deregistration?: CompetitionDeregistrationDto
+}
+
 export type CompetitionRegistrationFeeDto = {
     feeId: string
     feeName: string
@@ -291,6 +305,15 @@ export type CompetitionRegistrationNamedParticipantDto = {
 export type CompetitionRegistrationNamedParticipantLockedDto = {
     namedParticipantId: string
     participantIds: Array<string>
+}
+
+export type CompetitionRegistrationNamedParticipantRequirementDto = {
+    id: string
+    name: string
+    description?: string
+    optional: boolean
+    checkInApp: boolean
+    qrCodeRequired: boolean
 }
 
 export type CompetitionRegistrationNamedParticipantUpsertDto = {
@@ -323,13 +346,9 @@ export type CompetitionRegistrationTeamDto = {
     name?: string
     clubId: string
     clubName: string
-    optionalFees: Array<CompetitionRegistrationFeeDto>
-    namedParticipants: Array<CompetitionRegistrationNamedParticipantDto>
-    isLate: boolean
-    ratingCategory?: RatingCategoryDto
-    updatedAt: string
-    createdAt: string
+    namedParticipants: Array<CompetitionRegistrationTeamNamedParticipantDto>
     deregistration?: CompetitionDeregistrationDto
+    globalParticipantRequirements: Array<ParticipantRequirementDto>
 }
 
 export type CompetitionRegistrationTeamLockedDto = {
@@ -337,6 +356,13 @@ export type CompetitionRegistrationTeamLockedDto = {
     optionalFees: Array<string>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantLockedDto>
     isLate: boolean
+}
+
+export type CompetitionRegistrationTeamNamedParticipantDto = {
+    namedParticipantId: string
+    namedParticipantName: string
+    participants: Array<ParticipantForCompetitionRegistrationTeam>
+    participantRequirements: Array<CompetitionRegistrationNamedParticipantRequirementDto>
 }
 
 export type CompetitionRegistrationTeamUpsertDto = {
@@ -960,12 +986,10 @@ export type NamedParticipantRequest = {
     description?: string
 }
 
-export type NamedParticipantRequirmentForEventDto = {
+export type NamedParticipantRequirementForEventDto = {
     id: string
     name: string
     qrCodeRequired: boolean
-    event: string
-    participantRequirement: string
 }
 
 export type NamedParticipantWithRequirementsDto = {
@@ -1043,6 +1067,21 @@ export type ParticipantDto = {
     usedInRegistration: boolean
     createdAt: string
     updatedAt: string
+}
+
+export type ParticipantForCompetitionRegistrationTeam = {
+    id: string
+    firstname: string
+    lastname: string
+    year: number
+    gender: Gender
+    external: boolean
+    externalClubName?: string
+    qrCodeId?: string
+    participantRequirementsChecked: Array<string>
+    currentStatus?: ParticipantScanType
+    lastScanAt?: string
+    lastScanBy?: AppUserNameDto
 }
 
 export type ParticipantForEventDto = {
@@ -1135,7 +1174,7 @@ export type ParticipantRequirementForEventDto = {
      * Per App prüfbar
      */
     checkInApp: boolean
-    requirements?: Array<NamedParticipantRequirmentForEventDto>
+    requirements?: Array<NamedParticipantRequirementForEventDto>
 }
 
 export type ParticipantRequirementReducedDto = {
@@ -2314,7 +2353,7 @@ export type GetCompetitionRegistrationsData = {
 }
 
 export type GetCompetitionRegistrationsResponse = {
-    data: Array<CompetitionRegistrationTeamDto>
+    data: Array<CompetitionRegistrationDto>
     pagination: Pagination
 }
 
@@ -2395,6 +2434,41 @@ export type RevertCompetitionDeregistrationData = {
 export type RevertCompetitionDeregistrationResponse = void
 
 export type RevertCompetitionDeregistrationError = BadRequestError | ApiError
+
+export type GetCompetitionRegistrationTeamsData = {
+    path: {
+        competitionId: string
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetCompetitionRegistrationTeamsResponse = {
+    data: Array<CompetitionRegistrationTeamDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionRegistrationTeamsError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
 
 export type UpdateCompetitionSetupData = {
     body: CompetitionSetupDto

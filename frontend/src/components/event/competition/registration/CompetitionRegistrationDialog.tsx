@@ -3,7 +3,7 @@ import {
     ClubSearchDto,
     CompetitionDto,
     CompetitionRegistrationNamedParticipantUpsertDto,
-    CompetitionRegistrationTeamDto,
+    CompetitionRegistrationDto,
     CompetitionRegistrationTeamUpsertDto, EventDto,
     EventRegistrationNamedParticipantDto, RegistrationInvoiceType,
 } from '@api/types.gen.ts'
@@ -43,7 +43,7 @@ const CompetitionRegistrationDialog = ({
     competition,
     eventData,
     ...props
-}: BaseEntityDialogProps<CompetitionRegistrationTeamDto> & {
+}: BaseEntityDialogProps<CompetitionRegistrationDto> & {
     competition: CompetitionDto
     eventData: EventDto
 }) => {
@@ -184,7 +184,7 @@ const CompetitionRegistrationDialog = ({
 
     const editAction = (
         formData: CompetitionRegistrationForm,
-        entity: CompetitionRegistrationTeamDto,
+        entity: CompetitionRegistrationDto,
     ) => {
         return updateCompetitionRegistration({
             path: {
@@ -336,7 +336,7 @@ function mapFormToRequest(
     }
 }
 
-function mapDtoToForm(dto: CompetitionRegistrationTeamDto): CompetitionRegistrationForm {
+function mapDtoToForm(dto: CompetitionRegistrationDto): CompetitionRegistrationForm {
     return {
         id: dto.id,
         clubId: dto.clubId,
