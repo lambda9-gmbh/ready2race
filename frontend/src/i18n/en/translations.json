@@ -1335,5 +1335,15 @@
     "userName": "User",
     "price": "Amount",
     "createdAt": "Time"
+  },
+  "landing": {
+    "smallScreen": {
+      "to": {
+        "where": "What would you like to visit?",
+        "app": "Helper App",
+        "results": "Match Info",
+        "desktop": "Desktop View"
+      }
+    }
   }
 }

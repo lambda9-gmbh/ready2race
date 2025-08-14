@@ -1,6 +1,6 @@
 import {ReactElement} from 'react'
 import {Link, LinkComponentProps} from '@tanstack/react-router'
-import {ListItem, ListItemButton, ListItemIcon, ListItemText} from '@mui/material'
+import {ListItem, ListItemButton, ListItemIcon, ListItemText, useMediaQuery} from '@mui/material'
 import {useSidebar} from './SidebarContext.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {Privilege} from '@api/types.gen.ts'
@@ -21,7 +21,7 @@ type Props = {
     LinkComponentProps<'a'>
 
 const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: Props) => {
-    const {open} = useSidebar()
+    const {isOpen, close} = useSidebar()
     const user = useUser()
 
     if (!user.loggedIn) {
@@ -34,8 +34,17 @@ const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: P
         }
     }
 
+    const shouldCollapseSideBar = useMediaQuery('(max-width:1024px)')
+
     return (
-        <Link {...linkProps} title={text}>
+        <Link
+            {...linkProps}
+            title={text}
+            onClick={() => {
+                if (shouldCollapseSideBar && isOpen) {
+                    close()
+                }
+            }}>
             {({isActive}) => (
                 <ListItem disablePadding>
                     <ListItemButton
@@ -52,11 +61,11 @@ const SidebarItem = ({text, icon, authenticatedOnly, privilege, ...linkProps}: P
                             sx={{
                                 minWidth: 0,
                                 paddingY: 0.5,
-                                mr: open ? 3 : 'auto',
+                                mr: isOpen ? 3 : 'auto',
                             }}>
                             {icon}
                         </ListItemIcon>
-                        {open && <ListItemText primary={text} sx={{margin: 0}} />}
+                        {isOpen && <ListItemText primary={text} sx={{margin: 0}} />}
                     </ListItemButton>
                 </ListItem>
             )}

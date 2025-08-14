@@ -1336,5 +1336,15 @@
     "userName": "Benutzer",
     "price": "Betrag",
     "createdAt": "Zeitpunkt"
+  },
+  "landing": {
+    "smallScreen": {
+      "to": {
+        "where": "Was möchten Sie sehen?",
+        "app": "Helfer App",
+        "results": "Match Info",
+        "desktop": "Desktopansicht"
+      }
+    }
   }
 }
