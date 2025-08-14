@@ -1,7 +1,9 @@
 import {createContext, useContext} from 'react'
 
 export type SidebarProps = {
-    open: boolean
+    isOpen: boolean
+    open: () => void
+    close: () => void
 }
 
 export const SidebarContext = createContext<SidebarProps | null>(null)

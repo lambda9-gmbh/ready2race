@@ -1,15 +1,17 @@
-import {Link, Outlet, useLocation} from '@tanstack/react-router'
+import {Link, Outlet, useLocation, useRouter} from '@tanstack/react-router'
 import {
     AppBar,
     Box,
     Button,
     Container,
+    DialogContent,
     Divider,
     IconButton,
     Paper,
     Stack,
     Toolbar,
     Typography,
+    useMediaQuery,
 } from '@mui/material'
 import {useState} from 'react'
 import {
@@ -28,7 +30,7 @@ import {
 import Sidebar from '@components/sidebar/Sidebar.tsx'
 import SidebarItem from '@components/sidebar/SidebarItem.tsx'
 import UserWidget from '@components/appbar/UserWidget.tsx'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {
     readClubGlobal,
     readClubOwn,
@@ -38,12 +40,18 @@ import {
 } from '@authorization/privileges.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
+import BaseDialog from '@components/BaseDialog.tsx'
 
 const RootLayout = () => {
     const {t} = useTranslation()
-    const [drawerExpanded, setDrawerExpanded] = useState(true)
+    const [drawerExpanded, setDrawerExpanded] = useState(!useMediaQuery('(max-width:1024px)'))
+    const [showSmallScreenDialog, setShowSmallScreenDialog] = useState(
+        useMediaQuery('(max-width:512px)'),
+    )
+    const closeSmallScreenDialog = () => setShowSmallScreenDialog(false)
     const user = useUser()
     const location = useLocation()
+    const router = useRouter()
 
     const languageSet = Boolean(document.getElementById('ready2race-root')!.dataset.lng)
 
@@ -70,7 +78,10 @@ const RootLayout = () => {
                         sx={{
                             display: 'flex',
                         }}>
-                        <Sidebar open={drawerExpanded}>
+                        <Sidebar
+                            isOpen={drawerExpanded}
+                            open={() => setDrawerExpanded(true)}
+                            close={() => setDrawerExpanded(false)}>
                             {!user.loggedIn && (
                                 <SidebarItem
                                     text={t('navigation.titles.landing')}
@@ -139,8 +150,8 @@ const RootLayout = () => {
                             }}>
                             <Outlet />
                             {!user.loggedIn &&
-                                location.pathname != '/login' &&
-                                location.pathname != '/registration' && (
+                                location.pathname !== router.basepath + '/login' &&
+                                location.pathname !== router.basepath + '/registration' && (
                                     <Stack spacing={1} mt={1} mb={-3}>
                                         <Stack
                                             spacing={2}
@@ -173,6 +184,36 @@ const RootLayout = () => {
                     </Box>
                 </Box>
             </Paper>
+            <BaseDialog
+                open={showSmallScreenDialog}
+                onClose={() => null}
+                fullScreen
+                noTopRightClose>
+                <DialogContent>
+                    <Stack
+                        spacing={4}
+                        justifyContent={'center'}
+                        alignItems={'center'}
+                        sx={{height: '100%'}}>
+                        <Typography variant={'h3'}>
+                            <Trans i18nKey={'landing.smallScreen.to.where'} />
+                        </Typography>
+                        <Link to={'/results'} style={{width: '100%'}}>
+                            <Button variant={'contained'} fullWidth>
+                                <Trans i18nKey={'landing.smallScreen.to.results'} />
+                            </Button>
+                        </Link>
+                        <Link to={'/app'} style={{width: '100%'}}>
+                            <Button variant={'outlined'} fullWidth>
+                                <Trans i18nKey={'landing.smallScreen.to.app'} />
+                            </Button>
+                        </Link>
+                        <Button variant={'text'} fullWidth onClick={closeSmallScreenDialog}>
+                            <Trans i18nKey={'landing.smallScreen.to.desktop'} />
+                        </Button>
+                    </Stack>
+                </DialogContent>
+            </BaseDialog>
         </Container>
     )
 }
