@@ -1347,5 +1347,9 @@
       }
     },
     "liveEventsLink": "Zu den Live Events"
+  },
+  "panic": {
+    "title": "Fehler",
+    "text": "Der API-Server ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut. Sollte dieser Zustand sich nicht ändern, wenden Sie sich bitte an einen Verantwortlichen. Vielen Dank."
   }
 }

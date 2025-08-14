@@ -1346,5 +1346,9 @@
       }
     },
     "liveEventsLink": "Go to Live Events"
+  },
+  "panic": {
+    "title": "Error",
+    "text": "The API server is currently unavailable. Please try again later. If this situation persists, please contact a site administrator. Thank you."
   }
 }
