@@ -700,7 +700,12 @@
       },
       "checkInApp": "Checkable in app",
       "approve": "Approve",
-      "checkedNote": "remark"
+      "checkedNote": "remark",
+      "confirmDelete": {
+        "content": "Do you really want to cancel the confirmation of the verified participation condition?",
+        "ok": "Yes",
+        "cancel": "No"
+      }
     },
     "action": {
       "registrationsReport": {

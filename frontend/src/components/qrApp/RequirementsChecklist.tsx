@@ -1,18 +1,13 @@
-import {
-    Stack,
-    Typography,
-    Button,
-    DialogContent,
-    DialogActions
-} from '@mui/material'
+import {Stack, Typography, Button, DialogContent, DialogActions} from '@mui/material'
 import {Trans, useTranslation} from 'react-i18next'
 import {CheckedParticipantRequirement, ParticipantRequirementForEventDto} from '@api/types.gen.ts'
-import {Block, Check, EditNote} from "@mui/icons-material";
-import {useEffect, useState} from "react";
-import BaseDialog from "@components/BaseDialog.tsx";
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import {FormContainer, useForm} from "react-hook-form-mui";
-import {SubmitButton} from "@components/form/SubmitButton.tsx";
+import {Block, Check, EditNote} from '@mui/icons-material'
+import {useEffect, useState} from 'react'
+import BaseDialog from '@components/BaseDialog.tsx'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {FormContainer, useForm} from 'react-hook-form-mui'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 
 interface RequirementsChecklistProps {
     requirements: ParticipantRequirementForEventDto[]
@@ -31,7 +26,7 @@ type NoteForm = {
 }
 
 const defaultNoteValues: NoteForm = {
-    note: ''
+    note: '',
 }
 
 export const RequirementsChecklist = ({
@@ -42,8 +37,10 @@ export const RequirementsChecklist = ({
     namedParticipantIds,
 }: RequirementsChecklistProps) => {
     const {t} = useTranslation()
+    const {confirmAction} = useConfirmation()
 
-    const [reqForNoteDialog, setReqForNoteDialog] = useState<ParticipantRequirementForEventDto | null>(null)
+    const [reqForNoteDialog, setReqForNoteDialog] =
+        useState<ParticipantRequirementForEventDto | null>(null)
     const showNoteDialog = reqForNoteDialog !== null
     const closeNoteDialog = () => setReqForNoteDialog(null)
 
@@ -83,37 +80,88 @@ export const RequirementsChecklist = ({
                                     <Button variant={'outlined'} sx={{visibility: 'hidden'}}>
                                         <EditNote />
                                     </Button>
-                                    <Button variant={'outlined'} sx={{color: 'red'}} disabled={pending} onClick={() => onRequirementChange(req.id, false, req.requirements?.find(npReq => namedParticipantIds.some(np => np === npReq.id))?.id)}>
-                                        <Block />
+                                    <Button
+                                        variant={'outlined'}
+                                        disabled={pending}
+                                        onClick={() =>
+                                            confirmAction(
+                                                () =>
+                                                    onRequirementChange(
+                                                        req.id,
+                                                        false,
+                                                        req.requirements?.find(npReq =>
+                                                            namedParticipantIds.some(
+                                                                np => np === npReq.id,
+                                                            ),
+                                                        )?.id,
+                                                    ),
+                                                {
+                                                    content: t(
+                                                        'event.participantRequirement.confirmDelete.content',
+                                                    ),
+                                                    okText: t(
+                                                        'event.participantRequirement.confirmDelete.ok',
+                                                    ),
+                                                    cancelText: t(
+                                                        'event.participantRequirement.confirmDelete.cancel',
+                                                    ),
+                                                    buttonsSX: {minWidth: 80},
+                                                },
+                                            )
+                                        }>
+                                        <Block color={'error'} />
                                     </Button>
                                 </>
                             ) : (
                                 <>
-                                    <Button variant={'outlined'} onClick={() => openNoteDialog(req)}>
+                                    <Button
+                                        variant={'outlined'}
+                                        onClick={() => openNoteDialog(req)}>
                                         <EditNote />
                                     </Button>
-                                    <Button variant={'outlined'} sx={{color: 'green'}} disabled={pending} onClick={() => onRequirementChange(req.id, true, req.requirements?.find(npReq => namedParticipantIds.some(np => np === npReq.id))?.id)}>
+                                    <Button
+                                        variant={'outlined'}
+                                        sx={{color: 'green'}}
+                                        disabled={pending}
+                                        onClick={() =>
+                                            onRequirementChange(
+                                                req.id,
+                                                true,
+                                                req.requirements?.find(npReq =>
+                                                    namedParticipantIds.some(np => np === npReq.id),
+                                                )?.id,
+                                            )
+                                        }>
                                         <Check />
                                     </Button>
                                 </>
                             )}
                         </Stack>
                         <Stack direction={'row'}>
-                            <Typography>
-                                {req.name}
-                            </Typography>
+                            <Typography>{req.name}</Typography>
                         </Stack>
                     </Stack>
                 )
             })}
 
             <BaseDialog open={showNoteDialog} onClose={closeNoteDialog}>
-                <FormContainer formContext={formContext} onSuccess={(formData) => {
-                    closeNoteDialog()
-                    onRequirementChange(reqForNoteDialog!.id, formData.note, reqForNoteDialog!.requirements?.find(npReq => namedParticipantIds.some(np => np === npReq.id))?.id)
-                }}>
+                <FormContainer
+                    formContext={formContext}
+                    onSuccess={formData => {
+                        closeNoteDialog()
+                        onRequirementChange(
+                            reqForNoteDialog!.id,
+                            formData.note,
+                            reqForNoteDialog!.requirements?.find(npReq =>
+                                namedParticipantIds.some(np => np === npReq.id),
+                            )?.id,
+                        )
+                    }}>
                     <DialogContent>
-                        <FormInputText name={'note'} label={t('event.participantRequirement.checkedNote')}/>
+                        <FormInputText
+                            name={'note'}
+                            label={t('event.participantRequirement.checkedNote')}
+                        />
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={closeNoteDialog}>

@@ -60,10 +60,16 @@ export const ConfirmationProvider = (props: PropsWithChildren<{}>) => {
                     {confirmation.options?.content ?? t('common.confirmation.content')}
                 </DialogContent>
                 <DialogActions>
-                    <Button variant={'outlined'} onClick={handleCancel}>
+                    <Button
+                        variant={'outlined'}
+                        onClick={handleCancel}
+                        sx={confirmation.options?.buttonsSX}>
                         {confirmation.options?.cancelText ?? t('common.cancel')}
                     </Button>
-                    <Button variant={'contained'} onClick={handleConfirm}>
+                    <Button
+                        variant={'contained'}
+                        onClick={handleConfirm}
+                        sx={confirmation.options?.buttonsSX}>
                         {confirmation.options?.okText ?? t('common.ok')}
                     </Button>
                 </DialogActions>

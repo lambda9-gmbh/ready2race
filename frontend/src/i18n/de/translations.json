@@ -700,7 +700,12 @@
       },
       "checkInApp": "Per App prüfbar",
       "approve": "Bestätigen",
-      "checkedNote": "Bemerkung"
+      "checkedNote": "Bemerkung",
+      "confirmDelete": {
+        "content": "Soll die Bestätigung der überprüften Teilnahmebedingung wirklich storniert werden?",
+        "ok": "Ja",
+        "cancel": "Nein"
+      }
     },
     "action": {
       "registrationsReport": {

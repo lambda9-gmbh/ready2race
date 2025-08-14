@@ -1,4 +1,5 @@
 import {createContext, useContext} from 'react'
+import {SxProps, Theme} from '@mui/material'
 
 export type Confirmation = {
     confirmAction: (action: () => void, options?: ConfirmationOptions) => void
@@ -20,4 +21,5 @@ export type ConfirmationOptions = {
     cancelText?: string
     okText?: string
     cancelAction?: () => void
+    buttonsSX?: SxProps<Theme>
 }
