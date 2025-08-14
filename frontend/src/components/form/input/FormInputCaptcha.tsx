@@ -5,6 +5,7 @@ import {UseFetchReturn, useWindowSize} from '@utils/hooks.ts'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {Box, Stack, Typography} from '@mui/material'
 import {touchSupported} from '@utils/helpers.ts'
+import logoUrl from '../../../assets/r2r_logo.png'
 
 type Props = {
     captchaProps: UseFetchReturn<CaptchaDto, ApiError>
@@ -15,10 +16,6 @@ type CaptchaSizes = {
     height: number
     logo: number
 }
-
-// TODO: Make this modifiable
-const logoUrl =
-    'https://www.coastal-rowing-flensburg.de/wp-content/uploads/2021/09/Coastal_FL_Logo_rgb-e1630489498379.png'
 
 const FormInputCaptcha = (props: Props) => {
     const {t} = useTranslation()
@@ -65,9 +62,11 @@ const FormInputCaptcha = (props: Props) => {
                                         background: `url('${logoUrl}')`,
                                         backgroundColor: 'white',
                                         border: '1px solid black',
-                                        backgroundSize: sizes.logo,
+                                        backgroundSize: sizes.logo - 5,
                                         width: sizes.logo,
                                         height: sizes.logo,
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundPosition: 'center',
                                     },
                                     '& .MuiSlider-rail': {
                                         display: 'none',
