@@ -24,7 +24,7 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
     const theme = useTheme()
     const {t} = useTranslation()
 
-    const [registrationPeriod, lateRegistrationPeriod] = getRegistrationPeriods(event, t)
+    const {registrationPeriod, lateRegistrationPeriod} = getRegistrationPeriods(event, t)
 
     const registrationState = getRegistrationState(event)
 

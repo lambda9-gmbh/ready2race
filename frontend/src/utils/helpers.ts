@@ -85,26 +85,27 @@ export const getRegistrationPeriods = (
         lateRegistrationAvailableTo,
     }: RegistrationPeriodBoundary,
     t: TFunction,
-) => [
-    !registrationAvailableFrom && !registrationAvailableTo
-        ? t('event.registrationAvailable.unknown')
-        : arrayOfNotNull(
-              ifDefined(
-                  registrationAvailableFrom,
-                  from =>
-                      t('event.registrationAvailable.from') +
-                      ' ' +
-                      format(new Date(from), t('format.datetime')),
-              ),
-              ifDefined(
-                  registrationAvailableTo,
-                  to =>
-                      t('event.registrationAvailable.to') +
-                      ' ' +
-                      format(new Date(to), t('format.datetime')),
-              ),
-          ).join(' '),
-    ifDefined(lateRegistrationAvailableTo, lateTo =>
+) => ({
+    registrationPeriod:
+        !registrationAvailableFrom && !registrationAvailableTo
+            ? t('event.registrationAvailable.unknown')
+            : arrayOfNotNull(
+                  ifDefined(
+                      registrationAvailableFrom,
+                      from =>
+                          t('event.registrationAvailable.from') +
+                          ' ' +
+                          format(new Date(from), t('format.datetime')),
+                  ),
+                  ifDefined(
+                      registrationAvailableTo,
+                      to =>
+                          t('event.registrationAvailable.to') +
+                          ' ' +
+                          format(new Date(to), t('format.datetime')),
+                  ),
+              ).join(' '),
+    lateRegistrationPeriod: ifDefined(lateRegistrationAvailableTo, lateTo =>
         ifDefined(
             registrationAvailableTo,
             lateFrom =>
@@ -117,7 +118,7 @@ export const getRegistrationPeriods = (
                 format(new Date(lateTo), t('format.datetime')),
         ),
     ),
-]
+})
 
 export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A =>
     u.includes(s as A)
