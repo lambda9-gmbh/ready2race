@@ -8,7 +8,7 @@ import {
 import {Trans, useTranslation} from 'react-i18next'
 import {CheckedParticipantRequirement, ParticipantRequirementForEventDto} from '@api/types.gen.ts'
 import {Block, Check, EditNote} from "@mui/icons-material";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import BaseDialog from "@components/BaseDialog.tsx";
 import {FormInputText} from "@components/form/input/FormInputText.tsx";
 import {FormContainer, useForm} from "react-hook-form-mui";
@@ -53,7 +53,13 @@ export const RequirementsChecklist = ({
         setReqForNoteDialog(req)
     }
 
-    const formContext = useForm<NoteForm>({defaultValues: defaultNoteValues})
+    const formContext = useForm<NoteForm>()
+
+    useEffect(() => {
+        if (reqForNoteDialog !== null) {
+            formContext.reset(defaultNoteValues)
+        }
+    }, [reqForNoteDialog])
 
     return (
         <Stack spacing={1} width={'100%'}>

@@ -272,6 +272,12 @@ const EntityTableInternal = <
         },
     )
 
+    // TODO: @Later - there seems to be a bug in DataGrid. After using search to find no entries, the next search that find entries, shows none of them (not even the message "no entries")
+    // TODO: this hack fixes the problem at the cost of more rerenders
+    //
+    // TODO: not sure, if this also fixes the similar bug of showing nothing in the grid on reloading in general (like by changing page or editing/deleting items)
+    useDebounce(data, 0)
+
     const rowCountRef = useRef(data?.pagination?.total ?? 0)
 
     const rowCount = useMemo(() => {
