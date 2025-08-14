@@ -22,7 +22,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const [token, setToken] = useState<string | null>(sessionStorage.getItem('session'))
     const [ready, setReady] = useState(false)
     const prevLoggedIn = useRef(false)
-    const autoLogin = useRef(false)
     const loggedIn = Boolean(userData)
 
     const navigate = router.navigate
@@ -51,26 +50,23 @@ const UserProvider = ({children}: PropsWithChildren) => {
         }
     }, [token, client])
 
+    // TODO: @Refactor: should be possible without this useEffect
     useEffect(() => {
         if (prevLoggedIn.current || loggedIn) {
             prevLoggedIn.current = loggedIn
-            if (!autoLogin.current) {
-                if (ready) {
-                    const redirect = router.state.resolvedLocation.search.redirect
-                    navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
-                } else {
-                    setReady(true)
-                }
+            if (ready) {
+                const redirect = router.state.resolvedLocation.search.redirect
+                navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+            } else {
+                setReady(true)
             }
         }
-        autoLogin.current = false
     }, [userData])
 
     //TODO: error-handling
     useFetch(signal => checkUserLogin({signal}), {
         onResponse: ({data, response}) => {
             if (response.status === 200 && data !== undefined) {
-                autoLogin.current = true
                 login(data)
             } else {
                 sessionStorage.removeItem('session')
@@ -80,7 +76,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
     })
 
     const login = (data: LoginDto, headers?: Headers) => {
-        autoLogin.current = false
         if (headers) {
             const sessionHeader = headers.get('X-Api-Session')
             if (sessionHeader === null) {
@@ -94,7 +89,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }
 
     const logout = async () => {
-        autoLogin.current = false
         const {error} = await userLogout()
         if (error === undefined) {
             sessionStorage.removeItem('session')
