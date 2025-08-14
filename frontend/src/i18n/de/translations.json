@@ -1342,9 +1342,10 @@
       "to": {
         "where": "Was möchten Sie sehen?",
         "app": "Helfer App",
-        "results": "Match Info",
+        "results": "Live Events",
         "desktop": "Desktopansicht"
       }
-    }
+    },
+    "liveEventsLink": "Zu den Live Events"
   }
 }

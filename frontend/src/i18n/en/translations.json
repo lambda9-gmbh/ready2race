@@ -1341,9 +1341,10 @@
       "to": {
         "where": "What would you like to visit?",
         "app": "Helper App",
-        "results": "Match Info",
+        "results": "Live Events",
         "desktop": "Desktop View"
       }
-    }
+    },
+    "liveEventsLink": "Go to Live Events"
   }
 }
