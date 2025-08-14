@@ -1,6 +1,7 @@
-import {EmailLanguage, Scope} from '@api/types.gen.ts'
+import {EmailLanguage, OpenForRegistrationType, Scope} from '@api/types.gen.ts'
 import {fallbackLng, isLanguage, Language} from '@i18n/config.ts'
-import i18next from 'i18next'
+import i18next, {TFunction} from 'i18next'
+import {format} from 'date-fns'
 
 export const getRootElement = () => document.getElementById('ready2race-root')!
 
@@ -47,13 +48,76 @@ export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K): Map<K, T[]> =>
 
 export const adminId = '00000000-0000-0000-0000-000000000000'
 
-export const eventRegistrationPossible = (from?: string, to?: string) => {
+const eventRegistrationPossible = (from?: string, to?: string) => {
     return (
         from !== undefined &&
         new Date(from) < new Date() &&
         (to === undefined || new Date(to) > new Date())
     )
 }
+
+type RegistrationPeriodBoundary = {
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+}
+
+export const getRegistrationState = (
+    {
+        registrationAvailableFrom,
+        registrationAvailableTo,
+        lateRegistrationAvailableTo,
+    }: RegistrationPeriodBoundary,
+    lateAllowed = true,
+): OpenForRegistrationType =>
+    eventRegistrationPossible(registrationAvailableFrom, registrationAvailableTo)
+        ? 'REGULAR'
+        : lateRegistrationAvailableTo &&
+            lateAllowed &&
+            eventRegistrationPossible(registrationAvailableTo, lateRegistrationAvailableTo)
+          ? 'LATE'
+          : 'CLOSED'
+
+export const getRegistrationPeriods = (
+    {
+        registrationAvailableFrom,
+        registrationAvailableTo,
+        lateRegistrationAvailableTo,
+    }: RegistrationPeriodBoundary,
+    t: TFunction,
+) => [
+    !registrationAvailableFrom && !registrationAvailableTo
+        ? t('event.registrationAvailable.unknown')
+        : arrayOfNotNull(
+              ifDefined(
+                  registrationAvailableFrom,
+                  from =>
+                      t('event.registrationAvailable.from') +
+                      ' ' +
+                      format(new Date(from), t('format.datetime')),
+              ),
+              ifDefined(
+                  registrationAvailableTo,
+                  to =>
+                      t('event.registrationAvailable.to') +
+                      ' ' +
+                      format(new Date(to), t('format.datetime')),
+              ),
+          ).join(' '),
+    ifDefined(lateRegistrationAvailableTo, lateTo =>
+        ifDefined(
+            registrationAvailableTo,
+            lateFrom =>
+                t('event.registrationAvailable.from') +
+                ' ' +
+                format(new Date(lateFrom), t('format.datetime')) +
+                ' ' +
+                t('event.registrationAvailable.to') +
+                ' ' +
+                format(new Date(lateTo), t('format.datetime')),
+        ),
+    ),
+]
 
 export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A =>
     u.includes(s as A)

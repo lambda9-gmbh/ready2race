@@ -52,13 +52,15 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }, [token, client])
 
     useEffect(() => {
-        if (!autoLogin.current && prevLoggedIn.current !== loggedIn) {
+        if (prevLoggedIn.current || loggedIn) {
             prevLoggedIn.current = loggedIn
-            if (ready) {
-                const redirect = router.state.resolvedLocation.search.redirect
-                navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
-            } else {
-                setReady(true)
+            if (!autoLogin.current) {
+                if (ready) {
+                    const redirect = router.state.resolvedLocation.search.redirect
+                    navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+                } else {
+                    setReady(true)
+                }
             }
         }
         autoLogin.current = false

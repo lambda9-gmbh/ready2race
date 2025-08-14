@@ -1,18 +1,13 @@
 import CompetitionRegistrationDialog from '@components/event/competition/registration/CompetitionRegistrationDialog.tsx'
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
-import {
-    CompetitionDto,
-    CompetitionRegistrationDto,
-    EventDto,
-    OpenForRegistrationType,
-} from '@api/types.gen.ts'
-import {eventRegistrationPossible} from '@utils/helpers.ts'
+import {CompetitionDto, CompetitionRegistrationDto, EventDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
 import {Link} from '@tanstack/react-router'
 import {Box, Button, Stack, Typography} from '@mui/material'
 import {Forward} from '@mui/icons-material'
+import {getRegistrationState} from '@utils/helpers.ts'
 
 type Props = {
     eventData: EventDto
@@ -22,18 +17,10 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
 
-    const registrationState: OpenForRegistrationType = eventRegistrationPossible(
-        eventData.registrationAvailableFrom,
-        eventData.registrationAvailableTo,
+    const registrationState = getRegistrationState(
+        eventData,
+        competitionData.properties.lateRegistrationAllowed,
     )
-        ? 'REGULAR'
-        : competitionData.properties.lateRegistrationAllowed &&
-            eventRegistrationPossible(
-                eventData.registrationAvailableTo,
-                eventData.lateRegistrationAvailableTo,
-            )
-          ? 'LATE'
-          : 'CLOSED'
 
     const registrationPossible = registrationState !== 'CLOSED'
 
@@ -49,7 +36,6 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
             entityDelete: actionsAllowed,
         },
     )
-
 
     return (
         (((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (

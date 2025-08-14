@@ -11,10 +11,9 @@ import {
 import {Link} from '@tanstack/react-router'
 import {Event, Forward, LocationOn} from '@mui/icons-material'
 import {ClockIcon} from '@mui/x-date-pickers'
-import {arrayOfNotNull, eventRegistrationPossible, ifDefined} from '@utils/helpers.ts'
+import {getRegistrationPeriods, getRegistrationState} from '@utils/helpers.ts'
 import {useTranslation} from 'react-i18next'
 import {EventPublicDto} from '@api/types.gen.ts'
-import {format} from 'date-fns'
 
 type Props = {
     event: EventPublicDto
@@ -25,51 +24,9 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
     const theme = useTheme()
     const {t} = useTranslation()
 
-    const registrationPeriod =
-        !event.registrationAvailableFrom && !event.registrationAvailableTo
-            ? t('event.registrationAvailable.unknown')
-            : arrayOfNotNull(
-                  ifDefined(
-                      event.registrationAvailableFrom,
-                      from =>
-                          t('event.registrationAvailable.from') +
-                          ' ' +
-                          format(new Date(from), t('format.datetime')),
-                  ),
-                  ifDefined(
-                      event.registrationAvailableTo,
-                      to =>
-                          t('event.registrationAvailable.to') +
-                          ' ' +
-                          format(new Date(to), t('format.datetime')),
-                  ),
-              ).join(' ')
+    const [registrationPeriod, lateRegistrationPeriod] = getRegistrationPeriods(event, t)
 
-    const lateRegistrationPeriod = ifDefined(event.lateRegistrationAvailableTo, lateTo =>
-        ifDefined(
-            event.registrationAvailableTo,
-            to =>
-                t('event.registrationAvailable.from') +
-                ' ' +
-                format(new Date(to), t('format.datetime')) +
-                ' ' +
-                t('event.registrationAvailable.to') +
-                ' ' +
-                format(new Date(lateTo), t('format.datetime')),
-        ),
-    )
-
-    const currentPeriod: 'regular' | 'late' | null = eventRegistrationPossible(
-        event.registrationAvailableFrom,
-        event.registrationAvailableTo,
-    )
-        ? 'regular'
-        : eventRegistrationPossible(
-                event.registrationAvailableTo,
-                event.lateRegistrationAvailableTo,
-            )
-          ? 'late'
-          : null
+    const registrationState = getRegistrationState(event)
 
     return (
         <ListItem>
@@ -157,7 +114,7 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                                     variant={'body2'}
                                     color={'text.secondary'}
                                     sx={
-                                        currentPeriod === 'regular'
+                                        registrationState === 'REGULAR'
                                             ? {fontWeight: 'fontWeightMedium'}
                                             : undefined
                                     }>
@@ -170,7 +127,7 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                                         variant={'body2'}
                                         color={'text.secondary'}
                                         sx={
-                                            currentPeriod === 'late'
+                                            registrationState === 'LATE'
                                                 ? {fontWeight: 'fontWeightMedium'}
                                                 : undefined
                                         }>
@@ -183,23 +140,15 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                         </Stack>
                     }
                 />
-                {!hideRegistration &&
-                    (eventRegistrationPossible(
-                        event.registrationAvailableFrom,
-                        event.registrationAvailableTo,
-                    ) ||
-                        eventRegistrationPossible(
-                            event.registrationAvailableTo,
-                            event.lateRegistrationAvailableTo,
-                        )) && (
-                        <Box sx={{alignSelf: 'center'}}>
-                            <Link to={'/event/$eventId/register'} params={{eventId: event.id}}>
-                                <Button endIcon={<Forward />} variant={'contained'}>
-                                    {t('event.registerNow')}
-                                </Button>
-                            </Link>
-                        </Box>
-                    )}
+                {!hideRegistration && registrationState !== 'CLOSED' && (
+                    <Box sx={{alignSelf: 'center'}}>
+                        <Link to={'/event/$eventId/register'} params={{eventId: event.id}}>
+                            <Button endIcon={<Forward />} variant={'contained'}>
+                                {t('event.registerNow')}
+                            </Button>
+                        </Link>
+                    </Box>
+                )}
             </Box>
         </ListItem>
     )

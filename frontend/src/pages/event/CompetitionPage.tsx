@@ -12,18 +12,25 @@ import TabPanel from '@components/tab/TabPanel.tsx'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer'
 import {useNavigate} from '@tanstack/react-router'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {updateEventGlobal} from '@authorization/privileges.ts'
+import {readRegistrationGlobal, updateEventGlobal} from '@authorization/privileges.ts'
 import CompetitionSetupForEvent from '@components/event/competition/setup/CompetitionSetupForEvent.tsx'
 import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import CompetitionTeamCompositionEntry from '@components/event/competition/CompetitionTeamCompositionEntry.tsx'
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
-import {a11yProps, eventRegistrationPossible} from '@utils/helpers.ts'
+import {a11yProps, getRegistrationState} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
-import CompetitionRegistrationTeams from "@components/event/competition/registration/CompetitionRegistrationTeams.tsx";
+import CompetitionRegistrationTeams from '@components/event/competition/registration/CompetitionRegistrationTeams.tsx'
 
-const COMPETITION_TABS = ['general', 'registrations', 'teams', 'setup', 'execution', 'places'] as const
+const COMPETITION_TABS = [
+    'general',
+    'registrations',
+    'teams',
+    'setup',
+    'execution',
+    'places',
+] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
 
 const CompetitionPage = () => {
@@ -88,8 +95,7 @@ const CompetitionPage = () => {
         },
     )
 
-    const tabProps = (tab: CompetitionTab) =>
-        a11yProps('competition', tab)
+    const tabProps = (tab: CompetitionTab) => a11yProps('competition', tab)
 
     const assignedEventDays = assignedEventDaysData?.data.map(value => value.id) ?? []
 
@@ -115,16 +121,20 @@ const CompetitionPage = () => {
             label: eventDayName(value.date, value.name),
         })) ?? []
 
+    const registrationState = getRegistrationState(
+        eventData ?? {},
+        competitionData?.properties.lateRegistrationAllowed,
+    )
+
     const showRegistrationsTab =
-        (eventData?.registrationCount ?? 0) > 0 ||
-        (user.loggedIn && !user.clubId) ||
-        eventRegistrationPossible(
-            eventData?.registrationAvailableFrom,
-            eventData?.registrationAvailableTo,
-        )
+        user.loggedIn &&
+        ((eventData?.registrationCount ?? 0) > 0 ||
+            user.checkPrivilege(readRegistrationGlobal) ||
+            registrationState !== 'CLOSED')
 
     const withLateRegistration =
-        eventData?.lateRegistrationAvailableTo && competitionData?.properties.lateRegistrationAllowed
+        eventData?.lateRegistrationAvailableTo &&
+        competitionData?.properties.lateRegistrationAllowed
 
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
@@ -137,17 +147,14 @@ const CompetitionPage = () => {
                     </Typography>
                     <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                         <Tab label={t('event.tabs.general')} {...tabProps('general')} />
-                        {user.loggedIn && showRegistrationsTab && (
+                        {showRegistrationsTab && (
                             <Tab
                                 label={t('event.registration.registrations')}
                                 {...tabProps('registrations')}
                             />
                         )}
-                        {user.loggedIn && showRegistrationsTab && (
-                            <Tab
-                                label={t('event.registration.teams')}
-                                {...tabProps('teams')}
-                            />
+                        {showRegistrationsTab && (
+                            <Tab label={t('event.registration.teams')} {...tabProps('teams')} />
                         )}
                         {user.checkPrivilege(updateEventGlobal) && (
                             <Tab
@@ -274,25 +281,38 @@ const CompetitionPage = () => {
                                                         )}
                                                         {!f.required && (
                                                             <Typography>
-                                                                {t('event.registration.optionalFee')}
+                                                                {t(
+                                                                    'event.registration.optionalFee',
+                                                                )}
                                                             </Typography>
                                                         )}
                                                     </Stack>
                                                     {withLateRegistration ? (
                                                         <>
                                                             <Typography>
-                                                                <Trans i18nKey={'event.competition.fee.asRegular'} values={{amount: f.amount}} />
+                                                                <Trans
+                                                                    i18nKey={
+                                                                        'event.competition.fee.asRegular'
+                                                                    }
+                                                                    values={{amount: f.amount}}
+                                                                />
                                                             </Typography>
                                                             <Typography>
-                                                                <Trans i18nKey={'event.competition.fee.asLate'} values={{amount: f.lateAmount ?? f.amount}} />
+                                                                <Trans
+                                                                    i18nKey={
+                                                                        'event.competition.fee.asLate'
+                                                                    }
+                                                                    values={{
+                                                                        amount:
+                                                                            f.lateAmount ??
+                                                                            f.amount,
+                                                                    }}
+                                                                />
                                                             </Typography>
                                                         </>
                                                     ) : (
-                                                        <Typography>
-                                                            {f.amount}€
-                                                        </Typography>
-                                                    )
-                                                    }
+                                                        <Typography>{f.amount}€</Typography>
+                                                    )}
                                                 </Box>
                                             </ListItem>
                                         ))}
@@ -316,7 +336,7 @@ const CompetitionPage = () => {
                             </Card>
                         </Box>
                     </TabPanel>
-                    {user.loggedIn && showRegistrationsTab && (
+                    {showRegistrationsTab && (
                         <TabPanel index={'registrations'} activeTab={activeTab}>
                             <CompetitionRegistrations
                                 eventData={eventData}
@@ -324,9 +344,9 @@ const CompetitionPage = () => {
                             />
                         </TabPanel>
                     )}
-                    {user.loggedIn && showRegistrationsTab && (
+                    {showRegistrationsTab && (
                         <TabPanel index={'teams'} activeTab={activeTab}>
-                            <CompetitionRegistrationTeams eventData={eventData}/>
+                            <CompetitionRegistrationTeams eventData={eventData} />
                         </TabPanel>
                     )}
                     {user.checkPrivilege(updateEventGlobal) && (

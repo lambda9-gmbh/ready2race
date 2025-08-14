@@ -2,18 +2,28 @@ import TabPanel from '@components/tab/TabPanel.tsx'
 import {EventTab} from '../EventPage.tsx'
 import InvoiceTable from '@components/invoice/InvoiceTable.tsx'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
-import {EventDto, InvoiceDto, RegistrationInvoiceType, CatererTransactionViewDto} from '@api/types.gen.ts'
+import {
+    EventDto,
+    InvoiceDto,
+    RegistrationInvoiceType,
+    CatererTransactionViewDto,
+} from '@api/types.gen.ts'
 import {Trans, useTranslation} from 'react-i18next'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {getEventCatererTransactions, getEventInvoices, getEventInvoicingInfo, produceInvoicesForEventRegistrations} from '@api/sdk.gen.ts'
+import {
+    getEventCatererTransactions,
+    getEventInvoices,
+    getEventInvoicingInfo,
+    produceInvoicesForEventRegistrations,
+} from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {createInvoiceGlobal} from '@authorization/privileges.ts'
-import CatererTransactionTable from '@components/caterertransaction/CatererTransactionTable.tsx';
+import CatererTransactionTable from '@components/caterertransaction/CatererTransactionTable.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
-import {arrayOfNotNull, eventRegistrationPossible} from '@utils/helpers.ts'
+import {arrayOfNotNull, getRegistrationState} from '@utils/helpers.ts'
 import InlineLink from '@components/InlineLink.tsx'
 import SelectionMenu from '@components/SelectionMenu.tsx'
-import {Alert, Box, Card, CardContent, Stack, Typography} from "@mui/material";
+import {Alert, Box, Card, CardContent, Stack, Typography} from '@mui/material'
 
 type Props = {
     activeTab: EventTab
@@ -30,15 +40,22 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
     const {checkPrivilege} = useUser()
     const {confirmAction} = useConfirmation()
 
-    const {reloadData, ...invoiceAdministrationTableProps} = useEntityAdministration<InvoiceDto>(t('invoice.invoice'), {
-        entityCreate: false,
-        entityUpdate: false,
-    }).table
+    const {reloadData, ...invoiceAdministrationTableProps} = useEntityAdministration<InvoiceDto>(
+        t('invoice.invoice'),
+        {
+            entityCreate: false,
+            entityUpdate: false,
+        },
+    ).table
 
-    const catererTransactionAdministrationProps = useEntityAdministration<CatererTransactionViewDto>(t('catererTransaction.catererTransaction'), {
-        entityCreate: false,
-        entityUpdate: false,
-    })
+    const catererTransactionAdministrationProps =
+        useEntityAdministration<CatererTransactionViewDto>(
+            t('catererTransaction.catererTransaction'),
+            {
+                entityCreate: false,
+                entityUpdate: false,
+            },
+        )
 
     const handleProduceInvoices = (type: RegistrationInvoiceType) => {
         confirmAction(
@@ -72,52 +89,52 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
         )
     }
 
+    const registrationState = getRegistrationState(event)
+
     const problems: Record<
         InvoiceType,
         ('INVOICES_ALREADY_PRODUCED' | 'EVENT_REGISTRATION_ONGOING')[]
     > = {
         REGULAR: arrayOfNotNull(
             event.invoicesProduced ? 'INVOICES_ALREADY_PRODUCED' : null,
-            eventRegistrationPossible(
-                event.registrationAvailableFrom,
-                event.registrationAvailableTo,
-            )
-                ? 'EVENT_REGISTRATION_ONGOING'
-                : null,
+            registrationState === 'REGULAR' ? 'EVENT_REGISTRATION_ONGOING' : null,
         ),
         LATE: arrayOfNotNull(
             event.lateInvoicesProduced ? 'INVOICES_ALREADY_PRODUCED' : null,
-            eventRegistrationPossible(
-                event.registrationAvailableTo,
-                event.lateRegistrationAvailableTo,
-            )
-                ? 'EVENT_REGISTRATION_ONGOING'
-                : null,
+            registrationState === 'LATE' ? 'EVENT_REGISTRATION_ONGOING' : null,
         ),
     }
 
-    const {data, reload: reloadInvoicingInfo} = useFetch( signal => getEventInvoicingInfo({signal, path: {eventId: event.id}}))
+    const {data, reload: reloadInvoicingInfo} = useFetch(signal =>
+        getEventInvoicingInfo({signal, path: {eventId: event.id}}),
+    )
 
     return (
         <TabPanel index={'invoices'} activeTab={activeTab}>
             <Stack spacing={4}>
-                {data &&
+                {data && (
                     <Card>
                         <CardContent>
                             <Typography>
-                                <Trans i18nKey={'event.invoices.infoCard.totalAmount'} values={{amount: data?.totalAmount}} />
+                                <Trans
+                                    i18nKey={'event.invoices.infoCard.totalAmount'}
+                                    values={{amount: data?.totalAmount}}
+                                />
                             </Typography>
                             <Typography>
-                                <Trans i18nKey={'event.invoices.infoCard.paidAmount'} values={{amount: data?.paidAmount}} />
+                                <Trans
+                                    i18nKey={'event.invoices.infoCard.paidAmount'}
+                                    values={{amount: data?.paidAmount}}
+                                />
                             </Typography>
-                            {data?.producing &&
+                            {data?.producing && (
                                 <Alert severity={'warning'}>
                                     <Trans i18nKey={'event.invoices.infoCard.alert'} />
                                 </Alert>
-                            }
+                            )}
                         </CardContent>
                     </Card>
-                }
+                )}
                 <InvoiceTable
                     {...invoiceAdministrationTableProps}
                     reloadData={() => {
@@ -177,13 +194,17 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
                                         problems: problems[id].map(p =>
                                             t(`invoice.produce.error.${p}`),
                                         ),
-                                    })) satisfies {id: InvoiceType; label: string; problems: string[]}[]
+                                    })) satisfies {
+                                        id: InvoiceType
+                                        label: string
+                                        problems: string[]
+                                    }[]
                                 }
                             />
                         ) : undefined
                     }
                 />
-                <Box sx={{ mt: 4 }}>
+                <Box sx={{mt: 4}}>
                     <CatererTransactionTable
                         {...catererTransactionAdministrationProps.table}
                         title={t('catererTransaction.catererTransactions')}
