@@ -13,6 +13,7 @@ sealed class QrCodeDto() {
         val lastname: String,
         val id: UUID,
         val qrCodeId: String,
+        val eventId: UUID,
         val type: QrCodeDtoType,
         val clubName: String? = null,
         val competitions: List<String> = emptyList(),
@@ -23,6 +24,7 @@ sealed class QrCodeDto() {
         val lastname: String,
         val id: UUID,
         val qrCodeId: String,
+        val eventId: UUID,
         val type: QrCodeDtoType,
         val clubName: String? = null,
     ) : QrCodeDto()

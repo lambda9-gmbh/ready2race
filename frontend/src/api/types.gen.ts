@@ -904,6 +904,7 @@ export type LatestMatchResultInfo = {
     eventDayId?: string | null
     eventDayDate?: string | null
     eventDayName?: string | null
+    startTime?: string
     teams: Array<MatchResultTeamInfo>
 }
 
@@ -1269,6 +1270,7 @@ export type QrCodeAppuserResponse = {
     lastname: string
     id?: string
     qrCodeId: string
+    eventId: string
     type?: QrCodeDtoType
     clubName?: string | null
 }
@@ -1286,6 +1288,7 @@ export type QrCodeParticipantResponse = {
     lastname: string
     id?: string
     qrCodeId: string
+    eventId: string
     type?: QrCodeDtoType
     clubName?: string | null
     competitions?: Array<string>
@@ -4292,6 +4295,7 @@ export type GetLatestMatchResultsData = {
         eventId: string
     }
     query?: {
+        competitionId?: string
         limit?: number
     }
 }

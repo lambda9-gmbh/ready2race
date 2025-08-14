@@ -26,7 +26,8 @@ object QrCodeRepo {
     fun delete(qrCodeId: String) = QR_CODES.delete { QR_CODE_ID.eq(qrCodeId) }
     fun create(record: QrCodesRecord) = QR_CODES.insertReturning(record) { ID }
 
-    fun getQrCodeByParticipant(participantId: UUID, eventId: UUID) = QR_CODES.selectOne { PARTICIPANT.eq(participantId).and(EVENT.eq(eventId)) }
+    fun getQrCodeByParticipant(participantId: UUID, eventId: UUID) =
+        QR_CODES.selectOne { PARTICIPANT.eq(participantId).and(EVENT.eq(eventId)) }
 
     fun findByCode(qrCodeId: String): JIO<QrCodesRecord?> = Jooq.query {
         selectFrom(QR_CODES)
@@ -44,9 +45,16 @@ object QrCodeRepo {
             .where(QR_CODES.QR_CODE_ID.eq(qrCodeId))
             .fetchOne {
                 if (it[QR_CODES.APP_USER] != null) {
-                    it.into(APP_USER_WITH_ROLES).toQrCodeAppuser(it[QR_CODES.QR_CODE_ID]!!)
+                    it.into(APP_USER_WITH_ROLES)
+                        .toQrCodeAppuser(
+                            qrCodeId = it[QR_CODES.QR_CODE_ID]!!,
+                            eventId = it[QR_CODES.EVENT]!!
+                        )
                 } else {
-                    it.into(PARTICIPANT_VIEW).toQrCodeDto(it[QR_CODES.QR_CODE_ID]!!)
+                    it.into(PARTICIPANT_VIEW).toQrCodeDto(
+                        qrCodeId = it[QR_CODES.QR_CODE_ID]!!,
+                        eventId = it[QR_CODES.EVENT]!!
+                    )
                 }
             }
     }
@@ -73,7 +81,8 @@ object QrCodeRepo {
             appUserData?.let {
                 it.into(APP_USER_WITH_ROLES).toQrCodeAppuserWithClub(
                     qrCodeId = qrCode.qrCodeId,
-                    clubName = it[CLUB.NAME]
+                    clubName = it[CLUB.NAME],
+                    eventId = qrCode.event,
                 )
             }
         } else if (qrCode.participant != null) {
@@ -91,7 +100,8 @@ object QrCodeRepo {
             // Get competitions for participant
             val competitions = selectDistinct(COMPETITION_PROPERTIES.NAME)
                 .from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
-                .join(COMPETITION_REGISTRATION).on(COMPETITION_REGISTRATION.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION))
+                .join(COMPETITION_REGISTRATION)
+                .on(COMPETITION_REGISTRATION.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION))
                 .join(COMPETITION).on(COMPETITION.ID.eq(COMPETITION_REGISTRATION.COMPETITION))
                 .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
                 .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(qrCode.participant))
@@ -102,7 +112,8 @@ object QrCodeRepo {
                 it.into(PARTICIPANT_VIEW).toQrCodeDtoWithDetails(
                     qrCodeId = qrCode.qrCodeId,
                     clubName = it[CLUB.NAME],
-                    competitions = competitions
+                    competitions = competitions,
+                    eventId = qrCode.event,
                 )
             }
         } else {
