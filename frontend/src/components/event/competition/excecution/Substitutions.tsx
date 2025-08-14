@@ -263,7 +263,7 @@ const Substitutions = ({reloadRoundDto, roundDto, roundIndex}: Props) => {
                                     )}
                                 </Typography>
                                 {sub.swapSubstitution !== undefined ? (
-                                    <SwapHorizIcon sx={{px: 2}} />
+                                    <SwapHorizIcon />
                                 ) : (
                                     <Box sx={{display: 'flex', gap: 1, px: 2}}>
                                         <SouthIcon />

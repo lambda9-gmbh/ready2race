@@ -29,7 +29,6 @@ const QrParticipantPage = () => {
     const {qr, appFunction} = useAppSession()
     const {eventId} = qrEventRoute.useParams()
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [deleteQrCodeError, setDeleteQrCodeError] = useState<string | null>(null)
     const [checkedRequirements, setCheckedRequirements] = useState<CheckedParticipantRequirement[]>([])
     const [participantRoles, setParticipantRoles] = useState<string[]>([])
     const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
@@ -130,16 +129,17 @@ const QrParticipantPage = () => {
 
     const handleDelete = async () => {
         setSubmitting(true)
-        setDeleteQrCodeError(null)
         const {error} = await deleteQrCode({
             path: {qrCodeId: qr.qrCodeId!},
         })
         if (error) {
-            setDeleteQrCodeError(t('qrParticipant.deleteError'))
+            feedback.error( t('qrParticipant.deleteError'))
+        } else{
+            feedback.success(t('qrAssign.deleteSuccess'))
         }
         setDialogOpen(false)
-        qr.reset(eventId)
         setSubmitting(false)
+        qr.reset(eventId)
     }
 
     return (
@@ -149,8 +149,7 @@ const QrParticipantPage = () => {
             justifyContent="center"
             sx={{flex: 1, justifyContent: 'start'}}>
             <AppTopTitle title={t('qrParticipant.title')} />
-            {/* Caterer food restriction message */}
-            {isCaterer && qr.response && (
+            {isCaterer && qr.response !== undefined && qr.response !== null && (
                 <Box
                     sx={{
                         display: 'flex',
@@ -168,8 +167,9 @@ const QrParticipantPage = () => {
                 </Box>
             )}
 
-            {/* QR Code Assignment Info Box */}
-            {qr.response && allowed && !isCaterer && <QrAssignmentInfo response={qr.response} />}
+            {qr.response !== undefined && qr.response !== null && allowed && !isCaterer && (
+                <QrAssignmentInfo response={qr.response} />
+            )}
 
             {!allowed && <Alert severity="warning">{t('qrParticipant.noRight')}</Alert>}
 
@@ -195,13 +195,11 @@ const QrParticipantPage = () => {
                 </Button>
             )}
 
-            {/*TODO useConfirmation()*/}
             <QrDeleteDialog
                 open={dialogOpen}
                 onClose={() => setDialogOpen(false)}
                 onDelete={handleDelete}
                 loading={submitting}
-                error={deleteQrCodeError}
                 type="participant"
             />
         </Stack>

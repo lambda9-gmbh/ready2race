@@ -804,7 +804,8 @@ export type FeeRequest = {
 export type Gender = 'M' | 'F' | 'D'
 
 export type GroupedParticipantQrAssignmentDto = {
-    competitionRegistration: string
+    competitionRegistrationId: string
+    competitionRegistrationName: string
     competitionName: string
     participants: Array<ParticipantQrAssignmentDto>
 }
@@ -1103,9 +1104,6 @@ export type ParticipantForEventDto = {
     participantRequirementsChecked?: Array<CheckedParticipantRequirement>
     qrCodeId?: string
     namedParticipantIds?: Array<string>
-    currentStatus?: ParticipantScanType
-    lastScanAt?: string
-    lastScanBy?: AppUserNameDto
 }
 
 export type ParticipantForExecutionDto = {
@@ -1136,9 +1134,7 @@ export type ParticipantQrAssignmentDto = {
     firstname: string
     lastname: string
     qrCodeValue?: string | null
-    namedParticipant: string
-    competitionRegistration: string
-    competitionName: string
+    namedParticipantName: string
 }
 
 export type ParticipantRequirementCheckForEventConfigDto = {
@@ -4497,7 +4493,7 @@ export type CheckQrCodeData = {
     }
 }
 
-export type CheckQrCodeResponse = QrCodeParticipantResponse | QrCodeAppuserResponse
+export type CheckQrCodeResponse = (QrCodeParticipantResponse | QrCodeAppuserResponse) | void
 
 export type CheckQrCodeError = BadRequestError | ApiError | UnprocessableEntityError
 

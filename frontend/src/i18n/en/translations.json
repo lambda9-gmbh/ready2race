@@ -1253,7 +1253,8 @@
     "search": "Search...",
     "confirmSelection": "Confirm selection",
     "confirm": "Add",
-    "success": "QR Code successfully assigned"
+    "success": "QR Code successfully assigned",
+    "deleteSuccess": "QR code assignment successfully removed"
   },
   "qrCode": {
     "qrCode": "QR Code",
@@ -1273,7 +1274,6 @@
     "removeAssignmentTitle": "Remove QR code assignment",
     "removeAssignmentConfirm": "Do you really want to remove the QR code assignment?",
     "deleteError": "Error while deleting",
-    "deleteSuccess": "QR code assignment successfully removed",
     "assignmentInfo": "Assignment information"
   },
   "qrParticipant": {

@@ -23,6 +23,7 @@ import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchRe
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
+import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
@@ -764,22 +765,27 @@ object CompetitionExecutionService {
                     sub.participantIn!!.id == p.id || sub.participantOut!!.id == p.id
                 }
                 p to subsRelevantForParticipant
-            }.filter { pToSubs ->
-                if (pToSubs.second.isEmpty()) {
+            }.filter { (participant, subs) ->
+                if (subs.isEmpty()) {
                     true
                 } else {
-                    pToSubs.second.last().participantIn!!.id == pToSubs.first.id
+                    subs.last().participantIn!!.id == participant.id || (SubstitutionService.getSwapSubstitution(subs.last(), subs) != null)
                 }
-            }.map { pToSubs ->
-                pToSubs.first to if (pToSubs.second.isEmpty()) {
+            }.map { (participant, subs) ->
+                participant to if (subs.isEmpty()) {
                     PersistedNamedParticipant(
-                        id = pToSubs.first.namedParticipantId,
-                        name = pToSubs.first.namedParticipantName,
+                        id = participant.namedParticipantId,
+                        name = participant.namedParticipantName,
                     )
                 } else {
+                    val subNamedParticipant = if(subs.last().participantIn!!.id == participant.id){
+                        subs.last() // This is the scenario if the last sub is a sub in - it doesn't matter if that is a sub in or a swap
+                    } else {
+                        subs[subs.lastIndex - 1] // As checked before this is the scenario where the last sub was a swap so the namedParticipant comes from the swap substitution (second to last)
+                    }
                     PersistedNamedParticipant(
-                        id = pToSubs.second.last().namedParticipantId!!,
-                        name = pToSubs.second.last().namedParticipantName!!,
+                        id = subNamedParticipant.namedParticipantId!!,
+                        name = subNamedParticipant.namedParticipantName!!,
                     )
                 }
             }

@@ -2,9 +2,10 @@ package de.lambda9.ready2race.backend.app.participant.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
-import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
@@ -43,5 +44,50 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
         usedInRegistration = usedInRegistration!!,
         createdAt = createdAt!!,
         updatedAt = updatedAt!!,
+    )
+)
+
+fun SubstitutionViewRecord.participantInToParticipantForEventDto(
+    namedParticipantIds: List<UUID>,
+    participantRequirementsChecked: List<CheckedParticipantRequirement>,
+    qrCode: String?,
+): App<Nothing, ParticipantForEventDto> = KIO.ok(
+    ParticipantForEventDto(
+        id = participantIn!!.id,
+        clubId = clubId!!,
+        clubName = clubName!!,
+        firstname = participantIn!!.firstname,
+        lastname = participantIn!!.lastname,
+        year = participantIn!!.year,
+        gender = participantIn!!.gender,
+        external = participantIn!!.external,
+        externalClubName = participantIn!!.externalClubName,
+        participantRequirementsChecked = participantRequirementsChecked,
+        namedParticipantIds = namedParticipantIds,
+        qrCodeId = qrCode,
+    )
+)
+
+fun ParticipantForEventRecord.toDto(
+    overwriteNamedParticipantIds: List<UUID>?,
+): App<Nothing, ParticipantForEventDto> = KIO.ok(
+    ParticipantForEventDto(
+        id = id!!,
+        clubId = clubId!!,
+        clubName = clubName!!,
+        firstname = firstname!!,
+        lastname = lastname!!,
+        year = year!!,
+        gender = gender!!,
+        external = external,
+        externalClubName = externalClubName,
+        participantRequirementsChecked = participantRequirementsChecked!!.map{ reqChecked ->
+            CheckedParticipantRequirement(
+                id = reqChecked!!.id!!,
+                note = reqChecked.note
+            )
+        },
+        namedParticipantIds = overwriteNamedParticipantIds ?: namedParticipantIds!!.filterNotNull(),
+        qrCodeId = qrCodeId
     )
 )

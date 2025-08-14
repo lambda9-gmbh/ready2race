@@ -7,10 +7,10 @@ import io.ktor.http.*
 enum class QrCodeError : ServiceError {
 
     QrCodeAlreadyInUse,
-    QrCodeNotInUse;
+    QrCodeNotFound;
 
     override fun respond(): ApiError = when (this) {
-        QrCodeNotInUse -> ApiError(status = HttpStatusCode.NotFound, message = "Qr Code not found")
+        QrCodeNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Qr Code not found")
         QrCodeAlreadyInUse -> ApiError(status = HttpStatusCode.Conflict, message = "Qr Code already in use.")
     }
 }

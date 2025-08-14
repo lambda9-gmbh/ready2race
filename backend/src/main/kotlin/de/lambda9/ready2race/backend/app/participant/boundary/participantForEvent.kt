@@ -21,7 +21,7 @@ fun Route.participantForEvent() {
                 val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.REGISTRATION)
                 val eventId = !pathParam("eventId", uuid)
                 val params = !pagination<ParticipantForEventSort>()
-                ParticipantService.pageForEvent(params, eventId, user, scope)
+                ParticipantService.pageForEvent(params, eventId, user.club, scope)
             }
         }
 
@@ -59,7 +59,7 @@ fun Route.participantForEvent() {
                 val user = !authenticate(Privilege.UpdateAppEventRequirementGlobal)
                 val eventId = !pathParam("eventId", uuid)
                 val params = !pagination<ParticipantForEventSort>()
-                ParticipantService.pageForEvent(params, eventId, user, Privilege.Scope.GLOBAL)
+                ParticipantService.pageForEvent(params, eventId, user.club, Privilege.Scope.GLOBAL)
             }
         }
     }

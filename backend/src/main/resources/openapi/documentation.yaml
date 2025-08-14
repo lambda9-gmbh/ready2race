@@ -5309,14 +5309,14 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/QrCodeParticipantResponse'
                   - $ref: '#/components/schemas/QrCodeAppuserResponse'
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
-        404:
-          $ref: '#/components/responses/404'
         422:
           $ref: '#/components/responses/422'
         500:
@@ -7631,13 +7631,6 @@ components:
           items:
             type: string
             format: uuid
-        currentStatus:
-          $ref: '#/components/schemas/ParticipantScanType'
-        lastScanAt:
-          type: string
-          format: date-time
-        lastScanBy:
-          $ref: '#/components/schemas/AppUserNameDto'
 
 
     # participant
@@ -9858,9 +9851,7 @@ components:
         - participantId
         - firstname
         - lastname
-        - namedParticipant
-        - competitionRegistration
-        - competitionName
+        - namedParticipantName
       properties:
         participantId:
           type: string
@@ -9871,22 +9862,23 @@ components:
         qrCodeValue:
           type: string
           nullable: true
-        namedParticipant:
-          type: string
-        competitionRegistration:
-          type: string
-        competitionName:
+        namedParticipantName:
           type: string
 
     GroupedParticipantQrAssignmentDto:
       type: object
       required:
-        - competitionRegistration
+        - competitionRegistrationId
+        - competitionRegistrationName
         - competitionName
         - participants
       properties:
-        competitionRegistration:
+        competitionRegistrationId:
           type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+          format: uuid
         competitionName:
           type: string
         participants:

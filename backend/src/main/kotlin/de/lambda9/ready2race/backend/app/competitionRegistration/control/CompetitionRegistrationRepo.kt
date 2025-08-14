@@ -1,12 +1,10 @@
 package de.lambda9.ready2race.backend.app.competitionRegistration.control
 
-import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
-import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
@@ -27,8 +25,6 @@ import org.jooq.Field
 import org.jooq.impl.DSL
 import java.util.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
-import org.jooq.Record5
-import java.time.LocalDateTime
 
 object CompetitionRegistrationRepo {
 
@@ -142,10 +138,7 @@ object CompetitionRegistrationRepo {
 
         val optionalFees = selectFees()
 
-        // Subquery to get the latest team tracking data
-        val participantTracking = selectParticipantTrackings()
-
-        val participants = selectParticipants(participantTracking)
+        val participants = selectParticipants()
 
         val namedParticipants = selectNamedParticipants(participants)
 
@@ -247,7 +240,7 @@ object CompetitionRegistrationRepo {
         }
 
 
-    private fun selectParticipants(participantTracking: Field<List<Record5<String?, LocalDateTime?, UUID?, String?, String?>>?>) =
+    private fun selectParticipants() =
         DSL.select(
             PARTICIPANT_FOR_EVENT.EVENT_ID,
             PARTICIPANT_FOR_EVENT.ID,
@@ -261,7 +254,6 @@ object CompetitionRegistrationRepo {
             PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
             PARTICIPANT_FOR_EVENT.QR_CODE_ID,
             PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS,
-            participantTracking
         )
             .from(PARTICIPANT_FOR_EVENT)
             .join(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
@@ -301,42 +293,9 @@ object CompetitionRegistrationRepo {
                         qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],
                         namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
                             ?: emptyList(),
-                        currentStatus = it[participantTracking]?.firstOrNull()
-                            ?.let { latestScan -> ParticipantScanType.valueOf(latestScan.value1()!!) },
-                        lastScanAt = it[participantTracking]?.firstOrNull()?.value2(),
-                        lastScanBy = it[participantTracking]?.firstOrNull().let { tracking ->
-                            if (tracking?.value3() != null && tracking.value4() != null && tracking.value5() != null) {
-                                AppUserNameDto(
-                                    id = tracking.value3()!!,
-                                    firstname = tracking.value4()!!,
-                                    lastname = tracking.value5()!!,
-                                )
-                            } else null
-                        }
                     )
                 }
             }
-
-    fun selectParticipantTrackings() = DSL.select(
-        PARTICIPANT_TRACKING.SCAN_TYPE,
-        PARTICIPANT_TRACKING.SCANNED_AT,
-        PARTICIPANT_TRACKING.SCANNED_BY,
-        APP_USER.FIRSTNAME,
-        APP_USER.LASTNAME
-    )
-        .from(PARTICIPANT_TRACKING)
-        .leftJoin(APP_USER).on(PARTICIPANT_TRACKING.SCANNED_BY.eq(APP_USER.ID))
-        .where(
-            PARTICIPANT_TRACKING.EVENT.eq(PARTICIPANT_FOR_EVENT.EVENT_ID).and(
-                PARTICIPANT_TRACKING.PARTICIPANT.eq(
-                    PARTICIPANT_FOR_EVENT.ID
-                )
-            )
-        )
-        .orderBy(PARTICIPANT_TRACKING.SCANNED_AT.desc())
-        .limit(1)
-        .asMultiset("participantTracking")
-        .convertFrom { it?.toList() }
 
 
     fun selectParticipantForEvent(eventId: UUID, participantId: UUID) =

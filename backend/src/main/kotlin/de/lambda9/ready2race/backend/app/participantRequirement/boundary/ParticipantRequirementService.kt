@@ -1,8 +1,11 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.participantRequirement.control.*
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
@@ -367,8 +370,22 @@ object ParticipantRequirementService {
         participantId: UUID,
         onlyForApp: Boolean,
     ): App<ParticipantError, ApiResponse.ListDto<ParticipantRequirementForEventDto>> = KIO.comprehension {
-        val participantForEvent = !CompetitionRegistrationRepo.selectParticipantForEvent(eventId, participantId).orDie()
-            .onNullFail { ParticipantError.ParticipantNotFound }
+
+        // TODO: Refactor this - This is a shortcut to get the substitution changes on the requirements
+        val participant =
+            !ParticipantRepo.get(participantId).orDie().onNullFail { ParticipantError.ParticipantNotFound }
+        val participantForEvent = !ParticipantService.pageForEvent(
+            PaginationParameters(
+                limit = null,
+                search = null,
+                sort = null,
+                offset = null
+            ),
+            eventId = eventId,
+            clubId = null,
+            scope = Privilege.Scope.GLOBAL,
+            specificParticipantId = participant.id,
+        ).map { page -> page.data.firstOrNull() }.onNullFail { ParticipantError.ParticipantNotFound }
 
         val requirementsForEvent = !ParticipantRequirementForEventRepo.get(
             eventId = eventId,
@@ -377,7 +394,7 @@ object ParticipantRequirementService {
         ).orDie()
 
         val requirementsForParticipant = requirementsForEvent.filter { eventReq ->
-            eventReq.requirements!!.any { npReq -> participantForEvent.namedParticipantIds!!.any { it == npReq!!.id } } || eventReq.requirements?.size == 0
+            eventReq.requirements!!.any { npReq -> participantForEvent.namedParticipantIds.any { it == npReq!!.id } } || eventReq.requirements?.size == 0
         }
 
         ok(

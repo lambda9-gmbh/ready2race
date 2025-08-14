@@ -22,6 +22,7 @@ import UserAssignment from '@components/qrApp/assign/UserAssignment'
 import SystemUserScanner from '@components/qrApp/assign/SystemUserScanner'
 import {useFeedback} from "@utils/hooks.ts";
 import AppTopTitle from "@components/qrApp/AppTopTitle.tsx";
+import {ParticipantQrAssignmentDto} from "@api/types.gen.ts";
 
 type UserTyp = 'Participant' | 'User' | 'SystemUser'
 
@@ -64,20 +65,14 @@ const QrAssignPage = () => {
     }
 
     const handleParticipantClick = (
-        participant: {
-            participantId: string
-            firstname: string
-            lastname: string
-            namedParticipant: string
-            qrCodeValue?: string | null
-        },
+        participant: ParticipantQrAssignmentDto,
         competitionName: string,
     ) => {
         setSelectedPerson({
             id: participant.participantId,
             name: `${participant.firstname} ${participant.lastname}`,
             type: 'participant',
-            additionalInfo: [competitionName, participant.namedParticipant],
+            additionalInfo: [competitionName, participant.namedParticipantName],
         })
         setConfirmationOpen(true)
     }
@@ -95,21 +90,31 @@ const QrAssignPage = () => {
         if (!selectedPerson) return
 
         if (selectedPerson.type === 'participant') {
-            await updateQrCodeParticipant({
+            const {error} = await updateQrCodeParticipant({
                 body: {
                     qrCodeId: qr.qrCodeId!,
                     eventId: eventId,
                     id: selectedPerson.id,
                 },
             })
+            if(error){
+                feedback.error(t('common.error.unexpected'))
+            } else {
+                feedback.success(t('qrAssign.successParticipant'))
+            }
         } else {
-            await updateQrCodeAppuser({
+            const {error} = await updateQrCodeAppuser({
                 body: {
                     qrCodeId: qr.qrCodeId!,
                     eventId: eventId,
                     id: selectedPerson.id,
                 },
             })
+            if(error){
+                feedback.error(t('common.error.unexpected'))
+            } else {
+                feedback.success(t('qrAssign.successUser'))
+            }
         }
 
         setConfirmationOpen(false)

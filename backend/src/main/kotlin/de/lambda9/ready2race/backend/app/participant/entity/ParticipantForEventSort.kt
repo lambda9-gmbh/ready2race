@@ -20,4 +20,13 @@ enum class ParticipantForEventSort : Sortable {
         YEAR -> listOf(PARTICIPANT_FOR_EVENT.YEAR)
         GENDER -> listOf(PARTICIPANT_FOR_EVENT.GENDER)
     }
+
+    fun comparator(): Comparator<ParticipantForEventDto> = when (this) {
+        FIRSTNAME -> compareBy { it.firstname }
+        LASTNAME -> compareBy { it.lastname }
+        EXTERNAL_CLUB_NAME -> compareBy { it.externalClubName ?: "" }
+        CLUB_NAME -> compareBy { it.clubName }
+        YEAR -> compareBy { it.year ?: Int.MIN_VALUE }
+        GENDER -> compareBy { it.gender }
+    }
 }

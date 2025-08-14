@@ -21,7 +21,7 @@ fun Route.user() {
     route("/user") {
         get {
             call.respondComprehension {
-                val user = !authenticate(Privilege.ReadUserGlobal)
+                val user = !authenticateAny(Privilege.ReadUserGlobal, Privilege.UpdateAppQrManagementGlobal)
                 val noClub = !optionalQueryParam("noClub", boolean)
 
                 if (user.id == SYSTEM_USER) {
