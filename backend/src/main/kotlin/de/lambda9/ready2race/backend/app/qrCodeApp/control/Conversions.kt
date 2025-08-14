@@ -15,19 +15,21 @@ import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
 
-fun ParticipantViewRecord.toQrCodeDto(qrCodeId: String): QrCodeDto.QrCodeParticipantResponseDto =
+fun ParticipantViewRecord.toQrCodeDto(qrCodeId: String, eventId: UUID): QrCodeDto.QrCodeParticipantResponseDto =
     QrCodeDto.QrCodeParticipantResponseDto(
         firstname = firstname!!,
         lastname = lastname!!,
         id = id!!,
         type = QrCodeDto.QrCodeDtoType.Participant,
-        qrCodeId = qrCodeId
+        qrCodeId = qrCodeId,
+        eventId = eventId,
     )
 
 fun ParticipantViewRecord.toQrCodeDtoWithDetails(
     qrCodeId: String,
     clubName: String?,
-    competitions: List<String>
+    competitions: List<String>,
+    eventId: UUID
 ): QrCodeDto.QrCodeParticipantResponseDto =
     QrCodeDto.QrCodeParticipantResponseDto(
         firstname = firstname!!,
@@ -36,22 +38,14 @@ fun ParticipantViewRecord.toQrCodeDtoWithDetails(
         type = QrCodeDto.QrCodeDtoType.Participant,
         qrCodeId = qrCodeId,
         clubName = clubName,
-        competitions = competitions
+        competitions = competitions,
+        eventId = eventId,
     )
 
 
-fun AppUserWithRolesRecord.toQrCodeAppuser(qrCodeId: String): QrCodeDto.QrCodeAppuserResponseDto =
-    QrCodeDto.QrCodeAppuserResponseDto(
-        firstname = firstname!!,
-        lastname = lastname!!,
-        id = id!!,
-        type = QrCodeDto.QrCodeDtoType.User,
-        qrCodeId = qrCodeId
-    )
-
-fun AppUserWithRolesRecord.toQrCodeAppuserWithClub(
+fun AppUserWithRolesRecord.toQrCodeAppuser(
     qrCodeId: String,
-    clubName: String?
+    eventId: UUID
 ): QrCodeDto.QrCodeAppuserResponseDto =
     QrCodeDto.QrCodeAppuserResponseDto(
         firstname = firstname!!,
@@ -59,7 +53,22 @@ fun AppUserWithRolesRecord.toQrCodeAppuserWithClub(
         id = id!!,
         type = QrCodeDto.QrCodeDtoType.User,
         qrCodeId = qrCodeId,
-        clubName = clubName
+        eventId = eventId,
+    )
+
+fun AppUserWithRolesRecord.toQrCodeAppuserWithClub(
+    qrCodeId: String,
+    clubName: String?,
+    eventId: UUID,
+): QrCodeDto.QrCodeAppuserResponseDto =
+    QrCodeDto.QrCodeAppuserResponseDto(
+        firstname = firstname!!,
+        lastname = lastname!!,
+        id = id!!,
+        type = QrCodeDto.QrCodeDtoType.User,
+        qrCodeId = qrCodeId,
+        clubName = clubName,
+        eventId = eventId,
     )
 
 fun QrCodeUpdateDto.toRecord(userId: UUID): QrCodesRecord = when (this) {

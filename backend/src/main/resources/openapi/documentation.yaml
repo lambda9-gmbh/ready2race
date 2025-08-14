@@ -9387,6 +9387,9 @@ components:
         eventDayName:
           type: string
           nullable: true
+        startTime:
+          type: string
+          format: date-time
         teams:
           type: array
           items:
@@ -9660,12 +9663,13 @@ components:
 
     QrCodeParticipantResponse:
       type: object
-      required: [ firstname, lastname, uuid, qrCodeId ]
+      required: [ firstname, lastname, uuid, qrCodeId, eventId ]
       properties:
         firstname: { type: string }
         lastname: { type: string }
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
+        eventId: { type: string }
         type:      { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
         competitions:
@@ -9675,12 +9679,13 @@ components:
 
     QrCodeAppuserResponse:
       type: object
-      required: [ firstname, lastname, uuid, qrCodeId ]
+      required: [ firstname, lastname, uuid, qrCodeId, eventId ]
       properties:
         firstname: { type: string }
         lastname: { type: string }
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
+        eventId: { type: string }
         type:      { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
 

@@ -21,6 +21,7 @@ import {de, enUS} from 'date-fns/locale'
 import {useFetch} from '@utils/hooks'
 import {getLatestMatchResults} from '@api/sdk.gen'
 import {EmojiEvents} from '@mui/icons-material'
+import SinglePlaceColored from "@components/event/info/views/SinglePlaceColored.tsx";
 
 interface LatestMatchResultsViewProps {
     eventId: string
@@ -141,26 +142,7 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                             .map(team => (
                                                 <TableRow key={team.teamId}>
                                                     <TableCell align="center">
-                                                        <Typography
-                                                            variant="h6"
-                                                            sx={{
-                                                                fontWeight:
-                                                                    team.place === 1
-                                                                        ? 'bold'
-                                                                        : team.place <= 3
-                                                                          ? 'medium'
-                                                                          : 'normal',
-                                                                color:
-                                                                    team.place === 1
-                                                                        ? 'gold'
-                                                                        : team.place === 2
-                                                                          ? 'silver'
-                                                                          : team.place === 3
-                                                                            ? '#CD7F32'
-                                                                            : 'inherit',
-                                                            }}>
-                                                            {team.place}
-                                                        </Typography>
+                                                        <SinglePlaceColored place={team.place} />
                                                     </TableCell>
                                                     <TableCell>
                                                         <Typography variant="body2">

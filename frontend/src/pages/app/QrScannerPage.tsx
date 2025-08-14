@@ -51,7 +51,7 @@ const QrScannerPage = () => {
             } catch (error) {
                 feedback.error(
                     t('common.load.error.single', {
-                        entity: t('task.task'),
+                        entity: t('qrCode.qrCode'),
                     }),
                 )
             }

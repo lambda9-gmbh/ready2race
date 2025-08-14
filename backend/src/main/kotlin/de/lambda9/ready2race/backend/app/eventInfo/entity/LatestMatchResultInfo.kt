@@ -16,6 +16,7 @@ data class LatestMatchResultInfo(
     val eventDayId: UUID?,
     val eventDayDate: LocalDate?,
     val eventDayName: String?,
+    val startTime: LocalDateTime?,
     val teams: List<MatchResultTeamInfo>
 )
 

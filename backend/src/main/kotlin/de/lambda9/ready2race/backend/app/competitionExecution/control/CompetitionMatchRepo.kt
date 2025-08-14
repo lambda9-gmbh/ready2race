@@ -37,6 +37,7 @@ object CompetitionMatchRepo {
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.UPDATED_AT,
+            COMPETITION_MATCH.START_TIME,
             COMPETITION_SETUP_MATCH.NAME.`as`("match_name"),
             COMPETITION_SETUP_ROUND.NAME.`as`("round_name"),
             COMPETITION.ID.`as`("competition_id"),

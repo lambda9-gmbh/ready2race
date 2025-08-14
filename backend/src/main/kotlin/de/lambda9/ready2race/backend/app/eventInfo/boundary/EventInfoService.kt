@@ -127,6 +127,7 @@ object EventInfoService {
                 eventDayId = match.get("event_day_id", UUID::class.java),
                 eventDayDate = match.get("event_day_date", LocalDate::class.java),
                 eventDayName = match.get("event_day_name", String::class.java),
+                startTime = match[COMPETITION_MATCH.START_TIME],
                 teams = teams
             )
         }
