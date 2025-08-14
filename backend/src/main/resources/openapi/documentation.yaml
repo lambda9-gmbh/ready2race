@@ -5683,6 +5683,7 @@ components:
         - SPREADSHEET_COLUMN_UNKNOWN
         - SPREADSHEET_CELL_BLANK
         - SPREADSHEET_WRONG_CELL_TYPE
+        - SPREADSHEET_UNPARSABLE_STRING
         - WRONG_TEAM_COUNT
         - DUPLICATE_START_NUMBERS
         - DUPLICATE_PLACES
@@ -6884,8 +6885,7 @@ components:
         participantRequirementsChecked:
           type: array
           items:
-            type: string
-            format: uuid
+            $ref: '#/components/schemas/CheckedParticipantRequirement'
         currentStatus:
           $ref: '#/components/schemas/ParticipantScanType'
         lastScanAt:
@@ -7289,16 +7289,15 @@ components:
           type: boolean
           description: "Per App prüfbar"
 
-    ParticipantRequirementReducedDto:
+    CheckedParticipantRequirement:
       type: object
       required:
         - id
-        - name
       properties:
         id:
           type: string
           format: uuid
-        name:
+        note:
           type: string
 
     ParticipantRequirementForEventDto:
@@ -7398,8 +7397,7 @@ components:
         approvedParticipants:
           type: array
           items:
-            type: string
-            format: uuid
+            $ref: '#/components/schemas/CheckedParticipantRequirement'
         namedParticipantId:
           type: string
           format: uuid
@@ -7625,7 +7623,7 @@ components:
         participantRequirementsChecked:
           type: array
           items:
-            $ref: '#/components/schemas/ParticipantRequirementReducedDto'
+            $ref: '#/components/schemas/CheckedParticipantRequirement'
         qrCodeId:
           type: string
         namedParticipantIds:

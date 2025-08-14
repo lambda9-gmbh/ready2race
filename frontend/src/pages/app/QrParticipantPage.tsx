@@ -22,13 +22,14 @@ import {QrDeleteDialog} from '@components/qrApp/QrDeleteDialog'
 import {TeamCheckInOut} from '@components/qrApp/TeamCheckInOut'
 import {RequirementsChecklist} from '@components/qrApp/RequirementsChecklist'
 import AppTopTitle from '@components/qrApp/AppTopTitle.tsx'
+import {CheckedParticipantRequirement} from "@api/types.gen.ts";
 
 const QrParticipantPage = () => {
     const {t} = useTranslation()
     const {qr, appFunction} = useAppSession()
     const {eventId} = qrEventRoute.useParams()
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [checkedRequirements, setCheckedRequirements] = useState<string[]>([])
+    const [checkedRequirements, setCheckedRequirements] = useState<CheckedParticipantRequirement[]>([])
     const [participantRoles, setParticipantRoles] = useState<string[]>([])
     const [participantRequirementsPending, setParticipantRequirementsPending] = useState(false)
     const [submitting, setSubmitting] = useState(false)
@@ -68,8 +69,6 @@ const QrParticipantPage = () => {
                         setCheckedRequirements(
                             Array.isArray(participant?.participantRequirementsChecked)
                                 ? participant.participantRequirementsChecked
-                                      .map(r => r.id)
-                                      .filter((id: string | undefined): id is string => !!id)
                                 : [],
                         )
                         setParticipantRoles(participant?.namedParticipantIds ?? [])
@@ -90,7 +89,7 @@ const QrParticipantPage = () => {
 
     const handleRequirementChange = async (
         requirementId: string,
-        checked: boolean,
+        checked: boolean | string,
         namedParticipantId?: string,
     ) => {
         if (!qr.response?.id) return
@@ -99,7 +98,7 @@ const QrParticipantPage = () => {
             path: {eventId},
             body: {
                 requirementId,
-                approvedParticipants: checked ? [qr.response.id] : [],
+                approvedParticipants: checked !== false ? [{id: qr.response.id, note: typeof checked === 'string' ? checked : undefined}] : [],
                 namedParticipantId: namedParticipantId,
             },
         })
@@ -110,8 +109,6 @@ const QrParticipantPage = () => {
         setCheckedRequirements(
             Array.isArray(participant?.participantRequirementsChecked)
                 ? participant.participantRequirementsChecked
-                      .map(r => r.id)
-                      .filter((id: string | undefined): id is string => !!id)
                 : [],
         )
         setSubmitting(false)

@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.xls
 
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.recover
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import org.apache.poi.ss.usermodel.Cell
 import org.apache.poi.ss.usermodel.CellType
@@ -25,6 +24,8 @@ fun interface CellParser<A> {
             when (input.cellType) {
                 CellType.BLANK -> KIO.fail(XLSReadError.CellError.ParseError.CellBlank(row, col))
                 CellType.NUMERIC -> KIO.ok(input.numericCellValue)
+                // TODO: maybe configurable, how strict/lax
+                CellType.STRING -> input.stringCellValue.let{ value -> value.toDoubleOrNull()?.let { KIO.ok(it) } ?: KIO.fail(XLSReadError.CellError.ParseError.UnparsableStringValue(row, col, value)) }
                 else -> KIO.fail(XLSReadError.CellError.ParseError.WrongCellType(row, col, input.cellType, CellType.NUMERIC))
             }
         }

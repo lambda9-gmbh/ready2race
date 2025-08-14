@@ -32,6 +32,7 @@ drop view if exists event_registrations_view;
 drop view if exists event_view;
 drop view if exists event_public_view;
 drop view if exists participant_for_event;
+drop view if exists checked_participant_requirement;
 drop view if exists participant_id_for_event;
 drop view if exists participant_requirement_for_event;
 drop view if exists participant_requirement_named_participant;
@@ -419,6 +420,15 @@ from event_registration er
          join participant p on crnp.participant = p.id
 group by er.event, p.id;
 
+create view checked_participant_requirement as
+select pr.*,
+       phrfe.note,
+       phrfe.participant,
+       phrfe.event
+from participant_requirement pr
+         join participant_has_requirement_for_event phrfe on pr.id = phrfe.participant_requirement
+;
+
 create view participant_for_event as
 select er.event                                                                  as event_id,
        c.id                                                                      as club_id,
@@ -430,7 +440,7 @@ select er.event                                                                 
        p.gender,
        p.external,
        p.external_club_name,
-       coalesce(array_agg(distinct pr) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
+       coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
        qc.qr_code_id,
        array_agg(distinct crnp.named_participant)                                as named_participant_ids
 from event_registration er
@@ -438,8 +448,7 @@ from event_registration er
          join competition_registration cr on er.id = cr.event_registration
          join competition_registration_named_participant crnp on cr.id = crnp.competition_registration
          join participant p on crnp.participant = p.id
-         left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = er.event
-         left join participant_requirement pr on phrfe.participant_requirement = pr.id
+         left join checked_participant_requirement cpr on p.id = cpr.participant and er.event = cpr.event
          left join qr_codes qc on qc.participant = p.id
 group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name,
          qc.id
@@ -898,7 +907,7 @@ select crnp.competition_registration                                            
        np.id                                                                        as role_id,
        np.name                                                                      as role,
        qc.qr_code_id                                                                as qr_code,
-       coalesce(array_agg(distinct pr.id) filter ( where pr.id is not null ), '{}') as participant_requirements_checked,
+       coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
        coalesce(array_agg(distinct pt) filter ( where pt.id is not null ), '{}')    as trackings
 from competition_registration_named_participant crnp
          left join named_participant np on crnp.named_participant = np.id
@@ -907,8 +916,7 @@ from competition_registration_named_participant crnp
          left join competition c on cr.competition = c.id
          left join participant_tracking_for_team_participant pt on p.id = pt.participant_id and c.event = pt.event_id
          left join qr_codes qc on qc.participant = p.id
-         left join participant_has_requirement_for_event phrfe on p.id = phrfe.participant and phrfe.event = c.event
-         left join participant_requirement pr on phrfe.participant_requirement = pr.id
+         left join checked_participant_requirement cpr on p.id = cpr.participant and c.event = cpr.event
 group by crnp.competition_registration, p.id, p.firstname, p.lastname, p.year, p.gender, p.external,
          p.external_club_name, np.id, np.name, qc.qr_code_id
 ;

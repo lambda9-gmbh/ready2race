@@ -7,6 +7,7 @@ import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
 import {checkQrCode} from '@api/sdk.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
+import Config from '../../Config.ts'
 
 const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/
 
@@ -78,17 +79,19 @@ const QrScannerPage = () => {
                     maxWidth: 400,
                     mt: 2,
                 }}>
-                <Button
-                    onClick={() => handleScannerResult('b294a2e0-039d-4ede-bd84-c61a47dd9c04')}
-                    fullWidth
-                    size="large"
-                    variant="contained"
-                    color="primary"
-                    sx={{
-                        py: {xs: 1.5, sm: 2},
-                    }}>
-                    Dev (Test)
-                </Button>
+                {(Config.mode === 'development' || Config.mode === 'test') && (
+                    <Button
+                        onClick={() => handleScannerResult('b294a2e0-039d-4ede-bd84-c61a47dd9c04')}
+                        fullWidth
+                        size="large"
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                            py: {xs: 1.5, sm: 2},
+                        }}>
+                        Skip ({Config.mode}-mode)
+                    </Button>
+                )}
                 {showBackButton && (
                     <Button onClick={goBack} fullWidth variant="outlined">
                         {t('common.back')}

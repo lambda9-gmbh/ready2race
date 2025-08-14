@@ -4,8 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
-import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
@@ -50,7 +49,7 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
 
 fun SubstitutionViewRecord.participantInToParticipantForEventDto(
     namedParticipantIds: List<UUID>,
-    participantRequirementsChecked: List<ParticipantHasRequirementForEventRecord>,
+    participantRequirementsChecked: List<CheckedParticipantRequirement>,
     qrCode: String?,
 ): App<Nothing, ParticipantForEventDto> = KIO.ok(
     ParticipantForEventDto(
@@ -63,12 +62,7 @@ fun SubstitutionViewRecord.participantInToParticipantForEventDto(
         gender = participantIn!!.gender,
         external = participantIn!!.external,
         externalClubName = participantIn!!.externalClubName,
-        participantRequirementsChecked = participantRequirementsChecked.map {
-            ParticipantRequirementReducedDto(
-                id = it.participantRequirement,
-                name = "NO NAME" // todo: will be refactored anyway
-            )
-        },
+        participantRequirementsChecked = participantRequirementsChecked,
         namedParticipantIds = namedParticipantIds,
         qrCodeId = qrCode,
     )
@@ -88,9 +82,9 @@ fun ParticipantForEventRecord.toDto(
         external = external,
         externalClubName = externalClubName,
         participantRequirementsChecked = participantRequirementsChecked!!.map{ reqChecked ->
-            ParticipantRequirementReducedDto(
-                id = reqChecked!!.id,
-                name =  reqChecked.name,
+            CheckedParticipantRequirement(
+                id = reqChecked!!.id!!,
+                note = reqChecked.note
             )
         },
         namedParticipantIds = overwriteNamedParticipantIds ?: namedParticipantIds!!.filterNotNull(),

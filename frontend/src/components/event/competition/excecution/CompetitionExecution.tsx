@@ -1,14 +1,17 @@
 import {
     createNextCompetitionRound,
+    downloadStartList,
     getCompetitionExecutionProgress,
     updateMatchData,
     updateMatchResults,
+    uploadResultFile,
 } from '@api/sdk.gen.ts'
 import {
     Box,
     Button,
     Checkbox,
     Divider,
+    Link,
     Stack,
     Table,
     TableBody,
@@ -23,16 +26,18 @@ import {
 import {competitionRoute, eventRoute} from '@routes'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
-import {BaseSyntheticEvent, Fragment, useState} from 'react'
+import {BaseSyntheticEvent, Fragment, useRef, useState} from 'react'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {Controller, FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import Throbber from '@components/Throbber.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
-import {groupBy, shuffle} from '@utils/helpers.ts'
+import {getFilename, groupBy, shuffle} from '@utils/helpers.ts'
 import {
     CompetitionExecutionCanNotCreateRoundReason,
     CompetitionMatchDto,
-    CompetitionMatchTeamDto, CompetitionRoundDto,
+    CompetitionMatchTeamDto,
+    CompetitionRoundDto,
+    StartListFileType,
 } from '@api/types.gen.ts'
 import CompetitionExecutionMatchDialog from '@components/event/competition/excecution/CompetitionExecutionMatchDialog.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
@@ -44,6 +49,8 @@ import InlineLink from '@components/InlineLink.tsx'
 import CompetitionExecutionRound from '@components/event/competition/excecution/CompetitionExecutionRound.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import BaseDialog from '@components/BaseDialog.tsx'
+import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
+import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
 
 type EditMatchTeam = {
     registrationId: string
@@ -70,6 +77,8 @@ const CompetitionExecution = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const theme = useTheme()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const smallScreenLayout = useMediaQuery(`(max-width:${theme.breakpoints.values.md}px)`)
 
@@ -191,6 +200,163 @@ const CompetitionExecution = () => {
                 failed: team.failed,
                 failedReason: team.failedReason ?? '',
             }))
+    }
+
+    const [startListMatch, setStartListMatch] = useState<string | null>(null)
+    const showStartListConfigDialog = startListMatch !== null
+    const closeStartListConfigDialog = () => setStartListMatch(null)
+
+    const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
+    const showMatchResultImportConfigDialog = resultImportMatch !== null
+    const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
+
+    const handleDownloadStartList = async (
+        competitionMatchId: string,
+        fileType: StartListFileType,
+        config?: string,
+    ) => {
+        const {data, error, response} = await downloadStartList({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+            query: {
+                fileType,
+                config,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            if (error.status.value === 409) {
+                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else if (data !== undefined && anchor) {
+            // need Blob constructor for text/csv
+            anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
+            anchor.download =
+                getFilename(response) ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
+    const handleUploadMatchResults = async (
+        competitionMatchId: string,
+        file: File,
+        config: string,
+    ) => {
+        const {error} = await uploadResultFile({
+            path: {
+                eventId,
+                competitionId,
+                competitionMatchId,
+            },
+            body: {
+                request: {config},
+                files: [file],
+            },
+        })
+
+        if (error) {
+            if (error.status.value === 400) {
+                if (error.errorCode === 'FILE_ERROR') {
+                    feedback.error(t('event.competition.execution.results.error.FILE_ERROR'))
+                } else if (error.message === 'Unsupported file type') {
+                    // TODO: replace with error code!
+                    feedback.error(t('common.error.upload.unsupportedType'))
+                } else {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            } else if (error.status.value === 422) {
+                const details = 'details' in error && error.details
+                switch (error.errorCode) {
+                    case 'SPREADSHEET_NO_HEADERS':
+                        feedback.error(t('event.competition.execution.results.error.NO_HEADERS'))
+                        break
+                    case 'SPREADSHEET_COLUMN_UNKNOWN':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.COLUMN_UNKNOWN',
+                                details as {expected: string},
+                            ),
+                        )
+                        break
+                    case 'SPREADSHEET_CELL_BLANK':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.CELL_BLANK',
+                                details as {row: number; column: string},
+                            ),
+                        )
+                        break
+                    case 'SPREADSHEET_WRONG_CELL_TYPE':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.WRONG_CELL_TYPE',
+                                details as {
+                                    row: number
+                                    column: string
+                                    actual: string
+                                    expected: string
+                                },
+                            ),
+                        )
+                        break
+                    case 'SPREADSHEET_UNPARSABLE_STRING':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.UNPARSABLE_STRING',
+                                details as {
+                                    row: number
+                                    column: string
+                                    value: string
+                                },
+                            ),
+                        )
+                        break
+                    case 'WRONG_TEAM_COUNT':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.WRONG_TEAM_COUNT',
+                                details as {actual: number; expected: number},
+                            ),
+                        )
+                        break
+                    case 'DUPLICATE_PLACES':
+                        feedback.error(
+                            t('event.competition.execution.results.error.DUPLICATE_PLACES'),
+                        )
+                        break
+                    case 'DUPLICATE_START_NUMBERS':
+                        feedback.error(
+                            t('event.competition.execution.results.error.DUPLICATE_START_NUMBERS'),
+                        )
+                        break
+                    case 'PLACES_UNCONTINUOUS':
+                        feedback.error(
+                            t(
+                                'event.competition.execution.results.error.PLACES_UNCONTINUOUS',
+                                details as {actual: number; expected: number},
+                            ),
+                        )
+                        break
+                    default:
+                        feedback.error(t('common.error.unexpected'))
+                        break
+                }
+            } else {
+                feedback.error(t('common.error.unexpected'))
+            }
+        } else {
+            feedback.success(t('event.competition.execution.results.submit.success'))
+        }
+
+        setReloadData(!reloadData)
     }
 
     const [resultsDialogOpen, setResultsDialogOpen] = useState(false)
@@ -505,6 +671,11 @@ const CompetitionExecution = () => {
                             handleAccordionExpandedChange({roundIndex, accordionIndex, isExpanded})
                         }
                         smallScreenLayout={smallScreenLayout}
+                        setStartListMatch={setStartListMatch}
+                        setResultImportMatch={setResultImportMatch}
+                        handleDownloadStartListPDF={matchId =>
+                            handleDownloadStartList(matchId, 'PDF')
+                        }
                     />
                 ))}
             </Stack>
@@ -727,6 +898,19 @@ const CompetitionExecution = () => {
                     </FormContainer>
                 </Box>
             </BaseDialog>
+            <StartListConfigPicker
+                open={showStartListConfigDialog}
+                onClose={closeStartListConfigDialog}
+                onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
+            />
+            <MatchResultUploadDialog
+                open={showMatchResultImportConfigDialog}
+                onClose={closeMatchResultImportConfigDialog}
+                onSuccess={async (config, file) =>
+                    handleUploadMatchResults(resultImportMatch!, file, config)
+                }
+            />
+            <Link ref={downloadRef} display={'none'}></Link>
         </Box>
     ) : (
         progressDtoPending && <Throbber />

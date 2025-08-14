@@ -1,8 +1,8 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.entity
 
-import java.util.*
+import java.util.UUID
 
-data class ParticipantRequirementReducedDto(
+data class CheckedParticipantRequirement(
     val id: UUID,
-    val name: String,
+    val note: String?
 )

@@ -7,7 +7,6 @@ import {
     Card,
     Divider,
     FormControlLabel,
-    Link,
     Stack,
     Table,
     TableBody,
@@ -23,21 +22,13 @@ import Substitutions from '@components/event/competition/excecution/Substitution
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {Fragment, SyntheticEvent, useRef, useState} from 'react'
-import {
-    deleteCurrentCompetitionExecutionRound,
-    downloadStartList,
-    updateMatchRunningState,
-    uploadResultFile,
-} from '@api/sdk.gen.ts'
+import {Dispatch, Fragment, SetStateAction, SyntheticEvent} from 'react'
+import {deleteCurrentCompetitionExecutionRound, updateMatchRunningState} from '@api/sdk.gen.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {competitionRoute, eventRoute} from '@routes'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import {format} from 'date-fns'
-import StartListConfigPicker from '@components/event/competition/excecution/StartListConfigPicker.tsx'
 import Checkbox from '@mui/material/Checkbox'
-import MatchResultUploadDialog from '@components/event/competition/excecution/MatchResultUploadDialog.tsx'
-import {getFilename} from '@utils/helpers.ts'
 
 type Props = {
     round: CompetitionRoundDto
@@ -51,6 +42,9 @@ type Props = {
     accordionsExpanded: boolean[] | undefined
     handleAccordionExpandedChange: (accordionIndex: number, isExpanded: boolean) => void
     smallScreenLayout: boolean
+    setResultImportMatch: Dispatch<SetStateAction<string | null>>
+    setStartListMatch: Dispatch<SetStateAction<string | null>>
+    handleDownloadStartListPDF: (competitionMatchId: string) => Promise<void>
 }
 
 const MATCH_RESULT_OPTIONS = ['form', 'XLS'] as const
@@ -62,6 +56,9 @@ const CompetitionExecutionRound = ({
     filteredMatches,
     submitting,
     smallScreenLayout,
+    setResultImportMatch,
+    setStartListMatch,
+    handleDownloadStartListPDF,
     ...props
 }: Props) => {
     const {t} = useTranslation()
@@ -72,16 +69,6 @@ const CompetitionExecutionRound = ({
     const {competitionId} = competitionRoute.useParams()
 
     const {confirmAction} = useConfirmation()
-
-    const downloadRef = useRef<HTMLAnchorElement>(null)
-
-    const [startListMatch, setStartListMatch] = useState<string | null>(null)
-    const showStartListConfigDialog = startListMatch !== null
-    const closeStartListConfigDialog = () => setStartListMatch(null)
-
-    const [resultImportMatch, setResultImportMatch] = useState<string | null>(null)
-    const showMatchResultImportConfigDialog = resultImportMatch !== null
-    const closeMatchResultImportConfigDialog = () => setResultImportMatch(null)
 
     const deleteCurrentRound = async () => {
         confirmAction(
@@ -112,140 +99,6 @@ const CompetitionExecutionRound = ({
         (accordionIndex: number) => (_: SyntheticEvent, isExpanded: boolean) => {
             props.handleAccordionExpandedChange(accordionIndex, isExpanded)
         }
-
-    const handleDownloadStartList = async (
-        competitionMatchId: string,
-        fileType: StartListFileType,
-        config?: string,
-    ) => {
-        const {data, error, response} = await downloadStartList({
-            path: {
-                eventId,
-                competitionId,
-                competitionMatchId,
-            },
-            query: {
-                fileType,
-                config,
-            },
-        })
-        const anchor = downloadRef.current
-
-        if (error) {
-            if (error.status.value === 409) {
-                feedback.error(t('event.competition.execution.startList.error.missingStartTime'))
-            } else {
-                feedback.error(t('common.error.unexpected'))
-            }
-        } else if (data !== undefined && anchor) {
-            // need Blob constructor for text/csv
-            anchor.href = URL.createObjectURL(new Blob([data])) // TODO: @Memory: revokeObjectURL() when done
-            anchor.download =
-                getFilename(response) ?? `startList-${competitionMatchId}.${fileType.toLowerCase()}`
-            anchor.click()
-            anchor.href = ''
-            anchor.download = ''
-        }
-    }
-
-    const handleUploadMatchResults = async (
-        competitionMatchId: string,
-        file: File,
-        config: string,
-    ) => {
-        const {error} = await uploadResultFile({
-            path: {
-                eventId,
-                competitionId,
-                competitionMatchId,
-            },
-            body: {
-                request: {config},
-                files: [file],
-            },
-        })
-
-        if (error) {
-            if (error.status.value === 400) {
-                if (error.errorCode === 'FILE_ERROR') {
-                    feedback.error(t('event.competition.execution.results.error.FILE_ERROR'))
-                } else {
-                    feedback.error(t('common.error.unexpected'))
-                }
-            } else if (error.status.value === 422) {
-                const details = 'details' in error && error.details
-                switch (error.errorCode) {
-                    case 'SPREADSHEET_NO_HEADERS':
-                        feedback.error(t('event.competition.execution.results.error.NO_HEADERS'))
-                        break
-                    case 'SPREADSHEET_COLUMN_UNKNOWN':
-                        feedback.error(
-                            t(
-                                'event.competition.execution.results.error.COLUMN_UNKNOWN',
-                                details as {expected: string},
-                            ),
-                        )
-                        break
-                    case 'SPREADSHEET_CELL_BLANK':
-                        feedback.error(
-                            t(
-                                'event.competition.execution.results.error.CELL_BLANK',
-                                details as {row: number; column: string},
-                            ),
-                        )
-                        break
-                    case 'SPREADSHEET_WRONG_CELL_TYPE':
-                        feedback.error(
-                            t(
-                                'event.competition.execution.results.error.WRONG_CELL_TYPE',
-                                details as {
-                                    row: number
-                                    column: string
-                                    actual: string
-                                    expected: string
-                                },
-                            ),
-                        )
-                        break
-                    case 'WRONG_TEAM_COUNT':
-                        feedback.error(
-                            t(
-                                'event.competition.execution.results.error.WRONG_TEAM_COUNT',
-                                details as {actual: number; expected: number},
-                            ),
-                        )
-                        break
-                    case 'DUPLICATE_PLACES':
-                        feedback.error(
-                            t('event.competition.execution.results.error.DUPLICATE_PLACES'),
-                        )
-                        break
-                    case 'DUPLICATE_START_NUMBERS':
-                        feedback.error(
-                            t('event.competition.execution.results.error.DUPLICATE_START_NUMBERS'),
-                        )
-                        break
-                    case 'PLACES_UNCONTINUOUS':
-                        feedback.error(
-                            t(
-                                'event.competition.execution.results.error.PLACES_UNCONTINUOUS',
-                                details as {actual: number; expected: number},
-                            ),
-                        )
-                        break
-                    default:
-                        feedback.error(t('common.error.unexpected'))
-                        break
-                }
-            } else {
-                feedback.error(t('common.error.unexpected'))
-            }
-        } else {
-            feedback.success(t('event.competition.execution.results.submit.success'))
-        }
-
-        props.reloadRoundDto()
-    }
 
     const handleToggleRunningState = async (match: CompetitionMatchDto) => {
         // Check if match has no places set
@@ -280,7 +133,6 @@ const CompetitionExecutionRound = ({
 
     return (
         <Fragment>
-            <Link ref={downloadRef} display={'none'}></Link>
             <Stack
                 spacing={2}
                 sx={{
@@ -294,59 +146,65 @@ const CompetitionExecutionRound = ({
                     <Typography>{t('event.competition.setup.round.required')}</Typography>
                 )}
                 <Box>
-                    {!round.required && round.matches.filter(match => match.teams.length === 1).length > 0 && (
-                        <Accordion
-                            expanded={props.accordionsExpanded?.[0] ?? false}
-                            onChange={handleAccordionExpandedChange(0)}>
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
-                                aria-expanded={true}
-                                aria-controls={`round-${roundIndex}-${round.name}-panel-teams-with-bye-content`}
-                                id={`round-${roundIndex}-${round.name}-panel-teams-with-bye-header`}>
-                                <Typography component="span">
-                                    {t('event.competition.execution.teamsWithBye')} (
-                                    {round.matches.filter(match => match.teams.length === 1).length}
-                                    )
-                                </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <TableContainer>
-                                    <Table>
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell width="20%">
-                                                    {t(
-                                                        'event.competition.setup.match.outcome.outcome',
-                                                    )}
-                                                </TableCell>
-                                                <TableCell width="80%">
-                                                    {t('event.competition.execution.match.team')}
-                                                </TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {round.matches
-                                                .filter(match => match.teams.length === 1)
-                                                .sort((a, b) => a.weighting - b.weighting)
-                                                .map(match => (
-                                                    <TableRow key={match.id}>
-                                                        <TableCell width="20%">
-                                                            {match.weighting}
-                                                        </TableCell>
-                                                        <TableCell width="80%">
-                                                            {match.teams[0].clubName +
-                                                                (match.teams[0].name
-                                                                    ? ` ${match.teams[0].name}`
-                                                                    : '')}
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </AccordionDetails>
-                        </Accordion>
-                    )}
+                    {!round.required &&
+                        round.matches.filter(match => match.teams.length === 1).length > 0 && (
+                            <Accordion
+                                expanded={props.accordionsExpanded?.[0] ?? false}
+                                onChange={handleAccordionExpandedChange(0)}>
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    aria-expanded={true}
+                                    aria-controls={`round-${roundIndex}-${round.name}-panel-teams-with-bye-content`}
+                                    id={`round-${roundIndex}-${round.name}-panel-teams-with-bye-header`}>
+                                    <Typography component="span">
+                                        {t('event.competition.execution.teamsWithBye')} (
+                                        {
+                                            round.matches.filter(match => match.teams.length === 1)
+                                                .length
+                                        }
+                                        )
+                                    </Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <TableContainer>
+                                        <Table>
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell width="20%">
+                                                        {t(
+                                                            'event.competition.setup.match.outcome.outcome',
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell width="80%">
+                                                        {t(
+                                                            'event.competition.execution.match.team',
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {round.matches
+                                                    .filter(match => match.teams.length === 1)
+                                                    .sort((a, b) => a.weighting - b.weighting)
+                                                    .map(match => (
+                                                        <TableRow key={match.id}>
+                                                            <TableCell width="20%">
+                                                                {match.weighting}
+                                                            </TableCell>
+                                                            <TableCell width="80%">
+                                                                {match.teams[0].clubName +
+                                                                    (match.teams[0].name
+                                                                        ? ` ${match.teams[0].name}`
+                                                                        : '')}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </AccordionDetails>
+                            </Accordion>
+                        )}
                     <Accordion
                         expanded={props.accordionsExpanded?.[1] ?? false}
                         onChange={handleAccordionExpandedChange(1)}>
@@ -503,7 +361,7 @@ const CompetitionExecutionRound = ({
                                             const ft = fileType as StartListFileType
                                             switch (ft) {
                                                 case 'PDF':
-                                                    await handleDownloadStartList(match.id, 'PDF')
+                                                    await handleDownloadStartListPDF(match.id)
                                                     break
                                                 case 'CSV':
                                                     setStartListMatch(match.id)
@@ -566,14 +424,19 @@ const CompetitionExecutionRound = ({
                                                     <TableCell width="30%">
                                                         {team.deregistered
                                                             ? t(
-                                                                'event.competition.registration.deregister.deregistered',
+                                                                  'event.competition.registration.deregister.deregistered',
+                                                              ) +
+                                                              (team.deregistrationReason
+                                                                  ? ` (${team.deregistrationReason})`
+                                                                  : '')
+                                                            : team.failed
+                                                              ? t(
+                                                                    'event.competition.execution.results.failed',
                                                                 ) +
-                                                                (team.deregistrationReason
-                                                                    ? ` (${team.deregistrationReason})`
+                                                                (team.failedReason
+                                                                    ? ` (${team.failedReason})`
                                                                     : '')
-                                                            : team.failed ? t('event.competition.execution.results.failed') + (team.failedReason ? ` (${team.failedReason})`: '')
-                                                            : team.place
-                                                        }
+                                                              : team.place}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -592,18 +455,6 @@ const CompetitionExecutionRound = ({
                     </LoadingButton>
                 )}
             </Stack>
-            <StartListConfigPicker
-                open={showStartListConfigDialog}
-                onClose={closeStartListConfigDialog}
-                onSuccess={async config => handleDownloadStartList(startListMatch!, 'CSV', config)}
-            />
-            <MatchResultUploadDialog
-                open={showMatchResultImportConfigDialog}
-                onClose={closeMatchResultImportConfigDialog}
-                onSuccess={async (config, file) =>
-                    handleUploadMatchResults(resultImportMatch!, file, config)
-                }
-            />
         </Fragment>
     )
 }

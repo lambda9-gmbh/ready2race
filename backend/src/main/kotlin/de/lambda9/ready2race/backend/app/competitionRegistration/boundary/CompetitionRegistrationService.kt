@@ -19,6 +19,8 @@ import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
+import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
+import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
 import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -35,6 +37,7 @@ import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -104,7 +107,7 @@ object CompetitionRegistrationService {
 
                             p.namedParticipantId to !p.toParticipantForCompetitionRegistrationTeam(
                                 qrCodeId = missingData.qrCode,
-                                participantRequirementsChecked = missingData.requirementsChecked.map { it.participantRequirement },
+                                participantRequirementsChecked = missingData.requirementsChecked,
                                 currentStatus = missingData.lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
                                 lastScanAt = missingData.lastScan?.scannedAt,
                                 lastScanBy = if (missingData.lastScan?.scannedById != null) {
@@ -114,13 +117,14 @@ object CompetitionRegistrationService {
                                         lastname = missingData.lastScan.scannedByLastname!!
                                     )
                                 } else null
-
                             )
                         } else {
+                            val requirementsChecked =
+                                !knownParticipant.participantRequirementsChecked!!.toList().traverse { it!!.toDto() }
                             knownParticipant.trackings!!.maxByOrNull { it!!.scannedAt!! }.let { lastScan ->
                                 p.namedParticipantId to !p.toParticipantForCompetitionRegistrationTeam(
                                     qrCodeId = knownParticipant.qrCode,
-                                    participantRequirementsChecked = knownParticipant.participantRequirementsChecked!!.filterNotNull(),
+                                    participantRequirementsChecked = requirementsChecked,
                                     currentStatus = lastScan?.scanType?.let { ParticipantScanType.valueOf(it) },
                                     lastScanAt = lastScan?.scannedAt,
                                     lastScanBy = if (lastScan?.scannedById != null) {

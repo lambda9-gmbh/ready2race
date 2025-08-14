@@ -2,8 +2,6 @@ package de.lambda9.ready2race.backend.xls
 
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
-import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.recover
 import org.apache.poi.ss.usermodel.Row
 
@@ -20,7 +18,7 @@ class RowReader(
         cellInternal(header, parser).recover {
             when (it) {
                 is XLSReadError.CellError.ColumnUnknown, is XLSReadError.CellError.ParseError.CellBlank -> KIO.ok(null)
-                is XLSReadError.CellError.ParseError.WrongCellType -> KIO.fail(it)
+                else -> KIO.fail(it)
             }
         }
 

@@ -164,6 +164,11 @@ export type CatererTransactionViewDto = {
     createdAt: string
 }
 
+export type CheckedParticipantRequirement = {
+    id: string
+    note?: string
+}
+
 export type ClubDto = {
     id: string
     name: string
@@ -547,6 +552,7 @@ export type ErrorCode =
     | 'SPREADSHEET_COLUMN_UNKNOWN'
     | 'SPREADSHEET_CELL_BLANK'
     | 'SPREADSHEET_WRONG_CELL_TYPE'
+    | 'SPREADSHEET_UNPARSABLE_STRING'
     | 'WRONG_TEAM_COUNT'
     | 'DUPLICATE_START_NUMBERS'
     | 'DUPLICATE_PLACES'
@@ -1079,7 +1085,7 @@ export type ParticipantForCompetitionRegistrationTeam = {
     external: boolean
     externalClubName?: string
     qrCodeId?: string
-    participantRequirementsChecked: Array<string>
+    participantRequirementsChecked: Array<CheckedParticipantRequirement>
     currentStatus?: ParticipantScanType
     lastScanAt?: string
     lastScanBy?: AppUserNameDto
@@ -1095,7 +1101,7 @@ export type ParticipantForEventDto = {
     gender: Gender
     external?: boolean | null
     externalClubName?: string | null
-    participantRequirementsChecked?: Array<ParticipantRequirementReducedDto>
+    participantRequirementsChecked?: Array<CheckedParticipantRequirement>
     qrCodeId?: string
     namedParticipantIds?: Array<string>
 }
@@ -1145,7 +1151,7 @@ export type ParticipantRequirementCheckForEventConfigDto = {
 
 export type ParticipantRequirementCheckForEventUpsertDto = {
     requirementId: string
-    approvedParticipants: Array<string>
+    approvedParticipants: Array<CheckedParticipantRequirement>
     namedParticipantId?: string | null
 }
 
@@ -1171,11 +1177,6 @@ export type ParticipantRequirementForEventDto = {
      */
     checkInApp: boolean
     requirements?: Array<NamedParticipantRequirementForEventDto>
-}
-
-export type ParticipantRequirementReducedDto = {
-    id: string
-    name: string
 }
 
 export type ParticipantRequirementUpsertDto = {

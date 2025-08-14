@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.participant.entity
 
-import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementReducedDto
+import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import java.util.*
 
@@ -14,7 +14,7 @@ data class ParticipantForEventDto(
     val gender: Gender,
     val external: Boolean?,
     val externalClubName: String?,
-    val participantRequirementsChecked: List<ParticipantRequirementReducedDto>?,
+    val participantRequirementsChecked: List<CheckedParticipantRequirement>?,
     val qrCodeId: String?,
     val namedParticipantIds: List<UUID>,
 )

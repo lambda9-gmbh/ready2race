@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.control.Competi
 import de.lambda9.ready2race.backend.app.participant.control.*
 import de.lambda9.ready2race.backend.app.participant.entity.*
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantHasRequirementForEventRepo
+import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
@@ -20,6 +21,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -149,7 +151,7 @@ object ParticipantService {
 
             allParticipants.filter { dto ->
                 val haystack =
-                    dtoSearchFields()   // e.g. listOf({ it.firstname }, { it.lastname }, { it.externalClubName })
+                    dtoSearchFields()
                         .asSequence()
                         .map { getter -> getter(dto) }
                         .filterNotNull()
@@ -243,6 +245,7 @@ object ParticipantService {
 
             val requirementsChecked =
                 !ParticipantHasRequirementForEventRepo.getApprovedRequirements(eventId, participantId).orDie()
+                    .andThen { checked -> checked.toList().traverse { it.toDto() } }
 
             val unknownParticipantTracking = !ParticipantTrackingRepo.get(participantId, eventId).orDie()
             val lastScan = unknownParticipantTracking.maxByOrNull { it.scannedAt!! }
