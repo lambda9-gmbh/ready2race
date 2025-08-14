@@ -1,5 +1,5 @@
-import {useFetch} from '@utils/hooks.ts'
-import {getLatestMatchResults} from '@api/sdk.gen.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {getCompetitions, getLatestMatchResults} from '@api/sdk.gen.ts'
 import {
     Alert,
     Box,
@@ -23,30 +23,72 @@ import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {useState} from 'react'
 import BaseDialog from '@components/BaseDialog.tsx'
-import {LatestMatchResultInfo} from '@api/types.gen.ts'
+import {CompetitionDto, LatestMatchResultInfo} from '@api/types.gen.ts'
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined'
 import {format} from 'date-fns'
 
 type Props = {
     eventId: string
+    competitionSelected: CompetitionDto | null
+    setCompetitionSelected: (value: CompetitionDto | null) => void
 }
 
-const MatchResults = ({eventId}: Props) => {
+const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Props) => {
     const resultsLimit = 100 // todo
 
     const {t} = useTranslation()
     const theme = useTheme()
+    const feedback = useFeedback()
 
     const smallScreenLayout = useMediaQuery(`(max-width:${theme.breakpoints.values.sm}px)`)
 
-    const {data, pending} = useFetch(
+    const {data: competitionsData, pending: competitionsPending} = useFetch(
+        signal =>
+            getCompetitions({
+                signal,
+                path: {eventId},
+            }),
+        {
+            onResponse: response => {
+                if (response.error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.competition.competitions'),
+                        }),
+                    )
+                }
+            },
+            deps: [eventId],
+        },
+    )
+
+    const onClickCompetition = (competition: CompetitionDto) => {
+        setCompetitionSelected(competition)
+    }
+
+    const {data: matchResultsData, pending: matchResultsPending} = useFetch(
         signal =>
             getLatestMatchResults({
                 signal,
                 path: {eventId},
-                query: {limit: resultsLimit},
+                query: {
+                    limit: resultsLimit,
+                    competitionId: competitionSelected?.id,
+                },
             }),
-        {deps: [eventId, resultsLimit]},
+        {
+            preCondition: () => competitionSelected !== null,
+            onResponse: response => {
+                if (response.error) {
+                    feedback.error(
+                        t('common.load.error.multiple.short', {
+                            entity: t('event.info.viewTypes.latestMatchResults'),
+                        }),
+                    )
+                }
+            },
+            deps: [eventId, competitionSelected, competitionsData, resultsLimit],
+        },
     )
 
     // todo: reload data once in a while
@@ -62,20 +104,23 @@ const MatchResults = ({eventId}: Props) => {
         setMatchSelected(null)
     }
 
+    console.log(matchResultsPending)
+
     return (
         <>
             <Box sx={{flex: 1, p: 2}}>
                 <Stack spacing={2} sx={{alignItems: 'center'}}>
-                    {pending ? (
+                    {competitionsPending || (competitionSelected && matchResultsPending) ? (
                         <Throbber />
-                    ) : data?.length === 0 ? (
-                        <Alert severity={'info'}>{'There are no results for this event'}</Alert>
-                    ) : (
-                        data
-                            ?.sort((a, b) => (a.updatedAt > b.updatedAt ? -1 : 1))
-                            .map(match => (
-                                <Card sx={{flex: 1, width: 1}} key={match.matchId}>
-                                    <CardActionArea onClick={() => onClickMatch(match)}>
+                    ) : !competitionSelected ? (
+                        competitionsData?.data.length === 0 ? (
+                            <Alert severity={'info'}>
+                                {'There are no competitions for this event'}
+                            </Alert>
+                        ) : (
+                            competitionsData?.data.map(competition => (
+                                <Card sx={{flex: 1, width: 1}} key={competition.id}>
+                                    <CardActionArea onClick={() => onClickCompetition(competition)}>
                                         <CardContent>
                                             <Box
                                                 sx={{
@@ -85,30 +130,78 @@ const MatchResults = ({eventId}: Props) => {
                                                     alignItems: 'center',
                                                 }}>
                                                 <Box>
-                                                    {match.matchName && (
-                                                        <Typography variant={'h6'}>
-                                                            {match.matchName}
-                                                        </Typography>
-                                                    )}
+                                                    <Typography variant={'h6'}>
+                                                        {competition.properties.identifier} |{' '}
+                                                        {competition.properties.name}
+                                                    </Typography>
                                                 </Box>
-                                                <Chip
-                                                    label={
-                                                        match.competitionName +
-                                                        (match.categoryName
-                                                            ? ' - ' + match.categoryName
-                                                            : '')
-                                                    }
-                                                    color="primary"
-                                                    variant="outlined"
-                                                />
+                                                {competition.properties.competitionCategory && (
+                                                    <Chip
+                                                        label={
+                                                            competition.properties
+                                                                .competitionCategory.name
+                                                        }
+                                                        color="primary"
+                                                        variant="outlined"
+                                                    />
+                                                )}
                                             </Box>
-                                            <Typography variant={'body2'}>
-                                                {match.roundName}
-                                            </Typography>
                                         </CardContent>
                                     </CardActionArea>
                                 </Card>
                             ))
+                        )
+                    ) : matchResultsData?.length === 0 ? (
+                        <Alert severity={'info'}>
+                            {'There are no results for this competition yet'}
+                        </Alert>
+                    ) : (
+                        <>
+                            {matchResultsData
+                                ?.sort((a, b) =>
+                                    (a.startTime ?? a.eventDayDate ?? '') >
+                                    (b.startTime ?? b.eventDayDate ?? '')
+                                        ? -1
+                                        : 1,
+                                )
+                                .map(match => (
+                                    <Card sx={{flex: 1, width: 1}} key={match.matchId}>
+                                        <CardActionArea onClick={() => onClickMatch(match)}>
+                                            <CardContent>
+                                                <Box
+                                                    sx={{
+                                                        display: 'flex',
+                                                        justifyContent: 'space-between',
+                                                    }}>
+                                                    <Box>
+                                                        <Typography>{match.roundName}</Typography>
+                                                        <Box>
+                                                            {match.matchName && (
+                                                                <Typography variant={'h6'}>
+                                                                    {match.matchName}
+                                                                </Typography>
+                                                            )}
+                                                        </Box>
+                                                    </Box>
+                                                    {(match.startTime || match.eventDayDate) && (
+                                                        <Typography>
+                                                            {match.startTime
+                                                                ? format(
+                                                                      new Date(match.startTime),
+                                                                      t('format.datetime'),
+                                                                  )
+                                                                : format(
+                                                                      new Date(match.eventDayDate!),
+                                                                      t('format.date'),
+                                                                  )}
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </CardContent>
+                                        </CardActionArea>
+                                    </Card>
+                                ))}
+                        </>
                     )}
                 </Stack>
             </Box>

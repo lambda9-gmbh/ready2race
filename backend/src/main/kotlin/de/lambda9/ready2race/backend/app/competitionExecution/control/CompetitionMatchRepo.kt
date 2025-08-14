@@ -30,7 +30,6 @@ object CompetitionMatchRepo {
 
     fun getMatchResults(
         eventId: UUID,
-        eventDayId: UUID?,
         competitionId: UUID?,
         limit: Int
     ) = Jooq.query {
@@ -83,9 +82,6 @@ object CompetitionMatchRepo {
                 ).gt(1)
             )
             .apply {
-                if (eventDayId != null) {
-                    and(EVENT_DAY.ID.eq(eventDayId))
-                }
                 if (competitionId != null) {
                     and(COMPETITION.ID.eq(competitionId))
                 }

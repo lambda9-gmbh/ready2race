@@ -3,7 +3,6 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEvents} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {Fragment} from 'react'
 import {Link} from '@tanstack/react-router'
 
 const SelectResultsEventPage = () => {
@@ -30,11 +29,15 @@ const SelectResultsEventPage = () => {
                 data?.data
                     .sort((a, b) => (a.name > b.name ? 1 : -1))
                     .map(event => (
-                        <Fragment key={event.id}>
-                            <Link to={'/results/event/$eventId'} params={{eventId: event.id}}>
-                                <Button variant={'outlined'}>{event.name}</Button>
-                            </Link>
-                        </Fragment>
+                        <Link
+                            key={event.id}
+                            to={'/results/event/$eventId'}
+                            params={{eventId: event.id}}
+                            style={{width: '100%'}}>
+                            <Button variant={'outlined'} fullWidth>
+                                {event.name}
+                            </Button>
+                        </Link>
                     ))
             )}
         </Stack>

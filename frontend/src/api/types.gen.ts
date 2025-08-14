@@ -4295,6 +4295,7 @@ export type GetLatestMatchResultsData = {
         eventId: string
     }
     query?: {
+        competitionId?: string
         limit?: number
     }
 }

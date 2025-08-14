@@ -4882,6 +4882,12 @@ paths:
   /event/{eventId}/info/latest-match-results:
     parameters:
       - $ref: '#/components/parameters/eventId'
+      - in: query
+        name: competitionId
+        required: false
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: getLatestMatchResults
       parameters:

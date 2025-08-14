@@ -32,8 +32,9 @@ fun Route.eventInfo() {
             call.respondComprehension {
                 val eventId = !pathParam("eventId", uuid)
                 val limit = !queryParam("limit", { it.toIntOrNull() ?: 10 })
+                val competitionId = !optionalQueryParam("competitionId", uuid)
 
-                EventInfoService.getLatestMatchResults(eventId, limit)
+                EventInfoService.getLatestMatchResults(eventId, limit, competitionId)
             }
         }
 

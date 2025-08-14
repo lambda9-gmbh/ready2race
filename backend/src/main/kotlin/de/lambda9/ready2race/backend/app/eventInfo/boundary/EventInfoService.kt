@@ -104,12 +104,10 @@ object EventInfoService {
     fun getLatestMatchResults(
         eventId: UUID,
         limit: Int = 10,
-        filters: JsonNode? = null
+        competitionId: UUID?,
     ): App<Nothing, ApiResponse.ListDto<LatestMatchResultInfo>> = KIO.comprehension {
-        val eventDayId = filters?.get("eventDayId")?.asText()?.let { UUID.fromString(it) }
-        val competitionId = filters?.get("competitionId")?.asText()?.let { UUID.fromString(it) }
 
-        val matches = !CompetitionMatchRepo.getMatchResults(eventId, eventDayId, competitionId, limit).orDie()
+        val matches = !CompetitionMatchRepo.getMatchResults(eventId, competitionId, limit).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
