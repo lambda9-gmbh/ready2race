@@ -12,7 +12,7 @@ import InfoViewDisplay from '@components/event/info/InfoViewDisplay'
 import ViewRotationControl from '@components/event/info/ViewRotationControl'
 import {InfoViewConfigurationDto} from '@api/types.gen'
 import {getInfoViews} from '@api/sdk.gen'
-import {eventInfoRoute} from "@routes";
+import {eventInfoRoute} from '@routes'
 
 const EventInfoPage = () => {
     const {t} = useTranslation()
@@ -26,7 +26,7 @@ const EventInfoPage = () => {
     const [dataRefreshKey, setDataRefreshKey] = useState(0)
     const [viewsRefreshKey, setViewsRefreshKey] = useState(0)
     const [showControls, setShowControls] = useState(true)
-    const [mouseTimer, setMouseTimer] = useState<NodeJS.Timeout | null>(null)
+    const [mouseTimer, setMouseTimer] = useState<number | null>(null)
 
     // Fetch views
     const {data: viewsData, pending} = useFetch(signal => getInfoViews({signal, path: {eventId}}), {
