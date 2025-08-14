@@ -12,7 +12,7 @@ const LandingPage = () => {
             <Grid2 size={{xs: 12}}>
                 <Stack direction={'row'} justifyContent={'space-between'}>
                     <Typography variant={'h5'}>{t('event.events')}</Typography>
-                    <Link to={'/results'}>
+                    <Link to={'.'}>
                         <Button variant={'text'} endIcon={<ArrowForward />}>
                             <Trans i18nKey={'landing.liveEventsLink'} />
                         </Button>

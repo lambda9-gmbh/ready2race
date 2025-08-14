@@ -198,7 +198,7 @@ const RootLayout = () => {
                         <Typography variant={'h3'}>
                             <Trans i18nKey={'landing.smallScreen.to.where'} />
                         </Typography>
-                        <Link to={'/results'} style={{width: '100%'}}>
+                        <Link to={'.'} style={{width: '100%'}}>
                             <Button variant={'contained'} fullWidth>
                                 <Trans i18nKey={'landing.smallScreen.to.results'} />
                             </Button>
