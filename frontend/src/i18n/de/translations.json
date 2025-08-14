@@ -1336,5 +1336,16 @@
     "userName": "Benutzer",
     "price": "Betrag",
     "createdAt": "Zeitpunkt"
+  },
+  "landing": {
+    "smallScreen": {
+      "to": {
+        "where": "Was möchten Sie sehen?",
+        "app": "Helfer App",
+        "results": "Live Events",
+        "desktop": "Desktopansicht"
+      }
+    },
+    "liveEventsLink": "Zu den Live Events"
   }
 }

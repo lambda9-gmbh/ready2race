@@ -3,9 +3,10 @@ import {Close} from '@mui/icons-material'
 
 export type BaseDialogProps = Omit<DialogProps, 'onClose'> & {
     onClose: () => void
+    noTopRightClose?: boolean
 }
 
-const BaseDialog = ({className, onClose, children, ...props}: BaseDialogProps) => {
+const BaseDialog = ({className, onClose, children, noTopRightClose, ...props}: BaseDialogProps) => {
     return (
         <Dialog
             scroll={'paper'}
@@ -17,15 +18,17 @@ const BaseDialog = ({className, onClose, children, ...props}: BaseDialogProps) =
                     onClose()
                 }
             }}>
-            <IconButton
-                onClick={onClose}
-                sx={{
-                    position: 'absolute',
-                    right: 6,
-                    top: 6,
-                }}>
-                <Close />
-            </IconButton>
+            {!noTopRightClose && (
+                <IconButton
+                    onClick={onClose}
+                    sx={{
+                        position: 'absolute',
+                        right: 6,
+                        top: 6,
+                    }}>
+                    <Close />
+                </IconButton>
+            )}
             {children}
         </Dialog>
     )
