@@ -1347,5 +1347,24 @@
       }
     },
     "liveEventsLink": "Zu den Live Events"
+  },
+  "panic": {
+    "title": "Fehler",
+    "text": "Der API-Server ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut. Sollte dieser Zustand sich nicht ändern, wenden Sie sich bitte an einen Verantwortlichen. Vielen Dank."
+  },
+  "results": {
+    "tabs": {
+      "results": "Ergebnisse",
+      "live": "Live"
+    },
+    "matchResults": {
+      "matchResults": "Ergebnisse",
+      "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf.",
+      "noCompetitions": "Es gibt keine Wettkämpfe für diese Veranstaltung."
+    },
+    "liveMatches": {
+      "liveMatches": "Laufende Partien",
+      "noMatches": "Momentan finden keine Partien statt."
+    }
   }
 }

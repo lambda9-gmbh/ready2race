@@ -21,7 +21,7 @@ const SelectResultsEventPage = () => {
     return (
         <Stack spacing={2} sx={{m: 4}}>
             <Typography variant={'h4'} align={'center'}>
-                Events
+                {t('event.events')}
             </Typography>
             {pending ? (
                 <Throbber />
