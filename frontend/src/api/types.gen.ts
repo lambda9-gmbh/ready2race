@@ -196,6 +196,14 @@ export type CompetitionCategoryRequest = {
     description?: string
 }
 
+export type CompetitionChoiceDto = {
+    id: string
+    identifier: string
+    name: string
+    shortName?: string
+    category?: string
+}
+
 export type CompetitionDeregistrationDto = {
     competitionSetupRoundId?: string
     reason?: string
@@ -950,7 +958,11 @@ export type MatchResultTeamInfo = {
     teamName?: string | null
     teamNumber?: number | null
     clubName?: string | null
-    place: number
+    place?: number
+    failed: boolean
+    failedReason?: string
+    deregistered: boolean
+    deregisteredReason?: string
     participants: Array<ParticipantInfo>
 }
 
@@ -4545,3 +4557,19 @@ export type GetQrAssignmentParticipantsData = {
 export type GetQrAssignmentParticipantsResponse = Array<GroupedParticipantQrAssignmentDto>
 
 export type GetQrAssignmentParticipantsError = BadRequestError | ApiError
+
+export type GetCompetitionsHavingResultsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetCompetitionsHavingResultsResponse = {
+    data: Array<CompetitionChoiceDto>
+    pagination: Pagination
+}
+
+export type GetCompetitionsHavingResultsError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError

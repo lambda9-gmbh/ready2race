@@ -10,7 +10,7 @@ import de.lambda9.ready2race.backend.app.role.entity.RoleDto
 import de.lambda9.ready2race.backend.app.role.entity.RoleError
 import de.lambda9.ready2race.backend.app.role.entity.RoleRequest
 import de.lambda9.ready2race.backend.app.role.entity.RoleWithPrivilegesSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleHasPrivilegeRecord

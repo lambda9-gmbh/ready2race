@@ -1,5 +1,5 @@
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {getCompetitions, getLatestMatchResults} from '@api/sdk.gen.ts'
+import {getCompetitionsHavingResults, getLatestMatchResults} from '@api/sdk.gen.ts'
 import {
     Alert,
     Box,
@@ -23,14 +23,15 @@ import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {useState} from 'react'
 import BaseDialog from '@components/BaseDialog.tsx'
-import {CompetitionDto, LatestMatchResultInfo} from '@api/types.gen.ts'
+import {CompetitionChoiceDto, LatestMatchResultInfo} from '@api/types.gen.ts'
 import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined'
 import {format} from 'date-fns'
+import {sortByPlaces} from '@utils/helpers.ts'
 
 type Props = {
     eventId: string
-    competitionSelected: CompetitionDto | null
-    setCompetitionSelected: (value: CompetitionDto | null) => void
+    competitionSelected: CompetitionChoiceDto | null
+    setCompetitionSelected: (value: CompetitionChoiceDto | null) => void
 }
 
 const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Props) => {
@@ -44,7 +45,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
 
     const {data: competitionsData, pending: competitionsPending} = useFetch(
         signal =>
-            getCompetitions({
+            getCompetitionsHavingResults({
                 signal,
                 path: {eventId},
             }),
@@ -62,7 +63,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
         },
     )
 
-    const onClickCompetition = (competition: CompetitionDto) => {
+    const onClickCompetition = (competition: CompetitionChoiceDto) => {
         setCompetitionSelected(competition)
     }
 
@@ -131,16 +132,13 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                                                 }}>
                                                 <Box>
                                                     <Typography variant={'h6'}>
-                                                        {competition.properties.identifier} |{' '}
-                                                        {competition.properties.name}
+                                                        {competition.identifier} |{' '}
+                                                        {competition.name}
                                                     </Typography>
                                                 </Box>
-                                                {competition.properties.competitionCategory && (
+                                                {competition.category && (
                                                     <Chip
-                                                        label={
-                                                            competition.properties
-                                                                .competitionCategory.name
-                                                        }
+                                                        label={competition.category}
                                                         color="primary"
                                                         variant="outlined"
                                                     />
@@ -249,65 +247,58 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                                         </Typography>
                                     </Stack>
                                 )}
-                                {matchSelected.teams
-                                    .sort((a, b) => a.place - b.place)
-                                    .sort((a, b) => a.place - b.place)
-                                    .map(team => (
-                                        <Card key={team.teamId}>
-                                            <CardContent>
-                                                <Stack
-                                                    direction={'row'}
-                                                    sx={{
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                    }}>
-                                                    <Typography variant={'h5'}>
-                                                        {team.place}.
-                                                    </Typography>
-                                                    <Typography>
-                                                        {team.clubName +
-                                                            (team.teamName
-                                                                ? ` ${team.teamName}`
-                                                                : '')}
-                                                    </Typography>
-                                                </Stack>
-                                                <Divider sx={{my: 1}} />
-                                                <Grid2 container>
-                                                    {team.participants
-                                                        .sort((a, b) =>
-                                                            a.namedRole === b.namedRole
-                                                                ? a.firstName === b.firstName
-                                                                    ? a.lastName > b.lastName
-                                                                        ? 1
-                                                                        : -1
-                                                                    : a.firstName > b.firstName
-                                                                      ? 1
-                                                                      : -1
-                                                                : (a.namedRole ?? '') >
-                                                                    (b.namedRole ?? '')
+                                {sortByPlaces(matchSelected.teams).map(team => (
+                                    <Card key={team.teamId}>
+                                        <CardContent>
+                                            <Stack
+                                                direction={'row'}
+                                                sx={{
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                }}>
+                                                <Typography variant={'h5'}>
+                                                    {team.place}.
+                                                </Typography>
+                                                <Typography>
+                                                    {team.clubName +
+                                                        (team.teamName ? ` ${team.teamName}` : '')}
+                                                </Typography>
+                                            </Stack>
+                                            <Divider sx={{my: 1}} />
+                                            <Grid2 container>
+                                                {team.participants
+                                                    .sort((a, b) =>
+                                                        a.namedRole === b.namedRole
+                                                            ? a.firstName === b.firstName
+                                                                ? a.lastName > b.lastName
+                                                                    ? 1
+                                                                    : -1
+                                                                : a.firstName > b.firstName
                                                                   ? 1
-                                                                  : -1,
-                                                        )
-                                                        .map(participant => (
-                                                            <Grid2
-                                                                size={6}
-                                                                key={participant.participantId}>
-                                                                <ListItemText
-                                                                    primary={
-                                                                        participant.firstName +
-                                                                        ' ' +
-                                                                        participant.lastName
-                                                                    }
-                                                                    secondary={
-                                                                        participant.namedRole
-                                                                    }
-                                                                />
-                                                            </Grid2>
-                                                        ))}
-                                                </Grid2>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
+                                                                  : -1
+                                                            : (a.namedRole ?? '') >
+                                                                (b.namedRole ?? '')
+                                                              ? 1
+                                                              : -1,
+                                                    )
+                                                    .map(participant => (
+                                                        <Grid2
+                                                            size={6}
+                                                            key={participant.participantId}>
+                                                            <ListItemText
+                                                                primary={
+                                                                    participant.firstName +
+                                                                    ' ' +
+                                                                    participant.lastName
+                                                                }
+                                                                secondary={participant.namedRole}
+                                                            />
+                                                        </Grid2>
+                                                    ))}
+                                            </Grid2>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </Stack>
                         </DialogContent>
                         <DialogActions>

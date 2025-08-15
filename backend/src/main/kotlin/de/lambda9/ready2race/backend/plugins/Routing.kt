@@ -21,6 +21,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.boundary.namedParticip
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirement
 import de.lambda9.ready2race.backend.app.qrCodeApp.boundary.qrCodeApp
 import de.lambda9.ready2race.backend.app.ratingcategory.boundary.ratingCategory
+import de.lambda9.ready2race.backend.app.results.boundary.results
 import de.lambda9.ready2race.backend.app.role.boundary.role
 import de.lambda9.ready2race.backend.app.startListConfig.boundary.startListConfig
 import de.lambda9.ready2race.backend.app.workType.boundary.workType
@@ -56,6 +57,7 @@ fun Application.configureRouting() {
             startListConfig()
             ratingCategory()
             matchResultImportConfig()
+            results()
         }
     }
 }

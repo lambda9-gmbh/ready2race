@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.workShift.entity
 
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.database.generated.tables.references.WORK_SHIFT_WITH_ASSIGNED_USERS
 import org.jooq.Field
 

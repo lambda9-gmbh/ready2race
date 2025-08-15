@@ -5452,7 +5452,42 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-
+  /results/event/{eventId}/competition:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      parameter:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      operationId: getCompetitionsHavingResults
+      responses:
+        200:
+          description: competition page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type:
+                  object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CompetitionChoiceDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -9405,8 +9440,9 @@ components:
       type: object
       required:
         - teamId
-        - place
         - participants
+        - failed
+        - deregistered
       properties:
         teamId:
           type: string
@@ -9422,6 +9458,14 @@ components:
           nullable: true
         place:
           type: integer
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+        deregistered:
+          type: boolean
+        deregisteredReason:
+          type: string
         participants:
           type: array
           items:
@@ -9896,4 +9940,23 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantQrAssignmentDto'
+
+    CompetitionChoiceDto:
+      type: object
+      required:
+        - id
+        - identifier
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+        shortName:
+          type: string
+        category:
+          type: string
 

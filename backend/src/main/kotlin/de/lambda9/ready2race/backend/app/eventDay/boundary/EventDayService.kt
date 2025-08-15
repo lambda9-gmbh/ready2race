@@ -12,7 +12,7 @@ import de.lambda9.ready2race.backend.app.eventDay.control.toRecord
 import de.lambda9.ready2race.backend.app.eventDay.entity.*
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO

@@ -1,4 +1,4 @@
-package de.lambda9.ready2race.backend.calls.pagination
+package de.lambda9.ready2race.backend.pagination
 
 data class Pagination<S: Sortable> (
     val total: Int,

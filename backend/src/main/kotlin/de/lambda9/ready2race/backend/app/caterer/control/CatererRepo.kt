@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.caterer.control
 
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.CatererTransactionView
 import de.lambda9.ready2race.backend.database.generated.tables.records.CatererTransactionViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CATERER_TRANSACTION

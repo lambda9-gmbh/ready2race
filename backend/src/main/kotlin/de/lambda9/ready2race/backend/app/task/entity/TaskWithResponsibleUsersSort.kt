@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.task.entity
 
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.database.generated.tables.references.TASK_WITH_RESPONSIBLE_USERS
 import org.jooq.Field
 

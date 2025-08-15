@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort
 import de.lambda9.ready2race.backend.app.appuser.entity.EveryAppUserWithRolesSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.EveryAppUserWithRoles

@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.caterer.entity
 
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Sortable
 
 enum class CatererTransactionViewSort : Sortable {
     CATERER_NAME,

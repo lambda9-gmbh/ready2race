@@ -57,8 +57,13 @@ object CompetitionMatchTeamRepo {
         Jooq.query {
             select(
                 COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION,
+                COMPETITION_MATCH_TEAM.START_NUMBER,
                 COMPETITION_MATCH_TEAM.PLACE,
+                COMPETITION_MATCH_TEAM.FAILED,
+                COMPETITION_MATCH_TEAM.FAILED_REASON,
                 COMPETITION_REGISTRATION.NAME.`as`("team_name"),
+                COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.isNotNull.`as`("deregistered"),
+                COMPETITION_DEREGISTRATION.REASON.`as`("deregistration_reason"),
                 CLUB.NAME.`as`("club_name"),
                 PARTICIPANT.ID.`as`("participant_id"),
                 PARTICIPANT.FIRSTNAME,
@@ -66,6 +71,8 @@ object CompetitionMatchTeamRepo {
                 NAMED_PARTICIPANT.NAME.`as`("named_role")
             )
                 .from(COMPETITION_MATCH_TEAM)
+                .join(COMPETITION_SETUP_MATCH)
+                .on(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_SETUP_MATCH.ID))
                 .join(COMPETITION_REGISTRATION)
                 .on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
                 .leftJoin(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
@@ -74,8 +81,10 @@ object CompetitionMatchTeamRepo {
                 .leftJoin(PARTICIPANT).on(PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT))
                 .leftJoin(NAMED_PARTICIPANT)
                 .on(NAMED_PARTICIPANT.ID.eq(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.NAMED_PARTICIPANT))
+                .leftJoin(COMPETITION_DEREGISTRATION)
+                .on(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION).and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND)))
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
-                .and(COMPETITION_MATCH_TEAM.PLACE.isNotNull)
+                .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
                 .orderBy(COMPETITION_MATCH_TEAM.PLACE.asc())
                 .fetch()
         }

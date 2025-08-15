@@ -13,7 +13,7 @@ import de.lambda9.ready2race.backend.app.contactInformation.entity.ContactInform
 import de.lambda9.ready2race.backend.app.contactInformation.entity.ContactInformationRequest
 import de.lambda9.ready2race.backend.app.contactInformation.entity.ContactInformationSort
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.kio.onFalseFail

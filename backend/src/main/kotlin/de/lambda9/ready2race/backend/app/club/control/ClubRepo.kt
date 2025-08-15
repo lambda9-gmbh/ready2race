@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.club.control
 
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord

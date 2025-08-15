@@ -8,7 +8,7 @@ import de.lambda9.ready2race.backend.app.workType.entity.WorkTypeDto
 import de.lambda9.ready2race.backend.app.workType.entity.WorkTypeError
 import de.lambda9.ready2race.backend.app.workType.entity.WorkTypeSort
 import de.lambda9.ready2race.backend.app.workType.entity.WorkTypeUpsertDto
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO

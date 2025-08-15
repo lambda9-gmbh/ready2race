@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.invoice.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.InvoiceForEventRegistration
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceForEventRegistrationRecord

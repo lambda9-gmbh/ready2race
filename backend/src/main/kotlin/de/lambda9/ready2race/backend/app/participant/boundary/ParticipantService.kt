@@ -13,8 +13,8 @@ import de.lambda9.ready2race.backend.app.participantTracking.control.Participant
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
-import de.lambda9.ready2race.backend.calls.pagination.Direction
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.Direction
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord

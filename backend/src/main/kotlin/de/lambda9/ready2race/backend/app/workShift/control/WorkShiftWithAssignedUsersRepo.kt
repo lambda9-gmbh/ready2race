@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.workShift.control
 
 import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftWithAssignedUsersSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.WorkShiftWithAssignedUsers
 import de.lambda9.ready2race.backend.database.generated.tables.records.WorkShiftWithAssignedUsersRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.WORK_SHIFT_HAS_USER

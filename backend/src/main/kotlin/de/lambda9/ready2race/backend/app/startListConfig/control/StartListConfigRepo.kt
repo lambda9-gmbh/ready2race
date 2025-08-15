@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.startListConfig.control
 
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.StartlistExportConfig
 import de.lambda9.ready2race.backend.database.generated.tables.records.StartlistExportConfigRecord

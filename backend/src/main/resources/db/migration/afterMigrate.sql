@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists competition_having_results;
 drop view if exists caterer_transaction_view;
 drop view if exists participant_qr_assignment_view;
 drop view if exists competition_registration_team;
@@ -989,3 +990,32 @@ SELECT ct.id,
 FROM caterer_transaction ct
          INNER JOIN app_user caterer ON ct.caterer_id = caterer.id
          INNER JOIN app_user ON ct.app_user_id = app_user.id;
+
+create view competition_having_results as
+select c.id,
+       c.event,
+       cp.identifier,
+       cp.name,
+       cp.short_name,
+       cc.name as category
+from competition c
+         join competition_properties cp on c.id = cp.competition
+         left join competition_category cc on cp.competition_category = cc.id
+where exists(
+    select 1
+    from competition_match cm
+             join competition_setup_match csm on cm.competition_setup_match = csm.id
+             join competition_setup_round csr on csm.competition_setup_round = csr.id
+             join competition_setup cs on csr.competition_setup = cs.competition_properties
+    where cs.competition_properties = cp.id
+    and not exists (
+        select 1
+        from competition_match_team cmt
+        where cmt.competition_match = csm.id
+          and cmt.place is null
+          and cmt.failed is false
+          and cmt.out is false
+          and not exists(select 1 from competition_deregistration cd where cd.competition_registration = cmt.competition_registration and cd.competition_setup_round = csr.id)
+    )
+)
+;

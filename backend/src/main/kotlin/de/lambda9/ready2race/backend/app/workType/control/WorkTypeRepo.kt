@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.workType.control
 
 import de.lambda9.ready2race.backend.app.workType.entity.WorkTypeSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.WorkTypeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.WORK_TYPE

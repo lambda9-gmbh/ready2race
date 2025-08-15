@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.competitionRegistration.entity.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionRegistrationTeam
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
