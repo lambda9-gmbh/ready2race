@@ -9,8 +9,8 @@ import CellTowerOutlinedIcon from '@mui/icons-material/CellTowerOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import {resultsEventRoute} from '@routes'
 import {Link} from '@tanstack/react-router'
-import ResultsLiveMatches from "@components/results/ResultsLiveMatches.tsx";
-import {useTranslation} from "react-i18next";
+import ResultsLiveMatches from '@components/results/ResultsLiveMatches.tsx'
+import {useTranslation} from 'react-i18next'
 import {CompetitionChoiceDto} from '@api/types.gen.ts'
 
 const RESULTS_TABS = ['latest-results', 'live', 'upcoming'] as const
@@ -24,15 +24,16 @@ const ResultsPage = () => {
 
     const {eventId} = resultsEventRoute.useParams()
 
-    const [activeTab, setActiveTab] = useState<ResultsTab>('latest-results')
-    const switchTab = (tab: ResultsTab) => {
-        setActiveTab(tab)
-    }
-    const tabProps = (tab: ResultsTab) => a11yProps('results', tab)
-
     const [competitionSelected, setCompetitionSelected] = useState<CompetitionChoiceDto | null>(
         null,
     )
+
+    const [activeTab, setActiveTab] = useState<ResultsTab>('latest-results')
+    const switchTab = (tab: ResultsTab) => {
+        setCompetitionSelected(null)
+        setActiveTab(tab)
+    }
+    const tabProps = (tab: ResultsTab) => a11yProps('results', tab)
 
     return (
         <Box sx={{maxWidth: theme.breakpoints.values.sm}}>
