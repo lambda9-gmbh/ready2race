@@ -79,7 +79,14 @@ object CompetitionMatchRepo {
                     select(count())
                         .from(COMPETITION_MATCH_TEAM)
                         .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                ).gt(1)
+                        .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
+                ).let {
+                    it.gt(1).or(
+                        it.gt(0).and(
+                            COMPETITION_SETUP_ROUND.REQUIRED.isTrue
+                        )
+                    )
+                }
             )
             .apply {
                 if (competitionId != null) {
