@@ -9341,17 +9341,6 @@ components:
         categoryName:
           type: string
           nullable: true
-        eventDayId:
-          type: string
-          format: uuid
-          nullable: true
-        eventDayDate:
-          type: string
-          format: date
-          nullable: true
-        eventDayName:
-          type: string
-          nullable: true
         scheduledStartTime:
           type: string
           format: date-time
@@ -9457,17 +9446,6 @@ components:
         updatedAt:
           type: string
           format: date-time
-        eventDayId:
-          type: string
-          format: uuid
-          nullable: true
-        eventDayDate:
-          type: string
-          format: date
-          nullable: true
-        eventDayName:
-          type: string
-          nullable: true
         startTime:
           type: string
           format: date-time
@@ -9532,17 +9510,6 @@ components:
         competitionName:
           type: string
         categoryName:
-          type: string
-          nullable: true
-        eventDayId:
-          type: string
-          format: uuid
-          nullable: true
-        eventDayDate:
-          type: string
-          format: date
-          nullable: true
-        eventDayName:
           type: string
           nullable: true
         startTime:

@@ -58,11 +58,9 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({
                             </Box>
                         </Box>
                         <Box textAlign={'right'}>
-                            {(match.startTime || match.eventDayDate) && (
+                            {match.startTime && (
                                 <Typography>
-                                    {match.startTime
-                                        ? format(new Date(match.startTime), t('format.datetime'))
-                                        : format(new Date(match.eventDayDate!), t('format.date'))}
+                                    {format(new Date(match.startTime), t('format.datetime'))}
                                 </Typography>
                             )}
                         </Box>

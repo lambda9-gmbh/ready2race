@@ -70,22 +70,11 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                     </DialogTitle>
                     <DialogContent>
                         <Stack spacing={2}>
-                            {(match.startTime || match.eventDayDate) && (
+                            {match.startTime && (
                                 <Stack direction={'row'} spacing={1}>
                                     <ScheduleOutlinedIcon color={'primary'} />
                                     <Typography>
-                                        {match.startTime
-                                            ? format(
-                                                  new Date(match.startTime),
-                                                  t('format.datetime'),
-                                              )
-                                            : format(
-                                                  new Date(match.eventDayDate!),
-                                                  t('format.date'),
-                                              ) +
-                                              (match.eventDayName
-                                                  ? ` (${match.eventDayName})`
-                                                  : '')}
+                                        {format(new Date(match.startTime), t('format.datetime'))}
                                     </Typography>
                                 </Stack>
                             )}

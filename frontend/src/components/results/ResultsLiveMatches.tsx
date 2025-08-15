@@ -59,12 +59,7 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                     <Alert severity={'info'}>{t('results.liveMatches.noMatches')}</Alert>
                 ) : (
                     data
-                        ?.sort((a, b) =>
-                            (a.startTime ?? a.eventDayDate ?? '') >
-                            (b.startTime ?? b.eventDayDate ?? '')
-                                ? -1
-                                : 1,
-                        )
+                        ?.sort((a, b) => ((a.startTime ?? '') > (b.startTime ?? '') ? -1 : 1))
                         .map(match => (
                             <ResultsMatchCard
                                 match={match}

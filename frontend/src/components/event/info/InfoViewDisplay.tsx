@@ -29,13 +29,7 @@ const InfoViewDisplay = ({eventId, view}: InfoViewDisplayProps) => {
                     />
                 )
             case 'RUNNING_MATCHES':
-                return (
-                    <RunningMatchesView
-                        eventId={eventId}
-                        limit={view.dataLimit}
-                        filters={view.filters}
-                    />
-                )
+                return <RunningMatchesView eventId={eventId} limit={view.dataLimit} />
             default:
                 return (
                     <Box sx={{p: 3}}>

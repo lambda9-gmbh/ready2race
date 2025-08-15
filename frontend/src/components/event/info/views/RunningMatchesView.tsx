@@ -8,7 +8,6 @@ import {PlayCircleFilled} from '@mui/icons-material'
 interface RunningMatchesViewProps {
     eventId: string
     limit: number
-    filters?: any
 }
 
 const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
@@ -243,16 +242,6 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                             )}
                                         </Box>
                                     )}
-
-                                    {/* Additional Info */}
-                                    <Box
-                                        sx={{display: 'flex', gap: 2, mt: 1, alignItems: 'center'}}>
-                                        {match.eventDayName && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                {match.eventDayName}
-                                            </Typography>
-                                        )}
-                                    </Box>
                                 </Box>
                             </Box>
                         </CardContent>

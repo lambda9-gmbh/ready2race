@@ -918,9 +918,6 @@ export type LatestMatchResultInfo = {
     matchName?: string | null
     matchNumber?: number | null
     updatedAt: string
-    eventDayId?: string | null
-    eventDayDate?: string | null
-    eventDayName?: string | null
     startTime?: string
     teams: Array<MatchResultTeamInfo>
 }
@@ -1375,9 +1372,6 @@ export type RunningMatchInfo = {
     competitionId: string
     competitionName: string
     categoryName?: string | null
-    eventDayId?: string | null
-    eventDayDate?: string | null
-    eventDayName?: string | null
     startTime?: string | null
     elapsedMinutes?: number | null
     placeName?: string | null
@@ -1560,9 +1554,6 @@ export type UpcomingCompetitionMatchInfo = {
     competitionId: string
     competitionName: string
     categoryName?: string | null
-    eventDayId?: string | null
-    eventDayDate?: string | null
-    eventDayName?: string | null
     scheduledStartTime?: string | null
     placeName?: string | null
     roundNumber?: number | null

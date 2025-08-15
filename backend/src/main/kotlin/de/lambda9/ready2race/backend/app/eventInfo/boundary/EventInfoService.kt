@@ -122,9 +122,6 @@ object EventInfoService {
                 matchName = match.get("match_name", String::class.java),
                 matchNumber = null, // Could be parsed from match name if needed
                 updatedAt = match[COMPETITION_MATCH.UPDATED_AT]!!,
-                eventDayId = match.get("event_day_id", UUID::class.java),
-                eventDayDate = match.get("event_day_date", LocalDate::class.java),
-                eventDayName = match.get("event_day_name", String::class.java),
                 startTime = match[COMPETITION_MATCH.START_TIME],
                 teams = teams
             )
@@ -136,14 +133,10 @@ object EventInfoService {
     fun getUpcomingCompetitionMatches(
         eventId: UUID,
         limit: Int = 10,
-        filters: JsonNode? = null
     ): App<Nothing, ApiResponse.ListDto<UpcomingCompetitionMatchInfo>> = KIO.comprehension {
-        val eventDayId = filters?.get("eventDayId")?.asText()?.let { UUID.fromString(it) }
-        val competitionId = filters?.get("competitionId")?.asText()?.let { UUID.fromString(it) }
-        val roundName = filters?.get("roundName")?.asText()
 
         val matches =
-            !CompetitionMatchRepo.getUpcomingMatches(eventId, eventDayId, competitionId, roundName, limit).orDie()
+            !CompetitionMatchRepo.getUpcomingMatches(eventId, limit).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
@@ -155,9 +148,6 @@ object EventInfoService {
                 competitionId = match.get("competition_id", UUID::class.java)!!,
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
-                eventDayId = match.get("event_day_id", UUID::class.java),
-                eventDayDate = match.get("event_day_date", java.time.LocalDate::class.java),
-                eventDayName = match.get("event_day_name", String::class.java),
                 scheduledStartTime = match[COMPETITION_MATCH.START_TIME],
                 placeName = null, // No place join in this query
                 roundNumber = null, // No round number field available
@@ -174,12 +164,9 @@ object EventInfoService {
     fun getRunningMatches(
         eventId: UUID,
         limit: Int = 10,
-        filters: JsonNode? = null
     ): App<Nothing, ApiResponse.ListDto<RunningMatchInfo>> = KIO.comprehension {
-        val eventDayId = filters?.get("eventDayId")?.asText()?.let { UUID.fromString(it) }
-        val competitionId = filters?.get("competitionId")?.asText()?.let { UUID.fromString(it) }
 
-        val matches = !CompetitionMatchRepo.getRunningMatches(eventId, eventDayId, competitionId, limit).orDie()
+        val matches = !CompetitionMatchRepo.getRunningMatches(eventId, limit).orDie()
 
         val result = matches.map { match ->
             val matchId = match[COMPETITION_MATCH.COMPETITION_SETUP_MATCH]!!
@@ -195,9 +182,6 @@ object EventInfoService {
                 competitionId = match.get("competition_id", UUID::class.java)!!,
                 competitionName = match.get("competition_name", String::class.java) ?: "",
                 categoryName = match[COMPETITION_VIEW.CATEGORY_NAME],
-                eventDayId = match.get("event_day_id", UUID::class.java),
-                eventDayDate = match.get("event_day_date", LocalDate::class.java),
-                eventDayName = match.get("event_day_name", String::class.java),
                 startTime = startTime,
                 elapsedMinutes = elapsedMinutes,
                 placeName = null,
@@ -217,9 +201,6 @@ object EventInfoService {
 
     private fun getMatchResultTeams(matchId: UUID): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
-
-        // TODO: calculate substitutions (Participants) and mark deregistered, failed or out
-        // now matches are filtered by having a place set for all teams - this is not up to date
 
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->

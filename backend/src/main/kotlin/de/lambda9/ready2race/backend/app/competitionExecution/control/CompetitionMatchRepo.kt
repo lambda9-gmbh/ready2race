@@ -42,9 +42,6 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
-            EVENT_DAY.ID.`as`("event_day_id"),
-            EVENT_DAY.DATE.`as`("event_day_date"),
-            EVENT_DAY.NAME.`as`("event_day_name")
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -55,8 +52,6 @@ object CompetitionMatchRepo {
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY_HAS_COMPETITION).on(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(
                 notExists(
@@ -100,8 +95,6 @@ object CompetitionMatchRepo {
 
     fun getRunningMatches(
         eventId: UUID,
-        eventDayId: UUID?,
-        competitionId: UUID?,
         limit: Int
     ) = Jooq.query {
         select(
@@ -114,9 +107,6 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
-            EVENT_DAY.ID.`as`("event_day_id"),
-            EVENT_DAY.DATE.`as`("event_day_date"),
-            EVENT_DAY.NAME.`as`("event_day_name")
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -127,18 +117,8 @@ object CompetitionMatchRepo {
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY_HAS_COMPETITION).on(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.CURRENTLY_RUNNING.eq(true))
-            .apply {
-                if (eventDayId != null) {
-                    and(EVENT_DAY.ID.eq(eventDayId))
-                }
-                if (competitionId != null) {
-                    and(COMPETITION.ID.eq(competitionId))
-                }
-            }
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()
@@ -149,11 +129,9 @@ object CompetitionMatchRepo {
 
     fun getUpcomingMatches(
         eventId: UUID,
-        eventDayId: UUID?,
-        competitionId: UUID?,
-        roundName: String?,
         limit: Int
     ) = Jooq.query {
+
         select(
             COMPETITION_MATCH.COMPETITION_SETUP_MATCH,
             COMPETITION_MATCH.START_TIME,
@@ -164,9 +142,6 @@ object CompetitionMatchRepo {
             COMPETITION.ID.`as`("competition_id"),
             COMPETITION_VIEW.NAME.`as`("competition_name"),
             COMPETITION_VIEW.CATEGORY_NAME,
-            EVENT_DAY.ID.`as`("event_day_id"),
-            EVENT_DAY.DATE.`as`("event_day_date"),
-            EVENT_DAY.NAME.`as`("event_day_name")
         )
             .from(COMPETITION_MATCH)
             .join(COMPETITION_SETUP_MATCH)
@@ -177,22 +152,9 @@ object CompetitionMatchRepo {
             .on(COMPETITION_SETUP_ROUND.COMPETITION_SETUP.eq(COMPETITION_PROPERTIES.ID))
             .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
             .leftJoin(COMPETITION_VIEW).on(COMPETITION_VIEW.ID.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY_HAS_COMPETITION).on(EVENT_DAY_HAS_COMPETITION.COMPETITION.eq(COMPETITION.ID))
-            .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(COMPETITION_MATCH.START_TIME.isNotNull)
             .and(COMPETITION_MATCH.START_TIME.gt(LocalDateTime.now()))
-            .apply {
-                if (eventDayId != null) {
-                    and(EVENT_DAY.ID.eq(eventDayId))
-                }
-                if (competitionId != null) {
-                    and(COMPETITION.ID.eq(competitionId))
-                }
-                if (roundName != null) {
-                    and(COMPETITION_SETUP_ROUND.NAME.eq(roundName))
-                }
-            }
             .orderBy(
                 COMPETITION_MATCH.START_TIME.asc(),
                 COMPETITION_SETUP_MATCH.EXECUTION_ORDER.asc()

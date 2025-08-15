@@ -137,12 +137,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                             }
                         />
                         {matchResultsData
-                            ?.sort((a, b) =>
-                                (a.startTime ?? a.eventDayDate ?? '') >
-                                (b.startTime ?? b.eventDayDate ?? '')
-                                    ? -1
-                                    : 1,
-                            )
+                            ?.sort((a, b) => ((a.startTime ?? '') > (b.startTime ?? '') ? -1 : 1))
                             .map(match => (
                                 <ResultsMatchCard
                                     match={match}
