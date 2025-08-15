@@ -40,7 +40,6 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
         },
     )
 
-
     const onClickCompetition = (competition: CompetitionChoiceDto) => {
         setCompetitionSelected(competition)
     }
@@ -88,9 +87,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                     <Throbber />
                 ) : !competitionSelected ? (
                     competitionsData?.data.length === 0 ? (
-                        <Alert severity={'info'}>
-                            {t('results.matchResults.noCompetitions')}
-                        </Alert>
+                        <Alert severity={'info'}>{t('results.matchResults.noResults')}</Alert>
                     ) : (
                         competitionsData?.data.map(competition => (
                             <Card sx={{flex: 1, width: 1}} key={competition.id}>
@@ -105,8 +102,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                                             }}>
                                             <Box>
                                                 <Typography variant={'h6'}>
-                                                    {competition.identifier} |{' '}
-                                                    {competition.name}
+                                                    {competition.identifier} | {competition.name}
                                                 </Typography>
                                             </Box>
                                             {competition.category && (
@@ -123,9 +119,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                         ))
                     )
                 ) : matchResultsData?.length === 0 ? (
-                    <Alert severity={'info'}>
-                        {t('results.matchResults.noResults')}
-                    </Alert>
+                    <Alert severity={'info'}>{t('results.matchResults.noResults')}</Alert>
                 ) : (
                     matchResultsData
                         ?.sort((a, b) =>

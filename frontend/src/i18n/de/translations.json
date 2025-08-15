@@ -1359,8 +1359,7 @@
     },
     "matchResults": {
       "matchResults": "Ergebnisse",
-      "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf.",
-      "noCompetitions": "Es gibt keine Wettkämpfe für diese Veranstaltung."
+      "noResults": "Es existieren noch keine Ergebnisse für diesen Wettkampf."
     },
     "liveMatches": {
       "liveMatches": "Laufende Partien",
