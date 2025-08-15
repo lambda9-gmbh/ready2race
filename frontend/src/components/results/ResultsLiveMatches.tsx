@@ -70,6 +70,10 @@ const ResultsLiveMatches = ({eventId}: Props) => {
                                 match={match}
                                 selectMatch={onClickMatch}
                                 key={match.matchId}
+                                competition={{
+                                    competitionName: match.competitionName,
+                                    competitionCategory: match.categoryName ?? undefined,
+                                }}
                             />
                         ))
                 )}
