@@ -229,7 +229,12 @@ object EventInfoService {
                     teamName = first.get("team_name", String::class.java),
                     teamNumber = null,
                     clubName = first.get("club_name", String::class.java),
-                    place = first[COMPETITION_MATCH_TEAM.PLACE]!!,
+                    startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
+                    place = first[COMPETITION_MATCH_TEAM.PLACE],
+                    failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
+                    failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
+                    deregistered = first.get("deregistered", Boolean::class.java),
+                    deregisteredReason = first.get("deregistration_reason", String::class.java),
                     participants = groupedRecords.mapNotNull { record ->
                         record.get("participant_id", UUID::class.java)?.let {
                             ParticipantInfo(

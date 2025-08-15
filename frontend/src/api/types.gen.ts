@@ -958,7 +958,11 @@ export type MatchResultTeamInfo = {
     teamName?: string | null
     teamNumber?: number | null
     clubName?: string | null
-    place: number
+    place?: number
+    failed: boolean
+    failedReason?: string
+    deregistered: boolean
+    deregisteredReason?: string
     participants: Array<ParticipantInfo>
 }
 

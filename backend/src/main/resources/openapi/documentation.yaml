@@ -9440,8 +9440,9 @@ components:
       type: object
       required:
         - teamId
-        - place
         - participants
+        - failed
+        - deregistered
       properties:
         teamId:
           type: string
@@ -9457,6 +9458,14 @@ components:
           nullable: true
         place:
           type: integer
+        failed:
+          type: boolean
+        failedReason:
+          type: string
+        deregistered:
+          type: boolean
+        deregisteredReason:
+          type: string
         participants:
           type: array
           items:
