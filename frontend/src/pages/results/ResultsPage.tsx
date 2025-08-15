@@ -1,5 +1,5 @@
 import MatchResults from '@components/results/MatchResults.tsx'
-import {Box, IconButton, Stack, Tab, Typography, useMediaQuery, useTheme} from '@mui/material'
+import {Box, IconButton, Stack, Tab, useMediaQuery, useTheme} from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import {a11yProps} from '@utils/helpers.ts'
@@ -9,6 +9,8 @@ import CellTowerOutlinedIcon from '@mui/icons-material/CellTowerOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import {resultsEventRoute} from '@routes'
 import {Link} from '@tanstack/react-router'
+import ResultsLiveMatches from "@components/results/ResultsLiveMatches.tsx";
+import {useTranslation} from "react-i18next";
 import {CompetitionChoiceDto} from '@api/types.gen.ts'
 
 const RESULTS_TABS = ['latest-results', 'live', 'upcoming'] as const
@@ -16,6 +18,7 @@ export type ResultsTab = (typeof RESULTS_TABS)[number]
 
 const ResultsPage = () => {
     const theme = useTheme()
+    const {t} = useTranslation()
 
     const smallScreenLayout = useMediaQuery(`(max-width:${theme.breakpoints.values.sm}px)`)
 
@@ -50,14 +53,14 @@ const ResultsPage = () => {
                 <Box sx={{flex: 1}}>
                     <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                         <Tab
-                            label={'Results'}
+                            label={t('results.tabs.results')}
                             icon={<EmojiEventsOutlinedIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
                             sx={{flex: 1}}
                             {...tabProps('latest-results')}
                         />
                         <Tab
-                            label={'Live'}
+                            label={t('results.tabs.live')}
                             icon={<CellTowerOutlinedIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
                             sx={{flex: 1}}
@@ -74,7 +77,7 @@ const ResultsPage = () => {
                 />
             </TabPanel>
             <TabPanel index={'live'} activeTab={activeTab}>
-                <Typography sx={{m: 2}}>Coming soon...</Typography>
+                <ResultsLiveMatches eventId={eventId} />
             </TabPanel>
         </Box>
     )

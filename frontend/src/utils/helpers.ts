@@ -122,10 +122,10 @@ export const getRegistrationPeriods = (
 
 export const coalesce = <T>(...args: (T | null)[]): T | null => args.find(a => a !== null) ?? null
 
-const sortDiff: {
+export const sortDiff: {
     (a: boolean, b: boolean): number | null
-    (a: number | undefined, b: number | undefined): number | null
-} = (a: boolean | number | undefined, b: boolean | number | undefined) => {
+    (a: number | undefined | null, b: number | undefined | null): number | null
+} = (a: boolean | number | undefined | null, b: boolean | number | undefined | null) => {
     if (a) {
         if (b) {
             return Number(a) - Number(b)

@@ -4860,6 +4860,7 @@ paths:
       parameters:
         - name: limit
           in: query
+          required: true
           schema:
             type: integer
             default: 10
@@ -4893,6 +4894,7 @@ paths:
       parameters:
         - name: limit
           in: query
+          required: true
           schema:
             type: integer
             default: 10
@@ -4920,6 +4922,7 @@ paths:
       parameters:
         - name: limit
           in: query
+          required: true
           schema:
             type: integer
             default: 10

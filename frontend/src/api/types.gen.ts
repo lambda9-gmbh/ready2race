@@ -4293,8 +4293,8 @@ export type GetUpcomingMatchesData = {
     path: {
         eventId: string
     }
-    query?: {
-        limit?: number
+    query: {
+        limit: number
     }
 }
 
@@ -4306,9 +4306,9 @@ export type GetLatestMatchResultsData = {
     path: {
         eventId: string
     }
-    query?: {
+    query: {
         competitionId?: string
-        limit?: number
+        limit: number
     }
 }
 
@@ -4320,8 +4320,8 @@ export type GetRunningMatchesData = {
     path: {
         eventId: string
     }
-    query?: {
-        limit?: number
+    query: {
+        limit: number
     }
 }
 

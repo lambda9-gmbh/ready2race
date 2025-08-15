@@ -1350,5 +1350,20 @@
   "panic": {
     "title": "Error",
     "text": "The API server is currently unavailable. Please try again later. If this situation persists, please contact a site administrator. Thank you."
+  },
+  "results": {
+    "tabs": {
+      "results": "Results",
+      "live": "Live"
+    },
+    "matchResults": {
+      "matchResults": "Match Results",
+      "noResults": "There are no results for this competition yet.",
+      "noCompetitions": "There are no competitions for this event."
+    },
+    "liveMatches": {
+      "liveMatches": "Currently running matches",
+      "noMatches": "There are no matches currently taking place."
+    }
   }
 }
