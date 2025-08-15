@@ -1030,4 +1030,9 @@ select au.id,
        qc.qr_code_id
 from app_user au
     left join qr_codes qc on qc.app_user = au.id
+-- TODO: maybe want to allow q-codes also for admins
+where not exists(select *
+                 from app_user_has_role auhr2
+                 where auhr2.role = '00000000-0000-0000-0000-000000000000'
+                   and auhr2.app_user = au.id)
 ;
