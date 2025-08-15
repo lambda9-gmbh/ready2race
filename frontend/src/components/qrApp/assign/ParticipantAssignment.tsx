@@ -139,7 +139,7 @@ const ParticipantAssignment: React.FC<ParticipantAssignmentProps> = ({
                                                             group.competitionName,
                                                         )
                                                     }
-                                                    disabled={!!participant.qrCodeValue}>
+                                                    disabled={participant.qrCodeValue !== undefined}>
                                                     <CardContent sx={{py: 2}}>
                                                         <Box
                                                             sx={{

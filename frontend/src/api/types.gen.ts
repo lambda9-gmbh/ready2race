@@ -25,6 +25,15 @@ export type AppUserDto = {
     qrCodeId?: string
 }
 
+export type AppUserForEventDto = {
+    id: string
+    firstname: string
+    lastname: string
+    email: string
+    club?: string
+    qrCodeId?: string
+}
+
 export type AppUserInvitationDto = {
     id: string
     email: string
@@ -1879,6 +1888,37 @@ export type ResetPasswordData = {
 export type ResetPasswordResponse = void
 
 export type ResetPasswordError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetUsersForEventData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetUsersForEventResponse = {
+    data: Array<AppUserForEventDto>
+    pagination: Pagination
+}
+
+export type GetUsersForEventError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddRoleData = {
     body: RoleRequest

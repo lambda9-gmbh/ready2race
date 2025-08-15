@@ -221,7 +221,7 @@ const QrAssignPage = () => {
                     )}
 
                     {userTyp === 'User' && !scanningSystemUser && (
-                        <UserAssignment onSelectUser={handleUserClick} />
+                        <UserAssignment eventId={eventId} onSelectUser={handleUserClick} />
                     )}
                 </>
             )}

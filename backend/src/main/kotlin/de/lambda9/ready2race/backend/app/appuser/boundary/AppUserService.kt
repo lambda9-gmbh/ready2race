@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.appuser.boundary
 import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventDto
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventSort
 import de.lambda9.ready2race.backend.app.appuser.control.*
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
@@ -12,6 +14,7 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailPriority
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.role.boundary.RoleService
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -411,4 +414,20 @@ object AppUserService {
 
     fun deleteExpiredPasswordResets(): App<Nothing, Int> =
         AppUserPasswordResetRepo.deleteExpired().orDie()
+
+
+    fun getAllAppUsersForEvent(
+        eventId: UUID,
+        params: PaginationParameters<AppUserForEventSort>
+    ): App<EventError, ApiResponse.Page<AppUserForEventDto, AppUserForEventSort>> = KIO.comprehension {
+        val total = !AppUserForEventRepo.countForEvent(eventId, params.search).orDie()
+        val page = !AppUserForEventRepo.pageForEvent(eventId, params).orDie()
+
+        page.traverse { it.toDto() }.map {
+            ApiResponse.Page(
+                data = it,
+                pagination = params.toPagination(total)
+            )
+        }
+    }
 }

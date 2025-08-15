@@ -14,6 +14,10 @@ export type ResultsMatchInfo = LatestMatchResultInfo | RunningMatchInfo
 type Props<M extends ResultsMatchInfo> = {
     match: M
     selectMatch: (match: M) => void
+    competition?: {
+        competitionName: string,
+        competitionCategory?: string
+    }
 }
 
 const ResultsMatchCard = <M extends ResultsMatchInfo>({match, selectMatch}: Props<M>) => {

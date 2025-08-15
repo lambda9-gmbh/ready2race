@@ -49,6 +49,9 @@ import type {
     ResetPasswordData,
     ResetPasswordError,
     ResetPasswordResponse,
+    GetUsersForEventData,
+    GetUsersForEventError,
+    GetUsersForEventResponse,
     AddRoleData,
     AddRoleError,
     AddRoleResponse,
@@ -770,6 +773,19 @@ export const resetPassword = <ThrowOnError extends boolean = false>(
             url: '/user/resetPassword/{passwordResetToken}',
         },
     )
+}
+
+export const getUsersForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetUsersForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetUsersForEventResponse,
+        GetUsersForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/user/event/{eventId}',
+    })
 }
 
 export const addRole = <ThrowOnError extends boolean = false>(
