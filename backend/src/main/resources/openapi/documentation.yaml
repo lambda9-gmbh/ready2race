@@ -377,6 +377,43 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /user/event/{eventId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getUsersForEvent
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+      responses:
+        200:
+          description: User page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AppUserForEventDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
 
 
   /role:
@@ -9963,3 +10000,25 @@ components:
         category:
           type: string
 
+    AppUserForEventDto:
+      type: object
+      required:
+        - id
+        - firstname
+        - lastname
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        club:
+          type: string
+          format: uuid
+        qrCodeId:
+          type: string

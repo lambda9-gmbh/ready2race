@@ -5,7 +5,9 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithQrCodeForEvent
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithQrCodeForEventRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_HAS_ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_QR_CODE_FOR_EVENT
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -38,5 +40,15 @@ object AppUserWithQrCodeRepo {
                 }
                 .fetch()
         }
+    }
+
+    fun exists(
+        eventId: UUID,
+        qrCode: String,
+    ) = APP_USER_WITH_QR_CODE_FOR_EVENT.exists {
+        DSL.and(
+            EVENT_ID.eq(eventId),
+            QR_CODE_ID.eq(qrCode)
+        )
     }
 }

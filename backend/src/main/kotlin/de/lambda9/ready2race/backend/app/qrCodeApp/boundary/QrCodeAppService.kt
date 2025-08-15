@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.qrCodeApp.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.appUserWithQrCode.control.AppUserWithQrCodeRepo
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.toRecord
@@ -9,6 +10,7 @@ import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeError
 import de.lambda9.ready2race.backend.app.qrCodeApp.entity.QrCodeUpdateDto
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -19,7 +21,7 @@ object QrCodeAppService {
         qrCodeId: String
     ): App<ServiceError, ApiResponse> = KIO.comprehension {
         val userOrParticipant = !QrCodeRepo.getUserOrParticipantByQrCodeIdWithDetails(qrCodeId).orDie()
-            //.onNullFail { QrCodeError.QrCodeNotFound }
+        //.onNullFail { QrCodeError.QrCodeNotFound }
 
         when {
             userOrParticipant != null -> KIO.ok(ApiResponse.Dto(userOrParticipant))
@@ -39,6 +41,9 @@ object QrCodeAppService {
     ): App<ServiceError, ApiResponse> = KIO.comprehension {
         val record = update.toRecord(user.id!!)
         !isQrCodeInUse(record.qrCodeId)
+
+        !AppUserWithQrCodeRepo.exists(eventId = record.event, qrCode = record.qrCodeId).orDie()
+            .onTrueFail { QrCodeError.QrCodeAlreadyInUse }
 
         QrCodeRepo
             .create(record)
