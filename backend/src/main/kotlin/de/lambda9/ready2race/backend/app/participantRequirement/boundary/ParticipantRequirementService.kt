@@ -9,7 +9,7 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.app.participantRequirement.control.*
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.*
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData

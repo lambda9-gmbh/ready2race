@@ -22,7 +22,7 @@ import de.lambda9.ready2race.backend.app.participantRequirement.control.Particip
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender

@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.eventRegistration.control
 
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord

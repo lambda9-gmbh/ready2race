@@ -7,6 +7,7 @@ import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
 import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 import i18next from 'i18next'
 import {fallbackLng, isLanguage, Language} from '@i18n/config.ts'
+import PanicPage from '../../pages/PanicPage.tsx'
 
 type Session = {
     token: string
@@ -21,6 +22,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const [userData, setUserData] = useState<UserData>()
     const [token, setToken] = useState<string | null>(sessionStorage.getItem('session'))
     const [ready, setReady] = useState(false)
+    const [error, setError] = useState<string | null>(null)
     const prevLoggedIn = useRef(false)
     const loggedIn = Boolean(userData)
 
@@ -63,7 +65,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
         }
     }, [userData])
 
-    //TODO: error-handling
     useFetch(signal => checkUserLogin({signal}), {
         onResponse: ({data, response}) => {
             if (response.status === 200 && data !== undefined) {
@@ -72,6 +73,9 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 sessionStorage.removeItem('session')
                 setReady(true)
             }
+        },
+        onError: error => {
+            setError(`${error}`)
         },
     })
 
@@ -148,9 +152,11 @@ const UserProvider = ({children}: PropsWithChildren) => {
         } satisfies AuthenticatedUser
     }
 
-    return <UserContext.Provider value={userValue}>{ready && children}</UserContext.Provider>
+    return (
+        <UserContext.Provider value={userValue}>
+            {error !== null ? <PanicPage /> : ready && children}
+        </UserContext.Provider>
+    )
 }
 
 export default UserProvider
-
-//todo: add "ready" (with Loading animation?) or better solution?

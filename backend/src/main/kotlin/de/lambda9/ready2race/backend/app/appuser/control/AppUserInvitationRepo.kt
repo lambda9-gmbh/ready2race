@@ -10,7 +10,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.APP_US
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.time.LocalDateTime

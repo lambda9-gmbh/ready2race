@@ -602,6 +602,9 @@ import type {
     GetQrAssignmentParticipantsData,
     GetQrAssignmentParticipantsError,
     GetQrAssignmentParticipantsResponse,
+    GetCompetitionsHavingResultsData,
+    GetCompetitionsHavingResultsError,
+    GetCompetitionsHavingResultsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3059,5 +3062,18 @@ export const getQrAssignmentParticipants = <ThrowOnError extends boolean = false
     >({
         ...options,
         url: '/app/qr-assignment/participants',
+    })
+}
+
+export const getCompetitionsHavingResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetCompetitionsHavingResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetCompetitionsHavingResultsResponse,
+        GetCompetitionsHavingResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/results/event/{eventId}/competition',
     })
 }

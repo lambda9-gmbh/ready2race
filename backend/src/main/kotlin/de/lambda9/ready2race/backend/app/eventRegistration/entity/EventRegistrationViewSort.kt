@@ -1,6 +1,6 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.entity
 
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATIONS_VIEW
 import org.jooq.Field
 

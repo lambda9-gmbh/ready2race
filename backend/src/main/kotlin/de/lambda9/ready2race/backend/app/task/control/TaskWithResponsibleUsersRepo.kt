@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.task.control
 
 import de.lambda9.ready2race.backend.app.task.entity.TaskWithResponsibleUsersSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.enums.TaskState
 import de.lambda9.ready2race.backend.database.generated.tables.TaskWithResponsibleUsers
 import de.lambda9.ready2race.backend.database.generated.tables.records.TaskWithResponsibleUsersRecord

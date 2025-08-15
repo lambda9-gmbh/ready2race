@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.competition.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionSortable
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionForClubView
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionPublicView

@@ -5,7 +5,7 @@ import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Fee
 import de.lambda9.ready2race.backend.database.generated.tables.records.FeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.FEE
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL

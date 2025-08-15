@@ -1,9 +1,9 @@
 package de.lambda9.ready2race.backend.database
 
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
-import de.lambda9.ready2race.backend.calls.pagination.toOrderBy
-import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Direction
+import de.lambda9.ready2race.backend.pagination.Page
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.*
@@ -22,6 +22,7 @@ fun String?.metaSearch(fields: List<Field<*>>, splitRegex: Regex = Regex("\\s"))
         ?.and()
         ?: DSL.trueCondition()
 
+@Deprecated("Use the page() extension function on Table instead", level = DeprecationLevel.WARNING)
 fun <R : Record, S : Sortable> SelectWhereStep<R>.page(
     paginationParameter: PaginationParameters<S>,
     searchFields: List<Field<*>> = emptyList(),
@@ -30,7 +31,14 @@ fun <R : Record, S : Sortable> SelectWhereStep<R>.page(
     this
         .where(where())
         .and(paginationParameter.search.metaSearch(searchFields))
-        .orderBy(paginationParameter.sort?.toOrderBy())
+        .orderBy(paginationParameter.sort?.flatMap { order ->
+            order.field.toFields().map {
+                when (order.direction) {
+                    Direction.DESC -> it.desc()
+                    Direction.ASC -> it.asc()
+                }
+            }
+        })
         .limit(paginationParameter.limit)
         .offset(paginationParameter.offset)
 
@@ -105,6 +113,25 @@ fun <R : Record, T : TableImpl<R>, A> T.selectOne(
         .where(condition())
         .fetchOne()
         ?.value1()
+}
+
+// TODO: @Evaluate need for similar function without pagination, just search
+@Suppress("DEPRECATION")
+fun <R : Record, T : TableImpl<R>, S : Sortable> T.page(
+    params: PaginationParameters<S>,
+    searchFields: T.() -> List<Field<*>> = { emptyList() },
+    condition: T.() -> Condition = { DSL.trueCondition() },
+): JIO<Page<R, S>> = Jooq.query {
+    val total = fetchCount(this@page, DSL.and(params.search.metaSearch(searchFields()), condition()))
+    val page = selectFrom(this@page)
+        .page(params, searchFields()) {
+            condition()
+        }
+        .fetch()
+    Page(
+        data = page,
+        pagination = params.toPagination(total)
+    )
 }
 
 private fun <R : UpdatableRecord<R>> R.updateChanges(

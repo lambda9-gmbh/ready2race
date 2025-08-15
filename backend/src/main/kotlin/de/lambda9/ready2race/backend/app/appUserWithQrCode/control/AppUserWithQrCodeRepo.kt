@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.appUserWithQrCode.control
 
 import de.lambda9.ready2race.backend.app.appUserWithQrCode.entity.AppUserWithQrCodeSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithQrCodeForEvent
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithQrCodeForEventRecord

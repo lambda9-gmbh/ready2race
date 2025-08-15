@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.app.task.entity.TaskDto
 import de.lambda9.ready2race.backend.app.task.entity.TaskError
 import de.lambda9.ready2race.backend.app.task.entity.TaskUpsertDto
 import de.lambda9.ready2race.backend.app.task.entity.TaskWithResponsibleUsersSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.TaskState

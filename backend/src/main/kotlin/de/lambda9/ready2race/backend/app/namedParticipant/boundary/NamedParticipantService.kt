@@ -10,7 +10,7 @@ import de.lambda9.ready2race.backend.app.namedParticipant.entity.*
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.EventParticipantRequirementDto
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO

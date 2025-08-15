@@ -10,6 +10,7 @@ type UseFetchOptions<T, E, R> = {
     mapData?: (data: T) => R
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
     preCondition?: () => boolean
+    onError?: (error: unknown) => void
     deps?: DependencyList
 }
 
@@ -18,10 +19,9 @@ export type FetchError<E> = {
     error: E
 }
 
-export type UseFetchReturn<T, E> =
-    {
-        reload: () => void
-    } & (
+export type UseFetchReturn<T, E> = {
+    reload: () => void
+} & (
     | {
           pending: true
           error: null
@@ -37,13 +37,12 @@ export type UseFetchReturn<T, E> =
           error: null
           data: T
       }
-    )
+)
 
 export const useFetch = <T, E, R = T>(
     req: (abortSignal: AbortSignal) => RequestResult<T, E, false>,
     options?: UseFetchOptions<T, E, R>,
 ): UseFetchReturn<R, E> => {
-
     const [lastTry, setLastTry] = useState(Date.now())
     const reload = () => setLastTry(Date.now())
     const fetchPending: UseFetchReturn<unknown, unknown> = {
@@ -85,7 +84,11 @@ export const useFetch = <T, E, R = T>(
                     }
                 } catch (error) {
                     if (!controller.signal.aborted) {
-                        throw error
+                        if (options?.onError) {
+                            options.onError(error)
+                        } else {
+                            throw error
+                        }
                     }
                 }
             })()
@@ -147,7 +150,11 @@ export type UseEntityAdministrationReturn<T> = {
 
 export const useEntityAdministration = <T extends GridValidRowModel | undefined = undefined>(
     entityName: string,
-    {entityCreate = true, entityUpdate = true, entityDelete = true}: UseEntityAdministrationOptions = {},
+    {
+        entityCreate = true,
+        entityUpdate = true,
+        entityDelete = true,
+    }: UseEntityAdministrationOptions = {},
 ): UseEntityAdministrationReturn<T> => {
     const [dialogIsOpen, openDialog, closeDialog, entity] = useParamDialogState<T>(false)
 
@@ -158,7 +165,7 @@ export const useEntityAdministration = <T extends GridValidRowModel | undefined 
     const options: UseEntityAdministrationOptions = {
         entityCreate,
         entityUpdate,
-        entityDelete
+        entityDelete,
     }
 
     return {

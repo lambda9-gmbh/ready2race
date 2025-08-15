@@ -9,9 +9,9 @@ import CellTowerOutlinedIcon from '@mui/icons-material/CellTowerOutlined'
 import EmojiEventsOutlinedIcon from '@mui/icons-material/EmojiEventsOutlined'
 import {resultsEventRoute} from '@routes'
 import {Link} from '@tanstack/react-router'
-import {CompetitionDto} from "@api/types.gen.ts";
 import ResultsLiveMatches from "@components/results/ResultsLiveMatches.tsx";
 import {useTranslation} from "react-i18next";
+import {CompetitionChoiceDto} from '@api/types.gen.ts'
 
 const RESULTS_TABS = ['latest-results', 'live', 'upcoming'] as const
 export type ResultsTab = (typeof RESULTS_TABS)[number]
@@ -30,7 +30,9 @@ const ResultsPage = () => {
     }
     const tabProps = (tab: ResultsTab) => a11yProps('results', tab)
 
-    const [competitionSelected, setCompetitionSelected] = useState<CompetitionDto | null>(null)
+    const [competitionSelected, setCompetitionSelected] = useState<CompetitionChoiceDto | null>(
+        null,
+    )
 
     return (
         <Box sx={{maxWidth: theme.breakpoints.values.sm}}>
@@ -68,7 +70,11 @@ const ResultsPage = () => {
                 </Box>
             </Stack>
             <TabPanel index={'latest-results'} activeTab={activeTab}>
-                <MatchResults eventId={eventId} competitionSelected={competitionSelected} setCompetitionSelected={setCompetitionSelected} />
+                <MatchResults
+                    eventId={eventId}
+                    competitionSelected={competitionSelected}
+                    setCompetitionSelected={setCompetitionSelected}
+                />
             </TabPanel>
             <TabPanel index={'live'} activeTab={activeTab}>
                 <ResultsLiveMatches eventId={eventId} />

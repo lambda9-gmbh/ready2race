@@ -120,6 +120,43 @@ export const getRegistrationPeriods = (
     ),
 })
 
+export const coalesce = <T>(...args: (T | null)[]): T | null => args.find(a => a !== null) ?? null
+
+export const sortDiff: {
+    (a: boolean, b: boolean): number | null
+    (a: number | undefined | null, b: number | undefined | null): number | null
+} = (a: boolean | number | undefined | null, b: boolean | number | undefined | null) => {
+    if (a) {
+        if (b) {
+            return Number(a) - Number(b)
+        }
+        return -1
+    }
+    if (b) {
+        return 1
+    }
+
+    return null
+}
+
+export const sortByPlaces = <
+    T extends {
+        place?: number
+        failed: boolean
+        deregistered: boolean
+    },
+>(
+    teams: T[],
+) =>
+    teams.sort(
+        (a, b) =>
+            coalesce(
+                sortDiff(a.place, b.place),
+                sortDiff(a.failed, b.failed),
+                sortDiff(a.deregistered, b.deregistered),
+            ) ?? 0,
+    )
+
 export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A =>
     u.includes(s as A)
 

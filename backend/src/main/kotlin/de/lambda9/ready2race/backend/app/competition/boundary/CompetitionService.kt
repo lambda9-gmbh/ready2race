@@ -13,7 +13,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSe
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord

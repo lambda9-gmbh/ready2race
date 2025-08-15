@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.contactInformation.control
 
 import de.lambda9.ready2race.backend.app.contactInformation.entity.ContactInformationSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.ContactInformation

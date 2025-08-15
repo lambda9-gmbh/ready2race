@@ -8,7 +8,7 @@ import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.Compet
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.toDto
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.toOverviewDto
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.entity.*
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupTemplateRecord

@@ -10,7 +10,7 @@ import de.lambda9.ready2race.backend.app.caterer.entity.CatererError
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewDto
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSort
 import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionRequest
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.kio.onFalseFail

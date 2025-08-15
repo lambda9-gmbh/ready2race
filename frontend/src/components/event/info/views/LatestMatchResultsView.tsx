@@ -21,7 +21,8 @@ import {de, enUS} from 'date-fns/locale'
 import {useFetch} from '@utils/hooks'
 import {getLatestMatchResults} from '@api/sdk.gen'
 import {EmojiEvents} from '@mui/icons-material'
-import SinglePlaceColored from "@components/event/info/views/SinglePlaceColored.tsx";
+import SinglePlaceColored from '@components/event/info/views/SinglePlaceColored.tsx'
+import {sortByPlaces} from '@utils/helpers.ts'
 
 interface LatestMatchResultsViewProps {
     eventId: string
@@ -137,41 +138,39 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {match.teams
-                                            .sort((a, b) => a.place - b.place)
-                                            .map(team => (
-                                                <TableRow key={team.teamId}>
-                                                    <TableCell align="center">
-                                                        <SinglePlaceColored place={team.place} />
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography variant="body2">
-                                                            {team.teamName || '-'}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography
-                                                            variant="body2"
-                                                            color="text.secondary">
-                                                            {team.clubName || '-'}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography variant="body2">
-                                                            {team.participants
-                                                                .map(
-                                                                    p =>
-                                                                        `${p.firstName} ${p.lastName}${
-                                                                            p.namedRole
-                                                                                ? ` (${p.namedRole})`
-                                                                                : ''
-                                                                        }`,
-                                                                )
-                                                                .join(', ')}
-                                                        </Typography>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                        {sortByPlaces(match.teams).map(team => (
+                                            <TableRow key={team.teamId}>
+                                                <TableCell align="center">
+                                                    <SinglePlaceColored place={team.place ?? 0} />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {team.teamName || '-'}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography
+                                                        variant="body2"
+                                                        color="text.secondary">
+                                                        {team.clubName || '-'}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Typography variant="body2">
+                                                        {team.participants
+                                                            .map(
+                                                                p =>
+                                                                    `${p.firstName} ${p.lastName}${
+                                                                        p.namedRole
+                                                                            ? ` (${p.namedRole})`
+                                                                            : ''
+                                                                    }`,
+                                                            )
+                                                            .join(', ')}
+                                                    </Typography>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
                                     </TableBody>
                                 </Table>
                             </TableContainer>

@@ -1,17 +1,17 @@
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {getCompetitions, getLatestMatchResults} from '@api/sdk.gen.ts'
+import {getCompetitionsHavingResults, getLatestMatchResults} from '@api/sdk.gen.ts'
 import {Alert, Box, Card, CardActionArea, CardContent, Chip, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {useState} from 'react'
-import {CompetitionDto, LatestMatchResultInfo} from '@api/types.gen.ts'
+import {CompetitionChoiceDto, LatestMatchResultInfo} from '@api/types.gen.ts'
 import ResultsMatchDialog from '@components/results/ResultsMatchDialog.tsx'
 import ResultsMatchCard from '@components/results/ResultsMatchCard.tsx'
 
 type Props = {
     eventId: string
-    competitionSelected: CompetitionDto | null
-    setCompetitionSelected: (value: CompetitionDto | null) => void
+    competitionSelected: CompetitionChoiceDto | null
+    setCompetitionSelected: (value: CompetitionChoiceDto | null) => void
 }
 
 const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Props) => {
@@ -22,7 +22,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
 
     const {data: competitionsData, pending: competitionsPending} = useFetch(
         signal =>
-            getCompetitions({
+            getCompetitionsHavingResults({
                 signal,
                 path: {eventId},
             }),
@@ -40,7 +40,8 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
         },
     )
 
-    const onClickCompetition = (competition: CompetitionDto) => {
+
+    const onClickCompetition = (competition: CompetitionChoiceDto) => {
         setCompetitionSelected(competition)
     }
 
@@ -68,8 +69,6 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
             deps: [eventId, competitionSelected, competitionsData, matchesLimit],
         },
     )
-
-    // todo: reload data once in a while
 
     const [dialogOpen, setDialogOpen] = useState(false)
     const [matchSelected, setMatchSelected] = useState<LatestMatchResultInfo | null>(null)
@@ -106,16 +105,13 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                                             }}>
                                             <Box>
                                                 <Typography variant={'h6'}>
-                                                    {competition.properties.identifier} |{' '}
-                                                    {competition.properties.name}
+                                                    {competition.identifier} |{' '}
+                                                    {competition.name}
                                                 </Typography>
                                             </Box>
-                                            {competition.properties.competitionCategory && (
+                                            {competition.category && (
                                                 <Chip
-                                                    label={
-                                                        competition.properties.competitionCategory
-                                                            .name
-                                                    }
+                                                    label={competition.category}
                                                     color="primary"
                                                     variant="outlined"
                                                 />

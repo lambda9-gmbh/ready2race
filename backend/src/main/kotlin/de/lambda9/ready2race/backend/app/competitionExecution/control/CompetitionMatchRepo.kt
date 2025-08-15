@@ -59,19 +59,19 @@ object CompetitionMatchRepo {
             .leftJoin(EVENT_DAY).on(EVENT_DAY.ID.eq(EVENT_DAY_HAS_COMPETITION.EVENT_DAY))
             .where(COMPETITION.EVENT.eq(eventId))
             .and(
-                exists(
-                    selectOne()
-                        .from(COMPETITION_MATCH_TEAM)
-                        .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
-                        .and(COMPETITION_MATCH_TEAM.PLACE.isNotNull)
-                )
-            )
-            .and(
                 notExists(
                     selectOne()
                         .from(COMPETITION_MATCH_TEAM)
                         .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(COMPETITION_MATCH.COMPETITION_SETUP_MATCH))
                         .and(COMPETITION_MATCH_TEAM.PLACE.isNull)
+                        .and(COMPETITION_MATCH_TEAM.OUT.isFalse)
+                        .and(COMPETITION_MATCH_TEAM.FAILED.isFalse)
+                        .and(notExists(
+                            selectOne()
+                                .from(COMPETITION_DEREGISTRATION)
+                                .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION))
+                                .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_ROUND.ID))
+                        ))
                 )
             )
             .and(

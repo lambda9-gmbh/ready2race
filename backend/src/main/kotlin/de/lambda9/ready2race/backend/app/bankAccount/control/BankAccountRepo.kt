@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.bankAccount.control
 
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.BankAccount

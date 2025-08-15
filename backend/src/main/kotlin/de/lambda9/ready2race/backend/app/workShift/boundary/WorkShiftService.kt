@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftError
 import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftUpsertDto
 import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftWithAssignedUsersDto
 import de.lambda9.ready2race.backend.app.workShift.entity.WorkShiftWithAssignedUsersSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.WorkShiftHasUserRecord

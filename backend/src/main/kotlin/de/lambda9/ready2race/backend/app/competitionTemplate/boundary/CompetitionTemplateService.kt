@@ -13,7 +13,7 @@ import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionT
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateError
 import de.lambda9.ready2race.backend.app.competitionTemplate.entity.CompetitionTemplateWithPropertiesSort
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionTemplateRecord
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.kio.onFalseFail
