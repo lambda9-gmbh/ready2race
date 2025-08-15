@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.competitionSetupTemplate.control
 
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.entity.CompetitionSetupTemplateSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionSetupTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupTemplateRecord

@@ -13,7 +13,7 @@ import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountError
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountRequest
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountSort
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.kio.onFalseFail

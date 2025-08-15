@@ -4,6 +4,8 @@ import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.calls.comprehension.comprehension
+import de.lambda9.ready2race.backend.pagination.Page
+import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.plugins.kioEnv
 import de.lambda9.tailwind.core.Cause
 import de.lambda9.tailwind.core.KIO
@@ -21,10 +23,23 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-fun <R, E, A> KIO<R, E, A>.noDataResponse() = map { ApiResponse.NoData }
-fun <R, E> KIO<R, E, UUID>.createdResponse() = map { ApiResponse.Created(it) }
-fun <R, E, A> KIO<R, E, A>.createdResponse(f: A.() -> UUID) = map { ApiResponse.Created(f(it)) }
-fun <R, E, A : Any> KIO<R, E, A>.dtoResponse() = map { ApiResponse.Dto(it) }
+fun <R, E, A> KIO<R, E, A>.noDataResponse(): KIO<R, E, ApiResponse.NoData> =
+    map { ApiResponse.NoData }
+
+fun <R, E> KIO<R, E, UUID>.createdResponse(): KIO<R, E, ApiResponse.Created> =
+    map { ApiResponse.Created(it) }
+
+fun <R, E, A> KIO<R, E, A>.createdResponse(f: A.() -> UUID): KIO<R, E, ApiResponse.Created> =
+    map { ApiResponse.Created(f(it)) }
+
+fun <R, E, A : Any> KIO<R, E, A>.dtoResponse(): KIO<R, E, ApiResponse.Dto<A>> =
+    map { ApiResponse.Dto(it) }
+
+fun <R, E, A : Any, B : Any, S : Sortable> KIO<R, E, Page<A, S>>.pageResponse(f: (A) -> B): KIO<R, E, ApiResponse.Page<B, S>> =
+    map { ApiResponse.Page(data = it.data.map(f), pagination = it.pagination) }
+
+fun <R, E, A : Any, S : Sortable> KIO<R, E, Page<A, S>>.pageResponse(): KIO<R, E, ApiResponse.Page<A, S>> =
+    map { ApiResponse.Page(data = it.data, pagination = it.pagination) }
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,
@@ -104,7 +119,7 @@ suspend fun ApplicationCall.respondKIO(
 
                     val contentType = try {
                         ContentType.parse(URLConnection.guessContentTypeFromName(apiResponse.name))
-                    } catch(e: BadContentTypeFormatException) {
+                    } catch (e: BadContentTypeFormatException) {
                         logger.warn(e) { "Could not parse content-type from Document/File ${apiResponse.name}" }
                         ContentType.Application.OctetStream
                     }

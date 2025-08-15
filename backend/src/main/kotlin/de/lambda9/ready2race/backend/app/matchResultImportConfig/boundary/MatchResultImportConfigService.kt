@@ -15,7 +15,7 @@ import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigD
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigRequest
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigSort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.createdResponse

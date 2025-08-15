@@ -8,7 +8,7 @@ import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryError
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRequest
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategorySort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.createdResponse

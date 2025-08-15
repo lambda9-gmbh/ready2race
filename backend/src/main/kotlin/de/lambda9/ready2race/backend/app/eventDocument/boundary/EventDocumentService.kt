@@ -18,7 +18,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrat
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData

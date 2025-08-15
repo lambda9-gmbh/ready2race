@@ -5,9 +5,9 @@ import de.lambda9.ready2race.backend.app.auth.boundary.AuthService
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.captcha.boundary.CaptchaService
-import de.lambda9.ready2race.backend.calls.pagination.Order
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Order
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.parsing.Parser

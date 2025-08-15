@@ -32,7 +32,7 @@ import de.lambda9.ready2race.backend.app.invoice.control.toDto
 import de.lambda9.ready2race.backend.app.invoice.entity.*
 import de.lambda9.ready2race.backend.app.sequence.control.SequenceRepo
 import de.lambda9.ready2race.backend.app.sequence.entity.SequenceConsumer
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.dtoResponse

@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.calls.responses
 
-import de.lambda9.ready2race.backend.calls.pagination.Pagination
-import de.lambda9.ready2race.backend.calls.pagination.Sortable
+import de.lambda9.ready2race.backend.pagination.Pagination
+import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.tailwind.core.KIO
 import java.util.*
 

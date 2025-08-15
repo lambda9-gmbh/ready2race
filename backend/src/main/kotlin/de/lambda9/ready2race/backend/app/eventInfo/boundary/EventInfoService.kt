@@ -218,6 +218,9 @@ object EventInfoService {
     private fun getMatchResultTeams(matchId: UUID): App<Nothing, List<MatchResultTeamInfo>> = KIO.comprehension {
         val records = !CompetitionMatchTeamRepo.getTeamsForMatchResult(matchId).orDie()
 
+        // TODO: calculate substitutions (Participants) and mark deregistered, failed or out
+        // now matches are filtered by having a place set for all teams - this is not up to date
+
         val result = records.groupBy { it[COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION] }
             .map { (registrationId, groupedRecords) ->
                 val first = groupedRecords.first()

@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.ratingcategory.control
 
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategorySort
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.RatingCategory
 import de.lambda9.ready2race.backend.database.generated.tables.records.RatingCategoryRecord

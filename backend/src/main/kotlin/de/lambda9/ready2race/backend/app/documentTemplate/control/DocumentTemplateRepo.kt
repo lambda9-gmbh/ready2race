@@ -2,7 +2,7 @@ package de.lambda9.ready2race.backend.app.documentTemplate.control
 
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentTemplateSort
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.DocumentTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateRecord

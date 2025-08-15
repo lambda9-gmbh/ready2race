@@ -9,7 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocu
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_DOWNLOAD
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DOCUMENT_VIEW
-import de.lambda9.ready2race.backend.calls.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
