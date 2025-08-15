@@ -82,7 +82,7 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
 
     return (
         <>
-            <Stack spacing={2} sx={{alignItems: 'center', p: 2}}>
+            <Stack spacing={2} sx={{p: 2}}>
                 {competitionsPending || (competitionSelected && matchResultsPending) ? (
                     <Throbber />
                 ) : !competitionSelected ? (
@@ -121,20 +121,36 @@ const MatchResults = ({eventId, competitionSelected, setCompetitionSelected}: Pr
                 ) : matchResultsData?.length === 0 ? (
                     <Alert severity={'info'}>{t('results.matchResults.noResults')}</Alert>
                 ) : (
-                    matchResultsData
-                        ?.sort((a, b) =>
-                            (a.startTime ?? a.eventDayDate ?? '') >
-                            (b.startTime ?? b.eventDayDate ?? '')
-                                ? -1
-                                : 1,
-                        )
-                        .map(match => (
-                            <ResultsMatchCard
-                                match={match}
-                                selectMatch={onClickMatch}
-                                key={match.matchId}
-                            />
-                        ))
+                    <>
+                        <Chip
+                            variant={'outlined'}
+                            color={'primary'}
+                            sx={{mb: 1}}
+                            label={
+                                <Typography fontWeight={'bold'} variant={'body2'}>
+                                    {competitionSelected.identifier} |{' '}
+                                    {competitionSelected.name +
+                                        (competitionSelected.category
+                                            ? ` (${competitionSelected.category})`
+                                            : '')}
+                                </Typography>
+                            }
+                        />
+                        {matchResultsData
+                            ?.sort((a, b) =>
+                                (a.startTime ?? a.eventDayDate ?? '') >
+                                (b.startTime ?? b.eventDayDate ?? '')
+                                    ? -1
+                                    : 1,
+                            )
+                            .map(match => (
+                                <ResultsMatchCard
+                                    match={match}
+                                    selectMatch={onClickMatch}
+                                    key={match.matchId}
+                                />
+                            ))}
+                    </>
                 )}
             </Stack>
             <ResultsMatchDialog

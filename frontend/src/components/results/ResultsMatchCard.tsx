@@ -1,11 +1,5 @@
 import {LatestMatchResultInfo, RunningMatchInfo} from '@api/types.gen.ts'
-import {
-    Box,
-    Card,
-    CardActionArea,
-    CardContent,
-    Typography,
-} from '@mui/material'
+import {Box, Card, CardActionArea, CardContent, Chip, Typography} from '@mui/material'
 import {format} from 'date-fns'
 import {useTranslation} from 'react-i18next'
 
@@ -15,12 +9,16 @@ type Props<M extends ResultsMatchInfo> = {
     match: M
     selectMatch: (match: M) => void
     competition?: {
-        competitionName: string,
+        competitionName: string
         competitionCategory?: string
     }
 }
 
-const ResultsMatchCard = <M extends ResultsMatchInfo>({match, selectMatch}: Props<M>) => {
+const ResultsMatchCard = <M extends ResultsMatchInfo>({
+    match,
+    selectMatch,
+    competition,
+}: Props<M>) => {
     const {t} = useTranslation()
 
     const onClickMatch = (match: M) => {
@@ -37,6 +35,21 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({match, selectMatch}: Prop
                             justifyContent: 'space-between',
                         }}>
                         <Box>
+                            {competition && (
+                                <Chip
+                                    variant={'outlined'}
+                                    color={'primary'}
+                                    sx={{mb: 1}}
+                                    label={
+                                        <Typography fontWeight={'bold'} variant={'body2'}>
+                                            {competition.competitionName +
+                                                (competition.competitionCategory
+                                                    ? ` (${competition.competitionCategory})`
+                                                    : '')}
+                                        </Typography>
+                                    }
+                                />
+                            )}
                             <Typography>{match.roundName}</Typography>
                             <Box>
                                 {match.matchName && (
@@ -44,13 +57,15 @@ const ResultsMatchCard = <M extends ResultsMatchInfo>({match, selectMatch}: Prop
                                 )}
                             </Box>
                         </Box>
-                        {(match.startTime || match.eventDayDate) && (
-                            <Typography>
-                                {match.startTime
-                                    ? format(new Date(match.startTime), t('format.datetime'))
-                                    : format(new Date(match.eventDayDate!), t('format.date'))}
-                            </Typography>
-                        )}
+                        <Box textAlign={'right'}>
+                            {(match.startTime || match.eventDayDate) && (
+                                <Typography>
+                                    {match.startTime
+                                        ? format(new Date(match.startTime), t('format.datetime'))
+                                        : format(new Date(match.eventDayDate!), t('format.date'))}
+                                </Typography>
+                            )}
+                        </Box>
                     </Box>
                 </CardContent>
             </CardActionArea>
