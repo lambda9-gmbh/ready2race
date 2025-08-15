@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists app_user_for_event;
 drop view if exists competition_having_results;
 drop view if exists caterer_transaction_view;
 drop view if exists participant_qr_assignment_view;
@@ -1017,5 +1018,21 @@ where exists(
           and cmt.out is false
           and not exists(select 1 from competition_deregistration cd where cd.competition_registration = cmt.competition_registration and cd.competition_setup_round = csr.id)
     )
-)
+);
+
+create view app_user_for_event as
+select au.id,
+       au.firstname,
+       au.lastname,
+       au.email,
+       au.club,
+       qc.event,
+       qc.qr_code_id
+from app_user au
+    left join qr_codes qc on qc.app_user = au.id
+-- TODO: maybe want to allow q-codes also for admins
+where not exists(select *
+                 from app_user_has_role auhr2
+                 where auhr2.role = '00000000-0000-0000-0000-000000000000'
+                   and auhr2.app_user = au.id)
 ;

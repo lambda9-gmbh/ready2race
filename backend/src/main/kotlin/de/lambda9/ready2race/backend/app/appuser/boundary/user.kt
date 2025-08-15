@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.appuser.boundary
 
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventSort
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
@@ -171,5 +172,16 @@ fun Route.user() {
             }
         }
 
+        route("event/{eventId}") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.UpdateAppQrManagementGlobal)
+                    val eventId = !pathParam("eventId", uuid)
+                    val params = !pagination<AppUserForEventSort>()
+
+                    AppUserService.getAllAppUsersForEvent(eventId, params)
+                }
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.afterNow
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.entity.AppUserForEventDto
 import de.lambda9.ready2race.backend.app.appuser.entity.*
 import de.lambda9.ready2race.backend.app.email.control.toAssignedDto
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
@@ -162,3 +163,14 @@ fun AppUserRegistrationViewRecord.toDto(): App<Nothing, AppUserRegistrationDto> 
         )
     )
 }
+
+fun AppUserForEventRecord.toDto(): App<Nothing, AppUserForEventDto> = KIO.ok(
+    AppUserForEventDto(
+        id = id!!,
+        firstname = firstname!!,
+        lastname = lastname!!,
+        email = email!!,
+        club = club,
+        qrCodeId = qrCodeId,
+    )
+)
