@@ -93,18 +93,33 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                 <Card key={team.teamId}>
                                     <CardContent>
                                         <Stack
+                                            spacing={4}
                                             direction={'row'}
                                             sx={{
-                                                alignItems: 'center',
                                                 justifyContent: 'space-between',
                                             }}>
-                                            {'place' in team && (
-                                                <Typography variant={'h5'}>
-                                                    {/*todo with changes*/}
-                                                    {team.place}.
+                                            {'failed' in team && (
+                                                <Typography variant={team.place ? 'h5' : 'body1'}>
+                                                    {team.place
+                                                        ? `${team.place}.`
+                                                        : team.failed
+                                                          ? t(
+                                                                'event.competition.execution.results.failed',
+                                                            ) +
+                                                            (team.failedReason
+                                                                ? ` (${team.failedReason})`
+                                                                : '')
+                                                          : team.deregistered
+                                                            ? t(
+                                                                  'event.competition.registration.deregister.deregistered',
+                                                              ) +
+                                                              (team.deregisteredReason
+                                                                  ? ` (${team.deregisteredReason})`
+                                                                  : '')
+                                                            : ''}
                                                 </Typography>
                                             )}
-                                            <Typography>
+                                            <Typography textAlign={'right'}>
                                                 {team.clubName +
                                                     (team.teamName ? ` ${team.teamName}` : '')}
                                             </Typography>
