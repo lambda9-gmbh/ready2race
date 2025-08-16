@@ -8,6 +8,7 @@ import {
     CompetitionSetupTemplateRequest,
 } from '@api/types.gen.ts'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {compareNullsHigh} from '@utils/helpers.ts'
 
 // Form Types
 
@@ -163,7 +164,10 @@ function mapDtoRoundsToFormRounds(
     return dtoRounds.map(round => ({
         name: round.name,
         required: round.required,
-        matches: round.matches?.map(match => mapDtoMatchToFormMatch(match)) ?? [],
+        matches:
+            round.matches
+                ?.sort((a, b) => compareNullsHigh(a.weighting, b.weighting))
+                .map(match => mapDtoMatchToFormMatch(match)) ?? [],
         groups:
             round.groups?.map(group => ({
                 teams: group.teams?.toString() ?? '',

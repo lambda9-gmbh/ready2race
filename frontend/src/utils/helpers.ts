@@ -122,13 +122,10 @@ export const getRegistrationPeriods = (
 
 export const coalesce = <T>(...args: (T | null)[]): T | null => args.find(a => a !== null) ?? null
 
-export const sortDiff: {
-    (a: boolean, b: boolean): number | null
-    (a: number | undefined | null, b: number | undefined | null): number | null
-} = (a: boolean | number | undefined | null, b: boolean | number | undefined | null) => {
+export const compareNullsHigh = (a: number | undefined | null, b: number | undefined | null) => {
     if (a) {
         if (b) {
-            return Number(a) - Number(b)
+            return a - b
         }
         return -1
     }
@@ -136,8 +133,13 @@ export const sortDiff: {
         return 1
     }
 
-    return null
+    return 0
 }
+
+const compareBool = (a: boolean, b: boolean, reversed: boolean = false): -1 | 0 | 1 =>
+    ((reversed ? -1 : 1) * (a ? (b ? 0 : -1) : b ? 1 : 0)) as -1 | 0 | 1
+
+const coalesceZero = (...args: number[]): number => args.find(a => a !== 0) ?? 0
 
 export const sortByPlaces = <
     T extends {
@@ -148,13 +150,12 @@ export const sortByPlaces = <
 >(
     teams: T[],
 ) =>
-    teams.sort(
-        (a, b) =>
-            coalesce(
-                sortDiff(a.place, b.place),
-                sortDiff(a.failed, b.failed),
-                sortDiff(a.deregistered, b.deregistered),
-            ) ?? 0,
+    teams.sort((a, b) =>
+        coalesceZero(
+            compareNullsHigh(a.place, b.place),
+            compareBool(a.failed, b.failed),
+            compareBool(a.deregistered, b.deregistered),
+        ),
     )
 
 export const isFromUnion = <A extends string>(s: string | undefined, u: readonly A[]): s is A =>

@@ -20,7 +20,7 @@ import {format} from 'date-fns'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {useTranslation} from 'react-i18next'
 import {ResultsMatchInfo} from '@components/results/ResultsMatchCard.tsx'
-import {sortByPlaces, sortDiff} from '@utils/helpers.ts'
+import {sortByPlaces, compareNullsHigh} from '@utils/helpers.ts'
 
 type Props<M extends ResultsMatchInfo> = {
     match: M | null
@@ -40,7 +40,7 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
 
     const sortedTeams = match
         ? 'executionOrder' in match
-            ? match.teams.sort((a, b) => sortDiff(a.startNumber, b.startNumber) ?? 0)
+            ? match.teams.sort((a, b) => compareNullsHigh(a.startNumber, b.startNumber))
             : sortByPlaces(match.teams)
         : []
 
