@@ -39,6 +39,8 @@ object CompetitionRepo {
 
     fun delete(id: UUID) = COMPETITION.delete { ID.eq(id) }
 
+    fun getIdsByEvent(eventId: UUID) = COMPETITION.select({ ID }) { EVENT.eq(eventId) }
+
     fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {
         fetchExists(
             COMPETITION_VIEW
