@@ -10,8 +10,6 @@ import io.github.cdimascio.dotenv.Dotenv
 import org.simplejavamail.api.mailer.Mailer
 import org.simplejavamail.api.mailer.config.TransportStrategy
 import org.simplejavamail.mailer.MailerBuilder
-import kotlin.enums.enumEntries
-import kotlin.reflect.KClass
 
 data class Config(
     val mode: Mode,
@@ -20,6 +18,7 @@ data class Config(
     val smtp: Smtp?,
     val security: Security,
     val admin: Admin,
+    val webDAV: WebDAV?
 ) {
 
     enum class Mode {
@@ -92,19 +91,28 @@ data class Config(
         val password: String,
     )
 
+    data class WebDAV(
+        val urlScheme: String,
+        val host: String,
+        val path: String,
+        val authUser: String,
+        val authPassword: String,
+    )
+
     companion object {
 
-        private inline fun <reified T: Any> Dotenv.optional(key: String, parser: Parser<T>): T? =
+        private inline fun <reified T : Any> Dotenv.optional(key: String, parser: Parser<T>): T? =
             get(key)?.let { value ->
                 parser(value) { task ->
-                    task.mapError { ParseEnvException("Value '$value' for key '$key' could not be parsed as '${T::class}'.") }.unwrap()
+                    task.mapError { ParseEnvException("Value '$value' for key '$key' could not be parsed as '${T::class}'.") }
+                        .unwrap()
                 }
             }
 
         private fun Dotenv.optional(key: String): String? =
             optional(key) { it }
 
-        private inline fun <reified T: Any> Dotenv.required(key: String, parser: Parser<T>): T =
+        private inline fun <reified T : Any> Dotenv.required(key: String, parser: Parser<T>): T =
             optional(key, parser) ?: throw ParseEnvException("Missing required environment variable '$key'")
 
         private fun Dotenv.required(key: String): String =
@@ -141,7 +149,16 @@ data class Config(
             admin = Admin(
                 email = required("ADMIN_EMAIL"),
                 password = required("ADMIN_PASSWORD")
-            )
+            ),
+            webDAV = if (optional("WEBDAV_HOST") != null) { // todo: own functionality for this case
+                WebDAV(
+                    urlScheme = required("WEBDAV_URL_SCHEME"),
+                    host = required("WEBDAV_HOST"),
+                    path = required("WEBDAV_PATH"),
+                    authUser = required("WEBDAV_AUTH_USER"),
+                    authPassword = required("WEBDAV_AUTH_PASSWORD"),
+                )
+            } else null
         )
     }
 

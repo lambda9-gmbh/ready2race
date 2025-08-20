@@ -43,6 +43,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceDo
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoicePositionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ProduceInvoiceForRegistrationRecord
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrDate
 import de.lambda9.ready2race.backend.kio.onNullDie
@@ -206,7 +207,8 @@ object InvoiceService {
             }
             .onNullFail { InvoiceError.MissingAssignedContactInformation }
 
-        val contact = !ContactInformationRepo.get(contactUsage.contactInformation).orDie().onNullDie("foreign key constraint")
+        val contact =
+            !ContactInformationRepo.get(contactUsage.contactInformation).orDie().onNullDie("foreign key constraint")
 
         val registrations = !EventRegistrationRepo.getIdsForInvoicing(eventId, type).orDie()
 
@@ -243,9 +245,11 @@ object InvoiceService {
 
     fun produceNextRegistrationInvoice(): App<ProduceInvoiceError, Unit> = KIO.comprehension {
 
-        val job = !ProduceInvoiceForRegistrationRepo.getAndLockNext(retryAfterError).orDie().onNullFail { ProduceInvoiceError.NoOpenJobs }
+        val job = !ProduceInvoiceForRegistrationRepo.getAndLockNext(retryAfterError).orDie()
+            .onNullFail { ProduceInvoiceError.NoOpenJobs }
 
-        val registration = !EventRegistrationForInvoiceRepo.get(job.eventRegistration).orDie().onNullDie("foreign key constraint")
+        val registration =
+            !EventRegistrationForInvoiceRepo.get(job.eventRegistration).orDie().onNullDie("foreign key constraint")
 
         val type = RegistrationInvoiceType.valueOf(job.mode!!)
 
@@ -314,22 +318,24 @@ object InvoiceService {
                     ).orDie()
 
                     var position = 0
-                    val positions = invoiceCompetitions.groupBy { it!!.propertiesId }.values.flatMap { sameCompetitions ->
-                        val compRef = sameCompetitions.first()!!
-                        val allFees = sameCompetitions.flatMap { competition -> competition!!.appliedFees!!.map { it!! to competition.isLate!! } }
-                        allFees.groupBy { it.first.id to it.second }.values.map { sameFees ->
-                            val ref = sameFees.first().first
-                            val isLate = sameFees.first().second
-                            InvoicePositionRecord(
-                                invoice = id,
-                                position = ++position,
-                                item = ref.name!!,
-                                description = "${compRef.identifier} - ${compRef.name}",
-                                quantity = sameFees.size.toBigDecimal(),
-                                unitPrice = ref.lateAmount.takeIf { isLate } ?: ref.amount!!,
-                            )
+                    val positions =
+                        invoiceCompetitions.groupBy { it!!.propertiesId }.values.flatMap { sameCompetitions ->
+                            val compRef = sameCompetitions.first()!!
+                            val allFees =
+                                sameCompetitions.flatMap { competition -> competition!!.appliedFees!!.map { it!! to competition.isLate!! } }
+                            allFees.groupBy { it.first.id to it.second }.values.map { sameFees ->
+                                val ref = sameFees.first().first
+                                val isLate = sameFees.first().second
+                                InvoicePositionRecord(
+                                    invoice = id,
+                                    position = ++position,
+                                    item = ref.name!!,
+                                    description = "${compRef.identifier} - ${compRef.name}",
+                                    quantity = sameFees.size.toBigDecimal(),
+                                    unitPrice = ref.lateAmount.takeIf { isLate } ?: ref.amount!!,
+                                )
+                            }
                         }
-                    }
 
                     !InvoicePositionRepo.create(positions).orDie()
 
@@ -602,4 +608,18 @@ object InvoiceService {
 
         return bytes
     }
+
+
+    fun getByEvents(
+        eventIds: List<UUID>,
+    ): App<Nothing, List<File>> =
+        // TODO: @Incomplete: not really incomplete but maybe a bug in the future, when there are different kinds of invoices
+        InvoiceRepo.getByEvents(eventIds).orDie().map { invoices ->
+            invoices.map {
+                File(
+                    name = it.filename!!,
+                    bytes = it.data!!
+                )
+            }
+        }
 }

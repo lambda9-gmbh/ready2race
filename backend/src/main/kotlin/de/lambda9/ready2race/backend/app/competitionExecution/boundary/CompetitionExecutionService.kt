@@ -28,13 +28,13 @@ import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
-import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
 import de.lambda9.ready2race.backend.pdf.FontStyle
@@ -474,7 +474,7 @@ object CompetitionExecutionService {
     fun updateMatchResultByFile(
         competitionId: UUID,
         matchId: UUID,
-        file: FileUpload,
+        file: File,
         request: UploadMatchResultRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {

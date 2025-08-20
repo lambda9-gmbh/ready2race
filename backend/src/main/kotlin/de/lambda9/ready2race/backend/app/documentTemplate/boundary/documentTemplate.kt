@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.pdf.checkValidPdf
@@ -34,7 +35,7 @@ fun Route.documentTemplate() {
         post {
             val multipartData = call.receiveMultipart()
 
-            val uploads = mutableListOf<FileUpload>()
+            val uploads = mutableListOf<File>()
             var templateRequest: DocumentTemplateRequest? = null
 
             var done = false
@@ -46,7 +47,7 @@ fun Route.documentTemplate() {
                     when (part) {
                         is PartData.FileItem -> {
                             uploads.add(
-                                FileUpload(
+                                File(
                                     part.originalFileName!!,
                                     part.provider().toByteArray()
                                 )

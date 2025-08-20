@@ -11,6 +11,7 @@ drop view if exists participant_tracking_view;
 drop view if exists startlist_view;
 drop view if exists startlist_team;
 drop view if exists event_invoices_info;
+drop view if exists invoice_download_for_event;
 drop view if exists invoice_download;
 drop view if exists invoice_for_event_registration;
 drop view if exists competition_setup_round_with_matches;
@@ -432,10 +433,10 @@ from participant_requirement pr
 ;
 
 create view participant_for_event as
-select er.event                                                                  as event_id,
-       c.id                                                                      as club_id,
-       c.name                                                                    as club_name,
-       p.id                                                                      as id,
+select er.event                                                                    as event_id,
+       c.id                                                                        as club_id,
+       c.name                                                                      as club_name,
+       p.id                                                                        as id,
        p.firstname,
        p.lastname,
        p.year,
@@ -444,7 +445,7 @@ select er.event                                                                 
        p.external_club_name,
        coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
        qc.qr_code_id,
-       array_agg(distinct crnp.named_participant)                                as named_participant_ids
+       array_agg(distinct crnp.named_participant)                                  as named_participant_ids
 from event_registration er
          join club c on er.club = c.id
          join competition_registration cr on er.id = cr.event_registration
@@ -803,6 +804,15 @@ select i.id,
 from invoice i
          join invoice_document_data idd on i.id = idd.invoice;
 
+create view invoice_download_for_event as
+select id.id,
+       id.filename,
+       id.data,
+       er.event
+from invoice_download id
+         join event_registration_invoice eri on id.id = eri.invoice
+         join event_registration er on eri.event_registration = er.id;
+
 create view event_invoices_info as
 select ifer.event,
        round(coalesce(sum(ifer.total_amount), 0), 2)                                           as total_amount,
@@ -898,19 +908,19 @@ from participant_tracking pt
          left join app_user au on pt.scanned_by = au.id;
 
 create view competition_registration_team_participant as
-select crnp.competition_registration                                                as competition_registration_id,
-       p.id                                                                         as participant_id,
+select crnp.competition_registration                                               as competition_registration_id,
+       p.id                                                                        as participant_id,
        p.firstname,
        p.lastname,
        p.year,
        p.gender,
        p.external,
        p.external_club_name,
-       np.id                                                                        as role_id,
-       np.name                                                                      as role,
-       qc.qr_code_id                                                                as qr_code,
+       np.id                                                                       as role_id,
+       np.name                                                                     as role,
+       qc.qr_code_id                                                               as qr_code,
        coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
-       coalesce(array_agg(distinct pt) filter ( where pt.id is not null ), '{}')    as trackings
+       coalesce(array_agg(distinct pt) filter ( where pt.id is not null ), '{}')   as trackings
 from competition_registration_named_participant crnp
          left join named_participant np on crnp.named_participant = np.id
          left join participant p on crnp.participant = p.id
@@ -952,7 +962,7 @@ select p.id                          as participant_id,
        p.firstname,
        p.lastname,
        qc.qr_code_id                 as qr_code_value,
-       np.id                       as named_participant_id,
+       np.id                         as named_participant_id,
        np.name                       as named_participant_name,
        crnp.competition_registration as competition_registration_id,
        cr.name                       as competition_registration_name,
@@ -1002,23 +1012,22 @@ select c.id,
 from competition c
          join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
-where exists(
-    select 1
-    from competition_match cm
-             join competition_setup_match csm on cm.competition_setup_match = csm.id
-             join competition_setup_round csr on csm.competition_setup_round = csr.id
-             join competition_setup cs on csr.competition_setup = cs.competition_properties
-    where cs.competition_properties = cp.id
-    and not exists (
-        select 1
-        from competition_match_team cmt
-        where cmt.competition_match = csm.id
-          and cmt.place is null
-          and cmt.failed is false
-          and cmt.out is false
-          and not exists(select 1 from competition_deregistration cd where cd.competition_registration = cmt.competition_registration and cd.competition_setup_round = csr.id)
-    )
-);
+where exists(select 1
+             from competition_match cm
+                      join competition_setup_match csm on cm.competition_setup_match = csm.id
+                      join competition_setup_round csr on csm.competition_setup_round = csr.id
+                      join competition_setup cs on csr.competition_setup = cs.competition_properties
+             where cs.competition_properties = cp.id
+               and not exists (select 1
+                               from competition_match_team cmt
+                               where cmt.competition_match = csm.id
+                                 and cmt.place is null
+                                 and cmt.failed is false
+                                 and cmt.out is false
+                                 and not exists(select 1
+                                                from competition_deregistration cd
+                                                where cd.competition_registration = cmt.competition_registration
+                                                  and cd.competition_setup_round = csr.id)));
 
 create view app_user_for_event as
 select au.id,
@@ -1029,7 +1038,7 @@ select au.id,
        qc.event,
        qc.qr_code_id
 from app_user au
-    left join qr_codes qc on qc.app_user = au.id
+         left join qr_codes qc on qc.app_user = au.id
 -- TODO: maybe want to allow q-codes also for admins
 where not exists(select *
                  from app_user_has_role auhr2
