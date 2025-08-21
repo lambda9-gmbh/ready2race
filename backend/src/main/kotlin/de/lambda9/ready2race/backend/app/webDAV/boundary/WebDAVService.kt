@@ -82,20 +82,21 @@ object WebDAVService {
             return@comprehension KIO.fail(WebDAVError.ConfigIncomplete)
         }
 
-        !sendExportRequest(config.webDAV, body).mapError {
-            logger.error { it }
+        val callResult = !sendExportRequest(config.webDAV, body, fileName = "${request.name}.zip").mapError {
             WebDAVError.ExportThirdPartyError
         }
+        !KIO.failOn(callResult.first != 201){ WebDAVError.ExportThirdPartyError }
 
         noData
     }
 
-    private fun sendExportRequest(webDAVConfig: Config.WebDAV, body: RequestBody): App<Throwable, Unit> = KIO.comprehension {
+    private fun sendExportRequest(webDAVConfig: Config.WebDAV, body: RequestBody, fileName: String): App<Throwable, Pair<Int, String?>> = KIO.comprehension {
 
         val url = HttpUrl.Builder()
             .scheme(webDAVConfig.urlScheme)
             .host(webDAVConfig.host)
             .addPathSegment(webDAVConfig.path)
+            .addPathSegments("remote.php/dav/files/${webDAVConfig.authUser}/${fileName}")
             .build()
 
         val headers = Headers.Builder()
@@ -104,14 +105,16 @@ object WebDAVService {
         val httpRequest = Request.Builder()
             .url(url)
             .headers(headers)
-            .post(body)
+            .put(body)
             .build()
 
         val client = OkHttpClient();
 
-        client.newCall(httpRequest)
+        val callResult = client.newCall(httpRequest).execute().use { it.code to it.body?.string() }
 
-        unit
+        logger.info { "Attempt to export data to WebDAV Server. Request: $httpRequest Response: ${callResult.first} ${callResult.second}" }
+
+        KIO.ok(callResult)
     }
 
 
