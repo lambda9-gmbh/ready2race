@@ -608,6 +608,9 @@ import type {
     GetCompetitionsHavingResultsData,
     GetCompetitionsHavingResultsError,
     GetCompetitionsHavingResultsResponse,
+    ExportDataByWebDavData,
+    ExportDataByWebDavError,
+    ExportDataByWebDavResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3091,5 +3094,18 @@ export const getCompetitionsHavingResults = <ThrowOnError extends boolean = fals
     >({
         ...options,
         url: '/results/event/{eventId}/competition',
+    })
+}
+
+export const exportDataByWebDav = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ExportDataByWebDavData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ExportDataByWebDavResponse,
+        ExportDataByWebDavError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/WebDAV/export',
     })
 }

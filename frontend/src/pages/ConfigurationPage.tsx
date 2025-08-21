@@ -49,6 +49,7 @@ import StartListConfigPanel from "@components/startListConfig/StartListConfigPan
 import {a11yProps} from "@utils/helpers.ts";
 import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
 import MatchResultImportConfigPanel from "@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx";
+import GlobalConfigurationsTab from "@components/configurations/GlobalConfigurationsTab.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -241,11 +242,7 @@ const ConfigurationPage = () => {
                 </Stack>
             </TabPanel>
             <TabPanel index={'global-settings'} activeTab={activeTab}>
-                <Stack spacing={2}>
-                    <AssignDocumentTemplate />
-                    <AssignBankAccount />
-                    <AssignContactInformation />
-                </Stack>
+                <GlobalConfigurationsTab/>
             </TabPanel>
         </Stack>
     )
