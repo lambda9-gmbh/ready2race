@@ -10,7 +10,8 @@ import java.util.UUID
 
 data class WebDAVExportRequest(
     val name: String,
-    val events: List<UUID>
+    val events: List<UUID>,
+    val selectedResources: List<WebDAVExportType>,
 ): Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -22,6 +23,7 @@ data class WebDAVExportRequest(
         val example get() = WebDAVExportRequest(
             name = "2025-EventName",
             events = listOf(UUID.randomUUID()),
+            selectedResources = WebDAVExportType.entries,
         )
     }
 }

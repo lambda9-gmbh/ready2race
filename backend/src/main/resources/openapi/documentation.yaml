@@ -5529,6 +5529,33 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /WebDAV/export:
+    post:
+      operationId: exportDataByWebDAV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebDAVExportRequest'
+      responses:
+        204:
+          description: Data successfully exported
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+
 components:
 
   parameters:
@@ -5703,6 +5730,13 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
 
+    502:
+      description: Bad Gateway
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
 
     409EmailInUse:
       description: Conflict
@@ -5789,6 +5823,14 @@ components:
         - 'REGULAR'
         - 'LATE'
         - 'CLOSED'
+
+    WebDAVExportType:
+      type: string
+      enum:
+        - 'INVOICES'
+        - 'REGISTRATION_RESULTS'
+        - 'DOCUMENTS'
+
 
     # error
 
@@ -9989,3 +10031,23 @@ components:
           format: uuid
         qrCodeId:
           type: string
+
+
+    WebDAVExportRequest:
+      type: object
+      required:
+        - name
+        - events
+        - selectedResources
+      properties:
+        name:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+            format: uuid
+        selectedResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'

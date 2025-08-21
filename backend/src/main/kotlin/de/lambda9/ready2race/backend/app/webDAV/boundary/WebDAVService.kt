@@ -1,6 +1,10 @@
 package de.lambda9.ready2race.backend.app.webDAV.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationReportRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
@@ -14,53 +18,62 @@ import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.internal.http2.Header
 import java.io.ByteArrayOutputStream
+import java.net.URLConnection
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 object WebDAVService {
 
-    fun exportData(request: WebDAVExportRequest): App<WebDAVError, ApiResponse.NoData> = KIO.comprehension {
+    fun exportData(request: WebDAVExportRequest): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        val selectedEvents = request.events.mapIndexed { idx, eventId -> eventId to "Event${idx}" }.toMap() // todo
-        // todo: check events existing
-
-        val eventInvoices: List<Pair<UUID, File>> =
-            !InvoiceRepo.getByEvents(selectedEvents.keys.toList()).orDie()
-                .map { records ->
-                    records.map {
-                        it.event!! to File(
-                            name = it.filename!!,
-                            bytes = it.data!!,
-                        )
-                    }
+        val events = !EventRepo.getEvents(request.events).orDie()
+            .failIf({ it.size != request.events.size }) { EventError.NotFound }
+            .map { records ->
+                records.associate { rec ->
+                    rec.id to
+                        if (records.filter { it.id == rec.id }.size == 1
+                        ) {
+                            rec.name
+                        } else { // This covers the case of multiple events having the same name
+                            "${rec.name}-${
+                                records.filter { it.id == rec.id }.indexOf(rec) + 1
+                            }"
+                        }
                 }
+            }
+
 
         // todo: handle case where files are not generated for the event
-        val eventRegistrationResults: List<Pair<UUID, File>> =
-            !EventRegistrationReportRepo.getDownloads(selectedEvents.keys.toList()).orDie()
+        val eventRegistrationResults: Map<UUID, File> =
+            !EventRegistrationReportRepo.getDownloads(events.keys.toList()).orDie()
+                .map { records ->
+                    records.associate { it.event!! to File(name = it.name!!, bytes = it.data!!) }
+                }
+
+
+        // todo: Multilingual folder names
+        val eventInvoices: List<Triple<String, UUID, File>> =
+            !InvoiceRepo.getByEvents(events.keys.toList()).orDie()
                 .map { records ->
                     records.map {
-                        it.event!! to File(
-                            name = it.name!!,
-                            bytes = it.data!!,
-                        )
+                        Triple("Invoices", it.event!!, File(name = it.filename!!, bytes = it.data!!))
                     }
                 }
 
-        val eventDocuments: List<Pair<UUID, File>> =
-            !EventDocumentRepo.getDownloadsByEvents(selectedEvents.keys.toList()).orDie()
+        val eventDocuments: List<Triple<String, UUID, File>> =
+            !EventDocumentRepo.getDownloadsByEvents(events.keys.toList()).orDie()
                 .map { records ->
                     records.map {
-                        it.event!! to File(
-                            name = it.name!!,
-                            bytes = it.data!!,
-                        )
+                        Triple("Documents", it.event!!, File(name = it.name!!, bytes = it.data!!))
                     }
                 }
 
@@ -69,67 +82,117 @@ object WebDAVService {
         // todo competition_results
         // todo document_templates ? - maybe as json with the properties as well
 
-        val eventFiles = (eventInvoices + eventRegistrationResults + eventDocuments)
-
-        val zippedFiles = createZip(
-            eventFiles.map { Triple("${request.name}/${selectedEvents[it.first]!!}", it.second.name, it.second.bytes) }
-        )
-
-        val body = zippedFiles.toRequestBody("application/zip".toMediaType())
-
         val config = !accessConfig()
         if (config.webDAV == null) {
             return@comprehension KIO.fail(WebDAVError.ConfigIncomplete)
         }
 
-        val callResult = !sendExportRequest(config.webDAV, body, fileName = "${request.name}.zip").mapError {
-            WebDAVError.ExportThirdPartyError
+        val client = OkHttpClient();
+        val authHeader = Credentials.basic(config.webDAV.authUser, config.webDAV.authPassword)
+
+        fun createFolder(path: String): App<WebDAVError, Unit> = KIO.comprehension {
+            val callRequest = Request.Builder()
+                .url(buildUrl(webDAVConfig = config.webDAV, pathSegments = "${request.name}/$path"))
+                .method("MKCOL", null)
+                .header("Authorization", authHeader)
+                .build()
+
+            val (responseCode, responseMessage) = !makeCall(client, callRequest)
+                .mapError { WebDAVError.ExportThirdPartyError }
+
+            !KIO.failOn(responseCode == 405) { WebDAVError.ExportFolderAlreadyExists }
+            !KIO.failOn(responseCode != 201) {
+                logger.error { "WenDAV Export failed on createFolder: Status $responseCode; Message: $responseMessage " }
+                WebDAVError.ExportThirdPartyError
+            }
+
+            unit
         }
-        !KIO.failOn(callResult.first != 201){ WebDAVError.ExportThirdPartyError }
+
+        fun putFile(path: String, filename: String, data: ByteArray): App<WebDAVError, Unit> =
+            KIO.comprehension {
+                val mimeType = URLConnection.guessContentTypeFromName(filename) ?: "application/octet-stream"
+                val requestBody = data.toRequestBody(mimeType.toMediaTypeOrNull())
+                val callRequest = Request.Builder()
+                    .url(buildUrl(webDAVConfig = config.webDAV, pathSegments = "${request.name}/$path"))
+                    .put(requestBody)
+                    .header("Authorization", authHeader)
+                    .build()
+
+                val (responseCode, responseMessage) = !makeCall(client, callRequest)
+                    .mapError { WebDAVError.ExportThirdPartyError }
+
+                !KIO.failOn(responseCode != 201) {
+                    logger.error { "WenDAV Export failed on putFile: Status $responseCode; Message: $responseMessage " }
+                    WebDAVError.ExportThirdPartyError
+                }
+
+                unit
+            }
+
+        val folderFiles = (eventInvoices + eventDocuments)
+
+
+        // Create root folder
+        !createFolder("")
+
+        events.forEach { (eventId, eventName) ->
+
+            // Create event folder
+            !createFolder(eventName)
+
+            // Export registrationResult
+            eventRegistrationResults[eventId].let { file ->
+                if (file != null) {
+                    !putFile(
+                        path = "${eventName}/${file.name}",
+                        filename = file.name,
+                        data = file.bytes,
+                    )
+                }
+            }
+
+            // Create documentType folders and export the files into them
+            folderFiles
+                .filter { it.second == eventId } // Only for this event
+                .groupBy { it.first } // Group by folder name
+                .mapValues { folder -> folder.value.map { it.third } } // --> Map<FolderName, List<File>>
+                .forEach { (folderName, files) ->
+
+                    // Create folder
+                    !createFolder("$eventName/$folderName")
+
+                    // Export files into the folders
+                    files.forEach { file ->
+                        !putFile(
+                            path = "${eventName}/$folderName/${file.name}",
+                            filename = file.name,
+                            data = file.bytes,
+                        )
+                    }
+                }
+        }
 
         noData
     }
 
-    private fun sendExportRequest(webDAVConfig: Config.WebDAV, body: RequestBody, fileName: String): App<Throwable, Pair<Int, String?>> = KIO.comprehension {
+    private fun makeCall(client: OkHttpClient, callRequest: Request): App<Throwable, Pair<Int, String?>> =
+        KIO.comprehension {
+            KIO.ok(client.newCall(callRequest).execute().use {
+                it.code to it.body?.string()
+            })
+        }
 
-        val url = HttpUrl.Builder()
+    private fun buildUrl(
+        webDAVConfig: Config.WebDAV,
+        pathSegments: String
+    ): HttpUrl {
+        return HttpUrl.Builder()
             .scheme(webDAVConfig.urlScheme)
             .host(webDAVConfig.host)
             .addPathSegment(webDAVConfig.path)
-            .addPathSegments("remote.php/dav/files/${webDAVConfig.authUser}/${fileName}")
+            .addPathSegments("remote.php/dav/files/${webDAVConfig.authUser}/$pathSegments")
             .build()
-
-        val headers = Headers.Builder()
-            .add("Authorization", Credentials.basic(webDAVConfig.authUser, webDAVConfig.authPassword)).build()
-
-        val httpRequest = Request.Builder()
-            .url(url)
-            .headers(headers)
-            .put(body)
-            .build()
-
-        val client = OkHttpClient();
-
-        val callResult = client.newCall(httpRequest).execute().use { it.code to it.body?.string() }
-
-        logger.info { "Attempt to export data to WebDAV Server. Request: $httpRequest Response: ${callResult.first} ${callResult.second}" }
-
-        KIO.ok(callResult)
-    }
-
-
-    private fun createZip(files: List<Triple<String, String, ByteArray>>): ByteArray { // folder, fileName, data
-        val baos = ByteArrayOutputStream()
-        ZipOutputStream(baos).use { zos ->
-            for ((folder, name, data) in files) {
-                val path = if (folder.isNotEmpty()) "$folder/$name" else name
-                val entry = ZipEntry(path)
-                zos.putNextEntry(entry)
-                zos.write(data)
-                zos.closeEntry()
-            }
-        }
-        return baos.toByteArray()
     }
 
 }

@@ -22,7 +22,9 @@ import java.util.*
 
 object EventRepo {
 
-    private fun EventView.searchFields() = listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
+    private fun EventView.searchFields() =
+        listOf(NAME, REGISTRATION_AVAILABLE_FROM, REGISTRATION_AVAILABLE_TO, DESCRIPTION)
+
     private fun EventPublicView.searchFields() = listOf(NAME, DESCRIPTION)
 
     fun create(record: EventRecord) = EVENT.insertReturning(record) { ID }
@@ -34,6 +36,8 @@ object EventRepo {
     fun update(id: UUID, f: EventRecord.() -> Unit) = EVENT.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = EVENT.delete { ID.eq(id) }
+
+    fun getEvents(ids: List<UUID>, ) = EVENT.select { ID.`in`(ids) }
 
     fun count(
         search: String?,
@@ -98,17 +102,7 @@ object EventRepo {
 
     fun getName(
         id: UUID,
-    ): JIO<String?> = Jooq.query {
-        with(EVENT) {
-            select(
-                NAME
-            )
-                .from(this)
-                .where(ID.eq(id))
-                .fetchOne()
-                ?.value1()
-        }
-    }
+    ): JIO<String?> = EVENT.selectOne({ NAME }) { ID.eq(id) }
 
     fun isOpenForRegistration(id: UUID, at: LocalDateTime): JIO<Boolean> = Jooq.query {
         with(EVENT) {

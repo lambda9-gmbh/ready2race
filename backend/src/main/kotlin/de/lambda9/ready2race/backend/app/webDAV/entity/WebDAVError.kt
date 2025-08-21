@@ -6,7 +6,8 @@ import io.ktor.http.*
 
 enum class WebDAVError : ServiceError {
     ConfigIncomplete,
-    ExportThirdPartyError;
+    ExportThirdPartyError,
+    ExportFolderAlreadyExists;
 
     override fun respond(): ApiError = when (this) {
         ConfigIncomplete -> ApiError(
@@ -16,6 +17,10 @@ enum class WebDAVError : ServiceError {
         ExportThirdPartyError -> ApiError(
             status = HttpStatusCode.BadGateway,
             message = "An error has occurred when exporting the files to the WebDAV Server."
+        )
+        ExportFolderAlreadyExists -> ApiError(
+            status = HttpStatusCode.Conflict,
+            message = "Another export folder with the same name already exists on the WebDEV Server."
         )
     }
 }
