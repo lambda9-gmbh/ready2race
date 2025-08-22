@@ -10,6 +10,9 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportNextError
 import de.lambda9.ready2race.backend.database.initializeDatabase
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.DynamicIntervalJobState
@@ -93,6 +96,25 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                     logger.info { "${"sent email".count(it)} deleted" }
                 }
             }*/
+
+            scheduleDynamic("Export next file to WebDAV Server", 10.seconds) {
+                WebDAVService.exportNext()
+                    .map { DynamicIntervalJobState.Processed }
+                    .recoverDefault { error ->
+                        when (error) {
+                            WebDAVExportNextError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete")
+                            WebDAVExportNextError.NoFilesToExport -> DynamicIntervalJobState.Empty
+                            is WebDAVExportNextError.FileNotFound ->{
+                                logger.warn { "Error exporting file. ExportId: ${error.exportId}; ReferencedFileId: ${error.referenceId}" }
+                                DynamicIntervalJobState.Processed
+                            }
+                            is WebDAVExportNextError.ThirdPartyError -> {
+                                logger.warn(error.cause) { "Third party error on WebDAV Export ${error.exportId}" }
+                                DynamicIntervalJobState.Processed
+                            }
+                        }
+                    }
+            }
 
             scheduleFixed("Delete expired session tokens", 5.minutes) {
                 AuthService.deleteExpiredTokens().map {

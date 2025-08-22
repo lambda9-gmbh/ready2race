@@ -17,6 +17,8 @@ object EventRegistrationReportRepo {
 
     fun getDownloads(eventIds: List<UUID>) = EVENT_REGISTRATION_REPORT_DOWNLOAD.select { EVENT.`in`(eventIds) }
 
+    fun getExistingEventIds(eventIds: List<UUID>) = EVENT_REGISTRATION_REPORT.select({ EVENT }) { EVENT.`in`(eventIds) }
+
     fun delete(eventId: UUID) = EVENT_REGISTRATION_REPORT.delete { EVENT.eq(eventId) }
 
 }

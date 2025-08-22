@@ -2,10 +2,9 @@ package de.lambda9.ready2race.backend.app.webDAV.entity
 
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
-import de.lambda9.ready2race.backend.validation.fileNamePreDot
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
-import de.lambda9.ready2race.backend.validation.validators.StringValidators.pattern
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.maxLength
 import java.util.UUID
 
 data class WebDAVExportRequest(
@@ -16,7 +15,7 @@ data class WebDAVExportRequest(
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
             this::name validate notBlank,
-            this::name validate pattern(fileNamePreDot),
+            this::name validate maxLength(255)
         )
 
     companion object {

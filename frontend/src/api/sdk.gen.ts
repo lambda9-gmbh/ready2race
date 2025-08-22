@@ -3106,6 +3106,6 @@ export const exportDataByWebDav = <ThrowOnError extends boolean = false>(
         ThrowOnError
     >({
         ...options,
-        url: '/WebDAV/export',
+        url: '/webDAV/export',
     })
 }

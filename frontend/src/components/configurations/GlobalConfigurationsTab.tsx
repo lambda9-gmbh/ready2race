@@ -8,16 +8,19 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
     assignCompetitionsToEventDay,
     assignDaysToCompetition,
-    exportDataByWebDav, getEventDays, getEvents,
+    exportDataByWebDav,
+    getEventDays,
+    getEvents,
 } from '@api/sdk.gen.ts'
 import {WebDAVExportType} from '@api/types.gen'
 import {FormContainer, MultiSelectElement, useForm} from 'react-hook-form-mui'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import {paginationParameters} from "@utils/ApiUtils.ts";
+import {paginationParameters} from '@utils/ApiUtils.ts'
 import {AutocompleteOption} from '@utils/types'
-import {eventDayName} from "@components/event/common.ts";
+import {eventDayName} from '@components/event/common.ts'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
 type ExportForm = {
     name: string
@@ -25,31 +28,46 @@ type ExportForm = {
     selectedResources: WebDAVExportType[]
 }
 
+const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
+    'REGISTRATION_RESULTS',
+    'INVOICES',
+    'DOCUMENTS',
+] as const
+
 const GlobalConfigurationsTab = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const {data: eventsData, pending: eventsPending} = useFetch(
-        signal =>
-            getEvents({signal}),
-        {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(
-                        t('common.load.error.multiple.short', {
-                            entity: t('event.events'),
-                        }),
-                    )
-                }
-            },
-            deps: [],
+    const {data: eventsData, pending: eventsPending} = useFetch(signal => getEvents({signal}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('event.events'),
+                    }),
+                )
+            }
         },
-    )
+        deps: [],
+    })
 
-    const eventOptions: AutocompleteOption[] = eventsData?.data.map(value => ({
-        id: value.id,
-        label: value.name,
-    })) ?? []
+    const eventOptions: AutocompleteOption[] =
+        eventsData?.data.map(value => ({
+            id: value.id,
+            label: value.name,
+        })) ?? []
+
+    const webDavExportTypes = WEBDAV_EXPORT_TYPES.map(type => ({
+        id: type,
+        label:
+            type === 'REGISTRATION_RESULTS'
+                ? '[todo] Registration Results'
+                : type === 'INVOICES'
+                  ? '[todo] Invoices'
+                  : type === 'DOCUMENTS'
+                    ? '[todo] Documents'
+                    : '',
+    }))
 
     const formContext = useForm<ExportForm>()
 
@@ -94,25 +112,38 @@ const GlobalConfigurationsTab = () => {
     return (
         <Stack spacing={2}>
             <Box>
-                <Button variant={'outlined'} onClick={openDialog}>[todo] Export data</Button>
+                <Button variant={'outlined'} onClick={openDialog}>
+                    [todo] Export data
+                </Button>
                 <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'xs'}>
                     <DialogTitle>{'[todo] Export data'}</DialogTitle>
+                    <FormContainer formContext={formContext} onSuccess={onSubmit}>
                     <DialogContent>
-                        <FormContainer formContext={formContext} onSuccess={onSubmit}>
                             <Stack spacing={2}>
-                            <FormInputText
-                                name={'name'}
-                                required
-                                label={'[todo] Export folder name'}
-                            />
-                            <MultiSelectElement
-                                name={'selectedEvents'}
-                                options={eventOptions}
-                                showCheckbox
-                                showChips
-                                formControlProps={{sx: {width: 1}}}
-                            /></Stack>
-                        </FormContainer>
+                                <FormInputText
+                                    name={'name'}
+                                    required
+                                    label={'[todo] Export folder name'}
+                                />
+                                <FormInputLabel label={'[todo] Events'} required>
+                                    <MultiSelectElement
+                                        name={'selectedEvents'}
+                                        options={eventOptions}
+                                        showCheckbox
+                                        showChips
+                                        formControlProps={{sx: {width: 1}}}
+                                    />
+                                </FormInputLabel>
+                                <FormInputLabel label={'[todo] Resources'} required>
+                                    <MultiSelectElement
+                                        name={'selectedResources'}
+                                        options={webDavExportTypes}
+                                        showCheckbox
+                                        showChips
+                                        formControlProps={{sx: {width: 1}}}
+                                    />
+                                </FormInputLabel>
+                            </Stack>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={closeDialog} disabled={submitting}>
@@ -120,6 +151,7 @@ const GlobalConfigurationsTab = () => {
                         </Button>
                         <SubmitButton submitting={submitting}>{'[todo] Export'}</SubmitButton>
                     </DialogActions>
+                    </FormContainer>
                 </BaseDialog>
             </Box>
             <AssignDocumentTemplate />

@@ -13,10 +13,10 @@ fun Route.webDAV() {
             post{
 
                 call.respondComprehension {
-                    !authenticate(Privilege.UpdateEventGlobal)
+                    val user = !authenticate(Privilege.UpdateEventGlobal)
 
                     val body = !receiveKIO(WebDAVExportRequest.example)
-                    WebDAVService.exportData(body)
+                    WebDAVService.initializeExportData(body, user.id!!)
                 }
             }
         }

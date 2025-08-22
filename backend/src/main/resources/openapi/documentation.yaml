@@ -5529,7 +5529,7 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
-  /WebDAV/export:
+  /webDAV/export:
     post:
       operationId: exportDataByWebDAV
       requestBody:
