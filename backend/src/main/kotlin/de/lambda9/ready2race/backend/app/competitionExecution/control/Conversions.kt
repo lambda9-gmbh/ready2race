@@ -100,6 +100,7 @@ fun CompetitionSetupRoundWithMatchesRecord.toCompetitionSetupRoundWithMatches() 
                         out = team.out!!,
                         failed = team.failed!!,
                         failedReason = team.failedReason,
+                        ratingCategory = team.ratingCategoryName,
                     )
                 }
             )

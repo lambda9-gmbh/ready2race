@@ -39,7 +39,7 @@ object CompetitionRepo {
 
     fun delete(id: UUID) = COMPETITION.delete { ID.eq(id) }
 
-    fun getIdsByEvent(eventId: UUID) = COMPETITION.select({ ID }) { EVENT.eq(eventId) }
+    fun getByEvent(eventId: UUID) = COMPETITION_VIEW.select { EVENT.eq(eventId) }
 
     fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {
         fetchExists(
@@ -183,23 +183,17 @@ object CompetitionRepo {
         }
     }
 
-    fun getWithProperties(
+    fun getScoped(
         competitionId: UUID,
         scope: Privilege.Scope,
-    ): JIO<CompetitionViewRecord?> = Jooq.query {
-        with(COMPETITION_VIEW) {
-            selectFrom(this)
-                .where(
-                    ID.eq(competitionId).and(
-                        if (scope == Privilege.Scope.GLOBAL) {
-                            DSL.trueCondition()
-                        } else {
-                            DSL.falseCondition()
-                        }
-                    )
-                )
-                .fetchOne()
-        }
+    ): JIO<CompetitionViewRecord?> = COMPETITION_VIEW.selectOne {
+        ID.eq(competitionId).and(
+            if (scope == Privilege.Scope.GLOBAL) {
+                DSL.trueCondition()
+            } else {
+                DSL.falseCondition()
+            }
+        )
     }
 
     fun getWithPropertiesForClub(

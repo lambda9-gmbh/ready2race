@@ -18,4 +18,5 @@ data class CompetitionMatchTeamWithRegistration(
     val out: Boolean,
     val failed: Boolean,
     val failedReason: String?,
+    val ratingCategory: String?,
 )

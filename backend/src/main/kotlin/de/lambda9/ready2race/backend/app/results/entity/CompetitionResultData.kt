@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.results.entity
 
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
 
 data class EventResultData(
     val name: String,
@@ -11,14 +12,16 @@ data class EventResultData(
         val identifier: String,
         val name: String,
         val shortName: String?,
+        val days: List<EventDayRecord>,
         val teams: List<TeamResultData>,
     )
 
     data class TeamResultData(
         val place: Int,
         val clubName: String,
-        val teamName: String,
-        val ratingCategory: String,
+        val teamName: String?,
+        val participatingClubName: String?,
+        val ratingCategory: String?,
         val participants: List<ParticipantResultData>,
         val substitutions: List<SubstitutionResultData>
     )
@@ -35,8 +38,8 @@ data class EventResultData(
     sealed interface SubstitutionResultData {
 
         data class RoleSwap(
-            val left: SubstitutionResultData,
-            val right: SubstitutionResultData,
+            val left: ParticipantResultData,
+            val right: ParticipantResultData,
             val round: String,
         ) : SubstitutionResultData
 

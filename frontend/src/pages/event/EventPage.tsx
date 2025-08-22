@@ -9,12 +9,13 @@ import {
     Typography,
     ListItemIcon,
     ListItemText,
+    Link as MuiLink,
 } from '@mui/material'
 import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import {eventIndexRoute, eventRoute} from '@routes'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
-import {getEvent} from '@api/sdk.gen.ts'
+import {downloadEventResults, getEvent} from '@api/sdk.gen.ts'
 import {
     EventDocumentDto,
     ParticipantForEventDto,
@@ -26,7 +27,7 @@ import DocumentTable from '@components/event/document/DocumentTable.tsx'
 import DocumentDialog from '@components/event/document/DocumentDialog.tsx'
 import {Forward, InfoOutlined, PlayCircleOutlined} from '@mui/icons-material'
 import {Link, useNavigate} from '@tanstack/react-router'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import TabPanel from '@components/tab/TabPanel.tsx'
 import ParticipantRequirementForEventTable from '@components/event/participantRequirement/ParticipantRequirementForEventTable.tsx'
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
@@ -42,7 +43,12 @@ import InlineLink from '@components/InlineLink.tsx'
 import TaskTable from '@components/event/task/TaskTable.tsx'
 import TaskDialog from '@components/event/task/TaskDialog.tsx'
 import {Shiftplan} from '@components/event/shiftplan/Shiftplan.tsx'
-import {a11yProps, getRegistrationPeriods, getRegistrationState} from '@utils/helpers.ts'
+import {
+    a11yProps,
+    getFilename,
+    getRegistrationPeriods,
+    getRegistrationState,
+} from '@utils/helpers.ts'
 import PlaceIcon from '@mui/icons-material/Place'
 import CompetitionsAndEventDays from '@components/event/CompetitionsAndEventDays.tsx'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
@@ -70,6 +76,8 @@ const EventPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
     const user = useUser()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const {tab} = eventIndexRoute.useSearch()
     const activeTab = tab ?? 'general'
@@ -131,8 +139,26 @@ const EventPage = () => {
 
     const {registrationPeriod, lateRegistrationPeriod} = getRegistrationPeriods(data ?? {}, t)
 
+    const handleResultsDownload = async () => {
+        const {data, error, response} = await downloadEventResults({
+            path: {eventId},
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('event.results.downloadError'))
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(data)
+            anchor.download = getFilename(response) ?? 'event-results.pdf'
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
     return (
         <Box>
+            <MuiLink ref={downloadRef} display={'none'}></MuiLink>
             <Box sx={{display: 'flex', flexDirection: 'column'}}>
                 {data ? (
                     <Stack spacing={4}>
@@ -257,6 +283,15 @@ const EventPage = () => {
                                         </List>
                                     </Box>
                                 </Card>
+                                {(user.checkPrivilege(readEventGlobal) || data.published) && (
+                                    <Card sx={{p: 2}}>
+                                        <Button
+                                            variant={'outlined'}
+                                            onClick={handleResultsDownload}>
+                                            <Trans i18nKey={'event.results.download'} />
+                                        </Button>
+                                    </Card>
+                                )}
                                 {user.checkPrivilege(readEventGlobal) && (
                                     <Card sx={{p: 2}}>
                                         <Typography variant="h6" sx={{mb: 1}}>

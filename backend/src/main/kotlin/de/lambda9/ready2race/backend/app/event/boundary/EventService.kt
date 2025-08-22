@@ -12,8 +12,10 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.discard
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -111,6 +113,13 @@ object EventService {
     ): App<EventError, Unit> = EventRepo.exists(eventId)
         .orDie()
         .onFalseFail { EventError.NotFound }
+
+    fun checkEventPublished(
+        id: UUID,
+    ): App<EventError, Unit> = EventRepo.getPublished(id)
+        .orDie()
+        .failIf({it != true}) { EventError.NotFound }
+        .discard()
 
     fun getOpenForRegistrationType(
         eventId: UUID,
