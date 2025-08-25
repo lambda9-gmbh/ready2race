@@ -5555,6 +5555,25 @@ paths:
           $ref: '#/components/responses/500'
         502:
           $ref: '#/components/responses/502'
+    get:
+      operationId: getWebDAVExportStatus
+      responses:
+        200:
+          description: WebDAV Status successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebDAVExportStatusDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
 
 components:
 
@@ -10051,3 +10070,41 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WebDAVExportType'
+
+    WebDAVExportStatusDto:
+      type: object
+      required:
+        - processId
+        - exportFolderName
+        - exportInitializedAt
+        - exportInitializedBy
+        - events
+        - exportTypes
+        - filesExported
+        - totalFilesToExport
+        - error
+      properties:
+        processId:
+          type: string
+          format: uuid
+        exportFolderName:
+          type: string
+        exportInitializedAt:
+          type: string
+          format: date-time
+        exportInitializedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        events:
+          type: array
+          items:
+            type: string
+        exportTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'
+        filesExported:
+          type: integer
+        totalFilesToExport:
+          type: integer
+        error:
+          type: boolean

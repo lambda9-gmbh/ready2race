@@ -97,12 +97,13 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                 }
             }*/
 
-            scheduleDynamic("Export next file to WebDAV Server", 10.seconds) {
+            scheduleFixed("Export next file to WebDAV Server", 5.seconds) {
                 WebDAVService.exportNext()
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {
                             WebDAVExportNextError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete")
+                            WebDAVExportNextError.ConfigUnparsable -> DynamicIntervalJobState.Fatal("WebDAV config could not be parsed")
                             WebDAVExportNextError.NoFilesToExport -> DynamicIntervalJobState.Empty
                             is WebDAVExportNextError.FileNotFound ->{
                                 logger.warn { "Error exporting file. ExportId: ${error.exportId}; ReferencedFileId: ${error.referenceId}" }

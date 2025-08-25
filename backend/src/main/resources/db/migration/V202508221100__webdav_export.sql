@@ -12,6 +12,7 @@ create table webdav_export
 (
     id                    uuid primary key,
     webdav_export_process uuid references webdav_export_process,
+    event_name            text not null,
     document_type         text not null,
     data_reference        uuid,
     path                  text not null,

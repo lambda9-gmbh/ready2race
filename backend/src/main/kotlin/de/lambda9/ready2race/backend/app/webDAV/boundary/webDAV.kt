@@ -19,6 +19,13 @@ fun Route.webDAV() {
                     WebDAVService.initializeExportData(body, user.id!!)
                 }
             }
+            get{
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+
+                    WebDAVService.getExportStatus()
+                }
+            }
         }
         route("/import"){
             get{

@@ -8,6 +8,7 @@ enum class WebDAVError : ServiceError {
     ConfigIncomplete,
     ThirdPartyError,
     ExportFolderAlreadyExists,
+    ConfigUnparsable,
     Unexpected;
 
     override fun respond(): ApiError = when (this) {
@@ -22,6 +23,10 @@ enum class WebDAVError : ServiceError {
         ExportFolderAlreadyExists -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "Another export folder with the same name already exists on the WebDEV Server."
+        )
+        ConfigUnparsable -> ApiError(
+            status = HttpStatusCode.InternalServerError,
+            message = "An unexpected error has occurred. The specified WebDAV adress could not be parsed."
         )
         Unexpected -> ApiError(
             status = HttpStatusCode.InternalServerError,

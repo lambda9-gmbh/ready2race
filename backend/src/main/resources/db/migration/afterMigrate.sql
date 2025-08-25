@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists webdav_export_process_status;
 drop view if exists app_user_for_event;
 drop view if exists competition_having_results;
 drop view if exists caterer_transaction_view;
@@ -1045,3 +1046,16 @@ where not exists(select *
                  where auhr2.role = '00000000-0000-0000-0000-000000000000'
                    and auhr2.app_user = au.id)
 ;
+
+create view webdav_export_process_status as
+select wep.id,
+       wep.name,
+       wep.created_at,
+       au.id        as created_by_id,
+       au.firstname as created_by_firstname,
+       au.lastname  as created_by_lastname,
+       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}')   as file_exports
+from webdav_export_process wep
+         left join webdav_export we on wep.id = we.webdav_export_process
+         left join app_user au on wep.created_by = au.id
+group by wep.id, wep.name, wep.created_at, au.id, au.firstname, au.lastname;

@@ -47,12 +47,14 @@ import {a11yProps} from "@utils/helpers.ts";
 import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
 import MatchResultImportConfigPanel from "@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx";
 import GlobalConfigurationsTab from "@components/configurations/GlobalConfigurationsTab.tsx";
+import ExportData from "@components/configurations/ExportData.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
     'competition-elements',
     'event-elements',
     'global-settings',
+    'export-data',
 ] as const
 export type ConfigurationTab = (typeof CONFIGURATION_TABS)[number]
 
@@ -127,6 +129,10 @@ const ConfigurationPage = () => {
                 <Tab
                     label={t('configuration.tabs.globalSettings')}
                     {...tabProps('global-settings')}
+                />
+                <Tab
+                    label={t('configuration.tabs.exportData')}
+                    {...tabProps('export-data')}
                 />
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>
@@ -240,6 +246,9 @@ const ConfigurationPage = () => {
             </TabPanel>
             <TabPanel index={'global-settings'} activeTab={activeTab}>
                 <GlobalConfigurationsTab/>
+            </TabPanel>
+            <TabPanel index={'export-data'} activeTab={activeTab}>
+                <ExportData/>
             </TabPanel>
         </Stack>
     )

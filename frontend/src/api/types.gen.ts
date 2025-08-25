@@ -1632,6 +1632,18 @@ export type WebDAVExportRequest = {
     selectedResources: Array<WebDAVExportType>
 }
 
+export type WebDAVExportStatusDto = {
+    processId: string
+    exportFolderName: string
+    exportInitializedAt: string
+    exportInitializedBy: AppUserNameDto
+    events: Array<string>
+    exportTypes: Array<WebDAVExportType>
+    filesExported: number
+    totalFilesToExport: number
+    error: boolean
+}
+
 export type WebDAVExportType = 'INVOICES' | 'REGISTRATION_RESULTS' | 'DOCUMENTS'
 
 export type WorkShiftUpsertDto = {
@@ -4620,3 +4632,7 @@ export type ExportDataByWebDavData = {
 export type ExportDataByWebDavResponse = void
 
 export type ExportDataByWebDavError = BadRequestError | ApiError
+
+export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
+
+export type GetWebDavExportStatusError = BadRequestError | ApiError

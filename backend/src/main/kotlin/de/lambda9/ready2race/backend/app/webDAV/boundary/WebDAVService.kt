@@ -9,11 +9,9 @@ import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistra
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVExportProcessRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVExportRepo
+import de.lambda9.ready2race.backend.app.webDAV.control.toDto
 import de.lambda9.ready2race.backend.app.webDAV.control.toRecord
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportNextError
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
+import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -26,6 +24,7 @@ import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -99,6 +98,7 @@ object WebDAVService {
                 return WebdavExportRecord(
                     id = UUID.randomUUID(),
                     webdavExportProcess = processId,
+                    eventName = events[eventId] ?: "",
                     documentType = documentType.name,
                     dataReference = dataReference,
                     path = "${request.name}/${events[eventId]}/${getFolderName(documentType)}",
@@ -136,14 +136,20 @@ object WebDAVService {
             val client = OkHttpClient();
             val authHeader = Credentials.basic(config.webDAV.authUser, config.webDAV.authPassword)
             fun createFolder(path: String): App<WebDAVError, Unit> = KIO.comprehension {
-                val callRequest = Request.Builder()
-                    .url(buildUrl(webDAVConfig = config.webDAV, pathSegments = "${request.name}/$path"))
-                    .method("MKCOL", null)
-                    .header("Authorization", authHeader)
-                    .build()
+                val folderUrl = !buildUrl(
+                    webDAVConfig = config.webDAV,
+                    pathSegments = "${request.name}/$path"
+                ).mapError { WebDAVError.ConfigUnparsable }
 
-                val response = !makeCall(client, callRequest)
-                    .mapError { WebDAVError.Unexpected }
+                val response = !KIO.effect {
+                    client.newCall(
+                        Request.Builder()
+                            .url(folderUrl)
+                            .method("MKCOL", null)
+                            .header("Authorization", authHeader)
+                            .build()
+                    ).execute()
+                }.mapError { WebDAVError.Unexpected }
 
                 !KIO.failOn(response.code != 201) {
                     logger.warn { "WebDAV Export failed on createFolder: Status ${response.code}; Message: ${response.message} " }
@@ -153,15 +159,20 @@ object WebDAVService {
                 unit
             }
 
+            val checkFolderUrl = !buildUrl(
+                webDAVConfig = config.webDAV,
+                pathSegments = request.name
+            ).mapError { WebDAVError.ConfigUnparsable }
             // Check if the root folder already exists on the server
-            val checkFolderResult = !makeCall(
-                client, Request.Builder()
-                    .url(buildUrl(webDAVConfig = config.webDAV, pathSegments = request.name))
-                    .method("PROPFIND", null)
-                    .header("Authorization", authHeader)
-                    .build()
-            )
-                .mapError { WebDAVError.Unexpected }
+            val checkFolderResult = !KIO.effect {
+                client.newCall(
+                    Request.Builder()
+                        .url(checkFolderUrl)
+                        .method("PROPFIND", null)
+                        .header("Authorization", authHeader)
+                        .build()
+                ).execute()
+            }.mapError { WebDAVError.Unexpected }
 
             !KIO.failOn(checkFolderResult.isSuccessful) { WebDAVError.ExportFolderAlreadyExists }
             !KIO.failOn(checkFolderResult.code != 404) { WebDAVError.ThirdPartyError }
@@ -193,21 +204,18 @@ object WebDAVService {
             noData
         }
 
-    private fun makeCall(client: OkHttpClient, callRequest: Request): App<Throwable, Response> =
-        KIO.comprehension {
-            KIO.ok(client.newCall(callRequest).execute())
-        }
-
     private fun buildUrl(
         webDAVConfig: Config.WebDAV,
         pathSegments: String
-    ): HttpUrl {
-        return HttpUrl.Builder()
-            .scheme(webDAVConfig.urlScheme)
-            .host(webDAVConfig.host)
-            .addPathSegment(webDAVConfig.path)
-            .addPathSegments("remote.php/dav/files/${webDAVConfig.authUser}/$pathSegments")
-            .build()
+    ): App<Throwable, HttpUrl> = KIO.comprehension {
+        KIO.ok(
+            HttpUrl.Builder()
+                .scheme(webDAVConfig.urlScheme)
+                .host(webDAVConfig.host)
+                .addPathSegment(webDAVConfig.path)
+                .addPathSegments("remote.php/dav/files/${webDAVConfig.authUser}/$pathSegments")
+                .build()
+        )
     }
 
     fun exportNext(): App<WebDAVExportNextError, Unit> = KIO.comprehension {
@@ -244,11 +252,15 @@ object WebDAVService {
         val authHeader = Credentials.basic(config.webDAV.authUser, config.webDAV.authPassword)
         val mimeType = URLConnection.guessContentTypeFromName(file.name) ?: "application/octet-stream"
         val requestBody = file.bytes.toRequestBody(mimeType.toMediaTypeOrNull())
+        val url = !buildUrl(
+            webDAVConfig = config.webDAV,
+            pathSegments = "${nextExport.path}/${file.name}"
+        ).mapError { WebDAVExportNextError.ConfigUnparsable }
 
         !KIO.effect {
             client.newCall(
                 Request.Builder()
-                    .url(buildUrl(webDAVConfig = config.webDAV, pathSegments = "${nextExport.path}/${file.name}"))
+                    .url(url)
                     .put(requestBody)
                     .header("Authorization", authHeader)
                     .build()
@@ -266,5 +278,29 @@ object WebDAVService {
         }.orDie()
 
         unit
+    }
+
+    fun getExportStatus(): App<Nothing, ApiResponse.ListDto<WebDAVExportStatusDto>> = KIO.comprehension {
+
+        val records = !WebDAVExportProcessRepo.all().orDie()
+
+        KIO.ok(
+            ApiResponse.ListDto(
+                !records.traverse { record ->
+                    val events = record.fileExports!!.groupBy { it!!.eventName!! }.keys.toList()
+                    val exportTypes = record.fileExports!!
+                        .groupBy { it!!.documentType }.keys.toList()
+                        .map { WebDAVExportType.valueOf(it) }
+                    val filesExported = record.fileExports!!.filter { it!!.exportedAt != null }.size
+                    val error = record.fileExports!!.any { it!!.errorAt != null }
+
+                    record.toDto(
+                        events = events,
+                        exportTypes = exportTypes,
+                        filesExported = filesExported,
+                        error = error
+                    )
+                })
+        )
     }
 }
