@@ -4,7 +4,6 @@ import {
     Button,
     Card,
     CardContent,
-    Chip,
     DialogActions,
     DialogContent,
     DialogTitle,
@@ -25,7 +24,6 @@ import {AutocompleteOption} from '@utils/types.ts'
 import {useState} from 'react'
 import {WebDAVExportType} from '@api/types.gen.ts'
 import {format} from 'date-fns'
-import {Cancel, CheckCircle} from '@mui/icons-material'
 import Throbber from '@components/Throbber.tsx'
 
 type ExportForm = {

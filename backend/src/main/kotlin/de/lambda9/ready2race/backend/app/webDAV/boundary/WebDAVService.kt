@@ -148,11 +148,11 @@ object WebDAVService {
                             .method("MKCOL", null)
                             .header("Authorization", authHeader)
                             .build()
-                    ).execute()
+                    ).execute().use{ response -> response.code to response.body?.string() }
                 }.mapError { WebDAVError.Unexpected }
 
-                !KIO.failOn(response.code != 201) {
-                    logger.warn { "WebDAV Export failed on createFolder: Status ${response.code}; Message: ${response.message} " }
+                !KIO.failOn(response.first != 201) {
+                    logger.warn { "WebDAV Export failed on createFolder: Status ${response.first}; Message: ${response.second} " }
                     WebDAVError.ThirdPartyError
                 }
 
@@ -171,11 +171,11 @@ object WebDAVService {
                         .method("PROPFIND", null)
                         .header("Authorization", authHeader)
                         .build()
-                ).execute()
+                ).execute().use{ response -> response.code to response.body?.string() }
             }.mapError { WebDAVError.Unexpected }
 
-            !KIO.failOn(checkFolderResult.isSuccessful) { WebDAVError.ExportFolderAlreadyExists }
-            !KIO.failOn(checkFolderResult.code != 404) { WebDAVError.ThirdPartyError }
+            !KIO.failOn(checkFolderResult.first == 200) { WebDAVError.ExportFolderAlreadyExists }
+            !KIO.failOn(checkFolderResult.first != 404) { WebDAVError.ThirdPartyError }
 
 
             // Create root folder
@@ -264,7 +264,7 @@ object WebDAVService {
                     .put(requestBody)
                     .header("Authorization", authHeader)
                     .build()
-            ).execute()
+            ).execute().use{ response -> response.code to response.body?.string() }
         }.mapError {
             !WebDAVExportRepo.update(nextExport) {
                 error = it.stackTraceToString()
