@@ -24,6 +24,7 @@ import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.andThenNotNull
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
+import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -64,6 +65,11 @@ fun ApplicationCall.authenticate(
         transform = { AuthError.PrivilegeMissing },
     )
 
+fun ApplicationCall.optionalAuthenticate(
+    privilege: Privilege
+): App<Nothing, AppUserWithPrivilegesRecord?> =
+    authenticate(privilege).recoverDefault { null }
+
 fun ApplicationCall.authenticateAny(
     vararg privileges: Privilege,
 ): App<AuthError, AppUserWithPrivilegesRecord> =
@@ -97,16 +103,8 @@ fun ApplicationCall.authenticate(
 fun ApplicationCall.optionalAuthenticate(
     action: Privilege.Action,
     resource: Privilege.Resource,
-): App<AuthError, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>?> =
-    sessions.get<UserSession>()?.token?.let {token ->
-        AuthService.useSessionToken(token).map { user ->
-            user.privileges!!
-                .filter { it!!.action == action.name && it.resource == resource.name }
-                .map { Privilege.Scope.valueOf(it!!.scope) }
-                .maxByOrNull { it.level }
-                ?.let { user to it }
-        }
-    }?: KIO.ok(null)
+): App<Nothing, Pair<AppUserWithPrivilegesRecord, Privilege.Scope>?> =
+    authenticate(action, resource).recoverDefault { null }
 
 fun ApplicationCall.authenticate(): App<AuthError, AppUserWithPrivilegesRecord> = KIO.comprehension {
 

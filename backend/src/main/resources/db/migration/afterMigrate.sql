@@ -192,7 +192,8 @@ select c.id,
        cc.description                                                            as category_description,
        coalesce(nps.named_participants, '{}')                                    as named_participants,
        coalesce(fs.fees, '{}')                                                   as fees,
-       count(distinct cr.id)                                                     as registrations_count
+       count(distinct cr.id)                                                     as registrations_count,
+       coalesce(array_agg(distinct ed) filter ( where ed.id is not null), '{}')  as event_days
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -213,6 +214,8 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          left join competition_registration cr on c.id = cr.competition
+         left join event_day_has_competition edhc on c.id = edhc.competition
+         left join event_day ed on edhc.event_day = ed.id
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
          cc.name,
          cc.description, nps.total_count, nps.named_participants, fs.fees
@@ -713,7 +716,8 @@ select cmt.id,
        cr.team_number,
        coalesce(array_agg(rctp) filter (where rctp.team_id is not null), '{}') as participants,
        (cd.competition_registration is not null)                               as deregistered,
-       cd.reason                                                               as deregistration_reason
+       cd.reason                                                               as deregistration_reason,
+       rc.name                                                                 as rating_category_name
 from competition_match_team cmt
          join competition_setup_match csm on cmt.competition_match = csm.id
          left join competition_registration cr on cr.id = cmt.competition_registration
@@ -721,8 +725,9 @@ from competition_match_team cmt
          left join registered_competition_team_participant rctp on cr.id = rctp.team_id
          left join competition_deregistration cd
                    on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
+         left join rating_category rc on cr.rating_category = rc.id
 group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
-         cr.name, cr.team_number, cd.competition_registration, cd.reason
+         cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id
 ;
 
 create view competition_match_with_teams as
@@ -740,6 +745,7 @@ create view substitution_view as
 select s.id,
        s.reason,
        s.order_for_round,
+       s.inherited_from,
        np.id      as named_participant_id,
        np.name    as named_participant_name,
        csr.id     as competition_setup_round_id,

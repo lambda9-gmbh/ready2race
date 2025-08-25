@@ -4589,9 +4589,37 @@ export type GetQrAssignmentParticipantsResponse = Array<GroupedParticipantQrAssi
 
 export type GetQrAssignmentParticipantsError = BadRequestError | ApiError
 
+export type DownloadEventResultsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type DownloadEventResultsResponse = Blob | File
+
+export type DownloadEventResultsError = BadRequestError | ApiError
+
 export type GetCompetitionsHavingResultsData = {
     path: {
         eventId: string
+    }
+    query?: {
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
     }
 }
 

@@ -26,12 +26,18 @@ object SubstitutionRepo {
 
     fun getViewByRound(setupRoundId: UUID) = SUBSTITUTION_VIEW.select { COMPETITION_SETUP_ROUND_ID.eq(setupRoundId) }
 
+    fun getOriginalsByCompetitionRegistration(competitionRegistrationId: UUID) = SUBSTITUTION_VIEW.select {
+        DSL.and(
+            COMPETITION_REGISTRATION_ID.eq(competitionRegistrationId),
+            INHERITED_FROM.isNull
+        )
+    }
+
     fun getByEvent(
         eventId: UUID,
         clubId: UUID?,
         scope: Privilege.Scope,
     ) = SUBSTITUTION_VIEW.select { EVENT_ID.eq(eventId).and(filterScope(scope, clubId)) }
-
 
     private fun filterScope(
         scope: Privilege.Scope,

@@ -852,6 +852,10 @@
       "points": "Punkte",
       "matchTeams": "Lauf-Teams",
       "executionOrder": "Ausführungsreihenfolge: {{order}}"
+    },
+    "results": {
+      "download": "Bisherige Ergebnisse herunterladen",
+      "downloadError": "Die datei konnte nicht heruntergeladen werden."
     }
   },
   "task": {
