@@ -109,7 +109,7 @@ object CompetitionService {
     ): App<CompetitionError, ApiResponse> = KIO.comprehension {
 
         val competition = if (scope == Privilege.Scope.GLOBAL) {
-            !CompetitionRepo.getWithProperties(competitionId, scope)
+            !CompetitionRepo.getScoped(competitionId, scope)
                 .orDie()
                 .onNullFail { CompetitionError.CompetitionNotFound }
                 .map { it.toDto() }

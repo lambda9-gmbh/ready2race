@@ -2,12 +2,15 @@ import {PropsWithChildren} from 'react'
 import {Box} from '@mui/material'
 
 type Props<TabType> = {
-    index: TabType
+    index: NoInfer<TabType>
     activeTab: TabType
 }
 
-const TabPanel = <TabType extends string,> ({children, activeTab, index}: PropsWithChildren<Props<TabType>>) => {
-
+const TabPanel = <TabType extends string>({
+    children,
+    activeTab,
+    index,
+}: PropsWithChildren<Props<TabType>>) => {
     return (
         <div
             role="tabpanel"

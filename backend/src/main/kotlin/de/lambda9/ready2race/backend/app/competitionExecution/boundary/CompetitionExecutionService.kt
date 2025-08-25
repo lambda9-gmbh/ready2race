@@ -57,6 +57,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import kotlin.collections.sortedBy
 
 object CompetitionExecutionService {
 
@@ -661,14 +662,9 @@ object CompetitionExecutionService {
         }
     }
 
-    fun getCompetitionPlaces(
-        eventId: UUID,
+    fun computeCompetitionPlaces(
         competitionId: UUID,
-        scope: Privilege.Scope?,
-    ): App<ServiceError, ApiResponse.ListDto<CompetitionTeamPlaceDto>> = KIO.comprehension {
-
-        !EventRepo.getScoped(eventId, scope).orDie().onNullFail { EventError.NotFound }
-
+    ): App<ServiceError, List<Pair<CompetitionMatchTeamWithRegistration, Int>>> = KIO.comprehension {
         val setupRoundRecords = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
         val setupRounds = sortRounds(setupRoundRecords)
 
@@ -740,12 +736,29 @@ object CompetitionExecutionService {
             }
 
 
-        val result = !roundsWithTeamsToPlaces
-            .flatten()
-            .sortedBy { it.second }
-            .traverse { it.first.toCompetitionTeamPlaceDto(it.second) }
+        val result = roundsWithTeamsToPlaces.flatten()
 
-        KIO.ok(ApiResponse.ListDto(result))
+        KIO.ok(result)
+    }
+
+    fun getCompetitionPlaces(
+        eventId: UUID,
+        competitionId: UUID,
+        scope: Privilege.Scope?,
+    ): App<ServiceError, ApiResponse.ListDto<CompetitionTeamPlaceDto>> = KIO.comprehension {
+
+        !EventRepo.getScoped(eventId, scope).orDie().onNullFail { EventError.NotFound }
+
+        computeCompetitionPlaces(competitionId)
+            .andThen { places ->
+                places
+                    .sortedBy { it.second }
+                    .traverse { it.first.toCompetitionTeamPlaceDto(it.second) }
+            }.map {
+                ApiResponse.ListDto(
+                    it
+                )
+            }
     }
 
     fun getActuallyParticipatingParticipants(

@@ -5492,11 +5492,30 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /results/event/{eventId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: downloadEventResults
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /results/event/{eventId}/competition:
     parameters:
       - $ref: '#/components/parameters/eventId'
     get:
-      parameter:
+      parameters:
         - $ref: '#/components/parameters/limit'
         - $ref: '#/components/parameters/offset'
         - $ref: '#/components/parameters/sort'

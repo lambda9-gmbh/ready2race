@@ -19,5 +19,4 @@ object ResultsRepo {
         eventId: UUID,
         params: PaginationParameters<CompetitionHavingResultsSort>,
     ) = COMPETITION_HAVING_RESULTS.page(params, { searchFields() }) { EVENT.eq(eventId) }
-
 }
