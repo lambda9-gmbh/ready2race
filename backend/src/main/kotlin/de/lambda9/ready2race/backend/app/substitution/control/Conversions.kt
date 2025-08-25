@@ -150,6 +150,7 @@ fun SubstitutionViewRecord.toPossibleSubstitutionParticipantDto(
 
 fun SubstitutionRecord.applyNewRound(newRoundId: UUID) = KIO.ok(
     this.apply {
+        inheritedFrom = inheritedFrom ?: id
         id = UUID.randomUUID()
         competitionSetupRound = newRoundId
     }

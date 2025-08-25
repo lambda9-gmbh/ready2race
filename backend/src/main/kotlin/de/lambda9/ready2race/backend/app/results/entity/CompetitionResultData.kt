@@ -23,7 +23,7 @@ data class EventResultData(
         val participatingClubName: String?,
         val ratingCategory: String?,
         val participants: List<ParticipantResultData>,
-        val substitutions: List<SubstitutionResultData>
+        val sortedSubstitutions: List<SubstitutionResultData>
     )
 
     data class ParticipantResultData(
