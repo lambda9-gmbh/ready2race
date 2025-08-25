@@ -1380,7 +1380,8 @@
       "types": {
         "registrationResults": "Registration Results",
         "invoices": "Invoices",
-        "documents": "Event documents"
+        "documents": "Event documents",
+        "results": "Results"
       },
       "error": {
         "nameConflict": "The folder name you entered already exists. Please choose a different name.",

@@ -4,7 +4,7 @@ import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.calls.comprehension.comprehension
-import de.lambda9.ready2race.backend.calls.requests.FileUpload
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.pagination.Page
 import de.lambda9.ready2race.backend.pagination.Sortable
 import de.lambda9.ready2race.backend.plugins.kioEnv
@@ -42,8 +42,8 @@ fun <R, E, A : Any, B : Any, S : Sortable> KIO<R, E, Page<A, S>>.pageResponse(f:
 fun <R, E, A : Any, S : Sortable> KIO<R, E, Page<A, S>>.pageResponse(): KIO<R, E, ApiResponse.Page<A, S>> =
     map { ApiResponse.Page(data = it.data, pagination = it.pagination) }
 
-fun <R, E> KIO<R, E, FileUpload>.fileResponse(): KIO<R, E, ApiResponse.File> =
-    map { ApiResponse.File(name = it.fileName, bytes = it.bytes) }
+fun <R, E> KIO<R, E, File>.fileResponse(): KIO<R, E, ApiResponse.File> =
+    map { ApiResponse.File(name = it.name, bytes = it.bytes) }
 
 suspend fun ApplicationCall.respondError(
     error: ToApiError,

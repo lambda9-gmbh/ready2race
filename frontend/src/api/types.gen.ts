@@ -1644,7 +1644,7 @@ export type WebDAVExportStatusDto = {
     error: boolean
 }
 
-export type WebDAVExportType = 'INVOICES' | 'REGISTRATION_RESULTS' | 'DOCUMENTS'
+export type WebDAVExportType = 'INVOICES' | 'REGISTRATION_RESULTS' | 'DOCUMENTS' | 'RESULTS'
 
 export type WorkShiftUpsertDto = {
     workType: string

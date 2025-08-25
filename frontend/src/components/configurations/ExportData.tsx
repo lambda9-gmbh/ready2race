@@ -36,6 +36,7 @@ const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
     'REGISTRATION_RESULTS',
     'INVOICES',
     'DOCUMENTS',
+    'RESULTS'
 ] as const
 
 const ExportData = () => {
@@ -84,7 +85,7 @@ const ExportData = () => {
                   ? t('webDAV.export.types.invoices')
                   : type === 'DOCUMENTS'
                     ? t('webDAV.export.types.documents')
-                    : '',
+                    : type === 'RESULTS' ? t('webDAV.export.types.results') : '',
     }))
 
     const formContext = useForm<ExportForm>()
