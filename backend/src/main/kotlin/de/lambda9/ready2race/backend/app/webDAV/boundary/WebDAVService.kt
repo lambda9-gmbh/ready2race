@@ -2,6 +2,9 @@ package de.lambda9.ready2race.backend.app.webDAV.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
@@ -40,17 +43,7 @@ object WebDAVService {
             val events = !EventRepo.getEvents(request.events).orDie()
                 .failIf({ it.size != request.events.size }) { EventError.NotFound }
                 .map { records ->
-                    records.associate { rec ->
-                        rec.id to
-                            if (records.filter { it.id == rec.id }.size == 1
-                            ) {
-                                rec.name
-                            } else { // This covers the case of multiple events having the same name
-                                "${rec.name}-${
-                                    records.filter { it.id == rec.id }.indexOf(rec) + 1
-                                }"
-                            }
-                    }
+                    renameDuplicateNameEntities(records.associate { it.id to it.name })
                 }
 
 
@@ -70,6 +63,7 @@ object WebDAVService {
                     WebDAVExportType.INVOICES -> "Invoices"
                     WebDAVExportType.DOCUMENTS -> "Documents"
                     WebDAVExportType.RESULTS -> "Results"
+                    WebDAVExportType.START_LISTS -> "Start-Lists"
                 }
             }
 
@@ -90,6 +84,7 @@ object WebDAVService {
                 documentType: WebDAVExportType,
                 dataReference: UUID,
                 parentFolder: UUID?,
+                additionalPath: String? = "",
             ): WebdavExportRecord {
                 return WebdavExportRecord(
                     id = UUID.randomUUID(),
@@ -97,7 +92,7 @@ object WebDAVService {
                     eventName = events[eventId] ?: "",
                     documentType = documentType.name,
                     dataReference = dataReference,
-                    path = "${request.name}/${events[eventId]}/${getFolderName(documentType)}",
+                    path = "${request.name}/${events[eventId]}/${getFolderName(documentType)}" + additionalPath,
                     parentFolder = parentFolder
                 )
             }
@@ -140,30 +135,43 @@ object WebDAVService {
 
             // todo: ?? handle case where files are not yet generated for the event
             val eventRegistrationIds =
-                !EventRegistrationReportRepo.getExistingEventIds(events.keys.toList()).orDie()
+                if (request.selectedResources.any { it == WebDAVExportType.REGISTRATION_RESULTS }) {
+                    !EventRegistrationReportRepo.getExistingEventIds(events.keys.toList()).orDie()
+                } else null
 
-            val invoices = !InvoiceRepo.getByEvents(events.keys.toList()).orDie().map { records ->
-                records.map { it.event!! to it.id!! }
-            }
-
-            val eventDocuments = !EventDocumentRepo.getByEventIds(events.keys.toList()).orDie()
-                .map { records ->
-                    records.map {
-                        it.event to it.id
-                    }
+            val invoices = if (request.selectedResources.any { it == WebDAVExportType.INVOICES }) {
+                !InvoiceRepo.getByEvents(events.keys.toList()).orDie().map { records ->
+                    records.map { it.event!! to it.id!! }
                 }
+            } else null
 
-            val eventsHavingResults =
+            val eventDocuments = if (request.selectedResources.any { it == WebDAVExportType.DOCUMENTS }) {
+                !EventDocumentRepo.getByEventIds(events.keys.toList()).orDie()
+                    .map { records ->
+                        records.map {
+                            it.event to it.id
+                        }
+                    }
+            } else null
+
+            val eventsHavingResults = if (request.selectedResources.any { it == WebDAVExportType.RESULTS }) {
                 !ResultsRepo.getEventsHavingResultsByEventIds(eventIds = events.keys.toList()).orDie()
                     .map { eventsHavingResults ->
                         eventsHavingResults.distinct()
                     }
+            } else null
 
-            // RECORDS
+            val startListsMatchRecords = if (request.selectedResources.any { it == WebDAVExportType.START_LISTS }) {
+                !CompetitionMatchRepo.getMatchForEventByEvents(events.keys.toList()).orDie()
+            } else null
+
+
+            // FOLDER RECORDS
             val exportFolderEventRecords: MutableList<WebdavExportFolderRecord> = mutableListOf()
             val exportFolderTypeRecords: MutableList<WebdavExportFolderRecord> = mutableListOf()
+            val exportFolderCompetitionRecords: MutableList<WebdavExportFolderRecord> = mutableListOf()
 
-
+            // EXPORT RECORDS
             val exportRecords: MutableList<WebdavExportRecord> = mutableListOf()
 
             events.forEach { (eventId, eventName) ->
@@ -175,7 +183,7 @@ object WebDAVService {
                 exportFolderEventRecords.add(eventFolder)
 
                 // REGISTRATION RESULTS
-                if (eventRegistrationIds.any { it == eventId }) {
+                if (eventRegistrationIds != null && eventRegistrationIds.any { it == eventId }) {
                     val folderRecord = buildExportFolderRecord(
                         parentFolder = eventFolder.id,
                         path = "$pathStart/${getFolderName(WebDAVExportType.REGISTRATION_RESULTS)}",
@@ -193,7 +201,7 @@ object WebDAVService {
                 }
 
                 //INVOICES
-                if (invoices.any { it.first == eventId }) {
+                if (invoices != null && invoices.any { it.first == eventId }) {
                     val folderRecord = buildExportFolderRecord(
                         parentFolder = eventFolder.id,
                         path = "$pathStart/${getFolderName(WebDAVExportType.INVOICES)}",
@@ -211,7 +219,9 @@ object WebDAVService {
                         )
                     }
                 }
-                if (eventDocuments.any { it.first == eventId }) {
+
+                // EVENT DOCUMENTS
+                if (eventDocuments != null && eventDocuments.any { it.first == eventId }) {
                     val folderRecord = buildExportFolderRecord(
                         parentFolder = eventFolder.id,
                         path = "$pathStart/${getFolderName(WebDAVExportType.DOCUMENTS)}",
@@ -229,7 +239,9 @@ object WebDAVService {
                         )
                     }
                 }
-                if (eventsHavingResults.any { it == eventId }) {
+
+                // RESULTS
+                if (eventsHavingResults != null && eventsHavingResults.any { it == eventId }) {
                     val folderRecord = buildExportFolderRecord(
                         parentFolder = eventFolder.id,
                         path = "$pathStart/${getFolderName(WebDAVExportType.RESULTS)}",
@@ -245,11 +257,50 @@ object WebDAVService {
                         )
                     )
                 }
+
+                // START LISTS
+                val matchesForEvent = startListsMatchRecords?.filter { it.eventId == eventId }
+                if (!matchesForEvent.isNullOrEmpty()) {
+                    val typeFolderRecord = buildExportFolderRecord(
+                        parentFolder = eventFolder.id,
+                        path = "$pathStart/${getFolderName(WebDAVExportType.START_LISTS)}",
+                    )
+                    exportFolderTypeRecords.add(typeFolderRecord)
+
+
+                    // Makes sure that the competition folder names are unique
+                    val competitionFolderNames =
+                        renameDuplicateNameEntities(matchesForEvent.groupBy { it.competitionId!! }
+                            .mapValues { "${it.value.first().competitionIdentifier}-${it.value.first().competitionName}" })
+
+                    matchesForEvent.groupBy { it.competitionId }.forEach { (competitionId, matchRecords) ->
+                        // CREATE COMPETITION FOLDERS
+                        val competitionFolderRecord = buildExportFolderRecord(
+                            parentFolder = typeFolderRecord.id,
+                            path = "$pathStart/${getFolderName(WebDAVExportType.START_LISTS)}/${competitionFolderNames[competitionId]}",
+                        )
+                        exportFolderCompetitionRecords.add(competitionFolderRecord)
+
+                        // CREATE EXPORT RECORDS
+                        matchRecords.forEach { match ->
+                            exportRecords.add(
+                                buildExportRecord(
+                                    eventId = eventId,
+                                    documentType = WebDAVExportType.START_LISTS,
+                                    dataReference = match.matchId!!,
+                                    parentFolder = competitionFolderRecord.id,
+                                    additionalPath = "/${competitionFolderNames[competitionId]}"
+                                )
+                            )
+                        }
+                    }
+                }
             }
 
             // CREATE EXPORT FOLDER QUEUE - Because of the parent_folder references it has to be in this order
             !WebDAVExportFolderRepo.create(exportFolderEventRecords).orDie()
             !WebDAVExportFolderRepo.create(exportFolderTypeRecords).orDie()
+            !WebDAVExportFolderRepo.create(exportFolderCompetitionRecords).orDie()
 
             // CREATE EXPORT QUEUE
             !WebDAVExportRepo.create(exportRecords).orDie()
@@ -291,27 +342,53 @@ object WebDAVService {
         // EXPORT FILE INTO FOLDER (if all folders are created already)
         val nextExport = !WebDAVExportRepo.getNextExport().orDie().onNullFail { WebDAVError.NoFilesToExport }
 
+        fun setFileNotFoundError(msg: String? = "File not found") = WebDAVExportRepo.update(nextExport) {
+            error = msg
+            errorAt = LocalDateTime.now()
+        }
 
         val file = nextExport.let { exportRecord ->
             when (exportRecord.documentType) {
                 WebDAVExportType.REGISTRATION_RESULTS.name ->
                     !EventRegistrationReportRepo.getDownload(exportRecord.dataReference!!).orDie()
-                        .onNullFail { WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference) }
+                        .onNullFail {
+                            !setFileNotFoundError().orDie()
+                            WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                        }
                         .map { File(name = it.name!!, bytes = it.data!!) }
 
                 WebDAVExportType.INVOICES.name ->
                     !InvoiceRepo.getDownload(exportRecord.dataReference!!).orDie()
-                        .onNullFail { WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference) }
+                        .onNullFail {
+                            !setFileNotFoundError().orDie()
+                            WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                        }
                         .map { File(name = it.filename!!, bytes = it.data!!) }
 
                 WebDAVExportType.DOCUMENTS.name ->
                     !EventDocumentRepo.getDownload(exportRecord.dataReference!!).orDie()
-                        .onNullFail { WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference) }
+                        .onNullFail {
+                            !setFileNotFoundError().orDie()
+                            WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                        }
                         .map { File(name = it.name!!, bytes = it.data!!) }
 
                 WebDAVExportType.RESULTS.name ->
                     !ResultsService.generateResultsDocument(exportRecord.dataReference!!)
-                        .mapError { WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference) }
+                        .mapError {
+                            !setFileNotFoundError("Failed to generate document").orDie()
+                            WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                        }
+
+                WebDAVExportType.START_LISTS.name ->
+                    !CompetitionExecutionService.downloadStartlist(
+                        matchId = exportRecord.dataReference!!,
+                        type = StartListFileType.PDF
+                    ).mapError {
+                        !setFileNotFoundError("Failed to generate document").orDie()
+                        WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                    }
+                        .map { File(name = it.name, bytes = it.bytes) }
 
                 else -> return@comprehension KIO.fail(WebDAVError.FileNotFound(exportRecord.id, null))
             }
@@ -340,7 +417,6 @@ object WebDAVService {
             }.orDie()
             WebDAVError.Unexpected
         }
-        // TODO: keine Überprüfung status code?
 
         if (responseCode != 201) {
             !WebDAVExportRepo.update(nextExport) {
@@ -426,6 +502,18 @@ object WebDAVService {
         }
 
         unit
+    }
+
+    private fun renameDuplicateNameEntities(entities: Map<UUID, String>): Map<UUID, String> {
+        return entities.mapValues { (id, name) ->
+            val entitiesWithName = entities.filter { it.value == name }
+            if (entitiesWithName.size == 1
+            ) {
+                name
+            } else { // This covers the case of multiple entities having the same name
+                "${name}-${entitiesWithName.keys.toList().indexOf(id) + 1}"
+            }
+        }
     }
 
     fun getExportStatus(): App<Nothing, ApiResponse.ListDto<WebDAVExportStatusDto>> = KIO.comprehension {

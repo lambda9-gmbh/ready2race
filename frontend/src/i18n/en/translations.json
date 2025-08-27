@@ -624,7 +624,7 @@
           }
         },
         "startList": {
-          "download": "Download start list",
+          "download": "Download start-list",
           "dialog": {
             "title": "Select configuration",
             "config": "Configuration",
@@ -1381,7 +1381,8 @@
         "registrationResults": "Registration Results",
         "invoices": "Invoices",
         "documents": "Event documents",
-        "results": "Results"
+        "results": "Results",
+        "startLists": "Start-lists"
       },
       "error": {
         "nameConflict": "The folder name you entered already exists. Please choose a different name.",

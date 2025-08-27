@@ -3,6 +3,7 @@ set search_path to ready2race, pg_catalog, public;
 drop view if exists webdav_export_process_status;
 drop view if exists webdav_export_folder_view;
 drop view if exists app_user_for_event;
+drop view if exists competition_match_for_event;
 drop view if exists competition_having_results;
 drop view if exists caterer_transaction_view;
 drop view if exists participant_qr_assignment_view;
@@ -1036,6 +1037,19 @@ where exists(select 1
                                                 from competition_deregistration cd
                                                 where cd.competition_registration = cmt.competition_registration
                                                   and cd.competition_setup_round = csr.id)));
+
+create view competition_match_for_event as
+select cm.competition_setup_match as match_id,
+       e.id                       as event_id,
+       c.id                       as competition_id,
+       cp.identifier              as competition_identifier,
+       cp.name                    as competition_name
+from competition_match cm
+         join competition_setup_match csm on csm.id = cm.competition_setup_match
+         join competition_setup_round csr on csr.id = csm.competition_setup_round
+         join competition_properties cp on cp.id = csr.competition_setup
+         join competition c on c.id = cp.competition
+         join event e on e.id = c.event;
 
 create view app_user_for_event as
 select au.id,

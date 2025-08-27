@@ -5,5 +5,6 @@ enum class WebDAVExportType {
     INVOICES,
     REGISTRATION_RESULTS,
     DOCUMENTS,
-    RESULTS;
+    RESULTS,
+    START_LISTS;
 }

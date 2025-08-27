@@ -5869,6 +5869,7 @@ components:
         - 'REGISTRATION_RESULTS'
         - 'DOCUMENTS'
         - 'RESULTS'
+        - 'START_LISTS'
 
 
     # error

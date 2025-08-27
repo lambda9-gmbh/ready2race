@@ -1644,7 +1644,12 @@ export type WebDAVExportStatusDto = {
     filesWithError: number
 }
 
-export type WebDAVExportType = 'INVOICES' | 'REGISTRATION_RESULTS' | 'DOCUMENTS' | 'RESULTS'
+export type WebDAVExportType =
+    | 'INVOICES'
+    | 'REGISTRATION_RESULTS'
+    | 'DOCUMENTS'
+    | 'RESULTS'
+    | 'START_LISTS'
 
 export type WorkShiftUpsertDto = {
     workType: string

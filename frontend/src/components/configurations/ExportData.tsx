@@ -8,6 +8,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    LinearProgress,
     List,
     ListItemText,
     Stack,
@@ -26,7 +27,6 @@ import {useState} from 'react'
 import {WebDAVExportType} from '@api/types.gen.ts'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
-import {CrisisAlert} from '@mui/icons-material'
 
 type ExportForm = {
     name: string
@@ -39,25 +39,42 @@ const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
     'INVOICES',
     'DOCUMENTS',
     'RESULTS',
+    'START_LISTS',
 ] as const
 
 const ExportData = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const {data: exportStatusData, pending: exportStatusPending} = useFetch(
-        signal => getWebDavExportStatus({signal}),
-        {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(
-                        t('common.load.error.single', {entity: t('webDAV.export.status.status')}),
+    const [reloadFrequently, setReloadFrequently] = useState(true)
+
+    const {
+        data: exportStatusData,
+        pending: exportStatusPending,
+        reload: reloadExportStatus,
+    } = useFetch(signal => getWebDavExportStatus({signal}), {
+        onResponse: ({data, error}) => {
+            if (error) {
+                feedback.error(
+                    t('common.load.error.single', {entity: t('webDAV.export.status.status')}),
+                )
+            } else {
+                if (
+                    data.some(
+                        process =>
+                            process.totalFilesToExport !==
+                            process.filesExported + process.filesWithError,
                     )
+                ) {
+                    setReloadFrequently(true)
+                } else {
+                    setReloadFrequently(false)
                 }
-            },
-            deps: [],
+            }
         },
-    )
+        deps: [reloadFrequently],
+        autoReloadInterval: reloadFrequently ? 1000 : 6000,
+    })
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
         onResponse: ({error}) => {
@@ -89,7 +106,9 @@ const ExportData = () => {
                     ? t('webDAV.export.types.documents')
                     : type === 'RESULTS'
                       ? t('webDAV.export.types.results')
-                      : '',
+                      : type === 'START_LISTS'
+                        ? t('webDAV.export.types.startLists')
+                        : '',
     }))
 
     const formContext = useForm<ExportForm>()
@@ -135,6 +154,7 @@ const ExportData = () => {
             closeDialog()
             feedback.success(t('webDAV.export.success'))
             formContext.reset()
+            reloadExportStatus()
         }
     }
 
@@ -215,15 +235,25 @@ const ExportData = () => {
                                             </Alert>
                                         )
                                     ) : (
-                                        <Alert severity={'info'} icon={<Throbber />}>
-                                            <AlertTitle>
-                                                {t('webDAV.export.status.pending.title')}
-                                            </AlertTitle>
-                                            {t('webDAV.export.status.pending.body', {
-                                                exported: exportStatus.filesExported,
-                                                total: exportStatus.totalFilesToExport,
-                                            })}
-                                        </Alert>
+                                        <Box sx={{width: 1}}>
+                                            <LinearProgress
+                                                variant="determinate"
+                                                value={
+                                                    (exportStatus.filesExported /
+                                                        exportStatus.totalFilesToExport) *
+                                                    100
+                                                }
+                                            />
+                                            <Alert severity={'info'} icon={<Throbber />}>
+                                                <AlertTitle>
+                                                    {t('webDAV.export.status.pending.title')}
+                                                </AlertTitle>
+                                                {t('webDAV.export.status.pending.body', {
+                                                    exported: exportStatus.filesExported,
+                                                    total: exportStatus.totalFilesToExport,
+                                                })}
+                                            </Alert>
+                                        </Box>
                                     )}
                                     <Box
                                         sx={{

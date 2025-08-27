@@ -1369,5 +1369,41 @@
       "liveMatches": "Laufende Partien",
       "noMatches": "Momentan finden keine Partien statt."
     }
+  },
+  "webDAV": {
+    "export": {
+      "export": "Daten exportieren",
+      "confirm": "Exportieren",
+      "folderName": "Export Ordnername",
+      "events": "Veranstaltungen",
+      "data": "Zu exportierende Daten",
+      "types": {
+        "registrationResults": "Meldeergebnisse",
+        "invoices": "Rechnungen",
+        "documents": "Veranstaltungsdokumente",
+        "results": "Ergebnisse",
+        "startLists": "Startlisten"
+      },
+      "error": {
+        "nameConflict": "Der eingegebene Ordnername existiert bereits. Bitte wählen Sie einen anderen Namen.",
+        "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator."
+      },
+      "success": "Export erfolgreich gestartet",
+      "status": {
+        "status": "Exportstatus",
+        "error": {
+          "title": "Fehler beim Export",
+          "body": "{{exported}} / {{total}} Dateien erfolgreich exportiert."
+        },
+        "success": {
+          "title": "Export erfolgreich",
+          "body": "{{exported}} Dateien exportiert."
+        },
+        "pending": {
+          "title": "Wird exportiert...",
+          "body": "{{exported}} / {{total}} Dateien exportiert."
+        }
+      }
+    }
   }
 }

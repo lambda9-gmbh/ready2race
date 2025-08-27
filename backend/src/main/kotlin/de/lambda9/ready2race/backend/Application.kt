@@ -96,7 +96,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                 }
             }*/
 
-            scheduleFixed("Export next file to WebDAV Server", 10.seconds) {
+            scheduleDynamic("Export next file to WebDAV Server", 10.seconds) {
                 WebDAVService.exportNext()
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
