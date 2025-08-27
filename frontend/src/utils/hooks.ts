@@ -5,12 +5,14 @@ import {GridValidRowModel} from '@mui/x-data-grid'
 import {useTranslation} from 'react-i18next'
 import {ApiError, CaptchaDto} from '@api/types.gen.ts'
 import {newCaptcha} from '@api/sdk.gen.ts'
+import {ifDefined} from '@utils/helpers.ts'
 
 type UseFetchOptions<T, E, R> = {
     mapData?: (data: T) => R
     onResponse?: (result: Awaited<RequestResult<T, E, false>>) => void
     preCondition?: () => boolean
-    onError?: (error: unknown) => void
+    onPanic?: (error: unknown) => void
+    autoReloadInterval?: number
     deps?: DependencyList
 }
 
@@ -21,19 +23,17 @@ export type FetchError<E> = {
 
 export type UseFetchReturn<T, E> = {
     reload: () => void
+    pending: boolean
 } & (
     | {
-          pending: true
           error: null
           data: null
       }
     | {
-          pending: false
           error: FetchError<E>
           data: null
       }
     | {
-          pending: false
           error: null
           data: T
       }
@@ -45,19 +45,21 @@ export const useFetch = <T, E, R = T>(
 ): UseFetchReturn<R, E> => {
     const [lastTry, setLastTry] = useState(Date.now())
     const reload = () => setLastTry(Date.now())
-    const fetchPending: UseFetchReturn<unknown, unknown> = {
+
+    const fetchInit: UseFetchReturn<R, E> = {
         reload,
-        pending: true,
+        pending: false,
         error: null,
         data: null,
     }
 
-    const [result, setResult] = useState<UseFetchReturn<R, E>>(fetchPending)
+    const [result, setResult] = useState<UseFetchReturn<R, E>>(fetchInit)
 
     useEffect(() => {
         if (options?.preCondition?.() != false) {
             const controller = new AbortController()
-            setResult(fetchPending)
+            const timer = ifDefined(options?.autoReloadInterval, i => setTimeout(reload, i))
+            setResult(prev => ({...prev, pending: true}))
             ;(async () => {
                 try {
                     const result = await req(controller.signal)
@@ -68,8 +70,7 @@ export const useFetch = <T, E, R = T>(
                             reload,
                             pending: false,
                             error: null,
-                            // @ts-ignore
-                            data: options?.mapData ? options.mapData(data) : data,
+                            data: options?.mapData ? options.mapData(data) : (data as R),
                         })
                     } else if (error !== undefined) {
                         setResult({
@@ -84,8 +85,8 @@ export const useFetch = <T, E, R = T>(
                     }
                 } catch (error) {
                     if (!controller.signal.aborted) {
-                        if (options?.onError) {
-                            options.onError(error)
+                        if (options?.onPanic) {
+                            options.onPanic(error)
                         } else {
                             throw error
                         }
@@ -95,6 +96,9 @@ export const useFetch = <T, E, R = T>(
 
             return () => {
                 controller.abort()
+                if (timer !== null) {
+                    clearTimeout(timer)
+                }
             }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

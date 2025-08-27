@@ -209,7 +209,7 @@ const EntityTableInternal = <
         ...columns.filter(c => !c.requiredPrivilege || user.checkPrivilege(c.requiredPrivilege)),
         {
             field: 'actions',
-            type: 'actions' as 'actions',
+            type: 'actions' as const,
             getActions: (params: GridRowParams<Entity>) => [
                 ...customEntityActions(params.row, user.checkPrivilege).filter(action => !!action),
                 ...(crud.update && options.entityUpdate && (editableIf?.(params.row) ?? true)
@@ -222,7 +222,10 @@ const EntityTableInternal = <
                           />,
                       ]
                     : []),
-                ...(deleteRequest && crud.delete && options.entityDelete && (deletableIf?.(params.row) ?? true)
+                ...(deleteRequest &&
+                crud.delete &&
+                options.entityDelete &&
+                (deletableIf?.(params.row) ?? true)
                     ? [
                           <GridActionsCellItem
                               icon={<Delete />}
@@ -233,11 +236,13 @@ const EntityTableInternal = <
                                       const {error} = await deleteRequest(params.row)
                                       setIsDeletingRow(false)
                                       if (error) {
-                                          onDeleteError
-                                              ? onDeleteError(error)
-                                              : feedback.error(
-                                                    t('entity.delete.error', {entity: entityName}),
-                                                )
+                                          if (onDeleteError !== undefined) {
+                                              onDeleteError(error)
+                                          } else {
+                                              feedback.error(
+                                                  t('entity.delete.error', {entity: entityName}),
+                                              )
+                                          }
                                       } else {
                                           onDelete?.()
                                           feedback.success(
