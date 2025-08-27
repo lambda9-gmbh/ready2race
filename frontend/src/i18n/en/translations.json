@@ -1390,9 +1390,18 @@
       "success": "Export successfully initiated",
       "status": {
         "status": "Export status",
-        "error": "An error has occurred while exporting. The process was aborted.",
-        "success": "Export successful",
-        "pending": "{{exported}} / {{total}} exported"
+        "error": {
+          "title": "Error during export",
+          "body": "{{exported}} / {{total}} files successfully exported."
+        },
+        "success": {
+          "title": "Export successful",
+          "body": "{{exported}} files exported."
+        },
+        "pending": {
+          "title": "Exporting...",
+          "body": "{{exported}} / {{total}} exported."
+        }
       }
     }
   }

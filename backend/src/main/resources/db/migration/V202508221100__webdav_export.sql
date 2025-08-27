@@ -8,6 +8,17 @@ create table webdav_export_process
     created_by uuid      references app_user on delete set null
 );
 
+create table webdav_export_folder
+(
+    id                    uuid primary key,
+    webdav_export_process uuid references webdav_export_process,
+    parent_folder         uuid references webdav_export_folder,
+    path                  text not null,
+    done_at               timestamp,
+    error_at              timestamp,
+    error                 text
+);
+
 create table webdav_export
 (
     id                    uuid primary key,
@@ -18,5 +29,6 @@ create table webdav_export
     path                  text not null,
     exported_at           timestamp,
     error_at              timestamp,
-    error                 text
+    error                 text,
+    parent_folder         uuid references webdav_export_folder
 );

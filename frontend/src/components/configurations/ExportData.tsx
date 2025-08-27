@@ -1,5 +1,6 @@
 import {
     Alert,
+    AlertTitle,
     Box,
     Button,
     Card,
@@ -25,6 +26,7 @@ import {useState} from 'react'
 import {WebDAVExportType} from '@api/types.gen.ts'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
+import {CrisisAlert} from '@mui/icons-material'
 
 type ExportForm = {
     name: string
@@ -36,7 +38,7 @@ const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
     'REGISTRATION_RESULTS',
     'INVOICES',
     'DOCUMENTS',
-    'RESULTS'
+    'RESULTS',
 ] as const
 
 const ExportData = () => {
@@ -85,7 +87,9 @@ const ExportData = () => {
                   ? t('webDAV.export.types.invoices')
                   : type === 'DOCUMENTS'
                     ? t('webDAV.export.types.documents')
-                    : type === 'RESULTS' ? t('webDAV.export.types.results') : '',
+                    : type === 'RESULTS'
+                      ? t('webDAV.export.types.results')
+                      : '',
     }))
 
     const formContext = useForm<ExportForm>()
@@ -188,18 +192,34 @@ const ExportData = () => {
                         .map(exportStatus => (
                             <Card key={exportStatus.processId}>
                                 <CardContent>
-                                    {exportStatus.error ? (
-                                        <Alert severity={'error'}>
-                                            {t('webDAV.export.status.error')}
-                                        </Alert>
-                                    ) : exportStatus.filesExported ===
-                                      exportStatus.totalFilesToExport ? (
-                                        <Alert severity={'success'}>
-                                            {t('webDAV.export.status.success')}
-                                        </Alert>
+                                    {exportStatus.filesExported + exportStatus.filesWithError ===
+                                    exportStatus.totalFilesToExport ? (
+                                        exportStatus.filesWithError > 0 ? (
+                                            <Alert severity={'error'}>
+                                                <AlertTitle>
+                                                    {t('webDAV.export.status.error.title')}
+                                                </AlertTitle>
+                                                {t('webDAV.export.status.error.body', {
+                                                    exported: exportStatus.filesExported,
+                                                    total: exportStatus.totalFilesToExport,
+                                                })}
+                                            </Alert>
+                                        ) : (
+                                            <Alert severity={'success'}>
+                                                <AlertTitle>
+                                                    {t('webDAV.export.status.success.title')}
+                                                </AlertTitle>
+                                                {t('webDAV.export.status.success.body', {
+                                                    exported: exportStatus.filesExported,
+                                                })}
+                                            </Alert>
+                                        )
                                     ) : (
                                         <Alert severity={'info'} icon={<Throbber />}>
-                                            {t('webDAV.export.status.pending', {
+                                            <AlertTitle>
+                                                {t('webDAV.export.status.pending.title')}
+                                            </AlertTitle>
+                                            {t('webDAV.export.status.pending.body', {
                                                 exported: exportStatus.filesExported,
                                                 total: exportStatus.totalFilesToExport,
                                             })}

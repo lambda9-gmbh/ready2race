@@ -13,5 +13,5 @@ data class WebDAVExportStatusDto (
     val exportTypes: List<WebDAVExportType>,
     val filesExported: Int,
     val totalFilesToExport: Int,
-    val error: Boolean
+    val filesWithError: Int
 )

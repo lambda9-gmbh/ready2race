@@ -26,7 +26,7 @@ fun WebdavExportProcessStatusRecord.toDto(
     events: List<String>,
     exportTypes: List<WebDAVExportType>,
     filesExported: Int,
-    error: Boolean
+    filesWithError: Int,
 ): App<Nothing, WebDAVExportStatusDto> = KIO.ok(
     WebDAVExportStatusDto(
         processId = id!!,
@@ -41,6 +41,6 @@ fun WebdavExportProcessStatusRecord.toDto(
         exportTypes = exportTypes,
         filesExported = filesExported,
         totalFilesToExport = fileExports!!.size,
-        error = error
+        filesWithError = filesWithError
     )
 )

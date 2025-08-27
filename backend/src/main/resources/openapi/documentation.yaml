@@ -10102,7 +10102,7 @@ components:
         - exportTypes
         - filesExported
         - totalFilesToExport
-        - error
+        - filesWithError
       properties:
         processId:
           type: string
@@ -10126,5 +10126,5 @@ components:
           type: integer
         totalFilesToExport:
           type: integer
-        error:
-          type: boolean
+        filesWithError:
+          type: integer

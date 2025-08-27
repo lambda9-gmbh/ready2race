@@ -1641,7 +1641,7 @@ export type WebDAVExportStatusDto = {
     exportTypes: Array<WebDAVExportType>
     filesExported: number
     totalFilesToExport: number
-    error: boolean
+    filesWithError: number
 }
 
 export type WebDAVExportType = 'INVOICES' | 'REGISTRATION_RESULTS' | 'DOCUMENTS' | 'RESULTS'

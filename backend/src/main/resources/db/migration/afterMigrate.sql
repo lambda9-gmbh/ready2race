@@ -1,6 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
 drop view if exists webdav_export_process_status;
+drop view if exists webdav_export_folder_view;
 drop view if exists app_user_for_event;
 drop view if exists competition_having_results;
 drop view if exists caterer_transaction_view;
@@ -1053,14 +1054,24 @@ where not exists(select *
                    and auhr2.app_user = au.id)
 ;
 
+create view webdav_export_folder_view as
+select wef.id,
+       wef.path,
+       wef.done_at,
+       wef.error_at,
+       wef.parent_folder  as parend_folder_id,
+       parent_wef.done_at as parent_folder_done_at
+from webdav_export_folder wef
+         left join webdav_export_folder parent_wef on wef.parent_folder = parent_wef.id;
+
 create view webdav_export_process_status as
 select wep.id,
        wep.name,
        wep.created_at,
-       au.id        as created_by_id,
-       au.firstname as created_by_firstname,
-       au.lastname  as created_by_lastname,
-       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}')   as file_exports
+       au.id                                                                     as created_by_id,
+       au.firstname                                                              as created_by_firstname,
+       au.lastname                                                               as created_by_lastname,
+       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}') as file_exports
 from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
          left join app_user au on wep.created_by = au.id
