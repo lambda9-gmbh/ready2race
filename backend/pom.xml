@@ -46,7 +46,6 @@
         <pdfbox.version>3.0.4</pdfbox.version>
         <opencsv.version>5.11.2</opencsv.version>
         <poi.version>5.4.1</poi.version>
-        <okhttp.version>4.12.0</okhttp.version>
     </properties>
     <dependencies>
         <dependency>
@@ -127,6 +126,16 @@
         <dependency>
             <groupId>io.ktor</groupId>
             <artifactId>ktor-server-netty-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-core-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-cio-jvm</artifactId>
             <version>${ktor.version}</version>
         </dependency>
         <dependency>
@@ -257,12 +266,6 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>${okhttp.version}</version>
         </dependency>
 
 

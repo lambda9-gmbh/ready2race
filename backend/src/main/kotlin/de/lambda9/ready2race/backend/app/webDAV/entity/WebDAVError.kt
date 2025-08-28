@@ -44,6 +44,6 @@ sealed interface WebDAVError {
 
     data object Unexpected : WebDavInternExternError("An unexpected error has occurred. This is most likely a network issue.")
     data object ConfigIncomplete : WebDavInternExternError("The config env file does not include the necessary WebDAV information.")
-    data class CannotMakeFolder(val folderPath: String) : WebDavInternExternError("An error has occurred when creating new folder on the WebDAV Server. Folder path $folderPath")
+    data class CannotMakeFolder(val folderPath: String) : WebDavInternExternError("An error has occurred when creating a new folder on the WebDAV Server. Folder path $folderPath")
     data object ConfigUnparsable : WebDavInternExternError("An unexpected error has occurred. The specified WebDAV adress could not be parsed.")
 }

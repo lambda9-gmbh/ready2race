@@ -1398,7 +1398,8 @@
         },
         "success": {
           "title": "Export successful",
-          "body": "{{exported}} files exported."
+          "body_one": "{{count}} file exported.",
+          "body_other": "{{count}} files exported."
         },
         "pending": {
           "title": "Exporting...",

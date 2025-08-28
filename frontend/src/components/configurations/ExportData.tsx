@@ -230,7 +230,7 @@ const ExportData = () => {
                                                     {t('webDAV.export.status.success.title')}
                                                 </AlertTitle>
                                                 {t('webDAV.export.status.success.body', {
-                                                    exported: exportStatus.filesExported,
+                                                    count: exportStatus.filesExported,
                                                 })}
                                             </Alert>
                                         )

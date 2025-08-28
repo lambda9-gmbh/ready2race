@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.webDAV.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.initializeExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
@@ -16,7 +17,7 @@ fun Route.webDAV() {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
 
                     val body = !receiveKIO(WebDAVExportRequest.example)
-                    WebDAVService.initializeExportData(body, user.id!!)
+                    initializeExportData(body, user.id!!)
                 }
             }
             get{
@@ -25,14 +26,6 @@ fun Route.webDAV() {
 
                     WebDAVService.getExportStatus()
                 }
-            }
-        }
-        route("/import"){
-            get{
-                // todo: get available data-sets from the webDAV endpoint
-            }
-            post {
-                // todo: load data from webDAV endpoint into this application
             }
         }
     }
