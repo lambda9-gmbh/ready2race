@@ -3,8 +3,6 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
-import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationError.IsLocked
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto

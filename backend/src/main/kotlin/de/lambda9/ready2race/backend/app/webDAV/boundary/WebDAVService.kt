@@ -14,7 +14,6 @@ import de.lambda9.ready2race.backend.app.results.boundary.ResultsService
 import de.lambda9.ready2race.backend.app.results.control.ResultsRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
-import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.config.Config
@@ -98,7 +97,7 @@ object WebDAVService {
             }
 
 
-            val client = OkHttpClient();
+            val client = OkHttpClient()
             val authHeader = getAuthHeader(config.webDAV)
 
             val checkFolderUrl = !buildUrl(
