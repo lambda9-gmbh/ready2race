@@ -130,10 +130,8 @@ object WebDAVService {
 
             // GET FILES
 
-            // todo start_lists ??
             // todo document_templates ? - maybe as json with the properties as well
 
-            // todo: ?? handle case where files are not yet generated for the event
             val eventRegistrationIds =
                 if (request.selectedResources.any { it == WebDAVExportType.REGISTRATION_RESULTS }) {
                     !EventRegistrationReportRepo.getExistingEventIds(events.keys.toList()).orDie()
@@ -381,9 +379,10 @@ object WebDAVService {
                         }
 
                 WebDAVExportType.START_LISTS.name ->
-                    !CompetitionExecutionService.downloadStartlist(
+                    !CompetitionExecutionService.getStartList(
                         matchId = exportRecord.dataReference!!,
-                        type = StartListFileType.PDF
+                        startListType = StartListFileType.PDF,
+                        startTimeRequired = false
                     ).mapError {
                         !setFileNotFoundError("Failed to generate document").orDie()
                         WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)

@@ -16,7 +16,7 @@ data class CompetitionMatchData(
     val matchName: String?,
     val roundName: String,
     val order: Int,
-    val startTime: LocalDateTime,
+    val startTime: LocalDateTime?,
     val startTimeOffset: Long?,
     val competition: CompetitionData,
     val teams: List<CompetitionMatchTeam>,
@@ -67,7 +67,7 @@ data class CompetitionMatchData(
                 matchName = persisted.name,
                 roundName = persisted.roundName!!,
                 order = persisted.executionOrder!!,
-                startTime = persisted.startTime!!,
+                startTime = persisted.startTime,
                 startTimeOffset = persisted.startTimeOffset,
                 competition = CompetitionData(
                     identifier = persisted.competitionIdentifier!!,

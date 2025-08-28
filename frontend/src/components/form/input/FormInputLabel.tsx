@@ -11,7 +11,7 @@ type Props = {
 const FormInputLabel = (props: PropsWithChildren<Props>) => {
     const {t} = useTranslation()
 
-    return (
+    return props.label ? (
         <label
             style={
                 props.horizontal
@@ -41,7 +41,7 @@ const FormInputLabel = (props: PropsWithChildren<Props>) => {
             </Box>
             {props.children}
         </label>
-    )
+    ) : <>{props.children}</>
 }
 
 export default FormInputLabel

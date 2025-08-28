@@ -1066,6 +1066,7 @@
     "userRoles": "Benutzerrollen",
     "name": "Name",
     "description": "Beschreibung",
+    "rights": "Rechte",
     "error": {
       "cannotAssign": "Rolle(n) konnte(n) dem Benutzer nicht zugewiesen werden"
     }

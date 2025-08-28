@@ -1066,6 +1066,7 @@
     "userRoles": "User Roles",
     "name": "Name",
     "description": "Description",
+    "rights": "Rights",
     "error": {
       "cannotAssign": "Role(s) could not be assigned to the user"
     }

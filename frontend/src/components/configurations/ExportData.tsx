@@ -15,9 +15,8 @@ import {
     Typography,
 } from '@mui/material'
 import BaseDialog from '@components/BaseDialog.tsx'
-import {FormContainer, MultiSelectElement, useForm} from 'react-hook-form-mui'
+import {FormContainer, useForm} from 'react-hook-form-mui'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
-import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -27,6 +26,7 @@ import {useState} from 'react'
 import {WebDAVExportType} from '@api/types.gen.ts'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
+import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
 
 type ExportForm = {
     name: string
@@ -111,7 +111,7 @@ const ExportData = () => {
                         : '',
     }))
 
-    const formContext = useForm<ExportForm>()
+    const formContext = useForm<ExportForm>({})
 
     const [submitting, setSubmitting] = useState(false)
 
@@ -175,24 +175,24 @@ const ExportData = () => {
                                 required
                                 label={t('webDAV.export.folderName')}
                             />
-                            <FormInputLabel label={t('webDAV.export.events')} required>
-                                <MultiSelectElement
-                                    name={'selectedEvents'}
-                                    options={eventOptions}
-                                    showCheckbox
-                                    showChips
-                                    formControlProps={{sx: {width: 1}}}
-                                />
-                            </FormInputLabel>
-                            <FormInputLabel label={t('webDAV.export.data')} required>
-                                <MultiSelectElement
-                                    name={'selectedResources'}
-                                    options={webDavExportTypes}
-                                    showCheckbox
-                                    showChips
-                                    formControlProps={{sx: {width: 1}}}
-                                />
-                            </FormInputLabel>
+                            <FormInputMultiselect
+                                name={'selectedEvents'}
+                                label={t('webDAV.export.events')}
+                                options={eventOptions}
+                                showCheckbox
+                                showChips
+                                required
+                                fullWidth
+                            />
+                            <FormInputMultiselect
+                                name={'selectedResources'}
+                                label={t('webDAV.export.data')}
+                                options={webDavExportTypes}
+                                showCheckbox
+                                showChips
+                                required
+                                fullWidth
+                            />
                         </Stack>
                     </DialogContent>
                     <DialogActions>

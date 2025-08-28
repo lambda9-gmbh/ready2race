@@ -1,6 +1,6 @@
-import {MultiSelectElement} from 'react-hook-form-mui'
 import {RoleDto} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
+import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
 
 type Props = {
     availableRoles?: Array<RoleDto>
@@ -9,7 +9,7 @@ type Props = {
 const RolesSelect = (props: Props) => {
     const {t} = useTranslation()
     return (
-        <MultiSelectElement
+        <FormInputMultiselect
             name={'roles'}
             label={t('role.roles')}
             options={
@@ -28,11 +28,9 @@ const RolesSelect = (props: Props) => {
                         label: r.name,
                     })) ?? []
             }
-            itemKey={'id'}
-            itemValue={'id'}
-            itemLabel={'label'}
-            showCheckbox={true}
-            showChips={true}
+            showCheckbox
+            showChips
+            fullWidth
         />
     )
 }
