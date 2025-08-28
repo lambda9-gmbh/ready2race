@@ -130,7 +130,7 @@ object WebDAVService {
 
             // GET FILES
 
-            // todo document_templates ? - maybe as json with the properties as well
+            // todo export different templates as documents ? - maybe as json
 
             val eventRegistrationIds =
                 if (request.selectedResources.any { it == WebDAVExportType.REGISTRATION_RESULTS }) {
@@ -524,7 +524,7 @@ object WebDAVService {
                 !records.traverse { record ->
                     val fileExports = record.fileExports!!.filterNotNull()
 
-                    val events = fileExports.groupBy { it.eventName }.keys.toList() // TODO EVENT NAME MUST BE UNIQUE
+                    val events = fileExports.groupBy { it.eventName }.keys.toList()
                     val exportTypes = fileExports
                         .groupBy { it.documentType }.keys.toList()
                         .map { WebDAVExportType.valueOf(it) }
