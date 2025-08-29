@@ -1636,7 +1636,7 @@ export type WebDAVExportStatusDto = {
     processId: string
     exportFolderName: string
     exportInitializedAt: string
-    exportInitializedBy: AppUserNameDto
+    exportInitializedBy?: AppUserNameDto
     events: Array<string>
     exportTypes: Array<WebDAVExportType>
     filesExported: number

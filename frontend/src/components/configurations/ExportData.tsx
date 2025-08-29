@@ -293,10 +293,12 @@ const ExportData = () => {
                                                     t('format.datetime'),
                                                 )}
                                             </Typography>
-                                            <Typography variant={'subtitle2'}>
-                                                {exportStatus.exportInitializedBy.firstname}{' '}
-                                                {exportStatus.exportInitializedBy.lastname}
-                                            </Typography>
+                                            {exportStatus.exportInitializedBy && (
+                                                <Typography variant={'subtitle2'}>
+                                                    {exportStatus.exportInitializedBy.firstname}{' '}
+                                                    {exportStatus.exportInitializedBy.lastname}
+                                                </Typography>
+                                            )}
                                         </Box>
                                     </Box>
                                 </CardContent>

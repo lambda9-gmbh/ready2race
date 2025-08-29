@@ -10098,7 +10098,6 @@ components:
         - processId
         - exportFolderName
         - exportInitializedAt
-        - exportInitializedBy
         - events
         - exportTypes
         - filesExported

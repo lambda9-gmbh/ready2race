@@ -1082,11 +1082,9 @@ create view webdav_export_process_status as
 select wep.id,
        wep.name,
        wep.created_at,
-       au.id                                                                     as created_by_id,
-       au.firstname                                                              as created_by_firstname,
-       au.lastname                                                               as created_by_lastname,
+       cb                                                                        as created_by,
        coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}') as file_exports
 from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
-         left join app_user au on wep.created_by = au.id
-group by wep.id, wep.name, wep.created_at, au.id, au.firstname, au.lastname;
+         left join app_user_name cb on wep.created_by = cb.id
+group by wep.id, wep.name, wep.created_at, cb;

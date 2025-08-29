@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.webDAV.control
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.appuser.control.toDto
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportStatusDto
@@ -27,20 +28,18 @@ fun WebdavExportProcessStatusRecord.toDto(
     exportTypes: List<WebDAVExportType>,
     filesExported: Int,
     filesWithError: Int,
-): App<Nothing, WebDAVExportStatusDto> = KIO.ok(
-    WebDAVExportStatusDto(
+): App<Nothing, WebDAVExportStatusDto> = KIO.comprehension {
+    val createdByDto = createdBy?.let { !it.toDto() }
+
+    KIO.ok(WebDAVExportStatusDto(
         processId = id!!,
         exportFolderName = name!!,
         exportInitializedAt = createdAt!!,
-        exportInitializedBy = AppUserNameDto(
-            id = createdById!!,
-            firstname = createdByFirstname!!,
-            lastname = createdByLastname!!,
-        ),
+        exportInitializedBy = createdByDto,
         events = events,
         exportTypes = exportTypes,
         filesExported = filesExported,
         totalFilesToExport = fileExports!!.size,
         filesWithError = filesWithError
-    )
-)
+    ))
+}
