@@ -23,7 +23,7 @@ sealed class Privilege(
         APP_EVENT_REQUIREMENT,
         APP_QR_MANAGEMENT,
         APP_COMPETITION_CHECK,
-        APP_CATERER
+        APP_CATERER,
     }
 
     enum class Scope(val level: Int) {

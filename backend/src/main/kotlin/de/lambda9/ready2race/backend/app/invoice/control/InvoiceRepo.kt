@@ -2,20 +2,13 @@ package de.lambda9.ready2race.backend.app.invoice.control
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.generated.tables.InvoiceForEventRegistration
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceForEventRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.InvoiceRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_INVOICES_INFO
-import de.lambda9.ready2race.backend.database.generated.tables.references.INVOICE
-import de.lambda9.ready2race.backend.database.generated.tables.references.INVOICE_DOWNLOAD
-import de.lambda9.ready2race.backend.database.generated.tables.references.INVOICE_FOR_EVENT_REGISTRATION
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.selectOne
-import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -35,6 +28,8 @@ object InvoiceRepo {
     fun getClubForRegistration(id: UUID) = INVOICE_FOR_EVENT_REGISTRATION.selectOne({ CLUB }) { ID.eq(id) }
 
     fun getEventInvoicesInfo(eventId: UUID) = EVENT_INVOICES_INFO.selectOne { EVENT.eq(eventId) }
+
+    fun getByEvents(eventIds: List<UUID>) = INVOICE_DOWNLOAD_FOR_EVENT.select { EVENT.`in`(eventIds) }
 
     fun count(
         search: String?,

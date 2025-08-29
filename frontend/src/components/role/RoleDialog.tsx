@@ -1,6 +1,6 @@
 import EntityDialog from '@components/EntityDialog.tsx'
 import {BaseEntityDialogProps} from '@utils/types.ts'
-import {MultiSelectElement, useForm} from 'react-hook-form-mui'
+import {useForm} from 'react-hook-form-mui'
 import {useCallback} from 'react'
 import {Stack} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
@@ -10,6 +10,7 @@ import {RoleDto, RoleRequest} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks.ts'
 import {scopeLevel} from '@utils/helpers.ts'
+import FormInputMultiselect from "@components/form/input/FormInputMultiselect.tsx";
 
 type RoleForm = {
     name: string
@@ -68,9 +69,9 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
             <Stack spacing={4}>
                 <FormInputText name={'name'} label={t('role.name')} required />
                 <FormInputText name={'description'} label={t('role.description')} />
-                <MultiSelectElement
+                <FormInputMultiselect
                     name={'privileges'}
-                    label={'Rechte'}
+                    label={t('role.rights')}
                     options={
                         data
                             ?.sort((a, b) => {
@@ -98,11 +99,8 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
                                 label: p.action + '.' + p.resource + '.' + p.scope,
                             })) ?? []
                     }
-                    itemKey={'id'}
-                    itemValue={'id'}
-                    itemLabel={'label'}
-                    showCheckbox={true}
-                    showChips={true}
+                    showCheckbox
+                    showChips
                 />
             </Stack>
         </EntityDialog>

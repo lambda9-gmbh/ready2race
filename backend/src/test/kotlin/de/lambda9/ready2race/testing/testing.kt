@@ -91,6 +91,13 @@ private object TestRunner {
             admin = Config.Admin(
                 email = "admin",
                 password = "admin",
+            ),
+            webDAV = Config.WebDAV(
+                urlScheme = "https",
+                host = "localhost",
+                path = "",
+                authUser = "admin",
+                authPassword = "admin",
             )
         )
 

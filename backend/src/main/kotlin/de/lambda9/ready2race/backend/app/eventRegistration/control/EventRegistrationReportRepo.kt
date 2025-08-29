@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegi
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION_REPORT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION_REPORT_DOWNLOAD
 import de.lambda9.ready2race.backend.database.insertReturning
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import java.util.UUID
 
@@ -13,6 +14,10 @@ object EventRegistrationReportRepo {
     fun create(record: EventRegistrationReportRecord) = EVENT_REGISTRATION_REPORT.insertReturning(record) { EVENT }
 
     fun getDownload(eventId: UUID) = EVENT_REGISTRATION_REPORT_DOWNLOAD.selectOne { EVENT.eq(eventId) }
+
+    fun getDownloads(eventIds: List<UUID>) = EVENT_REGISTRATION_REPORT_DOWNLOAD.select { EVENT.`in`(eventIds) }
+
+    fun getExistingEventIds(eventIds: List<UUID>) = EVENT_REGISTRATION_REPORT.select({ EVENT }) { EVENT.`in`(eventIds) }
 
     fun delete(eventId: UUID) = EVENT_REGISTRATION_REPORT.delete { EVENT.eq(eventId) }
 

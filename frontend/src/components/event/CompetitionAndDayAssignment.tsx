@@ -11,7 +11,7 @@ import {
 } from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {FormContainer, MultiSelectElement, useForm} from 'react-hook-form-mui'
+import {FormContainer, useForm} from 'react-hook-form-mui'
 import {AutocompleteOption} from '@utils/types.ts'
 import {eventRoute} from '@routes'
 import {useState} from 'react'
@@ -22,6 +22,7 @@ import {updateEventGlobal} from '@authorization/privileges.ts'
 import {Link} from '@tanstack/react-router'
 import InputIcon from '@mui/icons-material/Input'
 import BaseDialog from '@components/BaseDialog.tsx'
+import FormInputMultiselect from "@components/form/input/FormInputMultiselect.tsx";
 
 type AssignmentForm = {
     selected: string[]
@@ -151,12 +152,12 @@ const CompetitionAndDayAssignment = ({competitionsToDay, ...props}: Props) => {
                 </DialogTitle>
                 <FormContainer formContext={formContext} onSuccess={onSubmit}>
                     <DialogContent dividers>
-                        <MultiSelectElement
+                        <FormInputMultiselect
                             name={'selected'}
                             options={[...props.options]}
                             showCheckbox
                             showChips
-                            formControlProps={{sx: {width: 1}}}
+                            fullWidth
                         />
                     </DialogContent>
                     <DialogActions>

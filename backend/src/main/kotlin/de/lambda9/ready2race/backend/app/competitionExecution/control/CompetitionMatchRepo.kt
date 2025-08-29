@@ -240,4 +240,6 @@ object CompetitionMatchRepo {
             )
         }
     }
+
+    fun getMatchForEventByEvents(eventIds: List<UUID>) = COMPETITION_MATCH_FOR_EVENT.select{ EVENT_ID.`in`(eventIds) }
 }
