@@ -30,6 +30,4 @@ fun <R, E, A> KIO<R, E, A?>.onNullDie(notNullReason: String): KIO<R, E, A> =
         KIO.halt(Cause.panic(NullPointerException("Expected non-null value was in fact NULL. It should not be null, because: $notNullReason")))
     }
 
-fun <A> Task<A>.unwrap(): A = orDie().unsafeRunSync().getOrThrow()
-
 fun <R, E, A> KIO<R, E, A>.discard(): KIO<R, E, Unit> = map {}
