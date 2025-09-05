@@ -4,8 +4,12 @@
 
 ### Dependencies
 - docker compose
+- JAVA JDK >= 17
 
 ### Building
+
+Before building, make you are using a JAVA JDK version, that is not higher than the JAVA JRE version on your target server.
+
 To build the backend `.jar`-File, you have to boot a local postgres database container via docker compose and run the
 Maven-Wrapper. Run these commands :
 ```shell
