@@ -1,5 +1,23 @@
 # Ready2Race Frontend
 
+## Installation
+
+### Dependencies
+- npm
+
+### Building
+Before building, you need to provide a `.env` including the URL to your Backend API. You can copy template.env and fill
+in the missing values.\
+To build the frontend, you just have to run the following commands:
+```shell
+$ npm i
+$ npm run build
+```
+This should generate a `/dist` directory including all files for serving your frontend application.
+
+## Running
+Serve the generated files in the `/dist` directory.
+
 ## Contributing
 
 ### Code format
