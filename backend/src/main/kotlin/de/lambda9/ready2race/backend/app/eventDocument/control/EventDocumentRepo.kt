@@ -42,23 +42,15 @@ object EventDocumentRepo {
         }
     }
 
-    fun getDownload(
-        id: UUID,
-    ): JIO<EventDocumentDownloadRecord?> = Jooq.query {
-        with(EVENT_DOCUMENT_DOWNLOAD) {
-            selectFrom(this)
-                .where(ID.eq(id))
-                .fetchOne()
-        }
-    }
+    fun getDownload(id: UUID): JIO<EventDocumentDownloadRecord?> = EVENT_DOCUMENT_DOWNLOAD.selectOne { ID.eq(id) }
 
-    fun getDownloadsByEvent(
-        eventId: UUID,
-    ): JIO<List<EventDocumentDownloadRecord>> = Jooq.query {
-        with(EVENT_DOCUMENT_DOWNLOAD) {
-            selectFrom(this)
-                .where(EVENT.eq(eventId))
-                .fetch()
-        }
-    }
+    fun getDownloadsByEvent(eventId: UUID): JIO<List<EventDocumentDownloadRecord>> =
+        EVENT_DOCUMENT_DOWNLOAD.select { EVENT.eq(eventId) }
+
+
+    fun getDownloadsByEvents(
+        eventIds: List<UUID>,
+    ): JIO<List<EventDocumentDownloadRecord>> = EVENT_DOCUMENT_DOWNLOAD.select { EVENT.`in`(eventIds) }
+
+    fun getByEventIds(eventIds: List<UUID>) = EVENT_DOCUMENT.select { EVENT.`in`(eventIds) }
 }

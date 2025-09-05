@@ -14,17 +14,16 @@ import de.lambda9.ready2race.backend.app.results.entity.CompetitionHavingResults
 import de.lambda9.ready2race.backend.app.results.entity.EventResultData
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
-import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.fileResponse
 import de.lambda9.ready2race.backend.calls.responses.pageResponse
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
-import de.lambda9.ready2race.backend.pdf.elements.table.TableBuilder
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -64,7 +63,7 @@ object ResultsService {
 
     fun generateResultsDocument(
         eventId: UUID,
-    ): App<ServiceError, FileUpload> = KIO.comprehension {
+    ): App<ServiceError, File> = KIO.comprehension {
 
         val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
@@ -173,8 +172,8 @@ object ResultsService {
         val bytes = buildPdf(EventResultData(event.name, competitionsData), null)
 
         KIO.ok(
-            FileUpload(
-                fileName = "results-${event.name}.pdf",
+            File(
+                name = "results-${event.name}.pdf",
                 bytes = bytes,
             )
         )

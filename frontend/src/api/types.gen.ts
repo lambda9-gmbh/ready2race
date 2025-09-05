@@ -1626,6 +1626,31 @@ export type VerifyRegistrationRequest = {
     token: string
 }
 
+export type WebDAVExportRequest = {
+    name: string
+    events: Array<string>
+    selectedResources: Array<WebDAVExportType>
+}
+
+export type WebDAVExportStatusDto = {
+    processId: string
+    exportFolderName: string
+    exportInitializedAt: string
+    exportInitializedBy?: AppUserNameDto
+    events: Array<string>
+    exportTypes: Array<WebDAVExportType>
+    filesExported: number
+    totalFilesToExport: number
+    filesWithError: number
+}
+
+export type WebDAVExportType =
+    | 'INVOICES'
+    | 'REGISTRATION_RESULTS'
+    | 'DOCUMENTS'
+    | 'RESULTS'
+    | 'START_LISTS'
+
 export type WorkShiftUpsertDto = {
     workType: string
     timeFrom: string
@@ -4632,3 +4657,15 @@ export type GetCompetitionsHavingResultsError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type ExportDataByWebDavData = {
+    body: WebDAVExportRequest
+}
+
+export type ExportDataByWebDavResponse = void
+
+export type ExportDataByWebDavError = BadRequestError | ApiError
+
+export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
+
+export type GetWebDavExportStatusError = BadRequestError | ApiError

@@ -33,28 +33,28 @@ import {useNavigate} from '@tanstack/react-router'
 // TODO: @Improve, @Discussion: Maybe extract TabContents into several Components
 import DocumentTemplateTable from '@components/documentTemplate/DocumentTemplateTable.tsx'
 import DocumentTemplateDialog from '@components/documentTemplate/DocumentTemplateDialog.tsx'
-import AssignDocumentTemplate from '@components/documentTemplate/AssignDocumentTemplate.tsx'
 import InlineLink from '@components/InlineLink.tsx'
 import CompetitionSetupTemplateTable from '@components/event/competition/setup/template/CompetitionSetupTemplateTable.tsx'
 import CompetitionSetupTemplateDialog from '@components/event/competition/setup/template/CompetitionSetupTemplateDialog.tsx'
 import BankAccountTable from '@components/bankAccount/BankAccountTable.tsx'
 import BankAccountDialog from '@components/bankAccount/BankAccountDialog.tsx'
-import AssignBankAccount from '@components/bankAccount/AssignBankAccount.tsx'
 import ContactInformationTable from '@components/contactInformation/ContactInformationTable.tsx'
 import ContactInformationDialog from '@components/contactInformation/ContactInformationDialog.tsx'
-import AssignContactInformation from '@components/contactInformation/AssignContactInformation.tsx'
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
 import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
 import {a11yProps} from "@utils/helpers.ts";
 import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
 import MatchResultImportConfigPanel from "@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx";
+import GlobalConfigurationsTab from "@components/configurations/GlobalConfigurationsTab.tsx";
+import ExportData from "@components/configurations/ExportData.tsx";
 
 const CONFIGURATION_TABS = [
     'competition-templates',
     'competition-elements',
     'event-elements',
     'global-settings',
+    'export-data',
 ] as const
 export type ConfigurationTab = (typeof CONFIGURATION_TABS)[number]
 
@@ -129,6 +129,10 @@ const ConfigurationPage = () => {
                 <Tab
                     label={t('configuration.tabs.globalSettings')}
                     {...tabProps('global-settings')}
+                />
+                <Tab
+                    label={t('configuration.tabs.exportData')}
+                    {...tabProps('export-data')}
                 />
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>
@@ -241,11 +245,10 @@ const ConfigurationPage = () => {
                 </Stack>
             </TabPanel>
             <TabPanel index={'global-settings'} activeTab={activeTab}>
-                <Stack spacing={2}>
-                    <AssignDocumentTemplate />
-                    <AssignBankAccount />
-                    <AssignContactInformation />
-                </Stack>
+                <GlobalConfigurationsTab/>
+            </TabPanel>
+            <TabPanel index={'export-data'} activeTab={activeTab}>
+                <ExportData/>
             </TabPanel>
         </Stack>
     )

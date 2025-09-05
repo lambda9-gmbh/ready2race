@@ -153,7 +153,7 @@ const InvoicesTabPanel = ({activeTab, event, reloadEvent}: Props) => {
                         </>,
                         <>
                             {t('invoice.tableHint.5')}
-                            <InlineLink to={'/config'} search={{tab: 'event-elements'}}>
+                            <InlineLink to={'/config'} search={{tab: 'global-settings'}}>
                                 {t('invoice.tableHint.6')}
                             </InlineLink>
                             {t('invoice.tableHint.7')}

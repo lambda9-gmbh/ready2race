@@ -17,9 +17,9 @@ import de.lambda9.ready2race.backend.app.eventDocumentType.entity.EventDocumentT
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentRecord
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.tailwind.core.KIO
@@ -48,7 +48,7 @@ object EventDocumentService {
 
     fun saveDocuments(
         eventId: UUID,
-        uploads: List<FileUpload>,
+        uploads: List<File>,
         documentTypeId: UUID?,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {

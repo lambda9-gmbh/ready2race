@@ -19,4 +19,8 @@ object ResultsRepo {
         eventId: UUID,
         params: PaginationParameters<CompetitionHavingResultsSort>,
     ) = COMPETITION_HAVING_RESULTS.page(params, { searchFields() }) { EVENT.eq(eventId) }
+
+    fun getEventsHavingResultsByEventIds(
+        eventIds: List<UUID>,
+    ) = COMPETITION_HAVING_RESULTS.select({EVENT}) { EVENT.`in`(eventIds) }
 }

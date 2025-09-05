@@ -10,10 +10,14 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.database.initializeDatabase
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.DynamicIntervalJobState
 import de.lambda9.ready2race.backend.schedule.Scheduler
+import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
+import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import io.github.cdimascio.dotenv.dotenv
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -93,6 +97,34 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                     logger.info { "${"sent email".count(it)} deleted" }
                 }
             }*/
+
+            scheduleDynamic("Export next file to WebDAV Server", 10.seconds) {
+                WebDAVService.exportNext(env)
+                    .map { DynamicIntervalJobState.Processed }
+                    .recoverDefault { error ->
+                        when (error) {
+                            WebDAVError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete")
+                            WebDAVError.ConfigUnparsable -> DynamicIntervalJobState.Fatal("WebDAV config could not be parsed")
+                            WebDAVError.NoFilesToExport -> DynamicIntervalJobState.Empty
+                            is WebDAVError.CannotMakeFolder -> {
+                                logger.warn { error.message }
+                                DynamicIntervalJobState.Processed
+                            }
+                            is WebDAVError.FileNotFound ->{
+                                logger.warn { "Error on exporting file. ExportId: ${error.exportId}; ReferencedFileId: ${error.referenceId}" }
+                                DynamicIntervalJobState.Processed
+                            }
+                            is WebDAVError.CannotTransferFile -> {
+                                logger.warn { "Third party error on WebDAV Export ${error.exportId}: ${error.errorMsg}" }
+                                DynamicIntervalJobState.Processed
+                            }
+                            WebDAVError.Unexpected -> {
+                                logger.warn { "An unexpected error has occurred on export" }
+                                DynamicIntervalJobState.Processed
+                            }
+                        }
+                    }
+            }
 
             scheduleFixed("Delete expired session tokens", 5.minutes) {
                 AuthService.deleteExpiredTokens().map {

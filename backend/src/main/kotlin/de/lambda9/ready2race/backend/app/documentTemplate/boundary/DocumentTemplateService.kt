@@ -14,13 +14,13 @@ import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceData
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.DocumentTemplateUsageRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDocumentTemplateUsageRecord
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -393,11 +393,11 @@ object DocumentTemplateService {
     }
 
     fun addTemplate(
-        upload: FileUpload,
+        upload: File,
         request: DocumentTemplateRequest,
     ): App<Nothing, ApiResponse.NoData> = KIO.comprehension {
 
-        val record = !request.toRecord(upload.fileName)
+        val record = !request.toRecord(upload.name)
 
         val id = !DocumentTemplateRepo.create(record).orDie()
         !DocumentTemplateDataRepo.create(

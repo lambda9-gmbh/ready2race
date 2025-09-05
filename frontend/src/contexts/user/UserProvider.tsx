@@ -74,7 +74,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 setReady(true)
             }
         },
-        onError: error => {
+        onPanic: error => {
             setError(`${error}`)
         },
     })

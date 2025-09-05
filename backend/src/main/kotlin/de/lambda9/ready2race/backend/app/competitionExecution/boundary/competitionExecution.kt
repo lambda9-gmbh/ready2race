@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.xls.checkValidXls
@@ -103,7 +104,7 @@ fun Route.competitionExecution() {
 
                     val multiPartData = receiveMultipart()
 
-                    var upload: FileUpload? = null
+                    var upload: File? = null
                     var request: UploadMatchResultRequest? = null
 
                     var done = false
@@ -115,7 +116,7 @@ fun Route.competitionExecution() {
                             when (part) {
                                 is PartData.FileItem -> {
                                     if (upload == null) {
-                                        upload = FileUpload(
+                                        upload = File(
                                             part.originalFileName!!,
                                             part.provider().toByteArray(),
                                         )

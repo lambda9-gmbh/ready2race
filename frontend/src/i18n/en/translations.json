@@ -624,7 +624,7 @@
           }
         },
         "startList": {
-          "download": "Download start list",
+          "download": "Download start-list",
           "dialog": {
             "title": "Select configuration",
             "config": "Configuration",
@@ -1066,6 +1066,7 @@
     "userRoles": "User Roles",
     "name": "Name",
     "description": "Description",
+    "rights": "Rights",
     "error": {
       "cannotAssign": "Role(s) could not be assigned to the user"
     }
@@ -1076,7 +1077,8 @@
       "competitionTemplates": "Competition templates",
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
-      "globalSettings": "Global settings"
+      "globalSettings": "Global settings",
+      "exportData": "Export data"
     },
     "ratingCategory": {
       "ratingCategory": "Rating category",
@@ -1367,6 +1369,43 @@
     "liveMatches": {
       "liveMatches": "Currently running matches",
       "noMatches": "There are no matches currently taking place."
+    }
+  },
+  "webDAV": {
+    "export": {
+      "export": "Export data",
+      "confirm": "Export",
+      "folderName": "Export folder name",
+      "events": "Events",
+      "data": "Data to export",
+      "types": {
+        "registrationResults": "Registration Results",
+        "invoices": "Invoices",
+        "documents": "Event documents",
+        "results": "Results",
+        "startLists": "Start-lists"
+      },
+      "error": {
+        "nameConflict": "The folder name you entered already exists. Please choose a different name.",
+        "thirdPartyError": "The external WebDAV server has reported an error. Please contact the administrator."
+      },
+      "success": "Export successfully initiated",
+      "status": {
+        "status": "Export status",
+        "error": {
+          "title": "Error during export",
+          "body": "{{exported}} / {{total}} files successfully exported."
+        },
+        "success": {
+          "title": "Export successful",
+          "body_one": "{{count}} file exported.",
+          "body_other": "{{count}} files exported."
+        },
+        "pending": {
+          "title": "Exporting...",
+          "body": "{{exported}} / {{total}} exported."
+        }
+      }
     }
   }
 }

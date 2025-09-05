@@ -5548,6 +5548,52 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /webDAV/export:
+    post:
+      operationId: exportDataByWebDAV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebDAVExportRequest'
+      responses:
+        204:
+          description: Data successfully exported
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+    get:
+      operationId: getWebDAVExportStatus
+      responses:
+        200:
+          description: WebDAV Status successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebDAVExportStatusDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -5722,6 +5768,13 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
 
+    502:
+      description: Bad Gateway
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
 
     409EmailInUse:
       description: Conflict
@@ -5808,6 +5861,16 @@ components:
         - 'REGULAR'
         - 'LATE'
         - 'CLOSED'
+
+    WebDAVExportType:
+      type: string
+      enum:
+        - 'INVOICES'
+        - 'REGISTRATION_RESULTS'
+        - 'DOCUMENTS'
+        - 'RESULTS'
+        - 'START_LISTS'
+
 
     # error
 
@@ -10008,3 +10071,60 @@ components:
           format: uuid
         qrCodeId:
           type: string
+
+
+    WebDAVExportRequest:
+      type: object
+      required:
+        - name
+        - events
+        - selectedResources
+      properties:
+        name:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+            format: uuid
+        selectedResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'
+
+    WebDAVExportStatusDto:
+      type: object
+      required:
+        - processId
+        - exportFolderName
+        - exportInitializedAt
+        - events
+        - exportTypes
+        - filesExported
+        - totalFilesToExport
+        - filesWithError
+      properties:
+        processId:
+          type: string
+          format: uuid
+        exportFolderName:
+          type: string
+        exportInitializedAt:
+          type: string
+          format: date-time
+        exportInitializedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        events:
+          type: array
+          items:
+            type: string
+        exportTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'
+        filesExported:
+          type: integer
+        totalFilesToExport:
+          type: integer
+        filesWithError:
+          type: integer

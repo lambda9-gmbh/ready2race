@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentReque
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
@@ -30,7 +31,7 @@ fun Route.eventDocument() {
 		        Please refer to 'flow' documentation or use 'flowOn' instead
             * */
 
-            val uploads = mutableListOf<FileUpload>()
+            val uploads = mutableListOf<File>()
             var documentType: String? = null
 
             var done = false
@@ -42,7 +43,7 @@ fun Route.eventDocument() {
                     when (part) {
                         is PartData.FileItem -> {
                             uploads.add(
-                                FileUpload(
+                                File(
                                     part.originalFileName!!,
                                     part.provider().toByteArray(),
 

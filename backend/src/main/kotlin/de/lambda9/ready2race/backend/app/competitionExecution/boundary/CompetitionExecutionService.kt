@@ -3,8 +3,6 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionDeregistration.control.CompetitionDeregistrationRepo
-import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationError.IsLocked
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
@@ -28,13 +26,13 @@ import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
-import de.lambda9.ready2race.backend.calls.requests.FileUpload
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
 import de.lambda9.ready2race.backend.pdf.FontStyle
@@ -109,7 +107,8 @@ object CompetitionExecutionService {
                 val newTeamRecords = sortedRegistrations.mapIndexed { index, reg ->
                     val matchIndex = seedingList.indexOfFirst { it.contains(index + 1) }
 
-                    val automaticFirstPlace = !nextRound.required && seedingList[matchIndex].filter { it <= registrations.size }.size == 1
+                    val automaticFirstPlace =
+                        !nextRound.required && seedingList[matchIndex].filter { it <= registrations.size }.size == 1
 
                     CompetitionMatchTeamRecord(
                         id = UUID.randomUUID(),
@@ -189,9 +188,9 @@ object CompetitionExecutionService {
 
                     val automaticFirstPlace =
                         !nextRound.required && !prevTeam.deregistered && !prevTeam.out && !prevTeam.failed &&
-                        currentTeamsToParticipantId.filter {
-                            it.second!!.competitionSetupMatch == nextRoundTeam.competitionSetupMatch && !it.first.out && !it.first.failed && !it.first.deregistered
-                        }.size == 1
+                            currentTeamsToParticipantId.filter {
+                                it.second!!.competitionSetupMatch == nextRoundTeam.competitionSetupMatch && !it.first.out && !it.first.failed && !it.first.deregistered
+                            }.size == 1
 
                     CompetitionMatchTeamRecord(
                         id = UUID.randomUUID(),
@@ -255,7 +254,8 @@ object CompetitionExecutionService {
             val sortedRounds = sortRounds(setupRounds)
 
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
-                round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) }).toCompetitionRoundDto()
+                round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
+                    .toCompetitionRoundDto()
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
@@ -334,7 +334,8 @@ object CompetitionExecutionService {
                 }
 
             val placesAreMissing = currentRound.matches.map { match ->
-                match.teams.map { it.place }.containsAll((1..match.teams.filter { !it.deregistered && !it.failed && !it.out }.size).toList())
+                match.teams.map { it.place }
+                    .containsAll((1..match.teams.filter { !it.deregistered && !it.failed && !it.out }.size).toList())
             }.any { !it }
 
 
@@ -391,7 +392,9 @@ object CompetitionExecutionService {
         }
 
         val highestStartNumber = request.teams.maxOfOrNull { it.startNumber } ?: 0
-        val outStartNumbers = outTeams.sortedBy { it.startNumber }.mapIndexed { index, team -> team.id to index + highestStartNumber + 1 }.toMap()
+        val outStartNumbers =
+            outTeams.sortedBy { it.startNumber }.mapIndexed { index, team -> team.id to index + highestStartNumber + 1 }
+                .toMap()
 
         !teamRecords.traverse { team ->
             CompetitionMatchTeamRepo.update(team) {
@@ -475,7 +478,7 @@ object CompetitionExecutionService {
     fun updateMatchResultByFile(
         competitionId: UUID,
         matchId: UUID,
-        file: FileUpload,
+        file: File,
         request: UploadMatchResultRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
@@ -483,7 +486,8 @@ object CompetitionExecutionService {
         val match = !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
 
-        val config = !MatchResultImportConfigRepo.get(request.config).orDie().onNullFail { MatchResultImportConfigError.NotFound }
+        val config = !MatchResultImportConfigRepo.get(request.config).orDie()
+            .onNullFail { MatchResultImportConfigError.NotFound }
 
         val iStream = file.bytes.inputStream()
 
@@ -496,9 +500,24 @@ object CompetitionExecutionService {
         }.mapError {
             when (it) {
                 is XLSReadError.CellError.ColumnUnknown -> CompetitionExecutionError.ResultUploadError.ColumnUnknown(it.expected)
-                is XLSReadError.CellError.ParseError.CellBlank -> CompetitionExecutionError.ResultUploadError.CellBlank(it.row, it.col)
-                is XLSReadError.CellError.ParseError.WrongCellType -> CompetitionExecutionError.ResultUploadError.WrongCellType(it.row, it. col, it.actual.name, it.expected.name)
-                is XLSReadError.CellError.ParseError.UnparsableStringValue -> CompetitionExecutionError.ResultUploadError.UnparsableString(it.row, it.col, it.value)
+                is XLSReadError.CellError.ParseError.CellBlank -> CompetitionExecutionError.ResultUploadError.CellBlank(
+                    it.row,
+                    it.col
+                )
+
+                is XLSReadError.CellError.ParseError.WrongCellType -> CompetitionExecutionError.ResultUploadError.WrongCellType(
+                    it.row,
+                    it.col,
+                    it.actual.name,
+                    it.expected.name
+                )
+
+                is XLSReadError.CellError.ParseError.UnparsableStringValue -> CompetitionExecutionError.ResultUploadError.UnparsableString(
+                    it.row,
+                    it.col,
+                    it.value
+                )
+
                 XLSReadError.FileError -> CompetitionExecutionError.ResultUploadError.FileError
                 XLSReadError.NoHeaders -> CompetitionExecutionError.ResultUploadError.NoHeaders
             }
@@ -506,20 +525,34 @@ object CompetitionExecutionService {
 
         !noDuplicates(teams.map { it.startNumber }).fold(
             onValid = { unit },
-            onInvalid = { when (it) {
-                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedStartNumbers(it))
-                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
-            } }
+            onInvalid = {
+                when (it) {
+                    is ValidationResult.Invalid.Duplicates -> KIO.fail(
+                        CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedStartNumbers(
+                            it
+                        )
+                    )
+
+                    else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+                }
+            }
         )
 
         val places = teams.map { it.place }
 
         !noDuplicates(places).fold(
             onValid = { unit },
-            onInvalid = { when (it) {
-                is ValidationResult.Invalid.Duplicates -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedPlaces(it))
-                else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
-            }}
+            onInvalid = {
+                when (it) {
+                    is ValidationResult.Invalid.Duplicates -> KIO.fail(
+                        CompetitionExecutionError.ResultUploadError.Invalid.DuplicatedPlaces(
+                            it
+                        )
+                    )
+
+                    else -> KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.Unexpected(it))
+                }
+            }
         )
 
         // TODO: disabled for now, because it helps with parallel matches (can upload results to multiple matches with the same file)
@@ -531,16 +564,19 @@ object CompetitionExecutionService {
             !KIO.failOn(expected != place) { CompetitionExecutionError.ResultUploadError.Invalid.PlacesUncontinuous(place, expected) }
         }*/
         // TODO: instead for now, we sort the places and give first place to smallest place in expected start numbers maintaining teams with place == null
-        val validTeams = teams.filter { team -> match.teams.any {team.startNumber == it.startNumber && !it.deregistered} }
+        val validTeams =
+            teams.filter { team -> match.teams.any { team.startNumber == it.startNumber && !it.deregistered } }
         val (teamWithoutPlace, teamWithPlace) = validTeams.partition { it.place == null }
-        val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }.mapIndexed { idx, res -> res.copy(place = idx + 1) }
+        val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }
+            .mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
         !correctedTeams.traverse { result ->
 
             KIO.comprehension {
 
                 // TODO: better error for frontend
-                val registrationId = !KIO.failOnNull(match.teams.find { it.startNumber == result.startNumber }?.competitionRegistration) { CompetitionExecutionError.MatchTeamNotFound }
+                val registrationId =
+                    !KIO.failOnNull(match.teams.find { it.startNumber == result.startNumber }?.competitionRegistration) { CompetitionExecutionError.MatchTeamNotFound }
 
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
                     this.place = result.place
@@ -673,7 +709,8 @@ object CompetitionExecutionService {
             setupRounds.filterIndexed { roundIdx, round -> // filters out rounds for which there was no following round created yet
                 if (roundIdx < setupRounds.size - 1) {
                     setupRounds[roundIdx + 1].matches.isNotEmpty()
-                } else round.matches.flatMap { it.teams }.none { it.place == null && !it.deregistered && !it.out && !it.failed }
+                } else round.matches.flatMap { it.teams }
+                    .none { it.place == null && !it.deregistered && !it.out && !it.failed }
             }.mapIndexed { roundIdx, round ->
 
                 val isLastRound = roundIdx >= setupRounds.size - 1
@@ -782,7 +819,10 @@ object CompetitionExecutionService {
                 if (subs.isEmpty()) {
                     true
                 } else {
-                    subs.last().participantIn!!.id == participant.id || (SubstitutionService.getSwapSubstitution(subs.last(), subs) != null)
+                    subs.last().participantIn!!.id == participant.id || (SubstitutionService.getSwapSubstitution(
+                        subs.last(),
+                        subs
+                    ) != null)
                 }
             }.map { (participant, subs) ->
                 participant to if (subs.isEmpty()) {
@@ -791,7 +831,7 @@ object CompetitionExecutionService {
                         name = participant.namedParticipantName,
                     )
                 } else {
-                    val subNamedParticipant = if(subs.last().participantIn!!.id == participant.id){
+                    val subNamedParticipant = if (subs.last().participantIn!!.id == participant.id) {
                         subs.last() // This is the scenario if the last sub is a sub in - it doesn't matter if that is a sub in or a swap
                     } else {
                         subs[subs.lastIndex - 1] // As checked before this is the scenario where the last sub was a swap so the namedParticipant comes from the swap substitution (second to last)
@@ -852,20 +892,19 @@ object CompetitionExecutionService {
         KIO.ok(getCurrentAndNextRound(setupRounds).first?.setupRoundId)
     }
 
-
-    fun downloadStartlist(
+    fun getStartList(
         matchId: UUID,
-        type: StartListFileType,
-    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
-
+        startListType: StartListFileType,
+        startTimeRequired: Boolean
+    ): App<ServiceError, File> = KIO.comprehension {
         val match = !CompetitionMatchRepo.getForStartList(matchId).orDie()
             .onNullFail { CompetitionExecutionError.MatchNotFound }
             .failIf({ it.teams!!.isEmpty() }) { CompetitionExecutionError.MatchTeamNotFound }
-            .failIf({ it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
+            .failIf({ startTimeRequired && it.startTime == null }) { CompetitionExecutionError.StartTimeNotSet }
 
         val data = !CompetitionMatchData.fromPersisted(match)
 
-        val (bytes, extension) = when (type) {
+        val (bytes, extension) = when (startListType) {
             StartListFileType.PDF -> {
                 val pdfTemplate = !DocumentTemplateRepo.getAssigned(DocumentType.START_LIST, match.event!!).orDie()
                     .andThenNotNull { it.toPdfTemplate() }
@@ -873,17 +912,35 @@ object CompetitionExecutionService {
             }
 
             is StartListFileType.CSV -> {
-                val config = !StartListConfigRepo.get(type.config).orDie()
+                val config = !StartListConfigRepo.get(startListType.config).orDie()
                     .onNullFail { StartListConfigError.NotFound }
                 buildCsv(data, config) to "csv"
             }
         }
 
+        val fileNameDate = if (startTimeRequired) {
+            data.startTime!!.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "-"
+        } else {
+            ""
+        }
+
         KIO.ok(
-            ApiResponse.File(
-                name = "${data.startTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}-startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
+            File(
+                name = "${fileNameDate}startList-${data.competition.identifier}-${data.roundName}-${data.order}${data.matchName?.let { "-$it" } ?: ""}.$extension",
                 bytes = bytes,
             )
+        )
+    }
+
+    fun downloadStartlist(
+        matchId: UUID,
+        type: StartListFileType,
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+
+        val startListFile = !getStartList(matchId, type, startTimeRequired = true)
+
+        KIO.ok(
+            ApiResponse.File(name = startListFile.name, bytes = startListFile.bytes)
         )
     }
 
@@ -937,28 +994,30 @@ object CompetitionExecutionService {
                         }
                     }
 
-                    block(
-                        padding = Padding(top = 10f, left = 10f),
-                    ) {
-                        text(
-                            fontStyle = FontStyle.BOLD,
-                            fontSize = 11f,
+                    if (data.startTime != null) {
+                        block(
+                            padding = Padding(top = 10f, left = 10f),
                         ) {
-                            "Startzeit / "
-                        }
-                        text(
-                            fontSize = 9f,
-                            newLine = false,
-                        ) {
-                            "Start time"
-                        }
-                        text(
-                            newLine = false,
-                        ) { "  ${data.startTime.hr()}" }
-                        if (data.startTimeOffset != null) {
+                            text(
+                                fontStyle = FontStyle.BOLD,
+                                fontSize = 11f,
+                            ) {
+                                "Startzeit / "
+                            }
+                            text(
+                                fontSize = 9f,
+                                newLine = false,
+                            ) {
+                                "Start time"
+                            }
                             text(
                                 newLine = false,
-                            ) { " (versetzte Starts)" }
+                            ) { "  ${data.startTime.hr()}" }
+                            if (data.startTimeOffset != null) {
+                                text(
+                                    newLine = false,
+                                ) { " (versetzte Starts)" }
+                            }
                         }
                     }
 
@@ -1021,11 +1080,17 @@ object CompetitionExecutionService {
                                 ) { " ${it.name}" }
                             }
                             if (data.startTimeOffset != null && !team.deregistered) {
-                                text {
-                                    "startet ${
-                                        data.startTime.plusSeconds(data.startTimeOffset * startingIndex)
-                                            .hrTime()
-                                    }"
+                                if (data.startTime != null) {
+                                    text {
+                                        "startet ${
+                                            data.startTime.plusSeconds(data.startTimeOffset * startingIndex)
+                                                .hrTime()
+                                        }"
+                                    }
+                                } else if (startingIndex != 0) {
+                                    text {
+                                        "startet versetzt um ${data.startTimeOffset * startingIndex} Sekunden"
+                                    }
                                 }
                                 startingIndex += 1
                             }
@@ -1101,10 +1166,17 @@ object CompetitionExecutionService {
             ) {
                 optionalColumn(config.colParticipantFirstname) { participants.joinToString(",") { p -> p.firstname } }
                 optionalColumn(config.colParticipantLastname) { participants.joinToString(",") { p -> p.lastname } }
-                optionalColumn(config.colParticipantGender) { participants.map { p -> p.gender }.toSortedSet { a ,b -> compareValues(a.order(), b.order()) }.joinToString("/") }
+                optionalColumn(config.colParticipantGender) {
+                    participants.map { p -> p.gender }.toSortedSet { a, b -> compareValues(a.order(), b.order()) }
+                        .joinToString("/")
+                }
                 optionalColumn(config.colParticipantYear) { participants.joinToString(",") { p -> p.year.toString() } }
                 optionalColumn(config.colParticipantRole) { participants.map { p -> p.role }.toSet().joinToString(",") }
-                optionalColumn(config.colParticipantClub) { participants.map { it.externalClubName ?: registeringClubName }.toSet().joinToString(",") }
+                optionalColumn(config.colParticipantClub) {
+                    participants.map {
+                        it.externalClubName ?: registeringClubName
+                    }.toSet().joinToString(",")
+                }
 
                 optionalColumn(config.colClubName) { registeringClubName }
 
@@ -1118,7 +1190,7 @@ object CompetitionExecutionService {
                     val offsetSeconds = idx * (data.startTimeOffset ?: 0)
                     // TODO: make this configurable
                     LocalTime.ofSecondOfDay(offsetSeconds)
-                    //data.startTime.toLocalTime().plusSeconds(offsetSeconds)
+                        //data.startTime.toLocalTime().plusSeconds(offsetSeconds)
                         .format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 }
 
