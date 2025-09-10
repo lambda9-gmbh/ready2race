@@ -20,6 +20,8 @@ object WorkTypeRepo {
 
     fun delete(id: UUID) = WORK_TYPE.delete { ID.eq(id) }
 
+    fun all() = WORK_TYPE.select()
+
     fun countByEvent(
         search: String?
     ): JIO<Int> = Jooq.query {
@@ -41,5 +43,4 @@ object WorkTypeRepo {
                 .fetch()
         }
     }
-
 }

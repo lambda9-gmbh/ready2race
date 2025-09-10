@@ -1650,6 +1650,8 @@ export type WebDAVExportType =
     | 'DOCUMENTS'
     | 'RESULTS'
     | 'START_LISTS'
+    | 'DB_USERS'
+    | 'DB_CLUBS'
 
 export type WorkShiftUpsertDto = {
     workType: string

@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleHasPrivilegeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_HAS_PRIVILEGE
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*
@@ -24,5 +25,7 @@ object RoleHasPrivilegeRepo {
                 .fetch { it.value1() }
         }
     }
+
+    fun getByRoles(roles: List<UUID>) = ROLE_HAS_PRIVILEGE.select { ROLE.`in`(roles) }
 
 }

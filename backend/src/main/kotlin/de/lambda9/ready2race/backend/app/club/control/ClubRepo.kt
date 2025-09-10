@@ -1,12 +1,12 @@
 package de.lambda9.ready2race.backend.app.club.control
 
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -15,6 +15,8 @@ import java.util.*
 object ClubRepo {
 
     private fun Club.searchFields() = listOf(NAME)
+
+    fun any() = CLUB.exists { DSL.trueCondition() }
 
     fun create(
         record: ClubRecord,
@@ -28,13 +30,13 @@ object ClubRepo {
             fetchCount(
                 this, search.metaSearch(searchFields()).and(
                     eventId?.let {
-                    DSL.exists(
-                        selectFrom(EVENT_REGISTRATION).where(
-                            EVENT_REGISTRATION.CLUB.eq(this.ID).and(EVENT_REGISTRATION.EVENT.eq(it))
+                        DSL.exists(
+                            selectFrom(EVENT_REGISTRATION).where(
+                                EVENT_REGISTRATION.CLUB.eq(this.ID).and(EVENT_REGISTRATION.EVENT.eq(it))
+                            )
                         )
-                    )
-                } ?: DSL.trueCondition()
-            ))
+                    } ?: DSL.trueCondition()
+                ))
         }
     }
 

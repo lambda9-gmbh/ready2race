@@ -40,6 +40,8 @@ const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
     'DOCUMENTS',
     'RESULTS',
     'START_LISTS',
+    'DB_USERS',
+    'DB_CLUBS'
 ] as const
 
 const ExportData = () => {
@@ -97,18 +99,26 @@ const ExportData = () => {
 
     const webDavExportTypes = WEBDAV_EXPORT_TYPES.map(type => ({
         id: type,
-        label:
-            type === 'REGISTRATION_RESULTS'
-                ? t('webDAV.export.types.registrationResults')
-                : type === 'INVOICES'
-                  ? t('webDAV.export.types.invoices')
-                  : type === 'DOCUMENTS'
-                    ? t('webDAV.export.types.documents')
-                    : type === 'RESULTS'
-                      ? t('webDAV.export.types.results')
-                      : type === 'START_LISTS'
-                        ? t('webDAV.export.types.startLists')
-                        : '',
+        label: (() => {
+            switch (type) {
+                case 'REGISTRATION_RESULTS':
+                    return t('webDAV.export.types.registrationResults');
+                case 'INVOICES':
+                    return t('webDAV.export.types.invoices');
+                case 'DOCUMENTS':
+                    return t('webDAV.export.types.documents');
+                case 'RESULTS':
+                    return t('webDAV.export.types.results');
+                case 'START_LISTS':
+                    return t('webDAV.export.types.startLists');
+                case 'DB_USERS':
+                    return "[todo] Users";
+                case 'DB_CLUBS':
+                    return "[todo] Clubs";
+                default:
+                    return '';
+            }
+        })()
     }))
 
     const formContext = useForm<ExportForm>({})
@@ -244,7 +254,7 @@ const ExportData = () => {
                                                     100
                                                 }
                                             />
-                                            <Alert severity={'info'} icon={<Throbber />}>
+                                            <Alert severity={'info'} icon={<Throbber/>}>
                                                 <AlertTitle>
                                                     {t('webDAV.export.status.pending.title')}
                                                 </AlertTitle>
@@ -306,7 +316,7 @@ const ExportData = () => {
                         ))}
                 </Stack>
             ) : exportStatusPending ? (
-                <Throbber />
+                <Throbber/>
             ) : (
                 <Alert severity={'error'}>
                     {t('common.load.error.single', {entity: t('webDAV.export.status.status')})}

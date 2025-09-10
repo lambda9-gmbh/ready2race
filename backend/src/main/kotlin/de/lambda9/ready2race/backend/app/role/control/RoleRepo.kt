@@ -23,6 +23,10 @@ object RoleRepo {
 
     fun update(record: RoleRecord, f: RoleRecord.() -> Unit) = ROLE.update(record, f)
 
+    fun getAllExceptStatic() = ROLE.select { STATIC.isFalse }
+
+    fun existsExceptStatic() = ROLE.exists { STATIC.isFalse }
+
     fun get(
         id: UUID,
     ): JIO<RoleRecord?> = Jooq.query {

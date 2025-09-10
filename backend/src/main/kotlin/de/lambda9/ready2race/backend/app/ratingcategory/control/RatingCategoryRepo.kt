@@ -1,15 +1,11 @@
 package de.lambda9.ready2race.backend.app.ratingcategory.control
 
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategorySort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.RatingCategory
 import de.lambda9.ready2race.backend.database.generated.tables.records.RatingCategoryRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.RATING_CATEGORY
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.update
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -23,6 +19,8 @@ object RatingCategoryRepo {
     fun update(id: UUID, f: RatingCategoryRecord.() -> Unit) = RATING_CATEGORY.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = RATING_CATEGORY.delete { ID.eq(id) }
+
+    fun all() = RATING_CATEGORY.select()
 
     fun count(
         search: String?,

@@ -20,6 +20,8 @@ object FeeRepo{
 
     fun delete(id: UUID) = FEE.delete { ID.eq(id) }
 
+    fun all() = FEE.select()
+
     fun getIfExist(
         ids: List<UUID>,
     ): JIO<List<FeeRecord>> = Jooq.query {

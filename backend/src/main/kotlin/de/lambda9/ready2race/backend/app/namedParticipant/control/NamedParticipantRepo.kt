@@ -21,6 +21,8 @@ object NamedParticipantRepo {
 
     fun delete(id: UUID) = NAMED_PARTICIPANT.delete { ID.eq(id) }
 
+    fun all() = NAMED_PARTICIPANT.select()
+
     fun getIfExist(
         ids: List<UUID>,
     ): JIO<List<NamedParticipantRecord>> = Jooq.query {

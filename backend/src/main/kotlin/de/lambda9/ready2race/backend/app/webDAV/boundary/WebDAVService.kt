@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.webDAV.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
+import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
@@ -13,12 +15,19 @@ import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistra
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
 import de.lambda9.ready2race.backend.app.results.boundary.ResultsService
 import de.lambda9.ready2race.backend.app.results.control.ResultsRepo
+import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.*
-import de.lambda9.ready2race.backend.app.webDAV.entity.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportStatusDto
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
+import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.config.Config
+import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDependencyRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportFolderRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportRecord
 import de.lambda9.ready2race.backend.file.File
@@ -36,7 +45,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import java.net.URLConnection
 import java.time.LocalDateTime
 import java.util.*
@@ -65,13 +73,14 @@ object WebDAVService {
         val processId = !WebDAVExportProcessRepo.create(exportProcess).orDie()
 
 
-        fun getFolderName(documentType: WebDAVExportType): String {
+        fun getFolderName(documentType: WebDAVExportType): String? {
             return when (documentType) {
                 WebDAVExportType.REGISTRATION_RESULTS -> "Registration-Result"
                 WebDAVExportType.INVOICES -> "Invoices"
                 WebDAVExportType.DOCUMENTS -> "Documents"
                 WebDAVExportType.RESULTS -> "Results"
                 WebDAVExportType.START_LISTS -> "Start-Lists"
+                else -> null
             }
         }
 
@@ -134,10 +143,6 @@ object WebDAVService {
             webDAVConfig = config.webDAV
         )
 
-
-        // GET FILES TO CREATE QUEUES FOR THE FOLDERS AND EXPORT-FILES
-
-        // todo export different templates as documents ? - maybe as json
 
         val eventRegistrationIds =
             if (request.selectedResources.any { it == WebDAVExportType.REGISTRATION_RESULTS }) {
@@ -311,6 +316,64 @@ object WebDAVService {
         !WebDAVExportRepo.create(exportRecords).orDie()
 
 
+        // ---------------------- DATABASE EXPORTS --------------------------
+
+        fun buildExportDataRecord(
+            dataType: WebDAVExportType,
+            dataReference: UUID? = null,
+        ): WebdavExportDataRecord {
+            return WebdavExportDataRecord(
+                id = UUID.randomUUID(),
+                webdavExportProcess = processId,
+                documentType = dataType.name,
+                dataReference = dataReference,
+                path = request.name,
+            )
+        }
+
+        val exportDataRecords = mutableMapOf<WebDAVExportType, UUID>()
+
+        val databaseExportTypes = request.selectedResources.filter {
+            it.name.startsWith("DB_")
+        }
+        databaseExportTypes.forEach { exportType ->
+            when (exportType) {
+
+                WebDAVExportType.DB_USERS -> {
+                    val users = !AppUserRepo.existsExceptSystemAdmin().orDie()
+                    val roles = !RoleRepo.existsExceptStatic().orDie()
+
+                    if (users || roles) {
+                        val record = buildExportDataRecord(exportType)
+                        !WebDAVExportDataRepo.create(listOf(record)).orDie()
+                        exportDataRecords[exportType] = record.id
+                    }
+                }
+
+                WebDAVExportType.DB_CLUBS -> {
+                    val clubExists = !ClubRepo.any().orDie()
+                    if (clubExists) {
+                        val record = buildExportDataRecord(exportType)
+                        !WebDAVExportDataRepo.create(listOf(record)).orDie()
+                        exportDataRecords[exportType] = record.id
+
+                        exportDataRecords[WebDAVExportType.DB_USERS]?.let { usersId ->
+                            !WebDAVExportDependencyRepo.create(
+                                listOf(
+                                    WebdavExportDependencyRecord(
+                                        webdavExportData = record.id,
+                                        dependingOn = usersId
+                                    )
+                                )
+                            ).orDie()
+                        }
+                    }
+                }
+
+                else -> {}
+            }
+        }
+
         client.close()
 
         return noData
@@ -348,60 +411,107 @@ object WebDAVService {
 
 
                 // EXPORT FILE INTO FOLDER (if all folders are created already)
-                val nextExport = !WebDAVExportRepo.getNextExport().orDie().onNullFail { WebDAVError.NoFilesToExport }
+                val nextExport = !WebDAVExportRepo.getNextExport().orDie()
 
-                fun setFileNotFoundError(msg: String? = "File not found") = WebDAVExportRepo.update(nextExport) {
-                    error = msg
-                    errorAt = LocalDateTime.now()
-                }
+                val file = if(nextExport != null){
+                    fun setFileNotFoundError(msg: String? = "File not found") = WebDAVExportRepo.update(nextExport) {
+                        error = msg
+                        errorAt = LocalDateTime.now()
+                    }
 
-                val file = nextExport.let { exportRecord ->
-                    when (exportRecord.documentType) {
-                        WebDAVExportType.REGISTRATION_RESULTS.name ->
-                            !EventRegistrationReportRepo.getDownload(exportRecord.dataReference!!).orDie()
-                                .onNullFail {
-                                    !setFileNotFoundError().orDie()
-                                    WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
-                                }
-                                .map { File(name = it.name!!, bytes = it.data!!) }
+                    nextExport.let { exportRecord ->
+                        when (exportRecord.documentType) {
+                            WebDAVExportType.REGISTRATION_RESULTS.name ->
+                                !EventRegistrationReportRepo.getDownload(exportRecord.dataReference!!).orDie()
+                                    .onNullFail {
+                                        !setFileNotFoundError().orDie()
+                                        WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                                    }
+                                    .map { File(name = it.name!!, bytes = it.data!!) }
 
-                        WebDAVExportType.INVOICES.name ->
-                            !InvoiceRepo.getDownload(exportRecord.dataReference!!).orDie()
-                                .onNullFail {
-                                    !setFileNotFoundError().orDie()
-                                    WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
-                                }
-                                .map { File(name = it.filename!!, bytes = it.data!!) }
+                            WebDAVExportType.INVOICES.name ->
+                                !InvoiceRepo.getDownload(exportRecord.dataReference!!).orDie()
+                                    .onNullFail {
+                                        !setFileNotFoundError().orDie()
+                                        WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                                    }
+                                    .map { File(name = it.filename!!, bytes = it.data!!) }
 
-                        WebDAVExportType.DOCUMENTS.name ->
-                            !EventDocumentRepo.getDownload(exportRecord.dataReference!!).orDie()
-                                .onNullFail {
-                                    !setFileNotFoundError().orDie()
-                                    WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
-                                }
-                                .map { File(name = it.name!!, bytes = it.data!!) }
+                            WebDAVExportType.DOCUMENTS.name ->
+                                !EventDocumentRepo.getDownload(exportRecord.dataReference!!).orDie()
+                                    .onNullFail {
+                                        !setFileNotFoundError().orDie()
+                                        WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                                    }
+                                    .map { File(name = it.name!!, bytes = it.data!!) }
 
-                        WebDAVExportType.RESULTS.name ->
-                            !ResultsService.generateResultsDocument(exportRecord.dataReference!!)
-                                .mapError {
+                            WebDAVExportType.RESULTS.name ->
+                                !ResultsService.generateResultsDocument(exportRecord.dataReference!!)
+                                    .mapError {
+                                        !setFileNotFoundError("Failed to generate document").orDie()
+                                        WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
+                                    }
+
+                            WebDAVExportType.START_LISTS.name ->
+                                !CompetitionExecutionService.getStartList(
+                                    matchId = exportRecord.dataReference!!,
+                                    startListType = StartListFileType.PDF,
+                                    startTimeRequired = false
+                                ).mapError {
                                     !setFileNotFoundError("Failed to generate document").orDie()
                                     WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
                                 }
+                                    .map { File(name = it.name, bytes = it.bytes) }
 
-                        WebDAVExportType.START_LISTS.name ->
-                            !CompetitionExecutionService.getStartList(
-                                matchId = exportRecord.dataReference!!,
-                                startListType = StartListFileType.PDF,
-                                startTimeRequired = false
-                            ).mapError {
-                                !setFileNotFoundError("Failed to generate document").orDie()
-                                WebDAVError.FileNotFound(exportRecord.id, exportRecord.dataReference)
-                            }
-                                .map { File(name = it.name, bytes = it.bytes) }
+                            else -> return@comprehension KIO.fail(WebDAVError.FileNotFound(exportRecord.id, null))
+                        }
+                    }
+                } else {
+                    // Check for database exports when no regular exports are available
+                    val nextDataExport = !WebDAVExportDataRepo.getNextExport().orDie()
+                        ?: return@comprehension unit // No more exports to process
 
-                        else -> return@comprehension KIO.fail(WebDAVError.FileNotFound(exportRecord.id, null))
+                    fun setDataFileNotFoundError(msg: String? = "File not found") = WebDAVExportDataRepo.update(nextDataExport) {
+                        error = msg
+                        errorAt = LocalDateTime.now()
+                    }
+
+                    when (nextDataExport.documentType) {
+                        WebDAVExportType.DB_USERS.name -> {
+                            logger.info { "User Export" }
+                            !setDataFileNotFoundError("Export not configured yet").orDie()
+                            return@comprehension KIO.fail(
+                                WebDAVError.FileNotFound(
+                                    nextDataExport.id,
+                                    nextDataExport.dataReference
+                                )
+                            )
+                        }
+
+                        WebDAVExportType.DB_CLUBS.name -> {
+                            logger.info { "Clubs Export" }
+                            !setDataFileNotFoundError("Export not configured yet").orDie()
+                            return@comprehension KIO.fail(
+                                WebDAVError.FileNotFound(
+                                    nextDataExport.id,
+                                    nextDataExport.dataReference
+                                )
+                            )
+                        }
+
+                        else -> {
+                            !setDataFileNotFoundError("Unknown export type").orDie()
+                            return@comprehension KIO.fail(
+                                WebDAVError.FileNotFound(
+                                    nextDataExport.id,
+                                    nextDataExport.dataReference
+                                )
+                            )
+                        }
                     }
                 }
+
+
 
                 val authHeader = buildBasicAuthHeader(config.webDAV)
                 val mimeType = URLConnection.guessContentTypeFromName(file.name) ?: "application/octet-stream"
@@ -523,6 +633,7 @@ object WebDAVService {
             }
         }
     }
+
 
     fun getExportStatus(): App<Nothing, ApiResponse.ListDto<WebDAVExportStatusDto>> = KIO.comprehension {
 

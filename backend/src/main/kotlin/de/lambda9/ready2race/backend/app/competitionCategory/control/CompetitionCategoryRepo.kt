@@ -23,6 +23,8 @@ object CompetitionCategoryRepo {
 
     fun delete(id: UUID) = COMPETITION_CATEGORY.delete { ID.eq(id) }
 
+    fun all() = COMPETITION_CATEGORY.select()
+
     fun count(
         search: String?
     ): JIO<Int> = Jooq.query {

@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort
 import de.lambda9.ready2race.backend.app.appuser.entity.EveryAppUserWithRolesSort
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.EveryAppUserWithRoles
@@ -14,9 +13,9 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.APP_US
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVERY_APP_USER_WITH_ROLES
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
-import org.jooq.Condition
 import org.jooq.impl.DSL
 import java.util.*
 
@@ -164,4 +163,8 @@ object AppUserRepo {
                 .fetch()
         }
     }
+
+    fun getAllExceptSystemAdmin(): JIO<List<AppUserRecord>> = APP_USER.select { ID.ne(SYSTEM_USER) }
+
+    fun existsExceptSystemAdmin() = APP_USER.exists { ID.ne(SYSTEM_USER) }
 }
