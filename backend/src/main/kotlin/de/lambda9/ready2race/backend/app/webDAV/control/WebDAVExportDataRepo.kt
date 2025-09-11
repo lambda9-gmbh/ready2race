@@ -10,7 +10,9 @@ object WebDAVExportDataRepo {
 
     fun create(records: List<WebdavExportDataRecord>) = WEBDAV_EXPORT_DATA.insert(records)
 
+    fun createOne(record: WebdavExportDataRecord) = WEBDAV_EXPORT_DATA.insert(record)
+
     fun getNextExport() = WEBDAV_EXPORT_DATA.selectAny { EXPORTED_AT.isNull.and(ERROR_AT.isNull) }
-    
+
     fun update(record: WebdavExportDataRecord, f: WebdavExportDataRecord.() -> Unit) = WEBDAV_EXPORT_DATA.update(record, f)
 }

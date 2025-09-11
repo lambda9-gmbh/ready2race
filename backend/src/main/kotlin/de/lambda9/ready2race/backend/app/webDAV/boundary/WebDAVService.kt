@@ -3,7 +3,6 @@ package de.lambda9.ready2race.backend.app.webDAV.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.appuser.control.AppUserHasRoleRepo
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
@@ -14,10 +13,8 @@ import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationReportRepo
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
-import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.results.boundary.ResultsService
 import de.lambda9.ready2race.backend.app.results.control.ResultsRepo
-import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
@@ -36,7 +33,10 @@ import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.ready2race.backend.kio.comprehension
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.*
+import de.lambda9.tailwind.core.extensions.kio.failIf
+import de.lambda9.tailwind.core.extensions.kio.onNullFail
+import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -48,6 +48,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 object WebDAVService {
+
 
     suspend fun CallComprehensionScope.initializeExportData(
         request: WebDAVExportRequest,
@@ -343,7 +344,7 @@ object WebDAVService {
 
                     if (users || roles) {
                         val record = buildExportDataRecord(exportType)
-                        !WebDAVExportDataRepo.create(listOf(record)).orDie()
+                        !WebDAVExportDataRepo.createOne(record).orDie()
                         exportDataRecords[exportType] = record.id
                     }
                 }
@@ -352,7 +353,7 @@ object WebDAVService {
                     val clubExists = !ClubRepo.any().orDie()
                     if (clubExists) {
                         val record = buildExportDataRecord(exportType)
-                        !WebDAVExportDataRepo.create(listOf(record)).orDie()
+                        !WebDAVExportDataRepo.createOne(record).orDie()
                         exportDataRecords[exportType] = record.id
 
                         exportDataRecords[WebDAVExportType.DB_USERS]?.let { usersId ->
@@ -469,72 +470,13 @@ object WebDAVService {
                 // DATABASE EXPORTS
                 else if (nextDataExport != null) {
 
-                    fun setDataFileNotFoundError(e: Exception, type: WebDAVExportType): App<WebDAVError.WebDAVInternError, Unit> =
-                        KIO.comprehension {
-                            logger.error(e) { "Failed to serialize $type to JSON" }
-                            !WebDAVExportDataRepo.update(nextDataExport) {
-                                error = "File not found"
-                                errorAt = LocalDateTime.now()
-                            }.orDie()
-                            KIO.fail(
-                                WebDAVError.FileNotFound(
-                                    nextDataExport.id,
-                                    nextDataExport.dataReference
-                                )
-                            )
-                        }
-
-
                     when (nextDataExport.documentType) {
                         WebDAVExportType.DB_USERS.name -> {
-                            val appUsers = !AppUserRepo.getAllExceptSystemAdmin().orDie()
-                                .map { list -> !list.traverse { it.toExport() } }
-                            val roles = !RoleRepo.getAllExceptStatic().orDie()
-                                .map { list -> !list.traverse { it.toExport() } }
-                            val roleHasPrivileges = !RoleHasPrivilegeRepo.getByRoles(roles.map { it.id }).orDie()
-                                .map { list -> !list.traverse { it.toExport() } }
-                            val appUserHasRoles = !AppUserHasRoleRepo.getByUsers(appUsers.map { it.id }).orDie()
-                                .map { list -> !list.traverse { it.toExport() } }
-
-                            // Create export data structure
-                            val exportData = DataUsersExport(
-                                appUsers = appUsers,
-                                roles = roles,
-                                roleHasPrivileges = roleHasPrivileges,
-                                appUserHasRoles = appUserHasRoles
-                            )
-
-                            // Convert to JSON using pre-configured mapper with JavaTime support
-                            val jsonContent = try {
-                                jsonMapper.writerWithDefaultPrettyPrinter().writeValueAsString(exportData)
-                            } catch (e: Exception) {
-                                return@comprehension setDataFileNotFoundError(e, WebDAVExportType.DB_USERS)
-                            }
-                            val jsonBytes = jsonContent.toByteArray()
-
-                            // Create filename with timestamp
-                            val timestamp = LocalDateTime.now().toString().replace(":", "-").replace(".", "-")
-                            val filename = "users_export_${timestamp}.json"
-
-                            File(name = filename, bytes = jsonBytes)
+                            !DataUsersExport.createExportFile(nextDataExport)
                         }
 
                         WebDAVExportType.DB_CLUBS.name -> {
-
-                            !ClubRepo.all().orDie()
-                            !ParticipantRepo.all().orDie()
-
-                            logger.info { "Clubs Export not yet implemented" }
-                            !WebDAVExportDataRepo.update(nextDataExport) {
-                                error = "Export not configured yet"
-                                errorAt = LocalDateTime.now()
-                            }.orDie()
-                            return@comprehension KIO.fail(
-                                WebDAVError.FileNotFound(
-                                    nextDataExport.id,
-                                    nextDataExport.dataReference
-                                )
-                            )
+                            !DataClubsExport.createExportFile(nextDataExport)
                         }
 
                         else -> {
@@ -704,6 +646,30 @@ object WebDAVService {
         }
     }
 
+    fun serializeDataExport(
+        record: WebdavExportDataRecord,
+        exportData: Any,
+        type: WebDAVExportType
+    ): App<WebDAVError.WebDAVInternError, ByteArray> = KIO.comprehension {
+        try {
+            val json = jsonMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(exportData)
+                .toByteArray()
+            KIO.ok(json)
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to serialize $type to JSON" }
+            !WebDAVExportDataRepo.update(record) {
+                error = "Failed to serialize: ${e.message}"
+                errorAt = LocalDateTime.now()
+            }.orDie()
+            KIO.fail(
+                WebDAVError.FileNotFound(
+                    exportId = record.id,
+                    referenceId = record.dataReference
+                )
+            )
+        }
+    }
 
     fun getExportStatus(): App<Nothing, ApiResponse.ListDto<WebDAVExportStatusDto>> = KIO.comprehension {
 

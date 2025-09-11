@@ -87,3 +87,32 @@ fun AppUserHasRoleRecord.toExport(): App<Nothing, AppUserHasRoleExport> = KIO.ok
         role = role
     )
 )
+
+fun ClubRecord.toExport(): App<Nothing, ClubExport> = KIO.ok(
+    ClubExport(
+        id = id,
+        name = name,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+
+fun ParticipantRecord.toExport(): App<Nothing, ParticipantExport> = KIO.ok(
+    ParticipantExport(
+        id = id,
+        club = club,
+        firstname = firstname,
+        lastname = lastname,
+        year = year,
+        gender = gender.toString(),
+        phone = phone,
+        external = external,
+        externalClubName = externalClubName,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
