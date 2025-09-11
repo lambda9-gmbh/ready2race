@@ -158,14 +158,13 @@ const ExportData = () => {
                 } else {
                     feedback.error(t('common.error.unexpected'))
                 }
-                formContext.reset()
             }
         } else {
             closeDialog()
             feedback.success(t('webDAV.export.success'))
             formContext.reset()
-            reloadExportStatus()
         }
+        reloadExportStatus()
     }
 
     return (

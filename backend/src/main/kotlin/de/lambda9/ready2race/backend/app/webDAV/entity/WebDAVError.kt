@@ -26,7 +26,10 @@ sealed interface WebDAVError {
                 ConfigIncomplete -> HttpStatusCode.BadRequest
                 is CannotMakeFolder /* TODO: other code? */, Unexpected -> HttpStatusCode.BadGateway
                 ExportFolderAlreadyExists -> HttpStatusCode.Conflict
-                ConfigUnparsable -> HttpStatusCode.InternalServerError
+                ConfigUnparsable,
+                ManifestSerializationFailed -> HttpStatusCode.InternalServerError
+                ManifestExportFailed,
+                CannotListFolders -> HttpStatusCode.BadGateway
             },
             message = message,
         )
@@ -34,6 +37,9 @@ sealed interface WebDAVError {
 
 
     data object ExportFolderAlreadyExists : WebDAVExternError("Another export folder with the same name already exists on the WebDEV Server.")
+    data object ManifestSerializationFailed : WebDAVExternError("Failed to serialize manifest.json file for database export.")
+    data object ManifestExportFailed : WebDAVExternError("Failed to export manifest.json file to the WebDAV Server.")
+    data object CannotListFolders : WebDAVExternError("Failed to list folders from the WebDAV Server.")
 
 
 

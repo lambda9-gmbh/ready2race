@@ -335,6 +335,17 @@ object WebDAVService {
         val databaseExportTypes = request.selectedResources.filter {
             it.name.startsWith("DB_")
         }
+
+        if (databaseExportTypes.isNotEmpty()) {
+            val maifestFile = !ManifestExport.createExportFile(databaseExportTypes)
+            val response = sendFile(client, config.webDAV, maifestFile, path = "${request.name}/${maifestFile.name}")
+            val content = if (!response.status.isSuccess()) response.bodyAsText() else null
+            !KIO.failOn(!response.status.isSuccess()) {
+                logger.error { "Export of manifest.json was unsuccessful. $content" }
+                WebDAVError.ManifestExportFailed
+            }
+        }
+
         databaseExportTypes.forEach { exportType ->
             when (exportType) {
 
@@ -498,27 +509,13 @@ object WebDAVService {
                 }
 
 
-                val authHeader = buildBasicAuthHeader(config.webDAV)
-                val mimeType = URLConnection.guessContentTypeFromName(file.name) ?: "application/octet-stream"
-
-                // Determine the path based on export type
                 val path = if (nextExport != null) {
                     "${nextExport.path}/${file.name}"
                 } else {
                     "${nextDataExport!!.path}/${file.name}"
                 }
 
-                val url = getUrl(
-                    webDAVConfig = config.webDAV,
-                    pathSegments = path
-                )
-
-                val response = client.put(url) {
-                    method = HttpMethod("PROPFIND")
-                    header("Authorization", authHeader)
-                    setBody(file.bytes)
-                    contentType(ContentType.parse(mimeType))
-                }
+                val response = sendFile(client, config.webDAV, file, path)
 
                 if (!response.status.isSuccess()) {
                     val content = response.bodyAsText()
@@ -560,6 +557,24 @@ object WebDAVService {
                 client.close()
 
                 unit
+            }
+        }
+
+    private suspend fun sendFile(client: HttpClient, config: Config.WebDAV, file: File, path: String): HttpResponse =
+        coroutineScope {
+            val authHeader = buildBasicAuthHeader(config)
+            val mimeType = URLConnection.guessContentTypeFromName(file.name) ?: "application/octet-stream"
+
+            val url = getUrl(
+                webDAVConfig = config,
+                pathSegments = path
+            )
+
+            client.put(url) {
+                method = HttpMethod("PROPFIND")
+                header("Authorization", authHeader)
+                setBody(file.bytes)
+                contentType(ContentType.parse(mimeType))
             }
         }
 
