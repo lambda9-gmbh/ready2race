@@ -6,10 +6,13 @@ import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
 import de.lambda9.ready2race.backend.app.webDAV.control.toExport
+import de.lambda9.ready2race.backend.app.webDAV.control.toRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 
@@ -41,7 +44,41 @@ data class DataUsersExport(
 
             val json = !WebDAVService.serializeDataExport(record, exportData, WebDAVExportType.DB_USERS)
 
-            KIO.ok(File(name = "users.json", bytes = json))
+            KIO.ok(File(name = getWebDavDataJsonFileName(WebDAVExportType.DB_USERS), bytes = json))
+        }
+
+        fun importData(data: DataUsersExport): App<Nothing, Unit> = KIO.comprehension {
+            // App User
+            val appUserOverlaps = !AppUserRepo.getOverlapIds(data.appUsers.map { it.id }).orDie()
+            val appUserRecords = !data.appUsers
+                .filter { appUserData -> !appUserOverlaps.any { it == appUserData.id } }
+                .traverse { it.toRecord() }
+            !AppUserRepo.insert(appUserRecords).orDie()
+
+            // Role
+            val existingRoles = !RoleRepo.getIfExist(data.roles.map { it.id }).orDie()
+            val roleRecords = !data.roles
+                .filter { roleData -> !existingRoles.any { it.id == roleData.id } }
+                .traverse { it.toRecord() }
+            !RoleRepo.create(roleRecords).orDie()
+
+            // Role has Privilege
+            val roleHasPrivOverlaps = !RoleHasPrivilegeRepo
+                .getOverlaps(data.roleHasPrivileges.map { it.role to it.privilege }).orDie()
+            val roleHasPrivilegeRecords = !data.roleHasPrivileges
+                .filter { roleHasPriv -> !roleHasPrivOverlaps.any { it.role == roleHasPriv.role && it.privilege == roleHasPriv.privilege } }
+                .traverse { it.toRecord() }
+            !RoleHasPrivilegeRepo.create(roleHasPrivilegeRecords).orDie()
+
+            // App User has Role
+            val appUserHasRoleOverlaps =
+                !AppUserHasRoleRepo.getOverlaps(data.appUserHasRoles.map { it.appUser to it.role }).orDie()
+            val appUserHasRoleRecords = !data.appUserHasRoles
+                .filter { userHasRole -> !appUserHasRoleOverlaps.any { it.appUser == userHasRole.appUser && it.role == userHasRole.role } }
+                .traverse { it.toRecord() }
+            !AppUserHasRoleRepo.create(appUserHasRoleRecords).orDie()
+
+            unit
         }
     }
 }

@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -23,6 +24,8 @@ object ClubRepo {
     fun create(
         record: ClubRecord,
     ): JIO<UUID> = CLUB.insertReturning(record) { ID }
+
+    fun create(records: List<ClubRecord>) = CLUB.insert(records)
 
     fun count(
         search: String?,
@@ -93,5 +96,7 @@ object ClubRepo {
     fun delete(
         id: UUID
     ): JIO<Int> = CLUB.delete { ID.eq(id) }
+
+    fun getOverlapIds(ids: List<UUID>) = CLUB.select({ ID }) { ID.`in`(ids) }
 
 }

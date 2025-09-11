@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.role.control
 import de.lambda9.ready2race.backend.app.role.entity.RoleWithPrivilegesSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.RoleWithPrivileges
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
@@ -20,6 +21,7 @@ object RoleRepo {
     fun exists(id: UUID) = ROLE.exists { ID.eq(id) }
 
     fun create(record: RoleRecord) = ROLE.insertReturning(record) { ID }
+    fun create(records: Collection<RoleRecord>) = ROLE.insert(records)
 
     fun update(record: RoleRecord, f: RoleRecord.() -> Unit) = ROLE.update(record, f)
 

@@ -5,11 +5,11 @@ import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getImport
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getImportOptionTypes
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.initializeExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVImportRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
 import de.lambda9.ready2race.backend.calls.requests.pathParam
 import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
-import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.*
 
 fun Route.webDAV() {
@@ -18,7 +18,7 @@ fun Route.webDAV() {
             post {
 
                 call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val user = !authenticate(Privilege.UpdateEventGlobal) // todo: new privilege
 
                     val body = !receiveKIO(WebDAVExportRequest.example)
                     initializeExportData(body, user.id!!)
@@ -34,6 +34,16 @@ fun Route.webDAV() {
         }
 
         route("/import") {
+
+            post {
+                call.respondComprehension {
+                    val user = !authenticate(Privilege.UpdateEventGlobal) // todo: new privilege
+
+                    val body = !receiveKIO(WebDAVImportRequest.example)
+                    WebDAVService.initializeImportData(body, user.id!!)
+                }
+            }
+
             route("/options") {
                 get {
                     call.respondComprehension {

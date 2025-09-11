@@ -5593,6 +5593,32 @@ paths:
           $ref: '#/components/responses/403'
         500:
           $ref: '#/components/responses/500'
+  /webDAV/import:
+    post:
+      operationId: importDatafromWebDAV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebDAVImportRequest'
+      responses:
+        204:
+          description: Data successfully exported
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
   /webDAV/import/options:
     get:
       operationId: getWebDAVImportOptionFolders
@@ -10180,3 +10206,17 @@ components:
           type: integer
         filesWithError:
           type: integer
+
+
+    WebDAVImportRequest:
+      type: object
+      required:
+        - folderName
+        - selectedData
+      properties:
+        folderName:
+          type: string
+        selectedData:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'

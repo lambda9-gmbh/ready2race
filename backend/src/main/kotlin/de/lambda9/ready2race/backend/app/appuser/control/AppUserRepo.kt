@@ -167,4 +167,8 @@ object AppUserRepo {
     fun getAllExceptSystemAdmin(): JIO<List<AppUserRecord>> = APP_USER.select { ID.ne(SYSTEM_USER) }
 
     fun existsExceptSystemAdmin() = APP_USER.exists { ID.ne(SYSTEM_USER) }
+
+    fun insert(records: List<AppUserRecord>) = APP_USER.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = APP_USER.select({ ID }) { ID.`in`(ids) }
 }

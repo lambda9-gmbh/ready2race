@@ -7,7 +7,6 @@ enum class WebDAVExportType {
     DOCUMENTS,
     RESULTS,
     START_LISTS,
-    DB_MANIFEST,
     DB_USERS,
     DB_CLUBS,
     DB_BANK_ACCOUNTS,

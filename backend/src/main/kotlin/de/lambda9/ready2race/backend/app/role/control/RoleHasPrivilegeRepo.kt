@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object RoleHasPrivilegeRepo {
@@ -27,5 +28,11 @@ object RoleHasPrivilegeRepo {
     }
 
     fun getByRoles(roles: List<UUID>) = ROLE_HAS_PRIVILEGE.select { ROLE.`in`(roles) }
+
+    fun getOverlaps(ids: List<Pair<UUID, UUID>>) = ROLE_HAS_PRIVILEGE.select {
+        DSL.or(ids.map { (roleId, privilegeId) ->
+            ROLE.eq(roleId).and(PRIVILEGE.eq(privilegeId))
+        })
+    }
 
 }

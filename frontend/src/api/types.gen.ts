@@ -1653,6 +1653,11 @@ export type WebDAVExportType =
     | 'DB_USERS'
     | 'DB_CLUBS'
 
+export type WebDAVImportRequest = {
+    folderName: string
+    selectedData: Array<WebDAVExportType>
+}
+
 export type WorkShiftUpsertDto = {
     workType: string
     timeFrom: string
@@ -4671,6 +4676,14 @@ export type ExportDataByWebDavError = BadRequestError | ApiError
 export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
+
+export type ImportDatafromWebDavData = {
+    body: WebDAVImportRequest
+}
+
+export type ImportDatafromWebDavResponse = void
+
+export type ImportDatafromWebDavError = BadRequestError | ApiError
 
 export type GetWebDavImportOptionFoldersResponse = Array<string>
 

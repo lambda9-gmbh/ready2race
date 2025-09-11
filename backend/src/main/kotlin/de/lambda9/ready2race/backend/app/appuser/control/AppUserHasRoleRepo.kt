@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.appuser.control
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_HAS_ROLE
+import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_HAS_PRIVILEGE
 import org.jooq.impl.DSL
 import java.util.*
 
@@ -27,4 +28,10 @@ object AppUserHasRoleRepo {
     }
 
     fun getByUsers(userIds: List<UUID>) = APP_USER_HAS_ROLE.select{ APP_USER.`in`(userIds) }
+
+    fun getOverlaps(ids: List<Pair<UUID, UUID>>) = APP_USER_HAS_ROLE.select {
+        DSL.or(ids.map { (appUser, role) ->
+            APP_USER.eq(appUser).and(ROLE.eq(role))
+        })
+    }
 }

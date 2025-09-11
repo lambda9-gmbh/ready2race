@@ -25,7 +25,7 @@ import {
     getEvents,
     getWebDavExportStatus,
     getWebDavImportOptionFolders,
-    getWebDavImportOptionTypes
+    getWebDavImportOptionTypes, importDatafromWebDav
 } from '@api/sdk.gen.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {useState} from 'react'
@@ -182,6 +182,9 @@ const ExportData = () => {
             <Box>
                 <Button variant={'contained'} onClick={openDialog}>
                     {t('webDAV.export.export')}
+                </Button>
+                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "FrischeFische", selectedData: ['DB_USERS', 'DB_CLUBS']}})}>
+                    todo IMPORT
                 </Button>
             </Box>
             <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'xs'}>

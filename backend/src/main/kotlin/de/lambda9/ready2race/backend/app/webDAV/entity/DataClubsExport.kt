@@ -4,10 +4,13 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
 import de.lambda9.ready2race.backend.app.webDAV.control.toExport
+import de.lambda9.ready2race.backend.app.webDAV.control.toRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 
@@ -31,7 +34,25 @@ data class DataClubsExport(
 
             val json = !WebDAVService.serializeDataExport(record, exportData, WebDAVExportType.DB_CLUBS)
 
-            KIO.ok(File(name = "clubs.json", bytes = json))
+            KIO.ok(File(name = getWebDavDataJsonFileName(WebDAVExportType.DB_CLUBS), bytes = json))
+        }
+
+        fun importData(data: DataClubsExport): App<Nothing, Unit> = KIO.comprehension {
+            // Club
+            val overlappingClubs = !ClubRepo.getOverlapIds(data.clubs.map { it.id }).orDie()
+            val clubRecords = !data.clubs
+                .filter { clubData -> !overlappingClubs.any { it == clubData.id } }
+                .traverse { it.toRecord() }
+            ClubRepo.create(clubRecords).orDie()
+
+            // Participant
+            val overlappingParticipants = !ParticipantRepo.getOverlapIds(data.participants.map { it.id }).orDie()
+            val participantRecords = !data.participants
+                .filter { participantData -> !overlappingParticipants.any { it == participantData.id } }
+                .traverse { it.toRecord() }
+            !ParticipantRepo.create(participantRecords).orDie()
+
+            unit
         }
     }
 }

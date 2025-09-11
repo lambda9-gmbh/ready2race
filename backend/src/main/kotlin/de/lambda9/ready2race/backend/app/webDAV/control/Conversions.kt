@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.control.toDto
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
@@ -60,9 +61,36 @@ fun AppUserRecord.toExport(): App<Nothing, AppUserExport> = KIO.ok(
         club = club
     )
 )
+fun AppUserExport.toRecord(): App<Nothing, AppUserRecord> = KIO.ok(
+    AppUserRecord(
+        id = id,
+        email = email,
+        password = password,
+        firstname = firstname,
+        lastname = lastname,
+        language = language,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy,
+        club = club
+    )
+)
 
 fun RoleRecord.toExport(): App<Nothing, RoleExport> = KIO.ok(
     RoleExport(
+        id = id,
+        name = name,
+        description = description,
+        static = static,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+fun RoleExport.toRecord(): App<Nothing, RoleRecord> = KIO.ok(
+    RoleRecord(
         id = id,
         name = name,
         description = description,
@@ -80,6 +108,12 @@ fun RoleHasPrivilegeRecord.toExport(): App<Nothing, RoleHasPrivilegeExport> = KI
         privilege = privilege
     )
 )
+fun RoleHasPrivilegeExport.toRecord(): App<Nothing, RoleHasPrivilegeRecord> = KIO.ok(
+    RoleHasPrivilegeRecord(
+        role = role,
+        privilege = privilege
+    )
+)
 
 fun AppUserHasRoleRecord.toExport(): App<Nothing, AppUserHasRoleExport> = KIO.ok(
     AppUserHasRoleExport(
@@ -87,9 +121,25 @@ fun AppUserHasRoleRecord.toExport(): App<Nothing, AppUserHasRoleExport> = KIO.ok
         role = role
     )
 )
+fun AppUserHasRoleExport.toRecord(): App<Nothing, AppUserHasRoleRecord> = KIO.ok(
+    AppUserHasRoleRecord(
+        appUser = appUser,
+        role = role
+    )
+)
 
 fun ClubRecord.toExport(): App<Nothing, ClubExport> = KIO.ok(
     ClubExport(
+        id = id,
+        name = name,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+fun ClubExport.toRecord(): App<Nothing, ClubRecord> = KIO.ok(
+    ClubRecord(
         id = id,
         name = name,
         createdAt = createdAt,
@@ -107,6 +157,23 @@ fun ParticipantRecord.toExport(): App<Nothing, ParticipantExport> = KIO.ok(
         lastname = lastname,
         year = year,
         gender = gender.toString(),
+        phone = phone,
+        external = external,
+        externalClubName = externalClubName,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+fun ParticipantExport.toRecord(): App<Nothing, ParticipantRecord> = KIO.ok(
+    ParticipantRecord(
+        id = id,
+        club = club,
+        firstname = firstname,
+        lastname = lastname,
+        year = year,
+        gender = Gender.valueOf(gender),
         phone = phone,
         external = external,
         externalClubName = externalClubName,

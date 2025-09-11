@@ -24,10 +24,7 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.config.Config
-import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDependencyRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportFolderRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.ready2race.backend.kio.comprehension
@@ -63,6 +60,7 @@ object WebDAVService {
 
 
         val config = !accessConfig()
+        !KIO.failOn(config.webDAV == null) { WebDAVError.ConfigIncomplete }
         if (config.webDAV == null) {
             return KIO.fail(WebDAVError.ConfigIncomplete)
         }
@@ -131,8 +129,14 @@ object WebDAVService {
                 header("Authorization", authHeader)
             }
 
-        !KIO.failOn(checkFolderResponse.status.isSuccess()) { WebDAVError.ExportFolderAlreadyExists }
-        !KIO.failOn(checkFolderResponse.status.value != 404) { WebDAVError.CannotMakeFolder("/") }
+        !KIO.failOn(checkFolderResponse.status.isSuccess()) {
+            client.close()
+            WebDAVError.ExportFolderAlreadyExists
+        }
+        !KIO.failOn(checkFolderResponse.status.value != 404) {
+            client.close()
+            WebDAVError.CannotMakeFolder("/")
+        }
 
 
         // Create root folder
@@ -342,6 +346,7 @@ object WebDAVService {
             val content = if (!response.status.isSuccess()) response.bodyAsText() else null
             !KIO.failOn(!response.status.isSuccess()) {
                 logger.error { "Export of manifest.json was unsuccessful. $content" }
+                client.close()
                 WebDAVError.ManifestExportFailed
             }
         }
@@ -411,11 +416,13 @@ object WebDAVService {
                                 errorAt = LocalDateTime.now()
                             }.orDie()
                             !setErrorOnChildrenOfFolder(nextExportFolder.id!!)
+                            client.close()
                             it
                         }
                     !WebDAVExportFolderRepo.update(nextExportFolder.id!!) {
                         doneAt = LocalDateTime.now()
                     }.orDie()
+                    client.close()
                     return@comprehension unit
                 }
 
@@ -433,7 +440,10 @@ object WebDAVService {
                     fun setFileNotFoundError(msg: String? = "File not found") = WebDAVExportRepo.update(nextExport) {
                         error = msg
                         errorAt = LocalDateTime.now()
-                    }.map { WebDAVError.FileNotFound(it.id, it.dataReference) }
+                    }.map {
+                        client.close()
+                        WebDAVError.FileNotFound(it.id, it.dataReference)
+                    }
 
                     nextExport.let { exportRecord ->
                         when (exportRecord.documentType) {
@@ -474,7 +484,9 @@ object WebDAVService {
                                 }
                                     .map { File(name = it.name, bytes = it.bytes) }
 
-                            else -> return@comprehension KIO.fail(!setFileNotFoundError().orDie())
+                            else -> {
+                                return@comprehension KIO.fail(!setFileNotFoundError().orDie())
+                            }
                         }
                     }
                 }
@@ -496,6 +508,7 @@ object WebDAVService {
                                 error = "Unknown export type"
                                 errorAt = LocalDateTime.now()
                             }.orDie()
+                            client.close() // todo: @evaluate: Is it necessary to close the clients before each fail?
                             return@comprehension KIO.fail(
                                 WebDAVError.FileNotFound(
                                     nextDataExport.id,
@@ -505,6 +518,7 @@ object WebDAVService {
                         }
                     }
                 } else {
+                    client.close()
                     return@comprehension KIO.fail(WebDAVError.NoFilesToExport)
                 }
 
@@ -524,6 +538,7 @@ object WebDAVService {
                             error = "${response.status.value} - $content"
                             errorAt = LocalDateTime.now()
                         }.orDie()
+                        client.close()
                         return@comprehension KIO.fail(
                             WebDAVError.CannotTransferFile(
                                 exportId = nextExport.id,
@@ -535,6 +550,7 @@ object WebDAVService {
                             error = "${response.status.value} - $content"
                             errorAt = LocalDateTime.now()
                         }.orDie()
+                        client.close()
                         return@comprehension KIO.fail(
                             WebDAVError.CannotTransferFile(
                                 exportId = nextDataExport.id,
@@ -744,7 +760,10 @@ object WebDAVService {
             contentType(ContentType.Application.Xml)
         }
 
-        !KIO.failOn(!resp.status.isSuccess()) { WebDAVError.CannotListFolders }
+        !KIO.failOn(!resp.status.isSuccess()) {
+            client.close()
+            WebDAVError.CannotListFolders
+        }
 
         val responseBody = resp.bodyAsText()
         val folderNames = parseFolderNamesFromPropfind(responseBody)
@@ -767,7 +786,7 @@ object WebDAVService {
 
             // Check if this is a collection (folder)
             val isCollection = responseContent.contains("<d:collection/>") ||
-                              responseContent.contains("<d:collection></d:collection>")
+                responseContent.contains("<d:collection></d:collection>")
 
             if (isCollection) {
                 // Extract display name
@@ -828,4 +847,223 @@ object WebDAVService {
         return KIO.ok(ApiResponse.ListDto(manifest.exportedTypes))
     }
 
+    fun initializeImportData(
+        request: WebDAVImportRequest, userId: UUID
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        !KIO.failOn(request.selectedData.any { !it.name.startsWith("DB_") }) { WebDAVError.OnlyDataImportsAllowed }
+        !checkImportRequestTypeDependencies(request.selectedData)
+
+        val importProcess = WebdavImportProcessRecord(
+            id = UUID.randomUUID(),
+            importFolderName = request.folderName,
+            createdAt = LocalDateTime.now(),
+            createdBy = userId
+        )
+        val processId = !WebDAVImportProcessRepo.create(importProcess).orDie()
+
+
+        fun buildImportDataRecord(
+            dataType: WebDAVExportType
+        ): WebdavImportDataRecord {
+            return WebdavImportDataRecord(
+                id = UUID.randomUUID(),
+                webdavImportProcess = processId,
+                documentType = dataType.name,
+                path = "${request.folderName}/${getWebDavDataJsonFileName(dataType)}",
+                importedAt = null,
+                errorAt = null,
+                error = null
+            )
+        }
+
+        val importDataRecords = mutableListOf<WebdavImportDataRecord>()
+        val importDataIds = mutableMapOf<WebDAVExportType, UUID>()
+
+        // Create import data records for each selected type
+        request.selectedData.forEach { dataType ->
+            val record = buildImportDataRecord(dataType)
+            importDataRecords.add(record)
+            importDataIds[dataType] = record.id
+        }
+
+        // Create import data records
+        !WebDAVImportDataRepo.create(importDataRecords).orDie()
+
+
+        // Create dependencies using the dependency map
+        val dependencyRecords = mutableListOf<WebdavImportDependencyRecord>()
+
+        request.selectedData.forEach { dataType ->
+            webDAVExportTypeDependencies[dataType]?.forEach { dependency ->
+                dependencyRecords.add(
+                    WebdavImportDependencyRecord(
+                        webdavImportData = importDataIds[dataType]!!,
+                        dependingOn = importDataIds[dependency]!! // can be called safely because of checkImportRequestTypeDependencies() earlier
+                    )
+                )
+            }
+        }
+
+        if (dependencyRecords.isNotEmpty()) {
+            !WebDAVImportDependencyRepo.create(dependencyRecords).orDie()
+        }
+
+        noData
+    }
+
+
+    private fun checkImportRequestTypeDependencies(types: List<WebDAVExportType>): App<WebDAVError.WebDAVExternError, Unit> =
+        KIO.comprehension {
+
+            // Check each type's dependencies
+            types.forEach { exportType ->
+                webDAVExportTypeDependencies[exportType]?.forEach { requiredDependency ->
+                    !KIO.failOn(!types.contains(requiredDependency)) {
+                        WebDAVError.MissingDependency(
+                            exportType,
+                            requiredDependency
+                        )
+                    }
+                }
+            }
+
+            unit
+        }
+
+    private val webDAVExportTypeDependencies = mapOf(
+        WebDAVExportType.DB_CLUBS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_BANK_ACCOUNTS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_CONTACT_INFORMATION to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_EVENT_DOCUMENT_TYPES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_MATCH_RESULT_IMPORT_CONFIGS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_STARTLIST_EXPORT_CONFIGS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_WORK_TYPES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_RATING_CATEGORIES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_COMPETITION_CATEGORIES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_FEES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_NAMED_PARTICIPANTS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_COMPETITION_TEMPLATES to listOf(WebDAVExportType.DB_USERS),
+
+        WebDAVExportType.DB_EVENT to listOf(
+            WebDAVExportType.DB_USERS,
+            WebDAVExportType.DB_CONTACT_INFORMATION,
+            WebDAVExportType.DB_BANK_ACCOUNTS
+        ),
+
+        WebDAVExportType.DB_COMPETITION to listOf(
+            WebDAVExportType.DB_USERS,
+            WebDAVExportType.DB_FEES,
+            WebDAVExportType.DB_NAMED_PARTICIPANTS
+        )
+    )
+
+    fun getWebDavDataJsonFileName(type: WebDAVExportType): String {
+        return (when (type) {
+            WebDAVExportType.DB_USERS -> "users"
+            WebDAVExportType.DB_CLUBS -> "clubs"
+            WebDAVExportType.DB_BANK_ACCOUNTS -> "bank_accounts"
+            WebDAVExportType.DB_CONTACT_INFORMATION -> "contact_information"
+            WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES -> "email_individual_templates"
+            WebDAVExportType.DB_EVENT_DOCUMENT_TYPES -> "event_document_types"
+            WebDAVExportType.DB_MATCH_RESULT_IMPORT_CONFIGS -> "match_result_import_configs"
+            WebDAVExportType.DB_STARTLIST_EXPORT_CONFIGS -> "startlist_export_configs"
+            WebDAVExportType.DB_WORK_TYPES -> "work_types"
+            WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS -> "participant_requirements"
+            WebDAVExportType.DB_RATING_CATEGORIES -> "rating_categories"
+            WebDAVExportType.DB_COMPETITION_CATEGORIES -> "competition_categories"
+            WebDAVExportType.DB_FEES -> "fees"
+            WebDAVExportType.DB_NAMED_PARTICIPANTS -> "named_participants"
+            WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES -> "competition_setup_templates"
+            WebDAVExportType.DB_COMPETITION_TEMPLATES -> "competition_templates"
+            WebDAVExportType.DB_EVENT -> "event"
+            WebDAVExportType.DB_COMPETITION -> "competition"
+            else -> ""
+        }) + ".json"
+    }
+
+    // todo: check for foreign key existence - specific error if not
+    // todo: mark dependent imports as error as well if one import fails
+    // Todo: If there is an error that will definitely stay - set an error to the other files to reduce load on server
+    suspend fun importNext(env: JEnv): App<WebDAVError.WebDAVImportNextError, Unit> =
+        coroutineScope {
+            comprehension(env) {
+                val config = !accessConfig()
+                if (config.webDAV == null) {
+                    return@comprehension KIO.fail(WebDAVError.ConfigIncomplete)
+                }
+
+                val client = HttpClient(CIO)
+
+                val nextImport =
+                    !WebDAVImportDataRepo.getNextImport().orDie().onNullFail { WebDAVError.NoFilesToImport }
+
+                // Get json file from webdav server at the address of nextImport
+                val authHeader = buildBasicAuthHeader(config.webDAV)
+                val url = getUrl(
+                    webDAVConfig = config.webDAV,
+                    pathSegments = nextImport.path
+                )
+
+                val response = client.get(url) {
+                    header("Authorization", authHeader)
+                }
+
+                val content = response.bodyAsText()
+
+                if (!response.status.isSuccess()) {
+                    !WebDAVImportDataRepo.update(nextImport) {
+                        error = "HTTP ${response.status.value}: $content"
+                        errorAt = LocalDateTime.now()
+                    }.orDie()
+                    client.close()
+                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                }
+
+
+                // Process the data based on document type
+                try {
+                    when (nextImport.documentType) {
+                        WebDAVExportType.DB_USERS.name -> {
+                            val importData = jsonMapper.readValue(content, DataUsersExport::class.java)
+                            !DataUsersExport.importData(importData).orDie()
+                        }
+
+                        WebDAVExportType.DB_CLUBS.name -> {
+                            val importData = jsonMapper.readValue(content, DataClubsExport::class.java)
+                            !DataClubsExport.importData(importData).orDie()
+                        }
+
+                        else -> {
+                            !WebDAVImportDataRepo.update(nextImport) {
+                                error = "Unknown import type: ${nextImport.documentType}"
+                                errorAt = LocalDateTime.now()
+                            }.orDie()
+                            client.close()
+                            return@comprehension KIO.fail(WebDAVError.NoFilesToImport)
+                        }
+                    }
+
+                    // Mark import as successful
+                    !WebDAVImportDataRepo.update(nextImport) {
+                        importedAt = LocalDateTime.now()
+                    }.orDie()
+
+                } catch (ex: Exception) {
+                    !WebDAVImportDataRepo.update(nextImport) {
+                        error = "Import failed: ${ex.cause?.message}"
+                        errorAt = LocalDateTime.now()
+                    }.orDie()
+                    client.close()
+                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                }
+
+                client.close()
+
+                unit
+            }
+        }
 }
