@@ -18,6 +18,8 @@ object ClubRepo {
 
     fun any() = CLUB.exists { DSL.trueCondition() }
 
+    fun all() = CLUB.select()
+
     fun create(
         record: ClubRecord,
     ): JIO<UUID> = CLUB.insertReturning(record) { ID }

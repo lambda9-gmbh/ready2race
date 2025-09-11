@@ -25,4 +25,6 @@ object AppUserHasRoleRepo {
             ROLE.notIn(ADMIN_ROLE, USER_ROLE, CLUB_REPRESENTATIVE_ROLE)
         )
     }
+
+    fun getByUsers(userIds: List<UUID>) = APP_USER_HAS_ROLE.select{ APP_USER.`in`(userIds) }
 }

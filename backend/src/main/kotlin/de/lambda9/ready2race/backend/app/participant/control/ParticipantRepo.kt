@@ -24,6 +24,8 @@ object ParticipantRepo {
 
     fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
 
+    fun all() = PARTICIPANT.select()
+
     fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
 
     fun update(
