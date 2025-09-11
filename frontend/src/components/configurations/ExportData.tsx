@@ -20,13 +20,19 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {exportDataByWebDav, getEvents, getWebDavExportStatus, getWebDavImportOptions} from '@api/sdk.gen.ts'
+import {
+    exportDataByWebDav,
+    getEvents,
+    getWebDavExportStatus,
+    getWebDavImportOptionFolders,
+    getWebDavImportOptionTypes
+} from '@api/sdk.gen.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {useState} from 'react'
-import {WebDAVExportType} from '@api/types.gen.ts'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
 import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
+import {WebDAVExportType} from "@api/types.gen.ts";
 
 type ExportForm = {
     name: string
@@ -78,7 +84,9 @@ const ExportData = () => {
         autoReloadInterval: reloadFrequently ? 1000 : 6000,
     })
 
-    useFetch(signal => getWebDavImportOptions({signal}))
+    useFetch(signal => getWebDavImportOptionFolders({signal}))
+
+    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: "FrischeFische"}, signal}))
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
         onResponse: ({error}) => {

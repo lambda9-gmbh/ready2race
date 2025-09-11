@@ -712,7 +712,7 @@ object WebDAVService {
         )
     }
 
-    suspend fun CallComprehensionScope.getImportOptions(): App<WebDAVError.WebDAVExternError, ApiResponse.ListDto<String>> {
+    suspend fun CallComprehensionScope.getImportOptionFolders(): App<WebDAVError.WebDAVExternError, ApiResponse.ListDto<String>> {
         val config = !accessConfig()
         if (config.webDAV == null) {
             return KIO.fail(WebDAVError.ConfigIncomplete)
@@ -787,4 +787,45 @@ object WebDAVService {
 
         return folderNames.distinct()
     }
+
+
+    suspend fun CallComprehensionScope.getImportOptionTypes(folderName: String): App<WebDAVError.WebDAVExternError, ApiResponse.ListDto<WebDAVExportType>> {
+        val config = !accessConfig()
+        if (config.webDAV == null) {
+            return KIO.fail(WebDAVError.ConfigIncomplete)
+        }
+
+        val client = HttpClient(CIO)
+        val authHeader = buildBasicAuthHeader(config.webDAV)
+
+        val manifestUrl = getUrl(
+            webDAVConfig = config.webDAV,
+            pathSegments = "$folderName/manifest.json"
+        )
+
+        val manifestResponse = client.request(manifestUrl) {
+            method = HttpMethod.Get
+            header("Authorization", authHeader)
+        }
+
+        if (!manifestResponse.status.isSuccess()) {
+            client.close()
+            return KIO.fail(WebDAVError.ManifestNotFound)
+        }
+
+        val manifestContent = manifestResponse.bodyAsText()
+
+        // Parse the manifest JSON into ManifestExport data class
+        val manifest = try {
+            jsonMapper.readValue(manifestContent, ManifestExport::class.java)
+        } catch (e: Exception) {
+            client.close()
+            return KIO.fail(WebDAVError.ManifestParsingFailed)
+        }
+
+        client.close()
+
+        return KIO.ok(ApiResponse.ListDto(manifest.exportedTypes))
+    }
+
 }

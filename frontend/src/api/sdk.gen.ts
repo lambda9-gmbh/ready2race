@@ -616,8 +616,11 @@ import type {
     ExportDataByWebDavResponse,
     GetWebDavExportStatusError,
     GetWebDavExportStatusResponse,
-    GetWebDavImportOptionsError,
-    GetWebDavImportOptionsResponse,
+    GetWebDavImportOptionFoldersError,
+    GetWebDavImportOptionFoldersResponse,
+    GetWebDavImportOptionTypesData,
+    GetWebDavImportOptionTypesError,
+    GetWebDavImportOptionTypesResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3143,15 +3146,28 @@ export const getWebDavExportStatus = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const getWebDavImportOptions = <ThrowOnError extends boolean = false>(
+export const getWebDavImportOptionFolders = <ThrowOnError extends boolean = false>(
     options?: OptionsLegacyParser<unknown, ThrowOnError>,
 ) => {
     return (options?.client ?? client).get<
-        GetWebDavImportOptionsResponse,
-        GetWebDavImportOptionsError,
+        GetWebDavImportOptionFoldersResponse,
+        GetWebDavImportOptionFoldersError,
         ThrowOnError
     >({
         ...options,
         url: '/webDAV/import/options',
+    })
+}
+
+export const getWebDavImportOptionTypes = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWebDavImportOptionTypesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWebDavImportOptionTypesResponse,
+        GetWebDavImportOptionTypesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import/options/{folderName}',
     })
 }

@@ -30,6 +30,8 @@ sealed interface WebDAVError {
                 ManifestSerializationFailed -> HttpStatusCode.InternalServerError
                 ManifestExportFailed,
                 CannotListFolders -> HttpStatusCode.BadGateway
+                ManifestNotFound -> HttpStatusCode.NotFound
+                ManifestParsingFailed -> HttpStatusCode.InternalServerError
             },
             message = message,
         )
@@ -40,6 +42,8 @@ sealed interface WebDAVError {
     data object ManifestSerializationFailed : WebDAVExternError("Failed to serialize manifest.json file for database export.")
     data object ManifestExportFailed : WebDAVExternError("Failed to export manifest.json file to the WebDAV Server.")
     data object CannotListFolders : WebDAVExternError("Failed to list folders from the WebDAV Server.")
+    data object ManifestNotFound : WebDAVExternError("Manifest.json file not found in the specified folder.")
+    data object ManifestParsingFailed : WebDAVExternError("Failed to parse manifest.json file from the WebDAV Server.")
 
 
 

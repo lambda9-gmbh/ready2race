@@ -4672,6 +4672,16 @@ export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
 
-export type GetWebDavImportOptionsResponse = Array<string>
+export type GetWebDavImportOptionFoldersResponse = Array<string>
 
-export type GetWebDavImportOptionsError = BadRequestError | ApiError
+export type GetWebDavImportOptionFoldersError = BadRequestError | ApiError
+
+export type GetWebDavImportOptionTypesData = {
+    path: {
+        folderName: string
+    }
+}
+
+export type GetWebDavImportOptionTypesResponse = Array<WebDAVExportType>
+
+export type GetWebDavImportOptionTypesError = BadRequestError | ApiError
