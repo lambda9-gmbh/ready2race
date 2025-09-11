@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.webDAV.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getImportOptions
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.initializeExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -25,6 +26,18 @@ fun Route.webDAV() {
                     !authenticate(Privilege.ReadEventGlobal)
 
                     WebDAVService.getExportStatus()
+                }
+            }
+        }
+
+        route("/import"){
+            route("/options"){
+                get{
+                    call.respondComprehension {
+                        !authenticate(Privilege.ReadEventGlobal)
+
+                        getImportOptions()
+                    }
                 }
             }
         }

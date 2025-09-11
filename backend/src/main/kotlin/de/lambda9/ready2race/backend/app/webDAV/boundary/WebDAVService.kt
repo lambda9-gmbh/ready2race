@@ -711,4 +711,80 @@ object WebDAVService {
                 })
         )
     }
+
+    suspend fun CallComprehensionScope.getImportOptions(): App<WebDAVError.WebDAVExternError, ApiResponse.ListDto<String>> {
+        val config = !accessConfig()
+        if (config.webDAV == null) {
+            return KIO.fail(WebDAVError.ConfigIncomplete)
+        }
+
+        val client = HttpClient(CIO)
+        val authHeader = buildBasicAuthHeader(config.webDAV)
+
+        val propfindUrl = getUrl(
+            webDAVConfig = config.webDAV,
+            pathSegments = ""
+        )
+
+        val propfindBody = """
+                        <?xml version="1.0"?>
+                        <d:propfind xmlns:d="DAV:">
+                            <d:prop>
+                                <d:resourcetype/>
+                                <d:displayname/>
+                            </d:prop>
+                        </d:propfind>
+                    """.trimIndent()
+
+        val resp = client.request(propfindUrl) {
+            method = HttpMethod("PROPFIND")
+            header("Authorization", authHeader)
+            header("Depth", "1")
+            setBody(propfindBody)
+            contentType(ContentType.Application.Xml)
+        }
+
+        !KIO.failOn(!resp.status.isSuccess()) { WebDAVError.CannotListFolders }
+
+        val responseBody = resp.bodyAsText()
+        val folderNames = parseFolderNamesFromPropfind(responseBody)
+
+        client.close()
+
+        return KIO.ok(ApiResponse.ListDto(folderNames))
+    }
+
+
+    private fun parseFolderNamesFromPropfind(xmlResponse: String): List<String> {
+        val folderNames = mutableListOf<String>()
+
+        // Use regex to find all response blocks
+        val responsePattern = "<d:response>(.*?)</d:response>".toRegex()
+        val matches = responsePattern.findAll(xmlResponse)
+
+        for (match in matches) {
+            val responseContent = match.groupValues[1]
+
+            // Check if this is a collection (folder)
+            val isCollection = responseContent.contains("<d:collection/>") ||
+                              responseContent.contains("<d:collection></d:collection>")
+
+            if (isCollection) {
+                // Extract display name
+                val displayNamePattern = "<d:displayname>(.*?)</d:displayname>".toRegex()
+                val displayNameMatch = displayNamePattern.find(responseContent)
+
+                if (displayNameMatch != null) {
+                    val displayName = displayNameMatch.groupValues[1]
+                    // Skip the root folder (which has the username as displayname)
+                    // We want actual subfolders only
+                    if (displayName.isNotEmpty() && !responseContent.contains("/dav/files/admin/</d:href>")) {
+                        folderNames.add(displayName)
+                    }
+                }
+            }
+        }
+
+        return folderNames.distinct()
+    }
 }

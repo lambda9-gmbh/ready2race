@@ -4671,3 +4671,7 @@ export type ExportDataByWebDavError = BadRequestError | ApiError
 export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
+
+export type GetWebDavImportOptionsResponse = Array<string>
+
+export type GetWebDavImportOptionsError = BadRequestError | ApiError

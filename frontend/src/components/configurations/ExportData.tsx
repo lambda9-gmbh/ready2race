@@ -20,7 +20,7 @@ import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {exportDataByWebDav, getEvents, getWebDavExportStatus} from '@api/sdk.gen.ts'
+import {exportDataByWebDav, getEvents, getWebDavExportStatus, getWebDavImportOptions} from '@api/sdk.gen.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {useState} from 'react'
 import {WebDAVExportType} from '@api/types.gen.ts'
@@ -77,6 +77,8 @@ const ExportData = () => {
         deps: [reloadFrequently],
         autoReloadInterval: reloadFrequently ? 1000 : 6000,
     })
+
+    useFetch(signal => getWebDavImportOptions({signal}))
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
         onResponse: ({error}) => {

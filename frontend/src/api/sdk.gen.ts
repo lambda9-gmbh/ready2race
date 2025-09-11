@@ -616,6 +616,8 @@ import type {
     ExportDataByWebDavResponse,
     GetWebDavExportStatusError,
     GetWebDavExportStatusResponse,
+    GetWebDavImportOptionsError,
+    GetWebDavImportOptionsResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3138,5 +3140,18 @@ export const getWebDavExportStatus = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/webDAV/export',
+    })
+}
+
+export const getWebDavImportOptions = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWebDavImportOptionsResponse,
+        GetWebDavImportOptionsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import/options',
     })
 }
