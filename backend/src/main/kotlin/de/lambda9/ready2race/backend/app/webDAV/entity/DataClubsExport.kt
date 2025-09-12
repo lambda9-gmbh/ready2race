@@ -17,7 +17,7 @@ import de.lambda9.tailwind.core.extensions.kio.traverse
 data class DataClubsExport(
     val clubs: List<ClubExport>,
     val participants: List<ParticipantExport>
-) {
+) : WebDAVExportData {
     companion object {
         fun createExportFile(
             record: WebdavExportDataRecord
@@ -32,13 +32,15 @@ data class DataClubsExport(
                 participants = participants
             )
 
-            val json = !WebDAVService.serializeDataExport(record, exportData, WebDAVExportType.DB_CLUBS)
+            val json = !WebDAVService.serializeDataExport(record, exportData)
 
             KIO.ok(File(name = getWebDavDataJsonFileName(WebDAVExportType.DB_CLUBS), bytes = json))
         }
 
-        fun importData(data: DataClubsExport): App<Nothing, Unit> = KIO.comprehension {
+        fun importData(data: DataClubsExport): App<WebDAVError.Unexpected, Unit> = KIO.comprehension {
             // Club
+            try {
+
             val overlappingClubs = !ClubRepo.getOverlapIds(data.clubs.map { it.id }).orDie()
             val clubRecords = !data.clubs
                 .filter { clubData -> !overlappingClubs.any { it == clubData.id } }
@@ -52,6 +54,9 @@ data class DataClubsExport(
                 .traverse { it.toRecord() }
             !ParticipantRepo.create(participantRecords).orDie()
 
+            } catch (ex: Exception) {
+                return@comprehension KIO.fail(WebDAVError.Unexpected)
+            }
             unit
         }
     }

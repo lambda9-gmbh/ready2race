@@ -183,7 +183,7 @@ const ExportData = () => {
                 <Button variant={'contained'} onClick={openDialog}>
                     {t('webDAV.export.export')}
                 </Button>
-                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "FrischeFische", selectedData: ['DB_USERS', 'DB_CLUBS']}})}>
+                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "FrischeFische", selectedData: ['DB_USERS']}})}>
                     todo IMPORT
                 </Button>
             </Box>

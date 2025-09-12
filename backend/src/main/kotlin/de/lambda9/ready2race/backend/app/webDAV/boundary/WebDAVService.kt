@@ -394,6 +394,7 @@ object WebDAVService {
         return noData
     }
 
+    // Todo: Set errors to dependent export_data entries if the depending_on export fails
     // Todo: If there is an error that will definitely stay - set an error to the other files to reduce load on server
     suspend fun exportNext(env: JEnv): App<WebDAVError.WebDAVInternError, Unit> =
         coroutineScope {
@@ -440,7 +441,7 @@ object WebDAVService {
                     fun setFileNotFoundError(msg: String? = "File not found") = WebDAVExportRepo.update(nextExport) {
                         error = msg
                         errorAt = LocalDateTime.now()
-                    }.map {
+                    }.orDie().map {
                         client.close()
                         WebDAVError.FileNotFound(it.id, it.dataReference)
                     }
@@ -450,28 +451,28 @@ object WebDAVService {
                             WebDAVExportType.REGISTRATION_RESULTS.name ->
                                 !EventRegistrationReportRepo.getDownload(exportRecord.dataReference!!).orDie()
                                     .onNullFail {
-                                        !setFileNotFoundError().orDie()
+                                        !setFileNotFoundError()
                                     }
                                     .map { File(name = it.name!!, bytes = it.data!!) }
 
                             WebDAVExportType.INVOICES.name ->
                                 !InvoiceRepo.getDownload(exportRecord.dataReference!!).orDie()
                                     .onNullFail {
-                                        !setFileNotFoundError().orDie()
+                                        !setFileNotFoundError()
                                     }
                                     .map { File(name = it.filename!!, bytes = it.data!!) }
 
                             WebDAVExportType.DOCUMENTS.name ->
                                 !EventDocumentRepo.getDownload(exportRecord.dataReference!!).orDie()
                                     .onNullFail {
-                                        !setFileNotFoundError().orDie()
+                                        !setFileNotFoundError()
                                     }
                                     .map { File(name = it.name!!, bytes = it.data!!) }
 
                             WebDAVExportType.RESULTS.name ->
                                 !ResultsService.generateResultsDocument(exportRecord.dataReference!!)
                                     .mapError {
-                                        !setFileNotFoundError("Failed to generate document").orDie()
+                                        !setFileNotFoundError("Failed to generate document")
                                     }
 
                             WebDAVExportType.START_LISTS.name ->
@@ -480,12 +481,12 @@ object WebDAVService {
                                     startListType = StartListFileType.PDF,
                                     startTimeRequired = false
                                 ).mapError {
-                                    !setFileNotFoundError("Failed to generate document").orDie()
+                                    !setFileNotFoundError("Failed to generate document")
                                 }
                                     .map { File(name = it.name, bytes = it.bytes) }
 
                             else -> {
-                                return@comprehension KIO.fail(!setFileNotFoundError().orDie())
+                                return@comprehension KIO.fail(!setFileNotFoundError())
                             }
                         }
                     }
@@ -503,12 +504,8 @@ object WebDAVService {
                         }
 
                         else -> {
-                            logger.warn { "Unknown export type: ${nextDataExport.documentType}" }
-                            !WebDAVExportDataRepo.update(nextDataExport) {
-                                error = "Unknown export type"
-                                errorAt = LocalDateTime.now()
-                            }.orDie()
-                            client.close() // todo: @evaluate: Is it necessary to close the clients before each fail?
+                            !setErrorOnDataExport(nextDataExport, "Unknown export type")
+                            client.close()
                             return@comprehension KIO.fail(
                                 WebDAVError.FileNotFound(
                                     nextDataExport.id,
@@ -538,26 +535,17 @@ object WebDAVService {
                             error = "${response.status.value} - $content"
                             errorAt = LocalDateTime.now()
                         }.orDie()
-                        client.close()
-                        return@comprehension KIO.fail(
-                            WebDAVError.CannotTransferFile(
-                                exportId = nextExport.id,
-                                errorMsg = "${response.status.value} - $content"
-                            )
-                        )
+
                     } else {
-                        !WebDAVExportDataRepo.update(nextDataExport!!) {
-                            error = "${response.status.value} - $content"
-                            errorAt = LocalDateTime.now()
-                        }.orDie()
-                        client.close()
-                        return@comprehension KIO.fail(
-                            WebDAVError.CannotTransferFile(
-                                exportId = nextDataExport.id,
-                                errorMsg = "${response.status.value} - $content"
-                            )
-                        )
+                        !setErrorOnDataExport(nextDataExport!!, "${response.status.value} - $content")
                     }
+                    client.close()
+                    return@comprehension KIO.fail(
+                        WebDAVError.CannotTransferFile(
+                            exportId = nextExport.let { it?.id ?: nextDataExport!!.id },
+                            errorMsg = "${response.status.value} - $content"
+                        )
+                    )
                 }
 
                 if (nextExport != null) {
@@ -665,6 +653,33 @@ object WebDAVService {
         unit
     }
 
+    private fun setErrorOnDataExport(dataExport: WebdavExportDataRecord, errorMsg: String): App<Nothing, Unit> =
+        KIO.comprehension {
+            !WebDAVExportDataRepo.update(dataExport) {
+                error = errorMsg
+                errorAt = LocalDateTime.now()
+            }.orDie()
+            setErrorOnDependentDataExports(dataExport.id, errorMsg)
+        }
+
+    private fun setErrorOnDependentDataExports(
+        failedExportId: UUID,
+        errorMessage: String
+    ): App<Nothing, Unit> = KIO.comprehension {
+        // Update all exports that depend on this failed export and get the updated records
+        val dependentRecords = !WebDAVExportDataRepo.updateByDependingOnId(failedExportId) {
+            errorAt = LocalDateTime.now()
+            error = "Dependency failed: $errorMessage"
+        }.orDie()
+
+        // Recursively set errors on dependencies of dependencies
+        dependentRecords.forEach { record ->
+            !setErrorOnDependentDataExports(record.id, errorMessage)
+        }
+
+        unit
+    }
+
     private fun renameDuplicateNameEntities(entities: Map<UUID, String>): Map<UUID, String> {
         return entities.mapValues { (id, name) ->
             val entitiesWithName = entities.filter { it.value == name }
@@ -679,8 +694,7 @@ object WebDAVService {
 
     fun serializeDataExport(
         record: WebdavExportDataRecord,
-        exportData: Any,
-        type: WebDAVExportType
+        exportData: WebDAVExportData,
     ): App<WebDAVError.WebDAVInternError, ByteArray> = KIO.comprehension {
         try {
             val json = jsonMapper.writerWithDefaultPrettyPrinter()
@@ -688,11 +702,7 @@ object WebDAVService {
                 .toByteArray()
             KIO.ok(json)
         } catch (e: Exception) {
-            logger.error(e) { "Failed to serialize $type to JSON" }
-            !WebDAVExportDataRepo.update(record) {
-                error = "Failed to serialize: ${e.message}"
-                errorAt = LocalDateTime.now()
-            }.orDie()
+            !setErrorOnDataExport(record, "Failed to serialize: ${e.message}")
             KIO.fail(
                 WebDAVError.FileNotFound(
                     exportId = record.id,
@@ -985,7 +995,6 @@ object WebDAVService {
         }) + ".json"
     }
 
-    // todo: check for foreign key existence - specific error if not
     // todo: mark dependent imports as error as well if one import fails
     // Todo: If there is an error that will definitely stay - set an error to the other files to reduce load on server
     suspend fun importNext(env: JEnv): App<WebDAVError.WebDAVImportNextError, Unit> =
@@ -1022,46 +1031,59 @@ object WebDAVService {
                     client.close()
                     return@comprehension KIO.fail(WebDAVError.Unexpected)
                 }
+                client.close()
 
-
-                // Process the data based on document type
-                try {
-                    when (nextImport.documentType) {
-                        WebDAVExportType.DB_USERS.name -> {
-                            val importData = jsonMapper.readValue(content, DataUsersExport::class.java)
-                            !DataUsersExport.importData(importData).orDie()
-                        }
-
-                        WebDAVExportType.DB_CLUBS.name -> {
-                            val importData = jsonMapper.readValue(content, DataClubsExport::class.java)
-                            !DataClubsExport.importData(importData).orDie()
-                        }
-
-                        else -> {
-                            !WebDAVImportDataRepo.update(nextImport) {
-                                error = "Unknown import type: ${nextImport.documentType}"
-                                errorAt = LocalDateTime.now()
-                            }.orDie()
-                            client.close()
-                            return@comprehension KIO.fail(WebDAVError.NoFilesToImport)
-                        }
-                    }
-
-                    // Mark import as successful
+                fun <C> parseJsonData(
+                    content: String,
+                    dataClass: Class<C>
+                ): KIO<JEnv, WebDAVError.WebDAVImportNextError, C> = KIO.effect {
+                    jsonMapper.readValue(content, dataClass)
+                }.mapError { ex ->
                     !WebDAVImportDataRepo.update(nextImport) {
-                        importedAt = LocalDateTime.now()
-                    }.orDie()
-
-                } catch (ex: Exception) {
-                    !WebDAVImportDataRepo.update(nextImport) {
-                        error = "Import failed: ${ex.cause?.message}"
+                        error = "Import failed: ${ex.message ?: ex::class.simpleName}"
                         errorAt = LocalDateTime.now()
                     }.orDie()
                     client.close()
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                    WebDAVError.Unexpected
                 }
 
-                client.close()
+                fun setNextImportError(msg: String) = WebDAVImportDataRepo.update(nextImport) {
+                    error = msg
+                    errorAt = LocalDateTime.now()
+                }.orDie()
+
+                // Process the data based on document type
+                when (nextImport.documentType) {
+                    WebDAVExportType.DB_USERS.name -> {
+                        val importData = !parseJsonData(content, DataUsersExport::class.java)
+                        !DataUsersExport.importData(importData).mapError {
+                            val msg = when (it) {
+                                WebDAVError.EmailExistingWithOtherId -> "An email in the import already exists with another id."
+                                else -> "Unexpected error importing the data into the database."
+                            }
+                            !setNextImportError(msg)
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_CLUBS.name -> {
+                        val importData = !parseJsonData(content, DataClubsExport::class.java)
+                        !DataClubsExport.importData(importData).mapError {
+                            !setNextImportError("Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    else -> {
+                        !setNextImportError("Unknown import type: ${nextImport.documentType}")
+                        return@comprehension KIO.fail(WebDAVError.TypeNotSupported)
+                    }
+                }
+
+                // Mark import as successful
+                !WebDAVImportDataRepo.update(nextImport) {
+                    importedAt = LocalDateTime.now()
+                }.orDie()
 
                 unit
             }

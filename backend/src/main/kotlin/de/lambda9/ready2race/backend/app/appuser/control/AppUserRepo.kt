@@ -171,4 +171,6 @@ object AppUserRepo {
     fun insert(records: List<AppUserRecord>) = APP_USER.insert(records)
 
     fun getOverlapIds(ids: List<UUID>) = APP_USER.select({ ID }) { ID.`in`(ids) }
+
+    fun getEmailsExisting(emails: List<String>) = APP_USER.exists { EMAIL.`in`(emails) }
 }

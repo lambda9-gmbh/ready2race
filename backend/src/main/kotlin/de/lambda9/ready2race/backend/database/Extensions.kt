@@ -98,6 +98,17 @@ fun <R : Record, T : TableImpl<R>> T.selectAny(
     fetchAny(this@selectAny, condition())
 }
 
+fun <R : Record, T : TableImpl<R>, A> T.selectAny(
+    selection: T.() -> TableField<R, A>,
+    condition: T.() -> Condition
+): JIO<A?> = Jooq.query {
+    select(selection())
+        .from(this@selectAny)
+        .where(condition())
+        .fetchAny()
+        ?.value1()
+}
+
 fun <R : Record, T : TableImpl<R>> T.selectOne(
     condition: T.() -> Condition
 ): JIO<R?> = Jooq.query {

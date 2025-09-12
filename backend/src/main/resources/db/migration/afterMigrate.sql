@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists webdav_export_data_dependency_view;
 drop view if exists webdav_export_process_status;
 drop view if exists webdav_export_folder_view;
 drop view if exists app_user_for_event;
@@ -1088,3 +1089,18 @@ from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
          left join app_user_name cb on wep.created_by = cb.id
 group by wep.id, wep.name, wep.created_at, cb;
+
+create view webdav_export_data_dependency_view as
+select data,
+       data.exported_at,
+       data.error_at,
+       data.error,
+       case 
+           when count(dep_on) = 0 then true
+           else bool_and(dep_on.exported_at is not null)
+       end as all_dependencies_exported
+from webdav_export_data data
+         left join webdav_export_dependency wed on data.id = wed.webdav_export_data
+         left join webdav_export_data dep_on on dep_on.id = wed.depending_on
+group by data, data.exported_at, data.error_at, data.error
+;

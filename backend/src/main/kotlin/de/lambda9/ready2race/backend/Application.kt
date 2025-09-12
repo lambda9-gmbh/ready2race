@@ -135,6 +135,8 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                             WebDAVError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete")
                             WebDAVError.ConfigUnparsable -> DynamicIntervalJobState.Fatal("WebDAV config could not be parsed")
                             WebDAVError.NoFilesToImport -> DynamicIntervalJobState.Empty
+                            WebDAVError.EmailExistingWithOtherId -> DynamicIntervalJobState.Processed
+                            WebDAVError.TypeNotSupported -> DynamicIntervalJobState.Fatal("WebDAV ExportType not supported")
                             is WebDAVError.CannotMakeFolder -> {
                                 logger.warn { error.message }
                                 DynamicIntervalJobState.Processed

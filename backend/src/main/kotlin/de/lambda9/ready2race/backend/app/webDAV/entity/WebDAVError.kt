@@ -19,6 +19,8 @@ sealed interface WebDAVError {
     sealed interface WebDAVImportNextError : WebDAVError
 
     data object NoFilesToImport : WebDAVImportNextError
+    data object EmailExistingWithOtherId : WebDAVImportNextError
+    data object TypeNotSupported : WebDAVImportNextError
 
     // API-only
 
