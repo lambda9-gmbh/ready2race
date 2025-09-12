@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists webdav_import_data_dependency_view;
 drop view if exists webdav_export_data_dependency_view;
 drop view if exists webdav_export_process_status;
 drop view if exists webdav_export_folder_view;
@@ -1103,4 +1104,19 @@ from webdav_export_data data
          left join webdav_export_dependency wed on data.id = wed.webdav_export_data
          left join webdav_export_data dep_on on dep_on.id = wed.depending_on
 group by data, data.exported_at, data.error_at, data.error
+;
+
+create view webdav_import_data_dependency_view as
+select data,
+       data.imported_at,
+       data.error_at,
+       data.error,
+       case
+           when count(dep_on) = 0 then true
+           else bool_and(dep_on.imported_at is not null)
+           end as all_dependencies_imported
+from webdav_import_data data
+         left join webdav_import_dependency wid on data.id = wid.webdav_import_data
+         left join webdav_import_data dep_on on dep_on.id = wid.depending_on
+group by data, data.imported_at, data.error_at, data.error
 ;

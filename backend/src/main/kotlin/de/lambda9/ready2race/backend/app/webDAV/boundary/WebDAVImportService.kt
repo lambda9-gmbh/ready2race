@@ -150,7 +150,6 @@ object WebDAVImportService {
     }
 
 
-
     fun initializeImportData(
         request: WebDAVImportRequest, userId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
@@ -286,11 +285,6 @@ object WebDAVImportService {
                     WebDAVError.Unexpected
                 }
 
-                fun setNextImportError(msg: String) = WebDAVImportDataRepo.update(nextImport) {
-                    error = msg
-                    errorAt = LocalDateTime.now()
-                }.orDie()
-
                 // Process the data based on document type
                 when (nextImport.documentType) {
                     WebDAVExportType.DB_USERS.name -> {
@@ -300,7 +294,7 @@ object WebDAVImportService {
                                 WebDAVError.EmailExistingWithOtherId -> "An email in the import already exists with another id."
                                 else -> "Unexpected error importing the data into the database."
                             }
-                            !setNextImportError(msg)
+                            !setNextImportError(nextImport, msg)
                             it
                         }
                     }
@@ -308,13 +302,13 @@ object WebDAVImportService {
                     WebDAVExportType.DB_CLUBS.name -> {
                         val importData = !parseJsonData(content, DataClubsExport::class.java)
                         !DataClubsExport.importData(importData).mapError {
-                            !setNextImportError("Unexpected error importing the data into the database.")
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
                             it
                         }
                     }
 
                     else -> {
-                        !setNextImportError("Unknown import type: ${nextImport.documentType}")
+                        !setNextImportError(nextImport, "Unknown import type: ${nextImport.documentType}")
                         return@comprehension KIO.fail(WebDAVError.TypeNotSupported)
                     }
                 }
@@ -327,4 +321,31 @@ object WebDAVImportService {
                 unit
             }
         }
+
+    // Similar function in WebDAVExportService
+    private fun setNextImportError(dataImport: WebdavImportDataRecord, errorMsg: String) = KIO.comprehension {
+        !WebDAVImportDataRepo.update(dataImport) {
+            error = errorMsg
+            errorAt = LocalDateTime.now()
+        }.orDie()
+        setErrorOnDependentDataImports(dataImport.id, errorMsg)
+    }
+
+    private fun setErrorOnDependentDataImports(
+        failedImportId: UUID,
+        errorMessage: String
+    ): App<Nothing, Unit> = KIO.comprehension {
+        // Update all imports that depend on this failed import and get the updated records
+        val dependentRecords = !WebDAVImportDataRepo.updateByDependingOnId(failedImportId) {
+            errorAt = LocalDateTime.now()
+            error = "Dependency failed: $errorMessage"
+        }.orDie()
+
+        // Recursively set errors on dependencies of dependencies
+        dependentRecords.forEach { record ->
+            !setErrorOnDependentDataImports(record.id, errorMessage)
+        }
+
+        unit
+    }
 }
