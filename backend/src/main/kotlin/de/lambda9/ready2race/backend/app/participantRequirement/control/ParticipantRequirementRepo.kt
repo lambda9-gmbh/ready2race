@@ -17,6 +17,10 @@ object ParticipantRequirementRepo {
     fun create(record: ParticipantRequirementRecord) =
         PARTICIPANT_REQUIREMENT.insertReturning(record) { PARTICIPANT_REQUIREMENT.ID }
 
+    fun create(records: List<ParticipantRequirementRecord>) = PARTICIPANT_REQUIREMENT.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = PARTICIPANT_REQUIREMENT.select({ ID }) { ID.`in`(ids) }
+
     fun update(id: UUID, f: ParticipantRequirementRecord.() -> Unit) = PARTICIPANT_REQUIREMENT.update(f) { ID.eq(id) }
 
     fun delete(

@@ -59,7 +59,7 @@ sealed interface WebDAVError {
     data object ManifestParsingFailed : WebDAVExternError("Failed to parse manifest.json file from the WebDAV Server.")
     data object OnlyDataImportsAllowed : WebDAVExternError("Only Data import types allowed.")
     data class MissingDependency(val requester: WebDAVExportType, val dependency: WebDAVExportType) :
-        WebDAVExternError("Import type ${requester.name} requires ${dependency.name} to be selected as well.")
+        WebDAVExternError("Export type ${requester.name} requires ${dependency.name} to be selected as well.")
 
 
     // both

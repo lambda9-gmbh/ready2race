@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.webDAV.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.checkRequestTypeDependencies
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExportTypeDependencies
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDataRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDependencyRepo
@@ -22,7 +23,6 @@ import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
-import de.lambda9.tailwind.jooq.transact
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -157,7 +157,7 @@ object WebDAVImportService {
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
         !KIO.failOn(request.selectedData.any { !it.name.startsWith("DB_") }) { WebDAVError.OnlyDataImportsAllowed }
-        !checkImportRequestTypeDependencies(request.selectedData)
+        !checkRequestTypeDependencies(request.selectedData)
 
         val importProcess = WebdavImportProcessRecord(
             id = UUID.randomUUID(),
@@ -216,24 +216,6 @@ object WebDAVImportService {
 
         noData
     }
-
-    private fun checkImportRequestTypeDependencies(types: List<WebDAVExportType>): App<WebDAVError.WebDAVExternError, Unit> =
-        KIO.comprehension {
-
-            // Check each type's dependencies
-            types.forEach { exportType ->
-                webDAVExportTypeDependencies[exportType]?.forEach { requiredDependency ->
-                    !KIO.failOn(!types.contains(requiredDependency)) {
-                        WebDAVError.MissingDependency(
-                            exportType,
-                            requiredDependency
-                        )
-                    }
-                }
-            }
-
-            unit
-        }
 
 
     // Todo: If there is an error that will definitely stay - set an error to the other files to reduce load on server
@@ -294,9 +276,105 @@ object WebDAVImportService {
                         }
                     }
 
-                    WebDAVExportType.DB_CLUBS.name -> {
-                        val importData = !parseJsonData(content, DataClubsExport::class.java)
-                        !DataClubsExport.importData(importData).mapError {
+                    WebDAVExportType.DB_PARTICIPANTS.name -> {
+                        val importData = !parseJsonData(content, DataParticipantsExport::class.java)
+                        !DataParticipantsExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_BANK_ACCOUNTS.name -> {
+                        val importData = !parseJsonData(content, DataBankAccountsExport::class.java)
+                        !DataBankAccountsExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_CONTACT_INFORMATION.name -> {
+                        val importData = !parseJsonData(content, DataContactInformationExport::class.java)
+                        !DataContactInformationExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES.name -> {
+                        val importData = !parseJsonData(content, DataEmailIndividualTemplatesExport::class.java)
+                        !DataEmailIndividualTemplatesExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_EVENT_DOCUMENT_TYPES.name -> {
+                        val importData = !parseJsonData(content, DataEventDocumentTypesExport::class.java)
+                        !DataEventDocumentTypesExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_MATCH_RESULT_IMPORT_CONFIGS.name -> {
+                        val importData = !parseJsonData(content, DataMatchResultImportConfigsExport::class.java)
+                        !DataMatchResultImportConfigsExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_STARTLIST_EXPORT_CONFIGS.name -> {
+                        val importData = !parseJsonData(content, DataStartlistExportConfigsExport::class.java)
+                        !DataStartlistExportConfigsExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_WORK_TYPES.name -> {
+                        val importData = !parseJsonData(content, DataWorkTypesExport::class.java)
+                        !DataWorkTypesExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS.name -> {
+                        val importData = !parseJsonData(content, DataParticipantRequirementsExport::class.java)
+                        !DataParticipantRequirementsExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_RATING_CATEGORIES.name -> {
+                        val importData = !parseJsonData(content, DataRatingCategoriesExport::class.java)
+                        !DataRatingCategoriesExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_COMPETITION_CATEGORIES.name -> {
+                        val importData = !parseJsonData(content, DataCompetitionCategoriesExport::class.java)
+                        !DataCompetitionCategoriesExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_FEES.name -> {
+                        val importData = !parseJsonData(content, DataFeesExport::class.java)
+                        !DataFeesExport.importData(importData).mapError {
+                            !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
+                            it
+                        }
+                    }
+
+                    WebDAVExportType.DB_NAMED_PARTICIPANTS.name -> {
+                        val importData = !parseJsonData(content, DataNamedParticipantsExport::class.java)
+                        !DataNamedParticipantsExport.importData(importData).mapError {
                             !setNextImportError(nextImport, "Unexpected error importing the data into the database.")
                             it
                         }

@@ -15,6 +15,10 @@ object WorkTypeRepo {
 
     fun create(record: WorkTypeRecord) = WORK_TYPE.insertReturning(record) { ID }
 
+    fun create(records: List<WorkTypeRecord>) = WORK_TYPE.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = WORK_TYPE.select({ ID }) { ID.`in`(ids) }
+
     fun update(id: UUID, f: WorkTypeRecord.() -> Unit) =
         WORK_TYPE.update(f) { ID.eq(id) }
 

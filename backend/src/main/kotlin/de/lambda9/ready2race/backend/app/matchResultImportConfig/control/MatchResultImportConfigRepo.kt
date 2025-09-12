@@ -15,6 +15,8 @@ import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -47,6 +49,10 @@ object MatchResultImportConfigRepo {
     }
 
     fun create(record: MatchResultImportConfigRecord) = MATCH_RESULT_IMPORT_CONFIG.insertReturning(record) { ID }
+
+    fun create(records: List<MatchResultImportConfigRecord>) = MATCH_RESULT_IMPORT_CONFIG.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = MATCH_RESULT_IMPORT_CONFIG.select({ ID }) { ID.`in`(ids) }
 
     fun update(id: UUID, f: MatchResultImportConfigRecord.() -> Unit) = MATCH_RESULT_IMPORT_CONFIG.update(f) { ID.eq(id) }
 

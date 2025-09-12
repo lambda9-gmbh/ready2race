@@ -3,8 +3,6 @@ package de.lambda9.ready2race.backend.app.webDAV.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
-import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
@@ -15,7 +13,8 @@ import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistra
 import de.lambda9.ready2race.backend.app.invoice.control.InvoiceRepo
 import de.lambda9.ready2race.backend.app.results.boundary.ResultsService
 import de.lambda9.ready2race.backend.app.results.control.ResultsRepo
-import de.lambda9.ready2race.backend.app.role.control.RoleRepo
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.checkRequestTypeDependencies
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExportTypeDependencies
 import de.lambda9.ready2race.backend.app.webDAV.control.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
@@ -60,6 +59,7 @@ object WebDAVExportService {
                 renameDuplicateNameEntities(records.associate { it.id to it.name })
             }
 
+        !checkRequestTypeDependencies(request.selectedResources)
 
         val config = !accessConfig()
         !KIO.failOn(config.webDAV == null) { WebDAVError.ConfigIncomplete }
@@ -353,49 +353,36 @@ object WebDAVExportService {
             }
         }
 
-        databaseExportTypes.forEach { exportType ->
-            when (exportType) {
+        fun addRecord(exportType: WebDAVExportType, dependencies: List<WebDAVExportType>? = null) = KIO.effect {
+            val record = buildExportDataRecord(exportType)
+            !WebDAVExportDataRepo.createOne(record).orDie()
+            exportDataRecords[exportType] = record.id
 
-                WebDAVExportType.DB_USERS -> {
-                    val users = !AppUserRepo.existsExceptSystemAdmin().orDie()
-                    val roles = !RoleRepo.existsExceptStatic().orDie()
-
-                    if (users || roles) {
-                        val record = buildExportDataRecord(exportType)
-                        !WebDAVExportDataRepo.createOne(record).orDie()
-                        exportDataRecords[exportType] = record.id
+            if (dependencies != null) {
+                val dependencyRecords = dependencies
+                    .map {
+                        WebdavExportDependencyRecord(
+                            webdavExportData = record.id,
+                            dependingOn = exportDataRecords[it]!! // The dependency has to be there due to the checkRequestTypeDependencies() check earlier and the sorting of the list
+                        )
                     }
-                }
-
-                WebDAVExportType.DB_CLUBS -> {
-                    val clubExists = !ClubRepo.any().orDie()
-                    if (clubExists) {
-                        val record = buildExportDataRecord(exportType)
-                        !WebDAVExportDataRepo.createOne(record).orDie()
-                        exportDataRecords[exportType] = record.id
-
-                        exportDataRecords[WebDAVExportType.DB_USERS]?.let { usersId ->
-                            !WebDAVExportDependencyRepo.create(
-                                listOf(
-                                    WebdavExportDependencyRecord(
-                                        webdavExportData = record.id,
-                                        dependingOn = usersId
-                                    )
-                                )
-                            ).orDie()
-                        }
-                    }
-                }
-
-                else -> {}
+                !WebDAVExportDependencyRepo.create(dependencyRecords).orDie()
             }
         }
+        WebDAVService.sortDbExportTypes(databaseExportTypes) // Sorted so the dependencies are guaranteed to be there
+            .forEach { exportType ->
+                !addRecord(
+                    exportType,
+                    dependencies = webDAVExportTypeDependencies[exportType]?.let { it.ifEmpty { null } }
+                ).mapError { WebDAVError.Unexpected }
+            }
 
         client.close()
 
         return noData
     }
 
+    // Todo: @evaluate if a rollback might be a good option in case of errors (except for the error update in the records)
     // Todo: Set errors to dependent export_data entries if the depending_on export fails
     // Todo: If there is an error that will definitely stay - set an error to the other files to reduce load on server
     suspend fun exportNext(env: JEnv): App<WebDAVError.WebDAVInternError, Unit> =
@@ -501,8 +488,56 @@ object WebDAVExportService {
                             !DataUsersExport.createExportFile(nextDataExport)
                         }
 
-                        WebDAVExportType.DB_CLUBS.name -> {
-                            !DataClubsExport.createExportFile(nextDataExport)
+                        WebDAVExportType.DB_PARTICIPANTS.name -> {
+                            !DataParticipantsExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_BANK_ACCOUNTS.name -> {
+                            !DataBankAccountsExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_CONTACT_INFORMATION.name -> {
+                            !DataContactInformationExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES.name -> {
+                            !DataEmailIndividualTemplatesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_EVENT_DOCUMENT_TYPES.name -> {
+                            !DataEventDocumentTypesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_MATCH_RESULT_IMPORT_CONFIGS.name -> {
+                            !DataMatchResultImportConfigsExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_STARTLIST_EXPORT_CONFIGS.name -> {
+                            !DataStartlistExportConfigsExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_WORK_TYPES.name -> {
+                            !DataWorkTypesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS.name -> {
+                            !DataParticipantRequirementsExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_RATING_CATEGORIES.name -> {
+                            !DataRatingCategoriesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_COMPETITION_CATEGORIES.name -> {
+                            !DataCompetitionCategoriesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_FEES.name -> {
+                            !DataFeesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_NAMED_PARTICIPANTS.name -> {
+                            !DataNamedParticipantsExport.createExportFile(nextDataExport)
                         }
 
                         else -> {

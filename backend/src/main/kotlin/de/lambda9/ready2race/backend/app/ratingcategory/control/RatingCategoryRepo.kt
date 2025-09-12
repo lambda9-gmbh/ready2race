@@ -16,6 +16,10 @@ object RatingCategoryRepo {
 
     fun create(record: RatingCategoryRecord) = RATING_CATEGORY.insertReturning(record) { ID }
 
+    fun create(records: List<RatingCategoryRecord>) = RATING_CATEGORY.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = RATING_CATEGORY.select({ ID }) { ID.`in`(ids) }
+
     fun update(id: UUID, f: RatingCategoryRecord.() -> Unit) = RATING_CATEGORY.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = RATING_CATEGORY.delete { ID.eq(id) }

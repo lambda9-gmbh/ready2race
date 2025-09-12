@@ -10,8 +10,10 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.BANK_A
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -43,4 +45,8 @@ object BankAccountRepo {
                 .fetch()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = BANK_ACCOUNT.select({ ID }) { ID.`in`(ids) }
+
+    fun create(records: List<BankAccountRecord>) = BANK_ACCOUNT.insert(records)
 }

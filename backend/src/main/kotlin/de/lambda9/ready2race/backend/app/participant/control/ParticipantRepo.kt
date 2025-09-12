@@ -31,6 +31,8 @@ object ParticipantRepo {
 
     fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
 
+    fun any() = PARTICIPANT.exists { DSL.trueCondition() }
+
     fun update(
         id: UUID,
         clubId: UUID?,

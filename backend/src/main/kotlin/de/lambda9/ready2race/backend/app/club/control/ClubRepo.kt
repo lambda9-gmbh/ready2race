@@ -4,9 +4,9 @@ import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
+import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -92,6 +92,17 @@ object ClubRepo {
         id: UUID,
         f: ClubRecord.() -> Unit
     ): JIO<ClubRecord?> = CLUB.update(f) { ID.eq(id) }
+
+    fun updateUserReferences(records: List<ClubRecord>, userReferences: Map<UUID, Pair<UUID?, UUID?>>) = Jooq.query {
+        records.forEach { clubRecord ->
+            clubRecord.apply {
+                clubRecord.createdBy = userReferences[clubRecord.id]?.first
+                clubRecord.updatedBy = userReferences[clubRecord.id]?.second
+            }
+        }
+        batchUpdate(records)
+            .execute()
+    }
 
     fun delete(
         id: UUID

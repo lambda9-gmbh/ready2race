@@ -47,7 +47,23 @@ const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
     'RESULTS',
     'START_LISTS',
     'DB_USERS',
-    'DB_CLUBS'
+    'DB_PARTICIPANTS',
+    'DB_BANK_ACCOUNTS',
+    'DB_CONTACT_INFORMATION',
+    'DB_EMAIL_INDIVIDUAL_TEMPLATES',
+    'DB_EVENT_DOCUMENT_TYPES',
+    'DB_MATCH_RESULT_IMPORT_CONFIGS',
+    'DB_STARTLIST_EXPORT_CONFIGS',
+    'DB_WORK_TYPES',
+    'DB_PARTICIPANT_REQUIREMENTS',
+    'DB_RATING_CATEGORIES',
+    'DB_COMPETITION_CATEGORIES',
+    'DB_FEES',
+    'DB_NAMED_PARTICIPANTS',
+    'DB_COMPETITION_SETUP_TEMPLATES',
+    'DB_COMPETITION_TEMPLATES',
+    'DB_EVENT',
+    'DB_COMPETITION',
 ] as const
 
 const ExportData = () => {
@@ -86,7 +102,7 @@ const ExportData = () => {
 
     useFetch(signal => getWebDavImportOptionFolders({signal}))
 
-    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: "FischersFische"}, signal}))
+    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: "007"}, signal}))
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
         onResponse: ({error}) => {
@@ -123,8 +139,40 @@ const ExportData = () => {
                     return t('webDAV.export.types.startLists');
                 case 'DB_USERS':
                     return "[todo] Users";
-                case 'DB_CLUBS':
-                    return "[todo] Clubs";
+                case 'DB_PARTICIPANTS':
+                    return "[todo] Participants";
+                case 'DB_BANK_ACCOUNTS':
+                    return "[todo] Bank Accounts";
+                case 'DB_CONTACT_INFORMATION':
+                    return "[todo] Contact Information";
+                case 'DB_EMAIL_INDIVIDUAL_TEMPLATES':
+                    return "[todo] Email Individual Templates";
+                case 'DB_EVENT_DOCUMENT_TYPES':
+                    return "[todo] Event Document Types";
+                case 'DB_MATCH_RESULT_IMPORT_CONFIGS':
+                    return "[todo] Match Result Import Configs";
+                case 'DB_STARTLIST_EXPORT_CONFIGS':
+                    return "[todo] Startlist Export Configs";
+                case 'DB_WORK_TYPES':
+                    return "[todo] Work Types";
+                case 'DB_PARTICIPANT_REQUIREMENTS':
+                    return "[todo] Participant Requirements";
+                case 'DB_RATING_CATEGORIES':
+                    return "[todo] Rating Categories";
+                case 'DB_COMPETITION_CATEGORIES':
+                    return "[todo] Competition Categories";
+                case 'DB_FEES':
+                    return "[todo] Fees";
+                case 'DB_NAMED_PARTICIPANTS':
+                    return "[todo] Named Participants";
+                case 'DB_COMPETITION_SETUP_TEMPLATES':
+                    return "[todo] Competition Setup Templates";
+                case 'DB_COMPETITION_TEMPLATES':
+                    return "[todo] Competition Templates";
+                case 'DB_EVENT':
+                    return "[todo] Event";
+                case 'DB_COMPETITION':
+                    return "[todo] Competition";
                 default:
                     return '';
             }
@@ -183,7 +231,20 @@ const ExportData = () => {
                 <Button variant={'contained'} onClick={openDialog}>
                     {t('webDAV.export.export')}
                 </Button>
-                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "FischersFische", selectedData: ['DB_USERS', 'DB_CLUBS']}})}>
+                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "007", selectedData: ['DB_USERS',
+                            'DB_PARTICIPANTS',
+                            'DB_BANK_ACCOUNTS',
+                            'DB_CONTACT_INFORMATION',
+                            'DB_EMAIL_INDIVIDUAL_TEMPLATES',
+                            'DB_EVENT_DOCUMENT_TYPES',
+                            'DB_MATCH_RESULT_IMPORT_CONFIGS',
+                            'DB_STARTLIST_EXPORT_CONFIGS',
+                            'DB_WORK_TYPES',
+                            'DB_PARTICIPANT_REQUIREMENTS',
+                            'DB_RATING_CATEGORIES',
+                            'DB_COMPETITION_CATEGORIES',
+                            'DB_FEES',
+                            'DB_NAMED_PARTICIPANTS',]}})}>
                     todo IMPORT
                 </Button>
             </Box>

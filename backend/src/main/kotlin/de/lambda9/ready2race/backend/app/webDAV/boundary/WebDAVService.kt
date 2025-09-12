@@ -1,7 +1,11 @@
 package de.lambda9.ready2race.backend.app.webDAV.boundary
 
+import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
 import de.lambda9.ready2race.backend.config.Config
+import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.KIO.Companion.unit
 import io.ktor.http.*
 import java.util.*
 
@@ -32,7 +36,7 @@ object WebDAVService {
 
 
     val webDAVExportTypeDependencies = mapOf(
-        WebDAVExportType.DB_CLUBS to listOf(WebDAVExportType.DB_USERS),
+        WebDAVExportType.DB_PARTICIPANTS to listOf(WebDAVExportType.DB_USERS),
         WebDAVExportType.DB_BANK_ACCOUNTS to listOf(WebDAVExportType.DB_USERS),
         WebDAVExportType.DB_CONTACT_INFORMATION to listOf(WebDAVExportType.DB_USERS),
         WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES to listOf(WebDAVExportType.DB_USERS),
@@ -51,20 +55,71 @@ object WebDAVService {
         WebDAVExportType.DB_EVENT to listOf(
             WebDAVExportType.DB_USERS,
             WebDAVExportType.DB_CONTACT_INFORMATION,
-            WebDAVExportType.DB_BANK_ACCOUNTS
+            WebDAVExportType.DB_BANK_ACCOUNTS,
+            WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS,
         ),
 
         WebDAVExportType.DB_COMPETITION to listOf(
             WebDAVExportType.DB_USERS,
+            WebDAVExportType.DB_EVENT,
+            WebDAVExportType.DB_COMPETITION_CATEGORIES,
             WebDAVExportType.DB_FEES,
             WebDAVExportType.DB_NAMED_PARTICIPANTS
         )
     )
 
+    // todo refactor this KIO to traverse
+    fun checkRequestTypeDependencies(types: List<WebDAVExportType>): App<WebDAVError.MissingDependency, Unit> =
+        KIO.comprehension {
+            types.forEach { exportType ->
+                webDAVExportTypeDependencies[exportType]?.forEach { requiredDependency ->
+                    !KIO.failOn(!types.contains(requiredDependency)) {
+                        WebDAVError.MissingDependency(
+                            exportType,
+                            requiredDependency
+                        )
+                    }
+                }
+            }
+            unit
+        }
+
+    private val sortedDbExportTypes: List<WebDAVExportType> by lazy {
+        val dbTypes = WebDAVExportType.entries.filter { it.name.startsWith("DB_") }
+        val sorted = mutableListOf<WebDAVExportType>()
+        val visited = mutableSetOf<WebDAVExportType>()
+        val visiting = mutableSetOf<WebDAVExportType>()
+
+        fun visit(type: WebDAVExportType) {
+            if (type in visited) {
+                return
+            }
+
+            visiting.add(type)
+            webDAVExportTypeDependencies[type]?.forEach { dependency ->
+                visit(dependency)
+            }
+            visiting.remove(type)
+            visited.add(type)
+            sorted.add(type)
+        }
+
+        dbTypes.forEach { type ->
+            if (type !in visited) {
+                visit(type)
+            }
+        }
+
+        sorted.toList()
+    }
+
+    fun sortDbExportTypes(types: List<WebDAVExportType>): List<WebDAVExportType> = sortedDbExportTypes
+        .filter { it in types }
+
     fun getWebDavDataJsonFileName(type: WebDAVExportType): String {
         return (when (type) {
             WebDAVExportType.DB_USERS -> "users"
-            WebDAVExportType.DB_CLUBS -> "clubs"
+            WebDAVExportType.DB_PARTICIPANTS -> "participants"
             WebDAVExportType.DB_BANK_ACCOUNTS -> "bank_accounts"
             WebDAVExportType.DB_CONTACT_INFORMATION -> "contact_information"
             WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES -> "email_individual_templates"
@@ -84,4 +139,6 @@ object WebDAVService {
             else -> ""
         }) + ".json"
     }
+
+
 }

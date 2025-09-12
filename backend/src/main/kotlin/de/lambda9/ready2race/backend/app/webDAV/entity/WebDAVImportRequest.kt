@@ -19,7 +19,7 @@ data class WebDAVImportRequest(
     companion object {
         val example get() = WebDAVImportRequest(
             folderName = "2025-EventName",
-            selectedData = listOf(WebDAVExportType.DB_USERS, WebDAVExportType.DB_CLUBS),
+            selectedData = listOf(WebDAVExportType.DB_USERS, WebDAVExportType.DB_PARTICIPANTS),
         )
     }
 }

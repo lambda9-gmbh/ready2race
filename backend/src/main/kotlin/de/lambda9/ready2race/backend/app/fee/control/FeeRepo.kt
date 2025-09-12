@@ -49,4 +49,8 @@ object FeeRepo{
                 .fetch()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = FEE.select({ ID }) { ID.`in`(ids) }
+
+    fun create(records: List<FeeRecord>) = FEE.insert(records)
 }
