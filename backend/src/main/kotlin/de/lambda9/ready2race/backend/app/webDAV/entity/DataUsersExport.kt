@@ -31,7 +31,7 @@ data class DataUsersExport(
             record: WebdavExportDataRecord
         ): App<WebDAVError.WebDAVInternError, File> = KIO.comprehension {
             val appUsers = !AppUserRepo.getAllExceptSystemAdmin().orDie()
-                .map { list -> !list.traverse { it.toExport() } }
+                .map { list -> !list.traverse { it.toExport() } } // TODO: REMOVE PASSWORD
             val roles = !RoleRepo.getAllExceptStatic().orDie()
                 .map { list -> !list.traverse { it.toExport() } }
             val roleHasPrivileges = !RoleHasPrivilegeRepo.getByRoles(roles.map { it.id }).orDie()
