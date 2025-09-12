@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.webDAV.entity
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
 import de.lambda9.ready2race.backend.app.webDAV.control.toExport
@@ -32,7 +33,7 @@ data class DataClubsExport(
                 participants = participants
             )
 
-            val json = !WebDAVService.serializeDataExport(record, exportData)
+            val json = !WebDAVExportService.serializeDataExport(record, exportData)
 
             KIO.ok(File(name = getWebDavDataJsonFileName(WebDAVExportType.DB_CLUBS), bytes = json))
         }

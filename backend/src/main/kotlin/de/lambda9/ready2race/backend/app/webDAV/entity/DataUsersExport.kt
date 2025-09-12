@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.appuser.control.AppUserHasRoleRepo
 import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
 import de.lambda9.ready2race.backend.app.webDAV.control.toExport
@@ -43,7 +44,7 @@ data class DataUsersExport(
                 appUserHasRoles = appUserHasRoles
             )
 
-            val json = !WebDAVService.serializeDataExport(record, exportData)
+            val json = !WebDAVExportService.serializeDataExport(record, exportData)
 
             KIO.ok(File(name = getWebDavDataJsonFileName(WebDAVExportType.DB_USERS), bytes = json))
         }

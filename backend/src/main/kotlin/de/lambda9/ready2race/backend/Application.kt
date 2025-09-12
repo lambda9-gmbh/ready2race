@@ -9,7 +9,9 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVImportService
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.config.Config.Companion.parseConfig
 import de.lambda9.ready2race.backend.database.initializeDatabase
@@ -97,7 +99,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             }*/
 
             scheduleDynamic("Export next file to WebDAV Server", 10.seconds) {
-                WebDAVService.exportNext(env)
+                WebDAVExportService.exportNext(env)
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {
@@ -128,7 +130,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             }
 
             scheduleDynamic("Import next file from WebDAV Server", 10.seconds) {
-                WebDAVService.importNext(env)
+                WebDAVImportService.importNext(env)
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {

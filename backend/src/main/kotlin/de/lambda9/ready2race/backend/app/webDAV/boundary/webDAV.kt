@@ -1,9 +1,9 @@
 package de.lambda9.ready2race.backend.app.webDAV.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getImportOptionFolders
-import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getImportOptionTypes
-import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.initializeExportData
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService.initializeExportData
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVImportService.getImportOptionFolders
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVImportService.getImportOptionTypes
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVImportRequest
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -28,7 +28,7 @@ fun Route.webDAV() {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
 
-                    WebDAVService.getExportStatus()
+                    WebDAVExportService.getExportStatus()
                 }
             }
         }
@@ -40,7 +40,7 @@ fun Route.webDAV() {
                     val user = !authenticate(Privilege.UpdateEventGlobal) // todo: new privilege
 
                     val body = !receiveKIO(WebDAVImportRequest.example)
-                    WebDAVService.initializeImportData(body, user.id!!)
+                    WebDAVImportService.initializeImportData(body, user.id!!)
                 }
             }
 
