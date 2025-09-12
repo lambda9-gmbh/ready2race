@@ -3,9 +3,9 @@ package de.lambda9.ready2race.backend.app.webDAV.entity
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
-import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.maxLength
-import java.util.UUID
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import java.util.*
 
 data class WebDAVExportRequest(
     val name: String,

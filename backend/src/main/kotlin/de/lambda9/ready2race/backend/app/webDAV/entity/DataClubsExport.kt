@@ -4,7 +4,6 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
-import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
 import de.lambda9.ready2race.backend.app.webDAV.control.toExport
 import de.lambda9.ready2race.backend.app.webDAV.control.toRecord

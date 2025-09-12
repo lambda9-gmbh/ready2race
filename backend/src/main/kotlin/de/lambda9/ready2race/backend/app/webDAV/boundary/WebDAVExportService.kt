@@ -661,7 +661,7 @@ object WebDAVExportService {
         // Update all exports that depend on this failed export and get the updated records
         val dependentRecords = !WebDAVExportDataRepo.updateByDependingOnId(failedExportId) {
             errorAt = LocalDateTime.now()
-            error = "Dependency failed: $errorMessage"
+            error = "Dependency with id $failedExportId failed: $errorMessage"
         }.orDie()
 
         // Recursively set errors on dependencies of dependencies

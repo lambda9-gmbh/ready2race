@@ -6,7 +6,6 @@ import de.lambda9.ready2race.backend.app.appuser.control.AppUserRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
-import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
 import de.lambda9.ready2race.backend.app.webDAV.control.toExport
 import de.lambda9.ready2race.backend.app.webDAV.control.toRecord

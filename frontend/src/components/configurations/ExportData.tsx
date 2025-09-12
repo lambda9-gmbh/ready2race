@@ -86,7 +86,7 @@ const ExportData = () => {
 
     useFetch(signal => getWebDavImportOptionFolders({signal}))
 
-    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: "FrischeFische"}, signal}))
+    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: "FischersFische"}, signal}))
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
         onResponse: ({error}) => {
@@ -183,7 +183,7 @@ const ExportData = () => {
                 <Button variant={'contained'} onClick={openDialog}>
                     {t('webDAV.export.export')}
                 </Button>
-                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "FrischeFische", selectedData: ['DB_USERS']}})}>
+                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "FischersFische", selectedData: ['DB_USERS', 'DB_CLUBS']}})}>
                     todo IMPORT
                 </Button>
             </Box>

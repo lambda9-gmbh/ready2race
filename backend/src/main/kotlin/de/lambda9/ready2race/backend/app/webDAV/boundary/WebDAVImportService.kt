@@ -21,6 +21,8 @@ import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
+import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.jooq.transact
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -262,10 +264,7 @@ object WebDAVImportService {
                 val content = response.bodyAsText()
 
                 if (!response.status.isSuccess()) {
-                    !WebDAVImportDataRepo.update(nextImport) {
-                        error = "HTTP ${response.status.value}: $content"
-                        errorAt = LocalDateTime.now()
-                    }.orDie()
+                    !setNextImportError(nextImport, "HTTP ${response.status.value}: $content")
                     client.close()
                     return@comprehension KIO.fail(WebDAVError.Unexpected)
                 }
@@ -277,11 +276,7 @@ object WebDAVImportService {
                 ): KIO<JEnv, WebDAVError.WebDAVImportNextError, C> = KIO.effect {
                     jsonMapper.readValue(content, dataClass)
                 }.mapError { ex ->
-                    !WebDAVImportDataRepo.update(nextImport) {
-                        error = "Import failed: ${ex.message ?: ex::class.simpleName}"
-                        errorAt = LocalDateTime.now()
-                    }.orDie()
-                    client.close()
+                    !setNextImportError(nextImport, "Import failed: ${ex.message ?: ex::class.simpleName}")
                     WebDAVError.Unexpected
                 }
 
@@ -334,18 +329,10 @@ object WebDAVImportService {
     private fun setErrorOnDependentDataImports(
         failedImportId: UUID,
         errorMessage: String
-    ): App<Nothing, Unit> = KIO.comprehension {
-        // Update all imports that depend on this failed import and get the updated records
-        val dependentRecords = !WebDAVImportDataRepo.updateByDependingOnId(failedImportId) {
-            errorAt = LocalDateTime.now()
-            error = "Dependency failed: $errorMessage"
-        }.orDie()
-
-        // Recursively set errors on dependencies of dependencies
-        dependentRecords.forEach { record ->
-            !setErrorOnDependentDataImports(record.id, errorMessage)
-        }
-
-        unit
+    ): App<Nothing, Unit> = WebDAVImportDataRepo.updateByDependingOnId(failedImportId) {
+        errorAt = LocalDateTime.now()
+        error = "Dependency with id $failedImportId failed: $errorMessage"
+    }.orDie().map { records ->
+        records.traverse { setErrorOnDependentDataImports(it.id, errorMessage) }
     }
 }
