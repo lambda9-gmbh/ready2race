@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.appuser.control.toDto
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.security.PasswordUtilities
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
@@ -50,7 +51,6 @@ fun AppUserRecord.toExport(): App<Nothing, AppUserExport> = KIO.ok(
     AppUserExport(
         id = id,
         email = email,
-        password = password,
         firstname = firstname,
         lastname = lastname,
         language = language,
@@ -61,21 +61,23 @@ fun AppUserRecord.toExport(): App<Nothing, AppUserExport> = KIO.ok(
         club = club
     )
 )
-fun AppUserExport.toRecord(): App<Nothing, AppUserRecord> = KIO.ok(
-    AppUserRecord(
-        id = id,
-        email = email,
-        password = password,
-        firstname = firstname,
-        lastname = lastname,
-        language = language,
-        createdAt = createdAt,
-        createdBy = createdBy,
-        updatedAt = updatedAt,
-        updatedBy = updatedBy,
-        club = club
-    )
-)
+
+fun AppUserExport.toRecord(password: String): App<Nothing, AppUserRecord> =
+    PasswordUtilities.hash(password).map { hashed ->
+        AppUserRecord(
+            id = id,
+            email = email,
+            password = hashed,
+            firstname = firstname,
+            lastname = lastname,
+            language = language,
+            createdAt = createdAt,
+            createdBy = createdBy,
+            updatedAt = updatedAt,
+            updatedBy = updatedBy,
+            club = club
+        )
+    }
 
 fun RoleRecord.toExport(): App<Nothing, RoleExport> = KIO.ok(
     RoleExport(
@@ -89,6 +91,7 @@ fun RoleRecord.toExport(): App<Nothing, RoleExport> = KIO.ok(
         updatedBy = updatedBy
     )
 )
+
 fun RoleExport.toRecord(): App<Nothing, RoleRecord> = KIO.ok(
     RoleRecord(
         id = id,
@@ -108,6 +111,7 @@ fun RoleHasPrivilegeRecord.toExport(): App<Nothing, RoleHasPrivilegeExport> = KI
         privilege = privilege
     )
 )
+
 fun RoleHasPrivilegeExport.toRecord(): App<Nothing, RoleHasPrivilegeRecord> = KIO.ok(
     RoleHasPrivilegeRecord(
         role = role,
@@ -121,6 +125,7 @@ fun AppUserHasRoleRecord.toExport(): App<Nothing, AppUserHasRoleExport> = KIO.ok
         role = role
     )
 )
+
 fun AppUserHasRoleExport.toRecord(): App<Nothing, AppUserHasRoleRecord> = KIO.ok(
     AppUserHasRoleRecord(
         appUser = appUser,
@@ -138,6 +143,7 @@ fun ClubRecord.toExport(): App<Nothing, ClubExport> = KIO.ok(
         updatedBy = updatedBy
     )
 )
+
 fun ClubExport.toRecordWithoutUsers(): App<Nothing, ClubRecord> = KIO.ok(
     ClubRecord(
         id = id,
@@ -166,6 +172,7 @@ fun ParticipantRecord.toExport(): App<Nothing, ParticipantExport> = KIO.ok(
         updatedBy = updatedBy
     )
 )
+
 fun ParticipantExport.toRecord(): App<Nothing, ParticipantRecord> = KIO.ok(
     ParticipantRecord(
         id = id,
@@ -197,6 +204,7 @@ fun BankAccountRecord.toExport(): App<Nothing, BankAccountExport> = KIO.ok(
         updatedBy = updatedBy
     )
 )
+
 fun BankAccountExport.toRecord(): App<Nothing, BankAccountRecord> = KIO.ok(
     BankAccountRecord(
         id = id,
@@ -225,6 +233,7 @@ fun ContactInformationRecord.toExport(): App<Nothing, ContactInformationExport> 
         updatedBy = updatedBy
     )
 )
+
 fun ContactInformationExport.toRecord(): App<Nothing, ContactInformationRecord> = KIO.ok(
     ContactInformationRecord(
         id = id,
@@ -252,6 +261,7 @@ fun MatchResultImportConfigRecord.toExport(): App<Nothing, MatchResultImportConf
         updatedBy = updatedBy
     )
 )
+
 fun MatchResultImportConfigExport.toRecord(): App<Nothing, MatchResultImportConfigRecord> = KIO.ok(
     MatchResultImportConfigRecord(
         id = id,
@@ -295,6 +305,7 @@ fun StartlistExportConfigRecord.toExport(): App<Nothing, StartlistExportConfigEx
         updatedBy = updatedBy
     )
 )
+
 fun StartlistExportConfigExport.toRecord(): App<Nothing, StartlistExportConfigRecord> = KIO.ok(
     StartlistExportConfigRecord(
         id = id,
@@ -340,6 +351,7 @@ fun WorkTypeRecord.toExport(): App<Nothing, WorkTypeExport> = KIO.ok(
         updatedBy = updatedBy
     )
 )
+
 fun WorkTypeExport.toRecord(): App<Nothing, WorkTypeRecord> = KIO.ok(
     WorkTypeRecord(
         id = id,
@@ -368,6 +380,7 @@ fun ParticipantRequirementRecord.toExport(): App<Nothing, ParticipantRequirement
         updatedBy = updatedBy
     )
 )
+
 fun ParticipantRequirementExport.toRecord(): App<Nothing, ParticipantRequirementRecord> = KIO.ok(
     ParticipantRequirementRecord(
         id = id,
@@ -393,6 +406,7 @@ fun RatingCategoryRecord.toExport(): App<Nothing, RatingCategoryExport> = KIO.ok
         updatedBy = updatedBy
     )
 )
+
 fun RatingCategoryExport.toRecord(): App<Nothing, RatingCategoryRecord> = KIO.ok(
     RatingCategoryRecord(
         id = id,
@@ -416,6 +430,7 @@ fun CompetitionCategoryRecord.toExport(): App<Nothing, CompetitionCategoryExport
         updatedBy = updatedBy
     )
 )
+
 fun CompetitionCategoryExport.toRecord(): App<Nothing, CompetitionCategoryRecord> = KIO.ok(
     CompetitionCategoryRecord(
         id = id,
@@ -439,6 +454,7 @@ fun FeeRecord.toExport(): App<Nothing, FeeExport> = KIO.ok(
         updatedBy = updatedBy
     )
 )
+
 fun FeeExport.toRecord(): App<Nothing, FeeRecord> = KIO.ok(
     FeeRecord(
         id = id,
@@ -462,6 +478,7 @@ fun NamedParticipantRecord.toExport(): App<Nothing, NamedParticipantExport> = KI
         updatedBy = updatedBy
     )
 )
+
 fun NamedParticipantExport.toRecord(): App<Nothing, NamedParticipantRecord> = KIO.ok(
     NamedParticipantRecord(
         id = id,
@@ -487,6 +504,7 @@ fun EmailIndividualTemplateRecord.toExport(): App<Nothing, EmailIndividualTempla
         updatedBy = updatedBy
     )
 )
+
 fun EmailIndividualTemplateExport.toRecord(): App<Nothing, EmailIndividualTemplateRecord> = KIO.ok(
     EmailIndividualTemplateRecord(
         key = key,
@@ -514,6 +532,7 @@ fun EventDocumentTypeRecord.toExport(): App<Nothing, EventDocumentTypeExport> = 
         updatedBy = updatedBy
     )
 )
+
 fun EventDocumentTypeExport.toRecord(): App<Nothing, EventDocumentTypeRecord> = KIO.ok(
     EventDocumentTypeRecord(
         id = id,

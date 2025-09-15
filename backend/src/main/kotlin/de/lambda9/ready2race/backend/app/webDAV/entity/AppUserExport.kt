@@ -6,7 +6,6 @@ import java.util.*
 data class AppUserExport(
     val id: UUID,
     val email: String,
-    val password: String,
     val firstname: String,
     val lastname: String,
     val language: String,

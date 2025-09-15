@@ -14,6 +14,7 @@ import de.lambda9.ready2race.backend.app.webDAV.control.toRecordWithoutUsers
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onTrueFail
+import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -31,7 +32,7 @@ data class DataUsersExport(
             record: WebdavExportDataRecord
         ): App<WebDAVError.WebDAVInternError, File> = KIO.comprehension {
             val appUsers = !AppUserRepo.getAllExceptSystemAdmin().orDie()
-                .map { list -> !list.traverse { it.toExport() } } // TODO: REMOVE PASSWORD
+                .map { list -> !list.traverse { it.toExport() } }
             val roles = !RoleRepo.getAllExceptStatic().orDie()
                 .map { list -> !list.traverse { it.toExport() } }
             val roleHasPrivileges = !RoleHasPrivilegeRepo.getByRoles(roles.map { it.id }).orDie()
@@ -68,7 +69,7 @@ data class DataUsersExport(
                 val appUserOverlaps = !AppUserRepo.getOverlapIds(data.appUsers.map { it.id }).orDie()
                 val appUserRecords = !data.appUsers
                     .filter { appUserData -> !appUserOverlaps.any { it == appUserData.id } }
-                    .traverse { it.toRecord() }
+                    .traverse { it.toRecord(password = RandomUtilities.token()) } // Random new password
                 !AppUserRepo.getEmailsExisting(appUserRecords.map { it.email }).orDie()
                     .onTrueFail { WebDAVError.EmailExistingWithOtherId }
 
