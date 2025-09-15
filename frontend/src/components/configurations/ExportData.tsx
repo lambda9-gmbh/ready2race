@@ -25,14 +25,15 @@ import {
     getEvents,
     getWebDavExportStatus,
     getWebDavImportOptionFolders,
-    getWebDavImportOptionTypes, importDatafromWebDav
+    getWebDavImportOptionTypes,
+    importDatafromWebDav,
 } from '@api/sdk.gen.ts'
 import {AutocompleteOption} from '@utils/types.ts'
 import {useState} from 'react'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
 import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
-import {WebDAVExportType} from "@api/types.gen.ts";
+import {WebDAVExportType} from '@api/types.gen.ts'
 
 type ExportForm = {
     name: string
@@ -102,7 +103,7 @@ const ExportData = () => {
 
     useFetch(signal => getWebDavImportOptionFolders({signal}))
 
-    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: "007"}, signal}))
+    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: '007'}, signal}))
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
         onResponse: ({error}) => {
@@ -128,55 +129,55 @@ const ExportData = () => {
         label: (() => {
             switch (type) {
                 case 'REGISTRATION_RESULTS':
-                    return t('webDAV.export.types.registrationResults');
+                    return t('webDAV.export.types.registrationResults')
                 case 'INVOICES':
-                    return t('webDAV.export.types.invoices');
+                    return t('webDAV.export.types.invoices')
                 case 'DOCUMENTS':
-                    return t('webDAV.export.types.documents');
+                    return t('webDAV.export.types.documents')
                 case 'RESULTS':
-                    return t('webDAV.export.types.results');
+                    return t('webDAV.export.types.results')
                 case 'START_LISTS':
-                    return t('webDAV.export.types.startLists');
+                    return t('webDAV.export.types.startLists')
                 case 'DB_USERS':
-                    return "[todo] Users";
+                    return '[todo] Users'
                 case 'DB_PARTICIPANTS':
-                    return "[todo] Participants";
+                    return '[todo] Participants'
                 case 'DB_BANK_ACCOUNTS':
-                    return "[todo] Bank Accounts";
+                    return '[todo] Bank Accounts'
                 case 'DB_CONTACT_INFORMATION':
-                    return "[todo] Contact Information";
+                    return '[todo] Contact Information'
                 case 'DB_EMAIL_INDIVIDUAL_TEMPLATES':
-                    return "[todo] Email Individual Templates";
+                    return '[todo] Email Individual Templates'
                 case 'DB_EVENT_DOCUMENT_TYPES':
-                    return "[todo] Event Document Types";
+                    return '[todo] Event Document Types'
                 case 'DB_MATCH_RESULT_IMPORT_CONFIGS':
-                    return "[todo] Match Result Import Configs";
+                    return '[todo] Match Result Import Configs'
                 case 'DB_STARTLIST_EXPORT_CONFIGS':
-                    return "[todo] Startlist Export Configs";
+                    return '[todo] Startlist Export Configs'
                 case 'DB_WORK_TYPES':
-                    return "[todo] Work Types";
+                    return '[todo] Work Types'
                 case 'DB_PARTICIPANT_REQUIREMENTS':
-                    return "[todo] Participant Requirements";
+                    return '[todo] Participant Requirements'
                 case 'DB_RATING_CATEGORIES':
-                    return "[todo] Rating Categories";
+                    return '[todo] Rating Categories'
                 case 'DB_COMPETITION_CATEGORIES':
-                    return "[todo] Competition Categories";
+                    return '[todo] Competition Categories'
                 case 'DB_FEES':
-                    return "[todo] Fees";
+                    return '[todo] Fees'
                 case 'DB_NAMED_PARTICIPANTS':
-                    return "[todo] Named Participants";
+                    return '[todo] Named Participants'
                 case 'DB_COMPETITION_SETUP_TEMPLATES':
-                    return "[todo] Competition Setup Templates";
+                    return '[todo] Competition Setup Templates'
                 case 'DB_COMPETITION_TEMPLATES':
-                    return "[todo] Competition Templates";
+                    return '[todo] Competition Templates'
                 case 'DB_EVENT':
-                    return "[todo] Event";
+                    return '[todo] Event'
                 case 'DB_COMPETITION':
-                    return "[todo] Competition";
+                    return '[todo] Competition'
                 default:
-                    return '';
+                    return ''
             }
-        })()
+        })(),
     }))
 
     const formContext = useForm<ExportForm>({})
@@ -231,20 +232,33 @@ const ExportData = () => {
                 <Button variant={'contained'} onClick={openDialog}>
                     {t('webDAV.export.export')}
                 </Button>
-                <Button variant={'contained'} onClick={() => importDatafromWebDav({body: {folderName: "007", selectedData: ['DB_USERS',
-                            'DB_PARTICIPANTS',
-                            'DB_BANK_ACCOUNTS',
-                            'DB_CONTACT_INFORMATION',
-                            'DB_EMAIL_INDIVIDUAL_TEMPLATES',
-                            'DB_EVENT_DOCUMENT_TYPES',
-                            'DB_MATCH_RESULT_IMPORT_CONFIGS',
-                            'DB_STARTLIST_EXPORT_CONFIGS',
-                            'DB_WORK_TYPES',
-                            'DB_PARTICIPANT_REQUIREMENTS',
-                            'DB_RATING_CATEGORIES',
-                            'DB_COMPETITION_CATEGORIES',
-                            'DB_FEES',
-                            'DB_NAMED_PARTICIPANTS',]}})}>
+                <Button
+                    variant={'contained'}
+                    onClick={() =>
+                        importDatafromWebDav({
+                            body: {
+                                folderName: 'Quali',
+                                selectedData: [
+                                    'DB_USERS',
+                                    'DB_PARTICIPANTS',
+                                    'DB_BANK_ACCOUNTS',
+                                    'DB_CONTACT_INFORMATION',
+                                    'DB_EMAIL_INDIVIDUAL_TEMPLATES',
+                                    'DB_EVENT_DOCUMENT_TYPES',
+                                    'DB_MATCH_RESULT_IMPORT_CONFIGS',
+                                    'DB_STARTLIST_EXPORT_CONFIGS',
+                                    'DB_WORK_TYPES',
+                                    'DB_PARTICIPANT_REQUIREMENTS',
+                                    'DB_RATING_CATEGORIES',
+                                    'DB_COMPETITION_CATEGORIES',
+                                    'DB_FEES',
+                                    'DB_NAMED_PARTICIPANTS',
+                                    'DB_COMPETITION_SETUP_TEMPLATES',
+                                    'DB_COMPETITION_TEMPLATES',
+                                ],
+                            },
+                        })
+                    }>
                     todo IMPORT
                 </Button>
             </Box>
@@ -327,7 +341,7 @@ const ExportData = () => {
                                                     100
                                                 }
                                             />
-                                            <Alert severity={'info'} icon={<Throbber/>}>
+                                            <Alert severity={'info'} icon={<Throbber />}>
                                                 <AlertTitle>
                                                     {t('webDAV.export.status.pending.title')}
                                                 </AlertTitle>
@@ -389,7 +403,7 @@ const ExportData = () => {
                         ))}
                 </Stack>
             ) : exportStatusPending ? (
-                <Throbber/>
+                <Throbber />
             ) : (
                 <Alert severity={'error'}>
                     {t('common.load.error.single', {entity: t('webDAV.export.status.status')})}

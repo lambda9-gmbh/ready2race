@@ -3,9 +3,11 @@ package de.lambda9.ready2race.backend.app.competitionSetup.control
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupGroupStatisticEvaluationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_GROUP_STATISTIC_EVALUATION
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
-import java.util.UUID
+import org.jooq.impl.DSL
+import java.util.*
 
 object CompetitionSetupGroupStatisticEvaluationRepo {
     fun create(records: Collection<CompetitionSetupGroupStatisticEvaluationRecord>) =
@@ -19,4 +21,10 @@ object CompetitionSetupGroupStatisticEvaluationRepo {
                     .fetch()
             }
         }
+
+    fun getOverlaps(evaluations: List<Pair<UUID, String>>) = COMPETITION_SETUP_GROUP_STATISTIC_EVALUATION.select {
+        DSL.or(evaluations.map { (roundId, name) ->
+            COMPETITION_SETUP_ROUND.eq(roundId).and(NAME.eq(name))
+        })
+    }
 }

@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionSetup.control
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupMatchRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_MATCH
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -20,4 +21,6 @@ object CompetitionSetupMatchRepo {
                 .fetch()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_SETUP_MATCH.select({ ID }) { ID.`in`(ids) }
 }

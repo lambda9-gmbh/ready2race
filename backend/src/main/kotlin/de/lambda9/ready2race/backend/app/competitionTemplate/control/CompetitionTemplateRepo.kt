@@ -18,11 +18,15 @@ object CompetitionTemplateRepo {
 
     fun create(record: CompetitionTemplateRecord) = COMPETITION_TEMPLATE.insertReturning(record) { ID }
 
+    fun create(records: List<CompetitionTemplateRecord>) = COMPETITION_TEMPLATE.insert(records)
+
     fun exists(id: UUID) = COMPETITION_TEMPLATE.exists { ID.eq(id) }
 
     fun update(id: UUID, f: CompetitionTemplateRecord.() -> Unit) = COMPETITION_TEMPLATE.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = COMPETITION_TEMPLATE.delete { ID.eq(id) }
+
+    fun all() = COMPETITION_TEMPLATE.select()
 
     fun countWithProperties(
         search: String?
@@ -51,4 +55,7 @@ object CompetitionTemplateRepo {
                 .fetchOne()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_TEMPLATE.select({ ID }) { ID.`in`(ids) }
+
 }

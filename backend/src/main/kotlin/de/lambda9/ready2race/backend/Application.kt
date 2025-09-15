@@ -131,25 +131,6 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
 
             scheduleDynamic("Import next file from WebDAV Server", 10.seconds) {
                 WebDAVImportService.importNext(env)
-                    .map { DynamicIntervalJobState.Processed }
-                    .recoverDefault { error ->
-                        when (error) {
-                            WebDAVError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete")
-                            WebDAVError.ConfigUnparsable -> DynamicIntervalJobState.Fatal("WebDAV config could not be parsed")
-                            WebDAVError.NoFilesToImport -> DynamicIntervalJobState.Empty
-                            WebDAVError.EmailExistingWithOtherId -> DynamicIntervalJobState.Processed
-                            WebDAVError.TypeNotSupported -> DynamicIntervalJobState.Fatal("WebDAV ExportType not supported")
-                            is WebDAVError.CannotMakeFolder -> {
-                                logger.warn { error.message }
-                                DynamicIntervalJobState.Processed
-                            }
-
-                            WebDAVError.Unexpected -> {
-                                logger.warn { "An unexpected error has occurred on import" }
-                                DynamicIntervalJobState.Processed
-                            }
-                        }
-                    }
             }
 
             scheduleFixed("Delete expired session tokens", 5.minutes) {

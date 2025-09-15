@@ -58,4 +58,10 @@ object CompetitionSetupTemplateRepo {
                 .fetch()
         }
     }
+
+    fun all() = COMPETITION_SETUP_TEMPLATE.select()
+
+    fun create(records: Collection<CompetitionSetupTemplateRecord>) = COMPETITION_SETUP_TEMPLATE.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_SETUP_TEMPLATE.select({ ID }) { ID.`in`(ids) }
 }

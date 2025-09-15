@@ -18,9 +18,11 @@ sealed interface WebDAVError {
 
     sealed interface WebDAVImportNextError : WebDAVError
 
-    data object NoFilesToImport : WebDAVImportNextError
-    data object EmailExistingWithOtherId : WebDAVImportNextError
+    data class EmailExistingWithOtherId(val emails: List<String>) : WebDAVImportNextError
     data object TypeNotSupported : WebDAVImportNextError
+    data class InsertFailed(val table: String, val errorMsg: String) : WebDAVImportNextError
+    data class UnableToRetrieveFile(val importId: UUID, val errorMsg: String) : WebDAVImportNextError
+    data class JsonToExportParsingFailed(val className: String, val errorMsg: String) : WebDAVImportNextError
 
     // API-only
 
@@ -64,7 +66,8 @@ sealed interface WebDAVError {
 
     // both
 
-    sealed class WebDavInternExternError(message: String) : WebDAVExternError(message), WebDAVInternError, WebDAVImportNextError
+    sealed class WebDavInternExternError(message: String) : WebDAVExternError(message), WebDAVInternError,
+        WebDAVImportNextError
 
 
     data object Unexpected :

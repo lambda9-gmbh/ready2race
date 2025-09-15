@@ -17,6 +17,22 @@ import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.checkRequ
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExportTypeDependencies
 import de.lambda9.ready2race.backend.app.webDAV.control.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.DataBankAccountsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories.DataCompetitionCategoriesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates.DataCompetitionSetupTemplatesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates.DataCompetitionTemplatesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.contactInformation.DataContactInformationExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.emailIndividualTemplates.DataEmailIndividualTemplatesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.eventDocumentTypes.DataEventDocumentTypesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.fees.DataFeesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.matchResultsImportConfigs.DataMatchResultImportConfigsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.namedParticipants.DataNamedParticipantsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.participantRequirements.DataParticipantRequirementsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.participants.DataParticipantsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.ratingCategories.DataRatingCategoriesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.startlistExportConfigs.DataStartlistExportConfigsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.users.DataUsersExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.workTypes.DataWorkTypesExport
 import de.lambda9.ready2race.backend.calls.comprehension.CallComprehensionScope
 import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
@@ -369,9 +385,9 @@ object WebDAVExportService {
                 !WebDAVExportDependencyRepo.create(dependencyRecords).orDie()
             }
         }
-        WebDAVService.sortDbExportTypes(databaseExportTypes) // Sorted so the dependencies are guaranteed to be there
-            .forEach { exportType ->
-                !addRecord(
+        !WebDAVService.sortDbExportTypes(databaseExportTypes) // Sorted so the dependencies are guaranteed to be there
+            .traverse { exportType ->
+                addRecord(
                     exportType,
                     dependencies = webDAVExportTypeDependencies[exportType]?.let { it.ifEmpty { null } }
                 ).mapError { WebDAVError.Unexpected }
@@ -538,6 +554,14 @@ object WebDAVExportService {
 
                         WebDAVExportType.DB_NAMED_PARTICIPANTS.name -> {
                             !DataNamedParticipantsExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES.name -> {
+                            !DataCompetitionSetupTemplatesExport.createExportFile(nextDataExport)
+                        }
+
+                        WebDAVExportType.DB_COMPETITION_TEMPLATES.name -> {
+                            !DataCompetitionTemplatesExport.createExportFile(nextDataExport)
                         }
 
                         else -> {

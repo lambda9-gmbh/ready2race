@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.webDAV
 
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.users.*
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import org.junit.Test
 import java.time.LocalDateTime

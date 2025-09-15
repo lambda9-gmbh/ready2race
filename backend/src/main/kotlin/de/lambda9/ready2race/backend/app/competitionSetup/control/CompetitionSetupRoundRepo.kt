@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND_WITH_MATCHES
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -28,6 +29,14 @@ object CompetitionSetupRoundRepo {
         }
     }
 
+    fun getBySetupIds(keys: List<UUID>): JIO<List<CompetitionSetupRoundRecord>> = Jooq.query {
+        with(COMPETITION_SETUP_ROUND) {
+            selectFrom(this)
+                .where(COMPETITION_SETUP.`in`(keys).or(COMPETITION_SETUP_TEMPLATE.`in`(keys)))
+                .fetch()
+        }
+    }
+
     fun getWithMatchesBySetup(setupId: UUID): JIO<List<CompetitionSetupRoundWithMatchesRecord>> = Jooq.query {
         with(COMPETITION_SETUP_ROUND_WITH_MATCHES) {
             selectFrom(this)
@@ -37,4 +46,6 @@ object CompetitionSetupRoundRepo {
     }
 
     fun getWithMatches(id: UUID) = COMPETITION_SETUP_ROUND_WITH_MATCHES.selectOne { SETUP_ROUND_ID.eq(id) }
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_SETUP_ROUND.select({ ID }) { ID.`in`(ids) }
 }

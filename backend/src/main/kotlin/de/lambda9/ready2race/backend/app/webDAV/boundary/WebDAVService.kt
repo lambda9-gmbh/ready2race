@@ -50,7 +50,14 @@ object WebDAVService {
         WebDAVExportType.DB_FEES to listOf(WebDAVExportType.DB_USERS),
         WebDAVExportType.DB_NAMED_PARTICIPANTS to listOf(WebDAVExportType.DB_USERS),
         WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES to listOf(WebDAVExportType.DB_USERS),
-        WebDAVExportType.DB_COMPETITION_TEMPLATES to listOf(WebDAVExportType.DB_USERS),
+
+        WebDAVExportType.DB_COMPETITION_TEMPLATES to listOf(
+            WebDAVExportType.DB_USERS,
+            WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES,
+            WebDAVExportType.DB_COMPETITION_CATEGORIES,
+            WebDAVExportType.DB_FEES,
+            WebDAVExportType.DB_NAMED_PARTICIPANTS
+        ),
 
         WebDAVExportType.DB_EVENT to listOf(
             WebDAVExportType.DB_USERS,

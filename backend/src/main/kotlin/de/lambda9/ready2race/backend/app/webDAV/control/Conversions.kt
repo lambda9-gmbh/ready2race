@@ -2,7 +2,29 @@ package de.lambda9.ready2race.backend.app.webDAV.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.control.toDto
-import de.lambda9.ready2race.backend.app.webDAV.entity.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportStatusDto
+import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
+import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.BankAccountExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories.CompetitionCategoryExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionProperties.CompetitionPropertiesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionProperties.CompetitionPropertiesHasFeeExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionProperties.CompetitionPropertiesHasNamedParticipantExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetup.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates.CompetitionSetupTemplateExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates.CompetitionTemplateExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.contactInformation.ContactInformationExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.emailIndividualTemplates.EmailIndividualTemplateExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.eventDocumentTypes.EventDocumentTypeExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.fees.FeeExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.matchResultsImportConfigs.MatchResultImportConfigExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.namedParticipants.NamedParticipantExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.participantRequirements.ParticipantRequirementExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.participants.ParticipantExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.ratingCategories.RatingCategoryExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.startlistExportConfigs.StartlistExportConfigExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.users.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.workTypes.WorkTypeExport
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.security.PasswordUtilities
@@ -546,3 +568,257 @@ fun EventDocumentTypeExport.toRecord(): App<Nothing, EventDocumentTypeRecord> = 
         updatedBy = updatedBy
     )
 )
+
+// COMPETITION SETUP CONVERSIONS
+
+fun CompetitionSetupTemplateRecord.toExport(): App<Nothing, CompetitionSetupTemplateExport> = KIO.ok(
+    CompetitionSetupTemplateExport(
+        id = id,
+        name = name,
+        description = description,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+
+fun CompetitionSetupTemplateExport.toRecord(): App<Nothing, CompetitionSetupTemplateRecord> = KIO.ok(
+    CompetitionSetupTemplateRecord(
+        id = id,
+        name = name,
+        description = description,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+
+fun CompetitionSetupRoundRecord.toExport(): App<Nothing, CompetitionSetupRoundExport> = KIO.ok(
+    CompetitionSetupRoundExport(
+        id = id,
+        competitionSetup = competitionSetup,
+        competitionSetupTemplate = competitionSetupTemplate,
+        nextRound = nextRound,
+        name = name,
+        required = required,
+        useDefaultSeeding = useDefaultSeeding,
+        placesOption = placesOption
+    )
+)
+
+fun CompetitionSetupRoundExport.toRecord(): App<Nothing, CompetitionSetupRoundRecord> = KIO.ok(
+    CompetitionSetupRoundRecord(
+        id = id,
+        competitionSetup = competitionSetup,
+        competitionSetupTemplate = competitionSetupTemplate,
+        nextRound = nextRound,
+        name = name,
+        required = required,
+        useDefaultSeeding = useDefaultSeeding,
+        placesOption = placesOption
+    )
+)
+
+fun CompetitionSetupGroupRecord.toExport(): App<Nothing, CompetitionSetupGroupExport> = KIO.ok(
+    CompetitionSetupGroupExport(
+        id = id,
+        weighting = weighting,
+        teams = teams,
+        name = name
+    )
+)
+
+fun CompetitionSetupGroupExport.toRecord(): App<Nothing, CompetitionSetupGroupRecord> = KIO.ok(
+    CompetitionSetupGroupRecord(
+        id = id,
+        weighting = weighting,
+        teams = teams,
+        name = name
+    )
+)
+
+fun CompetitionSetupGroupStatisticEvaluationRecord.toExport(): App<Nothing, CompetitionSetupGroupStatisticEvaluationExport> =
+    KIO.ok(
+        CompetitionSetupGroupStatisticEvaluationExport(
+            competitionSetupRound = competitionSetupRound,
+            name = name,
+            priority = priority,
+            rankByBiggest = rankByBiggest,
+            ignoreBiggestValues = ignoreBiggestValues,
+            ignoreSmallestValues = ignoreSmallestValues,
+            asAverage = asAverage
+        )
+    )
+
+fun CompetitionSetupGroupStatisticEvaluationExport.toRecord(): App<Nothing, CompetitionSetupGroupStatisticEvaluationRecord> =
+    KIO.ok(
+        CompetitionSetupGroupStatisticEvaluationRecord(
+            competitionSetupRound = competitionSetupRound,
+            name = name,
+            priority = priority,
+            rankByBiggest = rankByBiggest,
+            ignoreBiggestValues = ignoreBiggestValues,
+            ignoreSmallestValues = ignoreSmallestValues,
+            asAverage = asAverage
+        )
+    )
+
+fun CompetitionSetupMatchRecord.toExport(): App<Nothing, CompetitionSetupMatchExport> = KIO.ok(
+    CompetitionSetupMatchExport(
+        id = id,
+        competitionSetupRound = competitionSetupRound,
+        competitionSetupGroup = competitionSetupGroup,
+        weighting = weighting,
+        teams = teams,
+        name = name,
+        executionOrder = executionOrder,
+        startTimeOffset = startTimeOffset
+    )
+)
+
+fun CompetitionSetupMatchExport.toRecord(): App<Nothing, CompetitionSetupMatchRecord> = KIO.ok(
+    CompetitionSetupMatchRecord(
+        id = id,
+        competitionSetupRound = competitionSetupRound,
+        competitionSetupGroup = competitionSetupGroup,
+        weighting = weighting,
+        teams = teams,
+        name = name,
+        executionOrder = executionOrder,
+        startTimeOffset = startTimeOffset
+    )
+)
+
+fun CompetitionSetupParticipantRecord.toExport(): App<Nothing, CompetitionSetupParticipantExport> = KIO.ok(
+    CompetitionSetupParticipantExport(
+        id = id,
+        competitionSetupMatch = competitionSetupMatch,
+        competitionSetupGroup = competitionSetupGroup,
+        seed = seed,
+        ranking = ranking
+    )
+)
+
+fun CompetitionSetupParticipantExport.toRecord(): App<Nothing, CompetitionSetupParticipantRecord> = KIO.ok(
+    CompetitionSetupParticipantRecord(
+        id = id,
+        competitionSetupMatch = competitionSetupMatch,
+        competitionSetupGroup = competitionSetupGroup,
+        seed = seed,
+        ranking = ranking
+    )
+)
+
+fun CompetitionSetupPlaceRecord.toExport(): App<Nothing, CompetitionSetupPlaceExport> = KIO.ok(
+    CompetitionSetupPlaceExport(
+        competitionSetupRound = competitionSetupRound,
+        roundOutcome = roundOutcome,
+        place = place
+    )
+)
+
+fun CompetitionSetupPlaceExport.toRecord(): App<Nothing, CompetitionSetupPlaceRecord> = KIO.ok(
+    CompetitionSetupPlaceRecord(
+        competitionSetupRound = competitionSetupRound,
+        roundOutcome = roundOutcome,
+        place = place
+    )
+)
+
+fun CompetitionTemplateRecord.toExport(): App<Nothing, CompetitionTemplateExport> = KIO.ok(
+    CompetitionTemplateExport(
+        id = id,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy,
+        competitionSetupTemplate = competitionSetupTemplate,
+    )
+)
+
+fun CompetitionTemplateExport.toRecord(): App<Nothing, CompetitionTemplateRecord> = KIO.ok(
+    CompetitionTemplateRecord(
+        id = id,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy,
+        competitionSetupTemplate = competitionSetupTemplate,
+    )
+)
+
+fun CompetitionPropertiesRecord.toExport(): App<Nothing, CompetitionPropertiesExport> = KIO.ok(
+    CompetitionPropertiesExport(
+        id = id,
+        competition = competition,
+        competitionTemplate = competitionTemplate,
+        identifier = identifier,
+        name = name,
+        shortName = shortName,
+        description = description,
+        competitionCategory = competitionCategory,
+        lateRegistrationAllowed = lateRegistrationAllowed,
+    )
+)
+
+fun CompetitionPropertiesExport.toRecord(): App<Nothing, CompetitionPropertiesRecord> = KIO.ok(
+    CompetitionPropertiesRecord(
+        id = id,
+        competition = competition,
+        competitionTemplate = competitionTemplate,
+        identifier = identifier,
+        name = name,
+        shortName = shortName,
+        description = description,
+        competitionCategory = competitionCategory,
+        lateRegistrationAllowed = lateRegistrationAllowed,
+    )
+)
+
+fun CompetitionPropertiesHasFeeRecord.toExport(): App<Nothing, CompetitionPropertiesHasFeeExport> = KIO.ok(
+    CompetitionPropertiesHasFeeExport(
+        id = id,
+        competitionProperties = competitionProperties,
+        fee = fee,
+        required = required,
+        amount = amount,
+        lateAmount = lateAmount,
+    )
+)
+
+fun CompetitionPropertiesHasFeeExport.toRecord(): App<Nothing, CompetitionPropertiesHasFeeRecord> = KIO.ok(
+    CompetitionPropertiesHasFeeRecord(
+        id = id,
+        competitionProperties = competitionProperties,
+        fee = fee,
+        required = required,
+        amount = amount,
+        lateAmount = lateAmount,
+    )
+)
+
+fun CompetitionPropertiesHasNamedParticipantRecord.toExport(): App<Nothing, CompetitionPropertiesHasNamedParticipantExport> =
+    KIO.ok(
+        CompetitionPropertiesHasNamedParticipantExport(
+            competitionProperties = competitionProperties,
+            namedParticipant = namedParticipant,
+            countMales = countMales,
+            countFemales = countFemales,
+            countNonBinary = countNonBinary,
+            countMixed = countMixed,
+        )
+    )
+
+fun CompetitionPropertiesHasNamedParticipantExport.toRecord(): App<Nothing, CompetitionPropertiesHasNamedParticipantRecord> =
+    KIO.ok(
+        CompetitionPropertiesHasNamedParticipantRecord(
+            competitionProperties = competitionProperties,
+            namedParticipant = namedParticipant,
+            countMales = countMales,
+            countFemales = countFemales,
+            countNonBinary = countNonBinary,
+            countMixed = countMixed,
+        )
+    )
