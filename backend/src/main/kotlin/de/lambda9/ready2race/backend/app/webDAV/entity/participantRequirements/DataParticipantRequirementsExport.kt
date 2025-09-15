@@ -40,20 +40,16 @@ data class DataParticipantRequirementsExport(
 
         fun importData(data: DataParticipantRequirementsExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val overlaps =
-                        !ParticipantRequirementRepo.getOverlapIds(data.participantRequirements.map { it.id }).orDie()
+                val overlaps =
+                    !ParticipantRequirementRepo.getOverlapIds(data.participantRequirements.map { it.id }).orDie()
+                val records = !data.participantRequirements
+                    .filter { requirement -> !overlaps.any { it == requirement.id } }
+                    .traverse { it.toRecord() }
 
-                    val records = !data.participantRequirements
-                        .filter { requirement -> !overlaps.any { it == requirement.id } }
-                        .traverse { it.toRecord() }
-
-                    if (records.isNotEmpty()) {
-                        !ParticipantRequirementRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !ParticipantRequirementRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

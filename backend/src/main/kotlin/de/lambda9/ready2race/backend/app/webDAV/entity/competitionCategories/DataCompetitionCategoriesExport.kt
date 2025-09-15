@@ -40,20 +40,17 @@ data class DataCompetitionCategoriesExport(
 
         fun importData(data: DataCompetitionCategoriesExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val overlaps =
-                        !CompetitionCategoryRepo.getOverlapIds(data.competitionCategories.map { it.id }).orDie()
 
-                    val records = !data.competitionCategories
-                        .filter { category -> !overlaps.any { it == category.id } }
-                        .traverse { it.toRecord() }
+                val overlaps =
+                    !CompetitionCategoryRepo.getOverlapIds(data.competitionCategories.map { it.id }).orDie()
+                val records = !data.competitionCategories
+                    .filter { category -> !overlaps.any { it == category.id } }
+                    .traverse { it.toRecord() }
 
-                    if (records.isNotEmpty()) {
-                        !CompetitionCategoryRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !CompetitionCategoryRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

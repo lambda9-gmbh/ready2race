@@ -40,20 +40,17 @@ data class DataEmailIndividualTemplatesExport(
 
         fun importData(data: DataEmailIndividualTemplatesExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val keyLanguagePairs = data.emailIndividualTemplates.map { it.key to it.language }
-                    val overlaps = !EmailIndividualTemplateRepo.getOverlapKeyLanguagePairs(keyLanguagePairs).orDie()
+                val keyLanguagePairs = data.emailIndividualTemplates.map { it.key to it.language }
+                val overlaps = !EmailIndividualTemplateRepo.getOverlapKeyLanguagePairs(keyLanguagePairs).orDie()
 
-                    val records = !data.emailIndividualTemplates
-                        .filter { template -> !overlaps.any { it.first == template.key && it.second == template.language } }
-                        .traverse { it.toRecord() }
+                val records = !data.emailIndividualTemplates
+                    .filter { template -> !overlaps.any { it.first == template.key && it.second == template.language } }
+                    .traverse { it.toRecord() }
 
-                    if (records.isNotEmpty()) {
-                        !EmailIndividualTemplateRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !EmailIndividualTemplateRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

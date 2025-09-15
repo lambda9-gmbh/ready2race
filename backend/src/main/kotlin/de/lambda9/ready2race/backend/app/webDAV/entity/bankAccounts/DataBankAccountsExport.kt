@@ -39,19 +39,16 @@ data class DataBankAccountsExport(
         }
 
         fun importData(data: DataBankAccountsExport): App<WebDAVError.WebDAVImportNextError, Unit> = KIO.comprehension {
-            try {
-                val overlaps = !BankAccountRepo.getOverlapIds(data.bankAccounts.map { it.id }).orDie()
 
-                val records = !data.bankAccounts
-                    .filter { bankAccount -> !overlaps.any { it == bankAccount.id } }
-                    .traverse { it.toRecord() }
+            val overlaps = !BankAccountRepo.getOverlapIds(data.bankAccounts.map { it.id }).orDie()
+            val records = !data.bankAccounts
+                .filter { bankAccount -> !overlaps.any { it == bankAccount.id } }
+                .traverse { it.toRecord() }
 
-                if (records.isNotEmpty()) {
-                    !BankAccountRepo.create(records).orDie()
-                }
-            } catch (ex: Exception) {
-                return@comprehension KIO.fail(WebDAVError.Unexpected)
+            if (records.isNotEmpty()) {
+                !BankAccountRepo.create(records).orDie()
             }
+
             unit
         }
     }

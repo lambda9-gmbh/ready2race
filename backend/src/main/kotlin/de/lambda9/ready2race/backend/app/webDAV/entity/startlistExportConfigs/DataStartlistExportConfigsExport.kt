@@ -40,19 +40,15 @@ data class DataStartlistExportConfigsExport(
 
         fun importData(data: DataStartlistExportConfigsExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val overlaps = !StartListConfigRepo.getOverlapIds(data.startlistExportConfigs.map { it.id }).orDie()
+                val overlaps = !StartListConfigRepo.getOverlapIds(data.startlistExportConfigs.map { it.id }).orDie()
+                val records = !data.startlistExportConfigs
+                    .filter { config -> !overlaps.any { it == config.id } }
+                    .traverse { it.toRecord() }
 
-                    val records = !data.startlistExportConfigs
-                        .filter { config -> !overlaps.any { it == config.id } }
-                        .traverse { it.toRecord() }
-
-                    if (records.isNotEmpty()) {
-                        !StartListConfigRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !StartListConfigRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

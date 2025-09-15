@@ -40,19 +40,15 @@ data class DataContactInformationExport(
 
         fun importData(data: DataContactInformationExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val overlaps = !ContactInformationRepo.getOverlapIds(data.contactInformation.map { it.id }).orDie()
+                val overlaps = !ContactInformationRepo.getOverlapIds(data.contactInformation.map { it.id }).orDie()
+                val records = !data.contactInformation
+                    .filter { contact -> !overlaps.any { it == contact.id } }
+                    .traverse { it.toRecord() }
 
-                    val records = !data.contactInformation
-                        .filter { contact -> !overlaps.any { it == contact.id } }
-                        .traverse { it.toRecord() }
-
-                    if (records.isNotEmpty()) {
-                        !ContactInformationRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !ContactInformationRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

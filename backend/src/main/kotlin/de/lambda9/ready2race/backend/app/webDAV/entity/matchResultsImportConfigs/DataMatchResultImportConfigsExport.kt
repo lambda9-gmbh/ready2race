@@ -45,20 +45,16 @@ data class DataMatchResultImportConfigsExport(
 
         fun importData(data: DataMatchResultImportConfigsExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val overlaps =
-                        !MatchResultImportConfigRepo.getOverlapIds(data.matchResultImportConfigs.map { it.id }).orDie()
+                val overlaps =
+                    !MatchResultImportConfigRepo.getOverlapIds(data.matchResultImportConfigs.map { it.id }).orDie()
+                val records = !data.matchResultImportConfigs
+                    .filter { config -> !overlaps.any { it == config.id } }
+                    .traverse { it.toRecord() }
 
-                    val records = !data.matchResultImportConfigs
-                        .filter { config -> !overlaps.any { it == config.id } }
-                        .traverse { it.toRecord() }
-
-                    if (records.isNotEmpty()) {
-                        !MatchResultImportConfigRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !MatchResultImportConfigRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

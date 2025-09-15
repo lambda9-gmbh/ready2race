@@ -40,19 +40,16 @@ data class DataEventDocumentTypesExport(
 
         fun importData(data: DataEventDocumentTypesExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
-                try {
-                    val overlaps = !EventDocumentTypeRepo.getOverlapIds(data.eventDocumentTypes.map { it.id }).orDie()
 
-                    val records = !data.eventDocumentTypes
-                        .filter { docType -> !overlaps.any { it == docType.id } }
-                        .traverse { it.toRecord() }
+                val overlaps = !EventDocumentTypeRepo.getOverlapIds(data.eventDocumentTypes.map { it.id }).orDie()
+                val records = !data.eventDocumentTypes
+                    .filter { docType -> !overlaps.any { it == docType.id } }
+                    .traverse { it.toRecord() }
 
-                    if (records.isNotEmpty()) {
-                        !EventDocumentTypeRepo.create(records).orDie()
-                    }
-                } catch (ex: Exception) {
-                    return@comprehension KIO.fail(WebDAVError.Unexpected)
+                if (records.isNotEmpty()) {
+                    !EventDocumentTypeRepo.create(records).orDie()
                 }
+
                 unit
             }
     }

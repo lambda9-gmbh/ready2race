@@ -39,19 +39,16 @@ data class DataWorkTypesExport(
         }
 
         fun importData(data: DataWorkTypesExport): App<WebDAVError.WebDAVImportNextError, Unit> = KIO.comprehension {
-            try {
-                val overlaps = !WorkTypeRepo.getOverlapIds(data.workTypes.map { it.id }).orDie()
 
-                val records = !data.workTypes
-                    .filter { workType -> !overlaps.any { it == workType.id } }
-                    .traverse { it.toRecord() }
+            val overlaps = !WorkTypeRepo.getOverlapIds(data.workTypes.map { it.id }).orDie()
+            val records = !data.workTypes
+                .filter { workType -> !overlaps.any { it == workType.id } }
+                .traverse { it.toRecord() }
 
-                if (records.isNotEmpty()) {
-                    !WorkTypeRepo.create(records).orDie()
-                }
-            } catch (ex: Exception) {
-                return@comprehension KIO.fail(WebDAVError.Unexpected)
+            if (records.isNotEmpty()) {
+                !WorkTypeRepo.create(records).orDie()
             }
+
             unit
         }
     }

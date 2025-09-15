@@ -39,19 +39,16 @@ data class DataFeesExport(
         }
 
         fun importData(data: DataFeesExport): App<WebDAVError.WebDAVImportNextError, Unit> = KIO.comprehension {
-            try {
-                val overlaps = !FeeRepo.getOverlapIds(data.fees.map { it.id }).orDie()
 
-                val records = !data.fees
-                    .filter { fee -> !overlaps.any { it == fee.id } }
-                    .traverse { it.toRecord() }
+            val overlaps = !FeeRepo.getOverlapIds(data.fees.map { it.id }).orDie()
+            val records = !data.fees
+                .filter { fee -> !overlaps.any { it == fee.id } }
+                .traverse { it.toRecord() }
 
-                if (records.isNotEmpty()) {
-                    !FeeRepo.create(records).orDie()
-                }
-            } catch (ex: Exception) {
-                return@comprehension KIO.fail(WebDAVError.Unexpected)
+            if (records.isNotEmpty()) {
+                !FeeRepo.create(records).orDie()
             }
+
             unit
         }
     }

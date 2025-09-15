@@ -150,12 +150,7 @@ data class DataCompetitionSetupTemplatesExport(
                     .filter { group -> !overlappingGroupIds.contains(group.id) }
                     .traverse { it.toRecord() }
                 if (groupRecords.isNotEmpty()) {
-                    !CompetitionSetupGroupRepo.create(groupRecords).mapError {
-                        WebDAVError.InsertFailed(
-                            table = "CompetitionSetupGroup",
-                            errorMsg = it.stackTraceToString()
-                        )
-                    }
+                    !CompetitionSetupGroupRepo.create(groupRecords).orDie()
                 }
 
 
@@ -167,12 +162,7 @@ data class DataCompetitionSetupTemplatesExport(
                     .filter { participant -> !overlappingParticipantIds.contains(participant.id) }
                     .traverse { it.toRecord() }
                 if (participantRecords.isNotEmpty()) {
-                    !CompetitionSetupParticipantRepo.create(participantRecords).mapError {
-                        WebDAVError.InsertFailed(
-                            table = "CompetitionSetupParticipant",
-                            errorMsg = it.stackTraceToString()
-                        )
-                    }
+                    !CompetitionSetupParticipantRepo.create(participantRecords).orDie()
                 }
 
                 unit
