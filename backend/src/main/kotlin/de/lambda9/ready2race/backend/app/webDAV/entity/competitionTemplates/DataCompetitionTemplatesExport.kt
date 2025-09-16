@@ -89,7 +89,7 @@ data class DataCompetitionTemplatesExport(
                     !CompetitionPropertiesHasFeeRepo.getOverlapIds(data.competitionPropertiesHasFees.map { it.id })
                         .orDie()
                 val propsHasFeeRecords = !data.competitionPropertiesHasFees
-                    .filter { overlappingPropsHasFees.contains(it.id) }
+                    .filter { !overlappingPropsHasFees.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (propsHasFeeRecords.isNotEmpty()) {
@@ -97,13 +97,18 @@ data class DataCompetitionTemplatesExport(
                 }
 
                 // PROPERTIES HAS NAMED PARTICIPANT
-                val overlappingPropsHasNamedParticipants =
-                    !CompetitionPropertiesHasNamedParticipantRepo.getOverlaps(data.competitionPropertiesHasNamedParticipants.map { it.competitionProperties to it.namedParticipant })
-                        .orDie()
+                val overlappingPropsHasNamedParticipants = !CompetitionPropertiesHasNamedParticipantRepo
+                    .getOverlaps(data.competitionPropertiesHasNamedParticipants.map { it.competitionProperties to it.namedParticipant })
+                    .orDie()
 
                 val propsHasNamedParticipantRecords =
                     !data.competitionPropertiesHasNamedParticipants
-                        .filter { propsHasNP -> overlappingPropsHasNamedParticipants.any { it.competitionProperties == propsHasNP.competitionProperties && it.namedParticipant == propsHasNP.namedParticipant } }
+                        .filter { propsHasNP ->
+                            overlappingPropsHasNamedParticipants.none {
+                                it.competitionProperties == propsHasNP.competitionProperties
+                                    && it.namedParticipant == propsHasNP.namedParticipant
+                            }
+                        }
                         .traverse { it.toRecord() }
 
                 if (propsHasNamedParticipantRecords.isNotEmpty()) {

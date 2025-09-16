@@ -42,7 +42,7 @@ data class DataRatingCategoriesExport(
             KIO.comprehension {
                 val overlaps = !RatingCategoryRepo.getOverlapIds(data.ratingCategories.map { it.id }).orDie()
                 val records = !data.ratingCategories
-                    .filter { category -> !overlaps.any { it == category.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

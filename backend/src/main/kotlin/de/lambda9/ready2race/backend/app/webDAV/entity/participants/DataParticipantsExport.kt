@@ -38,11 +38,11 @@ data class DataParticipantsExport(
 
         fun importData(data: DataParticipantsExport): App<WebDAVError.Unexpected, Unit> = KIO.comprehension {
 
-            val overlappingParticipants = !ParticipantRepo.getOverlapIds(data.participants.map { it.id }).orDie()
+            val overlaps = !ParticipantRepo.getOverlapIds(data.participants.map { it.id }).orDie()
             val participantRecords = !data.participants
-                .filter { participantData -> !overlappingParticipants.any { it == participantData.id } }
+                .filter { !overlaps.contains(it.id) }
                 .traverse { it.toRecord() }
-            
+
             if (participantRecords.isNotEmpty()) {
                 !ParticipantRepo.create(participantRecords).orDie()
             }

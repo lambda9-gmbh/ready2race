@@ -1096,10 +1096,10 @@ select data,
        data.exported_at,
        data.error_at,
        data.error,
-       case 
+       case
            when count(dep_on) = 0 then true
            else bool_and(dep_on.exported_at is not null)
-       end as all_dependencies_exported
+           end as all_dependencies_exported
 from webdav_export_data data
          left join webdav_export_dependency wed on data.id = wed.webdav_export_data
          left join webdav_export_data dep_on on dep_on.id = wed.depending_on

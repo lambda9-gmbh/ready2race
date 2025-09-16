@@ -114,7 +114,7 @@ data class DataCompetitionSetupTemplatesExport(
                     .getOverlaps(data.competitionSetupGroupStatisticEvaluation.map { it.competitionSetupRound to it.name })
                     .orDie()
                 val evaluationRecords = !data.competitionSetupGroupStatisticEvaluation
-                    .filter { evaluation -> overlappingEvaluations.any { it.competitionSetupRound == evaluation.competitionSetupRound && it.name == evaluation.name } }
+                    .filter { evaluation -> overlappingEvaluations.none { it.competitionSetupRound == evaluation.competitionSetupRound && it.name == evaluation.name } }
                     .traverse { it.toRecord() }
 
                 if (evaluationRecords.isNotEmpty()) {
@@ -137,7 +137,7 @@ data class DataCompetitionSetupTemplatesExport(
                     .getOverlaps(data.competitionSetupPlaces.map { it.competitionSetupRound to it.roundOutcome })
                     .orDie()
                 val placeRecords = !data.competitionSetupPlaces
-                    .filter { place -> overlappingPlaces.any { it.competitionSetupRound == place.competitionSetupRound && it.roundOutcome == place.roundOutcome } }
+                    .filter { place -> overlappingPlaces.none { it.competitionSetupRound == place.competitionSetupRound && it.roundOutcome == place.roundOutcome } }
                     .traverse { it.toRecord() }
                 if (placeRecords.isNotEmpty()) {
                     !CompetitionSetupPlaceRepo.create(placeRecords).orDie()

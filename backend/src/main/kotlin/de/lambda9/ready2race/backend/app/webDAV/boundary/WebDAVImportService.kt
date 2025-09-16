@@ -256,9 +256,14 @@ object WebDAVImportService {
                                     WebDAVError.TypeNotSupported -> DynamicIntervalJobState.Processed to "The documentType WebDAVExportType is not supported as an import."
                                     is WebDAVError.EmailExistingWithOtherId -> {
                                         val message =
-                                            "The user ${if (e.emails.size == 1) "mail" else "mails"} ${
-                                                e.emails.joinToString(", ")
-                                            } already exists in the system with a different id."
+                                            "The user mail(s) ${e.emails.joinToString(", ")} already exist(s) in the system with a different id."
+
+                                        DynamicIntervalJobState.Processed to message
+                                    }
+
+                                    is WebDAVError.UnknownPrivilege -> {
+                                        val message =
+                                            "The privilege(s) ${e.privileges.joinToString(", ")} is/are unknown by the system."
 
                                         DynamicIntervalJobState.Processed to message
                                     }

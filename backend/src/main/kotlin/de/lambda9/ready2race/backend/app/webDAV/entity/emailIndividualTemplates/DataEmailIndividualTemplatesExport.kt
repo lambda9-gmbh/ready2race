@@ -44,7 +44,7 @@ data class DataEmailIndividualTemplatesExport(
                 val overlaps = !EmailIndividualTemplateRepo.getOverlapKeyLanguagePairs(keyLanguagePairs).orDie()
 
                 val records = !data.emailIndividualTemplates
-                    .filter { template -> !overlaps.any { it.first == template.key && it.second == template.language } }
+                    .filter { template -> overlaps.none { it.first == template.key && it.second == template.language } }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

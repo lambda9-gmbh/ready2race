@@ -42,7 +42,7 @@ data class DataFeesExport(
 
             val overlaps = !FeeRepo.getOverlapIds(data.fees.map { it.id }).orDie()
             val records = !data.fees
-                .filter { fee -> !overlaps.any { it == fee.id } }
+                .filter { !overlaps.contains(it.id) }
                 .traverse { it.toRecord() }
 
             if (records.isNotEmpty()) {

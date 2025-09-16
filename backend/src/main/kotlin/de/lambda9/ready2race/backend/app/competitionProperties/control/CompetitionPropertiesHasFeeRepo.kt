@@ -14,7 +14,7 @@ import java.util.*
 object CompetitionPropertiesHasFeeRepo {
 
     fun create(records: Collection<CompetitionPropertiesHasFeeRecord>) = COMPETITION_PROPERTIES_HAS_FEE.insert(records)
-    
+
     fun existsByCompetitionIdAndFeeId(competitionId: UUID, feeId: UUID) = Jooq.query {
         fetchExists(
             COMPETITION_PROPERTIES_HAS_FEE.join(COMPETITION_PROPERTIES)
@@ -62,6 +62,6 @@ object CompetitionPropertiesHasFeeRepo {
 
     fun getByProperties(ids: List<UUID>) = COMPETITION_PROPERTIES_HAS_FEE.select { COMPETITION_PROPERTIES.`in`(ids) }
 
-    fun getOverlapIds(ids: List<UUID>) = COMPETITION_SETUP_TEMPLATE.select({ ID }) { ID.`in`(ids) }
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_PROPERTIES_HAS_FEE.select({ ID }) { ID.`in`(ids) }
 
 }

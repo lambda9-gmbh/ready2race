@@ -43,7 +43,7 @@ data class DataEventDocumentTypesExport(
 
                 val overlaps = !EventDocumentTypeRepo.getOverlapIds(data.eventDocumentTypes.map { it.id }).orDie()
                 val records = !data.eventDocumentTypes
-                    .filter { docType -> !overlaps.any { it == docType.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

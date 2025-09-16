@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.webDAV.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.control.toDto
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportStatusDto
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
@@ -124,6 +125,15 @@ fun RoleExport.toRecord(): App<Nothing, RoleRecord> = KIO.ok(
         createdBy = createdBy,
         updatedAt = updatedAt,
         updatedBy = updatedBy
+    )
+)
+
+fun PrivilegeRecord.toExport(): App<Nothing, PrivilegeExport> = KIO.ok(
+    PrivilegeExport(
+        id = id,
+        action = action,
+        resource = resource,
+        scope = scope,
     )
 )
 

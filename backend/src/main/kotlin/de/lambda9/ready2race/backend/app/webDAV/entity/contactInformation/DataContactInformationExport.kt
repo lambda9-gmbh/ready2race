@@ -42,7 +42,7 @@ data class DataContactInformationExport(
             KIO.comprehension {
                 val overlaps = !ContactInformationRepo.getOverlapIds(data.contactInformation.map { it.id }).orDie()
                 val records = !data.contactInformation
-                    .filter { contact -> !overlaps.any { it == contact.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

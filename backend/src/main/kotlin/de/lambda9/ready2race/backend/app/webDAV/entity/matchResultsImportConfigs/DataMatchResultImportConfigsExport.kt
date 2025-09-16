@@ -48,7 +48,7 @@ data class DataMatchResultImportConfigsExport(
                 val overlaps =
                     !MatchResultImportConfigRepo.getOverlapIds(data.matchResultImportConfigs.map { it.id }).orDie()
                 val records = !data.matchResultImportConfigs
-                    .filter { config -> !overlaps.any { it == config.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

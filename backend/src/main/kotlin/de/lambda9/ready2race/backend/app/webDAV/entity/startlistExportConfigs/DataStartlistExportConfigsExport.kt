@@ -42,7 +42,7 @@ data class DataStartlistExportConfigsExport(
             KIO.comprehension {
                 val overlaps = !StartListConfigRepo.getOverlapIds(data.startlistExportConfigs.map { it.id }).orDie()
                 val records = !data.startlistExportConfigs
-                    .filter { config -> !overlaps.any { it == config.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

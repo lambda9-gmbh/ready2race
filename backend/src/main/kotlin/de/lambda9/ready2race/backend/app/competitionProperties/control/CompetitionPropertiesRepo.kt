@@ -66,7 +66,7 @@ object CompetitionPropertiesRepo {
     fun getByCompetitionOrTemplateIds(keys: List<UUID>) =
         COMPETITION_PROPERTIES.select { COMPETITION.`in`(keys).or(COMPETITION_TEMPLATE.`in`(keys)) }
 
-    fun getOverlapIds(ids: List<UUID>) = COMPETITION_SETUP_TEMPLATE.select({ ID }) { ID.`in`(ids) }
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_PROPERTIES.select({ ID }) { ID.`in`(ids) }
 
 
 }

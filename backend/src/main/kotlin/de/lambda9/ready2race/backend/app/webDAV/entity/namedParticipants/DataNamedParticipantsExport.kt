@@ -42,7 +42,7 @@ data class DataNamedParticipantsExport(
             KIO.comprehension {
                 val overlaps = !NamedParticipantRepo.getOverlapIds(data.namedParticipants.map { it.id }).orDie()
                 val records = !data.namedParticipants
-                    .filter { participant -> !overlaps.any { it == participant.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

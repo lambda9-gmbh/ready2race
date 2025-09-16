@@ -44,7 +44,7 @@ data class DataCompetitionCategoriesExport(
                 val overlaps =
                     !CompetitionCategoryRepo.getOverlapIds(data.competitionCategories.map { it.id }).orDie()
                 val records = !data.competitionCategories
-                    .filter { category -> !overlaps.any { it == category.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

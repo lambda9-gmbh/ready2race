@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.RoleWithPrivilege
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -66,4 +67,6 @@ object RoleRepo {
                 .fetch()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = ROLE.select({ ID }) { ID.`in`(ids) }
 }

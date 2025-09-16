@@ -42,7 +42,7 @@ data class DataBankAccountsExport(
 
             val overlaps = !BankAccountRepo.getOverlapIds(data.bankAccounts.map { it.id }).orDie()
             val records = !data.bankAccounts
-                .filter { bankAccount -> !overlaps.any { it == bankAccount.id } }
+                .filter { !overlaps.contains(it.id) }
                 .traverse { it.toRecord() }
 
             if (records.isNotEmpty()) {

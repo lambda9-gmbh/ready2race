@@ -43,7 +43,7 @@ data class DataParticipantRequirementsExport(
                 val overlaps =
                     !ParticipantRequirementRepo.getOverlapIds(data.participantRequirements.map { it.id }).orDie()
                 val records = !data.participantRequirements
-                    .filter { requirement -> !overlaps.any { it == requirement.id } }
+                    .filter { !overlaps.contains(it.id) }
                     .traverse { it.toRecord() }
 
                 if (records.isNotEmpty()) {

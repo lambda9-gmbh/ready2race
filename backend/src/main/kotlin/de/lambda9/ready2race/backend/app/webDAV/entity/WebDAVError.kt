@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.webDAV.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.calls.responses.ApiError
 import io.ktor.http.*
 import java.util.*
@@ -23,6 +24,7 @@ sealed interface WebDAVError {
     data class InsertFailed(val table: String, val errorMsg: String) : WebDAVImportNextError
     data class UnableToRetrieveFile(val importId: UUID, val errorMsg: String) : WebDAVImportNextError
     data class JsonToExportParsingFailed(val className: String, val errorMsg: String) : WebDAVImportNextError
+    data class UnknownPrivilege(val privileges: List<Triple<String, String, String>>) : WebDAVImportNextError
 
     // API-only
 
