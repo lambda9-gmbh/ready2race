@@ -7,11 +7,16 @@ import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_HAS_PARTICIPANT_REQUIREMENT
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
 import java.util.*
 
 object EventHasParticipantRequirementRepo {
 
     fun create(record: EventHasParticipantRequirementRecord) = EVENT_HAS_PARTICIPANT_REQUIREMENT.insert(record)
+
+    fun create(records: List<EventHasParticipantRequirementRecord>) = EVENT_HAS_PARTICIPANT_REQUIREMENT.insert(records)
+
+    fun getByEvent(eventId: UUID) = EVENT_HAS_PARTICIPANT_REQUIREMENT.select { EVENT.eq(eventId) }
 
     fun exists(eventId: UUID, participantRequirementId: UUID, namedParticipantId: UUID? = null) =
         EVENT_HAS_PARTICIPANT_REQUIREMENT.exists {

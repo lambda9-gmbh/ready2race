@@ -20,11 +20,15 @@ object EventDayRepo {
 
     fun create(record: EventDayRecord) = EVENT_DAY.insertReturning(record) { ID }
 
+    fun create(records: List<EventDayRecord>) = EVENT_DAY.insert(records)
+
     fun exists(id: UUID) = EVENT_DAY.exists { ID.eq(id) }
 
     fun update(id: UUID, f: EventDayRecord.() -> Unit) = EVENT_DAY.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = EVENT_DAY.delete { ID.eq(id) }
+
+    fun getByEvent(eventId: UUID) = EVENT_DAY.select { EVENT.eq(eventId) }
 
     fun countByEvent(
         eventId: UUID,

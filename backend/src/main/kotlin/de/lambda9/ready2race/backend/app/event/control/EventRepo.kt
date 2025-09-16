@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.EventView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_PUBLIC_VIEW
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_VIEW
@@ -39,7 +40,7 @@ object EventRepo {
 
     fun delete(id: UUID) = EVENT.delete { ID.eq(id) }
 
-    fun getEvents(ids: List<UUID>, ) = EVENT.select { ID.`in`(ids) }
+    fun getEvents(ids: List<UUID>) = EVENT.select { ID.`in`(ids) }
 
     fun count(
         search: String?,

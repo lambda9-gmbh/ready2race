@@ -16,6 +16,7 @@ import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates.CompetitionTemplateExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.contactInformation.ContactInformationExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.emailIndividualTemplates.EmailIndividualTemplateExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.event.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.eventDocumentTypes.EventDocumentTypeExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.fees.FeeExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.matchResultsImportConfigs.MatchResultImportConfigExport
@@ -832,3 +833,165 @@ fun CompetitionPropertiesHasNamedParticipantExport.toRecord(): App<Nothing, Comp
             countMixed = countMixed,
         )
     )
+
+fun EventRecord.toExport(): App<Nothing, EventExport> = KIO.ok(
+    EventExport(
+        id = id,
+        name = name,
+        description = description,
+        location = location,
+        published = published,
+        registrationAvailableFrom = registrationAvailableFrom,
+        registrationAvailableTo = registrationAvailableTo,
+        invoicePrefix = invoicePrefix,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy,
+        paymentDueBy = paymentDueBy,
+        invoicesProduced = invoicesProduced,
+        lateRegistrationAvailableTo = lateRegistrationAvailableTo,
+        lateInvoicesProduced = lateInvoicesProduced,
+        latePaymentDueBy = latePaymentDueBy,
+        mixedTeamTerm = mixedTeamTerm
+    )
+)
+
+fun EventExport.toRecord(): App<Nothing, EventRecord> = KIO.ok(
+    EventRecord(
+        id = id,
+        name = name,
+        description = description,
+        location = location,
+        published = published,
+        registrationAvailableFrom = registrationAvailableFrom,
+        registrationAvailableTo = registrationAvailableTo,
+        invoicePrefix = invoicePrefix,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy,
+        paymentDueBy = paymentDueBy,
+        invoicesProduced = invoicesProduced,
+        lateRegistrationAvailableTo = lateRegistrationAvailableTo,
+        lateInvoicesProduced = lateInvoicesProduced,
+        latePaymentDueBy = latePaymentDueBy,
+        mixedTeamTerm = mixedTeamTerm
+    )
+)
+
+fun ContactInformationUsageRecord.toExport(): App<Nothing, ContactInformationUsageExport> = KIO.ok(
+    ContactInformationUsageExport(
+        contactInformation = contactInformation,
+        event = event,
+        assignedAt = assignedAt,
+        assignedBy = assignedBy
+    )
+)
+
+fun ContactInformationUsageExport.toRecord(): App<Nothing, ContactInformationUsageRecord> = KIO.ok(
+    ContactInformationUsageRecord(
+        contactInformation = contactInformation,
+        event = event,
+        assignedAt = assignedAt,
+        assignedBy = assignedBy
+    )
+)
+
+fun PayeeBankAccountRecord.toExport(): App<Nothing, PayeeBankAccountExport> = KIO.ok(
+    PayeeBankAccountExport(
+        bankAccount = bankAccount,
+        event = event,
+        assignedAt = assignedAt,
+        assignedBy = assignedBy
+    )
+)
+
+fun PayeeBankAccountExport.toRecord(): App<Nothing, PayeeBankAccountRecord> = KIO.ok(
+    PayeeBankAccountRecord(
+        bankAccount = bankAccount,
+        event = event,
+        assignedAt = assignedAt,
+        assignedBy = assignedBy
+    )
+)
+
+fun EventDayRecord.toExport(): App<Nothing, EventDayExport> = KIO.ok(
+    EventDayExport(
+        id = id,
+        event = event,
+        date = date,
+        name = name,
+        description = description,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+
+fun EventDayExport.toRecord(): App<Nothing, EventDayRecord> = KIO.ok(
+    EventDayRecord(
+        id = id,
+        event = event,
+        date = date,
+        name = name,
+        description = description,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        updatedAt = updatedAt,
+        updatedBy = updatedBy
+    )
+)
+
+fun EventHasParticipantRequirementRecord.toExport(): App<Nothing, EventHasParticipantRequirementExport> = KIO.ok(
+    EventHasParticipantRequirementExport(
+        event = event,
+        participantRequirement = participantRequirement,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        namedParticipant = namedParticipant,
+        qrCodeRequired = qrCodeRequired
+    )
+)
+
+fun EventHasParticipantRequirementExport.toRecord(): App<Nothing, EventHasParticipantRequirementRecord> = KIO.ok(
+    EventHasParticipantRequirementRecord(
+        event = event,
+        participantRequirement = participantRequirement,
+        createdAt = createdAt,
+        createdBy = createdBy,
+        namedParticipant = namedParticipant,
+        qrCodeRequired = qrCodeRequired
+    )
+)
+
+fun InfoViewConfigurationRecord.toExport(): App<Nothing, InfoViewConfigurationExport> = KIO.ok(
+    InfoViewConfigurationExport(
+        id = id,
+        eventId = eventId,
+        viewType = viewType,
+        displayDurationSeconds = displayDurationSeconds,
+        dataLimit = dataLimit,
+        filters = filters,
+        sortOrder = sortOrder,
+        isActive = isActive,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+)
+
+fun InfoViewConfigurationExport.toRecord(): App<Nothing, InfoViewConfigurationRecord> = KIO.ok(
+    InfoViewConfigurationRecord(
+        id = id,
+        eventId = eventId,
+        viewType = viewType,
+        displayDurationSeconds = displayDurationSeconds,
+        dataLimit = dataLimit,
+        filters = filters,
+        sortOrder = sortOrder,
+        isActive = isActive,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+)

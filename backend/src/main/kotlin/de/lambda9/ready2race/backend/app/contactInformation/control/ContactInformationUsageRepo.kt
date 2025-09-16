@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.contactInformation.control
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.ContactInformationUsageRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CONTACT_INFORMATION_USAGE
+import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.core.KIO
@@ -30,7 +31,11 @@ object ContactInformationUsageRepo {
         }
     }
 
-    fun getByEvent(eventId: UUID?) = CONTACT_INFORMATION_USAGE.selectOne { eventId?.let { EVENT.eq(it) } ?: EVENT.isNull }
+    fun getByEvent(eventId: UUID?) =
+        CONTACT_INFORMATION_USAGE.selectOne { eventId?.let { EVENT.eq(it) } ?: EVENT.isNull }
 
-    fun deleteByEvent(eventId: UUID?) = CONTACT_INFORMATION_USAGE.delete { eventId?.let { EVENT.eq(it) } ?: EVENT.isNull }
+    fun deleteByEvent(eventId: UUID?) =
+        CONTACT_INFORMATION_USAGE.delete { eventId?.let { EVENT.eq(it) } ?: EVENT.isNull }
+
+    fun create(record: ContactInformationUsageRecord) = CONTACT_INFORMATION_USAGE.insert(record)
 }

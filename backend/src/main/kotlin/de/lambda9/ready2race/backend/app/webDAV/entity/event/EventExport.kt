@@ -19,5 +19,8 @@ data class EventExport(
     val updatedBy: UUID?,
     val paymentDueBy: LocalDate?,
     val invoicesProduced: LocalDateTime?,
-    val lateRegistrationAvailableTo: LocalDateTime?
+    val lateRegistrationAvailableTo: LocalDateTime?,
+    val lateInvoicesProduced: LocalDateTime?,
+    val latePaymentDueBy: LocalDate?,
+    val mixedTeamTerm: String?,
 )

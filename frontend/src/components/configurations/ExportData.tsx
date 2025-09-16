@@ -37,16 +37,28 @@ import {WebDAVExportType} from '@api/types.gen.ts'
 
 type ExportForm = {
     name: string
-    selectedEvents: string[]
-    selectedResources: WebDAVExportType[]
+    events: {
+        eventId: string
+        checked: boolean
+        selectedExports: ExportFormCheckType[]
+    }[]
+    checkedDatabaseExports: ExportFormCheckType[]
+}
+type ExportFormCheckType = {
+    type: WebDAVExportType
+    checked: boolean
 }
 
-const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
+const WEBDAV_EVENT_EXPORT_TYPES: WebDAVExportType[] = [
     'REGISTRATION_RESULTS',
     'INVOICES',
     'DOCUMENTS',
     'RESULTS',
     'START_LISTS',
+    'DB_EVENT',
+] as const
+
+const WEBDAV_DATA_EXPORT_TYPES: WebDAVExportType[] = [
     'DB_USERS',
     'DB_PARTICIPANTS',
     'DB_BANK_ACCOUNTS',
@@ -63,9 +75,7 @@ const WEBDAV_EXPORT_TYPES: WebDAVExportType[] = [
     'DB_NAMED_PARTICIPANTS',
     'DB_COMPETITION_SETUP_TEMPLATES',
     'DB_COMPETITION_TEMPLATES',
-    'DB_EVENT',
-    'DB_COMPETITION',
-] as const
+]
 
 const ExportData = () => {
     const {t} = useTranslation()
@@ -106,13 +116,25 @@ const ExportData = () => {
     useFetch(signal => getWebDavImportOptionTypes({path: {folderName: '007'}, signal}))
 
     const {data: eventsData} = useFetch(signal => getEvents({signal}), {
-        onResponse: ({error}) => {
+        onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(
                     t('common.load.error.multiple.short', {
                         entity: t('event.events'),
                     }),
                 )
+            } else {
+                formContext.reset({
+                    name: '',
+                    events: data.data.map(event => ({
+                        eventId: event.id,
+                        selected: false,
+                        selectedExports: WEBDAV_EVENT_EXPORT_TYPES.map(type => ({
+                            type: type,
+                            checked: false,
+                        })),
+                    })),
+                })
             }
         },
         deps: [],
@@ -124,20 +146,10 @@ const ExportData = () => {
             label: value.name,
         })) ?? []
 
-    const webDavExportTypes = WEBDAV_EXPORT_TYPES.map(type => ({
+    const webDavDataExportTypeNames = WEBDAV_DATA_EXPORT_TYPES.map(type => ({
         id: type,
         label: (() => {
             switch (type) {
-                case 'REGISTRATION_RESULTS':
-                    return t('webDAV.export.types.registrationResults')
-                case 'INVOICES':
-                    return t('webDAV.export.types.invoices')
-                case 'DOCUMENTS':
-                    return t('webDAV.export.types.documents')
-                case 'RESULTS':
-                    return t('webDAV.export.types.results')
-                case 'START_LISTS':
-                    return t('webDAV.export.types.startLists')
                 case 'DB_USERS':
                     return '[todo] Users'
                 case 'DB_PARTICIPANTS':
@@ -170,6 +182,26 @@ const ExportData = () => {
                     return '[todo] Competition Setup Templates'
                 case 'DB_COMPETITION_TEMPLATES':
                     return '[todo] Competition Templates'
+                default:
+                    return ''
+            }
+        })(),
+    }))
+
+    const webDavEventExportTypeNames = WEBDAV_EVENT_EXPORT_TYPES.map(type => ({
+        id: type,
+        label: (() => {
+            switch (type) {
+                case 'REGISTRATION_RESULTS':
+                    return t('webDAV.export.types.registrationResults')
+                case 'INVOICES':
+                    return t('webDAV.export.types.invoices')
+                case 'DOCUMENTS':
+                    return t('webDAV.export.types.documents')
+                case 'RESULTS':
+                    return t('webDAV.export.types.results')
+                case 'START_LISTS':
+                    return t('webDAV.export.types.startLists')
                 case 'DB_EVENT':
                     return '[todo] Event'
                 case 'DB_COMPETITION':
@@ -199,8 +231,15 @@ const ExportData = () => {
         const {error} = await exportDataByWebDav({
             body: {
                 name: formData.name,
-                selectedResources: formData.selectedResources,
-                events: formData.selectedEvents,
+                events: formData.events
+                    .filter(event => event.checked)
+                    .map(event => ({
+                        eventId: event.eventId,
+                        selectedExports: event.selectedExports,
+                    })),
+                selectedDatabaseExports: formData.checkedDatabaseExports
+                    .filter(type => type.checked)
+                    .map(type => type.type),
             },
         })
         setSubmitting(false)

@@ -9903,7 +9903,7 @@ components:
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
         eventId: { type: string }
-        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        type: { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
         competitions:
           type: array
@@ -9919,7 +9919,7 @@ components:
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
         eventId: { type: string }
-        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        type: { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
 
     QrCodeAppuserUpdate:
@@ -9951,7 +9951,7 @@ components:
 
     QrCodeDtoType:
       type: string
-      enum: [Participant, User]
+      enum: [ Participant, User ]
 
     # Team Tracking schemas
 
@@ -10172,19 +10172,31 @@ components:
       required:
         - name
         - events
-        - selectedResources
+        - selectedDatabaseExports
       properties:
         name:
           type: string
         events:
           type: array
           items:
-            type: string
-            format: uuid
-        selectedResources:
+            $ref: '#/components/schemas/WebDAVExportEventRequest'
+        selectedDatabaseExports:
           type: array
           items:
             $ref: '#/components/schemas/WebDAVExportType'
+
+    WebDAVExportEventRequest:
+      type: object
+      required:
+        - eventId
+        - selectedExports
+      eventId:
+        type: string
+        format: uuid
+      selectedExports:
+        type: array
+        items:
+          $ref: '#/components/schemas/WebDAVExportType'
 
     WebDAVExportStatusDto:
       type: object

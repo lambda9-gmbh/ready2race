@@ -91,37 +91,6 @@ object WebDAVService {
             unit
         }
 
-    private val sortedDbExportTypes: List<WebDAVExportType> by lazy {
-        val dbTypes = WebDAVExportType.entries.filter { it.name.startsWith("DB_") }
-        val sorted = mutableListOf<WebDAVExportType>()
-        val visited = mutableSetOf<WebDAVExportType>()
-        val visiting = mutableSetOf<WebDAVExportType>()
-
-        fun visit(type: WebDAVExportType) {
-            if (type in visited) {
-                return
-            }
-
-            visiting.add(type)
-            webDAVExportTypeDependencies[type]?.forEach { dependency ->
-                visit(dependency)
-            }
-            visiting.remove(type)
-            visited.add(type)
-            sorted.add(type)
-        }
-
-        dbTypes.forEach { type ->
-            if (type !in visited) {
-                visit(type)
-            }
-        }
-
-        sorted.toList()
-    }
-
-    fun sortDbExportTypes(types: List<WebDAVExportType>): List<WebDAVExportType> = sortedDbExportTypes
-        .filter { it in types }
 
     fun getWebDavDataJsonFileName(type: WebDAVExportType): String {
         return (when (type) {

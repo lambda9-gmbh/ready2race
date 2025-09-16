@@ -1626,10 +1626,14 @@ export type VerifyRegistrationRequest = {
     token: string
 }
 
+export type WebDAVExportEventRequest = {
+    [key: string]: unknown
+}
+
 export type WebDAVExportRequest = {
     name: string
-    events: Array<string>
-    selectedResources: Array<WebDAVExportType>
+    events: Array<WebDAVExportEventRequest>
+    selectedDatabaseExports: Array<WebDAVExportType>
 }
 
 export type WebDAVExportStatusDto = {

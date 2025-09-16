@@ -25,6 +25,7 @@ sealed interface WebDAVError {
     data class UnableToRetrieveFile(val importId: UUID, val errorMsg: String) : WebDAVImportNextError
     data class JsonToExportParsingFailed(val className: String, val errorMsg: String) : WebDAVImportNextError
     data class UnknownPrivilege(val privileges: List<Triple<String, String, String>>) : WebDAVImportNextError
+    data class EntityAlreadyExists(val entityId: UUID) : WebDAVImportNextError
 
     // API-only
 

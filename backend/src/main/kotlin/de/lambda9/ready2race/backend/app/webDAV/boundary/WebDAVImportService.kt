@@ -18,6 +18,7 @@ import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates.DataCompetitionTemplatesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.contactInformation.DataContactInformationExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.emailIndividualTemplates.DataEmailIndividualTemplatesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.event.DataEventExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.eventDocumentTypes.DataEventDocumentTypesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.fees.DataFeesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.matchResultsImportConfigs.DataMatchResultImportConfigsExport
@@ -271,6 +272,7 @@ object WebDAVImportService {
                                     is WebDAVError.InsertFailed -> DynamicIntervalJobState.Processed to "Insert failed for table ${e.table}: ${e.errorMsg}"
                                     is WebDAVError.JsonToExportParsingFailed -> DynamicIntervalJobState.Processed to "Failed to parse the json file to the export type ${e.className}: ${e.errorMsg}"
                                     is WebDAVError.UnableToRetrieveFile -> DynamicIntervalJobState.Processed to "Failed to retrieve the file of import ${e.importId} from the WebDAV server: ${e.errorMsg}"
+                                    is WebDAVError.EntityAlreadyExists -> DynamicIntervalJobState.Processed to "The referred entity with id ${e.entityId} already exists in the system."
 
                                     WebDAVError.Unexpected -> DynamicIntervalJobState.Processed to "Unexpected error for import."
                                     WebDAVError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete") to "WebDAV config is incomplete."
@@ -420,6 +422,11 @@ object WebDAVImportService {
                     WebDAVExportType.DB_COMPETITION_TEMPLATES -> {
                         val importData = !parseJsonData(content, DataCompetitionTemplatesExport::class.java)
                         !DataCompetitionTemplatesExport.importData(importData)
+                    }
+
+                    WebDAVExportType.DB_EVENT -> {
+                        val importData = !parseJsonData(content, DataEventExport::class.java)
+                        !DataEventExport.importData(importData)
                     }
 
                     else -> {
