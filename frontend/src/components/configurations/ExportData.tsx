@@ -12,11 +12,16 @@ import {
     List,
     ListItemText,
     Stack,
+    Stepper,
+    Step,
+    StepLabel,
     Typography,
+    Divider,
 } from '@mui/material'
 import BaseDialog from '@components/BaseDialog.tsx'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -28,19 +33,18 @@ import {
     getWebDavImportOptionTypes,
     importDatafromWebDav,
 } from '@api/sdk.gen.ts'
-import {AutocompleteOption} from '@utils/types.ts'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
-import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
 import {WebDAVExportType} from '@api/types.gen.ts'
 
 type ExportForm = {
     name: string
     events: {
         eventId: string
-        checked: boolean
-        selectedExports: ExportFormCheckType[]
+        docExportChecked: boolean
+        selectedDocExports: ExportFormCheckType[]
+        exportData: boolean
     }[]
     checkedDatabaseExports: ExportFormCheckType[]
 }
@@ -49,16 +53,15 @@ type ExportFormCheckType = {
     checked: boolean
 }
 
-const WEBDAV_EVENT_EXPORT_TYPES: WebDAVExportType[] = [
+const EVENT_TYPE_OPTIONS: WebDAVExportType[] = [
     'REGISTRATION_RESULTS',
     'INVOICES',
     'DOCUMENTS',
     'RESULTS',
     'START_LISTS',
-    'DB_EVENT',
-] as const
+]
 
-const WEBDAV_DATA_EXPORT_TYPES: WebDAVExportType[] = [
+const DATA_TYPE_OPTIONS: WebDAVExportType[] = [
     'DB_USERS',
     'DB_PARTICIPANTS',
     'DB_BANK_ACCOUNTS',
@@ -76,6 +79,44 @@ const WEBDAV_DATA_EXPORT_TYPES: WebDAVExportType[] = [
     'DB_COMPETITION_SETUP_TEMPLATES',
     'DB_COMPETITION_TEMPLATES',
 ]
+
+// Mirror the backend dependency structure
+const webDAVExportTypeDependencies: Partial<Record<WebDAVExportType, WebDAVExportType[]>> = {
+    'DB_PARTICIPANTS': ['DB_USERS'],
+    'DB_BANK_ACCOUNTS': ['DB_USERS'],
+    'DB_CONTACT_INFORMATION': ['DB_USERS'],
+    'DB_EMAIL_INDIVIDUAL_TEMPLATES': ['DB_USERS'],
+    'DB_EVENT_DOCUMENT_TYPES': ['DB_USERS'],
+    'DB_MATCH_RESULT_IMPORT_CONFIGS': ['DB_USERS'],
+    'DB_STARTLIST_EXPORT_CONFIGS': ['DB_USERS'],
+    'DB_WORK_TYPES': ['DB_USERS'],
+    'DB_PARTICIPANT_REQUIREMENTS': ['DB_USERS'],
+    'DB_RATING_CATEGORIES': ['DB_USERS'],
+    'DB_COMPETITION_CATEGORIES': ['DB_USERS'],
+    'DB_FEES': ['DB_USERS'],
+    'DB_NAMED_PARTICIPANTS': ['DB_USERS'],
+    'DB_COMPETITION_SETUP_TEMPLATES': ['DB_USERS'],
+    'DB_COMPETITION_TEMPLATES': [
+        'DB_USERS',
+        'DB_COMPETITION_SETUP_TEMPLATES',
+        'DB_COMPETITION_CATEGORIES',
+        'DB_FEES',
+        'DB_NAMED_PARTICIPANTS'
+    ],
+    'DB_EVENT': [
+        'DB_USERS',
+        'DB_CONTACT_INFORMATION',
+        'DB_BANK_ACCOUNTS',
+        'DB_PARTICIPANT_REQUIREMENTS',
+    ],
+    'DB_COMPETITION': [
+        'DB_USERS',
+        'DB_EVENT',
+        'DB_COMPETITION_CATEGORIES',
+        'DB_FEES',
+        'DB_NAMED_PARTICIPANTS'
+    ]
+} as const
 
 const ExportData = () => {
     const {t} = useTranslation()
@@ -128,102 +169,119 @@ const ExportData = () => {
                     name: '',
                     events: data.data.map(event => ({
                         eventId: event.id,
-                        selected: false,
-                        selectedExports: WEBDAV_EVENT_EXPORT_TYPES.map(type => ({
+                        docExportChecked: false,
+                        selectedDocExports: EVENT_TYPE_OPTIONS.map(type => ({
                             type: type,
                             checked: false,
                         })),
+                        exportData: false,
+                    })),
+                    checkedDatabaseExports: DATA_TYPE_OPTIONS.map(type => ({
+                        type: type,
+                        checked: false,
                     })),
                 })
             }
         },
+        mapData: data => data?.data.sort((a, b) => (a.name < b.name ? -1 : 1)),
         deps: [],
     })
 
-    const eventOptions: AutocompleteOption[] =
-        eventsData?.data.map(value => ({
-            id: value.id,
-            label: value.name,
-        })) ?? []
-
-    const webDavDataExportTypeNames = WEBDAV_DATA_EXPORT_TYPES.map(type => ({
-        id: type,
-        label: (() => {
-            switch (type) {
-                case 'DB_USERS':
-                    return '[todo] Users'
-                case 'DB_PARTICIPANTS':
-                    return '[todo] Participants'
-                case 'DB_BANK_ACCOUNTS':
-                    return '[todo] Bank Accounts'
-                case 'DB_CONTACT_INFORMATION':
-                    return '[todo] Contact Information'
-                case 'DB_EMAIL_INDIVIDUAL_TEMPLATES':
-                    return '[todo] Email Individual Templates'
-                case 'DB_EVENT_DOCUMENT_TYPES':
-                    return '[todo] Event Document Types'
-                case 'DB_MATCH_RESULT_IMPORT_CONFIGS':
-                    return '[todo] Match Result Import Configs'
-                case 'DB_STARTLIST_EXPORT_CONFIGS':
-                    return '[todo] Startlist Export Configs'
-                case 'DB_WORK_TYPES':
-                    return '[todo] Work Types'
-                case 'DB_PARTICIPANT_REQUIREMENTS':
-                    return '[todo] Participant Requirements'
-                case 'DB_RATING_CATEGORIES':
-                    return '[todo] Rating Categories'
-                case 'DB_COMPETITION_CATEGORIES':
-                    return '[todo] Competition Categories'
-                case 'DB_FEES':
-                    return '[todo] Fees'
-                case 'DB_NAMED_PARTICIPANTS':
-                    return '[todo] Named Participants'
-                case 'DB_COMPETITION_SETUP_TEMPLATES':
-                    return '[todo] Competition Setup Templates'
-                case 'DB_COMPETITION_TEMPLATES':
-                    return '[todo] Competition Templates'
-                default:
-                    return ''
-            }
-        })(),
-    }))
-
-    const webDavEventExportTypeNames = WEBDAV_EVENT_EXPORT_TYPES.map(type => ({
-        id: type,
-        label: (() => {
-            switch (type) {
-                case 'REGISTRATION_RESULTS':
-                    return t('webDAV.export.types.registrationResults')
-                case 'INVOICES':
-                    return t('webDAV.export.types.invoices')
-                case 'DOCUMENTS':
-                    return t('webDAV.export.types.documents')
-                case 'RESULTS':
-                    return t('webDAV.export.types.results')
-                case 'START_LISTS':
-                    return t('webDAV.export.types.startLists')
-                case 'DB_EVENT':
-                    return '[todo] Event'
-                case 'DB_COMPETITION':
-                    return '[todo] Competition'
-                default:
-                    return ''
-            }
-        })(),
-    }))
+    const webDavExportTypeNames = new Map<WebDAVExportType, string>([
+        ['REGISTRATION_RESULTS', t('webDAV.export.types.registrationResults')],
+        ['INVOICES', t('webDAV.export.types.invoices')],
+        ['DOCUMENTS', t('webDAV.export.types.documents')],
+        ['RESULTS', t('webDAV.export.types.results')],
+        ['START_LISTS', t('webDAV.export.types.startLists')],
+        ['DB_USERS', '[todo] Users'],
+        ['DB_PARTICIPANTS', '[todo] Participants'],
+        ['DB_BANK_ACCOUNTS', '[todo] Bank Accounts'],
+        ['DB_CONTACT_INFORMATION', '[todo] Contact Information'],
+        ['DB_EMAIL_INDIVIDUAL_TEMPLATES', '[todo] Email Individual Templates'],
+        ['DB_EVENT_DOCUMENT_TYPES', '[todo] Event Document Types'],
+        ['DB_MATCH_RESULT_IMPORT_CONFIGS', '[todo] Match Result Import Configs'],
+        ['DB_STARTLIST_EXPORT_CONFIGS', '[todo] Startlist Export Configs'],
+        ['DB_WORK_TYPES', '[todo] Work Types'],
+        ['DB_PARTICIPANT_REQUIREMENTS', '[todo] Participant Requirements'],
+        ['DB_RATING_CATEGORIES', '[todo] Rating Categories'],
+        ['DB_COMPETITION_CATEGORIES', '[todo] Competition Categories'],
+        ['DB_FEES', '[todo] Fees'],
+        ['DB_NAMED_PARTICIPANTS', '[todo] Named Participants'],
+        ['DB_COMPETITION_SETUP_TEMPLATES', '[todo] Competition Setup Templates'],
+        ['DB_COMPETITION_TEMPLATES', '[todo] Competition Templates'],
+        ['DB_EVENT', '[todo] Event'],
+        ['DB_COMPETITION', '[todo] Competition'],
+    ])
 
     const formContext = useForm<ExportForm>({})
+
+    const watchedEvents = formContext.watch('events')
+    const watchedDatabaseExports = formContext.watch('checkedDatabaseExports')
+    console.log(watchedEvents)
 
     const [submitting, setSubmitting] = useState(false)
 
     const [dialogOpen, setDialogOpen] = useState(false)
 
+    const [activeStep, setActiveStep] = useState(0)
+
     const openDialog = () => {
         setDialogOpen(true)
+        setActiveStep(0)
     }
 
     const closeDialog = () => {
         setDialogOpen(false)
+        setActiveStep(0)
+    }
+
+    const handleNext = () => {
+        setActiveStep(prevStep => prevStep + 1)
+    }
+
+    const handleBack = () => {
+        setActiveStep(prevStep => prevStep - 1)
+    }
+
+    const steps = ['Name', '[todo] Documents', '[todo] Data']
+    
+    // Handle dependency checking
+    useEffect(() => {
+        if (!watchedDatabaseExports || activeStep !== 2) return
+        
+        const checkedTypes = watchedDatabaseExports
+            .filter(item => item?.checked)
+            .map(item => item.type)
+        
+        // Find all required dependencies
+        const requiredDependencies = new Set<WebDAVExportType>()
+        checkedTypes.forEach(type => {
+            const deps = webDAVExportTypeDependencies[type]
+            if (deps) {
+                deps.forEach(dep => requiredDependencies.add(dep))
+            }
+        })
+        
+        // Check and update dependencies
+        watchedDatabaseExports.forEach((item, index) => {
+            if (requiredDependencies.has(item.type) && !item.checked) {
+                formContext.setValue(`checkedDatabaseExports.${index}.checked`, true)
+            }
+        })
+    }, [watchedDatabaseExports, activeStep, formContext])
+    
+    // Check if a type is a dependency of any checked type
+    const isRequiredDependency = (type: WebDAVExportType): boolean => {
+        if (!watchedDatabaseExports) return false
+        
+        const checkedTypes = watchedDatabaseExports
+            .filter(item => item?.checked)
+            .map(item => item.type)
+        
+        return checkedTypes.some(checkedType => {
+            const deps = webDAVExportTypeDependencies[checkedType]
+            return deps?.includes(type) ?? false
+        })
     }
 
     const onSubmit = async (formData: ExportForm) => {
@@ -232,10 +290,13 @@ const ExportData = () => {
             body: {
                 name: formData.name,
                 events: formData.events
-                    .filter(event => event.checked)
+                    .filter(event => event.docExportChecked || event.exportData)
                     .map(event => ({
                         eventId: event.eventId,
-                        selectedExports: event.selectedExports,
+                        selectedExports: [
+                            ...event.selectedDocExports.map(value => value.type),
+                            ...(event.exportData ? ['DB_EVENTS'] : []),
+                        ],
                     })),
                 selectedDatabaseExports: formData.checkedDatabaseExports
                     .filter(type => type.checked)
@@ -301,43 +362,108 @@ const ExportData = () => {
                     todo IMPORT
                 </Button>
             </Box>
-            <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'xs'}>
+            <BaseDialog open={dialogOpen} onClose={closeDialog} maxWidth={'sm'}>
                 <DialogTitle>{t('webDAV.export.export')}</DialogTitle>
                 <FormContainer formContext={formContext} onSuccess={onSubmit}>
                     <DialogContent>
-                        <Stack spacing={2}>
+                        <Stepper activeStep={activeStep} sx={{mb: 3}}>
+                            {steps.map(label => (
+                                <Step key={label}>
+                                    <StepLabel>{label}</StepLabel>
+                                </Step>
+                            ))}
+                        </Stepper>
+
+                        {activeStep === 0 && (
                             <FormInputText
                                 name={'name'}
                                 required
                                 label={t('webDAV.export.folderName')}
                             />
-                            <FormInputMultiselect
-                                name={'selectedEvents'}
-                                label={t('webDAV.export.events')}
-                                options={eventOptions}
-                                showCheckbox
-                                showChips
-                                required
-                                fullWidth
-                            />
-                            <FormInputMultiselect
-                                name={'selectedResources'}
-                                label={t('webDAV.export.data')}
-                                options={webDavExportTypes}
-                                showCheckbox
-                                showChips
-                                required
-                                fullWidth
-                            />
-                        </Stack>
+                        )}
+
+                        {activeStep === 1 && (
+                            <Box>
+                                {eventsData?.map((event, index) => (
+                                    <Box key={event.id}>
+                                        <FormInputCheckbox
+                                            name={`events.${index}.docExportChecked`}
+                                            label={event.name}
+                                            horizontal
+                                            reverse
+                                        />
+                                        {watchedEvents[index]?.docExportChecked && (
+                                            <Box sx={{ml: 4, mt: 1}}>
+                                                {watchedEvents[index]?.selectedDocExports.map(
+                                                    (docExport, typeIndex) => (
+                                                        <FormInputCheckbox
+                                                            key={docExport.type}
+                                                            name={`events.${index}.selectedExports.${typeIndex}.checked`}
+                                                            label={
+                                                                webDavExportTypeNames.get(
+                                                                    docExport.type,
+                                                                ) ?? '-'
+                                                            }
+                                                            horizontal
+                                                            reverse
+                                                        />
+                                                    ),
+                                                )}
+                                            </Box>
+                                        )}
+                                    </Box>
+                                ))}
+                            </Box>
+                        )}
+
+                        {activeStep === 2 && (
+                            <Box>
+                                {eventsData?.map((event, index) => (
+                                    <FormInputCheckbox
+                                        key={event.id}
+                                        name={`events.${index}.exportData`}
+                                        label={event.name}
+                                        horizontal
+                                        reverse
+                                    />
+                                ))}
+                                <Divider />
+                                {DATA_TYPE_OPTIONS.map((exportType, index) => {
+                                    const isDisabled = isRequiredDependency(exportType)
+                                    return (
+                                        <FormInputCheckbox
+                                            key={exportType}
+                                            name={`checkedDatabaseExports.${index}.checked`}
+                                            label={webDavExportTypeNames.get(exportType) ?? '-'}
+                                            horizontal
+                                            reverse
+                                            disabled={isDisabled}
+                                        />
+                                    )
+                                })}
+                            </Box>
+                        )}
                     </DialogContent>
-                    <DialogActions>
-                        <Button onClick={closeDialog} disabled={submitting}>
-                            {t('common.cancel')}
-                        </Button>
-                        <SubmitButton submitting={submitting}>
-                            {t('webDAV.export.confirm')}
-                        </SubmitButton>
+                    <DialogActions sx={{justifyContent: 'space-between'}}>
+                        <Box>
+                            <Button onClick={handleBack} disabled={submitting || activeStep === 0}>
+                                {'[todo] Back'}
+                            </Button>
+                            <Button onClick={closeDialog} disabled={submitting}>
+                                {t('common.cancel')}
+                            </Button>
+                        </Box>
+                        <Box>
+                            {activeStep < steps.length - 1 ? (
+                                <Button variant="contained" onClick={handleNext}>
+                                    {'[todo] Next'}
+                                </Button>
+                            ) : (
+                                <SubmitButton submitting={submitting}>
+                                    {t('webDAV.export.confirm')}
+                                </SubmitButton>
+                            )}
+                        </Box>
                     </DialogActions>
                 </FormContainer>
             </BaseDialog>
@@ -416,8 +542,7 @@ const ExportData = () => {
                                                 {exportStatus.exportTypes.map(type => (
                                                     <ListItemText
                                                         key={exportStatus.processId + type}>
-                                                        {webDavExportTypes.find(t => t.id === type)
-                                                            ?.label ?? '-'}
+                                                        {webDavExportTypeNames.get(type) ?? '-'}
                                                     </ListItemText>
                                                 ))}
                                             </List>

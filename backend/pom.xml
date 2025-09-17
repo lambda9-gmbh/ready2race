@@ -411,7 +411,7 @@
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-                            <excludes />
+                            <excludes/>
                             <inputSchema>${database.schemas}</inputSchema>
                             <outputSchemaToDefault>false</outputSchemaToDefault>
                             <includeSystemSequences>true</includeSystemSequences>
@@ -421,7 +421,7 @@
                             <directory>target/generated-sources/jooq</directory>
                         </target>
                         <generate>
-                            <pojos>false</pojos>
+                            <pojos>true</pojos>
                             <pojosAsKotlinDataClasses>true</pojosAsKotlinDataClasses>
                             <daos>false</daos>
                             <validationAnnotations>false</validationAnnotations>
