@@ -7,6 +7,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHa
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
+import de.lambda9.ready2race.backend.database.generated.tables.references.BANK_ACCOUNT
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -26,7 +27,9 @@ object RoleRepo {
 
     fun update(record: RoleRecord, f: RoleRecord.() -> Unit) = ROLE.update(record, f)
 
-    fun getAllExceptStatic() = ROLE.select { STATIC.isFalse }
+    fun getAllIdsExceptStatic() = ROLE.select({ ID }) { STATIC.isFalse }
+
+    fun getAllExceptStaticAsJson() = ROLE.selectAsJson { STATIC.isFalse }
 
     fun existsExceptStatic() = ROLE.exists { STATIC.isFalse }
 
@@ -69,4 +72,8 @@ object RoleRepo {
     }
 
     fun getOverlapIds(ids: List<UUID>) = ROLE.select({ ID }) { ID.`in`(ids) }
+
+    fun insertJsonData(data: String) = Jooq.query {
+        this.loadInto(ROLE).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
+    }
 }

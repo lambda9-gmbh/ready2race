@@ -8,7 +8,6 @@ import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDav
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
-import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
@@ -22,7 +21,7 @@ data class DataBankAccountsExport(
         fun createExportFile(
             record: WebdavExportDataRecord
         ): App<WebDAVError.WebDAVInternError, File> = KIO.comprehension {
-            
+
             val bankAccounts = !BankAccountRepo.allAsJson().orDie()
 
             val json = !WebDAVExportService.serializeDataExportNew(record, mapOf("bankAccounts" to bankAccounts))
@@ -32,9 +31,7 @@ data class DataBankAccountsExport(
 
         fun importData(data: DataBankAccountsExport): App<WebDAVError.WebDAVImportNextError, Unit> = KIO.comprehension {
 
-            val bankAccountsJson = data.bankAccounts.toString()
-
-            !BankAccountRepo.insertJsonData(bankAccountsJson).orDie()
+            !BankAccountRepo.insertJsonData(data.bankAccounts.toString()).orDie()
 
             unit
         }

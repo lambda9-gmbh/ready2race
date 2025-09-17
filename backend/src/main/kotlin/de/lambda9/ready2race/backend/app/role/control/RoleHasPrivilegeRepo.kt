@@ -1,11 +1,13 @@
 package de.lambda9.ready2race.backend.app.role.control
 
 import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleHasPrivilegeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_HAS_PRIVILEGE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_HAS_PRIVILEGE_VIEW
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectAsJson
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -28,12 +30,17 @@ object RoleHasPrivilegeRepo {
         }
     }
 
-    fun getByRoles(roles: List<UUID>) = ROLE_HAS_PRIVILEGE.select { ROLE.`in`(roles) }
+    fun getByRolesAsJson(roles: List<UUID>) = ROLE_HAS_PRIVILEGE.selectAsJson { ROLE.`in`(roles) }
 
     fun getOverlaps(ids: List<Pair<UUID, UUID>>) = ROLE_HAS_PRIVILEGE.select {
         DSL.or(ids.map { (roleId, privilegeId) ->
             ROLE.eq(roleId).and(PRIVILEGE.eq(privilegeId))
         })
+    }
+
+    fun parseJsonToRecord(data: String): JIO<List<RoleHasPrivilegeRecord>> = Jooq.query {
+        fetchFromJSON(data)
+            .into(RoleHasPrivilegeRecord::class.java)
     }
 
 }

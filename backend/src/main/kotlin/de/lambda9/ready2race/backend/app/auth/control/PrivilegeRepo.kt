@@ -1,8 +1,10 @@
 package de.lambda9.ready2race.backend.app.auth.control
 
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.PrivilegeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.PRIVILEGE
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectAsJson
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 
@@ -15,5 +17,12 @@ object PrivilegeRepo {
             selectFrom(this)
                 .fetch()
         }
+    }
+
+    fun allAsJson() = PRIVILEGE.selectAsJson()
+
+    fun parseJsonToRecord(data: String): JIO<List<PrivilegeRecord>> = Jooq.query {
+        fetchFromJSON(data)
+            .into(PrivilegeRecord::class.java)
     }
 }

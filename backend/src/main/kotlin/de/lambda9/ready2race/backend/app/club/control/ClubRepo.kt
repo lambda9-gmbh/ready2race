@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.club.control
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
+import de.lambda9.ready2race.backend.database.generated.tables.records.BankAccountRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
@@ -19,7 +20,7 @@ object ClubRepo {
 
     fun any() = CLUB.exists { DSL.trueCondition() }
 
-    fun all() = CLUB.select()
+    fun allAsJson() = CLUB.selectAsJson()
 
     fun create(
         record: ClubRecord,
@@ -109,5 +110,10 @@ object ClubRepo {
     ): JIO<Int> = CLUB.delete { ID.eq(id) }
 
     fun getOverlapIds(ids: List<UUID>) = CLUB.select({ ID }) { ID.`in`(ids) }
+
+    fun parseJsonToRecord(data: String): JIO<List<ClubRecord>> = Jooq.query {
+        fetchFromJSON(data)
+            .into(ClubRecord::class.java)
+    }
 
 }

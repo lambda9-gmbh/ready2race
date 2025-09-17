@@ -5,10 +5,7 @@ import de.lambda9.ready2race.backend.app.appuser.entity.EveryAppUserWithRolesSor
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.EveryAppUserWithRoles
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithRolesRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EveryAppUserWithRolesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
@@ -164,11 +161,18 @@ object AppUserRepo {
         }
     }
 
-    fun getAllExceptSystemAdmin(): JIO<List<AppUserRecord>> = APP_USER.select { ID.ne(SYSTEM_USER) }
+    fun getAllIdsExceptSystemAdmin() = APP_USER.select({ ID }) { ID.ne(SYSTEM_USER) }
+
+    fun getAllExceptSystemAdminAsJson() = APP_USER.selectAsJson { ID.ne(SYSTEM_USER) }
 
     fun insert(records: List<AppUserRecord>) = APP_USER.insert(records)
 
     fun getOverlapIds(ids: List<UUID>) = APP_USER.select({ ID }) { ID.`in`(ids) }
 
     fun getOverlappingEmails(emails: List<String>) = APP_USER.select({ EMAIL }) { EMAIL.`in`(emails) }
+
+    fun parseJsonToRecord(data: String): JIO<List<AppUserRecord>> = Jooq.query {
+        fetchFromJSON(data)
+            .into(AppUserRecord::class.java)
+    }
 }
