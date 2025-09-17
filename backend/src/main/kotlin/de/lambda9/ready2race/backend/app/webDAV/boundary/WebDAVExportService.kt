@@ -40,6 +40,7 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.config.Config
+import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDependencyRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportFolderRecord
@@ -368,7 +369,7 @@ object WebDAVExportService {
                 WebdavExportDataRecord(
                     id = UUID.randomUUID(),
                     webdavExportProcess = processId,
-                    documentType = request.name,
+                    documentType = it.toString(),
                     dataReference = null,
                     path = request.name,
                 )
@@ -386,7 +387,7 @@ object WebDAVExportService {
         }
         !WebDAVExportDependencyRepo.create(dependencyRecords).orDie()
 
-        
+
         client.close()
 
         return noData
@@ -727,6 +728,33 @@ object WebDAVExportService {
         }
 
         unit
+    }
+
+    fun serializeDataExportNew(
+        record: WebdavExportDataRecord,
+        exportData: Map<String, String>, // key to json
+    ): App<WebDAVError.WebDAVInternError, ByteArray> = KIO.comprehension {
+        try {
+            val combinedJson = mutableMapOf<String, JsonNode>()
+
+            exportData.forEach { (key, jsonString) ->
+                val parsedJson = jsonMapper.readTree(jsonString)
+                combinedJson[key] = parsedJson
+            }
+
+            val json = jsonMapper.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(combinedJson)
+                .toByteArray()
+            KIO.ok(json)
+        } catch (e: Exception) {
+            !setErrorOnDataExport(record, "Failed to serialize: ${e.message}")
+            KIO.fail(
+                WebDAVError.FileNotFound(
+                    exportId = record.id,
+                    referenceId = record.dataReference
+                )
+            )
+        }
     }
 
     fun serializeDataExport(

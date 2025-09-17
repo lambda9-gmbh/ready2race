@@ -1383,7 +1383,29 @@
         "invoices": "Rechnungen",
         "documents": "Veranstaltungsdokumente",
         "results": "Ergebnisse",
-        "startLists": "Startlisten"
+        "startLists": "Startlisten",
+        "users": "Benutzer",
+        "participants": "Teilnehmer",
+        "bankAccounts": "Bankkonten",
+        "contactInformation": "Kontaktinformationen",
+        "emailIndividualTemplates": "Individuelle E-Mail-Vorlagen",
+        "eventDocumentTypes": "Veranstaltungsdokumenttypen",
+        "matchResultImportConfigs": "Wettkampfergebnis-Importkonfigurationen",
+        "startlistExportConfigs": "Startlisten-Exportkonfigurationen",
+        "workTypes": "Arbeitstypen",
+        "participantRequirements": "Teilnehmeranforderungen",
+        "ratingCategories": "Wertungskategorien",
+        "competitionCategories": "Wettkampfkategorien",
+        "fees": "Gebühren",
+        "namedParticipants": "Benannte Teilnehmer",
+        "competitionSetupTemplates": "Wettkampf-Setup-Vorlagen",
+        "competitionTemplates": "Wettkampfvorlagen",
+        "event": "Veranstaltung",
+        "competition": "Wettkampf"
+      },
+      "steps": {
+        "documents": "Dokumente",
+        "data": "Daten"
       },
       "error": {
         "nameConflict": "Der eingegebene Ordnername existiert bereits. Bitte wählen Sie einen anderen Namen.",
@@ -1406,6 +1428,17 @@
           "body": "{{exported}} / {{total}} Dateien exportiert."
         }
       }
+    },
+    "import": {
+      "import": "Daten importieren",
+      "confirm": "Importieren",
+      "folderName": "Import Ordnername",
+      "selectData": "Zu importierende Daten auswählen",
+      "error": {
+        "noSelection": "Bitte wählen Sie mindestens einen Datentyp zum Importieren aus",
+        "failed": "Beim Importieren der Daten ist ein Fehler aufgetreten"
+      },
+      "success": "Import erfolgreich gestartet"
     }
   }
 }

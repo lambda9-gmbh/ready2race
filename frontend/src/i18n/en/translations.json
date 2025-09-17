@@ -1383,7 +1383,29 @@
         "invoices": "Invoices",
         "documents": "Event documents",
         "results": "Results",
-        "startLists": "Start-lists"
+        "startLists": "Start-lists",
+        "users": "Users",
+        "participants": "Participants",
+        "bankAccounts": "Bank Accounts",
+        "contactInformation": "Contact Information",
+        "emailIndividualTemplates": "Individual Email Templates",
+        "eventDocumentTypes": "Event Document Types",
+        "matchResultImportConfigs": "Match Result Import Configurations",
+        "startlistExportConfigs": "Startlist Export Configurations",
+        "workTypes": "Work Types",
+        "participantRequirements": "Participant Requirements",
+        "ratingCategories": "Rating Categories",
+        "competitionCategories": "Competition Categories",
+        "fees": "Fees",
+        "namedParticipants": "Named Participants",
+        "competitionSetupTemplates": "Competition Setup Templates",
+        "competitionTemplates": "Competition Templates",
+        "event": "Event",
+        "competition": "Competition"
+      },
+      "steps": {
+        "documents": "Documents",
+        "data": "Data"
       },
       "error": {
         "nameConflict": "The folder name you entered already exists. Please choose a different name.",
@@ -1406,6 +1428,17 @@
           "body": "{{exported}} / {{total}} exported."
         }
       }
+    },
+    "import": {
+      "import": "Import data",
+      "confirm": "Import",
+      "folderName": "Import folder name",
+      "selectData": "Select data to import",
+      "error": {
+        "noSelection": "Please select at least one data type to import",
+        "failed": "An error occurred while importing the data"
+      },
+      "success": "Import successfully started"
     }
   }
 }

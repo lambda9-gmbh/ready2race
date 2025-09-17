@@ -3,6 +3,8 @@ package de.lambda9.ready2race.backend.app.webDAV.entity
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators
+import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.flatMap
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.maxLength
@@ -26,7 +28,7 @@ data class WebDAVExportRequest(
             this::selectedDatabaseExports validate allOf(
                 notEmpty,
                 noDuplicates,
-                oneOf(
+                /*oneOf( // todo: doesnt work
                     isValue(WebDAVExportType.DB_USERS),
                     isValue(WebDAVExportType.DB_PARTICIPANTS),
                     isValue(WebDAVExportType.DB_BANK_ACCOUNTS),
@@ -43,7 +45,7 @@ data class WebDAVExportRequest(
                     isValue(WebDAVExportType.DB_NAMED_PARTICIPANTS),
                     isValue(WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES),
                     isValue(WebDAVExportType.DB_COMPETITION_TEMPLATES),
-                )
+                )*/
             )
         )
 

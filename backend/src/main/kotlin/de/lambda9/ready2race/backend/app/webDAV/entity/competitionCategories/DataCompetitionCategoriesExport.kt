@@ -18,6 +18,7 @@ import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.JSONFormat
 
 data class DataCompetitionCategoriesExport(
     val competitionCategories: List<CompetitionCategoryExport>
@@ -26,8 +27,20 @@ data class DataCompetitionCategoriesExport(
         fun createExportFile(
             record: WebdavExportDataRecord
         ): App<WebDAVError.WebDAVInternError, File> = KIO.comprehension {
-            val competitionCategories = !Jooq.query { selectFrom(COMPETITION_CATEGORY).fetch() }.orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
+            /*val competitionCategories =
+                !Jooq.query {
+                    return@query this.loadInto(COMPETITION_CATEGORY).onDuplicateKeyIgnore()..selectFrom(
+                        COMPETITION_CATEGORY
+                    ).fetch().formatJSON(JSONFormat.DEFAULT_FOR_RECORDS)
+                }.orDie()
+            //  .andThen { list -> list.traverse { it.toExport() } }*/
+
+            val competitionCategories = !Jooq.query {
+                selectFrom(
+                    COMPETITION_CATEGORY
+                ).fetch()
+            }.orDie().andThen { list -> list.traverse { it.toExport() } }
+
 
             val exportData = DataCompetitionCategoriesExport(
                 competitionCategories = competitionCategories

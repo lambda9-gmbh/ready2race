@@ -18,14 +18,14 @@ data class WebDAVExportEventRequest(
         this::selectedExports validate allOf(
             notEmpty,
             noDuplicates,
-            oneOf(
+            /*oneOf( // todo: doesnt work
                 isValue(WebDAVExportType.REGISTRATION_RESULTS),
                 isValue(WebDAVExportType.INVOICES),
                 isValue(WebDAVExportType.DOCUMENTS),
                 isValue(WebDAVExportType.RESULTS),
                 isValue(WebDAVExportType.START_LISTS),
                 isValue(WebDAVExportType.DB_EVENT),
-            )
+            )*/
         )
 
 

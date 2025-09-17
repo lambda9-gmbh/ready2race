@@ -1,21 +1,15 @@
 package de.lambda9.ready2race.backend.app.bankAccount.control
 
 import de.lambda9.ready2race.backend.app.bankAccount.entity.BankAccountSort
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
-import de.lambda9.ready2race.backend.database.delete
-import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.BankAccount
 import de.lambda9.ready2race.backend.database.generated.tables.records.BankAccountRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.BANK_ACCOUNT
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.metaSearch
-import de.lambda9.ready2race.backend.database.page
-import de.lambda9.ready2race.backend.database.select
-import de.lambda9.ready2race.backend.database.selectOne
-import de.lambda9.ready2race.backend.database.update
-import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
+import org.jooq.impl.DefaultConfiguration
 import java.util.UUID
 
 object BankAccountRepo {
@@ -30,7 +24,7 @@ object BankAccountRepo {
 
     fun update(id: UUID, f: BankAccountRecord.() -> Unit) = BANK_ACCOUNT.update(f) { ID.eq(id) }
 
-    fun delete(id: UUID) = BANK_ACCOUNT.delete { ID.eq(id)}
+    fun delete(id: UUID) = BANK_ACCOUNT.delete { ID.eq(id) }
 
     fun count(search: String?): JIO<Int> = Jooq.query {
         with(BANK_ACCOUNT) {
@@ -49,4 +43,15 @@ object BankAccountRepo {
     fun getOverlapIds(ids: List<UUID>) = BANK_ACCOUNT.select({ ID }) { ID.`in`(ids) }
 
     fun create(records: List<BankAccountRecord>) = BANK_ACCOUNT.insert(records)
+
+    fun allAsJson() = BANK_ACCOUNT.selectAsJson()
+
+    fun parseJsonToRecord(data: String): JIO<List<BankAccountRecord>> = Jooq.query {
+        fetchFromJSON(data)
+            .into(BankAccountRecord::class.java)
+    }
+
+    fun insertJsonData(data: String) = Jooq.query {
+        this.loadInto(BANK_ACCOUNT).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
+    }
 }

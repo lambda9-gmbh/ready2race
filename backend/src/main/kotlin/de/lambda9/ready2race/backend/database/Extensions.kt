@@ -126,6 +126,12 @@ fun <R : Record, T : TableImpl<R>, A> T.selectOne(
         ?.value1()
 }
 
+fun <R : Record, T : TableImpl<R>> T.selectAsJson(
+    condition: T.() -> Condition = { DSL.trueCondition() }
+): JIO<String> = Jooq.query {
+    fetch(this@selectAsJson, condition()).formatJSON()
+}
+
 // TODO: @Evaluate need for similar function without pagination, just search
 @Suppress("DEPRECATION")
 fun <R : Record, T : TableImpl<R>, S : Sortable> T.page(
