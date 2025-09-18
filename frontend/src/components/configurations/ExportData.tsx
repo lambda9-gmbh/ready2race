@@ -144,10 +144,7 @@ const ExportData = () => {
                                 .map(value => value.type),
                             ...(event.exportData ? ['DB_EVENT'] : []),
                         ],
-                        selectedCompetitions: [
-                            'a4f3edf0-b08f-4f92-8e10-df37d5cc981b',
-                            '05fdb8a6-687e-4990-8d78-698e09e1db9f',
-                        ],
+                        selectedCompetitions: [], // todo
                     })),
                 selectedDatabaseExports: formData.checkedDatabaseExports
                     .filter(type => type.checked)
