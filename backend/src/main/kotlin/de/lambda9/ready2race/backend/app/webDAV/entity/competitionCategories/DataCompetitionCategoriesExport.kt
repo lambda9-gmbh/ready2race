@@ -1,52 +1,30 @@
 package de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories
 
+import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionCategory.control.CompetitionCategoryRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
-import de.lambda9.ready2race.backend.app.webDAV.control.toExport
-import de.lambda9.ready2race.backend.app.webDAV.control.toRecord
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_CATEGORY
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
-import de.lambda9.tailwind.jooq.Jooq
-import org.jooq.JSONFormat
 
 data class DataCompetitionCategoriesExport(
-    val competitionCategories: List<CompetitionCategoryExport>
+    val competitionCategories: JsonNode
 ) : WebDAVExportData {
     companion object {
         fun createExportFile(
             record: WebdavExportDataRecord
         ): App<WebDAVError.WebDAVInternError, File> = KIO.comprehension {
-            /*val competitionCategories =
-                !Jooq.query {
-                    return@query this.loadInto(COMPETITION_CATEGORY).onDuplicateKeyIgnore()..selectFrom(
-                        COMPETITION_CATEGORY
-                    ).fetch().formatJSON(JSONFormat.DEFAULT_FOR_RECORDS)
-                }.orDie()
-            //  .andThen { list -> list.traverse { it.toExport() } }*/
 
-            val competitionCategories = !Jooq.query {
-                selectFrom(
-                    COMPETITION_CATEGORY
-                ).fetch()
-            }.orDie().andThen { list -> list.traverse { it.toExport() } }
+            val competitionCategories = !CompetitionCategoryRepo.allAsJson().orDie()
 
-
-            val exportData = DataCompetitionCategoriesExport(
-                competitionCategories = competitionCategories
-            )
-
-            val json = !WebDAVExportService.serializeDataExport(record, exportData)
+            val json = !WebDAVExportService.serializeDataExportNew(record, mapOf("competitionCategories" to competitionCategories))
 
             KIO.ok(File(name = getWebDavDataJsonFileName(WebDAVExportType.DB_COMPETITION_CATEGORIES), bytes = json))
         }
@@ -54,15 +32,7 @@ data class DataCompetitionCategoriesExport(
         fun importData(data: DataCompetitionCategoriesExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
 
-                val overlaps =
-                    !CompetitionCategoryRepo.getOverlapIds(data.competitionCategories.map { it.id }).orDie()
-                val records = !data.competitionCategories
-                    .filter { !overlaps.contains(it.id) }
-                    .traverse { it.toRecord() }
-
-                if (records.isNotEmpty()) {
-                    !CompetitionCategoryRepo.create(records).orDie()
-                }
+                !CompetitionCategoryRepo.insertJsonData(data.competitionCategories.toString()).orDie()
 
                 unit
             }

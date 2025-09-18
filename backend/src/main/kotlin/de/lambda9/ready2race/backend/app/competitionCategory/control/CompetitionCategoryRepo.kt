@@ -46,4 +46,8 @@ object CompetitionCategoryRepo {
                 .fetch()
         }
     }
+
+    fun allAsJson() = COMPETITION_CATEGORY.selectAsJson()
+
+    fun insertJsonData(data: String) = COMPETITION_CATEGORY.insertJsonData(data)
 }

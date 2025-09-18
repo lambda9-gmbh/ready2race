@@ -17,6 +17,8 @@ import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
 import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectAsJson
+import de.lambda9.ready2race.backend.database.insertJsonData
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -57,4 +59,8 @@ object MatchResultImportConfigRepo {
     fun update(id: UUID, f: MatchResultImportConfigRecord.() -> Unit) = MATCH_RESULT_IMPORT_CONFIG.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = MATCH_RESULT_IMPORT_CONFIG.delete { ID.eq(id) }
+
+    fun allAsJson() = MATCH_RESULT_IMPORT_CONFIG.selectAsJson()
+
+    fun insertJsonData(data: String) = MATCH_RESULT_IMPORT_CONFIG.insertJsonData(data)
 }

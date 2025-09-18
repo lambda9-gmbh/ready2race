@@ -1,11 +1,16 @@
 package de.lambda9.ready2race.backend.app.webDAV.boundary
 
+import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
+import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
@@ -18,7 +23,9 @@ import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExp
 import de.lambda9.ready2race.backend.app.webDAV.control.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.DataBankAccountsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competition.DataCompetitionExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories.DataCompetitionCategoriesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetup.CompetitionSetupDataType
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates.DataCompetitionSetupTemplatesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates.DataCompetitionTemplatesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.contactInformation.DataContactInformationExport
@@ -40,7 +47,6 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.config.Config
-import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDependencyRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportFolderRecord
@@ -97,7 +103,7 @@ object WebDAVExportService {
                 WebDAVExportType.INVOICES -> "Invoices"
                 WebDAVExportType.DOCUMENTS -> "Documents"
                 WebDAVExportType.RESULTS -> "Results"
-                WebDAVExportType.START_LISTS -> "Start-Lists"
+                WebDAVExportType.DB_COMPETITION, WebDAVExportType.START_LISTS -> "Competitions"
                 else -> null
             }
         }
@@ -154,9 +160,10 @@ object WebDAVExportService {
             client.close()
             WebDAVError.ExportFolderAlreadyExists
         }
+        val responseMsg = checkFolderResponse.bodyAsText()
         !KIO.failOn(checkFolderResponse.status.value != 404) {
             client.close()
-            WebDAVError.CannotMakeFolder("/")
+            WebDAVError.CannotMakeFolder("/", responseMsg)
         }
 
 
@@ -219,9 +226,16 @@ object WebDAVExportService {
                 !CompetitionMatchRepo
                     .getMatchForEventByEvents(requestedDocs[WebDAVExportType.START_LISTS]!!)
                     .orDie()
+                    .map { matches -> matches.filter { it.teams!!.isNotEmpty() } } // Filter matches with no teams (with deregistered teams) - otherwise that error only appears at the creation of the startlist
             } else emptyList()
         }
 
+        val selectedCompetitions = request.events.flatMap { it.selectedCompetitions }
+        val existingCompetitions = !CompetitionRepo.getExisting(selectedCompetitions).orDie()
+        !KIO.failOn(existingCompetitions.size != selectedCompetitions.size) {
+            client.close()
+            CompetitionError.CompetitionNotFound
+        }
 
         // FOLDER RECORDS
         val exportFolderEventRecords: MutableList<WebdavExportFolderRecord> = mutableListOf()
@@ -232,7 +246,7 @@ object WebDAVExportService {
         val exportRecords: MutableList<WebdavExportRecord> = mutableListOf()
 
         // EXPORT DATA RECORDS
-        val exportDataRecords: MutableMap<WebDAVExportType, WebdavExportDataRecord> = mutableMapOf()
+        val exportDataRecords: MutableList<Pair<WebDAVExportType, WebdavExportDataRecord>> = mutableListOf()
 
         events.forEach { (eventId, eventName) ->
             val pathStart = "${request.name}/$eventName"
@@ -292,49 +306,101 @@ object WebDAVExportService {
                 addExportRecord(WebDAVExportType.RESULTS, eventId, folderRecord.id)
             }
 
-            // START LISTS
+
+            // START LISTS and COMPETITIONS
+
+            data class CompetitionFolderNameComponents(
+                val id: UUID,
+                val identifier: String,
+                val name: String
+            )
+
+            // DB_COMPETITION
+            val selectedDataCompetitions = existingCompetitions.filter { it.event == eventId }
+            val competitionDataNameComponents = selectedDataCompetitions.map {
+                CompetitionFolderNameComponents(id = it.id!!, identifier = it.identifier!!, name = it.name!!)
+            }
+            val competitionDataIds = competitionDataNameComponents.map { it.id }
+
+
+            // START_LISTS (matches)
             val matchesForEvent = startListsMatchRecords.filter { it.eventId == eventId }
-            if (matchesForEvent.isNotEmpty()) {
-                val typeFolderRecord = addExportDocFolderRecord(WebDAVExportType.START_LISTS)
+            val startListCompetitionNameCompetitions = matchesForEvent.groupBy { it.competitionId!! }.mapValues {
+                CompetitionFolderNameComponents(
+                    id = it.key,
+                    identifier = it.value.first().competitionIdentifier!!,
+                    name = it.value.first().competitionName!!
+                )
+            }.values.toList()
 
-                // Makes sure that the competition folder names are unique
-                val competitionFolderNames =
-                    renameDuplicateNameEntities(matchesForEvent.groupBy { it.competitionId!! }
-                        .mapValues { "${it.value.first().competitionIdentifier}-${it.value.first().competitionName}" })
+            // Combine the DB_COMPETITION and START_LISTS competitions
+            val competitionNameComponents =
+                (competitionDataNameComponents + startListCompetitionNameCompetitions.filter {
+                    !competitionDataIds.contains(it.id)
+                })
 
-                matchesForEvent.groupBy { it.competitionId }.forEach { (competitionId, matchRecords) ->
-                    // CREATE COMPETITION FOLDERS
-                    val competitionFolderRecord = buildExportFolderRecord(
-                        parentFolder = typeFolderRecord.id,
-                        path = "$pathStart/${getFolderName(WebDAVExportType.START_LISTS)}/${competitionFolderNames[competitionId]}",
+            // Makes sure that the competition folder names are unique
+            val competitionFolderNames =
+                renameDuplicateNameEntities(competitionNameComponents.associate { it.id to "${it.identifier}-${it.name}" })
+
+            if (competitionFolderNames.isNotEmpty()) {
+                val competitionsTypeFolderRecord = addExportDocFolderRecord(WebDAVExportType.DB_COMPETITION)
+
+                // FOLDERS
+                val competitionFolderRecords = competitionFolderNames.mapValues {
+                    buildExportFolderRecord(
+                        parentFolder = competitionsTypeFolderRecord.id,
+                        path = "${competitionsTypeFolderRecord.path}/${it.value}",
                     )
-                    exportFolderCompetitionRecords.add(competitionFolderRecord)
+                }
+                exportFolderCompetitionRecords.addAll(competitionFolderRecords.values)
 
-                    // CREATE EXPORT RECORDS
+                // START LISTS
+                matchesForEvent.groupBy { it.competitionId }.forEach { (competitionId, matchRecords) ->
                     matchRecords.forEach { match ->
                         exportRecords.add(
                             buildExportRecord(
                                 eventId = eventId,
                                 documentType = WebDAVExportType.START_LISTS,
                                 dataReference = match.matchId!!,
-                                parentFolder = competitionFolderRecord.id,
+                                parentFolder = competitionFolderRecords[competitionId]!!.id,
                                 additionalPath = "/${competitionFolderNames[competitionId]}"
                             )
                         )
                     }
                 }
+
+                // COMPETITION DATA
+                selectedDataCompetitions.forEach { competition ->
+                    exportDataRecords.add(
+                        WebDAVExportType.DB_COMPETITION to WebdavExportDataRecord(
+                            id = UUID.randomUUID(),
+                            webdavExportProcess = processId,
+                            documentType = WebDAVExportType.DB_COMPETITION.name,
+                            dataReference = competition.id,
+                            path = "$pathStart/${getFolderName(WebDAVExportType.DB_COMPETITION)}/${competitionFolderNames[competition.id]}",
+                            parentFolder = competitionFolderRecords[competition.id]!!.id
+                        )
+                    )
+                }
             }
+
 
             // DB_EVENTS EXPORT
             if (requestedDocs[WebDAVExportType.DB_EVENT]!!.contains(eventId)) {
-                exportDataRecords[WebDAVExportType.DB_EVENT] = WebdavExportDataRecord(
-                    id = UUID.randomUUID(),
-                    webdavExportProcess = processId,
-                    documentType = request.name,
-                    dataReference = eventId,
-                    path = pathStart,
+                exportDataRecords.add(
+                    WebDAVExportType.DB_EVENT to WebdavExportDataRecord(
+                        id = UUID.randomUUID(),
+                        webdavExportProcess = processId,
+                        documentType = WebDAVExportType.DB_EVENT.name,
+                        dataReference = eventId,
+                        path = pathStart,
+                        parentFolder = eventFolder.id
+                    )
                 )
             }
+
+
         }
 
         // CREATE EXPORT FOLDER QUEUE - Because of the parent_folder references it has to be in this order
@@ -364,25 +430,32 @@ object WebDAVExportService {
         }
 
         // add exportData records
-        exportDataRecords.putAll(
-            databaseExportTypes.associateWith {
-                WebdavExportDataRecord(
-                    id = UUID.randomUUID(),
-                    webdavExportProcess = processId,
-                    documentType = it.toString(),
-                    dataReference = null,
-                    path = request.name,
-                )
+        exportDataRecords.addAll(
+            databaseExportTypes.map {
+                it to
+                    WebdavExportDataRecord(
+                        id = UUID.randomUUID(),
+                        webdavExportProcess = processId,
+                        documentType = it.toString(),
+                        dataReference = null,
+                        path = request.name,
+                    )
             })
-        !WebDAVExportDataRepo.create(exportDataRecords.values.toList()).orDie()
+        // create all exportData entries (including event and competition)
+        !WebDAVExportDataRepo.create(exportDataRecords.map { (_, exportDataRecords) -> exportDataRecords }).orDie()
 
-        // add exportData dependencies
-        val dependencyRecords = exportDataRecords.flatMap { (a, b) ->
-            webDAVExportTypeDependencies[a]?.map {
-                WebdavExportDependencyRecord(
-                    webdavExportData = b.id,
-                    dependingOn = exportDataRecords[it]!!.id // The dependency has to be there due to the checkRequestTypeDependencies() check earlier and the sorting of the list
-                )
+        // add a dependency for each record if it is dependent on other records.
+        val dependencyRecords = exportDataRecords.flatMap { (exportType, exportRecord) ->
+            webDAVExportTypeDependencies[exportType]?.flatMap { dependentOnType ->
+                // There could be multiple records of one DB_ type like COMPETITION - so we get all records with that type
+                val dependentOnRecords = exportDataRecords.filter { it.first == dependentOnType }.map { it.second }
+                dependentOnRecords.map { dependentOnRecord ->
+                    WebdavExportDependencyRecord(
+                        webdavExportData = exportRecord.id,
+                        dependingOn = dependentOnRecord.id
+                    )
+                }
+
             } ?: emptyList()
         }
         !WebDAVExportDependencyRepo.create(dependencyRecords).orDie()
@@ -563,6 +636,10 @@ object WebDAVExportService {
                             !DataEventExport.createExportFile(nextDataExport)
                         }
 
+                        WebDAVExportType.DB_COMPETITION.name -> {
+                            !DataCompetitionExport.createExportFile(nextDataExport)
+                        }
+
                         else -> {
                             !setErrorOnDataExport(nextDataExport, "Unknown export type")
                             client.close()
@@ -663,10 +740,11 @@ object WebDAVExportService {
                 if (response.status.isSuccess()) {
                     unit
                 } else {
-                    KIO.fail(WebDAVError.CannotMakeFolder(path))
+                    val responseMsg = response.bodyAsText()
+                    KIO.fail(WebDAVError.CannotMakeFolder(path, responseMsg))
                 }
             } catch (ex: Exception) {
-                KIO.fail(WebDAVError.Unexpected)
+                KIO.fail(WebDAVError.Unexpected(ex.stackTraceToString()))
             }
         }
 
@@ -757,26 +835,6 @@ object WebDAVExportService {
         }
     }
 
-    fun serializeDataExport(
-        record: WebdavExportDataRecord,
-        exportData: WebDAVExportData,
-    ): App<WebDAVError.WebDAVInternError, ByteArray> = KIO.comprehension {
-        try {
-            val json = jsonMapper.writerWithDefaultPrettyPrinter()
-                .writeValueAsString(exportData)
-                .toByteArray()
-            KIO.ok(json)
-        } catch (e: Exception) {
-            !setErrorOnDataExport(record, "Failed to serialize: ${e.message}")
-            KIO.fail(
-                WebDAVError.FileNotFound(
-                    exportId = record.id,
-                    referenceId = record.dataReference
-                )
-            )
-        }
-    }
-
     fun getExportStatus(): App<Nothing, ApiResponse.ListDto<WebDAVExportStatusDto>> = KIO.comprehension {
 
         val records = !WebDAVExportProcessRepo.all().orDie()
@@ -803,4 +861,38 @@ object WebDAVExportService {
         )
     }
 
+    fun getSetupRoundsWithDependenciesAsJson(templateOrSetupIds: List<UUID>): App<Nothing, Map<CompetitionSetupDataType, String>> =
+        KIO.comprehension {
+            val rounds = !CompetitionSetupRoundRepo.getBySetupIdsAsJson(templateOrSetupIds).orDie()
+            val roundIds = !CompetitionSetupRoundRepo.getIdsBySetupIds(templateOrSetupIds).orDie()
+
+            // get by rounds
+            val evaluations = !CompetitionSetupGroupStatisticEvaluationRepo.getAsJson(roundIds).orDie()
+            val places = !CompetitionSetupPlaceRepo.getAsJson(roundIds).orDie()
+            val matches = !CompetitionSetupMatchRepo.getAsJson(roundIds).orDie()
+
+            val matchRecords = !CompetitionSetupMatchRepo.get(roundIds).orDie()
+
+            // get by groupIds in matches
+            val groupIds =
+                !CompetitionSetupGroupRepo.getIds(matchRecords.mapNotNull { it.competitionSetupGroup }).orDie()
+            val groups =
+                !CompetitionSetupGroupRepo.getAsJson(matchRecords.mapNotNull { it.competitionSetupGroup }).orDie()
+
+            // get by matches and groups
+            val participants =
+                !CompetitionSetupParticipantRepo.getAsJson((matchRecords.map { it.id } + groupIds))
+                    .orDie()
+
+            KIO.ok(
+                mapOf(
+                    CompetitionSetupDataType.ROUNDS to rounds,
+                    CompetitionSetupDataType.GROUPS to groups,
+                    CompetitionSetupDataType.EVALUATIONS to evaluations,
+                    CompetitionSetupDataType.MATCHES to matches,
+                    CompetitionSetupDataType.PARTICIPANTS to participants,
+                    CompetitionSetupDataType.PLACES to places,
+                )
+            )
+        }
 }

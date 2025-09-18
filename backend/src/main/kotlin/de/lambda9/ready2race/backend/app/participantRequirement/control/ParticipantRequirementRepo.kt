@@ -51,4 +51,8 @@ object ParticipantRequirementRepo {
 
     fun get(id: UUID) = PARTICIPANT_REQUIREMENT.selectOne { ID.eq(id) }
 
+    fun allAsJson() = PARTICIPANT_REQUIREMENT.selectAsJson()
+
+    fun insertJsonData(data: String) = PARTICIPANT_REQUIREMENT.insertJsonData(data)
+
 }

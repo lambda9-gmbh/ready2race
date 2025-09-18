@@ -1,7 +1,6 @@
 package de.lambda9.ready2race.backend.app.webDAV.entity
 
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.calls.responses.ApiError
 import io.ktor.http.*
 import java.util.*
@@ -34,10 +33,10 @@ sealed interface WebDAVError {
         override fun respond(): ApiError = ApiError(
             status = when (this) {
                 ConfigIncomplete -> HttpStatusCode.BadRequest
-                is CannotMakeFolder, Unexpected -> HttpStatusCode.BadGateway/* TODO: other code? */
+                is CannotMakeFolder -> HttpStatusCode.BadGateway
                 ExportFolderAlreadyExists -> HttpStatusCode.Conflict
                 ConfigUnparsable,
-                ManifestSerializationFailed -> HttpStatusCode.InternalServerError
+                ManifestSerializationFailed, is Unexpected -> HttpStatusCode.InternalServerError
 
                 ManifestExportFailed,
                 CannotListFolders -> HttpStatusCode.BadGateway
@@ -73,14 +72,14 @@ sealed interface WebDAVError {
         WebDAVImportNextError
 
 
-    data object Unexpected :
-        WebDavInternExternError("An unexpected error has occurred. This is most likely a network issue.")
+    data class Unexpected(val errorMsg: String) :
+        WebDavInternExternError("An unexpected error has occurred. $errorMsg")
 
     data object ConfigIncomplete :
         WebDavInternExternError("The config env file does not include the necessary WebDAV information.")
 
-    data class CannotMakeFolder(val folderPath: String) :
-        WebDavInternExternError("An error has occurred when creating a new folder on the WebDAV Server. Folder path $folderPath")
+    data class CannotMakeFolder(val folderPath: String, val msg: String) :
+        WebDavInternExternError("An error has occurred when creating a new folder on the WebDAV Server. Folder path: $folderPath; Message: '$msg'")
 
     data object ConfigUnparsable :
         WebDavInternExternError("An unexpected error has occurred. The specified WebDAV adress could not be parsed.")

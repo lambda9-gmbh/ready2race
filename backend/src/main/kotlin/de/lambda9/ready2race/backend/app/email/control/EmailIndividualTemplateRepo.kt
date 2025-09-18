@@ -6,6 +6,8 @@ import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailIndividualTemplateRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EMAIL_INDIVIDUAL_TEMPLATE
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectAsJson
+import de.lambda9.ready2race.backend.database.insertJsonData
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -46,4 +48,8 @@ object EmailIndividualTemplateRepo {
                 .fetchOne()
         }
     }
+
+    fun allAsJson() = EMAIL_INDIVIDUAL_TEMPLATE.selectAsJson()
+
+    fun insertJsonData(data: String) = EMAIL_INDIVIDUAL_TEMPLATE.insertJsonData(data)
 }

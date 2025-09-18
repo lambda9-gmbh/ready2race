@@ -10,17 +10,15 @@ import de.lambda9.ready2race.backend.app.role.control.RoleHasPrivilegeRepo
 import de.lambda9.ready2race.backend.app.role.control.RoleRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
-import de.lambda9.ready2race.backend.app.webDAV.control.toRecord
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
+import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
 
 data class DataUsersExport(
     val appUsers: JsonNode,
@@ -62,47 +60,37 @@ data class DataUsersExport(
         }
 
         fun importData(data: DataUsersExport): App<WebDAVError.WebDAVImportNextError, Unit> = KIO.comprehension {
+
             // APP USER & CLUB (circular references - handled with two-phase import)
-
-            // Create Clubs with user references = null
-            /*val overlappingClubs = !ClubRepo.getOverlapIds(data.clubs.map { it.id }).orDie()
-            val filteredClubs = data.clubs.filter { !overlappingClubs.contains(it.id) }
-             val clubRecordsWithoutUserRefs = !filteredClubs.traverse { it.toRecordWithoutUsers() }
-
-            if (clubRecordsWithoutUserRefs.isNotEmpty()) {
-                !ClubRepo.create(clubRecordsWithoutUserRefs).orDie()
-            }*/
-
 
             val clubRecords = !ClubRepo.parseJsonToRecord(data.clubs.toString()).orDie()
 
             val overlappingClubs = !ClubRepo.getOverlapIds(clubRecords.map { it.id }).orDie()
-            val filteredClubRecordsWithoutUserRefs = clubRecords
-                .filter { !overlappingClubs.contains(it.id) }
-                .map {
-                    it.apply {
-                        createdBy = null
-                        updatedBy = null
-                    }
-                }
+            val filteredClubRecords = clubRecords.filter { !overlappingClubs.contains(it.id) }
+
+            // Save original user references before clearing them
+            val clubUserRefs = filteredClubRecords.associate { club ->
+                club.id to Pair(club.createdBy, club.updatedBy)
+            }
+
+            // Create new CLUB records with cleared user references for initial insert
+            val filteredClubRecordsWithoutUserRefs = filteredClubRecords.map { club ->
+                ClubRecord(
+                    id = club.id,
+                    name = club.name,
+                    createdAt = club.createdAt,
+                    createdBy = null,
+                    updatedAt = club.updatedAt,
+                    updatedBy = null
+                )
+            }
+
             if (filteredClubRecordsWithoutUserRefs.isNotEmpty()) {
                 !ClubRepo.create(filteredClubRecordsWithoutUserRefs).orDie()
             }
 
 
-            // Create users
-            /*val appUserOverlaps = !AppUserRepo.getOverlapIds(data.appUsers.map { it.id }).orDie()
-            val appUserRecords = !data.appUsers
-                .filter { !appUserOverlaps.contains(it.id) }
-                .traverse { it.toRecord(password = RandomUtilities.token()) } // Random new password
-
-            val overlappingEmails = !AppUserRepo.getOverlappingEmails(appUserRecords.map { it.email }).orDie()
-            !KIO.failOn(overlappingEmails.isNotEmpty()) { WebDAVError.EmailExistingWithOtherId(emails = overlappingEmails) }
-
-            if (appUserRecords.isNotEmpty()) {
-                !AppUserRepo.insert(appUserRecords).orDie()
-            }*/
-
+            // Create USERS
             val appUserRecords = !AppUserRepo.parseJsonToRecord(data.appUsers.toString()).orDie()
 
             val overlappingAppUsers = !AppUserRepo.getOverlapIds(appUserRecords.map { it.id }).orDie()
@@ -116,29 +104,17 @@ data class DataUsersExport(
             }
 
 
-            // Update clubs with correct created_by/updated_by references
-            val clubUserRefs = filteredClubRecordsWithoutUserRefs.associate { club ->
-                club.id to Pair(club.createdBy, club.updatedBy)
-            }
-
-            if (filteredClubRecordsWithoutUserRefs.isNotEmpty()) {
+            // Update CLUBS with correct created_by/updated_by references
+            if (filteredClubRecordsWithoutUserRefs.isNotEmpty() && clubUserRefs.isNotEmpty()) {
                 !ClubRepo.updateUserReferences(filteredClubRecordsWithoutUserRefs, clubUserRefs).orDie()
             }
 
-            // ROLE
-            /*val overlappingRoles = !RoleRepo.getOverlapIds(data.roles.map { it.id }).orDie()
-            val roleRecords = !data.roles
-                .filter { !overlappingRoles.contains(it.id) }
-                .traverse { it.toRecord() }
 
-            if (roleRecords.isNotEmpty()) {
-                !RoleRepo.create(roleRecords).orDie()
-            }*/
-
+            // ROLES
             !RoleRepo.insertJsonData(data.roles.toString()).orDie()
 
 
-            // Privileges - since privilege ids are generated randomly we need to associate the ones from the import with the ones from the database
+            // PRIVILEGES (not created - only for read purposes) - since privilege ids are generated randomly we need to associate the ones from the import with the ones from the database
             val privilegeRecords = !PrivilegeRepo.parseJsonToRecord(data.privileges.toString()).orDie()
 
             val privileges = !PrivilegeRepo.all().orDie()
@@ -178,18 +154,6 @@ data class DataUsersExport(
             }
 
             // APP USER HAS ROLE
-            /*
-                        val appUserHasRoleOverlaps =
-                            !AppUserHasRoleRepo.getOverlaps(data.appUserHasRoles.map { it.appUser to it.role }).orDie()
-                        val appUserHasRoleRecords = !data.appUserHasRoles
-                            .filter { userHasRole -> appUserHasRoleOverlaps.none { it.appUser == userHasRole.appUser && it.role == userHasRole.role } }
-                            .traverse { it.toRecord() }
-
-                        if (appUserHasRoleRecords.isNotEmpty()) {
-                            !AppUserHasRoleRepo.create(appUserHasRoleRecords).orDie()
-                        }
-            */
-
             !AppUserHasRoleRepo.insertJsonData(data.appUserHasRoles.toString()).orDie()
 
             unit

@@ -121,7 +121,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                                 DynamicIntervalJobState.Processed
                             }
 
-                            WebDAVError.Unexpected -> {
+                            is WebDAVError.Unexpected -> {
                                 logger.warn { "An unexpected error has occurred on export" }
                                 DynamicIntervalJobState.Processed
                             }

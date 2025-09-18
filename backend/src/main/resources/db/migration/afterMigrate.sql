@@ -1041,17 +1041,20 @@ where exists(select 1
                                                   and cd.competition_setup_round = csr.id)));
 
 create view competition_match_for_event as
-select cm.competition_setup_match as match_id,
-       e.id                       as event_id,
-       c.id                       as competition_id,
-       cp.identifier              as competition_identifier,
-       cp.name                    as competition_name
+select cm.competition_setup_match                                                      as match_id,
+       e.id                                                                            as event_id,
+       c.id                                                                            as competition_id,
+       cp.identifier                                                                   as competition_identifier,
+       cp.name                                                                         as competition_name,
+       coalesce(array_agg(st) filter ( where st.competition_match is not null ), '{}') as teams
 from competition_match cm
          join competition_setup_match csm on csm.id = cm.competition_setup_match
          join competition_setup_round csr on csr.id = csm.competition_setup_round
          join competition_properties cp on cp.id = csr.competition_setup
          join competition c on c.id = cp.competition
-         join event e on e.id = c.event;
+         join event e on e.id = c.event
+         left join startlist_team st on csm.id = st.competition_match
+group by cm.competition_setup_match, e.id, c.id, cp.identifier, cp.name;
 
 create view app_user_for_event as
 select au.id,

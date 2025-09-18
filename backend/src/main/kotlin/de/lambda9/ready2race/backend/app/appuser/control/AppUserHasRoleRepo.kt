@@ -31,13 +31,5 @@ object AppUserHasRoleRepo {
 
     fun getByUsersAsJson(userIds: List<UUID>) = APP_USER_HAS_ROLE.selectAsJson { APP_USER.`in`(userIds) }
 
-    fun getOverlaps(ids: List<Pair<UUID, UUID>>) = APP_USER_HAS_ROLE.select {
-        DSL.or(ids.map { (appUser, role) ->
-            APP_USER.eq(appUser).and(ROLE.eq(role))
-        })
-    }
-
-    fun insertJsonData(data: String) = Jooq.query {
-        this.loadInto(APP_USER_HAS_ROLE).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
-    }
+    fun insertJsonData(data: String) = APP_USER_HAS_ROLE.insertJsonData(data)
 }

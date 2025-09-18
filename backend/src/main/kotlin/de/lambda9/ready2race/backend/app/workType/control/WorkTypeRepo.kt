@@ -47,4 +47,8 @@ object WorkTypeRepo {
                 .fetch()
         }
     }
+
+    fun allAsJson() = WORK_TYPE.selectAsJson()
+
+    fun insertJsonData(data: String) = WORK_TYPE.insertJsonData(data)
 }

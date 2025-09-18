@@ -35,6 +35,8 @@ object CompetitionRepo {
 
     fun exists(id: UUID) = COMPETITION.exists { ID.eq(id) }
 
+    fun getExisting(ids: List<UUID>) = COMPETITION_VIEW.select { ID.`in`(ids) }
+
     fun update(id: UUID, f: CompetitionRecord.() -> Unit) = COMPETITION.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = COMPETITION.delete { ID.eq(id) }
@@ -228,5 +230,9 @@ object CompetitionRepo {
         }
         competitions.filter { !found.contains(it) }
     }
+
+    fun getAsJson(competitionId: UUID) = COMPETITION.selectAsJson { ID.eq(competitionId) }
+
+    fun insertJsonData(data: String) = COMPETITION.insertJsonData(data)
 
 }

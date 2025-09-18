@@ -14,6 +14,8 @@ import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectAsJson
+import de.lambda9.ready2race.backend.database.insertJsonData
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -54,4 +56,7 @@ object ContactInformationRepo {
 
     fun create(records: List<ContactInformationRecord>) = CONTACT_INFORMATION.insert(records)
 
+    fun allAsJson() = CONTACT_INFORMATION.selectAsJson()
+
+    fun insertJsonData(data: String) = CONTACT_INFORMATION.insertJsonData(data)
 }

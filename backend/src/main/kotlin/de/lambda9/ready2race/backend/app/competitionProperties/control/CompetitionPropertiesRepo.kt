@@ -1,13 +1,11 @@
 package de.lambda9.ready2race.backend.app.competitionProperties.control
 
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesContainingReference
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
-import de.lambda9.ready2race.backend.database.insert
-import de.lambda9.ready2race.backend.database.insertReturning
-import de.lambda9.ready2race.backend.database.select
-import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_TEMPLATE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -63,10 +61,16 @@ object CompetitionPropertiesRepo {
         }
     }
 
-    fun getByCompetitionOrTemplateIds(keys: List<UUID>) =
-        COMPETITION_PROPERTIES.select { COMPETITION.`in`(keys).or(COMPETITION_TEMPLATE.`in`(keys)) }
+    fun getIdsByCompetitionOrTemplateIds(keys: List<UUID>) =
+        COMPETITION_PROPERTIES.select({ ID }) { COMPETITION.`in`(keys).or(COMPETITION_TEMPLATE.`in`(keys)) }
+
+    fun getByCompetitionOrTemplateIdsAsJson(keys: List<UUID>) =
+        COMPETITION_PROPERTIES.selectAsJson { COMPETITION.`in`(keys).or(COMPETITION_TEMPLATE.`in`(keys)) }
 
     fun getOverlapIds(ids: List<UUID>) = COMPETITION_PROPERTIES.select({ ID }) { ID.`in`(ids) }
 
+    fun getAsJson(propertiesId: UUID) = COMPETITION_PROPERTIES.selectAsJson { ID.eq(propertiesId) }
+
+    fun insertJsonData(data: String) = COMPETITION_PROPERTIES.insertJsonData(data)
 
 }

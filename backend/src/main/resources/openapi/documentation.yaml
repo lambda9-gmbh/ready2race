@@ -10190,6 +10190,7 @@ components:
       required:
         - eventId
         - selectedExports
+        - selectedCompetitions
       eventId:
         type: string
         format: uuid
@@ -10197,6 +10198,11 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/WebDAVExportType'
+      selectedCompetitions:
+        type: array
+        items:
+          type: string
+          format: uuid
 
     WebDAVExportStatusDto:
       type: object

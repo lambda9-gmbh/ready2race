@@ -6,13 +6,12 @@ import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
-import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
-import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.oneOf
 import java.util.*
 
 data class WebDAVExportEventRequest(
     val eventId: UUID,
     val selectedExports: List<WebDAVExportType>,
+    val selectedCompetitions: List<UUID>,
 ) : Validatable {
     override fun validate(): ValidationResult =
         this::selectedExports validate allOf(
@@ -34,6 +33,7 @@ data class WebDAVExportEventRequest(
             get() = WebDAVExportEventRequest(
                 eventId = UUID.randomUUID(),
                 selectedExports = WebDAVExportType.entries,
+                selectedCompetitions = listOf(UUID.randomUUID()),
             )
     }
 }

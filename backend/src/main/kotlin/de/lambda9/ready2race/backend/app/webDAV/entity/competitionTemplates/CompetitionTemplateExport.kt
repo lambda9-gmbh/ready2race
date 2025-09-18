@@ -1,7 +1,7 @@
 package de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates
 
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 data class CompetitionTemplateExport(
     val id: UUID,

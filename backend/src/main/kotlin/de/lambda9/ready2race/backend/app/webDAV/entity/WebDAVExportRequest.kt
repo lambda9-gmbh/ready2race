@@ -3,17 +3,12 @@ package de.lambda9.ready2race.backend.app.webDAV.entity
 import de.lambda9.ready2race.backend.validation.Validatable
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
-import de.lambda9.ready2race.backend.validation.validators.CollectionValidators
-import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.flatMap
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.maxLength
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
-import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
-import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.oneOf
-import java.util.*
 
 data class WebDAVExportRequest(
     val name: String,

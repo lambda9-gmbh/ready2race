@@ -1,6 +1,6 @@
-import { Alert, Box, Button, Stack } from '@mui/material'
-import { useTranslation } from 'react-i18next'
-import { useFeedback, useFetch } from '@utils/hooks.ts'
+import {Alert, Box, Button, Stack} from '@mui/material'
+import {useTranslation} from 'react-i18next'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
     exportDataByWebDav,
     getEvents,
@@ -9,14 +9,13 @@ import {
     getWebDavImportOptionTypes,
     importDatafromWebDav,
 } from '@api/sdk.gen.ts'
-import { useState } from 'react'
+import {useState} from 'react'
 import Throbber from '@components/Throbber.tsx'
-import { WebDAVExportType } from '@api/types.gen.ts'
-import { createInitialExportForm, createInitialImportForm } from './common'
+import {WebDAVExportType} from '@api/types.gen.ts'
+import {createInitialExportForm, createInitialImportForm} from './common'
 import ExportDialog from './ExportDialog'
 import ImportDialog from './ImportDialog'
 import ExportStatusCard from './ExportStatusCard'
-
 
 const ExportData = () => {
     const {t} = useTranslation()
@@ -118,8 +117,6 @@ const ExportData = () => {
         setActiveStep(0)
     }
 
-
-
     const [nameError, setNameError] = useState<string>('')
 
     const handleSubmit = async () => {
@@ -146,6 +143,10 @@ const ExportData = () => {
                                 .filter(e => e.checked)
                                 .map(value => value.type),
                             ...(event.exportData ? ['DB_EVENT'] : []),
+                        ],
+                        selectedCompetitions: [
+                            'a4f3edf0-b08f-4f92-8e10-df37d5cc981b',
+                            '05fdb8a6-687e-4990-8d78-698e09e1db9f',
                         ],
                     })),
                 selectedDatabaseExports: formData.checkedDatabaseExports
@@ -198,7 +199,7 @@ const ExportData = () => {
                 activeStep={activeStep}
                 setActiveStep={setActiveStep}
             />
-            
+
             <ImportDialog
                 open={importDialogOpen}
                 onClose={() => setImportDialogOpen(false)}
@@ -213,19 +214,19 @@ const ExportData = () => {
                     const selectedTypes = importFormData.selectedData
                         .filter(item => item.checked)
                         .map(item => item.type)
-                    
+
                     if (selectedTypes.length === 0) {
                         feedback.error(t('webDAV.import.error.noSelection'))
                         return
                     }
-                    
+
                     const {error} = await importDatafromWebDav({
                         body: {
                             folderName: importFormData.folderName,
                             selectedData: selectedTypes,
                         },
                     })
-                    
+
                     if (error) {
                         feedback.error(t('webDAV.import.error.failed'))
                     } else {

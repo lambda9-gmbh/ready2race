@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object CompetitionTemplateRepo {
@@ -26,7 +27,7 @@ object CompetitionTemplateRepo {
 
     fun delete(id: UUID) = COMPETITION_TEMPLATE.delete { ID.eq(id) }
 
-    fun all() = COMPETITION_TEMPLATE.select()
+    fun allIds() = COMPETITION_TEMPLATE.select({ ID }) { DSL.trueCondition() }
 
     fun countWithProperties(
         search: String?
@@ -58,4 +59,7 @@ object CompetitionTemplateRepo {
 
     fun getOverlapIds(ids: List<UUID>) = COMPETITION_TEMPLATE.select({ ID }) { ID.`in`(ids) }
 
+    fun allAsJson() = COMPETITION_TEMPLATE.selectAsJson()
+
+    fun insertJsonData(data: String) = COMPETITION_TEMPLATE.insertJsonData(data)
 }

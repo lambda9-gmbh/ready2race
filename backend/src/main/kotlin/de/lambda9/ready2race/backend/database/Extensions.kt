@@ -201,3 +201,16 @@ fun <R : Record, T : TableImpl<R>> T.findOneBy(
 ): JIO<R?> = Jooq.query {
     fetchOne(this@findOneBy, condition())
 }
+
+inline fun <reified R : Record, T : TableImpl<R>> T.parseJsonToRecords(data: String): JIO<List<R>> = Jooq.query {
+    val records = fetchFromJSON(data)
+        .into(R::class.java)
+
+    records.map { it.changed(true) }
+    records
+}
+
+fun <R : Record, T : TableImpl<R>> T.insertJsonData(data: String) = Jooq.query {
+    this.loadInto(this@insertJsonData).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
+}
+

@@ -46,12 +46,5 @@ object BankAccountRepo {
 
     fun allAsJson() = BANK_ACCOUNT.selectAsJson()
 
-    fun parseJsonToRecord(data: String): JIO<List<BankAccountRecord>> = Jooq.query {
-        fetchFromJSON(data)
-            .into(BankAccountRecord::class.java)
-    }
-
-    fun insertJsonData(data: String) = Jooq.query {
-        this.loadInto(BANK_ACCOUNT).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
-    }
+    fun insertJsonData(data: String) = BANK_ACCOUNT.insertJsonData(data)
 }

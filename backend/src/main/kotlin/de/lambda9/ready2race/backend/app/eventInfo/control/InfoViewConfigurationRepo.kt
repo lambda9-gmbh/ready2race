@@ -25,7 +25,7 @@ object InfoViewConfigurationRepo {
     fun findById(id: UUID) = INFO_VIEW_CONFIGURATION.selectOne { ID.eq(id) }
 
     fun create(record: InfoViewConfigurationRecord) = INFO_VIEW_CONFIGURATION.insertReturning(record) { ID }
-    
+
     fun create(records: List<InfoViewConfigurationRecord>) = INFO_VIEW_CONFIGURATION.insert(records)
 
     fun update(id: UUID, f: InfoViewConfigurationRecord.() -> Unit) =
@@ -36,4 +36,8 @@ object InfoViewConfigurationRepo {
     fun exists(id: UUID) = INFO_VIEW_CONFIGURATION.exists { ID.eq(id) }
 
     fun getByEvent(eventId: UUID) = INFO_VIEW_CONFIGURATION.select { EVENT_ID.eq(eventId) }
+
+    fun getAsJson(eventId: UUID) = INFO_VIEW_CONFIGURATION.selectAsJson { EVENT_ID.eq(eventId) }
+
+    fun insertJsonData(data: String) = INFO_VIEW_CONFIGURATION.insertJsonData(data)
 }

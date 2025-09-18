@@ -1,13 +1,12 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.control
 
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.tailwind.jooq.Jooq
 import de.lambda9.tailwind.jooq.JIO
-import de.lambda9.ready2race.backend.database.delete
-import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
+import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_HAS_PARTICIPANT_REQUIREMENT
-import de.lambda9.ready2race.backend.database.insert
-import de.lambda9.ready2race.backend.database.select
 import java.util.*
 
 object EventHasParticipantRequirementRepo {
@@ -49,5 +48,9 @@ object EventHasParticipantRequirementRepo {
                 .fetchOne(NAMED_PARTICIPANT)
         }
     }
+
+    fun getAsJson(eventId: UUID) = EVENT_HAS_PARTICIPANT_REQUIREMENT.selectAsJson { EVENT.eq(eventId) }
+
+    fun insertJsonData(data: String) = EVENT_HAS_PARTICIPANT_REQUIREMENT.insertJsonData(data)
 
 }

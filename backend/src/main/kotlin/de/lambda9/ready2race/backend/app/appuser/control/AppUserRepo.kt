@@ -171,8 +171,5 @@ object AppUserRepo {
 
     fun getOverlappingEmails(emails: List<String>) = APP_USER.select({ EMAIL }) { EMAIL.`in`(emails) }
 
-    fun parseJsonToRecord(data: String): JIO<List<AppUserRecord>> = Jooq.query {
-        fetchFromJSON(data)
-            .into(AppUserRecord::class.java)
-    }
+    fun parseJsonToRecord(data: String) = APP_USER.parseJsonToRecords(data)
 }

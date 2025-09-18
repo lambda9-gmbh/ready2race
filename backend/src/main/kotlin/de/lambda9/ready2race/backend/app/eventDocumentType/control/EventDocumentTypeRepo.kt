@@ -43,4 +43,8 @@ object EventDocumentTypeRepo {
                 .fetch()
         }
     }
+
+    fun allAsJson() = EVENT_DOCUMENT_TYPE.selectAsJson()
+
+    fun insertJsonData(data: String) = EVENT_DOCUMENT_TYPE.insertJsonData(data)
 }

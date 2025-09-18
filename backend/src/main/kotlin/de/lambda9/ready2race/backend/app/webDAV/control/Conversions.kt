@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.webDAV.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.control.toDto
-import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportStatusDto
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType

@@ -1,11 +1,9 @@
 package de.lambda9.ready2race.backend.app.competitionProperties.control
 
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesContainingReference
-import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
-import de.lambda9.ready2race.backend.database.insert
-import de.lambda9.ready2race.backend.database.select
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -55,12 +53,9 @@ object CompetitionPropertiesHasNamedParticipantRepo {
             }
     }
 
-    fun getByProperties(ids: List<UUID>) =
-        COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.select { COMPETITION_PROPERTIES.`in`(ids) }
+    fun getByPropertiesAsJson(ids: List<UUID>) =
+        COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.selectAsJson() { COMPETITION_PROPERTIES.`in`(ids) }
 
-    fun getOverlaps(keys: List<Pair<UUID, UUID>>) = COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.select {
-        DSL.or(keys.map { (properties, namedParticipant) ->
-            COMPETITION_PROPERTIES.eq(properties).and(NAMED_PARTICIPANT.eq(namedParticipant))
-        })
-    }
+
+    fun insertJsonData(data: String) = COMPETITION_PROPERTIES_HAS_NAMED_PARTICIPANT.insertJsonData(data)
 }

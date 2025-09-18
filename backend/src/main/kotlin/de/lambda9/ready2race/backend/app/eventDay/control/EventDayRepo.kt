@@ -6,9 +6,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventDay
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_DAY_HAS_COMPETITION
+import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -140,4 +138,8 @@ object EventDayRepo {
             .where(EVENT.ID.eq(eventDay.EVENT))
             .and(EVENT.PUBLISHED.eq(true))
     )
+
+    fun getAsJson(eventId: UUID) = EVENT_DAY.selectAsJson { EVENT.eq(eventId) }
+
+    fun insertJsonData(data: String) = EVENT_DAY.insertJsonData(data)
 }

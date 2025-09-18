@@ -126,4 +126,8 @@ object ParticipantRepo {
         clubId: UUID?,
     ): Condition = if (scope == Privilege.Scope.OWN) PARTICIPANT_VIEW.CLUB.eq(clubId) else DSL.trueCondition()
 
+    fun allAsJson() = PARTICIPANT.selectAsJson()
+
+    fun insertJsonData(data: String) = PARTICIPANT.insertJsonData(data)
+
 }

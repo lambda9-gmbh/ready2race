@@ -62,4 +62,8 @@ object NamedParticipantRepo {
     fun getOverlapIds(ids: List<UUID>) = NAMED_PARTICIPANT.select({ ID }) { ID.`in`(ids) }
 
     fun create(records: List<NamedParticipantRecord>) = NAMED_PARTICIPANT.insert(records)
+
+    fun allAsJson() = NAMED_PARTICIPANT.selectAsJson()
+
+    fun insertJsonData(data: String) = NAMED_PARTICIPANT.insertJsonData(data)
 }

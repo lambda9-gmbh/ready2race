@@ -3,11 +3,9 @@ package de.lambda9.ready2race.backend.app.club.control
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.Club
-import de.lambda9.ready2race.backend.database.generated.tables.records.BankAccountRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_REGISTRATION
-import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
@@ -111,9 +109,7 @@ object ClubRepo {
 
     fun getOverlapIds(ids: List<UUID>) = CLUB.select({ ID }) { ID.`in`(ids) }
 
-    fun parseJsonToRecord(data: String): JIO<List<ClubRecord>> = Jooq.query {
-        fetchFromJSON(data)
-            .into(ClubRecord::class.java)
-    }
+
+    fun parseJsonToRecord(data: String) = CLUB.parseJsonToRecords(data)
 
 }

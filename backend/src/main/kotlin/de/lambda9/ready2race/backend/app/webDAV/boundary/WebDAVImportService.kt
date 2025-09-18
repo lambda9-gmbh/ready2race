@@ -13,6 +13,7 @@ import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVImportRequest
 import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.DataBankAccountsExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.competition.DataCompetitionExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories.DataCompetitionCategoriesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates.DataCompetitionSetupTemplatesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionTemplates.DataCompetitionTemplatesExport
@@ -274,10 +275,10 @@ object WebDAVImportService {
                                     is WebDAVError.UnableToRetrieveFile -> DynamicIntervalJobState.Processed to "Failed to retrieve the file of import ${e.importId} from the WebDAV server: ${e.errorMsg}"
                                     is WebDAVError.EntityAlreadyExists -> DynamicIntervalJobState.Processed to "The referred entity with id ${e.entityId} already exists in the system."
 
-                                    WebDAVError.Unexpected -> DynamicIntervalJobState.Processed to "Unexpected error for import."
+                                    is WebDAVError.Unexpected -> DynamicIntervalJobState.Processed to "Unexpected error for import. ${e.errorMsg}"
                                     WebDAVError.ConfigIncomplete -> DynamicIntervalJobState.Fatal("WebDAV config incomplete") to "WebDAV config is incomplete."
                                     WebDAVError.ConfigUnparsable -> DynamicIntervalJobState.Fatal("WebDAV config could not be parsed") to "WebDAV config could not be parsed."
-                                    is WebDAVError.CannotMakeFolder -> DynamicIntervalJobState.Processed to "Unable to create folder. This error should not be reachable."
+                                    is WebDAVError.CannotMakeFolder -> DynamicIntervalJobState.Processed to "Unable to create folder. This error should not be reachable since it should only be called on initialization."
                                 }
                             },
                             onPanic = { e ->
@@ -427,6 +428,11 @@ object WebDAVImportService {
                     WebDAVExportType.DB_EVENT -> {
                         val importData = !parseJsonData(content, DataEventExport::class.java)
                         !DataEventExport.importData(importData)
+                    }
+
+                    WebDAVExportType.DB_COMPETITION -> {
+                        val importData = !parseJsonData(content, DataCompetitionExport::class.java)
+                        !DataCompetitionExport.importData(importData)
                     }
 
                     else -> {

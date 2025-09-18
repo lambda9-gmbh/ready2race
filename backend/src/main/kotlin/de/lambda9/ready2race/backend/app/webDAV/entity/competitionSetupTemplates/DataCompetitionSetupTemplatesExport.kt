@@ -1,78 +1,51 @@
 package de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetupTemplates
 
+import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.CompetitionSetupTemplateRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.getWebDavDataJsonFileName
-import de.lambda9.ready2race.backend.app.webDAV.control.toExport
-import de.lambda9.ready2race.backend.app.webDAV.control.toRecord
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportData
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
-import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetup.*
+import de.lambda9.ready2race.backend.app.webDAV.entity.competitionSetup.CompetitionSetupDataType
 import de.lambda9.ready2race.backend.database.generated.tables.records.WebdavExportDataRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.recoverDefault
-import de.lambda9.tailwind.core.extensions.kio.traverse
 
 data class DataCompetitionSetupTemplatesExport(
-    val competitionSetupTemplates: List<CompetitionSetupTemplateExport>,
-    val competitionSetupGroups: List<CompetitionSetupGroupExport>,
-    val competitionSetupGroupStatisticEvaluation: List<CompetitionSetupGroupStatisticEvaluationExport>,
-    val competitionSetupMatches: List<CompetitionSetupMatchExport>,
-    val competitionSetupParticipants: List<CompetitionSetupParticipantExport>,
-    val competitionSetupPlaces: List<CompetitionSetupPlaceExport>,
-    val competitionSetupRounds: List<CompetitionSetupRoundExport>,
+    val competitionSetupTemplates: JsonNode,
+    val competitionSetupGroups: JsonNode,
+    val competitionSetupGroupStatisticEvaluation: JsonNode,
+    val competitionSetupMatches: JsonNode,
+    val competitionSetupParticipants: JsonNode,
+    val competitionSetupPlaces: JsonNode,
+    val competitionSetupRounds: JsonNode,
 ) : WebDAVExportData {
     companion object {
         fun createExportFile(
             record: WebdavExportDataRecord
         ): App<WebDAVError.WebDAVInternError, File> = KIO.comprehension {
-            val templates = !CompetitionSetupTemplateRepo.all().orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
+            val templateIds = !CompetitionSetupTemplateRepo.allIds().orDie()
+            val templates = !CompetitionSetupTemplateRepo.allAsJson().orDie()
 
-            // get by templates
-            val rounds = !CompetitionSetupRoundRepo.getBySetupIds(templates.map { it.id }).orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
-            val roundIds = rounds.map { it.id }
+            val setupData = !WebDAVExportService.getSetupRoundsWithDependenciesAsJson(templateIds)
 
-            // get by rounds
-            val evaluations = !CompetitionSetupGroupStatisticEvaluationRepo.get(roundIds).orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
-
-            // get by rounds
-            val matches = !CompetitionSetupMatchRepo.get(roundIds).orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
-
-            // get by rounds
-            val places = !CompetitionSetupPlaceRepo.get(roundIds).orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
-
-            // get by groupIds in matches
-            val groups = !CompetitionSetupGroupRepo.get(matches.mapNotNull { it.competitionSetupGroup }).orDie()
-                .andThen { list -> list.traverse { it.toExport() } }
-
-            // get by matches and groups
-            val participants =
-                !CompetitionSetupParticipantRepo.get((matches.map { it.id } + groups.map { it.id })).orDie()
-                    .andThen { list -> list.traverse { it.toExport() } }
-
-            val exportData = DataCompetitionSetupTemplatesExport(
-                competitionSetupTemplates = templates,
-                competitionSetupGroups = groups,
-                competitionSetupGroupStatisticEvaluation = evaluations,
-                competitionSetupMatches = matches,
-                competitionSetupParticipants = participants,
-                competitionSetupPlaces = places,
-                competitionSetupRounds = rounds
+            val json = !WebDAVExportService.serializeDataExportNew(
+                record,
+                mapOf(
+                    "competitionSetupTemplates" to templates,
+                    "competitionSetupGroups" to setupData[CompetitionSetupDataType.GROUPS]!!,
+                    "competitionSetupGroupStatisticEvaluation" to setupData[CompetitionSetupDataType.EVALUATIONS]!!,
+                    "competitionSetupMatches" to setupData[CompetitionSetupDataType.MATCHES]!!,
+                    "competitionSetupParticipants" to setupData[CompetitionSetupDataType.PARTICIPANTS]!!,
+                    "competitionSetupPlaces" to setupData[CompetitionSetupDataType.PLACES]!!,
+                    "competitionSetupRounds" to setupData[CompetitionSetupDataType.ROUNDS]!!,
+                )
             )
-
-            val json = !WebDAVExportService.serializeDataExport(record, exportData)
 
             KIO.ok(
                 File(
@@ -85,85 +58,16 @@ data class DataCompetitionSetupTemplatesExport(
         fun importData(data: DataCompetitionSetupTemplatesExport): App<WebDAVError.WebDAVImportNextError, Unit> =
             KIO.comprehension {
 
-                // COMPETITION SETUP TEMPLATES
-                val overlappingTemplates = !CompetitionSetupTemplateRepo
-                    .getOverlapIds(data.competitionSetupTemplates.map { it.id })
+                !CompetitionSetupTemplateRepo.insertJsonData(data.competitionSetupTemplates.toString()).orDie()
+                !CompetitionSetupRoundRepo.insertJsonData(data.competitionSetupRounds.toString()).orDie()
+                !CompetitionSetupGroupStatisticEvaluationRepo
+                    .insertJsonData(data.competitionSetupGroupStatisticEvaluation.toString())
                     .orDie()
-                val templateRecords = !data.competitionSetupTemplates
-                    .filter { !overlappingTemplates.contains(it.id) }
-                    .traverse { it.toRecord() }
+                !CompetitionSetupMatchRepo.insertJsonData(data.competitionSetupMatches.toString()).orDie()
+                !CompetitionSetupPlaceRepo.insertJsonData(data.competitionSetupPlaces.toString()).orDie()
+                !CompetitionSetupGroupRepo.insertJsonData(data.competitionSetupGroups.toString()).orDie()
+                !CompetitionSetupParticipantRepo.insertJsonData(data.competitionSetupParticipants.toString()).orDie()
 
-                if (templateRecords.isNotEmpty()) {
-                    !CompetitionSetupTemplateRepo.create(templateRecords).orDie()
-                }
-
-                // COMPETITION SETUP ROUNDS
-                val overlappingRounds = !CompetitionSetupRoundRepo
-                    .getOverlapIds(data.competitionSetupRounds.map { it.id })
-                    .orDie()
-                val roundRecords = !data.competitionSetupRounds
-                    .filter { !overlappingRounds.contains(it.id) }
-                    .traverse { it.toRecord() }
-
-                if (roundRecords.isNotEmpty()) {
-                    !CompetitionSetupRoundRepo.create(roundRecords).orDie()
-                }
-
-                // COMPETITION SETUP GROUP STATISTIC EVALUATIONS
-                val overlappingEvaluations = !CompetitionSetupGroupStatisticEvaluationRepo
-                    .getOverlaps(data.competitionSetupGroupStatisticEvaluation.map { it.competitionSetupRound to it.name })
-                    .orDie()
-                val evaluationRecords = !data.competitionSetupGroupStatisticEvaluation
-                    .filter { evaluation -> overlappingEvaluations.none { it.competitionSetupRound == evaluation.competitionSetupRound && it.name == evaluation.name } }
-                    .traverse { it.toRecord() }
-
-                if (evaluationRecords.isNotEmpty()) {
-                    !CompetitionSetupGroupStatisticEvaluationRepo.create(evaluationRecords).orDie()
-                }
-
-                // COMPETITION SETUP MATCHES
-                val existingMatchIds = !CompetitionSetupMatchRepo
-                    .getOverlapIds(data.competitionSetupMatches.map { it.id })
-                    .orDie()
-                val matchRecords = !data.competitionSetupMatches
-                    .filter { match -> !existingMatchIds.contains(match.id) }
-                    .traverse { it.toRecord() }
-                if (matchRecords.isNotEmpty()) {
-                    !CompetitionSetupMatchRepo.create(matchRecords).orDie()
-                }
-
-                // COMPETITION SETUP PLACES
-                val overlappingPlaces = !CompetitionSetupPlaceRepo
-                    .getOverlaps(data.competitionSetupPlaces.map { it.competitionSetupRound to it.roundOutcome })
-                    .orDie()
-                val placeRecords = !data.competitionSetupPlaces
-                    .filter { place -> overlappingPlaces.none { it.competitionSetupRound == place.competitionSetupRound && it.roundOutcome == place.roundOutcome } }
-                    .traverse { it.toRecord() }
-                if (placeRecords.isNotEmpty()) {
-                    !CompetitionSetupPlaceRepo.create(placeRecords).orDie()
-                }
-
-                // COMPETITION SETUP GROUPS
-                val overlappingGroupIds = !CompetitionSetupGroupRepo
-                    .getOverlapIds(data.competitionSetupGroups.map { it.id }).orDie()
-                val groupRecords = !data.competitionSetupGroups
-                    .filter { group -> !overlappingGroupIds.contains(group.id) }
-                    .traverse { it.toRecord() }
-                if (groupRecords.isNotEmpty()) {
-                    !CompetitionSetupGroupRepo.create(groupRecords).orDie()
-                }
-
-
-                // COMPETITION SETUP PARTICIPANTS
-                val overlappingParticipantIds = !CompetitionSetupParticipantRepo
-                    .getOverlapIds(data.competitionSetupParticipants.map { it.id })
-                    .orDie()
-                val participantRecords = !data.competitionSetupParticipants
-                    .filter { participant -> !overlappingParticipantIds.contains(participant.id) }
-                    .traverse { it.toRecord() }
-                if (participantRecords.isNotEmpty()) {
-                    !CompetitionSetupParticipantRepo.create(participantRecords).orDie()
-                }
 
                 unit
             }

@@ -1,13 +1,11 @@
 package de.lambda9.ready2race.backend.app.role.control
 
-import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleHasPrivilegeRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_HAS_PRIVILEGE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_HAS_PRIVILEGE_VIEW
-import de.lambda9.ready2race.backend.database.insert
-import de.lambda9.ready2race.backend.database.select
-import de.lambda9.ready2race.backend.database.selectAsJson
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -38,9 +36,7 @@ object RoleHasPrivilegeRepo {
         })
     }
 
-    fun parseJsonToRecord(data: String): JIO<List<RoleHasPrivilegeRecord>> = Jooq.query {
-        fetchFromJSON(data)
-            .into(RoleHasPrivilegeRecord::class.java)
-    }
+    fun parseJsonToRecord(data: String) = ROLE_HAS_PRIVILEGE.parseJsonToRecords(data)
+
 
 }

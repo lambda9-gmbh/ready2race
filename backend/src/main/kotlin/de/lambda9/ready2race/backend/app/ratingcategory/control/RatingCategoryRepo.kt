@@ -47,4 +47,8 @@ object RatingCategoryRepo {
         }
     }
 
+    fun allAsJson() = RATING_CATEGORY.selectAsJson()
+
+    fun insertJsonData(data: String) = RATING_CATEGORY.insertJsonData(data)
+
 }
