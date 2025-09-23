@@ -3,7 +3,7 @@ import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
     exportDataByWebDav,
-    getEvents,
+    getEventsForExport,
     getWebDavExportStatus,
     getWebDavImportOptionFolders,
     getWebDavImportOptionTypes,
@@ -51,11 +51,11 @@ const ExportData = () => {
         autoReloadInterval: reloadFrequently ? 1000 : 6000,
     })
 
-    useFetch(signal => getWebDavImportOptionFolders({signal}))
+    useFetch(signal => getWebDavImportOptionFolders({signal})) // todo
 
-    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: '007'}, signal}))
+    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: '007'}, signal})) // todo
 
-    const {data: eventsData} = useFetch(signal => getEvents({signal}), {
+    const {data: eventsData} = useFetch(signal => getEventsForExport({signal}), {
         onResponse: ({data, error}) => {
             if (error) {
                 feedback.error(
@@ -64,10 +64,17 @@ const ExportData = () => {
                     }),
                 )
             } else {
-                setFormData(createInitialExportForm(data.data))
+                setFormData(createInitialExportForm(data))
             }
         },
-        mapData: data => data?.data.sort((a, b) => (a.name < b.name ? -1 : 1)),
+        mapData: data => {
+            const events = data?.sort((a, b) => (a.name < b.name ? -1 : 1))
+            events.forEach(eventDto => {
+                eventDto.competitions.sort((a, b) => (a.identifier < b.identifier ? -1 : 1))
+            })
+            return events
+        },
+
         deps: [],
     })
 
@@ -110,6 +117,7 @@ const ExportData = () => {
     const openDialog = () => {
         setDialogOpen(true)
         setActiveStep(0)
+        setFormData(createInitialExportForm(eventsData ?? []))
     }
 
     const closeDialog = () => {
@@ -144,7 +152,9 @@ const ExportData = () => {
                                 .map(value => value.type),
                             ...(event.exportData ? ['DB_EVENT'] : []),
                         ],
-                        selectedCompetitions: [], // todo
+                        selectedCompetitions: event.selectedCompetitionIds
+                            .filter(comp => comp.checked)
+                            .map(comp => comp.competitionId),
                     })),
                 selectedDatabaseExports: formData.checkedDatabaseExports
                     .filter(type => type.checked)
@@ -167,7 +177,6 @@ const ExportData = () => {
         } else {
             closeDialog()
             feedback.success(t('webDAV.export.success'))
-            setFormData(createInitialExportForm(eventsData ?? []))
         }
         reloadExportStatus()
     }

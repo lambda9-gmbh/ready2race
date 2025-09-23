@@ -5548,6 +5548,26 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/export:
+    get:
+      operationId: getEventsForExport
+      responses:
+        200:
+          description: Events for export successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventForExportDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
   /webDAV/export:
     post:
       operationId: exportDataByWebDAV
@@ -10166,6 +10186,39 @@ components:
         qrCodeId:
           type: string
 
+
+    CompetitionForExportDto:
+      type: object
+      required:
+        - id
+        - identifier
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+
+    
+    EventForExportDto:
+      type: object
+      required:
+        - id
+        - name
+        - competitions
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionForExportDto'
 
     WebDAVExportRequest:
       type: object

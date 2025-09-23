@@ -1404,6 +1404,7 @@
         "competition": "Wettkampf"
       },
       "steps": {
+        "name": "Name",
         "documents": "Dokumente",
         "data": "Daten"
       },

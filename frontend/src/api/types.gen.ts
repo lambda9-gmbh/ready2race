@@ -245,6 +245,12 @@ export type CompetitionExecutionProgressDto = {
     lastRoundFinished: boolean
 }
 
+export type CompetitionForExportDto = {
+    id: string
+    identifier: string
+    name: string
+}
+
 export type CompetitionMatchDto = {
     id: string
     name?: string
@@ -635,6 +641,12 @@ export type EventDto = {
     registrationCount?: number
     registrationsFinalized: boolean
     mixedTeamTerm?: string
+}
+
+export type EventForExportDto = {
+    id: string
+    name: string
+    competitions: Array<CompetitionForExportDto>
 }
 
 export type EventInvoicesInfoDto = {
@@ -4684,6 +4696,10 @@ export type GetCompetitionsHavingResultsError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError
+
+export type GetEventsForExportResponse = Array<EventForExportDto>
+
+export type GetEventsForExportError = BadRequestError | ApiError
 
 export type ExportDataByWebDavData = {
     body: WebDAVExportRequest

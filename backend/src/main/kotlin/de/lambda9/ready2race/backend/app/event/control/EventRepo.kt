@@ -139,4 +139,5 @@ object EventRepo {
 
     fun insertJsonData(data: String) = EVENT.insertJsonData(data)
 
+    fun getEventsForExport() = EVENT_FOR_EXPORT.select()
 }

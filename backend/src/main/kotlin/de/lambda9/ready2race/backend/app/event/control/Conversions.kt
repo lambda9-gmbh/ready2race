@@ -3,8 +3,10 @@ package de.lambda9.ready2race.backend.app.event.control
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
+import de.lambda9.ready2race.backend.app.event.entity.EventForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
@@ -74,5 +76,19 @@ fun EventPublicViewRecord.eventPublicDto(): App<Nothing, EventPublicDto> = KIO.o
         competitionCount = competitionCount!!,
         eventFrom = eventFrom,
         eventTo = eventTo
+    )
+)
+
+fun EventForExportRecord.toDto(): App<Nothing, EventForExportDto> = KIO.ok(
+    EventForExportDto(
+        id = id!!,
+        name = name!!,
+        competitions = competitions!!.map { competition ->
+            EventForExportDto.CompetitionForExportDto(
+                id = competition!!.id!!,
+                identifier = competition.identifier!!,
+                name = competition.name!!,
+            )
+        }
     )
 )

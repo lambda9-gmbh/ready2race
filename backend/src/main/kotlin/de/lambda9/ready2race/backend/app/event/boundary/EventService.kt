@@ -2,10 +2,7 @@ package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.event.control.EventRepo
-import de.lambda9.ready2race.backend.app.event.control.eventDto
-import de.lambda9.ready2race.backend.app.event.control.eventPublicDto
-import de.lambda9.ready2race.backend.app.event.control.toRecord
+import de.lambda9.ready2race.backend.app.event.control.*
 import de.lambda9.ready2race.backend.app.event.entity.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -15,10 +12,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.kio.discard
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.failIf
-import de.lambda9.tailwind.core.extensions.kio.onNullFail
-import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.core.extensions.kio.*
 import java.time.LocalDateTime
 import java.util.*
 
@@ -118,7 +112,7 @@ object EventService {
         id: UUID,
     ): App<EventError, Unit> = EventRepo.getPublished(id)
         .orDie()
-        .failIf({it != true}) { EventError.NotFound }
+        .failIf({ it != true }) { EventError.NotFound }
         .discard()
 
     fun getOpenForRegistrationType(
@@ -141,4 +135,11 @@ object EventService {
 
         KIO.ok(type)
     }
+
+    fun getEventsForExport(): App<Nothing, ApiResponse.ListDto<EventForExportDto>> =
+        EventRepo.getEventsForExport().orDie().andThen { list ->
+            list.traverse {
+                it.toDto()
+            }
+        }.map { ApiResponse.ListDto(it) }
 }

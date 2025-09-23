@@ -611,6 +611,8 @@ import type {
     GetCompetitionsHavingResultsData,
     GetCompetitionsHavingResultsError,
     GetCompetitionsHavingResultsResponse,
+    GetEventsForExportError,
+    GetEventsForExportResponse,
     ExportDataByWebDavData,
     ExportDataByWebDavError,
     ExportDataByWebDavResponse,
@@ -3120,6 +3122,19 @@ export const getCompetitionsHavingResults = <ThrowOnError extends boolean = fals
     >({
         ...options,
         url: '/results/event/{eventId}/competition',
+    })
+}
+
+export const getEventsForExport = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventsForExportResponse,
+        GetEventsForExportError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/export',
     })
 }
 

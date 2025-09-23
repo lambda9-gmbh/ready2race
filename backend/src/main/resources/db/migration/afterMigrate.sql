@@ -1,5 +1,8 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_for_export;
+drop view if exists competition_for_export;
+drop view if exists webdav_import_data_dependency_view;
 drop view if exists webdav_import_data_dependency_view;
 drop view if exists webdav_export_data_dependency_view;
 drop view if exists webdav_export_process_status;
@@ -1123,3 +1126,19 @@ from webdav_import_data data
          left join webdav_import_data dep_on on dep_on.id = wid.depending_on
 group by data, data.imported_at, data.error_at, data.error
 ;
+
+create view competition_for_export as
+select c.id,
+       c.event,
+       cp.identifier,
+       cp.name
+from competition c
+         join competition_properties cp on cp.competition = c.id;
+
+create view event_for_export as
+select e.id,
+       e.name,
+       coalesce(array_agg(distinct cfe) filter ( where cfe.id is not null ), '{}') as competitions
+from event e
+         left join competition_for_export cfe on cfe.event = e.id
+group by e.id, e.name;

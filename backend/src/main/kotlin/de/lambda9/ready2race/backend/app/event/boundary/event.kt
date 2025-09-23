@@ -69,6 +69,15 @@ fun Route.event() {
             }
         }
 
+        route("/export") {
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+                    EventService.getEventsForExport()
+                }
+            }
+        }
+
         route("/{eventId}") {
 
             eventDay()

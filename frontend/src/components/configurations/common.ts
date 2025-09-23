@@ -1,5 +1,5 @@
 import React, {useEffect, useCallback} from 'react'
-import {WebDAVExportType} from '@api/types.gen.ts'
+import {EventForExportDto, WebDAVExportType} from '@api/types.gen.ts'
 
 export type ExportForm = {
     name: string
@@ -8,8 +8,14 @@ export type ExportForm = {
         docExportChecked: boolean
         selectedDocExports: ExportFormCheckType[]
         exportData: boolean
+        selectedCompetitionIds: ExportFormCompetitionCheckType[]
     }[]
     checkedDatabaseExports: ExportFormCheckType[]
+}
+
+export type ExportFormCompetitionCheckType = {
+    competitionId: string
+    checked: boolean
 }
 
 export type ExportFormCheckType = {
@@ -100,73 +106,96 @@ export const getDependenciesForTypes = (types: WebDAVExportType[]): Set<WebDAVEx
 }
 
 // Utility functions for dependency management
-const getCheckedExportTypes = (checkedDatabaseExports: ExportFormCheckType[]): WebDAVExportType[] => 
+const getCheckedExportTypes = (checkedDatabaseExports: ExportFormCheckType[]): WebDAVExportType[] =>
     checkedDatabaseExports?.filter(item => item?.checked).map(item => item.type) ?? []
 
-const hasSelectedEvents = (events: ExportForm['events']): boolean => 
+const hasSelectedEvents = (events: ExportForm['events']): boolean =>
     events.some(event => event.exportData)
 
+const hasSelectedCompetitions = (events: ExportForm['events']): boolean =>
+    events.some(event => event.selectedCompetitionIds.some(comp => comp.checked))
+
 const calculateAllRequiredDependencies = (
-    checkedTypes: WebDAVExportType[], 
-    anyEventSelected: boolean
+    checkedTypes: WebDAVExportType[],
+    anyEventSelected: boolean,
+    anyCompetitionSelected: boolean,
 ): Set<WebDAVExportType> => {
     const requiredDependencies = getDependenciesForTypes(checkedTypes)
-    
+
     if (anyEventSelected) {
         const eventDeps = webDAVExportTypeDependencies['DB_EVENT']
         eventDeps?.forEach(dep => requiredDependencies.add(dep))
     }
-    
+
+    if (anyCompetitionSelected) {
+        const competitionDeps = webDAVExportTypeDependencies['DB_COMPETITION']
+        competitionDeps?.forEach(dep => requiredDependencies.add(dep))
+    }
+
     return requiredDependencies
 }
 
 const updateDatabaseExportsWithDependencies = (
     databaseExports: ExportFormCheckType[],
     requiredDependencies: Set<WebDAVExportType>,
-    anyEventSelected: boolean
-): { updatedExports: ExportFormCheckType[], hasChanges: boolean } => {
+    anyEventSelected: boolean,
+    anyCompetitionSelected: boolean,
+): {updatedExports: ExportFormCheckType[]; hasChanges: boolean} => {
     let hasChanges = false
-    
+
     const updatedExports = databaseExports.map(item => {
         // Handle DB_EVENT auto-selection based on event selection
         if (item.type === 'DB_EVENT') {
             if (anyEventSelected && !item.checked) {
                 hasChanges = true
-                return { ...item, checked: true }
+                return {...item, checked: true}
             }
             if (!anyEventSelected && item.checked) {
                 hasChanges = true
-                return { ...item, checked: false }
+                return {...item, checked: false}
             }
         }
-        
+
+        // Handle DB_COMPETITION auto-selection based on competition selection
+        if (item.type === 'DB_COMPETITION') {
+            if (anyCompetitionSelected && !item.checked) {
+                hasChanges = true
+                return {...item, checked: true}
+            }
+            if (!anyCompetitionSelected && item.checked) {
+                hasChanges = true
+                return {...item, checked: false}
+            }
+        }
+
         // Auto-check required dependencies
         if (requiredDependencies.has(item.type) && !item.checked) {
             hasChanges = true
-            return { ...item, checked: true }
+            return {...item, checked: true}
         }
-        
+
         return item
     })
-    
-    return { updatedExports, hasChanges }
+
+    return {updatedExports, hasChanges}
 }
 
 // Dependency checking logic
 const createDependencyChecker = (
-    checkedDatabaseExports: ExportFormCheckType[], 
-    events: ExportForm['events']
+    checkedDatabaseExports: ExportFormCheckType[],
+    events: ExportForm['events'],
 ) => {
     const checkedTypes = getCheckedExportTypes(checkedDatabaseExports)
     const anyEventSelected = hasSelectedEvents(events)
-    
+    const anyCompetitionSelected = hasSelectedCompetitions(events)
+
     return (type: WebDAVExportType): boolean => {
         // Check if type is a dependency of any checked type
         const isDependency = checkedTypes.some(checkedType => {
             const deps = webDAVExportTypeDependencies[checkedType]
             return deps?.includes(type) ?? false
         })
-        
+
         // Handle DB_EVENT special case
         if (anyEventSelected) {
             const eventDeps = webDAVExportTypeDependencies['DB_EVENT']
@@ -174,7 +203,15 @@ const createDependencyChecker = (
                 return true
             }
         }
-        
+
+        // Handle DB_COMPETITION special case
+        if (anyCompetitionSelected) {
+            const competitionDeps = webDAVExportTypeDependencies['DB_COMPETITION']
+            if (competitionDeps?.includes(type) || type === 'DB_COMPETITION') {
+                return true
+            }
+        }
+
         return isDependency
     }
 }
@@ -191,12 +228,18 @@ export const useExportDependencies = (
 
         const checkedTypes = getCheckedExportTypes(formData.checkedDatabaseExports)
         const anyEventSelected = hasSelectedEvents(formData.events)
-        const requiredDependencies = calculateAllRequiredDependencies(checkedTypes, anyEventSelected)
-        
-        const { updatedExports, hasChanges } = updateDatabaseExportsWithDependencies(
+        const anyCompetitionSelected = hasSelectedCompetitions(formData.events)
+        const requiredDependencies = calculateAllRequiredDependencies(
+            checkedTypes,
+            anyEventSelected,
+            anyCompetitionSelected,
+        )
+
+        const {updatedExports, hasChanges} = updateDatabaseExportsWithDependencies(
             formData.checkedDatabaseExports,
             requiredDependencies,
-            anyEventSelected
+            anyEventSelected,
+            anyCompetitionSelected,
         )
 
         // Only update if there were changes
@@ -214,11 +257,11 @@ export const useExportDependencies = (
         [formData.checkedDatabaseExports, formData.events],
     )
 
-    return { isRequiredDependency }
+    return {isRequiredDependency}
 }
 
 // Helper to create initial form data
-export const createInitialExportForm = (events: Array<{id: string}>): ExportForm => ({
+export const createInitialExportForm = (events: EventForExportDto[]): ExportForm => ({
     name: '',
     events: events.map(event => ({
         eventId: event.id,
@@ -228,6 +271,10 @@ export const createInitialExportForm = (events: Array<{id: string}>): ExportForm
             checked: false,
         })),
         exportData: false,
+        selectedCompetitionIds: event.competitions.map(c => ({
+            competitionId: c.id,
+            checked: false,
+        })),
     })),
     checkedDatabaseExports: DATA_TYPE_OPTIONS.map(type => ({
         type: type,
