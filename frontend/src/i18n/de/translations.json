@@ -12,6 +12,7 @@
     "selected": "Ausgewählt",
     "manage": "Verwalten",
     "all": "Alle",
+    "selectAll": "Alles auswählen",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
@@ -79,7 +80,7 @@
     "noResults": "Keine Ergebnisse",
     "tryDifferentSearch": "Versuchen Sie eine andere Suche",
     "items": "Elemente",
-    "more": "Mehr",
+    "more": "weitere",
     "create": "Erstellen",
     "seconds": "Sekunden",
     "update": "Aktualisieren",
@@ -1417,7 +1418,11 @@
         "status": "Exportstatus",
         "error": {
           "title": "Fehler beim Export",
-          "body": "{{exported}} / {{total}} Dateien erfolgreich exportiert."
+          "body": "{{exported}} / {{total}} Dateien erfolgreich exportiert.",
+          "info": {
+            "files": "{{errors}} Fehler bei PDF-Exports",
+            "data": "{{errors}} Fehler bei Daten-Exports"
+          }
         },
         "success": {
           "title": "Export erfolgreich",

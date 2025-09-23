@@ -830,6 +830,11 @@ export type FeeRequest = {
     description?: string
 }
 
+export type FileExportEventStatusDto = {
+    eventName: string
+    fileExportTypes: WebDAVExportType
+}
+
 export type Gender = 'M' | 'F' | 'D'
 
 export type GroupedParticipantQrAssignmentDto = {
@@ -1653,11 +1658,14 @@ export type WebDAVExportStatusDto = {
     exportFolderName: string
     exportInitializedAt: string
     exportInitializedBy?: AppUserNameDto
-    events: Array<string>
-    exportTypes: Array<WebDAVExportType>
+    dataExportEvents: Array<string | null>
+    fileExportEvents: Array<FileExportEventStatusDto>
     filesExported: number
     totalFilesToExport: number
     filesWithError: number
+    dataExported: number
+    totalDataToExport: number
+    dataWithError: number
 }
 
 export type WebDAVExportType =

@@ -1,4 +1,4 @@
-import React, {memo, useCallback} from 'react'
+import React, {memo, useCallback, useMemo} from 'react'
 import {
     Box,
     Button,
@@ -19,6 +19,7 @@ import BaseDialog from '@components/BaseDialog.tsx'
 import {useTranslation} from 'react-i18next'
 import {ExportForm, ExportFormCheckType, useExportDependencies, DATA_TYPE_OPTIONS} from './common'
 import {EventForExportDto, WebDAVExportType} from '@api/types.gen.ts'
+import SelectAllCheckbox from './SelectAllCheckbox'
 
 interface ExportDialogProps {
     open: boolean
@@ -174,6 +175,86 @@ const ExportDialog = memo(
             [setFormData],
         )
 
+        // Select all/deselect all for document exports (step 1)
+        const handleSelectAllDocuments = useCallback(() => {
+            const hasAnySelected = formData.events.some(event => event.docExportChecked)
+            setFormData(prev => ({
+                ...prev,
+                events: prev.events.map(evt => ({
+                    ...evt,
+                    docExportChecked: !hasAnySelected,
+                    selectedDocExports: evt.selectedDocExports.map(doc => ({
+                        ...doc,
+                        checked: !hasAnySelected,
+                    })),
+                })),
+            }))
+        }, [formData.events, setFormData])
+
+        // Combined select all/deselect all for step 2 (both event data and database exports)
+        const handleSelectAllDataExport = useCallback(() => {
+            const hasAnyEventSelected = formData.events.some(event => event.exportData)
+            const availableExports = formData.checkedDatabaseExports.filter(
+                (_, index) => !isRequiredDependency(DATA_TYPE_OPTIONS[index]),
+            )
+            const hasAnyDatabaseSelected = availableExports.some(item => item.checked)
+            const shouldSelectAll = !(hasAnyEventSelected || hasAnyDatabaseSelected)
+
+            setFormData(prev => ({
+                ...prev,
+                events: prev.events.map(evt => ({
+                    ...evt,
+                    exportData: shouldSelectAll,
+                    selectedCompetitionIds: evt.selectedCompetitionIds.map(comp => ({
+                        ...comp,
+                        checked: shouldSelectAll,
+                    })),
+                })),
+                checkedDatabaseExports: prev.checkedDatabaseExports.map((item, index) => {
+                    if (shouldSelectAll && isRequiredDependency(DATA_TYPE_OPTIONS[index])) {
+                        return item // When selecting all, keep dependencies as they are
+                    }
+                    return {...item, checked: shouldSelectAll}
+                }),
+            }))
+        }, [formData.events, formData.checkedDatabaseExports, isRequiredDependency, setFormData])
+
+        // Helper to compute checkbox state
+        const getCheckboxState = (selectedCount: number, totalCount: number) => {
+            if (selectedCount === 0) return {checked: false, indeterminate: false}
+            if (selectedCount === totalCount) return {checked: true, indeterminate: false}
+            return {checked: false, indeterminate: true}
+        }
+
+        const documentsSelectState = useMemo(() => {
+            const totalItems = formData.events.reduce(
+                (acc, event) => acc + 1 + event.selectedDocExports.length,
+                0,
+            )
+            const selectedItems = formData.events.reduce(
+                (acc, event) =>
+                    acc +
+                    (event.docExportChecked ? 1 : 0) +
+                    (event.docExportChecked
+                        ? event.selectedDocExports.filter(doc => doc.checked).length
+                        : 0),
+                0,
+            )
+            return getCheckboxState(selectedItems, totalItems)
+        }, [formData.events])
+
+        const dataExportSelectState = useMemo(() => {
+            const availableExportTypes = formData.checkedDatabaseExports.filter(
+                (_, i) => !isRequiredDependency(DATA_TYPE_OPTIONS[i]),
+            )
+            const totalSelected =
+                formData.events.filter(e => e.exportData).length +
+                availableExportTypes.filter(item => item.checked).length
+            const totalItems = formData.events.length + availableExportTypes.length
+
+            return getCheckboxState(totalSelected, totalItems)
+        }, [formData.events, formData.checkedDatabaseExports, isRequiredDependency])
+
         return (
             <BaseDialog open={open} onClose={onClose} maxWidth={'sm'}>
                 <DialogTitle>{t('webDAV.export.export')}</DialogTitle>
@@ -201,6 +282,11 @@ const ExportDialog = memo(
 
                     {activeStep === 1 && (
                         <Box>
+                            <SelectAllCheckbox
+                                {...documentsSelectState}
+                                onChange={handleSelectAllDocuments}
+                            />
+                            <Divider sx={{my: 1}} />
                             {eventsData?.map((event, index) => (
                                 <Box key={event.id}>
                                     <FormControlLabel
@@ -243,6 +329,11 @@ const ExportDialog = memo(
 
                     {activeStep === 2 && (
                         <Box>
+                            <SelectAllCheckbox
+                                {...dataExportSelectState}
+                                onChange={handleSelectAllDataExport}
+                            />
+                            <Divider sx={{my: 1}} />
                             <Grid2 container spacing={1}>
                                 {eventsData?.map((event, index) => (
                                     <Grid2 key={event.id} size={{xs: 12}}>

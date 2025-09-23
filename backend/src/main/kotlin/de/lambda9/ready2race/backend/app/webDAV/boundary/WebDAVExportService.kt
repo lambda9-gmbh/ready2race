@@ -8,10 +8,10 @@ import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.control.toDto
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationReportRepo
@@ -56,10 +56,7 @@ import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.ready2race.backend.kio.comprehension
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.failIf
-import de.lambda9.tailwind.core.extensions.kio.onNullFail
-import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.core.extensions.kio.*
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
@@ -839,23 +836,47 @@ object WebDAVExportService {
 
         val records = !WebDAVExportProcessRepo.all().orDie()
 
+        val dataExportEventIds = records.flatMap { process ->
+            process.dataExports!!
+                .filter { it!!.documentType == WebDAVExportType.DB_EVENT.name }
+                .groupBy { it!!.dataReference }
+                .keys
+                .filterNotNull()
+                .toList()
+        }
+
+        val dataExportEventsForExport = !EventRepo.getEventsForExportByIds(dataExportEventIds).orDie()
+
         KIO.ok(
             ApiResponse.ListDto(
                 !records.traverse { record ->
-                    val fileExports = record.fileExports!!.filterNotNull()
+                    val fileExportEvents =
+                        record.fileExports!!.filterNotNull().groupBy { it.eventName }.toList()
+                            .map { (eventName, fileExports) ->
+                                FileExportEventStatusDto(
+                                    eventName = eventName,
+                                    fileExportTypes = fileExports.map { WebDAVExportType.valueOf(it.documentType) }
+                                )
+                            }
 
-                    val events = fileExports.groupBy { it.eventName }.keys.toList()
-                    val exportTypes = fileExports
-                        .groupBy { it.documentType }.keys.toList()
-                        .map { WebDAVExportType.valueOf(it) }
-                    val filesExported = fileExports.filter { it.exportedAt != null }.size
-                    val filesWithError = fileExports.filter { it.errorAt != null }.size
+                    val dataExports = record.dataExports!!.filterNotNull()
+
+                    val dataExportEvents = dataExports.filter { it.documentType == WebDAVExportType.DB_EVENT.name }
+                        .map { dataExport -> dataExportEventsForExport.find { it.id == dataExport.dataReference }?.name }
+
+                    val filesExported = record.fileExports!!.filter { it!!.exportedAt != null }.size
+                    val filesWithError = record.fileExports!!.filter { it!!.errorAt != null }.size
+
+                    val dataExported = dataExports.filter { it.exportedAt != null }.size
+                    val dataWithError = dataExports.filter { it.errorAt != null }.size
 
                     record.toDto(
-                        events = events,
-                        exportTypes = exportTypes,
+                        dataExportEvents = dataExportEvents,
+                        fileExportEvents = fileExportEvents,
                         filesExported = filesExported,
-                        filesWithError = filesWithError
+                        filesWithError = filesWithError,
+                        dataExported = dataExported,
+                        dataWithError = dataWithError
                     )
                 })
         )

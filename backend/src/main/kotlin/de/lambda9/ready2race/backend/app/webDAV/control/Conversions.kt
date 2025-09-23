@@ -2,9 +2,7 @@ package de.lambda9.ready2race.backend.app.webDAV.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.appuser.control.toDto
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportRequest
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportStatusDto
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
+import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.BankAccountExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories.CompetitionCategoryExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionProperties.CompetitionPropertiesExport
@@ -45,10 +43,12 @@ fun WebDAVExportRequest.toRecord(
 )
 
 fun WebdavExportProcessStatusRecord.toDto(
-    events: List<String>,
-    exportTypes: List<WebDAVExportType>,
+    dataExportEvents: List<String?>,
+    fileExportEvents: List<FileExportEventStatusDto>,
     filesExported: Int,
     filesWithError: Int,
+    dataExported: Int,
+    dataWithError: Int,
 ): App<Nothing, WebDAVExportStatusDto> = KIO.comprehension {
     val createdByDto = createdBy?.let { !it.toDto() }
 
@@ -58,11 +58,14 @@ fun WebdavExportProcessStatusRecord.toDto(
             exportFolderName = name!!,
             exportInitializedAt = createdAt!!,
             exportInitializedBy = createdByDto,
-            events = events,
-            exportTypes = exportTypes,
+            dataExportEvents = dataExportEvents,
+            fileExportEvents = fileExportEvents,
             filesExported = filesExported,
             totalFilesToExport = fileExports!!.size,
-            filesWithError = filesWithError
+            filesWithError = filesWithError,
+            dataExported = dataExported,
+            totalDataToExport = dataExports!!.filterNotNull().size,
+            dataWithError = dataWithError
         )
     )
 }

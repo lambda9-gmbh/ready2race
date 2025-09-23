@@ -12,6 +12,7 @@
     "selected": "Selected",
     "manage": "Manage",
     "all": "All",
+    "selectAll": "Select all",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}.",
@@ -79,7 +80,7 @@
     "noResults": "No results",
     "tryDifferentSearch": "Try a different search",
     "items": "Items",
-    "more": "More",
+    "more": "more",
     "create": "Create",
     "seconds": "seconds",
     "update": "Update",
@@ -1417,7 +1418,11 @@
         "status": "Export status",
         "error": {
           "title": "Error during export",
-          "body": "{{exported}} / {{total}} files successfully exported."
+          "body": "{{exported}} / {{total}} files successfully exported.",
+          "info": {
+            "files": "{{errors}} errors on pdf exports",
+            "data": "{{errors}} errors on data exports"
+          }
         },
         "success": {
           "title": "Export successful",

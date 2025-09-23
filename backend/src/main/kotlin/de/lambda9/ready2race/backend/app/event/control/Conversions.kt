@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.event.control
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
@@ -84,7 +85,7 @@ fun EventForExportRecord.toDto(): App<Nothing, EventForExportDto> = KIO.ok(
         id = id!!,
         name = name!!,
         competitions = competitions!!.map { competition ->
-            EventForExportDto.CompetitionForExportDto(
+            CompetitionForExportDto(
                 id = competition!!.id!!,
                 identifier = competition.identifier!!,
                 name = competition.name!!,

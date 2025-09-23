@@ -51,9 +51,14 @@ const ExportData = () => {
         autoReloadInterval: reloadFrequently ? 1000 : 6000,
     })
 
-    useFetch(signal => getWebDavImportOptionFolders({signal})) // todo
-
-    useFetch(signal => getWebDavImportOptionTypes({path: {folderName: '007'}, signal})) // todo
+    const {data: availableFolders} = useFetch(signal => getWebDavImportOptionFolders({signal}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(t('webDAV.import.error.loadFolders'))
+            }
+        },
+        deps: [],
+    })
 
     const {data: eventsData} = useFetch(signal => getEventsForExport({signal}), {
         onResponse: ({data, error}) => {
@@ -212,6 +217,7 @@ const ExportData = () => {
                 formData={importFormData}
                 setFormData={setImportFormData}
                 webDavExportTypeNames={webDavExportTypeNames}
+                availableFolders={availableFolders ?? []}
                 onSubmit={async () => {
                     if (!importFormData.folderName.trim()) {
                         feedback.error(t('common.form.required'))
@@ -250,7 +256,6 @@ const ExportData = () => {
                             <ExportStatusCard
                                 key={exportStatus.processId}
                                 exportStatus={exportStatus}
-                                webDavExportTypeNames={webDavExportTypeNames}
                             />
                         ))}
                 </Stack>

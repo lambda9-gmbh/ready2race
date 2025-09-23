@@ -10201,7 +10201,7 @@ components:
           type: string
         name:
           type: string
-
+    
     
     EventForExportDto:
       type: object
@@ -10257,17 +10257,34 @@ components:
           type: string
           format: uuid
 
+    FileExportEventStatusDto:
+      type: object
+      required:
+        - eventName
+        - fileExportTypes
+      properties:
+        eventName:
+          type: string
+        fileExportTypes:
+          type: array
+          items:
+          $ref: '#/components/schemas/WebDAVExportType'
+
+    
     WebDAVExportStatusDto:
       type: object
       required:
         - processId
         - exportFolderName
         - exportInitializedAt
-        - events
-        - exportTypes
+        - dataExportEvents
+        - fileExportEvents
         - filesExported
         - totalFilesToExport
         - filesWithError
+        - dataExported
+        - totalDataToExport
+        - dataWithError
       properties:
         processId:
           type: string
@@ -10279,19 +10296,27 @@ components:
           format: date-time
         exportInitializedBy:
           $ref: '#/components/schemas/AppUserNameDto'
-        events:
+        dataExportEvents:
           type: array
           items:
             type: string
-        exportTypes:
+            nullable: true
+        fileExportEvents:
           type: array
           items:
-            $ref: '#/components/schemas/WebDAVExportType'
+            $ref: '#/components/schemas/FileExportEventStatusDto'
+            nullable: true
         filesExported:
           type: integer
         totalFilesToExport:
           type: integer
         filesWithError:
+          type: integer
+        dataExported:
+          type: integer
+        totalDataToExport:
+          type: integer
+        dataWithError:
           type: integer
 
 

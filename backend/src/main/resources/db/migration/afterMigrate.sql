@@ -1091,9 +1091,11 @@ select wep.id,
        wep.name,
        wep.created_at,
        cb                                                                        as created_by,
-       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}') as file_exports
+       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}') as file_exports,
+       coalesce(array_agg(distinct wed) filter ( where wed.id is not null ), '{}') as data_exports
 from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
+         left join webdav_export_data wed on wep.id = wed.webdav_export_process
          left join app_user_name cb on wep.created_by = cb.id
 group by wep.id, wep.name, wep.created_at, cb;
 
