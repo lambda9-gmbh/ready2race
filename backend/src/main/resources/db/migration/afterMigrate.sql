@@ -5,6 +5,7 @@ drop view if exists competition_for_export;
 drop view if exists webdav_import_data_dependency_view;
 drop view if exists webdav_import_data_dependency_view;
 drop view if exists webdav_export_data_dependency_view;
+drop view if exists webdav_import_process_status;
 drop view if exists webdav_export_process_status;
 drop view if exists webdav_export_folder_view;
 drop view if exists app_user_for_event;
@@ -1090,14 +1091,25 @@ create view webdav_export_process_status as
 select wep.id,
        wep.name,
        wep.created_at,
-       cb                                                                        as created_by,
-       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}') as file_exports,
+       cb                                                                          as created_by,
+       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}')   as file_exports,
        coalesce(array_agg(distinct wed) filter ( where wed.id is not null ), '{}') as data_exports
 from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
          left join webdav_export_data wed on wep.id = wed.webdav_export_process
          left join app_user_name cb on wep.created_by = cb.id
 group by wep.id, wep.name, wep.created_at, cb;
+
+create view webdav_import_process_status as
+select wip.id,
+       wip.import_folder_name,
+       wip.created_at,
+       cb                                                                          as created_by,
+       coalesce(array_agg(distinct wid) filter ( where wid.id is not null ), '{}') as imports
+from webdav_import_process wip
+         left join webdav_import_data wid on wip.id = wid.webdav_import_process
+         left join app_user_name cb on wip.created_by = cb.id
+group by wip.id, wip.import_folder_name, wip.created_at, cb;
 
 create view webdav_export_data_dependency_view as
 select data,

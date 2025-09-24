@@ -12,27 +12,49 @@ import {
 import {useTranslation} from 'react-i18next'
 import {format} from 'date-fns'
 import Throbber from '@components/Throbber.tsx'
-import {WebDAVExportStatusDto} from '@api/types.gen.ts'
+import {WebDAVExportStatusDto, WebDAVImportStatusDto} from '@api/types.gen.ts'
 import {Info} from '@mui/icons-material'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 
-interface ExportStatusCardProps {
-    exportStatus: WebDAVExportStatusDto
-}
+type ExportStatusCardProps =
+    | {
+          isExport: true
+          status: WebDAVExportStatusDto
+      }
+    | {
+          isExport: false
+          status: WebDAVImportStatusDto
+      }
 
-const ExportStatusCard = memo(({exportStatus}: ExportStatusCardProps) => {
+const ExportStatusCard = memo(({isExport, status}: ExportStatusCardProps) => {
     const {t} = useTranslation()
+    const keyPrefix = isExport ? 'export' : 'import'
 
-    const isComplete =
-        exportStatus.filesExported +
-            exportStatus.filesWithError +
-            exportStatus.dataExported +
-            exportStatus.dataWithError ===
-        exportStatus.totalFilesToExport + exportStatus.totalDataToExport
-    const hasErrors = exportStatus.filesWithError > 0 || exportStatus.dataWithError > 0
+    const isComplete = isExport
+        ? status.filesExported +
+              status.filesWithError +
+              status.dataExported +
+              status.dataWithError ===
+          status.totalFilesToExport + status.totalDataToExport
+        : status.dataImported + status.dataWithError === status.totalDataToImport
 
-    const totalFilesExported = exportStatus.filesExported + exportStatus.dataExported
-    const totalFilesToExport = exportStatus.totalFilesToExport + exportStatus.totalDataToExport
+    const hasErrors = isExport
+        ? status.filesWithError > 0 || status.dataWithError > 0
+        : status.dataWithError > 0
+
+    const totalFilesExported = isExport
+        ? status.filesExported + status.dataExported
+        : status.dataImported
+    const totalFilesToExport = isExport
+        ? status.totalFilesToExport + status.totalDataToExport
+        : status.totalDataToImport
+
+    const folderName = isExport ? status.exportFolderName : status.importFolderName
+    const initializedAt = format(
+        new Date(isExport ? status.exportInitializedAt : status.importInitializedAt),
+        t('format.datetime'),
+    )
+    const initializedBy = isExport ? status.exportInitializedBy : status.importInitializedBy
 
     return (
         <Card>
@@ -40,40 +62,45 @@ const ExportStatusCard = memo(({exportStatus}: ExportStatusCardProps) => {
                 {isComplete ? (
                     hasErrors ? (
                         <Alert severity={'error'}>
-                            <AlertTitle>{t('webDAV.export.status.error.title')}</AlertTitle>
+                            <AlertTitle>{t(`webDAV.${keyPrefix}.status.error.title`)}</AlertTitle>
                             <Stack direction={'row'} spacing={1}>
-                                {t('webDAV.export.status.error.body', {
-                                    exported: totalFilesExported,
+                                {t(`webDAV.${keyPrefix}.status.error.body`, {
+                                    files: totalFilesExported,
                                     total: totalFilesToExport,
                                 })}
-                                <HtmlTooltip
-                                    placement={'bottom'}
-                                    title={
-                                        <Stack>
-                                            {exportStatus.filesWithError > 0 && (
-                                                <Typography>
-                                                    {t('webDAV.export.status.error.info.files', {
-                                                        errors: exportStatus.filesWithError,
-                                                    })}
-                                                </Typography>
-                                            )}
-                                            {exportStatus.dataWithError > 0 && (
-                                                <Typography>
-                                                    {t('webDAV.export.status.error.info.data', {
-                                                        errors: exportStatus.dataWithError,
-                                                    })}
-                                                </Typography>
-                                            )}
-                                        </Stack>
-                                    }>
-                                    <Info color={'info'} fontSize={'small'} />
-                                </HtmlTooltip>
+                                {isExport && (
+                                    <HtmlTooltip
+                                        placement={'bottom'}
+                                        title={
+                                            <Stack>
+                                                {status.filesWithError > 0 && (
+                                                    <Typography>
+                                                        {t(
+                                                            `webDAV.${keyPrefix}.status.error.info.files`,
+                                                            {
+                                                                errors: status.filesWithError,
+                                                            },
+                                                        )}
+                                                    </Typography>
+                                                )}
+                                                {status.dataWithError > 0 && (
+                                                    <Typography>
+                                                        {t(`webDAV.${keyPrefix}.status.error.info.data`, {
+                                                            errors: status.dataWithError,
+                                                        })}
+                                                    </Typography>
+                                                )}
+                                            </Stack>
+                                        }>
+                                        <Info color={'info'} fontSize={'small'} />
+                                    </HtmlTooltip>
+                                )}
                             </Stack>
                         </Alert>
                     ) : (
                         <Alert severity={'success'}>
-                            <AlertTitle>{t('webDAV.export.status.success.title')}</AlertTitle>
-                            {t('webDAV.export.status.success.body', {
+                            <AlertTitle>{t(`webDAV.${keyPrefix}.status.success.title`)}</AlertTitle>
+                            {t(`webDAV.${keyPrefix}.status.success.body`, {
                                 count: totalFilesExported,
                             })}
                         </Alert>
@@ -85,9 +112,9 @@ const ExportStatusCard = memo(({exportStatus}: ExportStatusCardProps) => {
                             value={(totalFilesExported / totalFilesToExport) * 100}
                         />
                         <Alert severity={'info'} icon={<Throbber />}>
-                            <AlertTitle>{t('webDAV.export.status.pending.title')}</AlertTitle>
-                            {t('webDAV.export.status.pending.body', {
-                                exported: totalFilesExported,
+                            <AlertTitle>{t(`webDAV.${keyPrefix}.status.pending.title`)}</AlertTitle>
+                            {t(`webDAV.${keyPrefix}.status.pending.body`, {
+                                files: totalFilesExported,
                                 total: totalFilesToExport,
                             })}
                         </Alert>
@@ -101,18 +128,12 @@ const ExportStatusCard = memo(({exportStatus}: ExportStatusCardProps) => {
                         mt: 2,
                         mx: 2,
                     }}>
-                    <Typography variant={'h3'}>{exportStatus.exportFolderName}</Typography>
+                    <Typography variant={'h3'}>{folderName}</Typography>
                     <Box sx={{flex: 1, textAlign: 'right'}}>
-                        <Typography variant={'subtitle2'}>
-                            {format(
-                                new Date(exportStatus.exportInitializedAt),
-                                t('format.datetime'),
-                            )}
-                        </Typography>
-                        {exportStatus.exportInitializedBy && (
+                        <Typography variant={'subtitle2'}>{initializedAt}</Typography>
+                        {initializedBy && (
                             <Typography variant={'subtitle2'}>
-                                {exportStatus.exportInitializedBy.firstname}{' '}
-                                {exportStatus.exportInitializedBy.lastname}
+                                {initializedBy.firstname} {initializedBy.lastname}
                             </Typography>
                         )}
                     </Box>

@@ -7,13 +7,14 @@ import {WebDAVExportType} from '@api/types.gen.ts'
 import {createInitialExportForm, createInitialImportForm} from './common'
 import ExportDialog from './ExportDialog'
 import ImportDialog from './ImportDialog'
-import ExportStatusDisplay from '@components/configurations/ExportStatusDisplay.tsx'
+import WebDAVStatusDisplay from '@components/configurations/WebDAVStatusDisplay.tsx'
 
 const WebDavExportImport = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const [reloadStatus, setReloadStatus] = useState(false)
+    const [reloadExportStatus, setReloadExportStatus] = useState(false)
+    const [reloadImportStatus, setReloadImportStatus] = useState(false)
 
     const {data: eventsData} = useFetch(signal => getEventsForExport({signal}), {
         onResponse: ({data, error}) => {
@@ -143,11 +144,11 @@ const WebDavExportImport = () => {
             closeExportDialog()
             feedback.success(t('webDAV.export.success'))
         }
-        setReloadStatus(prev => !prev)
+        setReloadExportStatus(prev => !prev)
     }
 
     return (
-        <Stack spacing={4} sx={{maxWidth: 600}}>
+        <Stack spacing={4}>
             <Box>
                 <Button variant={'contained'} onClick={openExportDialog}>
                     {t('webDAV.export.export')}
@@ -177,8 +178,12 @@ const WebDavExportImport = () => {
                 formData={importFormData}
                 setFormData={setImportFormData}
                 webDavExportTypeNames={webDavExportTypeNames}
+                onSucess={() => setReloadImportStatus(prev => !prev)}
             />
-            <ExportStatusDisplay reloadExportStatus={reloadStatus} />
+            <WebDAVStatusDisplay
+                reloadExportStatus={reloadExportStatus}
+                reloadImportStatus={reloadImportStatus}
+            />
         </Stack>
     )
 }

@@ -5639,6 +5639,25 @@ paths:
           $ref: '#/components/responses/500'
         502:
           $ref: '#/components/responses/502'
+    get:
+      operationId: getWebDAVImportStatus
+      responses:
+        200:
+          description: WebDAV Status successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebDAVImportStatusDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
   /webDAV/import/options:
     get:
       operationId: getWebDAVImportOptionFolders
@@ -10313,6 +10332,33 @@ components:
         dataExported:
           type: integer
         totalDataToExport:
+          type: integer
+        dataWithError:
+          type: integer
+
+    WebDAVImportStatusDto:
+      type: object
+      required:
+        - processId
+        - importFolderName
+        - importInitializedAt
+        - dataImported
+        - totalDataToImport
+        - dataWithError
+      properties:
+        processId:
+          type: string
+          format: uuid
+        importFolderName:
+          type: string
+        importInitializedAt:
+          type: string
+          format: date-time
+        importInitializedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        dataImported:
+          type: integer
+        totalDataToImport:
           type: integer
         dataWithError:
           type: integer

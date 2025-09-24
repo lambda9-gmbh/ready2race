@@ -621,6 +621,8 @@ import type {
     ImportDataFromWebDavData,
     ImportDataFromWebDavError,
     ImportDataFromWebDavResponse,
+    GetWebDavImportStatusError,
+    GetWebDavImportStatusResponse,
     GetWebDavImportOptionFoldersError,
     GetWebDavImportOptionFoldersResponse,
     GetWebDavImportOptionTypesData,
@@ -3170,6 +3172,19 @@ export const importDataFromWebDav = <ThrowOnError extends boolean = false>(
     return (options?.client ?? client).post<
         ImportDataFromWebDavResponse,
         ImportDataFromWebDavError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import',
+    })
+}
+
+export const getWebDavImportStatus = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWebDavImportStatusResponse,
+        GetWebDavImportStatusError,
         ThrowOnError
     >({
         ...options,

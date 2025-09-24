@@ -875,39 +875,36 @@ object WebDAVExportService {
 
         val dataExportEventsForExport = !EventRepo.getEventsForExportByIds(dataExportEventIds).orDie()
 
-        KIO.ok(
-            ApiResponse.ListDto(
-                !records.traverse { record ->
-                    val fileExportEvents =
-                        record.fileExports!!.filterNotNull().groupBy { it.eventName }.toList()
-                            .map { (eventName, fileExports) ->
-                                FileExportEventStatusDto(
-                                    eventName = eventName,
-                                    fileExportTypes = fileExports.map { WebDAVExportType.valueOf(it.documentType) }
-                                )
-                            }
+        records.traverse { record ->
+            val fileExportEvents =
+                record.fileExports!!.filterNotNull().groupBy { it.eventName }.toList()
+                    .map { (eventName, fileExports) ->
+                        FileExportEventStatusDto(
+                            eventName = eventName,
+                            fileExportTypes = fileExports.map { WebDAVExportType.valueOf(it.documentType) }
+                        )
+                    }
 
-                    val dataExports = record.dataExports!!.filterNotNull()
+            val dataExports = record.dataExports!!.filterNotNull()
 
-                    val dataExportEvents = dataExports.filter { it.documentType == WebDAVExportType.DB_EVENT.name }
-                        .map { dataExport -> dataExportEventsForExport.find { it.id == dataExport.dataReference }?.name }
+            val dataExportEvents = dataExports.filter { it.documentType == WebDAVExportType.DB_EVENT.name }
+                .map { dataExport -> dataExportEventsForExport.find { it.id == dataExport.dataReference }?.name }
 
-                    val filesExported = record.fileExports!!.filter { it!!.exportedAt != null }.size
-                    val filesWithError = record.fileExports!!.filter { it!!.errorAt != null }.size
+            val filesExported = record.fileExports!!.filter { it!!.exportedAt != null }.size
+            val filesWithError = record.fileExports!!.filter { it!!.errorAt != null }.size
 
-                    val dataExported = dataExports.filter { it.exportedAt != null }.size
-                    val dataWithError = dataExports.filter { it.errorAt != null }.size
+            val dataExported = dataExports.filter { it.exportedAt != null }.size
+            val dataWithError = dataExports.filter { it.errorAt != null }.size
 
-                    record.toDto(
-                        dataExportEvents = dataExportEvents,
-                        fileExportEvents = fileExportEvents,
-                        filesExported = filesExported,
-                        filesWithError = filesWithError,
-                        dataExported = dataExported,
-                        dataWithError = dataWithError
-                    )
-                })
-        )
+            record.toDto(
+                dataExportEvents = dataExportEvents,
+                fileExportEvents = fileExportEvents,
+                filesExported = filesExported,
+                filesWithError = filesWithError,
+                dataExported = dataExported,
+                dataWithError = dataWithError
+            )
+        }.map { ApiResponse.ListDto(it) }
     }
 
     fun getSetupRoundsWithDependenciesAsJson(templateOrSetupIds: List<UUID>): App<Nothing, Map<CompetitionSetupDataType, String>> =

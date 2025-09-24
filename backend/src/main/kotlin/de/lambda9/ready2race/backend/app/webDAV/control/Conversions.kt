@@ -70,6 +70,25 @@ fun WebdavExportProcessStatusRecord.toDto(
     )
 }
 
+fun WebdavImportProcessStatusRecord.toDto(
+    imported: Int,
+    importsWithError: Int,
+): App<Nothing, WebDAVImportStatusDto> = KIO.comprehension {
+    val createdByDto = createdBy?.let { !it.toDto() }
+
+    KIO.ok(
+        WebDAVImportStatusDto(
+            processId = id!!,
+            importFolderName = name!!,
+            importInitializedAt = createdAt!!,
+            importInitializedBy = createdByDto,
+            dataImported = imported,
+            totalDataToImport = imports!!.filterNotNull().size,
+            dataWithError = importsWithError
+        )
+    )
+}
+
 
 // EXPORT CONVERSIONS
 

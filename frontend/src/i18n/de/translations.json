@@ -1418,7 +1418,7 @@
         "status": "Exportstatus",
         "error": {
           "title": "Fehler beim Export",
-          "body": "{{exported}} / {{total}} Dateien erfolgreich exportiert.",
+          "body": "{{files}} / {{total}} Dateien erfolgreich exportiert.",
           "info": {
             "files": "{{errors}} Fehler bei PDF-Exports",
             "data": "{{errors}} Fehler bei Daten-Exports"
@@ -1431,7 +1431,7 @@
         },
         "pending": {
           "title": "Wird exportiert...",
-          "body": "{{exported}} / {{total}} Dateien exportiert."
+          "body": "{{files}} / {{total}} Dateien exportiert."
         }
       }
     },
@@ -1446,7 +1446,27 @@
         "loadFolders": "Beim Laden der verfügbaren Ordner vom WebDAV-Server ist ein Fehler aufgetreten",
         "loadOptions": "Beim Laden der verfügbaren Importoptionen ist ein Fehler aufgetreten"
       },
-      "success": "Import erfolgreich gestartet"
+      "success": "Import erfolgreich gestartet",
+      "status": {
+        "status": "Importstatus",
+        "error": {
+          "title": "Fehler beim Import",
+          "body": "{{files}} / {{total}} Dateien erfolgreich importiert.",
+          "info": {
+            "files": "{{errors}} Fehler bei PDF-Imports",
+            "data": "{{errors}} Fehler bei Daten-Imports"
+          }
+        },
+        "success": {
+          "title": "Import erfolgreich",
+          "body_one": "{{count}} Datei importiert.",
+          "body_other": "{{count}} Dateien importiert."
+        },
+        "pending": {
+          "title": "Wird importiert...",
+          "body": "{{files}} / {{total}} Dateien importiert."
+        }
+      }
     }
   }
 }

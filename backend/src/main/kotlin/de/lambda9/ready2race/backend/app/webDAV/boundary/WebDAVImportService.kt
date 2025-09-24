@@ -3,11 +3,10 @@ package de.lambda9.ready2race.backend.app.webDAV.boundary
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.checkRequestTypeDependencies
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExportTypeDependencies
-import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDataRepo
-import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDependencyRepo
-import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportProcessRepo
+import de.lambda9.ready2race.backend.app.webDAV.control.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.DataBankAccountsExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competition.DataCompetitionExport
@@ -529,5 +528,21 @@ object WebDAVImportService {
         error = "Dependency with id $failedImportId failed: $errorMessage"
     }.orDie().map { records ->
         records.traverse { setErrorOnDependentDataImports(it.id, errorMessage) }
+    }
+
+    fun getImportStatus(): App<Nothing, ApiResponse.ListDto<WebDAVImportStatusDto>> = KIO.comprehension {
+
+        val records = !WebDAVImportProcessRepo.all().orDie()
+
+        records.traverse { record ->
+
+            val imported = record.imports!!.filter { it!!.importedAt != null }.size
+            val importsWithError = record.imports!!.filter { it!!.errorAt != null }.size
+
+            record.toDto(
+                imported = imported,
+                importsWithError = importsWithError
+            )
+        }.map { ApiResponse.ListDto(it) }
     }
 }

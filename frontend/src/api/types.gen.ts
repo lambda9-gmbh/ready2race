@@ -1720,6 +1720,16 @@ export type WebDAVImportRequest = {
     selectedEvents: Array<WebDAVImportEventRequest>
 }
 
+export type WebDAVImportStatusDto = {
+    processId: string
+    importFolderName: string
+    importInitializedAt: string
+    importInitializedBy?: AppUserNameDto
+    dataImported: number
+    totalDataToImport: number
+    dataWithError: number
+}
+
 export type WorkShiftUpsertDto = {
     workType: string
     timeFrom: string
@@ -4750,6 +4760,10 @@ export type ImportDataFromWebDavData = {
 export type ImportDataFromWebDavResponse = void
 
 export type ImportDataFromWebDavError = BadRequestError | ApiError
+
+export type GetWebDavImportStatusResponse = Array<WebDAVImportStatusDto>
+
+export type GetWebDavImportStatusError = BadRequestError | ApiError
 
 export type GetWebDavImportOptionFoldersResponse = Array<string>
 

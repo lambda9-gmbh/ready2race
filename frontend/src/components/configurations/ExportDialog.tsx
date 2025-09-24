@@ -270,7 +270,7 @@ const ExportDialog = ({
                                     />
                                 </FormInputLabel>
                                 {formData.events[index]?.docExportChecked && (
-                                    <Grid2 container sx={{px: 4, pt: 1, width: 1}} spacing={1}>
+                                    <Grid2 container sx={{px: 4, pt: 1}} spacing={1}>
                                         {formData.events[index]?.selectedDocExports.map(
                                             (docExport, typeIndex) => (
                                                 <Grid2 size={{xs: 12, sm: 6}} key={docExport.type}>
@@ -321,7 +321,7 @@ const ExportDialog = ({
                                 {formData.events[index]?.exportData &&
                                     event.competitions &&
                                     event.competitions.length > 0 && (
-                                        <Grid2 container spacing={1} sx={{px: 4, pt: 1, width: 1}}>
+                                        <Grid2 container spacing={1} sx={{px: 4, pt: 1}}>
                                             {event.competitions.map((competition, compIndex) => (
                                                 <Grid2 key={competition.id} size={{xs: 12, sm: 6}}>
                                                     <FormInputLabel

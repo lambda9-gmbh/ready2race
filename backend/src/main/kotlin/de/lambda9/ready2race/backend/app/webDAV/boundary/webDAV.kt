@@ -44,6 +44,14 @@ fun Route.webDAV() {
                 }
             }
 
+            get {
+                call.respondComprehension {
+                    !authenticate(Privilege.ReadEventGlobal)
+
+                    WebDAVImportService.getImportStatus()
+                }
+            }
+
             route("/options") {
                 get {
                     call.respondComprehension {

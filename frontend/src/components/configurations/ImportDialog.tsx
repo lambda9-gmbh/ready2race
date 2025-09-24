@@ -33,10 +33,18 @@ type ImportDialogProps = {
     formData: ImportForm
     setFormData: React.Dispatch<React.SetStateAction<ImportForm>>
     webDavExportTypeNames: Map<WebDAVExportType, string>
+    onSucess: () => void
 }
 
 const ImportDialog = memo(
-    ({dialogOpen, webDavExportTypeNames, formData, setFormData, onClose}: ImportDialogProps) => {
+    ({
+        dialogOpen,
+        webDavExportTypeNames,
+        formData,
+        setFormData,
+        onClose,
+        ...props
+    }: ImportDialogProps) => {
         const {t} = useTranslation()
         const feedback = useFeedback()
         const {isRequiredDependency} = useImportDependencies(formData, setFormData)
@@ -239,6 +247,7 @@ const ImportDialog = memo(
                 feedback.error(t('webDAV.import.error.failed'))
             } else {
                 feedback.success(t('webDAV.import.success'))
+                props.onSucess()
                 handleClose()
             }
         }
@@ -289,94 +298,81 @@ const ImportDialog = memo(
                                                         />
                                                     </FormInputLabel>
                                                     {event.checked &&
-                                                        event.availableCompetitions &&
                                                         event.availableCompetitions.length > 0 && (
-                                                            <Box
-                                                                sx={{
-                                                                    ml: 4,
-                                                                    mt: 1,
-                                                                }}>
-                                                                <Grid2 container spacing={1}>
-                                                                    {event.availableCompetitions.map(
-                                                                        (
-                                                                            competition,
-                                                                            compIndex,
-                                                                        ) => (
-                                                                            <Grid2
-                                                                                key={
+                                                            <Grid2
+                                                                container
+                                                                spacing={1}
+                                                                sx={{px: 4, pt: 1}}>
+                                                                {event.availableCompetitions.map(
+                                                                    (competition, compIndex) => (
+                                                                        <Grid2
+                                                                            key={
+                                                                                competition.competitionFolderName
+                                                                            }
+                                                                            size={{
+                                                                                xs: 12,
+                                                                                sm: 6,
+                                                                            }}>
+                                                                            <FormInputLabel
+                                                                                label={
                                                                                     competition.competitionFolderName
                                                                                 }
-                                                                                size={{
-                                                                                    xs: 12,
-                                                                                    sm: 6,
-                                                                                }}>
-                                                                                <FormInputLabel
-                                                                                    label={
-                                                                                        competition.competitionFolderName
+                                                                                horizontal
+                                                                                reverse
+                                                                                required>
+                                                                                <Checkbox
+                                                                                    checked={
+                                                                                        competition.checked ||
+                                                                                        false
                                                                                     }
-                                                                                    horizontal
-                                                                                    reverse>
-                                                                                    <Checkbox
-                                                                                        checked={
-                                                                                            competition.checked ||
-                                                                                            false
-                                                                                        }
-                                                                                        onChange={handleCompetitionToggle(
-                                                                                            eventIndex,
-                                                                                            compIndex,
-                                                                                        )}
-                                                                                    />
-                                                                                </FormInputLabel>
-                                                                            </Grid2>
-                                                                        ),
-                                                                    )}
-                                                                </Grid2>
-                                                            </Box>
+                                                                                    onChange={handleCompetitionToggle(
+                                                                                        eventIndex,
+                                                                                        compIndex,
+                                                                                    )}
+                                                                                />
+                                                                            </FormInputLabel>
+                                                                        </Grid2>
+                                                                    ),
+                                                                )}
+                                                            </Grid2>
                                                         )}
                                                 </Box>
                                             ))}
                                             <Divider />
-                                            {formData.checkedResources &&
-                                                formData.checkedResources.length > 0 && (
-                                                    <Grid2 container spacing={1}>
-                                                        {formData.checkedResources.map(
-                                                            (resource, index) => {
-                                                                const isDisabled =
-                                                                    isRequiredDependency(
-                                                                        resource.type,
-                                                                    )
-                                                                return (
-                                                                    <Grid2
-                                                                        key={resource.type}
-                                                                        size={{xs: 12, sm: 6}}>
-                                                                        <FormInputLabel
-                                                                            label={
-                                                                                webDavExportTypeNames.get(
-                                                                                    resource.type,
-                                                                                ) ?? '-'
-                                                                            }
-                                                                            horizontal
-                                                                            reverse
-                                                                            required>
-                                                                            <Checkbox
-                                                                                checked={
-                                                                                    resource.checked ||
-                                                                                    false
-                                                                                }
-                                                                                disabled={
-                                                                                    isDisabled
-                                                                                }
-                                                                                onChange={handleResourceToggle(
-                                                                                    index,
-                                                                                )}
-                                                                            />
-                                                                        </FormInputLabel>
-                                                                    </Grid2>
-                                                                )
-                                                            },
-                                                        )}
-                                                    </Grid2>
-                                                )}
+                                            {formData.checkedResources.length > 0 && (
+                                                <Grid2 container spacing={1}>
+                                                    {formData.checkedResources.map(
+                                                        (resource, index) => (
+                                                            <Grid2
+                                                                key={resource.type}
+                                                                size={{xs: 12, sm: 6}}>
+                                                                <FormInputLabel
+                                                                    label={
+                                                                        webDavExportTypeNames.get(
+                                                                            resource.type,
+                                                                        ) ?? '-'
+                                                                    }
+                                                                    horizontal
+                                                                    reverse
+                                                                    required>
+                                                                    <Checkbox
+                                                                        checked={
+                                                                            resource.checked ||
+                                                                            false
+                                                                        }
+                                                                        disabled={isRequiredDependency(
+                                                                            resource.type,
+                                                                        )}
+                                                                        onChange={handleResourceToggle(
+                                                                            index,
+                                                                        )}
+                                                                    />
+                                                                </FormInputLabel>
+                                                            </Grid2>
+                                                        ),
+                                                    )}
+                                                </Grid2>
+                                            )}
                                         </>
                                     )}
                                 </Stack>
