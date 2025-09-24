@@ -1,6 +1,7 @@
 import React, {useEffect, useRef} from 'react'
-import {Checkbox, FormControlLabel} from '@mui/material'
+import {Checkbox} from '@mui/material'
 import {useTranslation} from 'react-i18next'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
 interface SelectAllCheckboxProps {
     checked: boolean
@@ -25,18 +26,15 @@ const SelectAllCheckbox: React.FC<SelectAllCheckboxProps> = ({
     }, [indeterminate])
 
     return (
-        <FormControlLabel
-            control={
-                <Checkbox
-                    inputRef={checkboxRef}
-                    checked={checked}
-                    indeterminate={indeterminate}
-                    onChange={onChange}
-                    disabled={disabled}
-                />
-            }
-            label={t('common.selectAll')}
-        />
+        <FormInputLabel label={t('common.selectAll')} reverse horizontal required>
+            <Checkbox
+                inputRef={checkboxRef}
+                checked={checked}
+                indeterminate={indeterminate}
+                onChange={onChange}
+                disabled={disabled}
+            />
+        </FormInputLabel>
     )
 }
 

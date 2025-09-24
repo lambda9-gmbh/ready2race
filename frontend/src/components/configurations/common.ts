@@ -24,8 +24,16 @@ export type ExportFormCheckType = {
 }
 
 export type ImportForm = {
-    folderName: string
-    selectedData: ExportFormCheckType[]
+    selectedFolder: string
+    checkedResources: ExportFormCheckType[]
+    availableEvents: {
+        eventFolderName: string
+        checked: boolean
+        availableCompetitions: {
+            competitionFolderName: string
+            checked: boolean
+        }[]
+    }[]
 }
 
 export const EVENT_TYPE_OPTIONS: WebDAVExportType[] = [
@@ -115,6 +123,12 @@ const hasSelectedEvents = (events: ExportForm['events']): boolean =>
 const hasSelectedCompetitions = (events: ExportForm['events']): boolean =>
     events.some(event => event.selectedCompetitionIds.some(comp => comp.checked))
 
+const hasSelectedImportEvents = (events: ImportForm['availableEvents']): boolean =>
+    events.some(event => event.checked)
+
+const hasSelectedImportCompetitions = (events: ImportForm['availableEvents']): boolean =>
+    events.some(event => event.availableCompetitions?.some(comp => comp.checked) ?? false)
+
 const calculateAllRequiredDependencies = (
     checkedTypes: WebDAVExportType[],
     anyEventSelected: boolean,
@@ -135,130 +149,153 @@ const calculateAllRequiredDependencies = (
     return requiredDependencies
 }
 
-const updateDatabaseExportsWithDependencies = (
-    databaseExports: ExportFormCheckType[],
+const updateResourcesWithDependencies = (
+    resources: ExportFormCheckType[],
     requiredDependencies: Set<WebDAVExportType>,
     anyEventSelected: boolean,
     anyCompetitionSelected: boolean,
-): {updatedExports: ExportFormCheckType[]; hasChanges: boolean} => {
-    let hasChanges = false
+    mode: 'export' | 'import' = 'export',
+): {updatedResources: ExportFormCheckType[]; hasChanges: boolean} => {
+    const checkedTypes = getCheckedExportTypes(resources)
 
-    const updatedExports = databaseExports.map(item => {
-        // Handle DB_EVENT auto-selection based on event selection
-        if (item.type === 'DB_EVENT') {
-            if (anyEventSelected && !item.checked) {
-                hasChanges = true
-                return {...item, checked: true}
-            }
-            if (!anyEventSelected && item.checked) {
-                hasChanges = true
+    const updatedResources = resources.map(item => {
+        const shouldBeChecked = requiredDependencies.has(item.type) ||
+            (item.type === 'DB_EVENT' && anyEventSelected) ||
+            (item.type === 'DB_COMPETITION' && anyCompetitionSelected)
+
+        if (mode === 'import') {
+            // Import mode: uncheck if no longer required and wasn't manually selected
+            if (!shouldBeChecked && item.checked && !checkedTypes.includes(item.type)) {
                 return {...item, checked: false}
             }
-        }
-
-        // Handle DB_COMPETITION auto-selection based on competition selection
-        if (item.type === 'DB_COMPETITION') {
-            if (anyCompetitionSelected && !item.checked) {
-                hasChanges = true
-                return {...item, checked: true}
+        } else {
+            // Export mode: handle special cases for DB_EVENT and DB_COMPETITION
+            if (item.type === 'DB_EVENT' && anyEventSelected !== item.checked) {
+                return {...item, checked: anyEventSelected}
             }
-            if (!anyCompetitionSelected && item.checked) {
-                hasChanges = true
-                return {...item, checked: false}
+            if (item.type === 'DB_COMPETITION' && anyCompetitionSelected !== item.checked) {
+                return {...item, checked: anyCompetitionSelected}
             }
         }
 
         // Auto-check required dependencies
-        if (requiredDependencies.has(item.type) && !item.checked) {
-            hasChanges = true
+        if (shouldBeChecked && !item.checked) {
             return {...item, checked: true}
         }
 
         return item
     })
 
-    return {updatedExports, hasChanges}
+    const hasChanges = updatedResources.some((item, i) => item.checked !== resources[i].checked)
+    return {updatedResources, hasChanges}
 }
 
-// Dependency checking logic
+// Generic dependency checker creator
 const createDependencyChecker = (
-    checkedDatabaseExports: ExportFormCheckType[],
-    events: ExportForm['events'],
-) => {
-    const checkedTypes = getCheckedExportTypes(checkedDatabaseExports)
-    const anyEventSelected = hasSelectedEvents(events)
-    const anyCompetitionSelected = hasSelectedCompetitions(events)
+    checkedResources: ExportFormCheckType[],
+    anyEventSelected: boolean,
+    anyCompetitionSelected: boolean,
+): ((type: WebDAVExportType) => boolean) => {
+    const checkedTypes = getCheckedExportTypes(checkedResources)
 
     return (type: WebDAVExportType): boolean => {
-        // Check if type is a dependency of any checked type
-        const isDependency = checkedTypes.some(checkedType => {
-            const deps = webDAVExportTypeDependencies[checkedType]
-            return deps?.includes(type) ?? false
-        })
-
-        // Handle DB_EVENT special case
-        if (anyEventSelected) {
-            const eventDeps = webDAVExportTypeDependencies['DB_EVENT']
-            if (eventDeps?.includes(type) || type === 'DB_EVENT') {
-                return true
-            }
-        }
-
-        // Handle DB_COMPETITION special case
-        if (anyCompetitionSelected) {
-            const competitionDeps = webDAVExportTypeDependencies['DB_COMPETITION']
-            if (competitionDeps?.includes(type) || type === 'DB_COMPETITION') {
-                return true
-            }
-        }
-
-        return isDependency
+        return checkedTypes.some(checkedType =>
+            webDAVExportTypeDependencies[checkedType]?.includes(type) ?? false
+        ) || (anyEventSelected && (
+            type === 'DB_EVENT' || (webDAVExportTypeDependencies['DB_EVENT']?.includes(type) ?? false)
+        )) || (anyCompetitionSelected && (
+            type === 'DB_COMPETITION' || (webDAVExportTypeDependencies['DB_COMPETITION']?.includes(type) ?? false)
+        ))
     }
 }
 
-// Custom hook for managing export dependencies
-export const useExportDependencies = (
-    formData: ExportForm,
-    setFormData: React.Dispatch<React.SetStateAction<ExportForm>>,
-    activeStep: number,
+// Unified hook for managing dependencies (works for both export and import)
+const useDependencies = <T extends ExportForm | ImportForm>(
+    formData: T,
+    setFormData: React.Dispatch<React.SetStateAction<T>>,
+    options?: { activeStep?: number },
 ) => {
-    useEffect(() => {
-        // Only run dependency checking on the data export step
-        if (activeStep !== 2 || !formData.checkedDatabaseExports) return
+    const isExport = 'events' in formData && 'checkedDatabaseExports' in formData
+    const resources = isExport
+        ? (formData as ExportForm).checkedDatabaseExports
+        : (formData as ImportForm).checkedResources
 
-        const checkedTypes = getCheckedExportTypes(formData.checkedDatabaseExports)
-        const anyEventSelected = hasSelectedEvents(formData.events)
-        const anyCompetitionSelected = hasSelectedCompetitions(formData.events)
+    useEffect(() => {
+        // For export, only run on step 2
+        if (isExport && options?.activeStep !== 2) return
+        if (!resources?.length) return
+
+        const checkedTypes = getCheckedExportTypes(resources)
+        const anyEventSelected = isExport
+            ? hasSelectedEvents((formData as ExportForm).events)
+            : hasSelectedImportEvents((formData as ImportForm).availableEvents)
+        const anyCompetitionSelected = isExport
+            ? hasSelectedCompetitions((formData as ExportForm).events)
+            : hasSelectedImportCompetitions((formData as ImportForm).availableEvents)
+
         const requiredDependencies = calculateAllRequiredDependencies(
             checkedTypes,
             anyEventSelected,
             anyCompetitionSelected,
         )
 
-        const {updatedExports, hasChanges} = updateDatabaseExportsWithDependencies(
-            formData.checkedDatabaseExports,
+        const {updatedResources, hasChanges} = updateResourcesWithDependencies(
+            resources,
             requiredDependencies,
             anyEventSelected,
             anyCompetitionSelected,
+            isExport ? 'export' : 'import',
         )
 
-        // Only update if there were changes
         if (hasChanges) {
-            setFormData(prev => ({
-                ...prev,
-                checkedDatabaseExports: updatedExports,
-            }))
+            if (isExport) {
+                setFormData(prev => ({
+                    ...prev,
+                    checkedDatabaseExports: updatedResources,
+                }) as T)
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    checkedResources: updatedResources,
+                }) as T)
+            }
         }
-    }, [formData.checkedDatabaseExports, formData.events, activeStep, setFormData])
+    }, [
+        resources,
+        isExport ? (formData as ExportForm).events : (formData as ImportForm).availableEvents,
+        options?.activeStep,
+        setFormData,
+    ])
 
-    // Memoized function to check if a type is a required dependency
     const isRequiredDependency = useCallback(
-        createDependencyChecker(formData.checkedDatabaseExports ?? [], formData.events),
-        [formData.checkedDatabaseExports, formData.events],
+        (type: WebDAVExportType): boolean => {
+            const anyEventSelected = isExport
+                ? hasSelectedEvents((formData as ExportForm).events)
+                : hasSelectedImportEvents((formData as ImportForm).availableEvents)
+            const anyCompetitionSelected = isExport
+                ? hasSelectedCompetitions((formData as ExportForm).events)
+                : hasSelectedImportCompetitions((formData as ImportForm).availableEvents)
+
+            return createDependencyChecker(resources ?? [], anyEventSelected, anyCompetitionSelected)(type)
+        },
+        [resources, isExport ? (formData as ExportForm).events : (formData as ImportForm).availableEvents],
     )
 
     return {isRequiredDependency}
 }
+
+// Export-specific wrapper
+export const useExportDependencies = (
+    formData: ExportForm,
+    setFormData: React.Dispatch<React.SetStateAction<ExportForm>>,
+    activeStep: number,
+) => useDependencies(formData, setFormData, {activeStep})
+
+// Import-specific wrapper
+export const useImportDependencies = (
+    formData: ImportForm,
+    setFormData: React.Dispatch<React.SetStateAction<ImportForm>>,
+) => useDependencies(formData, setFormData)
 
 // Helper to create initial form data
 export const createInitialExportForm = (events: EventForExportDto[]): ExportForm => ({
@@ -283,9 +320,14 @@ export const createInitialExportForm = (events: EventForExportDto[]): ExportForm
 })
 
 export const createInitialImportForm = (): ImportForm => ({
-    folderName: '',
-    selectedData: DATA_TYPE_OPTIONS.map(type => ({
-        type: type,
-        checked: false,
-    })),
+    selectedFolder: '',
+    checkedResources: [],
+    availableEvents: [],
 })
+
+// Helper to check if any import form has selections
+export const hasImportSelections = (formData: ImportForm): boolean => {
+    const hasDataSelections = formData.checkedResources.some(item => item.checked)
+    const hasEventSelections = formData.availableEvents.some(event => event.checked)
+    return hasDataSelections || hasEventSelections
+}

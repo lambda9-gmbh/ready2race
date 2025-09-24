@@ -29,7 +29,9 @@ const ExportStatusDisplay = ({reloadExportStatus}: Props) => {
                         data.some(
                             process =>
                                 process.totalFilesToExport !==
-                                process.filesExported + process.filesWithError,
+                                    process.filesExported + process.filesWithError ||
+                                process.totalDataToExport !==
+                                    process.dataExported + process.dataWithError,
                         )
                     ) {
                         setReloadFrequently(true)

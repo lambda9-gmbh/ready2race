@@ -24,7 +24,11 @@ const ExportStatusCard = memo(({exportStatus}: ExportStatusCardProps) => {
     const {t} = useTranslation()
 
     const isComplete =
-        exportStatus.filesExported + exportStatus.filesWithError === exportStatus.totalFilesToExport
+        exportStatus.filesExported +
+            exportStatus.filesWithError +
+            exportStatus.dataExported +
+            exportStatus.dataWithError ===
+        exportStatus.totalFilesToExport + exportStatus.totalDataToExport
     const hasErrors = exportStatus.filesWithError > 0 || exportStatus.dataWithError > 0
 
     const totalFilesExported = exportStatus.filesExported + exportStatus.dataExported

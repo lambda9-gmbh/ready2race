@@ -193,7 +193,13 @@ object WebDAVImportService {
         userId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        !checkRequestTypeDependencies(request.selectedData)
+        !checkRequestTypeDependencies(
+            request.selectedData + if (request.selectedEvents.isNotEmpty()) {
+                listOf(WebDAVExportType.DB_EVENT) + if (request.selectedEvents.any { it.competitionFolderNames.isNotEmpty() }) {
+                    listOf(WebDAVExportType.DB_COMPETITION)
+                } else listOf()
+            } else listOf()
+        )
 
         val importProcess = WebdavImportProcessRecord(
             id = UUID.randomUUID(),
@@ -243,7 +249,7 @@ object WebDAVImportService {
                 }"
             )
             importDataRecords.add(eventImportRecord)
-            event.competitions.forEach { competition ->
+            event.competitionFolderNames.forEach { competitionFolderName ->
                 val competitionImportRecord = buildImportDataRecord(
                     dataType = WebDAVExportType.DB_COMPETITION,
                     customPath = "${request.folderName}/${event.eventFolderName}/${
@@ -251,7 +257,7 @@ object WebDAVImportService {
                             WebDAVExportType.DB_COMPETITION
                         )
                     }/${
-                        competition.competitionFolderName
+                        competitionFolderName
                     }/${
                         WebDAVService.getWebDavDataJsonFileName(
                             WebDAVExportType.DB_COMPETITION

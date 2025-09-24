@@ -4,24 +4,10 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {exportDataByWebDav, getEventsForExport} from '@api/sdk.gen.ts'
 import {useState} from 'react'
 import {WebDAVExportType} from '@api/types.gen.ts'
-import {createInitialExportForm} from './common'
+import {createInitialExportForm, createInitialImportForm} from './common'
 import ExportDialog from './ExportDialog'
 import ImportDialog from './ImportDialog'
-import {useForm} from 'react-hook-form-mui'
 import ExportStatusDisplay from '@components/configurations/ExportStatusDisplay.tsx'
-
-export type WebDAVImportForm = {
-    selectedFolder: string
-    checkedResources: boolean[]
-    availableEvents: {
-        eventFolderName: string
-        checked: boolean
-        availableCompetitions: {
-            competitionFolderName: string
-            checked: boolean
-        }[]
-    }[]
-}
 
 const WebDavExportImport = () => {
     const {t} = useTranslation()
@@ -84,12 +70,11 @@ const WebDavExportImport = () => {
 
     const [dialogOpen, setDialogOpen] = useState(false)
     const [importDialogOpen, setImportDialogOpen] = useState(false)
-
-    const importFormContext = useForm<WebDAVImportForm>()
+    const [importFormData, setImportFormData] = useState(() => createInitialImportForm())
 
     const openImportDialog = () => {
         setImportDialogOpen(true)
-        importFormContext.reset({})
+        setImportFormData(createInitialImportForm())
     }
 
     const [activeStep, setActiveStep] = useState(0)
@@ -189,8 +174,9 @@ const WebDavExportImport = () => {
             <ImportDialog
                 dialogOpen={importDialogOpen}
                 onClose={() => setImportDialogOpen(false)}
+                formData={importFormData}
+                setFormData={setImportFormData}
                 webDavExportTypeNames={webDavExportTypeNames}
-                importFormContext={importFormContext}
             />
             <ExportStatusDisplay reloadExportStatus={reloadStatus} />
         </Stack>
