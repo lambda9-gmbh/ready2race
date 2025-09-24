@@ -1,5 +1,5 @@
 import {
-    Box,
+    Box, Button,
     Card,
     CardActionArea,
     CardContent,
@@ -18,6 +18,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {getUserAppRights} from '@components/qrApp/common.ts'
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 const APP_FUNCTIONS = [
     {
@@ -44,7 +45,7 @@ const APP_FUNCTIONS = [
 
 const AppFunctionSelectPage = () => {
     const {t} = useTranslation()
-    const {setAppFunction} = useAppSession()
+    const {setAppFunction, goBack, events} = useAppSession()
     const navigate = router.navigate
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -135,6 +136,16 @@ const AppFunctionSelectPage = () => {
                     )
                 })}
             </Box>
+            {(events.length > 1) && (
+            <Button
+                onClick={goBack}
+                variant="outlined"
+                startIcon={<SwapHorizIcon />}
+                fullWidth
+                sx={{mt: 4}}>
+                {t('app.functionSelect.switchEvent')}
+            </Button>
+            )}
         </Stack>
     )
 }

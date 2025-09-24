@@ -28,7 +28,7 @@ const AppLoginPage = () => {
             if (search && typeof search.redirect === 'string' && search.redirect) {
                 router.navigate({to: search.redirect})
             } else {
-                router.navigate({to: '/app/function'})
+                router.navigate({to: '/app'})
             }
         } else if (error) {
             if (error.status.value === 429) {

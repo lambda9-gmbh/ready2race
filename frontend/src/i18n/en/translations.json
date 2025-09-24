@@ -1315,7 +1315,8 @@
         "competitionCheck": "Competition Check",
         "eventRequirement": "Event Requirements",
         "caterer": "Catering"
-      }
+      },
+      "switchEvent": "Switch Event"
     },
     "forbidden": {
       "title": "Not authorized",

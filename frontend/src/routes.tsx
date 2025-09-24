@@ -420,7 +420,7 @@ export const appForbiddenRoute = createRoute({
 })
 
 export const appFunctionSelectRoute = createRoute({
-    getParentRoute: () => appRoute,
+    getParentRoute: () => qrEventRoute,
     path: 'function',
     component: () => <AppFunctionSelectPage />,
     beforeLoad: ({context, location}) => {
@@ -488,9 +488,8 @@ const routeTree = rootRoute.addChildren([
     appRoute.addChildren([
         appLoginRoute,
         qrEventsIndexRoute,
-        qrEventRoute.addChildren([qrScanRoute, qrUserRoute, qrParticipantRoute, qrAssignRoute]),
+        qrEventRoute.addChildren([qrScanRoute, qrUserRoute, qrParticipantRoute, qrAssignRoute, appFunctionSelectRoute]),
         appForbiddenRoute,
-        appFunctionSelectRoute,
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),
 ])
