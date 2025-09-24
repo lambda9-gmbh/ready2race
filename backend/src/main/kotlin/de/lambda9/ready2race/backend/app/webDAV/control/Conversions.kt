@@ -79,7 +79,7 @@ fun WebdavImportProcessStatusRecord.toDto(
     KIO.ok(
         WebDAVImportStatusDto(
             processId = id!!,
-            importFolderName = name!!,
+            importFolderName = importFolderName!!,
             importInitializedAt = createdAt!!,
             importInitializedBy = createdByDto,
             dataImported = imported,
