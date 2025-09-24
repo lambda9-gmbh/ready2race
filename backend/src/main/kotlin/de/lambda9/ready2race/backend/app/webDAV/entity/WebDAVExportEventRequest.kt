@@ -6,6 +6,9 @@ import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.notEmpty
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.oneOf
 import java.util.*
 
 data class WebDAVExportEventRequest(
@@ -17,14 +20,16 @@ data class WebDAVExportEventRequest(
         this::selectedExports validate allOf(
             notEmpty,
             noDuplicates,
-            /*oneOf( // todo: doesnt work
-                isValue(WebDAVExportType.REGISTRATION_RESULTS),
-                isValue(WebDAVExportType.INVOICES),
-                isValue(WebDAVExportType.DOCUMENTS),
-                isValue(WebDAVExportType.RESULTS),
-                isValue(WebDAVExportType.START_LISTS),
-                isValue(WebDAVExportType.DB_EVENT),
-            )*/
+            collection(
+                oneOf(
+                    isValue(WebDAVExportType.REGISTRATION_RESULTS),
+                    isValue(WebDAVExportType.INVOICES),
+                    isValue(WebDAVExportType.DOCUMENTS),
+                    isValue(WebDAVExportType.RESULTS),
+                    isValue(WebDAVExportType.START_LISTS),
+                    isValue(WebDAVExportType.DB_EVENT),
+                )
+            ),
         )
 
 

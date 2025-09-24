@@ -9,6 +9,8 @@ import de.lambda9.ready2race.backend.validation.validators.StringValidators.maxL
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.oneOf
 
 data class WebDAVExportRequest(
     val name: String,
@@ -23,24 +25,26 @@ data class WebDAVExportRequest(
             this::selectedDatabaseExports validate allOf(
                 notEmpty,
                 noDuplicates,
-                /*oneOf( // todo: doesnt work
-                    isValue(WebDAVExportType.DB_USERS),
-                    isValue(WebDAVExportType.DB_PARTICIPANTS),
-                    isValue(WebDAVExportType.DB_BANK_ACCOUNTS),
-                    isValue(WebDAVExportType.DB_CONTACT_INFORMATION),
-                    isValue(WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES),
-                    isValue(WebDAVExportType.DB_EVENT_DOCUMENT_TYPES),
-                    isValue(WebDAVExportType.DB_MATCH_RESULT_IMPORT_CONFIGS),
-                    isValue(WebDAVExportType.DB_STARTLIST_EXPORT_CONFIGS),
-                    isValue(WebDAVExportType.DB_WORK_TYPES),
-                    isValue(WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS),
-                    isValue(WebDAVExportType.DB_RATING_CATEGORIES),
-                    isValue(WebDAVExportType.DB_COMPETITION_CATEGORIES),
-                    isValue(WebDAVExportType.DB_FEES),
-                    isValue(WebDAVExportType.DB_NAMED_PARTICIPANTS),
-                    isValue(WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES),
-                    isValue(WebDAVExportType.DB_COMPETITION_TEMPLATES),
-                )*/
+                collection(
+                    oneOf(
+                        isValue(WebDAVExportType.DB_USERS),
+                        isValue(WebDAVExportType.DB_PARTICIPANTS),
+                        isValue(WebDAVExportType.DB_BANK_ACCOUNTS),
+                        isValue(WebDAVExportType.DB_CONTACT_INFORMATION),
+                        isValue(WebDAVExportType.DB_EMAIL_INDIVIDUAL_TEMPLATES),
+                        isValue(WebDAVExportType.DB_EVENT_DOCUMENT_TYPES),
+                        isValue(WebDAVExportType.DB_MATCH_RESULT_IMPORT_CONFIGS),
+                        isValue(WebDAVExportType.DB_STARTLIST_EXPORT_CONFIGS),
+                        isValue(WebDAVExportType.DB_WORK_TYPES),
+                        isValue(WebDAVExportType.DB_PARTICIPANT_REQUIREMENTS),
+                        isValue(WebDAVExportType.DB_RATING_CATEGORIES),
+                        isValue(WebDAVExportType.DB_COMPETITION_CATEGORIES),
+                        isValue(WebDAVExportType.DB_FEES),
+                        isValue(WebDAVExportType.DB_NAMED_PARTICIPANTS),
+                        isValue(WebDAVExportType.DB_COMPETITION_SETUP_TEMPLATES),
+                        isValue(WebDAVExportType.DB_COMPETITION_TEMPLATES),
+                    )
+                )
             )
         )
 

@@ -618,9 +618,9 @@ import type {
     ExportDataByWebDavResponse,
     GetWebDavExportStatusError,
     GetWebDavExportStatusResponse,
-    ImportDatafromWebDavData,
-    ImportDatafromWebDavError,
-    ImportDatafromWebDavResponse,
+    ImportDataFromWebDavData,
+    ImportDataFromWebDavError,
+    ImportDataFromWebDavResponse,
     GetWebDavImportOptionFoldersError,
     GetWebDavImportOptionFoldersResponse,
     GetWebDavImportOptionTypesData,
@@ -3164,12 +3164,12 @@ export const getWebDavExportStatus = <ThrowOnError extends boolean = false>(
     })
 }
 
-export const importDatafromWebDav = <ThrowOnError extends boolean = false>(
-    options: OptionsLegacyParser<ImportDatafromWebDavData, ThrowOnError>,
+export const importDataFromWebDav = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportDataFromWebDavData, ThrowOnError>,
 ) => {
     return (options?.client ?? client).post<
-        ImportDatafromWebDavResponse,
-        ImportDatafromWebDavError,
+        ImportDataFromWebDavResponse,
+        ImportDataFromWebDavError,
         ThrowOnError
     >({
         ...options,

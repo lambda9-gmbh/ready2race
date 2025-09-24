@@ -1693,9 +1693,31 @@ export type WebDAVExportType =
     | 'DB_EVENT'
     | 'DB_COMPETITION'
 
+export type WebDAVImportEventRequest = {
+    eventFolderName: string
+    competitionFolderNames: Array<string>
+}
+
+export type WebDAVImportOptionsCompetitionDto = {
+    competitionId: string
+    competitionFolderName: string
+}
+
+export type WebDAVImportOptionsDto = {
+    data: Array<WebDAVExportType>
+    events: Array<WebDAVImportOptionsEventDto>
+}
+
+export type WebDAVImportOptionsEventDto = {
+    eventId: string
+    eventFolderName: string
+    competitions: Array<WebDAVImportOptionsCompetitionDto>
+}
+
 export type WebDAVImportRequest = {
     folderName: string
     selectedData: Array<WebDAVExportType>
+    selectedEvents: Array<WebDAVImportEventRequest>
 }
 
 export type WorkShiftUpsertDto = {
@@ -4721,13 +4743,13 @@ export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
 
-export type ImportDatafromWebDavData = {
+export type ImportDataFromWebDavData = {
     body: WebDAVImportRequest
 }
 
-export type ImportDatafromWebDavResponse = void
+export type ImportDataFromWebDavResponse = void
 
-export type ImportDatafromWebDavError = BadRequestError | ApiError
+export type ImportDataFromWebDavError = BadRequestError | ApiError
 
 export type GetWebDavImportOptionFoldersResponse = Array<string>
 
@@ -4739,6 +4761,6 @@ export type GetWebDavImportOptionTypesData = {
     }
 }
 
-export type GetWebDavImportOptionTypesResponse = Array<WebDAVExportType>
+export type GetWebDavImportOptionTypesResponse = WebDAVImportOptionsDto
 
 export type GetWebDavImportOptionTypesError = BadRequestError | ApiError

@@ -1,64 +1,33 @@
-import {Alert, Box, Button, Stack} from '@mui/material'
+import {Box, Button, Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
-import {
-    exportDataByWebDav,
-    getEventsForExport,
-    getWebDavExportStatus,
-    getWebDavImportOptionFolders,
-    getWebDavImportOptionTypes,
-    importDatafromWebDav,
-} from '@api/sdk.gen.ts'
+import {exportDataByWebDav, getEventsForExport} from '@api/sdk.gen.ts'
 import {useState} from 'react'
-import Throbber from '@components/Throbber.tsx'
 import {WebDAVExportType} from '@api/types.gen.ts'
-import {createInitialExportForm, createInitialImportForm} from './common'
+import {createInitialExportForm} from './common'
 import ExportDialog from './ExportDialog'
 import ImportDialog from './ImportDialog'
-import ExportStatusCard from './ExportStatusCard'
+import {useForm} from 'react-hook-form-mui'
+import ExportStatusDisplay from '@components/configurations/ExportStatusDisplay.tsx'
 
-const ExportData = () => {
+export type WebDAVImportForm = {
+    selectedFolder: string
+    checkedResources: boolean[]
+    availableEvents: {
+        eventFolderName: string
+        checked: boolean
+        availableCompetitions: {
+            competitionFolderName: string
+            checked: boolean
+        }[]
+    }[]
+}
+
+const WebDavExportImport = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const [reloadFrequently, setReloadFrequently] = useState(true)
-
-    const {
-        data: exportStatusData,
-        pending: exportStatusPending,
-        reload: reloadExportStatus,
-    } = useFetch(signal => getWebDavExportStatus({signal}), {
-        onResponse: ({data, error}) => {
-            if (error) {
-                feedback.error(
-                    t('common.load.error.single', {entity: t('webDAV.export.status.status')}),
-                )
-            } else {
-                if (
-                    data.some(
-                        process =>
-                            process.totalFilesToExport !==
-                            process.filesExported + process.filesWithError,
-                    )
-                ) {
-                    setReloadFrequently(true)
-                } else {
-                    setReloadFrequently(false)
-                }
-            }
-        },
-        deps: [reloadFrequently],
-        autoReloadInterval: reloadFrequently ? 1000 : 6000,
-    })
-
-    const {data: availableFolders} = useFetch(signal => getWebDavImportOptionFolders({signal}), {
-        onResponse: ({error}) => {
-            if (error) {
-                feedback.error(t('webDAV.import.error.loadFolders'))
-            }
-        },
-        deps: [],
-    })
+    const [reloadStatus, setReloadStatus] = useState(false)
 
     const {data: eventsData} = useFetch(signal => getEventsForExport({signal}), {
         onResponse: ({data, error}) => {
@@ -115,17 +84,23 @@ const ExportData = () => {
 
     const [dialogOpen, setDialogOpen] = useState(false)
     const [importDialogOpen, setImportDialogOpen] = useState(false)
-    const [importFormData, setImportFormData] = useState(() => createInitialImportForm())
+
+    const importFormContext = useForm<WebDAVImportForm>()
+
+    const openImportDialog = () => {
+        setImportDialogOpen(true)
+        importFormContext.reset({})
+    }
 
     const [activeStep, setActiveStep] = useState(0)
 
-    const openDialog = () => {
+    const openExportDialog = () => {
         setDialogOpen(true)
         setActiveStep(0)
         setFormData(createInitialExportForm(eventsData ?? []))
     }
 
-    const closeDialog = () => {
+    const closeExportDialog = () => {
         setDialogOpen(false)
         setActiveStep(0)
     }
@@ -180,25 +155,25 @@ const ExportData = () => {
                 }
             }
         } else {
-            closeDialog()
+            closeExportDialog()
             feedback.success(t('webDAV.export.success'))
         }
-        reloadExportStatus()
+        setReloadStatus(prev => !prev)
     }
 
     return (
         <Stack spacing={4} sx={{maxWidth: 600}}>
             <Box>
-                <Button variant={'contained'} onClick={openDialog}>
+                <Button variant={'contained'} onClick={openExportDialog}>
                     {t('webDAV.export.export')}
                 </Button>
-                <Button variant={'contained'} onClick={() => setImportDialogOpen(true)}>
+                <Button variant={'contained'} onClick={() => openImportDialog()}>
                     {t('webDAV.import.import')}
                 </Button>
             </Box>
             <ExportDialog
                 open={dialogOpen}
-                onClose={closeDialog}
+                onClose={closeExportDialog}
                 formData={formData}
                 setFormData={setFormData}
                 eventsData={eventsData ?? undefined}
@@ -212,61 +187,13 @@ const ExportData = () => {
             />
 
             <ImportDialog
-                open={importDialogOpen}
+                dialogOpen={importDialogOpen}
                 onClose={() => setImportDialogOpen(false)}
-                formData={importFormData}
-                setFormData={setImportFormData}
                 webDavExportTypeNames={webDavExportTypeNames}
-                availableFolders={availableFolders ?? []}
-                onSubmit={async () => {
-                    if (!importFormData.folderName.trim()) {
-                        feedback.error(t('common.form.required'))
-                        return
-                    }
-                    const selectedTypes = importFormData.selectedData
-                        .filter(item => item.checked)
-                        .map(item => item.type)
-
-                    if (selectedTypes.length === 0) {
-                        feedback.error(t('webDAV.import.error.noSelection'))
-                        return
-                    }
-
-                    const {error} = await importDatafromWebDav({
-                        body: {
-                            folderName: importFormData.folderName,
-                            selectedData: selectedTypes,
-                        },
-                    })
-
-                    if (error) {
-                        feedback.error(t('webDAV.import.error.failed'))
-                    } else {
-                        feedback.success(t('webDAV.import.success'))
-                        setImportDialogOpen(false)
-                        setImportFormData(createInitialImportForm())
-                    }
-                }}
+                importFormContext={importFormContext}
             />
-            {exportStatusData ? (
-                <Stack spacing={2}>
-                    {exportStatusData
-                        .sort((a, b) => (a.exportInitializedAt > b.exportInitializedAt ? -1 : 1))
-                        .map(exportStatus => (
-                            <ExportStatusCard
-                                key={exportStatus.processId}
-                                exportStatus={exportStatus}
-                            />
-                        ))}
-                </Stack>
-            ) : exportStatusPending ? (
-                <Throbber />
-            ) : (
-                <Alert severity={'error'}>
-                    {t('common.load.error.single', {entity: t('webDAV.export.status.status')})}
-                </Alert>
-            )}
+            <ExportStatusDisplay reloadExportStatus={reloadStatus} />
         </Stack>
     )
 }
-export default ExportData
+export default WebDavExportImport

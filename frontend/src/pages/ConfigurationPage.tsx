@@ -42,12 +42,12 @@ import ContactInformationTable from '@components/contactInformation/ContactInfor
 import ContactInformationDialog from '@components/contactInformation/ContactInformationDialog.tsx'
 import WorkTypeDialog from '@components/work/WorkTypeDialog.tsx'
 import WorkTypeTable from '@components/work/WorkTypeTable.tsx'
-import StartListConfigPanel from "@components/startListConfig/StartListConfigPanel.tsx";
-import {a11yProps} from "@utils/helpers.ts";
-import RatingCategoryPanel from "@components/ratingCategory/RatingCategoryPanel.tsx";
-import MatchResultImportConfigPanel from "@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx";
-import GlobalConfigurationsTab from "@components/configurations/GlobalConfigurationsTab.tsx";
-import ExportData from "@components/configurations/ExportData.tsx";
+import StartListConfigPanel from '@components/startListConfig/StartListConfigPanel.tsx'
+import {a11yProps} from '@utils/helpers.ts'
+import RatingCategoryPanel from '@components/ratingCategory/RatingCategoryPanel.tsx'
+import MatchResultImportConfigPanel from '@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx'
+import GlobalConfigurationsTab from '@components/configurations/GlobalConfigurationsTab.tsx'
+import WebDavExportImport from '@components/configurations/WebDavExportImport.tsx'
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -69,8 +69,7 @@ const ConfigurationPage = () => {
         navigate({from: configurationIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const tabProps = (tab: ConfigurationTab) =>
-        a11yProps('configuration', tab)
+    const tabProps = (tab: ConfigurationTab) => a11yProps('configuration', tab)
 
     const competitionTemplateAdministrationProps = useEntityAdministration<CompetitionTemplateDto>(
         t('event.competition.template.template'),
@@ -130,10 +129,7 @@ const ConfigurationPage = () => {
                     label={t('configuration.tabs.globalSettings')}
                     {...tabProps('global-settings')}
                 />
-                <Tab
-                    label={t('configuration.tabs.exportData')}
-                    {...tabProps('export-data')}
-                />
+                <Tab label={t('configuration.tabs.exportData')} {...tabProps('export-data')} />
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>
                 <CompetitionTemplateTable
@@ -245,10 +241,10 @@ const ConfigurationPage = () => {
                 </Stack>
             </TabPanel>
             <TabPanel index={'global-settings'} activeTab={activeTab}>
-                <GlobalConfigurationsTab/>
+                <GlobalConfigurationsTab />
             </TabPanel>
             <TabPanel index={'export-data'} activeTab={activeTab}>
-                <ExportData/>
+                <WebDavExportImport />
             </TabPanel>
         </Stack>
     )

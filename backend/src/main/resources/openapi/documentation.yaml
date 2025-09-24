@@ -5615,7 +5615,7 @@ paths:
           $ref: '#/components/responses/500'
   /webDAV/import:
     post:
-      operationId: importDatafromWebDAV
+      operationId: importDataFromWebDAV
       requestBody:
         required: true
         content:
@@ -5676,9 +5676,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/WebDAVExportType'
+                $ref: '#/components/schemas/WebDAVImportOptionsDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -10320,11 +10318,57 @@ components:
           type: integer
 
 
+    WebDAVImportOptionsDto:
+      type: object
+      required:
+        - data
+        - events
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVImportOptionsEventDto'
+
+    WebDAVImportOptionsEventDto:
+      type: object
+      required:
+        - eventId
+        - eventFolderName
+        - competitions
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventFolderName:
+          type: string
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVImportOptionsCompetitionDto'
+
+    WebDAVImportOptionsCompetitionDto:
+      type: object
+      required:
+        - competitionId
+        - competitionFolderName
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionFolderName:
+          type: string
+
+
     WebDAVImportRequest:
       type: object
       required:
         - folderName
         - selectedData
+        - selectedEvents
       properties:
         folderName:
           type: string
@@ -10332,3 +10376,21 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WebDAVExportType'
+        selectedEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVImportEventRequest'
+
+
+    WebDAVImportEventRequest:
+      type: object
+      required:
+        - eventFolderName
+        - competitionFolderNames
+      properties:
+        eventFolderName:
+          type: string
+        competitionFolderNames:
+          type: array
+          items:
+            type: string

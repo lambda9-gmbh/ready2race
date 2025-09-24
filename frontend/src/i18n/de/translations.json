@@ -1442,7 +1442,9 @@
       "selectData": "Zu importierende Daten auswählen",
       "error": {
         "noSelection": "Bitte wählen Sie mindestens einen Datentyp zum Importieren aus",
-        "failed": "Beim Importieren der Daten ist ein Fehler aufgetreten"
+        "failed": "Beim Importieren der Daten ist ein Fehler aufgetreten",
+        "loadFolders": "Beim Laden der verfügbaren Ordner vom WebDAV-Server ist ein Fehler aufgetreten",
+        "loadOptions": "Beim Laden der verfügbaren Importoptionen ist ein Fehler aufgetreten"
       },
       "success": "Import erfolgreich gestartet"
     }

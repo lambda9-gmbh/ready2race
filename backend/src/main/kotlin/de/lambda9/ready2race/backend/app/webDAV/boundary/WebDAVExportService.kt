@@ -94,17 +94,6 @@ object WebDAVExportService {
         val processId = !WebDAVExportProcessRepo.create(exportProcess).orDie()
 
 
-        fun getFolderName(documentType: WebDAVExportType): String? {
-            return when (documentType) {
-                WebDAVExportType.REGISTRATION_RESULTS -> "Registration-Result"
-                WebDAVExportType.INVOICES -> "Invoices"
-                WebDAVExportType.DOCUMENTS -> "Documents"
-                WebDAVExportType.RESULTS -> "Results"
-                WebDAVExportType.DB_COMPETITION, WebDAVExportType.START_LISTS -> "Competitions"
-                else -> null
-            }
-        }
-
         fun buildExportFolderRecord(
             parentFolder: UUID?,
             path: String,
@@ -130,7 +119,7 @@ object WebDAVExportService {
                 eventName = events[eventId] ?: "",
                 documentType = documentType.name,
                 dataReference = dataReference,
-                path = "${request.name}/${events[eventId]}/${getFolderName(documentType)}" + additionalPath,
+                path = "${request.name}/${events[eventId]}/${getEventContentFolderName(documentType)}" + additionalPath,
                 parentFolder = parentFolder
             )
         }
@@ -245,6 +234,10 @@ object WebDAVExportService {
         // EXPORT DATA RECORDS
         val exportDataRecords: MutableList<Pair<WebDAVExportType, WebdavExportDataRecord>> = mutableListOf()
 
+
+        val competitionsForEventExport: MutableMap<UUID, UUID> = mutableMapOf()
+        val dataExportCompetitionNames: MutableMap<UUID, String> = mutableMapOf()
+
         events.forEach { (eventId, eventName) ->
             val pathStart = "${request.name}/$eventName"
             val eventFolder = buildExportFolderRecord(
@@ -256,7 +249,7 @@ object WebDAVExportService {
             fun addExportDocFolderRecord(type: WebDAVExportType): WebdavExportFolderRecord {
                 val record = buildExportFolderRecord(
                     parentFolder = eventFolder.id,
-                    path = "$pathStart/${getFolderName(type)}",
+                    path = "$pathStart/${getEventContentFolderName(type)}",
                 )
                 exportFolderTypeRecords.add(record)
                 return record
@@ -375,10 +368,12 @@ object WebDAVExportService {
                             webdavExportProcess = processId,
                             documentType = WebDAVExportType.DB_COMPETITION.name,
                             dataReference = competition.id,
-                            path = "$pathStart/${getFolderName(WebDAVExportType.DB_COMPETITION)}/${competitionFolderNames[competition.id]}",
+                            path = "$pathStart/${getEventContentFolderName(WebDAVExportType.DB_COMPETITION)}/${competitionFolderNames[competition.id]}",
                             parentFolder = competitionFolderRecords[competition.id]!!.id
                         )
                     )
+                    competitionsForEventExport[competition.id!!] = eventId
+                    dataExportCompetitionNames[competition.id!!] = competitionFolderNames[competition.id]!!
                 }
             }
 
@@ -411,24 +406,34 @@ object WebDAVExportService {
 
         // ---------------------- DATABASE EXPORTS --------------------------
 
-        val databaseExportTypes = request.selectedDatabaseExports.filter {
-            it.name.startsWith("DB_")
+        val manifestFile = !ManifestExport.createExportFile(
+            exportedTypes = request.selectedDatabaseExports,
+            exportedEvents = request.events
+                .map { event ->
+                    ManifestExport.ManifestEventExport(
+                        eventId = event.eventId,
+                        folderName = events[event.eventId]!!,
+                        competitions = event.selectedCompetitions.map { competitionId ->
+                            ManifestExport.ManifestCompetitionExport(
+                                competitionId = competitionId,
+                                folderName = dataExportCompetitionNames[competitionId]!!
+                            )
+                        }
+                    )
+                }
+        )
+        val response = sendFile(client, config.webDAV, manifestFile, path = "${request.name}/${manifestFile.name}")
+        val content = if (!response.status.isSuccess()) response.bodyAsText() else null
+        !KIO.failOn(!response.status.isSuccess()) {
+            logger.error { "Export of manifest.json was unsuccessful. $content" }
+            client.close()
+            WebDAVError.ManifestExportFailed
         }
 
-        if (databaseExportTypes.isNotEmpty()) {
-            val manifestFile = !ManifestExport.createExportFile(databaseExportTypes)
-            val response = sendFile(client, config.webDAV, manifestFile, path = "${request.name}/${manifestFile.name}")
-            val content = if (!response.status.isSuccess()) response.bodyAsText() else null
-            !KIO.failOn(!response.status.isSuccess()) {
-                logger.error { "Export of manifest.json was unsuccessful. $content" }
-                client.close()
-                WebDAVError.ManifestExportFailed
-            }
-        }
 
         // add exportData records
         exportDataRecords.addAll(
-            databaseExportTypes.map {
+            request.selectedDatabaseExports.map {
                 it to
                     WebdavExportDataRecord(
                         id = UUID.randomUUID(),
@@ -444,16 +449,29 @@ object WebDAVExportService {
         // add a dependency for each record if it is dependent on other records.
         val dependencyRecords = exportDataRecords.flatMap { (exportType, exportRecord) ->
             webDAVExportTypeDependencies[exportType]?.flatMap { dependentOnType ->
-                // There could be multiple records of one DB_ type like COMPETITION - so we get all records with that type
-                val dependentOnRecords = exportDataRecords.filter { it.first == dependentOnType }.map { it.second }
-                dependentOnRecords.map { dependentOnRecord ->
-                    WebdavExportDependencyRecord(
-                        webdavExportData = exportRecord.id,
-                        dependingOn = dependentOnRecord.id
+
+                // This case handles the dependency of a competition to a SPECIFIC event export, not just ALL event exports
+                if (exportType == WebDAVExportType.DB_COMPETITION && dependentOnType == WebDAVExportType.DB_EVENT) {
+                    val eventId = competitionsForEventExport[exportRecord.dataReference]!!
+                    listOf(
+                        WebdavExportDependencyRecord(
+                            webdavExportData = exportRecord.id,
+                            dependingOn = exportDataRecords.first { it.first == WebDAVExportType.DB_EVENT && it.second.dataReference == eventId }.second.id
+                        )
                     )
+                } else {
+                    // Needs to be a list since there could be multiple records of one DB_ type like COMPETITION - so we get all records with that type
+                    val dependentOnRecords = exportDataRecords.filter { it.first == dependentOnType }.map { it.second }
+                    dependentOnRecords.map { dependentOnRecord ->
+                        WebdavExportDependencyRecord(
+                            webdavExportData = exportRecord.id,
+                            dependingOn = dependentOnRecord.id
+                        )
+                    }
                 }
 
             } ?: emptyList()
+
         }
         !WebDAVExportDependencyRepo.create(dependencyRecords).orDie()
 
@@ -464,7 +482,6 @@ object WebDAVExportService {
     }
 
     // Todo: @evaluate if a rollback might be a good option in case of errors (except for the error update in the records)
-    // Todo: Set errors to dependent export_data entries if the depending_on export fails
     // Todo: If there is an error that will definitely stay - set an error to the other files to reduce load on server
     suspend fun exportNext(env: JEnv): App<WebDAVError.WebDAVInternError, Unit> =
         coroutineScope {
@@ -697,6 +714,17 @@ object WebDAVExportService {
                 unit
             }
         }
+
+    fun getEventContentFolderName(documentType: WebDAVExportType): String? {
+        return when (documentType) {
+            WebDAVExportType.REGISTRATION_RESULTS -> "Registration-Result"
+            WebDAVExportType.INVOICES -> "Invoices"
+            WebDAVExportType.DOCUMENTS -> "Documents"
+            WebDAVExportType.RESULTS -> "Results"
+            WebDAVExportType.DB_COMPETITION, WebDAVExportType.START_LISTS -> "Competitions"
+            else -> null
+        }
+    }
 
     private suspend fun sendFile(client: HttpClient, config: Config.WebDAV, file: File, path: String): HttpResponse =
         coroutineScope {

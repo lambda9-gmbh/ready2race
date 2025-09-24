@@ -8,10 +8,7 @@ import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExp
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDataRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDependencyRepo
 import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportProcessRepo
-import de.lambda9.ready2race.backend.app.webDAV.entity.ManifestExport
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVExportType
-import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVImportRequest
+import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.bankAccounts.DataBankAccountsExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competition.DataCompetitionExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.competitionCategories.DataCompetitionCategoriesExport
@@ -135,7 +132,7 @@ object WebDAVImportService {
         return folderNames.distinct()
     }
 
-    suspend fun CallComprehensionScope.getImportOptionTypes(folderName: String): App<WebDAVError.WebDAVExternError, ApiResponse.ListDto<WebDAVExportType>> {
+    suspend fun CallComprehensionScope.getImportOptionTypes(folderName: String): App<WebDAVError.WebDAVExternError, ApiResponse.Dto<WebDAVImportOptionsDto>> {
         val config = !accessConfig()
         if (config.webDAV == null) {
             return KIO.fail(WebDAVError.ConfigIncomplete)
@@ -171,15 +168,31 @@ object WebDAVImportService {
 
         client.close()
 
-        return KIO.ok(ApiResponse.ListDto(manifest.exportedTypes))
+        return KIO.ok(
+            ApiResponse.Dto(
+                WebDAVImportOptionsDto(
+                    data = manifest.exportedTypes,
+                    events = manifest.exportedEvents.map { event ->
+                        WebDAVImportOptionsDto.WebDAVImportOptionsEventDto(
+                            eventId = event.eventId,
+                            eventFolderName = event.folderName,
+                            competitions = event.competitions.map { comp ->
+                                WebDAVImportOptionsDto.WebDAVImportOptionsCompetitionDto(
+                                    competitionId = comp.competitionId,
+                                    competitionFolderName = comp.folderName
+                                )
+                            }
+                        )
+                    }
+                )))
     }
 
 
     fun initializeImportData(
-        request: WebDAVImportRequest, userId: UUID
+        request: WebDAVImportRequest,
+        userId: UUID
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
-        !KIO.failOn(request.selectedData.any { !it.name.startsWith("DB_") }) { WebDAVError.OnlyDataImportsAllowed }
         !checkRequestTypeDependencies(request.selectedData)
 
         val importProcess = WebdavImportProcessRecord(
@@ -192,13 +205,14 @@ object WebDAVImportService {
 
 
         fun buildImportDataRecord(
-            dataType: WebDAVExportType
+            dataType: WebDAVExportType,
+            customPath: String? = null
         ): WebdavImportDataRecord {
             return WebdavImportDataRecord(
                 id = UUID.randomUUID(),
                 webdavImportProcess = processId,
                 documentType = dataType.name,
-                path = "${request.folderName}/${WebDAVService.getWebDavDataJsonFileName(dataType)}",
+                path = customPath ?: "${request.folderName}/${WebDAVService.getWebDavDataJsonFileName(dataType)}",
                 importedAt = null,
                 errorAt = null,
                 error = null
@@ -208,6 +222,10 @@ object WebDAVImportService {
         val importDataRecords = mutableListOf<WebdavImportDataRecord>()
         val importDataIds = mutableMapOf<WebDAVExportType, UUID>()
 
+
+        val dependencyRecords = mutableListOf<WebdavImportDependencyRecord>()
+
+
         // Create import data records for each selected type
         request.selectedData.forEach { dataType ->
             val record = buildImportDataRecord(dataType)
@@ -215,21 +233,57 @@ object WebDAVImportService {
             importDataIds[dataType] = record.id
         }
 
+        request.selectedEvents.forEach { event ->
+            val eventImportRecord = buildImportDataRecord(
+                dataType = WebDAVExportType.DB_EVENT,
+                customPath = "${request.folderName}/${event.eventFolderName}/${
+                    WebDAVService.getWebDavDataJsonFileName(
+                        WebDAVExportType.DB_EVENT
+                    )
+                }"
+            )
+            importDataRecords.add(eventImportRecord)
+            event.competitions.forEach { competition ->
+                val competitionImportRecord = buildImportDataRecord(
+                    dataType = WebDAVExportType.DB_COMPETITION,
+                    customPath = "${request.folderName}/${event.eventFolderName}/${
+                        WebDAVExportService.getEventContentFolderName(
+                            WebDAVExportType.DB_COMPETITION
+                        )
+                    }/${
+                        competition.competitionFolderName
+                    }/${
+                        WebDAVService.getWebDavDataJsonFileName(
+                            WebDAVExportType.DB_COMPETITION
+                        )
+                    }"
+                )
+                importDataRecords.add(competitionImportRecord)
+
+                // Add dependencies from competition -> event
+                dependencyRecords.add(
+                    WebdavImportDependencyRecord(
+                        webdavImportData = competitionImportRecord.id,
+                        dependingOn = eventImportRecord.id
+                    )
+                )
+            }
+        }
+
         // Create import data records
         !WebDAVImportDataRepo.create(importDataRecords).orDie()
 
-
-        // Create dependencies using the dependency map
-        val dependencyRecords = mutableListOf<WebdavImportDependencyRecord>()
-
+        // add dependencies between types
         request.selectedData.forEach { dataType ->
             webDAVExportTypeDependencies[dataType]?.forEach { dependency ->
-                dependencyRecords.add(
-                    WebdavImportDependencyRecord(
-                        webdavImportData = importDataIds[dataType]!!,
-                        dependingOn = importDataIds[dependency]!! // can be called safely because of checkImportRequestTypeDependencies() earlier
+                if (dataType != WebDAVExportType.DB_COMPETITION || dependency != WebDAVExportType.DB_EVENT) { // This specific case is already handles before
+                    dependencyRecords.add(
+                        WebdavImportDependencyRecord(
+                            webdavImportData = importDataIds[dataType]!!,
+                            dependingOn = importDataIds[dependency]!! // can be called safely because of checkImportRequestTypeDependencies() earlier
+                        )
                     )
-                )
+                }
             }
         }
 
