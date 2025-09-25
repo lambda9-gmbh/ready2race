@@ -1078,7 +1078,8 @@
       "competitionTemplates": "Vorlagen Wettkampf",
       "eventElements": "Komponenten Veranstaltung",
       "competitionElements": "Komponenten Wettkampf",
-      "globalSettings": "Globale Einstellungen"
+      "globalSettings": "Globale Einstellungen",
+      "exportData": "Export / Import"
     },
     "ratingCategory": {
       "ratingCategory": "Wertungskategorie",
@@ -1373,6 +1374,10 @@
     }
   },
   "webDAV": {
+    "infoText": {
+      "part1": "Die Export-/Import-Funktion ermöglicht es Ihnen, Dokumente (systemgenerierte oder hochgeladene PDFs) und/oder in der Anwendung erstellte Konfigurationen auf einen externen Server (z.B. Nextcloud über WebDAV) zu speichern.",
+      "part2": "Diese exportierten Daten können später wieder importiert werden, um Ihre Veranstaltungskonfigurationen, Vorlagen und Einstellungen wiederherzustellen."
+    },
     "export": {
       "export": "Daten exportieren",
       "confirm": "Exportieren",
@@ -1451,11 +1456,7 @@
         "status": "Importstatus",
         "error": {
           "title": "Fehler beim Import",
-          "body": "{{files}} / {{total}} Dateien erfolgreich importiert.",
-          "info": {
-            "files": "{{errors}} Fehler bei PDF-Imports",
-            "data": "{{errors}} Fehler bei Daten-Imports"
-          }
+          "body": "{{files}} / {{total}} Dateien erfolgreich importiert."
         },
         "success": {
           "title": "Import erfolgreich",

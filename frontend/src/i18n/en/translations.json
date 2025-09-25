@@ -1079,7 +1079,7 @@
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings",
-      "exportData": "Export data"
+      "exportData": "Export / Import"
     },
     "ratingCategory": {
       "ratingCategory": "Rating category",
@@ -1373,6 +1373,10 @@
     }
   },
   "webDAV": {
+    "infoText": {
+      "part1": "The export/import functionality allows you to save documents (system-generated or uploaded PDFs) and/or configurations made in the application to an external server (e.g., Nextcloud via WebDAV).",
+      "part2": "This exported data can later be imported to restore your event configurations, templates, and settings."
+    },
     "export": {
       "export": "Export data",
       "confirm": "Export",

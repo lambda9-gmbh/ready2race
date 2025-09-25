@@ -1,4 +1,4 @@
-import {Box, Button, Stack} from '@mui/material'
+import {Alert, Box, Button, Stack} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {exportDataByWebDav, getEventsForExport} from '@api/sdk.gen.ts'
@@ -149,13 +149,23 @@ const WebDavExportImport = () => {
 
     return (
         <Stack spacing={4}>
-            <Box>
-                <Button variant={'contained'} onClick={openExportDialog}>
-                    {t('webDAV.export.export')}
-                </Button>
-                <Button variant={'contained'} onClick={() => openImportDialog()}>
-                    {t('webDAV.import.import')}
-                </Button>
+            <Alert severity="info">
+                <span>{t('webDAV.infoText.part1')}</span>
+                <br />
+                <br />
+                <span>{t('webDAV.infoText.part2')}</span>
+            </Alert>
+            <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 4}}>
+                <Box sx={{flex: 1, display: 'flex', justifyContent: 'center'}}>
+                    <Button variant={'contained'} onClick={openExportDialog} sx={{mr: 2}}>
+                        {t('webDAV.export.export')}
+                    </Button>
+                </Box>
+                <Box sx={{flex: 1, display: 'flex', justifyContent: 'center'}}>
+                    <Button variant={'contained'} onClick={() => openImportDialog()}>
+                        {t('webDAV.import.import')}
+                    </Button>
+                </Box>
             </Box>
             <ExportDialog
                 open={dialogOpen}

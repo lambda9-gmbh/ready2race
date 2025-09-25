@@ -76,7 +76,7 @@ const ExportStatusCard = memo(({isExport, status}: ExportStatusCardProps) => {
                                                 {status.filesWithError > 0 && (
                                                     <Typography>
                                                         {t(
-                                                            `webDAV.${keyPrefix}.status.error.info.files`,
+                                                            `webDAV.export.status.error.info.files`,
                                                             {
                                                                 errors: status.filesWithError,
                                                             },
@@ -85,7 +85,7 @@ const ExportStatusCard = memo(({isExport, status}: ExportStatusCardProps) => {
                                                 )}
                                                 {status.dataWithError > 0 && (
                                                     <Typography>
-                                                        {t(`webDAV.${keyPrefix}.status.error.info.data`, {
+                                                        {t(`webDAV.export.status.error.info.data`, {
                                                             errors: status.dataWithError,
                                                         })}
                                                     </Typography>

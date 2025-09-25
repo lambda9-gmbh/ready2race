@@ -76,9 +76,9 @@ const WebDAVStatusDisplay = ({reloadExportStatus, reloadImportStatus}: Props) =>
     )
 
     return (
-        <Box sx={{display: 'flex', gap: 2, justifyContent: 'space-between', flexWrap: 'wrap'}}>
+        <Box sx={{display: 'flex', gap: 4, justifyContent: 'space-between', flexWrap: 'wrap'}}>
             {exportStatusData ? (
-                <Stack spacing={2} sx={{maxWidth: 600, flex: 1}}>
+                <Stack spacing={2} sx={{maxWidth: 600, minWidth: 400, flex: 1}}>
                     {exportStatusData
                         .sort((a, b) => (a.exportInitializedAt > b.exportInitializedAt ? -1 : 1))
                         .map(exportStatus => (
@@ -99,7 +99,7 @@ const WebDAVStatusDisplay = ({reloadExportStatus, reloadImportStatus}: Props) =>
                 </Alert>
             )}
             {importStatusData ? (
-                <Stack spacing={2} sx={{maxWidth: 600, flex: 1}}>
+                <Stack spacing={2} sx={{maxWidth: 600, minWidth: 400, flex: 1}}>
                     {importStatusData
                         .sort((a, b) => (a.importInitializedAt > b.importInitializedAt ? -1 : 1))
                         .map(importStatus => (
