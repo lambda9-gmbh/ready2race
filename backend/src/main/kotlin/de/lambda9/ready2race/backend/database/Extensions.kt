@@ -206,11 +206,35 @@ inline fun <reified R : Record, T : TableImpl<R>> T.parseJsonToRecords(data: Str
     val records = fetchFromJSON(data)
         .into(R::class.java)
 
-    records.map { it.changed(true) }
+    records.forEach { it.changed(true) }
     records
 }
 
 fun <R : Record, T : TableImpl<R>> T.insertJsonData(data: String) = Jooq.query {
     this.loadInto(this@insertJsonData).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
 }
+
+// Use this if there is more than one primary key or a uniqueConstraint is present
+inline fun <reified R : Record, T : TableImpl<R>> T.insertJsonDataIgnoringUniqueIndexes(data: String) = Jooq.query {
+    val records = fetchFromJSON(data)
+        .into(R::class.java)
+
+    records.forEach { it.changed(true) }
+
+    records
+        .forEach { record ->
+            val hasNonNullValues = (0 until record.size()).any { index ->
+                record.get(index) != null
+            }
+
+            if (hasNonNullValues) {
+                insertInto(this@insertJsonDataIgnoringUniqueIndexes)
+                    .set(record)
+                    .onConflictDoNothing()
+                    .execute()
+            }
+        }
+}
+
+
 

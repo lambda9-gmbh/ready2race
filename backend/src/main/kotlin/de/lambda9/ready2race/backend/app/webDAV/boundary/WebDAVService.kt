@@ -18,13 +18,14 @@ object WebDAVService {
         return URLBuilder(
             protocol = URLProtocol.createOrDefault(webDAVConfig.urlScheme),
             host = webDAVConfig.host,
-            pathSegments = listOf(
-                webDAVConfig.path,
+            pathSegments = listOfNotNull(
+                webDAVConfig.path.takeIf { webDAVConfig.path != "" },
                 "remote.php",
                 "dav",
                 "files",
                 webDAVConfig.authUser,
-            ) + pathSegments.split("/").filter { it.isNotEmpty() },
+            ) + (webDAVConfig.folderPath?.split("/")?.filter { it.isNotEmpty() } ?: emptyList())
+                + pathSegments.split("/").filter { it.isNotEmpty() },
         ).buildString()
     }
 

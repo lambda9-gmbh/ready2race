@@ -40,6 +40,6 @@ object PayeeBankAccountRepo {
 
     fun getAsJson(eventId: UUID) = PAYEE_BANK_ACCOUNT.selectAsJson { EVENT.eq(eventId) }
 
-    fun insertJsonData(data: String) = PAYEE_BANK_ACCOUNT.insertJsonData(data)
+    fun insertJsonData(data: String) = PAYEE_BANK_ACCOUNT.insertJsonDataIgnoringUniqueIndexes(data)
 
 }

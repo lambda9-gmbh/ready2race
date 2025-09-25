@@ -51,6 +51,6 @@ object EventHasParticipantRequirementRepo {
 
     fun getAsJson(eventId: UUID) = EVENT_HAS_PARTICIPANT_REQUIREMENT.selectAsJson { EVENT.eq(eventId) }
 
-    fun insertJsonData(data: String) = EVENT_HAS_PARTICIPANT_REQUIREMENT.insertJsonData(data)
+    fun insertJsonData(data: String) = EVENT_HAS_PARTICIPANT_REQUIREMENT.insertJsonDataIgnoringUniqueIndexes(data)
 
 }

@@ -685,7 +685,7 @@ object CompetitionExecutionService {
         teams: List<Int?>,
         maxTeamsNeeded: Int
     ): Int {
-        val highestDefinedTeamCount = teams.maxBy { it ?: 0 } ?: 0
+        val highestDefinedTeamCount = teams.maxByOrNull { it ?: 0 } ?: 0
 
         val teamsForEachUndefinedTeams = if (teams.any { it == null }) {
             maxTeamsNeeded - teams.filterNotNull().sum() / teams.filter { it == null }.size

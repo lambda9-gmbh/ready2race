@@ -105,6 +105,7 @@ object WebDAVImportService {
         val matches = responsePattern.findAll(xmlResponse)
 
         for (match in matches) {
+            val href = match.groupValues[0]
             val responseContent = match.groupValues[1]
 
             // Check if this is a collection (folder)
@@ -118,16 +119,15 @@ object WebDAVImportService {
 
                 if (displayNameMatch != null) {
                     val displayName = displayNameMatch.groupValues[1]
-                    // Skip the root folder (which has the username as displayname)
-                    // We want actual subfolders only
-                    if (displayName.isNotEmpty() && !responseContent.contains("/dav/files/admin/</d:href>")) {
+                    if (displayName.isNotEmpty()) {
                         folderNames.add(displayName)
                     }
                 }
             }
         }
 
-        return folderNames.distinct()
+        // Remove root folder
+        return folderNames.drop(1).distinct()
     }
 
     suspend fun CallComprehensionScope.getImportOptionTypes(folderName: String): App<WebDAVError.WebDAVExternError, ApiResponse.Dto<WebDAVImportOptionsDto>> {

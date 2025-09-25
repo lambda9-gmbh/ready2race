@@ -40,6 +40,6 @@ object ContactInformationUsageRepo {
 
     fun getAsJson(eventId: UUID) = CONTACT_INFORMATION_USAGE.selectAsJson { EVENT.eq(eventId) }
 
-    fun insertJsonData(data: String) = CONTACT_INFORMATION_USAGE.insertJsonData(data)
+    fun insertJsonData(data: String) = CONTACT_INFORMATION_USAGE.insertJsonDataIgnoringUniqueIndexes(data)
 
 }
