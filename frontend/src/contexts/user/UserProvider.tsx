@@ -1,4 +1,4 @@
-import {PropsWithChildren, useEffect, useRef, useState} from 'react'
+import {PropsWithChildren, useEffect, useState} from 'react'
 import {AnonymousUser, AuthenticatedUser, User, UserContext} from './UserContext.ts'
 import {router} from '@routes'
 import {useFetch} from '@utils/hooks.ts'
@@ -13,7 +13,10 @@ type Session = {
     token: string
 }
 
-type UserData = LoginDto
+type UserData = {
+    userInfo: LoginDto | undefined
+    isInApp: boolean
+}
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(
@@ -23,22 +26,21 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const [token, setToken] = useState<string | null>(sessionStorage.getItem('session'))
     const [ready, setReady] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const prevLoggedIn = useRef(false)
-    const loggedIn = Boolean(userData)
 
     const navigate = router.navigate
 
     useEffect(() => {
         const f = async (res: Response) => {
             if (res.status === 401) {
-                await logout()
+                const isInApp = router.state.resolvedLocation.pathname.startsWith('/app')
+                await logout(isInApp)
             }
             return res
         }
 
         client.interceptors.response.use(f)
         return () => client.interceptors.response.eject(f)
-    }, [client])
+    }, [])
 
     useEffect(() => {
         if (token) {
@@ -50,15 +52,19 @@ const UserProvider = ({children}: PropsWithChildren) => {
             client.interceptors.request.use(f)
             return () => client.interceptors.request.eject(f)
         }
-    }, [token, client])
+    }, [token])
 
     // TODO: @Refactor: should be possible without this useEffect
     useEffect(() => {
-        if (prevLoggedIn.current || loggedIn) {
-            prevLoggedIn.current = loggedIn
+        if (userData) {
             if (ready) {
-                const redirect = router.state.resolvedLocation.search.redirect
-                navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+                const loggedIn = userData.userInfo !== undefined
+                if (userData.isInApp) {
+                    navigate({to: loggedIn ? '/app' : '/app/login'})
+                } else {
+                    const redirect = router.state.resolvedLocation.search.redirect
+                    navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+                }
             } else {
                 setReady(true)
             }
@@ -79,7 +85,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         },
     })
 
-    const login = (data: LoginDto, headers?: Headers) => {
+    const login = (data: LoginDto, headers?: Headers, isInApp: boolean = false) => {
         if (headers) {
             const sessionHeader = headers.get('X-Api-Session')
             if (sessionHeader === null) {
@@ -89,14 +95,14 @@ const UserProvider = ({children}: PropsWithChildren) => {
             sessionStorage.setItem('session', token)
             setToken(token)
         }
-        setUserData({...data})
+        setUserData({userInfo: data, isInApp})
     }
 
-    const logout = async () => {
+    const logout = async (isInApp: boolean = false) => {
         const {error} = await userLogout()
         if (error === undefined) {
             sessionStorage.removeItem('session')
-            setUserData(undefined)
+            setUserData({userInfo: undefined, isInApp})
             setToken(null)
         }
     }
@@ -107,8 +113,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }
 
     let userValue: User
-
-    if (!userData) {
+    const userInfo = userData?.userInfo
+    if (!userInfo) {
         userValue = {
             language,
             changeLanguage,
@@ -119,7 +125,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         } satisfies AnonymousUser
     } else {
         const checkPrivilege = (privilege: Privilege): boolean =>
-            userData.privileges.some(
+            userInfo.privileges.some(
                 p =>
                     p.action === privilege.action &&
                     p.resource === privilege.resource &&
@@ -127,7 +133,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
             )
 
         const getPrivilegeScope = (action: Action, resource: Resource): Scope | undefined =>
-            userData.privileges
+            userInfo.privileges
                 .filter(p => p.action === action && p.resource === resource)
                 .reduce<Scope | undefined>((scope, privilege) => {
                     if (scope === undefined) {
@@ -143,8 +149,8 @@ const UserProvider = ({children}: PropsWithChildren) => {
             language,
             changeLanguage,
             loggedIn: true,
-            id: userData.id,
-            clubId: userData.clubId,
+            id: userInfo.id,
+            clubId: userInfo.clubId,
             login,
             logout,
             checkPrivilege,
