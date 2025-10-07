@@ -2,37 +2,22 @@ import {Box, Button, Stack, Typography} from '@mui/material'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
 import {getUserAppRights} from "@components/qrApp/common.ts";
-import {useFeedback, useFetch} from "@utils/hooks.ts";
-import {getEvents} from "@api/sdk.gen.ts";
 import LogoutIcon from '@mui/icons-material/Logout';
 import {useUser} from "@contexts/user/UserContext.ts";
 import {useEffect} from "react";
 
 const QrEventsPage = () => {
     const {t} = useTranslation()
-    const feedback = useFeedback()
-    const {setEvents, setEventId, navigateTo, setAppFunction} = useAppSession()
+    const {events, setEventId, navigateTo, setAppFunction} = useAppSession()
     const user = useUser()
     const availableAppFunctions = getUserAppRights(user)
 
-    const {data} = useFetch(signal => getEvents({signal}), {
-        onResponse: response => {
-            if (response.data) {
-                setEvents(response.data.data)
-            }
-            if (response.error) {
-                feedback.error(t('common.load.error.multiple.short', {entity: t('event.event')}))
-            }
-        },
-        deps: [],
-    })
-
     useEffect(() => {
-        if (data && data.data.length === 1) {
-            setEventId(data.data[0].id)
+        if (events && events.length === 1) {
+            setEventId(events[0].id)
             goForward(true)
         }
-    }, [data]);
+    }, [events])
 
     function goForward(replace: boolean = false) {
         if (availableAppFunctions.length === 1) {
@@ -42,13 +27,13 @@ const QrEventsPage = () => {
             navigateTo("APP_Function_Select", replace)
         }
     }
-    return (
+    return (events &&
         <Box sx={{width: 1, maxWidth: 600}}>
             <Stack spacing={2} sx={{width: 1}}>
                 <Typography variant="h4" textAlign="center" gutterBottom>
                     {t('qrEvents.title')}
                 </Typography>
-                {data?.data?.map(event => (
+                {events.map(event => (
                     <Button
                         key={event.id}
                         onClick={() => {

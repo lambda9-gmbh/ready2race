@@ -14,17 +14,27 @@ type Session = {
 }
 
 type UserData = {
-    userInfo: LoginDto | undefined
+    userInfo: LoginDto
+    token: string
     isInApp: boolean
+    authStatus: 'authenticated'
+} | {
+    userInfo: LoginDto | undefined
+    token: string | null
+    isInApp: boolean
+    authStatus: 'pending' | 'anonymous'
 }
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(
         isLanguage(i18next.language) ? i18next.language : fallbackLng,
     )
-    const [userData, setUserData] = useState<UserData>()
-    const [token, setToken] = useState<string | null>(sessionStorage.getItem('session'))
-    const [ready, setReady] = useState(false)
+    const [userData, setUserData] = useState<UserData>({
+        userInfo: undefined,
+        token: sessionStorage.getItem('session'),
+        isInApp: false,
+        authStatus: "pending",
+    })
     const [error, setError] = useState<string | null>(null)
 
     const navigate = router.navigate
@@ -43,41 +53,55 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }, [])
 
     useEffect(() => {
-        if (token) {
+        if (userData.authStatus !== "pending") {
+            const loggedIn = userData.userInfo !== undefined
+            if (userData.isInApp) {
+                navigate({to: loggedIn ? '/app' : '/app/login'})
+            } else {
+                const redirect = router.state.resolvedLocation.search.redirect
+                navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+            }
+        } else {
+            if (userData.userInfo && userData.token) {
+                setUserData({
+                    userInfo: userData.userInfo,
+                    token: userData.token,
+                    isInApp: userData.isInApp,
+                    authStatus: 'authenticated'
+                })
+            } else {
+                setUserData(prevState => ({
+                    userInfo: undefined,
+                    token: null,
+                    isInApp: prevState.isInApp,
+                    authStatus: "anonymous"
+                }))
+            }
+        }
+        if (userData.token) {
             const f = async (req: Request) => {
-                req.headers.set('X-Api-Session', JSON.stringify({token}))
+                req.headers.set('X-Api-Session', JSON.stringify({token: userData.token}))
                 return req
             }
 
             client.interceptors.request.use(f)
             return () => client.interceptors.request.eject(f)
         }
-    }, [token])
 
-    // TODO: @Refactor: should be possible without this useEffect
-    useEffect(() => {
-        if (userData) {
-            if (ready) {
-                const loggedIn = userData.userInfo !== undefined
-                if (userData.isInApp) {
-                    navigate({to: loggedIn ? '/app' : '/app/login'})
-                } else {
-                    const redirect = router.state.resolvedLocation.search.redirect
-                    navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
-                }
-            } else {
-                setReady(true)
-            }
-        }
     }, [userData])
 
     useFetch(signal => checkUserLogin({signal}), {
         onResponse: ({data, response}) => {
             if (response.status === 200 && data !== undefined) {
-                login(data)
+                setAuth(data)
             } else {
                 sessionStorage.removeItem('session')
-                setReady(true)
+                setUserData(prevState => ({
+                    userInfo: undefined,
+                    token: null,
+                    isInApp: prevState.isInApp,
+                    authStatus: "anonymous"
+                }))
             }
         },
         onPanic: error => {
@@ -85,25 +109,38 @@ const UserProvider = ({children}: PropsWithChildren) => {
         },
     })
 
-    const login = (data: LoginDto, headers?: Headers, isInApp: boolean = false) => {
+    const setAuth = (data: LoginDto, headers?: Headers, isInApp: boolean = false) => {
+        let token = userData.token
+
         if (headers) {
             const sessionHeader = headers.get('X-Api-Session')
             if (sessionHeader === null) {
                 throw Error('Missing header on login response')
             }
-            const token = (JSON.parse(sessionHeader) as Session).token
+            token = (JSON.parse(sessionHeader) as Session).token
             sessionStorage.setItem('session', token)
-            setToken(token)
         }
-        setUserData({userInfo: data, isInApp})
+        if (!token) {
+            throw Error('Missing session token on login')
+        }
+        setUserData({
+            userInfo: data,
+            token,
+            isInApp,
+            authStatus: "pending"
+        })
     }
 
     const logout = async (isInApp: boolean = false) => {
         const {error} = await userLogout()
         if (error === undefined) {
             sessionStorage.removeItem('session')
-            setUserData({userInfo: undefined, isInApp})
-            setToken(null)
+            setUserData({
+                userInfo: undefined,
+                isInApp,
+                token: null,
+                authStatus: "anonymous"
+            })
         }
     }
 
@@ -113,19 +150,18 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }
 
     let userValue: User
-    const userInfo = userData?.userInfo
-    if (!userInfo) {
+    if (userData.authStatus !== 'authenticated') {
         userValue = {
             language,
             changeLanguage,
             loggedIn: false,
-            login,
+            login: setAuth,
             checkPrivilege: () => false,
             getPrivilegeScope: () => undefined,
         } satisfies AnonymousUser
     } else {
         const checkPrivilege = (privilege: Privilege): boolean =>
-            userInfo.privileges.some(
+            userData.userInfo.privileges.some(
                 p =>
                     p.action === privilege.action &&
                     p.resource === privilege.resource &&
@@ -133,7 +169,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
             )
 
         const getPrivilegeScope = (action: Action, resource: Resource): Scope | undefined =>
-            userInfo.privileges
+            userData.userInfo.privileges
                 .filter(p => p.action === action && p.resource === resource)
                 .reduce<Scope | undefined>((scope, privilege) => {
                     if (scope === undefined) {
@@ -149,9 +185,9 @@ const UserProvider = ({children}: PropsWithChildren) => {
             language,
             changeLanguage,
             loggedIn: true,
-            id: userInfo.id,
-            clubId: userInfo.clubId,
-            login,
+            id: userData.userInfo.id,
+            clubId: userData.userInfo.clubId,
+            login: setAuth,
             logout,
             checkPrivilege,
             getPrivilegeScope,
@@ -160,7 +196,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
 
     return (
         <UserContext.Provider value={userValue}>
-            {error !== null ? <PanicPage /> : ready && children}
+            {error !== null ? <PanicPage /> : userData.authStatus !== "pending" && children}
         </UserContext.Provider>
     )
 }

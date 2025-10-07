@@ -88,7 +88,7 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
             }
         },
         preCondition: () => user.loggedIn,
-        deps: [],
+        deps: [user.loggedIn],
     })
 
     const navigate = useNavigate()
