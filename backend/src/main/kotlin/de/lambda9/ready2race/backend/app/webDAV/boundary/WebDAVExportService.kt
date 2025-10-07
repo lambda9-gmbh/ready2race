@@ -706,6 +706,8 @@ object WebDAVExportService {
                     !WebDAVExportDataRepo.update(nextDataExport!!) {
                         exportedAt = LocalDateTime.now()
                     }.orDie()
+
+                    !WebDAVExportDependencyRepo.removeByExportDataId(nextDataExport.id).orDie()
                 }
 
                 client.close()

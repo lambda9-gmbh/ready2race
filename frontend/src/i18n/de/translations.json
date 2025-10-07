@@ -1375,7 +1375,7 @@
   },
   "webDAV": {
     "infoText": {
-      "part1": "Die Export-/Import-Funktion ermöglicht es Ihnen, Dokumente (systemgenerierte oder hochgeladene PDFs) und/oder in der Anwendung erstellte Konfigurationen auf einen externen Server (z.B. Nextcloud über WebDAV) zu speichern.",
+      "part1": "Die Export-/Import-Funktion ermöglicht es, Dokumente (systemgenerierte oder hochgeladene PDFs) und/oder in der Anwendung erstellte Konfigurationen auf einen externen Server (z.B. Nextcloud über WebDAV) zu speichern.",
       "part2": "Diese exportierten Daten können später wieder importiert werden, um Ihre Veranstaltungskonfigurationen, Vorlagen und Einstellungen wiederherzustellen."
     },
     "export": {
@@ -1384,6 +1384,7 @@
       "folderName": "Export Ordnername",
       "events": "Veranstaltungen",
       "data": "Zu exportierende Daten",
+      "applicationData": "Anwendungsdaten und Einstellungen",
       "types": {
         "registrationResults": "Meldeergebnisse",
         "invoices": "Rechnungen",
@@ -1406,8 +1407,8 @@
         "namedParticipants": "Benannte Teilnehmer",
         "competitionSetupTemplates": "Wettkampf-Setup-Vorlagen",
         "competitionTemplates": "Wettkampfvorlagen",
-        "event": "Veranstaltung",
-        "competition": "Wettkampf"
+        "event": "Veranstaltungsdaten",
+        "competition": "Wettkampfdaten"
       },
       "steps": {
         "name": "Name",
@@ -1416,8 +1417,10 @@
       },
       "error": {
         "nameConflict": "Der eingegebene Ordnername existiert bereits. Bitte wählen Sie einen anderen Namen.",
-        "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator."
+        "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator.",
+        "noDocumentTypeSelected": "Bitte wählen Sie mindestens einen Dokumenttyp für diese Veranstaltung aus."
       },
+      "noEventsAvailable": "Keine Veranstaltungen zum Exportieren verfügbar",
       "success": "Export erfolgreich gestartet",
       "status": {
         "status": "Exportstatus",
@@ -1451,6 +1454,7 @@
         "loadFolders": "Beim Laden der verfügbaren Ordner vom WebDAV-Server ist ein Fehler aufgetreten",
         "loadOptions": "Beim Laden der verfügbaren Importoptionen ist ein Fehler aufgetreten"
       },
+      "noEventsAvailable": "Keine Veranstaltungen zum Importieren verfügbar",
       "success": "Import erfolgreich gestartet",
       "status": {
         "status": "Importstatus",

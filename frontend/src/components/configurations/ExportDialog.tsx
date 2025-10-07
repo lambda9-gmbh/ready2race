@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo} from 'react'
+import React, {useCallback, useMemo, useState} from 'react'
 import {
     Box,
     Button,
@@ -12,6 +12,9 @@ import {
     Step,
     StepLabel,
     Divider,
+    Typography,
+    Card,
+    Stack,
 } from '@mui/material'
 import Grid2 from '@mui/material/Grid2'
 import BaseDialog from '@components/BaseDialog.tsx'
@@ -53,6 +56,9 @@ const ExportDialog = ({
     const {t} = useTranslation()
     const {isRequiredDependency} = useExportDependencies(formData, setFormData, activeStep)
 
+    // State for validation errors on each event (for step 1)
+    const [eventValidationErrors, setEventValidationErrors] = useState<Record<number, string>>({})
+
     const steps = [
         t('webDAV.export.steps.name'),
         t('webDAV.export.steps.documents'),
@@ -60,8 +66,28 @@ const ExportDialog = ({
     ]
 
     const handleNext = useCallback(() => {
+        // Validate step 1 (documents)
+        if (activeStep === 1) {
+            const errors: Record<number, string> = {}
+            formData.events.forEach((event, index) => {
+                if (event.docExportChecked) {
+                    const hasSelectedDocType = event.selectedDocExports.some(doc => doc.checked)
+                    if (!hasSelectedDocType) {
+                        errors[index] = t('webDAV.export.error.noDocumentTypeSelected')
+                    }
+                }
+            })
+
+            if (Object.keys(errors).length > 0) {
+                setEventValidationErrors(errors)
+                return
+            }
+        }
+
+        // Clear validation errors and proceed
+        setEventValidationErrors({})
         setActiveStep(activeStep + 1)
-    }, [activeStep, setActiveStep])
+    }, [activeStep, formData.events, setActiveStep, t])
 
     const handleBack = useCallback(() => {
         setActiveStep(activeStep - 1)
@@ -77,6 +103,12 @@ const ExportDialog = ({
 
     const handleEventDocExportToggle = useCallback(
         (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+            // Clear validation error for this event
+            setEventValidationErrors(prev => {
+                const newErrors = {...prev}
+                delete newErrors[index]
+                return newErrors
+            })
             setFormData(prev => ({
                 ...prev,
                 events: prev.events.map((evt, i) =>
@@ -89,6 +121,14 @@ const ExportDialog = ({
 
     const handleDocExportChange = useCallback(
         (index: number, typeIndex: number) => (checked: boolean) => {
+            // Clear validation error for this event when a document type is selected
+            if (checked) {
+                setEventValidationErrors(prev => {
+                    const newErrors = {...prev}
+                    delete newErrors[index]
+                    return newErrors
+                })
+            }
             setFormData(prev => ({
                 ...prev,
                 events: prev.events.map((evt, i) =>
@@ -256,50 +296,98 @@ const ExportDialog = ({
 
                 {activeStep === 1 && (
                     <Box>
-                        <SelectAllCheckbox
-                            {...documentsSelectState}
-                            onChange={handleSelectAllDocuments}
-                        />
-                        <Divider sx={{my: 1}} />
-                        {eventsData?.map((event, index) => (
-                            <Box key={event.id}>
-                                <FormInputLabel label={event.name} horizontal reverse required>
-                                    <Checkbox
-                                        checked={formData.events[index]?.docExportChecked || false}
-                                        onChange={handleEventDocExportToggle(index)}
-                                    />
-                                </FormInputLabel>
-                                {formData.events[index]?.docExportChecked && (
-                                    <Grid2 container sx={{px: 4, pt: 1}} spacing={1}>
-                                        {formData.events[index]?.selectedDocExports.map(
-                                            (docExport, typeIndex) => (
-                                                <Grid2 size={{xs: 12, sm: 6}} key={docExport.type}>
-                                                    <FormInputLabel
-                                                        label={
-                                                            webDavExportTypeNames.get(
-                                                                docExport.type,
-                                                            ) ?? '-'
+                        {!eventsData || eventsData.length === 0 ? (
+                            <Typography
+                                variant="body1"
+                                color="text.secondary"
+                                sx={{textAlign: 'center', py: 3}}>
+                                {t('webDAV.export.noEventsAvailable')}
+                            </Typography>
+                        ) : (
+                            <>
+                                <SelectAllCheckbox
+                                    {...documentsSelectState}
+                                    onChange={handleSelectAllDocuments}
+                                />
+                                <Divider sx={{my: 1}} />
+                                <Typography variant={'subtitle1'} gutterBottom>
+                                    {t('webDAV.export.types.documents')}
+                                </Typography>
+                                <Stack spacing={2}>
+                                    {eventsData.map((event, index) => (
+                                        <Box key={event.id}>
+                                            <Card
+                                                sx={{
+                                                    py: 1,
+                                                    border: eventValidationErrors[index]
+                                                        ? '1px solid'
+                                                        : undefined,
+                                                    borderColor: eventValidationErrors[index]
+                                                        ? 'error.main'
+                                                        : undefined,
+                                                }}>
+                                                <FormInputLabel
+                                                    label={event.name}
+                                                    horizontal
+                                                    reverse
+                                                    required>
+                                                    <Checkbox
+                                                        checked={
+                                                            formData.events[index]
+                                                                ?.docExportChecked || false
                                                         }
-                                                        horizontal
-                                                        reverse
-                                                        required>
-                                                        <Checkbox
-                                                            checked={docExport.checked}
-                                                            onChange={e =>
-                                                                handleDocExportChange(
-                                                                    index,
-                                                                    typeIndex,
-                                                                )(e.target.checked)
-                                                            }
-                                                        />
-                                                    </FormInputLabel>
-                                                </Grid2>
-                                            ),
-                                        )}
-                                    </Grid2>
-                                )}
-                            </Box>
-                        ))}
+                                                        onChange={handleEventDocExportToggle(index)}
+                                                    />
+                                                </FormInputLabel>
+                                                {formData.events[index]?.docExportChecked && (
+                                                    <Grid2 container sx={{px: 4}} spacing={1}>
+                                                        {formData.events[
+                                                            index
+                                                        ]?.selectedDocExports.map(
+                                                            (docExport, typeIndex) => (
+                                                                <Grid2
+                                                                    size={{xs: 12, sm: 6}}
+                                                                    key={docExport.type}>
+                                                                    <FormInputLabel
+                                                                        label={
+                                                                            webDavExportTypeNames.get(
+                                                                                docExport.type,
+                                                                            ) ?? '-'
+                                                                        }
+                                                                        horizontal
+                                                                        reverse
+                                                                        required>
+                                                                        <Checkbox
+                                                                            checked={
+                                                                                docExport.checked
+                                                                            }
+                                                                            onChange={e =>
+                                                                                handleDocExportChange(
+                                                                                    index,
+                                                                                    typeIndex,
+                                                                                )(e.target.checked)
+                                                                            }
+                                                                        />
+                                                                    </FormInputLabel>
+                                                                </Grid2>
+                                                            ),
+                                                        )}
+                                                    </Grid2>
+                                                )}
+                                            </Card>
+                                            {eventValidationErrors[index] && (
+                                                <Typography
+                                                    variant="caption"
+                                                    color="error"
+                                                    sx={{ml: 2, mt: 0.5, display: 'block'}}>
+                                                    {eventValidationErrors[index]}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            </>
+                        )}
                     </Box>
                 )}
 
@@ -309,46 +397,11 @@ const ExportDialog = ({
                             {...dataExportSelectState}
                             onChange={handleSelectAllDataExport}
                         />
-                        <Divider sx={{my: 1}} />
-                        {eventsData?.map((event, index) => (
-                            <Box>
-                                <FormInputLabel label={event.name} horizontal reverse required>
-                                    <Checkbox
-                                        checked={formData.events[index]?.exportData || false}
-                                        onChange={handleEventDataExportToggle(index)}
-                                    />
-                                </FormInputLabel>
-                                {formData.events[index]?.exportData &&
-                                    event.competitions &&
-                                    event.competitions.length > 0 && (
-                                        <Grid2 container spacing={1} sx={{px: 4, pt: 1}}>
-                                            {event.competitions.map((competition, compIndex) => (
-                                                <Grid2 key={competition.id} size={{xs: 12, sm: 6}}>
-                                                    <FormInputLabel
-                                                        label={`${competition.identifier} | ${competition.name}`}
-                                                        horizontal
-                                                        reverse
-                                                        required>
-                                                        <Checkbox
-                                                            checked={
-                                                                formData.events[index]
-                                                                    ?.selectedCompetitionIds[
-                                                                    compIndex
-                                                                ]?.checked || false
-                                                            }
-                                                            onChange={handleCompetitionToggle(
-                                                                index,
-                                                                compIndex,
-                                                            )}
-                                                        />
-                                                    </FormInputLabel>
-                                                </Grid2>
-                                            ))}
-                                        </Grid2>
-                                    )}
-                            </Box>
-                        ))}
+
                         <Divider sx={{my: 2}} />
+                        <Typography variant={'subtitle1'} gutterBottom>
+                            {t('webDAV.export.applicationData')}
+                        </Typography>
                         <Grid2 container spacing={1}>
                             {DATA_TYPE_OPTIONS.map((exportType, index) => {
                                 const isDisabled = isRequiredDependency(exportType)
@@ -372,6 +425,80 @@ const ExportDialog = ({
                                 )
                             })}
                         </Grid2>
+                        <Divider sx={{my: 2}} />
+                        {!eventsData || eventsData.length === 0 ? (
+                            <Typography color="text.secondary" sx={{textAlign: 'center', py: 3}}>
+                                {t('webDAV.export.noEventsAvailable')}
+                            </Typography>
+                        ) : (
+                            <>
+                                <Typography variant={'subtitle1'} gutterBottom>
+                                    {t('webDAV.export.types.event')}
+                                </Typography>
+                                <Stack spacing={2}>
+                                    {eventsData.map((event, index) => (
+                                        <Card key={event.id} sx={{py: 1}}>
+                                            <FormInputLabel
+                                                label={event.name}
+                                                horizontal
+                                                reverse
+                                                required>
+                                                <Checkbox
+                                                    checked={
+                                                        formData.events[index]?.exportData || false
+                                                    }
+                                                    onChange={handleEventDataExportToggle(index)}
+                                                />
+                                            </FormInputLabel>
+                                            {formData.events[index]?.exportData &&
+                                                event.competitions &&
+                                                event.competitions.length > 0 && (
+                                                    <Grid2
+                                                        container
+                                                        spacing={1}
+                                                        sx={{px: 4, pt: 1}}>
+                                                        <Grid2 size={12}>
+                                                            <Typography variant={'subtitle2'}>
+                                                                {t(
+                                                                    'event.competition.competitions',
+                                                                )}
+                                                            </Typography>
+                                                        </Grid2>
+                                                        {event.competitions.map(
+                                                            (competition, compIndex) => (
+                                                                <Grid2
+                                                                    key={competition.id}
+                                                                    size={{xs: 12, sm: 6}}>
+                                                                    <FormInputLabel
+                                                                        label={`${competition.identifier} | ${competition.name}`}
+                                                                        horizontal
+                                                                        reverse
+                                                                        required>
+                                                                        <Checkbox
+                                                                            checked={
+                                                                                formData.events[
+                                                                                    index
+                                                                                ]
+                                                                                    ?.selectedCompetitionIds[
+                                                                                    compIndex
+                                                                                ]?.checked || false
+                                                                            }
+                                                                            onChange={handleCompetitionToggle(
+                                                                                index,
+                                                                                compIndex,
+                                                                            )}
+                                                                        />
+                                                                    </FormInputLabel>
+                                                                </Grid2>
+                                                            ),
+                                                        )}
+                                                    </Grid2>
+                                                )}
+                                        </Card>
+                                    ))}
+                                </Stack>
+                            </>
+                        )}
                     </Box>
                 )}
             </DialogContent>

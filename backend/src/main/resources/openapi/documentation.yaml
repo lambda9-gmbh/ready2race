@@ -5921,6 +5921,7 @@ components:
         - APP_QR_MANAGEMENT
         - APP_COMPETITION_CHECK
         - APP_CATERER
+        - WEB_DAV
 
     Scope:
       type: string

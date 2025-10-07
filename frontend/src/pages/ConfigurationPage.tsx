@@ -48,6 +48,8 @@ import RatingCategoryPanel from '@components/ratingCategory/RatingCategoryPanel.
 import MatchResultImportConfigPanel from '@components/matchResultImportConfig/MatchResultImportConfigPanel.tsx'
 import GlobalConfigurationsTab from '@components/configurations/GlobalConfigurationsTab.tsx'
 import WebDavExportImport from '@components/configurations/WebDavExportImport.tsx'
+import {readWebDavGlobal} from '@authorization/privileges.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const CONFIGURATION_TABS = [
     'competition-templates',
@@ -60,6 +62,7 @@ export type ConfigurationTab = (typeof CONFIGURATION_TABS)[number]
 
 const ConfigurationPage = () => {
     const {t} = useTranslation()
+    const user = useUser()
 
     const {tab} = configurationIndexRoute.useSearch()
     const activeTab = tab ?? 'competition-templates'
@@ -129,7 +132,9 @@ const ConfigurationPage = () => {
                     label={t('configuration.tabs.globalSettings')}
                     {...tabProps('global-settings')}
                 />
-                <Tab label={t('configuration.tabs.exportData')} {...tabProps('export-data')} />
+                {user.checkPrivilege(readWebDavGlobal) && (
+                    <Tab label={t('configuration.tabs.exportData')} {...tabProps('export-data')} />
+                )}
             </TabSelectionContainer>
             <TabPanel index={'competition-templates'} activeTab={activeTab}>
                 <CompetitionTemplateTable
@@ -243,9 +248,11 @@ const ConfigurationPage = () => {
             <TabPanel index={'global-settings'} activeTab={activeTab}>
                 <GlobalConfigurationsTab />
             </TabPanel>
-            <TabPanel index={'export-data'} activeTab={activeTab}>
-                <WebDavExportImport />
-            </TabPanel>
+            {user.checkPrivilege(readWebDavGlobal) && (
+                <TabPanel index={'export-data'} activeTab={activeTab}>
+                    <WebDavExportImport />
+                </TabPanel>
+            )}
         </Stack>
     )
 }

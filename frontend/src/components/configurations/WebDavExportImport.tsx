@@ -8,10 +8,13 @@ import {createInitialExportForm, createInitialImportForm} from './common'
 import ExportDialog from './ExportDialog'
 import ImportDialog from './ImportDialog'
 import WebDAVStatusDisplay from '@components/configurations/WebDAVStatusDisplay.tsx'
+import {updateWebDavGlobal} from '@authorization/privileges.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
 
 const WebDavExportImport = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const user = useUser()
 
     const [reloadExportStatus, setReloadExportStatus] = useState(false)
     const [reloadImportStatus, setReloadImportStatus] = useState(false)
@@ -149,24 +152,28 @@ const WebDavExportImport = () => {
 
     return (
         <Stack spacing={4}>
-            <Alert severity="info">
-                <span>{t('webDAV.infoText.part1')}</span>
-                <br />
-                <br />
-                <span>{t('webDAV.infoText.part2')}</span>
-            </Alert>
-            <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 4}}>
-                <Box sx={{flex: 1, display: 'flex', justifyContent: 'center'}}>
-                    <Button variant={'contained'} onClick={openExportDialog} sx={{mr: 2}}>
-                        {t('webDAV.export.export')}
-                    </Button>
-                </Box>
-                <Box sx={{flex: 1, display: 'flex', justifyContent: 'center'}}>
-                    <Button variant={'contained'} onClick={() => openImportDialog()}>
-                        {t('webDAV.import.import')}
-                    </Button>
-                </Box>
-            </Box>
+            {user.checkPrivilege(updateWebDavGlobal) && (
+                <>
+                    <Alert severity="info">
+                        <span>{t('webDAV.infoText.part1')}</span>
+                        <br />
+                        <br />
+                        <span>{t('webDAV.infoText.part2')}</span>
+                    </Alert>
+                    <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 4}}>
+                        <Box sx={{flex: 1, display: 'flex', justifyContent: 'center'}}>
+                            <Button variant={'contained'} onClick={openExportDialog} sx={{mr: 2}}>
+                                {t('webDAV.export.export')}
+                            </Button>
+                        </Box>
+                        <Box sx={{flex: 1, display: 'flex', justifyContent: 'center'}}>
+                            <Button variant={'contained'} onClick={() => openImportDialog()}>
+                                {t('webDAV.import.import')}
+                            </Button>
+                        </Box>
+                    </Box>
+                </>
+            )}
             <ExportDialog
                 open={dialogOpen}
                 onClose={closeExportDialog}

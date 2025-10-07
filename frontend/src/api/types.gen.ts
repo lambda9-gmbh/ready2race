@@ -1369,6 +1369,7 @@ export type Resource =
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
+    | 'WEB_DAV'
 
 export type RoleDto = {
     id: string

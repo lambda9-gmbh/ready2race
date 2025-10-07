@@ -18,7 +18,7 @@ fun Route.webDAV() {
             post {
 
                 call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal) // todo: new privilege
+                    val user = !authenticate(Privilege.UpdateWebDavGlobal)
 
                     val body = !receiveKIO(WebDAVExportRequest.example)
                     initializeExportData(body, user.id!!)
@@ -26,7 +26,7 @@ fun Route.webDAV() {
             }
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
+                    !authenticate(Privilege.ReadWebDavGlobal)
 
                     WebDAVExportService.getExportStatus()
                 }
@@ -37,7 +37,7 @@ fun Route.webDAV() {
 
             post {
                 call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateEventGlobal) // todo: new privilege
+                    val user = !authenticate(Privilege.UpdateWebDavGlobal)
 
                     val body = !receiveKIO(WebDAVImportRequest.example)
                     WebDAVImportService.initializeImportData(body, user.id!!)
@@ -46,7 +46,7 @@ fun Route.webDAV() {
 
             get {
                 call.respondComprehension {
-                    !authenticate(Privilege.ReadEventGlobal)
+                    !authenticate(Privilege.ReadWebDavGlobal)
 
                     WebDAVImportService.getImportStatus()
                 }
@@ -55,7 +55,7 @@ fun Route.webDAV() {
             route("/options") {
                 get {
                     call.respondComprehension {
-                        !authenticate(Privilege.ReadEventGlobal)
+                        !authenticate(Privilege.ReadWebDavGlobal)
 
                         getImportOptionFolders()
                     }
@@ -64,7 +64,7 @@ fun Route.webDAV() {
                 route("/{folderName}") {
                     get {
                         call.respondComprehension {
-                            !authenticate(Privilege.ReadEventGlobal)
+                            !authenticate(Privilege.ReadWebDavGlobal)
                             val folderName = !pathParam("folderName")
 
                             getImportOptionTypes(folderName)

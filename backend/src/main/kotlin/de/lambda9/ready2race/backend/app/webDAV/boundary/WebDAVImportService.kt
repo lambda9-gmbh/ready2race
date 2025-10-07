@@ -5,17 +5,20 @@ import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.checkRequestTypeDependencies
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService.webDAVExportTypeDependencies
-import de.lambda9.ready2race.backend.app.webDAV.control.*
+import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDataRepo
+import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportDependencyRepo
+import de.lambda9.ready2race.backend.app.webDAV.control.WebDAVImportProcessRepo
+import de.lambda9.ready2race.backend.app.webDAV.control.toDto
 import de.lambda9.ready2race.backend.app.webDAV.entity.*
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataBankAccountsExport
-import de.lambda9.ready2race.backend.app.webDAV.entity.DataCompetitionExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataCompetitionCategoriesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.DataCompetitionExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataCompetitionSetupTemplatesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataCompetitionTemplatesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataContactInformationExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataEmailIndividualTemplatesExport
-import de.lambda9.ready2race.backend.app.webDAV.entity.DataEventExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataEventDocumentTypesExport
+import de.lambda9.ready2race.backend.app.webDAV.entity.DataEventExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataFeesExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataMatchResultImportConfigsExport
 import de.lambda9.ready2race.backend.app.webDAV.entity.DataNamedParticipantsExport
@@ -280,7 +283,7 @@ object WebDAVImportService {
         // add dependencies between types
         request.selectedData.forEach { dataType ->
             webDAVExportTypeDependencies[dataType]?.forEach { dependency ->
-                if (dataType != WebDAVExportType.DB_COMPETITION || dependency != WebDAVExportType.DB_EVENT) { // This specific case is already handles before
+                if (!(dataType == WebDAVExportType.DB_COMPETITION && dependency == WebDAVExportType.DB_EVENT)) { // This specific case is already handles before
                     dependencyRecords.add(
                         WebdavImportDependencyRecord(
                             webdavImportData = importDataIds[dataType]!!,
@@ -502,6 +505,7 @@ object WebDAVImportService {
                 !WebDAVImportDataRepo.update(nextImport) {
                     importedAt = LocalDateTime.now()
                 }.orDie()
+                !WebDAVImportDependencyRepo.removeByImportDataId(nextImport.id).orDie() // Remove dependencies
 
                 unit
             }

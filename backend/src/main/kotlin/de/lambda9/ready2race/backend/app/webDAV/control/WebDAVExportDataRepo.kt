@@ -41,7 +41,7 @@ object WebDAVExportDataRepo {
             records.forEach { it.f() }
             batchUpdate(records).execute()
         }
-        
+
         records
     }
 }
