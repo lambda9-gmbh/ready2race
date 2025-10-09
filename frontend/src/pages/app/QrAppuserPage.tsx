@@ -1,6 +1,5 @@
 import {Alert, Button, Stack, Typography} from '@mui/material'
 import {useEffect, useState} from 'react'
-import {qrEventRoute, router} from '@routes'
 import {createCateringTransaction, deleteQrCode} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
@@ -17,19 +16,17 @@ import {useFeedback} from '@utils/hooks.ts'
 
 const QrAppuserPage = () => {
     const {t} = useTranslation()
-    const {qr, appFunction} = useAppSession()
-    const {eventId} = qrEventRoute.useParams()
+    const {qr, navigateTo, appFunction, eventId} = useAppSession()
     const [dialogOpen, setDialogOpen] = useState(false)
     const [loading, setLoading] = useState(false)
     const [submitting, setSubmitting] = useState(false)
-    const navigate = router.navigate
     const feedback = useFeedback()
 
     useEffect(() => {
         if (!qr.received) {
-            qr.reset(eventId)
+            navigateTo("APP_Scanner")
         }
-    }, [qr, appFunction, eventId, navigate])
+    }, [qr, navigateTo])
 
     const handleDelete = async () => {
         setLoading(true)
@@ -41,7 +38,7 @@ const QrAppuserPage = () => {
         }
         setDialogOpen(false)
         setLoading(false)
-        qr.reset(eventId);
+        navigateTo("APP_Scanner")
     }
 
     const handleCateringTransaction = async (price: string) => {
@@ -50,7 +47,7 @@ const QrAppuserPage = () => {
         setSubmitting(true)
         const {error} = await createCateringTransaction({
             body: {
-                appUserId: qr.response?.id!!,
+                appUserId: qr.response.id,
                 eventId: eventId,
                 price: price === '' ? '0' : price,
             }
@@ -61,7 +58,7 @@ const QrAppuserPage = () => {
             feedback.success(t('caterer.transactionSuccess'))
         }
         setSubmitting(false)
-        qr.reset(eventId)
+        navigateTo("APP_Scanner")
     }
 
     const allowed = [
@@ -105,7 +102,7 @@ const QrAppuserPage = () => {
                 </Button>
             )}
 
-            <Button variant={'outlined'} onClick={() => qr.reset(eventId)} fullWidth>
+            <Button variant={'outlined'} onClick={() => navigateTo('APP_Scanner')} fullWidth>
                 {t('common.back')}
             </Button>
 

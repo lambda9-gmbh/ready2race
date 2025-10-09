@@ -1315,7 +1315,8 @@
         "competitionCheck": "Wettkampf-Check",
         "eventRequirement": "Bedingungen prüfen",
         "caterer": "Verpflegung"
-      }
+      },
+      "switchEvent": "Event wechseln"
     },
     "forbidden": {
       "title": "Nicht berechtigt",
