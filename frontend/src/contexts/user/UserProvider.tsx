@@ -32,7 +32,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const [userData, setUserData] = useState<UserData>({
         userInfo: undefined,
         token: sessionStorage.getItem('session'),
-        isInApp: false,
+        isInApp: router.state.resolvedLocation.pathname.startsWith('/app'),
         authStatus: "pending",
     })
     const [error, setError] = useState<string | null>(null)
@@ -53,6 +53,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
     }, [])
 
     useEffect(() => {
+        console.log(userData)
         if (userData.authStatus !== "pending") {
             const loggedIn = userData.userInfo !== undefined
             if (userData.isInApp) {
@@ -93,7 +94,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
     useFetch(signal => checkUserLogin({signal}), {
         onResponse: ({data, response}) => {
             if (response.status === 200 && data !== undefined) {
-                setAuth(data)
+                setAuth(data, undefined, userData.isInApp)
             } else {
                 sessionStorage.removeItem('session')
                 setUserData(prevState => ({
