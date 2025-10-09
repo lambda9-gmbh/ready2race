@@ -13,23 +13,25 @@ type Session = {
     token: string
 }
 
-type UserData = {
-    userInfo: LoginDto
-    token: string
-    isInApp: boolean
-    authStatus: 'authenticated'
-} | {
-    userInfo: LoginDto | undefined
-    token: string
-    isInApp: boolean
-    authStatus: 'pending'
-}
+type UserData =
     | {
-    userInfo: undefined
-    token: null
-    isInApp: boolean
-    authStatus: 'pending' | 'anonymous'
-}
+          userInfo: LoginDto
+          token: string
+          isInApp: boolean
+          authStatus: 'authenticated'
+      }
+    | {
+          userInfo: LoginDto | undefined
+          token: string
+          isInApp: boolean
+          authStatus: 'pending'
+      }
+    | {
+          userInfo: undefined
+          token: null
+          isInApp: boolean
+          authStatus: 'pending' | 'anonymous'
+      }
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(
@@ -39,7 +41,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         userInfo: undefined,
         token: sessionStorage.getItem('session'),
         isInApp: router.state.resolvedLocation.pathname.startsWith('/app'),
-        authStatus: "pending",
+        authStatus: 'pending',
     })
     const [error, setError] = useState<string | null>(null)
 
@@ -61,32 +63,34 @@ const UserProvider = ({children}: PropsWithChildren) => {
     const prevAuthStatus = React.useRef<'pending' | 'anonymous' | 'authenticated'>('pending')
 
     useEffect(() => {
-        if (userData.authStatus !== "pending") {
-            const loggedIn = userData.userInfo !== undefined
-            if (prevAuthStatus.current !== 'pending' && (userData.authStatus === 'authenticated' || prevAuthStatus.current === 'authenticated')) {
+        if (userData.authStatus !== 'pending') {
+            const authenticated = userData.authStatus === 'authenticated'
+            if (
+                prevAuthStatus.current !== 'pending' &&
+                (authenticated || prevAuthStatus.current === 'authenticated')
+            ) {
                 if (userData.isInApp) {
-                    navigate({to: loggedIn ? '/app' : '/app/login'})
+                    navigate({to: authenticated ? '/app' : '/app/login'})
                 } else {
                     const redirect = router.state.resolvedLocation.search.redirect
-                    navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+                    navigate({to: authenticated ? (redirect ? redirect : '/dashboard') : '/'})
                 }
             }
             prevAuthStatus.current = userData.authStatus
         } else {
-            prevAuthStatus.current = 'pending'
             if (userData.userInfo && userData.token) {
                 setUserData({
                     userInfo: userData.userInfo,
                     token: userData.token,
                     isInApp: userData.isInApp,
-                    authStatus: 'authenticated'
+                    authStatus: 'authenticated',
                 })
-            } else if (!userData.userInfo && !userData.token){
+            } else if (!userData.userInfo && !userData.token) {
                 setUserData(prevState => ({
                     userInfo: undefined,
                     token: null,
                     isInApp: prevState.isInApp,
-                    authStatus: "anonymous"
+                    authStatus: 'anonymous',
                 }))
             }
         }
@@ -99,7 +103,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
             client.interceptors.request.use(f)
             return () => client.interceptors.request.eject(f)
         }
-
     }, [userData])
 
     useFetch(signal => checkUserLogin({signal}), {
@@ -112,7 +115,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                     userInfo: undefined,
                     token: null,
                     isInApp: prevState.isInApp,
-                    authStatus: "pending"
+                    authStatus: 'pending',
                 }))
             }
         },
@@ -139,7 +142,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
             userInfo: data,
             token,
             isInApp,
-            authStatus: "pending"
+            authStatus: 'pending',
         })
     }
 
@@ -151,7 +154,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 userInfo: undefined,
                 isInApp,
                 token: null,
-                authStatus: "pending"
+                authStatus: 'pending',
             })
         }
     }
@@ -208,7 +211,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
 
     return (
         <UserContext.Provider value={userValue}>
-            {error !== null ? <PanicPage /> : userData.authStatus !== "pending" && children}
+            {error !== null ? <PanicPage /> : userData.authStatus !== 'pending' && children}
         </UserContext.Provider>
     )
 }
