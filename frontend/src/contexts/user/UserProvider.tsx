@@ -1,4 +1,4 @@
-import {PropsWithChildren, useEffect, useState} from 'react'
+import React, {PropsWithChildren, useEffect, useState} from 'react'
 import {AnonymousUser, AuthenticatedUser, User, UserContext} from './UserContext.ts'
 import {router} from '@routes'
 import {useFetch} from '@utils/hooks.ts'
@@ -20,7 +20,13 @@ type UserData = {
     authStatus: 'authenticated'
 } | {
     userInfo: LoginDto | undefined
-    token: string | null
+    token: string
+    isInApp: boolean
+    authStatus: 'pending'
+}
+    | {
+    userInfo: undefined
+    token: null
     isInApp: boolean
     authStatus: 'pending' | 'anonymous'
 }
@@ -52,17 +58,22 @@ const UserProvider = ({children}: PropsWithChildren) => {
         return () => client.interceptors.response.eject(f)
     }, [])
 
+    const prevAuthStatus = React.useRef<'pending' | 'anonymous' | 'authenticated'>('pending')
+
     useEffect(() => {
-        console.log(userData)
         if (userData.authStatus !== "pending") {
             const loggedIn = userData.userInfo !== undefined
-            if (userData.isInApp) {
-                navigate({to: loggedIn ? '/app' : '/app/login'})
-            } else {
-                const redirect = router.state.resolvedLocation.search.redirect
-                navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+            if (prevAuthStatus.current !== 'pending' && (userData.authStatus === 'authenticated' || prevAuthStatus.current === 'authenticated')) {
+                if (userData.isInApp) {
+                    navigate({to: loggedIn ? '/app' : '/app/login'})
+                } else {
+                    const redirect = router.state.resolvedLocation.search.redirect
+                    navigate({to: loggedIn ? (redirect ? redirect : '/dashboard') : '/'})
+                }
             }
+            prevAuthStatus.current = userData.authStatus
         } else {
+            prevAuthStatus.current = 'pending'
             if (userData.userInfo && userData.token) {
                 setUserData({
                     userInfo: userData.userInfo,
@@ -70,7 +81,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                     isInApp: userData.isInApp,
                     authStatus: 'authenticated'
                 })
-            } else {
+            } else if (!userData.userInfo && !userData.token){
                 setUserData(prevState => ({
                     userInfo: undefined,
                     token: null,
@@ -101,7 +112,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                     userInfo: undefined,
                     token: null,
                     isInApp: prevState.isInApp,
-                    authStatus: "anonymous"
+                    authStatus: "pending"
                 }))
             }
         },
@@ -140,7 +151,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
                 userInfo: undefined,
                 isInApp,
                 token: null,
-                authStatus: "anonymous"
+                authStatus: "pending"
             })
         }
     }
