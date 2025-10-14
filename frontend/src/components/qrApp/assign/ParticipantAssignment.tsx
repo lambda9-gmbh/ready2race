@@ -4,18 +4,17 @@ import {
     Card,
     CardActionArea,
     CardContent,
-    InputAdornment,
     Stack,
     TextField,
     Typography,
 } from '@mui/material'
-import React from 'react'
+import React, {useMemo} from 'react'
 import {useFetch} from '@utils/hooks.ts'
 import {getClubNames, getQrAssignmentParticipants} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
-import SearchIcon from '@mui/icons-material/Search'
 import PersonIcon from '@mui/icons-material/Person'
 import {ParticipantQrAssignmentDto} from "@api/types.gen.ts";
+import AssignmentSearchField from "@components/qrApp/assign/AssignmentSearchField.tsx";
 
 interface ParticipantAssignmentProps {
     eventId: string
@@ -46,25 +45,26 @@ const ParticipantAssignment: React.FC<ParticipantAssignmentProps> = ({
 
     const handleClubChange = (
         _event: React.SyntheticEvent,
-        newValue: {id: string; name: string} | null,
+        newValue: { id: string; name: string } | null,
     ) => {
         setClub(newValue?.id || '')
     }
 
-    const filteredParticipants =
-        groupedParticipants
-            ?.map(group => ({
-                ...group,
-                participants: group.participants.filter(
-                    p =>
-                        searchQuery === '' ||
-                        `${p.firstname} ${p.lastname}`
-                            .toLowerCase()
-                            .includes(searchQuery.toLowerCase()),
-                ),
-            }))
-            .filter(group => group.participants.length > 0)
-            .sort((a, b) => (a.competitionName > b.competitionName ? 1 : -1)) || []
+    const filteredParticipants = useMemo(() =>{
+            return groupedParticipants
+                ?.map(group => ({
+                    ...group,
+                    participants: group.participants.filter(
+                        p =>
+                            searchQuery === '' ||
+                            `${p.firstname} ${p.lastname}`
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase()),
+                    ),
+                }))
+                .filter(group => group.participants.length > 0)
+                .sort((a, b) => (a.competitionName > b.competitionName ? 1 : -1)) || []
+    }, [searchQuery, groupedParticipants])
 
     return (
         <>
@@ -92,24 +92,8 @@ const ParticipantAssignment: React.FC<ParticipantAssignmentProps> = ({
                         <Typography variant="subtitle1" fontWeight="medium">
                             {t('qrAssign.participants')}
                         </Typography>
-                    </Stack>
-
-                    <TextField
-                        fullWidth
-                        placeholder={t('common.search')}
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        slotProps={{
-                            input: {
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <SearchIcon />
-                                    </InputAdornment>
-                                ),
-                            },
-                        }}
-                        sx={{mb: 2}}
-                    />
+                </Stack>
+                    <AssignmentSearchField setSearchQuery={setSearchQuery} />
 
                     {filteredParticipants.length > 0 ? (
                         <Stack spacing={2}>
