@@ -97,3 +97,15 @@ export const deleteSubstitutionGlobal: Privilege = {
     resource: 'SUBSTITUTION',
     scope: 'GLOBAL'
 }
+
+export const updateSmtpConfigGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'ADMINISTRATION',
+    scope: 'GLOBAL'
+}
+
+export const readSmtpConfigGlobal: Privilege = {
+    action: 'READ',
+    resource: 'ADMINISTRATION',
+    scope: 'GLOBAL'
+}

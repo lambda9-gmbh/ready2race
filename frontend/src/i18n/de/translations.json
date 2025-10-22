@@ -183,7 +183,8 @@
       "config": "Konfigurationen",
       "clubs": "Vereine",
       "myClub": "Mein Verein",
-      "invoices": "Rechnungen"
+      "invoices": "Rechnungen",
+      "administration": "Administration"
     }
   },
   "dashboard": {
@@ -1289,14 +1290,14 @@
   },
   "qrParticipant": {
     "title": "Teilnehmer",
-    "noRight": "Du hast für diesen QR-Code-Typ keine Berechtigung.",
+    "noRight": "Sie haben für diesen QR-Code-Typ keine Berechtigung.",
     "loading": "Lade...",
     "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",
     "enterArea": "Eintritt Wettkampfbereich",
     "leaveArea": "Austritt Wettkampfbereich",
     "removeAssignment": "QR-Code-Zuordnung entfernen",
     "removeAssignmentTitle": "Zuordnung entfernen",
-    "removeAssignmentConfirm": "Möchtest du die Zuordnung wirklich entfernen?",
+    "removeAssignmentConfirm": "Möchten Sie die Zuordnung wirklich entfernen?",
     "deleteError": "Fehler beim Löschen des QR-Codes.",
     "assignmentInfo": "Zuordnungsinformationen"
   },
@@ -1406,6 +1407,29 @@
           "title": "Wird exportiert...",
           "body": "{{exported}} / {{total}} Dateien exportiert."
         }
+      }
+    }
+  },
+  "administration": {
+    "smtp": {
+      "title": "SMTP Konfiguration",
+      "host": "SMTP-Host",
+      "port": "SMTP-Port",
+      "username": "SMTP-Benutzername",
+      "password": "SMTP-Passwort",
+      "smtpStrategy": "SMTP-Strategie",
+      "fromAddress": "Absenderadresse",
+      "fromName": "Absendername",
+      "localhost": "Local Host",
+      "replyTo": "Antwortadresse",
+      "submit": "Konfiguration speichern",
+      "reset": "Konfiguration zurücksetzen",
+      "confirmation": {
+        "content": "Möchten Sie die SMTP-Konfiguration wirklich ändern?"
+      },
+      "errors": {
+        "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
+        "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
       }
     }
   }

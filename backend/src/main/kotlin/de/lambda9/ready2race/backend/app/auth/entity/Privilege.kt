@@ -24,6 +24,7 @@ sealed class Privilege(
         APP_QR_MANAGEMENT,
         APP_COMPETITION_CHECK,
         APP_CATERER,
+        ADMINISTRATION,
     }
 
     enum class Scope(val level: Int) {
@@ -72,6 +73,9 @@ sealed class Privilege(
 
     data object CreateSubstitutionGlobal: Privilege(Action.CREATE, Resource.SUBSTITUTION, Scope.GLOBAL)
     data object DeleteSubstitutionGlobal: Privilege(Action.DELETE, Resource.SUBSTITUTION, Scope.GLOBAL)
+
+    data object UpdateSmtpConfigGlobal: Privilege(Action.UPDATE, Resource.ADMINISTRATION, Scope.GLOBAL)
+    data object ReadSmtpConfigGlobal: Privilege(Action.READ, Resource.ADMINISTRATION, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

@@ -1352,6 +1352,7 @@ export type Resource =
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
+    | 'ADMINISTRATION'
 
 export type RoleDto = {
     id: string
@@ -1393,6 +1394,20 @@ export type RunningMatchTeamInfo = {
 }
 
 export type Scope = 'OWN' | 'GLOBAL'
+
+export type SmtpConfigOverrideDto = {
+    host: string
+    port: number
+    username: string
+    password: string
+    smtpStrategy: 'SMTP' | 'SMTP_TLS' | 'SMTPS'
+    fromAddress: string
+    fromName?: string
+    localhost?: string
+    replyTo?: string
+}
+
+export type smtpStrategy = 'SMTP' | 'SMTP_TLS' | 'SMTPS'
 
 export type StartListConfigDto = {
     id: string
@@ -4669,3 +4684,19 @@ export type ExportDataByWebDavError = BadRequestError | ApiError
 export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
+
+export type GetSmtpConfigResponse = SmtpConfigOverrideDto
+
+export type GetSmtpConfigError = ApiError
+
+export type SetSmtpOverrideData = {
+    body: SmtpConfigOverrideDto
+}
+
+export type SetSmtpOverrideResponse = void
+
+export type SetSmtpOverrideError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteSmtpOverrideResponse = void
+
+export type DeleteSmtpOverrideError = ApiError
