@@ -4,7 +4,7 @@ import FormInputLabel from './FormInputLabel.tsx'
 
 export type BaseFormInputProps = TextFieldElementProps
 
-export const FormInputColor = (props: BaseFormInputProps) => {
+export const FormInputColor = ({sx, ...props}: BaseFormInputProps) => {
     const {t} = useTranslation()
 
     return (
@@ -20,7 +20,7 @@ export const FormInputColor = (props: BaseFormInputProps) => {
                         !props.rules?.required && {required: t('common.form.required')}),
                 }}
                 label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )

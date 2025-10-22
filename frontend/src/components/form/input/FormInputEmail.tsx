@@ -3,7 +3,7 @@ import {BaseFormInputProps, FormInputText} from '@components/form/input/FormInpu
 
 type FormInputEmailProps = Omit<BaseFormInputProps, 'type'>
 
-const FormInputEmail = (props: FormInputEmailProps) => {
+const FormInputEmail = ({sx, ...props}: FormInputEmailProps) => {
     const {t} = useTranslation()
     return (
         <FormInputText
@@ -18,6 +18,7 @@ const FormInputEmail = (props: FormInputEmailProps) => {
                     },
                 }),
             }}
+            sx={{...sx}}
         />
     )
 }

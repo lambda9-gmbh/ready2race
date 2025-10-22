@@ -6,7 +6,7 @@ import FormInputLabel from './FormInputLabel.tsx'
 
 type FormInputDateTimeProps = DateTimePickerElementProps & RefAttributes<HTMLDivElement>
 
-const FormInputDateTime = (props: FormInputDateTimeProps) => {
+const FormInputDateTime = ({sx, ...props}: FormInputDateTimeProps) => {
     const {t} = useTranslation()
 
     // todo? "overwriteErrorMessages" to translate the error msg: "Date is invalid" if the Input is invalid
@@ -28,7 +28,7 @@ const FormInputDateTime = (props: FormInputDateTimeProps) => {
                     output: value => (value === null ? undefined : formatISO(value).slice(0, 19)),
                 }}
                 label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )
