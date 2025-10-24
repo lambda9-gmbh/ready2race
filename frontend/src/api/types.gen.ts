@@ -284,6 +284,7 @@ export type CompetitionPropertiesDto = {
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
     lateRegistrationAllowed: boolean
+    resultConfirmationImageRequired: boolean
 }
 
 export type CompetitionPropertiesRequest = {
@@ -296,6 +297,7 @@ export type CompetitionPropertiesRequest = {
     fees: Array<FeeForCompetitionRequestDto>
     lateRegistrationAllowed: boolean
     setupTemplate?: string
+    resultConfirmationImageRequired: boolean
 }
 
 export type CompetitionRegistrationDto = {
@@ -375,7 +377,13 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationTeamNamedParticipantDto>
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
-    challengeResult?: number
+    challengeResultValue?: number
+    /**
+     * Map of documentId to documentName
+     */
+    challengeResultDocuments?: {
+        [key: string]: string
+    }
 }
 
 export type CompetitionRegistrationTeamLockedDto = {
@@ -1368,6 +1376,7 @@ export type Resource =
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
+    | 'RESULT'
 
 export type RoleDto = {
     id: string
@@ -4717,3 +4726,15 @@ export type SubmitChallengeTeamResultsData = {
 export type SubmitChallengeTeamResultsResponse = void
 
 export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
+
+export type DownloadMatchTeamResultDocumentData = {
+    path: {
+        competitionId: string
+        eventId: string
+        resultDocumentId: string
+    }
+}
+
+export type DownloadMatchTeamResultDocumentResponse = Blob | File
+
+export type DownloadMatchTeamResultDocumentError = BadRequestError | ApiError

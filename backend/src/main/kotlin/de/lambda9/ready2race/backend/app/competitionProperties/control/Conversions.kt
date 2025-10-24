@@ -6,26 +6,29 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.tailwind.core.KIO
 import java.util.*
 
-fun CompetitionPropertiesRequest.toRecord(competitionId: UUID?, competitionTemplateId: UUID?) = CompetitionPropertiesRecord(
-    id = UUID.randomUUID(),
-    competition = competitionId,
-    competitionTemplate = competitionTemplateId,
-    identifier = identifier,
-    name = name,
-    shortName = shortName,
-    description = description,
-    competitionCategory = competitionCategory,
-    lateRegistrationAllowed = lateRegistrationAllowed,
-)
+fun CompetitionPropertiesRequest.toRecord(competitionId: UUID?, competitionTemplateId: UUID?) =
+    CompetitionPropertiesRecord(
+        id = UUID.randomUUID(),
+        competition = competitionId,
+        competitionTemplate = competitionTemplateId,
+        identifier = identifier,
+        name = name,
+        shortName = shortName,
+        description = description,
+        competitionCategory = competitionCategory,
+        lateRegistrationAllowed = lateRegistrationAllowed,
+        resultConfirmationImageRequired = resultConfirmationImageRequired,
+    )
 
-fun NamedParticipantForCompetitionRequestDto.toRecord(propertiesId: UUID) = CompetitionPropertiesHasNamedParticipantRecord(
-    competitionProperties = propertiesId,
-    namedParticipant = namedParticipant,
-    countMales = countMales,
-    countFemales = countFemales,
-    countNonBinary = countNonBinary,
-    countMixed = countMixed
-)
+fun NamedParticipantForCompetitionRequestDto.toRecord(propertiesId: UUID) =
+    CompetitionPropertiesHasNamedParticipantRecord(
+        competitionProperties = propertiesId,
+        namedParticipant = namedParticipant,
+        countMales = countMales,
+        countFemales = countFemales,
+        countNonBinary = countNonBinary,
+        countMixed = countMixed
+    )
 
 fun FeeForCompetitionRequestDto.toRecord(propertiesId: UUID) = CompetitionPropertiesHasFeeRecord(
     id = UUID.randomUUID(),
@@ -67,5 +70,6 @@ fun CompetitionPropertiesRequest.toUpdateFunction(): CompetitionPropertiesRecord
         description = it.description
         competitionCategory = it.competitionCategory
         lateRegistrationAllowed = it.lateRegistrationAllowed
+        resultConfirmationImageRequired = it.resultConfirmationImageRequired
     }
 }

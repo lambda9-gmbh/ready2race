@@ -27,6 +27,7 @@ export type CompetitionForm = {
     }[]
     setupTemplate: AutocompleteOption
     lateRegistrationAllowed: boolean
+    resultConfirmationImageRequired: boolean
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -39,6 +40,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     fees: [],
     setupTemplate: null,
     lateRegistrationAllowed: false,
+    resultConfirmationImageRequired: false,
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
@@ -68,6 +70,7 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             ? takeIfNotEmpty(formData.setupTemplate?.id)
             : undefined,
         lateRegistrationAllowed: formData.lateRegistrationAllowed,
+        resultConfirmationImageRequired: formData.resultConfirmationImageRequired,
     }
 }
 
@@ -107,6 +110,7 @@ export function mapCompetitionPropertiesToCompetitionForm(
               }
             : null,
         lateRegistrationAllowed: dto.lateRegistrationAllowed,
+        resultConfirmationImageRequired: dto.resultConfirmationImageRequired,
     }
 }
 

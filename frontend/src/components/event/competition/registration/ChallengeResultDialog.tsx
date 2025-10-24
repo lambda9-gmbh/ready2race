@@ -1,17 +1,22 @@
 import BaseDialog from '@components/BaseDialog.tsx'
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {
+    Alert,
+    AlertTitle,
+    Box,
     Button,
+    Card,
     DialogActions,
     DialogContent,
     DialogTitle,
     Divider,
+    InputAdornment,
     Stack,
     Typography,
 } from '@mui/material'
-import {CompetitionRegistrationTeamDto} from '@api/types.gen.ts'
+import {CompetitionRegistrationTeamDto, MatchResultType} from '@api/types.gen.ts'
 import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import SelectFileButton from '@components/SelectFileButton.tsx'
@@ -19,12 +24,15 @@ import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import LoadingButton from '@components/form/LoadingButton.tsx'
 import {submitChallengeTeamResults} from '@api/sdk.gen.ts'
 import {competitionRoute, eventRoute} from '@routes'
+import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
 type Props = {
     dialogOpen: boolean
     teamDto: CompetitionRegistrationTeamDto | null
     closeDialog: () => void
     reloadTeams: () => void
+    resultConfirmationImageRequired: boolean
+    resultType?: MatchResultType
 }
 type Form = {
     result: string
@@ -56,9 +64,16 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
         keyName: 'fieldId',
         rules: {
             validate: values => {
-                if (values.length !== 1) {
-                    setFileError(t('event.competition.execution.results.dialog.file.missing'))
+                if (values.length < 1 && props.resultConfirmationImageRequired) {
+                    setFileError(
+                        t('event.competition.execution.results.confirmationImage.error.empty'),
+                    )
                     return 'empty'
+                } else if (values.length > 1) {
+                    setFileError(
+                        t('event.competition.execution.results.confirmationImage.error.tooMany'),
+                    )
+                    return 'tooMany'
                 } else {
                     setFileError(null)
                     return undefined
@@ -75,8 +90,6 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
         if (!teamDto) return
         if (formData.files.length !== 1) return
 
-        setConfirming(false)
-
         setSubmitting(true)
         const {error} = await submitChallengeTeamResults({
             path: {
@@ -92,12 +105,13 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
             },
         })
         setSubmitting(false)
+        setConfirming(false)
         if (error) {
+            feedback.error(t('event.competition.execution.results.challenge.error'))
         } else {
             props.reloadTeams()
             props.closeDialog()
         }
-        // TODO ERROR HANDLING
     }
 
     useEffect(() => {
@@ -108,13 +122,24 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
         }
     }, [dialogOpen])
 
+    const confirmationFormState = useMemo(() => formContext.getValues(), [confirming])
+
+    const resultTypeDescriptor =
+        props.resultType === 'DISTANCE'
+            ? t('event.competition.execution.results.resultType.distance')
+            : ''
+
+    const resultTypeAdornment = props.resultType === 'DISTANCE' ? 'm' : undefined
+
     return teamDto ? (
-        <BaseDialog open={dialogOpen} onClose={props.closeDialog} maxWidth={'sm'}>
-            <DialogTitle>{'[todo] Challenge results'}</DialogTitle>
+        <BaseDialog open={dialogOpen} onClose={props.closeDialog} maxWidth={'xs'}>
+            <DialogTitle>
+                {t('event.competition.execution.results.challenge.challengeResults')}
+            </DialogTitle>
             <FormContainer formContext={formContext} onSuccess={() => setConfirming(true)}>
                 <DialogContent>
-                    {!confirming ? (
-                        <Stack spacing={4}>
+                    <Stack spacing={4}>
+                        <Card sx={{p: 2}}>
                             <Typography>
                                 {teamDto.clubName + (teamDto.name ? ` ${teamDto.name}` : '')}
                             </Typography>
@@ -133,49 +158,109 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
                                     </Stack>
                                 </>
                             ))}
+                        </Card>
+                        <Divider />
 
-                            <FormInputNumber
-                                name={'result'}
-                                integer
-                                required
-                                label={'[todo] Result'}
-                            />
-
-                            <Stack spacing={2}>
-                                <Typography>{filename}</Typography>
-                                <SelectFileButton
-                                    variant={'text'}
-                                    onSelected={file => {
-                                        if (fields.length < 1) {
-                                            append({file})
-                                        } else {
-                                            update(0, {file})
-                                        }
+                        {!confirming ? (
+                            <>
+                                <FormInputNumber
+                                    name={'result'}
+                                    integer
+                                    required
+                                    label={resultTypeDescriptor}
+                                    slotProps={{
+                                        input: {
+                                            endAdornment: resultTypeAdornment ? (
+                                                <InputAdornment position={'end'}>
+                                                    {resultTypeAdornment}
+                                                </InputAdornment>
+                                            ) : undefined,
+                                        },
                                     }}
-                                    accept={'.png, .jpg, .jpeg'}>
-                                    {filename
-                                        ? '[todo] Change image file'
-                                        : '[todo] Select an image'}
-                                </SelectFileButton>
-                                {fileError && <Typography color={'error'}>{fileError}</Typography>}
-                            </Stack>
-                        </Stack>
-                    ) : (
-                        <Typography>HALLO</Typography>
-                    )}
+                                />
+
+                                <Stack spacing={2}>
+                                    <FormInputLabel
+                                        label={t(
+                                            'event.competition.execution.results.confirmationImage.confirmationImage',
+                                        )}
+                                        required={props.resultConfirmationImageRequired}>
+                                        <Typography variant={'body2'}>{filename}</Typography>
+                                        <SelectFileButton
+                                            variant={'text'}
+                                            onSelected={file => {
+                                                if (fields.length < 1) {
+                                                    append({file})
+                                                } else {
+                                                    update(0, {file})
+                                                }
+                                            }}
+                                            accept={'.png, .jpg, .jpeg'}>
+                                            {filename
+                                                ? t(
+                                                      'event.competition.execution.results.confirmationImage.change',
+                                                  )
+                                                : t(
+                                                      'event.competition.execution.results.confirmationImage.select',
+                                                  )}
+                                        </SelectFileButton>
+                                    </FormInputLabel>
+                                    {fileError && (
+                                        <Typography color={'error'}>{fileError}</Typography>
+                                    )}
+                                </Stack>
+                            </>
+                        ) : (
+                            <>
+                                <Box>
+                                    <Typography>
+                                        <span style={{fontWeight: 'bold'}}>
+                                            {resultTypeDescriptor}:{' '}
+                                        </span>
+                                        {confirmationFormState.result +
+                                            (resultTypeAdornment ? ` ${resultTypeAdornment}` : '')}
+                                    </Typography>
+                                </Box>
+                                {confirmationFormState.files.length === 1 && (
+                                    <Typography>
+                                        <span style={{fontWeight: 'bold'}}>
+                                            {t(
+                                                'event.competition.execution.results.confirmationImage.confirmationImage',
+                                            )}
+                                            :{' '}
+                                        </span>
+                                        {confirmationFormState.files[0].file.name}
+                                    </Typography>
+                                )}
+                                <Alert severity={'warning'}>
+                                    <AlertTitle>
+                                        {t(
+                                            'event.competition.execution.results.challenge.confirmTitle',
+                                        )}
+                                    </AlertTitle>
+
+                                    <Typography>
+                                        {t(
+                                            'event.competition.execution.results.challenge.confirmBody',
+                                        )}
+                                    </Typography>
+                                </Alert>
+                            </>
+                        )}
+                    </Stack>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={props.closeDialog} disabled={submitting}>
                         {t('common.cancel')}
                     </Button>
                     {!confirming ? (
-                        <SubmitButton submitting={submitting}>{t('common.save')}</SubmitButton>
+                        <SubmitButton submitting={submitting}>{t('common.continue')}</SubmitButton>
                     ) : (
                         <LoadingButton
                             variant={'contained'}
                             pending={submitting}
                             onClick={() => onSubmit(formContext.getValues())}>
-                            {'[todo] Confirm!'}
+                            {t('event.competition.execution.results.challenge.confirm')}
                         </LoadingButton>
                     )}
                 </DialogActions>

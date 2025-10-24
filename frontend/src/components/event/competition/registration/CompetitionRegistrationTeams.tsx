@@ -6,8 +6,9 @@ import {useTranslation} from 'react-i18next'
 
 type Props = {
     eventData: EventDto
+    challengeConfirmationImageRequired?: boolean
 }
-const CompetitionRegistrationTeams = ({eventData}: Props) => {
+const CompetitionRegistrationTeams = ({eventData, challengeConfirmationImageRequired}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
 
@@ -23,6 +24,7 @@ const CompetitionRegistrationTeams = ({eventData}: Props) => {
             <CompetitionRegistrationTeamTable
                 {...competitionRegistrationTeamProps.table}
                 eventData={eventData}
+                challengeConfirmationImageRequired={challengeConfirmationImageRequired}
             />
         )
     )

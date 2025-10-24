@@ -20,6 +20,7 @@ data class CompetitionPropertiesRequest(
     val fees: List<FeeForCompetitionRequestDto>,
     val lateRegistrationAllowed: Boolean,
     val setupTemplate: UUID?, // Only relevant for add/edit template and add competition
+    val resultConfirmationImageRequired: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -49,6 +50,7 @@ data class CompetitionPropertiesRequest(
                 fees = listOf(FeeForCompetitionRequestDto.example),
                 lateRegistrationAllowed = true,
                 setupTemplate = UUID.randomUUID(),
+                resultConfirmationImageRequired = false,
             )
     }
 }

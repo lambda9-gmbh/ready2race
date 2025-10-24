@@ -346,7 +346,12 @@ const CompetitionPage = () => {
                     )}
                     {showRegistrationsTab && (
                         <TabPanel index={'teams'} activeTab={activeTab}>
-                            <CompetitionRegistrationTeams eventData={eventData} />
+                            <CompetitionRegistrationTeams
+                                eventData={eventData}
+                                challengeConfirmationImageRequired={
+                                    competitionData.properties.resultConfirmationImageRequired
+                                }
+                            />
                         </TabPanel>
                     )}
                     {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (

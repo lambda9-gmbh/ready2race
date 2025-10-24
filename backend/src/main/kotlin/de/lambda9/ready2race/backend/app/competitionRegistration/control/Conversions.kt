@@ -21,7 +21,8 @@ import java.util.*
 fun CompetitionRegistrationTeamRecord.toDto(
     requirementsForEvent: List<ParticipantRequirementForEventRecord>,
     namedParticipants: Map<UUID, List<ParticipantForCompetitionRegistrationTeam>>,
-    challengeResult: Int?,
+    challengeResultValue: Int?,
+    challengeResultDocuments: Map<UUID, String>?
 ): App<Nothing, CompetitionRegistrationTeamDto> =
     KIO.ok(
         CompetitionRegistrationTeamDto(
@@ -47,7 +48,8 @@ fun CompetitionRegistrationTeamRecord.toDto(
             },
             globalParticipantRequirements = requirementsForEvent.filter { it.requirements?.size == 0 }
                 .map { it.toRequirementDto() },
-            challengeResult = challengeResult,
+            challengeResultValue = challengeResultValue,
+            challengeResultDocuments = challengeResultDocuments,
         )
     )
 

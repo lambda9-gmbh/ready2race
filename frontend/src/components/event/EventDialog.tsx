@@ -1,7 +1,7 @@
 import {BaseEntityDialogProps} from '@utils/types.ts'
 import {useTranslation} from 'react-i18next'
 import EntityDialog from '@components/EntityDialog.tsx'
-import {Alert, Box, Stack} from '@mui/material'
+import {Alert, Box, Stack, Typography} from '@mui/material'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 import {useForm} from 'react-hook-form-mui'
@@ -85,30 +85,36 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 <FormInputText name={'location'} label={t('event.location')} />
                 <FormInputText name={'mixedTeamTerm'} label={t('event.mixedTeamTerm')} />
                 <FormInputCheckbox name={'published'} label={t('event.published.published')} />
-
-                <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 4}}>
-                    <FormInputCheckbox
-                        disabled={props.entity ? props.entity.challengeEvent : undefined}
-                        name={`challengeEvent`}
-                        label={'[todo] Challenge event'}
-                    />
-                    {challengeEventWatch && (
-                        <Box sx={{flex: 1}}>
-                            <FormInputSelect
-                                label={'[todo] Challenge result type'}
-                                required={true}
-                                name="challengeResultType"
-                                options={challengeResultTypes}
-                                fullWidth
-                            />
-                        </Box>
-                    )}
+                <Box>
+                    <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 4}}>
+                        <FormInputCheckbox
+                            disabled={props.entity ? props.entity.challengeEvent : undefined}
+                            name={`challengeEvent`}
+                            label={t('event.challengeEvent.challengeEvent')}
+                        />
+                        {challengeEventWatch && (
+                            <Box sx={{flex: 1}}>
+                                <FormInputSelect
+                                    label={t('event.challengeResultType')}
+                                    required={true}
+                                    name="challengeResultType"
+                                    options={challengeResultTypes}
+                                    fullWidth
+                                />
+                            </Box>
+                        )}
+                    </Box>
                 </Box>
-                {!props.entity && (
+                {challengeEventWatch && (
                     <Alert severity={'info'}>
-                        {
-                            '[todo] This being a "challenge event" or not can not be changed after creation'
-                        }
+                        <Typography variant={'body2'}>
+                            {t('event.challengeEvent.explanation')}
+                        </Typography>
+                        {!props.entity && (
+                            <Typography variant={'body2'} sx={{mt: 1}}>
+                                {t('event.challengeEvent.unchangeable')}
+                            </Typography>
+                        )}
                     </Alert>
                 )}
                 <FormInputDateTime
@@ -125,7 +131,7 @@ const EventDialog = (props: BaseEntityDialogProps<EventDto>) => {
                 />
                 <FormInputCheckbox
                     name={`allowSelfSubmission`}
-                    label={'[todo] Allow self submission of results'}
+                    label={t('event.allowSelfSubmission')}
                 />
                 <FormInputText name={'invoicePrefix'} label={t('event.invoice.prefix')} />
                 <FormInputDate name={'paymentDueBy'} label={t('event.invoice.paymentDueBy')} />

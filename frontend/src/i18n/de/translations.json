@@ -94,7 +94,8 @@
     "hide": "Ausblenden",
     "show": "Anzeigen",
     "name": "Name",
-    "by": "Von"
+    "by": "Von",
+    "continue": "Weiter"
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -247,6 +248,14 @@
     "name": "Name",
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
+    "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
+    "challengeEvent": {
+      "challengeEvent": "Challenge Modus",
+      "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
+      "unchangeable": "Dass \"Challenge-Modus\" aktiviert ist oder nicht, kann nach der Erstellung nicht mehr geändert werden."
+    },
+    "challengeResultType": "Challenge Ergebnistyp",
+    "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -602,6 +611,31 @@
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
             "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}"
+          },
+          "resultType": {
+            "distance": "Distanz"
+          },
+          "challenge": {
+            "challengeResults": "Challenge Ergebnis",
+            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "confirmTitle": "Bestätigung erforderlich",
+            "confirmBody": "Das Ergebnis kann nach dem Einreichung nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
+            "confirm": "Ergebnis bestätigen",
+            "submitResults": "Ergebnis einreichen"
+          },
+          "confirmationImage": {
+            "confirmationImage": "Bestätigungsbild",
+            "select": "Bild auswählen",
+            "change": "Bild Datei ändern",
+            "error": {
+              "empty": "Bitte wählen Sie ein Bild aus",
+              "tooMany": "Bitte wählen Sie maximal 1 Bild aus"
+            }
+          },
+          "document": {
+            "download": {
+              "error": "Beim herunterladen des Ergebnisdokuments ist ein Fehler aufgetreten."
+            }
           }
         },
         "matchData": {

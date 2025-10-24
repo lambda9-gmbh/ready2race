@@ -6,7 +6,7 @@ import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
-import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamResultRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.*
@@ -86,9 +86,8 @@ object CompetitionRegistrationService {
 
             val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
             val challengeResults = if (isChallengeEvent) {
-                !CompetitionMatchTeamRepo.getByCompetitionRegistrations(page.mapNotNull { it.competitionRegistrationId })
+                !CompetitionMatchTeamResultRepo.getByCompetitionRegistrationIds(page.mapNotNull { it.competitionRegistrationId })
                     .orDie()
-                    .map { list -> list.associate { it.competitionRegistration to it.resultValue } }
             } else null
 
             page.traverse { team ->
@@ -147,14 +146,25 @@ object CompetitionRegistrationService {
                         }
                     }
 
-                    val challengeResult = if (challengeResults != null) {
-                        challengeResults[team.competitionRegistrationId!!]
-                    } else null
+                    val readDocumentAccess = user.privileges
+                        ?.any {
+                            it!!.action == Privilege.Action.READ.name
+                                && it.resource == Privilege.Resource.RESULT.name
+                        } ?: false
+                    val challengeResultValueToDocuments =
+                        challengeResults?.find { it.competitionRegistration == team.competitionRegistrationId }
+                            ?.let { resultRecord ->
+                                resultRecord.resultValue?.let { resultValue ->
+                                    resultValue to ((resultRecord.resultDocuments?.associate { doc -> doc!!.id to doc.name })
+                                        ?: emptyMap())
+                                }
+                            }
 
                     team.toDto(
                         requirementsForEvent,
                         actuallyParticipatingWithInfos.groupBy({ it.first }, { it.second }),
-                        challengeResult = challengeResult
+                        challengeResultValue = challengeResultValueToDocuments?.first,
+                        challengeResultDocuments = if (readDocumentAccess) challengeResultValueToDocuments?.second else null
                     )
                 }
             }.map {

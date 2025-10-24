@@ -23,6 +23,7 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
     data object IsChallengeEvent : CompetitionExecutionError
     data object ResultConfirmationImageMissing : CompetitionExecutionError
+    data object ResultDocumentNotFound : CompetitionExecutionError
 
     // TODO: send out ErrorCodes for internationalization in frontend
     sealed interface ResultUploadError : CompetitionExecutionError {
@@ -140,6 +141,11 @@ sealed interface CompetitionExecutionError : ServiceError {
         ResultConfirmationImageMissing -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "The result confirmation image is missing"
+        )
+
+        ResultDocumentNotFound -> ApiError(
+            status = HttpStatusCode.NotFound,
+            message = "Result document not found"
         )
 
         is ResultUploadError.CellBlank -> ApiError(

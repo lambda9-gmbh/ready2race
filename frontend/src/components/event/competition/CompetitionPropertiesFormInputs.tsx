@@ -234,8 +234,14 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 name={'lateRegistrationAllowed'}
                 label={t('event.competition.lateRegistrationAllowed')}
             />
+            <FormInputCheckbox
+                name={'resultConfirmationImageRequired'}
+                label={t('event.resultConfirmationImageRequired')}
+            />
             <Divider />
-            <FormInputLabel label={t('event.competition.namedParticipant.namedParticipants')} required>
+            <FormInputLabel
+                label={t('event.competition.namedParticipant.namedParticipants')}
+                required>
                 {namedParticipantsError && (
                     <Typography color={'error'}>{namedParticipantsError}</Typography>
                 )}

@@ -12,5 +12,6 @@ data class CompetitionRegistrationTeamDto(
     val namedParticipants: List<CompetitionRegistrationTeamNamedParticipantDto>,
     val deregistration: CompetitionDeregistrationDto?,
     val globalParticipantRequirements: List<ParticipantRequirementDto>,
-    val challengeResult: Int?
+    val challengeResultValue: Int?,
+    val challengeResultDocuments: Map<UUID, String>?
 )

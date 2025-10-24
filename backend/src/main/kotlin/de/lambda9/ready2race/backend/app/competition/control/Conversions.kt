@@ -41,6 +41,7 @@ fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehens
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                resultConfirmationImageRequired = resultConfirmationImageRequired!!
             ),
             registrationCount = registrationsCount ?: 0
         )
@@ -75,6 +76,7 @@ fun CompetitionForClubViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.com
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                resultConfirmationImageRequired = resultConfirmationImageRequired!!
             ),
             registrationCount = registrationsCount ?: 0
         )
@@ -109,6 +111,7 @@ fun CompetitionPublicViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comp
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                resultConfirmationImageRequired = resultConfirmationImageRequired!!
             ),
             registrationCount = 0
         )

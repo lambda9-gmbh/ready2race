@@ -23,6 +23,7 @@ type Props = {
     onSelectItem: (id: string) => Promise<void>
     pending?: boolean
     anchor?: Anchor
+    itemIcon?: ReactNode
 }
 const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
     const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null)
@@ -81,6 +82,11 @@ const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
                                     handleMenuClose()
                                 }}
                                 value={item.id}>
+                                {props.itemIcon !== undefined && (
+                                    <Box sx={{mr: 1, display: 'flex', alignItems: 'center'}}>
+                                        {props.itemIcon}
+                                    </Box>
+                                )}
                                 {item.label}
                             </MenuItem>
                         </Box>

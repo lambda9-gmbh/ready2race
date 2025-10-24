@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists competition_match_team_document_download;
+drop view if exists competition_match_team_result;
 drop view if exists webdav_export_process_status;
 drop view if exists webdav_export_folder_view;
 drop view if exists app_user_for_event;
@@ -238,6 +240,7 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.result_confirmation_image_required,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -267,9 +270,9 @@ from competition c
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          cross join club cb
          left join competition_registration cr on c.id = cr.competition and cb.id = cr.club
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
-         cc.name,
-         cc.description, nps.total_count, nps.named_participants, fs.fees, cb.id;
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
+         cp.result_confirmation_image_required, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+         fs.fees, cb.id;
 
 create view competition_public_view as
 select c.id,
@@ -282,6 +285,7 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.result_confirmation_image_required,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -309,9 +313,9 @@ from competition c
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
 where e.published is true
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
-         cc.name,
-         cc.description, nps.total_count, nps.named_participants, fs.fees;
+group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
+         cp.result_confirmation_image_required, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+         fs.fees;
 
 create view competition_template_view as
 select ct.id,
@@ -320,6 +324,7 @@ select ct.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.result_confirmation_image_required,
        cc.id                                  as category_id,
        cc.name                                as category_name,
        cc.description                         as category_description,
@@ -1096,3 +1101,24 @@ from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
          left join app_user_name cb on wep.created_by = cb.id
 group by wep.id, wep.name, wep.created_at, cb;
+
+
+create view competition_match_team_result as
+select cmt.id,
+       cmt.competition_registration,
+       cmt.result_value,
+       coalesce(array_agg(distinct cmtd) filter ( where cmtd.id is not null ), '{}') as result_documents
+from competition_match_team cmt
+         left join competition_match_team_document cmtd on cmtd.competition_match_team_id = cmt.id
+group by cmt.id, cmt.competition_registration, cmt.result_value;
+
+create view competition_match_team_document_download as
+select cmtd.id,
+       cmtd.competition_match_team_id,
+       cmtd.name,
+       cmtdd.data,
+       cr.club
+from competition_match_team_document cmtd
+         join competition_match_team_document_data cmtdd on cmtd.id = cmtdd.competition_match_team_document_id
+         join competition_match_team cmt on cmtd.competition_match_team_id = cmt.id
+         join competition_registration cr on cmt.competition_registration = cr.id;

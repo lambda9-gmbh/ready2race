@@ -1,13 +1,15 @@
 import {useTranslation} from 'react-i18next'
-import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
-import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
+import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {useMemo, useState} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
     Chip,
+    IconButton,
+    Link,
     Stack,
     Table,
     TableBody,
@@ -22,10 +24,14 @@ import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import Cancel from '@mui/icons-material/Cancel'
 import {useUser} from '@contexts/user/UserContext.ts'
-import UploadIcon from '@mui/icons-material/Upload'
+import EditNoteIcon from '@mui/icons-material/EditNote'
 import ChallengeResultDialog from '@components/event/competition/registration/ChallengeResultDialog.tsx'
-import {getCompetitionRegistrationTeams} from '@api/sdk.gen'
+import {downloadMatchTeamResultDocument, getCompetitionRegistrationTeams} from '@api/sdk.gen'
 import {CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
+import {useFeedback} from '@utils/hooks.ts'
+import SelectionMenu from '@components/SelectionMenu.tsx'
+import BurstModeIcon from '@mui/icons-material/BurstMode'
+import DownloadIcon from '@mui/icons-material/Download'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -36,14 +42,22 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
     eventData: EventDto
+    challengeConfirmationImageRequired?: boolean
 }
 
-const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
+const CompetitionRegistrationTeamTable = ({
+    eventData,
+    challengeConfirmationImageRequired,
+    ...props
+}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
+    const feedback = useFeedback()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getCompetitionRegistrationTeams({
@@ -52,6 +66,13 @@ const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
             query: {...paginationParameters},
         })
     }
+
+    const challengeResultTypeUnit = eventData.challengeResultType === 'DISTANCE' ? 'm' : ''
+
+    const updateResultScope = user.getPrivilegeScope('UPDATE', 'RESULT')
+    const resultSubmissionAllowed =
+        updateResultScope === 'GLOBAL' ||
+        (updateResultScope === 'OWN' && eventData.allowSelfSubmission)
 
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
@@ -65,11 +86,71 @@ const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
                 headerName: t('entity.name'),
                 valueGetter: value => value ?? '-',
             },
+            ...(eventData.challengeEvent
+                ? [
+                      {
+                          field: 'challengeResultValue',
+                          headerName: t(
+                              'event.competition.execution.results.challenge.challengeResults',
+                          ),
+                          minWidth: 150,
+                          sortable: false,
+                          renderCell: ({row}: {row: CompetitionRegistrationTeamDto}) => {
+                              const challengeResultDocuments = eventData.challengeEvent
+                                  ? Object.entries(row.challengeResultDocuments ?? {}).map(
+                                        ([key, value]) => {
+                                            return {id: key, fileName: value}
+                                        },
+                                    )
+                                  : []
+                              return row.challengeResultValue ? (
+                                  <>
+                                      <Typography>
+                                          {row.challengeResultValue} {challengeResultTypeUnit}
+                                      </Typography>
+                                      {challengeResultDocuments.length > 0 && (
+                                          <SelectionMenu
+                                              keyLabel={'challenge-team-result-doc'}
+                                              buttonContent={<BurstModeIcon />}
+                                              onSelectItem={async (docId: string) => {
+                                                  const docName =
+                                                      row.challengeResultDocuments?.[docId]
+                                                  if (!docName) return
+                                                  void handleDownloadResultDocument(docId, docName)
+                                              }}
+                                              items={challengeResultDocuments.map(doc => ({
+                                                  id: doc.id,
+                                                  label: doc.fileName,
+                                              }))}
+                                              itemIcon={<DownloadIcon color={'primary'} />}
+                                          />
+                                      )}
+                                  </>
+                              ) : resultSubmissionAllowed ? (
+                                  <HtmlTooltip
+                                      title={
+                                          <Typography>
+                                              {t(
+                                                  'event.competition.execution.results.challenge.submitResults',
+                                              )}
+                                          </Typography>
+                                      }>
+                                      <IconButton onClick={() => openResultsDialog(row)}>
+                                          <EditNoteIcon />
+                                      </IconButton>
+                                  </HtmlTooltip>
+                              ) : (
+                                  '-'
+                              )
+                          },
+                      },
+                  ]
+                : []),
             {
                 field: 'namedParticipants',
                 headerName: t('event.registration.teamMembers'),
                 flex: 2,
-                minWidth: 300,
+                minWidth: 550,
                 sortable: false,
                 renderCell: ({row}) => {
                     return (
@@ -275,21 +356,26 @@ const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
         [],
     )
 
-    const customEntityActions = (entity: CompetitionRegistrationTeamDto): EntityAction[] => [
-        eventData.challengeEvent &&
-        entity.challengeResult === undefined &&
-        entity.deregistration === undefined &&
-        user.getPrivilegeScope('UPDATE', 'EVENT') !== undefined ? ( // TODO: NEW RESOURCE
-            <GridActionsCellItem
-                icon={<UploadIcon />}
-                label={'[todo] Enter results'}
-                onClick={() => {
-                    openResultsDialog(entity)
-                }}
-                showInMenu
-            />
-        ) : undefined,
-    ]
+    const handleDownloadResultDocument = async (docId: string, docName: string) => {
+        const {data, error} = await downloadMatchTeamResultDocument({
+            path: {
+                eventId,
+                competitionId,
+                resultDocumentId: docId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('event.competition.execution.results.document.download.error'))
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(data)
+            anchor.download = docName
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
 
     const [resultsDialogOpen, setResultsDialogOpen] = useState(false)
     const openResultsDialog = (entity: CompetitionRegistrationTeamDto) => {
@@ -304,6 +390,7 @@ const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
 
     return (
         <>
+            <Link ref={downloadRef} display={'none'}></Link>
             <EntityTable
                 {...props}
                 parentResource={'REGISTRATION'}
@@ -313,13 +400,15 @@ const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
                 columns={columns}
                 dataRequest={dataRequest}
                 entityName={t('event.registration.teams')}
-                customEntityActions={customEntityActions}
+                hideEntityActions
             />
             <ChallengeResultDialog
                 dialogOpen={resultsDialogOpen}
                 teamDto={selectedTeam}
                 closeDialog={closeResultsDialog}
                 reloadTeams={props.reloadData}
+                resultConfirmationImageRequired={challengeConfirmationImageRequired ?? false}
+                resultType={eventData.challengeResultType}
             />
         </>
     )

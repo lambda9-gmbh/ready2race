@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
+import de.lambda9.ready2race.backend.app.eventDocument.boundary.EventDocumentService
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -185,64 +186,76 @@ fun Route.competitionExecution() {
             }
         }
         route("/challenge") {
-            post("team-results/{competitionRegistrationId}") {
-                call.respondComprehension {
+            route("/team-results") {
+                post("/{competitionRegistrationId}") {
+                    call.respondComprehension {
 
-                    // TODO: @evaluate if another resource would be a good idea - updateEventOwn is not used for other cases but it is a bit misleading
-                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
-                    val competitionId = !pathParam("competitionId", uuid)
-                    val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+                        // GLOBAL can always submit results - OWN only if self_submission is enabled for the event
+                        val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.RESULT)
+                        val competitionId = !pathParam("competitionId", uuid)
+                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
 
-                    val multiPartData = receiveMultipart()
+                        val multiPartData = receiveMultipart()
 
-                    // Todo: Limit file size
-                    var upload: File? = null
-                    var request: CompetitionChallengeResultRequest? = null
+                        // Todo: Limit file size
+                        var upload: File? = null
+                        var request: CompetitionChallengeResultRequest? = null
 
-                    var done = false
-                    while (!done) {
-                        val part = multiPartData.readPart()
-                        if (part == null) {
-                            done = true
-                        } else {
-                            when (part) {
-                                is PartData.FileItem -> {
-                                    if (upload == null) {
-                                        upload = File(
-                                            part.originalFileName!!,
-                                            part.provider().toByteArray(),
-                                        )
-                                    } else {
-                                        KIO.fail(RequestError.File.Multiple)
+                        var done = false
+                        while (!done) {
+                            val part = multiPartData.readPart()
+                            if (part == null) {
+                                done = true
+                            } else {
+                                when (part) {
+                                    is PartData.FileItem -> {
+                                        if (upload == null) {
+                                            upload = File(
+                                                part.originalFileName!!,
+                                                part.provider().toByteArray(),
+                                            )
+                                        } else {
+                                            KIO.fail(RequestError.File.Multiple)
+                                        }
                                     }
-                                }
 
-                                is PartData.FormItem -> {
-                                    if (part.name == "request") {
-                                        request = jsonMapper.readValue<CompetitionChallengeResultRequest>(part.value)
+                                    is PartData.FormItem -> {
+                                        if (part.name == "request") {
+                                            request =
+                                                jsonMapper.readValue<CompetitionChallengeResultRequest>(part.value)
+                                        }
                                     }
-                                }
 
-                                else -> {}
+                                    else -> {}
+                                }
                             }
                         }
+
+                        val req =
+                            !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+
+                        // TODO: check valid image
+                        // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
+
+                        CompetitionExecutionChallengeService.saveChallengeResult(
+                            user = user,
+                            scope = scope,
+                            competitionId = competitionId,
+                            competitionRegistrationId = competitionRegistrationId,
+                            request = req,
+                            file = upload
+                        )
+
                     }
-
-                    val req = !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
-
-                    // TODO: check valid image
-                    // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
-
-                    CompetitionExecutionChallengeService.saveChallengeResult(
-                        user = user,
-                        scope = scope,
-                        competitionId = competitionId,
-                        competitionRegistrationId = competitionRegistrationId,
-                        request = req,
-                        file = upload
-                    )
-
                 }
+            }
+        }
+        get("/result-document/{resultDocumentId}") {
+            call.respondComprehension {
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.RESULT)
+                val id = !pathParam("resultDocumentId", uuid)
+
+                CompetitionExecutionService.downloadTeamResultDocument(id, user.club, scope)
             }
         }
 

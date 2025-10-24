@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionChallengeResultRequest
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionChallengeError
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionChallengeError.SelfSubmissionNotAllowed
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationError
@@ -18,6 +19,8 @@ import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSet
 import de.lambda9.ready2race.backend.app.competitionSetup.control.CompetitionSetupRoundRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetupPlacesOption
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
@@ -35,7 +38,7 @@ object CompetitionExecutionChallengeService {
     fun createChallengeSetup(
         competitionProperties: CompetitionPropertiesRecord,
         userId: UUID,
-    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, Unit> = KIO.comprehension {
 
         val now = LocalDateTime.now()
 
@@ -73,7 +76,7 @@ object CompetitionExecutionChallengeService {
         )
         !CompetitionMatchRepo.create(listOf(matchRecord)).orDie()
 
-        ApiResponse.noData
+        KIO.unit
     }
 
 
@@ -92,8 +95,10 @@ object CompetitionExecutionChallengeService {
 
         !KIO.failOn(competition.resultConfirmationImageRequired!! && file == null) { CompetitionExecutionError.ResultConfirmationImageMissing }
 
-        !EventService.checkIsChallengeEvent(competition.event!!)
-            .onFalseFail { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        val event = !EventRepo.get(competition.event!!).orDie()
+            .onNullFail { EventError.NotFound }
+        !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
+        !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
 
 
         val round = !CompetitionSetupRoundRepo.getWithMatchesBySetup(competition.propertiesId!!).orDie()

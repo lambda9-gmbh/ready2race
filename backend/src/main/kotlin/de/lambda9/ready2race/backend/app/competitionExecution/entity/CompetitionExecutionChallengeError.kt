@@ -11,6 +11,7 @@ sealed interface CompetitionExecutionChallengeError : ServiceError {
     data object ChallengeNotStartedYet : CompetitionExecutionChallengeError
     data object CorruptedSetup : CompetitionExecutionChallengeError
     data object ResultAlreadySubmitted : CompetitionExecutionChallengeError
+    data object SelfSubmissionNotAllowed : CompetitionExecutionChallengeError
 
     override fun respond(): ApiError = when (this) {
         NotAChallengeEvent -> ApiError(
@@ -36,6 +37,11 @@ sealed interface CompetitionExecutionChallengeError : ServiceError {
         ResultAlreadySubmitted -> ApiError(
             status = HttpStatusCode.Conflict,
             message = "The results for this team have already been submitted"
+        )
+
+        SelfSubmissionNotAllowed -> ApiError(
+            status = HttpStatusCode.Forbidden,
+            message = "Self submission of results is not allowed for this event"
         )
     }
 }

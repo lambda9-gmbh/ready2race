@@ -2,12 +2,10 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
-import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
-import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
+import de.lambda9.ready2race.backend.app.competitionExecution.control.*
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
-import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
@@ -18,6 +16,9 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
+import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentError
+import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
@@ -36,6 +37,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
+import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -1216,5 +1218,25 @@ object CompetitionExecutionService {
         }
 
         return bytes
+    }
+
+    fun downloadTeamResultDocument(
+        documentId: UUID,
+        clubId: UUID?,
+        scope: Privilege.Scope
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        val document = !CompetitionMatchTeamDocumentDataRepo.getDownload(documentId).orDie()
+            .onNullFail { CompetitionExecutionError.ResultDocumentNotFound }
+
+        !KIO.failOn(scope == Privilege.Scope.OWN && clubId != document.club) {
+            AuthError.PrivilegeMissing
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = document.name!!,
+                bytes = document.data!!,
+            )
+        )
     }
 }
