@@ -6,6 +6,7 @@ import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.*
@@ -20,9 +21,7 @@ import de.lambda9.ready2race.backend.app.participant.boundary.ParticipantService
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
-import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -34,10 +33,10 @@ import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.lexiNumberComp
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
-import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -78,10 +77,19 @@ object CompetitionRegistrationService {
         KIO.comprehension {
 
             val total =
-                !CompetitionRegistrationRepo.teamCountForCompetition(competitionId, params.search, scope, user).orDie()
-            val page = !CompetitionRegistrationRepo.teamPageForCompetition(competitionId, params, scope, user).orDie()
+                !CompetitionRegistrationTeamRepo.teamCountForCompetition(competitionId, params.search, scope, user)
+                    .orDie()
+            val page =
+                !CompetitionRegistrationTeamRepo.teamPageForCompetition(competitionId, params, scope, user).orDie()
 
             val requirementsForEvent = !ParticipantRequirementForEventRepo.get(eventId, onlyActive = true).orDie()
+
+            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+            val challengeResults = if (isChallengeEvent) {
+                !CompetitionMatchTeamRepo.getByCompetitionRegistrations(page.mapNotNull { it.competitionRegistrationId })
+                    .orDie()
+                    .map { list -> list.associate { it.competitionRegistration to it.resultValue } }
+            } else null
 
             page.traverse { team ->
                 KIO.comprehension {
@@ -139,9 +147,14 @@ object CompetitionRegistrationService {
                         }
                     }
 
+                    val challengeResult = if (challengeResults != null) {
+                        challengeResults[team.competitionRegistrationId!!]
+                    } else null
+
                     team.toDto(
                         requirementsForEvent,
-                        actuallyParticipatingWithInfos.groupBy({ it.first }, { it.second })
+                        actuallyParticipatingWithInfos.groupBy({ it.first }, { it.second }),
+                        challengeResult = challengeResult
                     )
                 }
             }.map {

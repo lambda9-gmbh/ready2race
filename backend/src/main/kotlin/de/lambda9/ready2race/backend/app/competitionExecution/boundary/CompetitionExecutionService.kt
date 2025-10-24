@@ -7,7 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.control.Competitio
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
-import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
@@ -15,6 +15,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetu
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
@@ -35,6 +36,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
@@ -69,9 +71,13 @@ object CompetitionExecutionService {
     }
 
     fun createNewRound(
+        eventId: UUID,
         competitionId: UUID,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId)
+            .onTrueFail { CompetitionExecutionChallengeError.NotAChallengeEvent }
+
         var createFollowingRound = true
         while (createFollowingRound) {
             val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
@@ -227,6 +233,7 @@ object CompetitionExecutionService {
     }
 
     fun getProgress(
+        eventId: UUID,
         competitionId: UUID,
     ): App<ServiceError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
         KIO.comprehension {
@@ -245,13 +252,9 @@ object CompetitionExecutionService {
                 registrations,
             )
 
-            val lastRoundFinished =
-                if (currentAndNextRound.second == null && currentAndNextRound.first != null) {
-                    currentAndNextRound.first!!.matches.flatMap { match -> match.teams.filter { it.place == null } }
-                        .isEmpty()
-                } else false
-
             val sortedRounds = sortRounds(setupRounds)
+
+            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
 
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
@@ -261,7 +264,7 @@ object CompetitionExecutionService {
                     CompetitionExecutionProgressDto(
                         rounds = it,
                         canNotCreateRoundReasons,
-                        lastRoundFinished
+                        isChallengeEvent = isChallengeEvent
                     )
                 )
             }

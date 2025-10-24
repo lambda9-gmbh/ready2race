@@ -1,14 +1,19 @@
 package de.lambda9.ready2race.backend.app.competitionSetup.boundary
 
 import de.lambda9.ready2race.backend.app.App
+import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionSetupRoundWithMatches
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
 import de.lambda9.ready2race.backend.app.competitionSetup.entity.*
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.unit
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -23,7 +28,7 @@ object CompetitionSetupService {
         competitionPropertiesId: UUID,
         setupTemplateId: UUID?,
         createRounds: Boolean
-    ): App<Nothing, UUID> = KIO.comprehension {
+    ): App<ServiceError, UUID> = KIO.comprehension {
 
         val setupId = !CompetitionSetupRepo.create(LocalDateTime.now().let { now ->
             CompetitionSetupRecord(
@@ -47,8 +52,15 @@ object CompetitionSetupService {
         requestRounds: List<CompetitionSetupRoundDto>,
         competitionPropertiesId: UUID?,
         competitionSetupTemplateId: UUID?
-    ): App<Nothing, Unit> = KIO.comprehension {
+    ): App<ServiceError, Unit> = KIO.comprehension {
 
+        // Cannot edit the setup for a challenge event since the setup structure is defined by the system
+        if (competitionPropertiesId != null) {
+            val eventId =
+                !CompetitionPropertiesRepo.getEventIdByCompetitionPropertiesId(competitionPropertiesId).orDie()
+                    .onNullFail { EventError.NotFound }
+            !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionSetupError.IsChallengeEvent }
+        }
         // Todo: Check if a round has already been generated for the competition - that round should be locked from being updated
 
         // Deletes all rounds for this competition - including matches, groups, places etc. by cascade
@@ -138,7 +150,7 @@ object CompetitionSetupService {
         request: CompetitionSetupDto,
         userId: UUID,
         key: UUID,
-    ): App<CompetitionSetupError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
         val competitionPropertiesId = !CompetitionPropertiesRepo.getIdByCompetitionOrTemplateId(key).orDie()
             .onNullFail { CompetitionSetupError.CompetitionPropertiesNotFound }
 

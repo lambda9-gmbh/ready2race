@@ -2,12 +2,7 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.StartListFileType
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRequest
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchResultRequest
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.UpdateCompetitionMatchRunningStateRequest
-import de.lambda9.ready2race.backend.app.competitionExecution.entity.UploadMatchResultRequest
-import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
+import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.substitution.boundary.substitution
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -17,10 +12,10 @@ import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import de.lambda9.ready2race.backend.xls.checkValidXls
 import de.lambda9.tailwind.core.KIO
-import io.ktor.http.content.PartData
-import io.ktor.server.request.receiveMultipart
+import io.ktor.http.content.*
+import io.ktor.server.request.*
 import io.ktor.server.routing.*
-import io.ktor.utils.io.toByteArray
+import io.ktor.utils.io.*
 
 private enum class StartListFileTypeParam {
     PDF,
@@ -32,9 +27,10 @@ fun Route.competitionExecution() {
         get {
             call.respondComprehension {
                 !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
                 val competitionId = !pathParam("competitionId", uuid)
 
-                CompetitionExecutionService.getProgress(competitionId)
+                CompetitionExecutionService.getProgress(eventId, competitionId)
             }
         }
         delete {
@@ -49,9 +45,10 @@ fun Route.competitionExecution() {
             post {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
                     val competitionId = !pathParam("competitionId", uuid)
 
-                    CompetitionExecutionService.createNewRound(competitionId, user.id!!)
+                    CompetitionExecutionService.createNewRound(eventId, competitionId, user.id!!)
                 }
             }
         }
@@ -73,7 +70,9 @@ fun Route.competitionExecution() {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
-                        val body = !receiveKIO<UpdateCompetitionMatchRunningStateRequest>(UpdateCompetitionMatchRunningStateRequest.example)
+                        val body = !receiveKIO<UpdateCompetitionMatchRunningStateRequest>(
+                            UpdateCompetitionMatchRunningStateRequest.example
+                        )
                         CompetitionExecutionService.updateMatchRunningState(competitionMatchId, user.id!!, body)
                     }
                 }
@@ -182,6 +181,67 @@ fun Route.competitionExecution() {
                         competitionId,
                         optionalUserAndScope?.second
                     )
+                }
+            }
+        }
+        route("/challenge") {
+            post("team-results/{competitionRegistrationId}") {
+                call.respondComprehension {
+
+                    // TODO: @evaluate if another resource would be a good idea - updateEventOwn is not used for other cases but it is a bit misleading
+                    val (user, scope) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.EVENT)
+                    val competitionId = !pathParam("competitionId", uuid)
+                    val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+
+                    val multiPartData = receiveMultipart()
+
+                    // Todo: Limit file size
+                    var upload: File? = null
+                    var request: CompetitionChallengeResultRequest? = null
+
+                    var done = false
+                    while (!done) {
+                        val part = multiPartData.readPart()
+                        if (part == null) {
+                            done = true
+                        } else {
+                            when (part) {
+                                is PartData.FileItem -> {
+                                    if (upload == null) {
+                                        upload = File(
+                                            part.originalFileName!!,
+                                            part.provider().toByteArray(),
+                                        )
+                                    } else {
+                                        KIO.fail(RequestError.File.Multiple)
+                                    }
+                                }
+
+                                is PartData.FormItem -> {
+                                    if (part.name == "request") {
+                                        request = jsonMapper.readValue<CompetitionChallengeResultRequest>(part.value)
+                                    }
+                                }
+
+                                else -> {}
+                            }
+                        }
+                    }
+
+                    val req = !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+
+                    // TODO: check valid image
+                    // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
+
+                    CompetitionExecutionChallengeService.saveChallengeResult(
+                        user = user,
+                        scope = scope,
+                        competitionId = competitionId,
+                        competitionRegistrationId = competitionRegistrationId,
+                        request = req,
+                        file = upload
+                    )
+
                 }
             }
         }

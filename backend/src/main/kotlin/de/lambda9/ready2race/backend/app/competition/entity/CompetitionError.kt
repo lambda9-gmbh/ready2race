@@ -10,6 +10,7 @@ sealed interface CompetitionError : ServiceError {
     data object CompetitionNotFound : CompetitionError
     data object CompetitionPropertiesNotFound : CompetitionError
     data object CompetitionTemplateUnknown : CompetitionError
+    data object CompetitionSetupForbiddenForChallengeEvent : CompetitionError
 
     data class ReferencedDaysUnknown(val days: List<UUID>) : CompetitionError
 
@@ -27,6 +28,11 @@ sealed interface CompetitionError : ServiceError {
         CompetitionTemplateUnknown -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Referenced competitionTemplate is unknown"
+        )
+
+        CompetitionSetupForbiddenForChallengeEvent -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Defining a competition setup in a challenge event is not allowed"
         )
 
         is ReferencedDaysUnknown -> ApiError(

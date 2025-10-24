@@ -5,20 +5,28 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
 import de.lambda9.ready2race.backend.app.competition.control.toDto
-import de.lambda9.ready2race.backend.app.competition.entity.*
+import de.lambda9.ready2race.backend.app.competition.entity.AssignDaysToCompetitionRequest
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionSortable
+import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionChallengeService
 import de.lambda9.ready2race.backend.app.competitionProperties.boundary.CompetitionPropertiesService
-import de.lambda9.ready2race.backend.app.competitionProperties.control.*
+import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.control.toRecord
+import de.lambda9.ready2race.backend.app.competitionProperties.control.toUpdateFunction
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayHasCompetitionRepo
 import de.lambda9.ready2race.backend.app.eventDay.control.EventDayRepo
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -34,7 +42,12 @@ object CompetitionService {
         eventId: UUID,
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
-        !EventService.checkEventExisting(eventId)
+        val event = !EventRepo.get(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+
+        KIO.failOn(event.challengeEvent == true && request.setupTemplate != null) {
+            CompetitionError.CompetitionSetupForbiddenForChallengeEvent
+        }
 
         val record = LocalDateTime.now().let { now ->
             CompetitionRecord(
@@ -52,8 +65,8 @@ object CompetitionService {
         !CompetitionPropertiesService.checkRequestReferences(request)
         !CompetitionPropertiesService.checkCompetitionSetupTemplateExisting(request.setupTemplate)
 
-        val competitionPropertiesId =
-            !CompetitionPropertiesRepo.create(request.toRecord(competitionId, null)).orDie()
+        val competitionPropertiesRecord = request.toRecord(competitionId, null)
+        val competitionPropertiesId = !CompetitionPropertiesRepo.create(competitionPropertiesRecord).orDie()
 
         !CompetitionPropertiesService.addCompetitionPropertiesReferences(
             namedParticipants = request.namedParticipants.map { it.toRecord(competitionPropertiesId) },
@@ -66,6 +79,11 @@ object CompetitionService {
             request.setupTemplate,
             true,
         )
+
+        // If challenge_event - create the round and match
+        if (event.challengeEvent == true) {
+            !CompetitionExecutionChallengeService.createChallengeSetup(competitionPropertiesRecord, userId)
+        }
 
         KIO.ok(ApiResponse.Created(competitionId))
     }

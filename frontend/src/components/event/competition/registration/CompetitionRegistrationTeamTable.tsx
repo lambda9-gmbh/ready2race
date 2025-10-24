@@ -1,10 +1,9 @@
 import {useTranslation} from 'react-i18next'
-import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
+import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
-import {CompetitionRegistrationTeamDto, getCompetitionRegistrationTeams} from '../../../../api'
-import {BaseEntityTableProps} from '@utils/types.ts'
+import {BaseEntityTableProps, EntityAction} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {useMemo} from 'react'
+import {useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
@@ -22,6 +21,11 @@ import QrCodeIcon from '@mui/icons-material/QrCode'
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import Cancel from '@mui/icons-material/Cancel'
+import {useUser} from '@contexts/user/UserContext.ts'
+import UploadIcon from '@mui/icons-material/Upload'
+import ChallengeResultDialog from '@components/event/competition/registration/ChallengeResultDialog.tsx'
+import {getCompetitionRegistrationTeams} from '@api/sdk.gen'
+import {CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -30,10 +34,13 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
-type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto>
+type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
+    eventData: EventDto
+}
 
-const CompetitionRegistrationTeamTable = ({...props}: Props) => {
+const CompetitionRegistrationTeamTable = ({eventData, ...props}: Props) => {
     const {t} = useTranslation()
+    const user = useUser()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -268,17 +275,53 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
         [],
     )
 
+    const customEntityActions = (entity: CompetitionRegistrationTeamDto): EntityAction[] => [
+        eventData.challengeEvent &&
+        entity.challengeResult === undefined &&
+        entity.deregistration === undefined &&
+        user.getPrivilegeScope('UPDATE', 'EVENT') !== undefined ? ( // TODO: NEW RESOURCE
+            <GridActionsCellItem
+                icon={<UploadIcon />}
+                label={'[todo] Enter results'}
+                onClick={() => {
+                    openResultsDialog(entity)
+                }}
+                showInMenu
+            />
+        ) : undefined,
+    ]
+
+    const [resultsDialogOpen, setResultsDialogOpen] = useState(false)
+    const openResultsDialog = (entity: CompetitionRegistrationTeamDto) => {
+        setResultsDialogOpen(true)
+        setSelectedTeam(entity)
+    }
+    const closeResultsDialog = () => {
+        setResultsDialogOpen(false)
+        setSelectedTeam(null)
+    }
+    const [selectedTeam, setSelectedTeam] = useState<CompetitionRegistrationTeamDto | null>(null)
+
     return (
-        <EntityTable
-            {...props}
-            parentResource={'REGISTRATION'}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            entityName={t('event.registration.teams')}
-        />
+        <>
+            <EntityTable
+                {...props}
+                parentResource={'REGISTRATION'}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                entityName={t('event.registration.teams')}
+                customEntityActions={customEntityActions}
+            />
+            <ChallengeResultDialog
+                dialogOpen={resultsDialogOpen}
+                teamDto={selectedTeam}
+                closeDialog={closeResultsDialog}
+                reloadTeams={props.reloadData}
+            />
+        </>
     )
 }
 

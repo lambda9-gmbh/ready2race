@@ -156,7 +156,7 @@ const CompetitionPage = () => {
                         {showRegistrationsTab && (
                             <Tab label={t('event.registration.teams')} {...tabProps('teams')} />
                         )}
-                        {user.checkPrivilege(updateEventGlobal) && (
+                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                             <Tab
                                 label={t('event.competition.setup.setup')}
                                 {...tabProps('setup')}
@@ -349,7 +349,7 @@ const CompetitionPage = () => {
                             <CompetitionRegistrationTeams eventData={eventData} />
                         </TabPanel>
                     )}
-                    {user.checkPrivilege(updateEventGlobal) && (
+                    {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                         <TabPanel index={'setup'} activeTab={activeTab}>
                             <CompetitionSetupForEvent />
                         </TabPanel>

@@ -43,6 +43,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
     formData: CompetitionForm,
+    leaveOutSetupTemplate: boolean = false,
 ): CompetitionPropertiesRequest {
     return {
         identifier: formData.identifier,
@@ -63,7 +64,9 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             amount: value.amount.replace(',', '.'),
             lateAmount: takeIfNotEmpty(value.lateAmount.replace(',', '.')),
         })),
-        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id),
+        setupTemplate: !leaveOutSetupTemplate
+            ? takeIfNotEmpty(formData.setupTemplate?.id)
+            : undefined,
         lateRegistrationAllowed: formData.lateRegistrationAllowed,
     }
 }

@@ -182,6 +182,7 @@ from competition_properties_has_fee cphf
 create view competition_view as
 select c.id,
        c.event,
+       cp.id                                                                     as properties_id,
        cp.identifier,
        substring(cp.identifier for length(cp.identifier) -
                                    length(substring(cp.identifier from '\d*$'))) as identifier_prefix,
@@ -190,6 +191,7 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
+       cp.result_confirmation_image_required,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -220,9 +222,9 @@ from competition c
          left join competition_registration cr on c.id = cr.competition
          left join event_day_has_competition edhc on c.id = edhc.competition
          left join event_day ed on edhc.event_day = ed.id
-group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed, cc.id,
-         cc.name,
-         cc.description, nps.total_count, nps.named_participants, fs.fees
+group by c.id, c.event, cp.id, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
+         cp.result_confirmation_image_required, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+         fs.fees
 ;
 
 create view competition_for_club_view as
@@ -472,6 +474,9 @@ select e.id,
        e.registration_available_to,
        e.late_registration_available_to,
        e.created_at,
+       e.challenge_event,
+       e.challenge_match_result_type,
+       e.self_submission,
        count(distinct c.id) as competition_count,
        min(ed.date)         as event_from,
        max(ed.date)         as event_to
@@ -500,6 +505,9 @@ select e.id,
        e.payment_due_by,
        e.late_payment_due_by,
        e.mixed_team_term,
+       e.challenge_event,
+       e.challenge_match_result_type,
+       e.self_submission,
        coalesce(array_agg(distinct er.club) filter ( where er.club is not null ), '{}') as registered_clubs,
        err.event is not null                                                            as registrations_finalized
 from event e

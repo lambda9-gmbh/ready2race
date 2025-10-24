@@ -20,7 +20,10 @@ const CompetitionRegistrationTeams = ({eventData}: Props) => {
 
     return (
         ((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (
-            <CompetitionRegistrationTeamTable {...competitionRegistrationTeamProps.table} />
+            <CompetitionRegistrationTeamTable
+                {...competitionRegistrationTeamProps.table}
+                eventData={eventData}
+            />
         )
     )
 }

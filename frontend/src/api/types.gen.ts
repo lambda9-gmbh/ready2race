@@ -205,6 +205,10 @@ export type CompetitionCategoryRequest = {
     description?: string
 }
 
+export type CompetitionChallengeResultRequest = {
+    result: number
+}
+
 export type CompetitionChoiceDto = {
     id: string
     identifier: string
@@ -242,7 +246,7 @@ export type CompetitionExecutionCanNotCreateRoundReason =
 export type CompetitionExecutionProgressDto = {
     rounds: Array<CompetitionRoundDto>
     canNotCreateRoundReasons: Array<CompetitionExecutionCanNotCreateRoundReason>
-    lastRoundFinished: boolean
+    isChallengeEvent: boolean
 }
 
 export type CompetitionMatchDto = {
@@ -371,6 +375,7 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationTeamNamedParticipantDto>
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
+    challengeResult?: number
 }
 
 export type CompetitionRegistrationTeamLockedDto = {
@@ -526,6 +531,23 @@ export type ContactInformationRequest = {
     email: string
 }
 
+export type CreateEventRequest = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+    invoicePrefix?: string
+    published: boolean
+    paymentDueBy?: string
+    latePaymentDueBy?: string
+    mixedTeamTerm?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
+}
+
 export type DocumentTemplateDto = {
     id: string
     name: string
@@ -635,6 +657,9 @@ export type EventDto = {
     registrationCount?: number
     registrationsFinalized: boolean
     mixedTeamTerm?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
 }
 
 export type EventInvoicesInfoDto = {
@@ -663,6 +688,9 @@ export type EventPublicDto = {
     competitionCount: number
     eventFrom?: string
     eventTo?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -775,20 +803,6 @@ export type EventRegistrationViewDto = {
     clubName: string
     competitionRegistrationCount: number
     participantCount: number
-}
-
-export type EventRequest = {
-    name: string
-    description?: string
-    location?: string
-    registrationAvailableFrom?: string
-    registrationAvailableTo?: string
-    lateRegistrationAvailableTo?: string
-    invoicePrefix?: string
-    published: boolean
-    paymentDueBy?: string
-    latePaymentDueBy?: string
-    mixedTeamTerm?: string
 }
 
 export type FeeDto = {
@@ -971,6 +985,8 @@ export type MatchResultTeamInfo = {
     deregisteredReason?: string
     participants: Array<ParticipantInfo>
 }
+
+export type MatchResultType = 'DISTANCE'
 
 export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
 
@@ -1612,6 +1628,22 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     failedReason?: string
 }
 
+export type UpdateEventRequest = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+    invoicePrefix?: string
+    published: boolean
+    paymentDueBy?: string
+    latePaymentDueBy?: string
+    mixedTeamTerm?: string
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
+}
+
 export type UpdateQrCodeRequirementDto = {
     requirementId: string
     namedParticipantId?: string
@@ -1994,7 +2026,7 @@ export type DeleteRoleResponse = void
 export type DeleteRoleError = BadRequestError | ApiError
 
 export type AddEventData = {
-    body: EventRequest
+    body: CreateEventRequest
 }
 
 export type AddEventResponse = string
@@ -2096,7 +2128,7 @@ export type GetEventResponse = EventDto
 export type GetEventError = BadRequestError | ApiError
 
 export type UpdateEventData = {
-    body: EventRequest
+    body: UpdateEventRequest
     path: {
         eventId: string
     }
@@ -4669,3 +4701,19 @@ export type ExportDataByWebDavError = BadRequestError | ApiError
 export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
+
+export type SubmitChallengeTeamResultsData = {
+    body: {
+        request: CompetitionChallengeResultRequest
+        files: Array<Blob | File>
+    }
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type SubmitChallengeTeamResultsResponse = void
+
+export type SubmitChallengeTeamResultsError = BadRequestError | ApiError

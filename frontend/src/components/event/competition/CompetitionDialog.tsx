@@ -20,7 +20,12 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import {createEventGlobal} from '@authorization/privileges.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 
-const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
+const CompetitionDialog = ({
+    isChallengeEvent,
+    ...props
+}: BaseEntityDialogProps<CompetitionDto> & {
+    isChallengeEvent: boolean
+}) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
@@ -30,14 +35,14 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
     const addAction = (formData: CompetitionForm) => {
         return addCompetition({
             path: {eventId: eventId},
-            body: mapCompetitionFormToCompetitionPropertiesRequest(formData),
+            body: mapCompetitionFormToCompetitionPropertiesRequest(formData, isChallengeEvent),
         })
     }
 
     const editAction = (formData: CompetitionForm, entity: CompetitionDto) => {
         return updateCompetition({
             path: {eventId: entity.event, competitionId: entity.id},
-            body: mapCompetitionFormToCompetitionPropertiesRequest(formData),
+            body: mapCompetitionFormToCompetitionPropertiesRequest(formData, isChallengeEvent),
         })
     }
 
@@ -116,7 +121,7 @@ const CompetitionDialog = (props: BaseEntityDialogProps<CompetitionDto>) => {
                 )}
                 <CompetitionPropertiesFormInputs
                     formContext={formContext}
-                    hideCompetitionSetupTemplate={props.entity !== undefined}
+                    hideCompetitionSetupTemplate={props.entity !== undefined || isChallengeEvent}
                 />
             </Stack>
         </EntityDialog>

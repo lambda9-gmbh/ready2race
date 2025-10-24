@@ -2,6 +2,7 @@ package de.lambda9.ready2race.backend.app.competitionProperties.control
 
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesContainingReference
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.update
@@ -47,7 +48,7 @@ object CompetitionPropertiesRepo {
             ).from(this)
                 .where(COMPETITION_CATEGORY.eq(competitionCategory))
                 .fetch()
-                .map{
+                .map {
                     CompetitionPropertiesContainingReference(
                         competitionTemplateId = it[COMPETITION_TEMPLATE],
                         competitionId = it[COMPETITION],
@@ -56,5 +57,16 @@ object CompetitionPropertiesRepo {
                     )
                 }
         }
+    }
+
+    fun getEventIdByCompetitionPropertiesId(
+        competitionPropertiesId: UUID
+    ): JIO<UUID?> = Jooq.query {
+        select(COMPETITION.EVENT)
+            .from(COMPETITION_PROPERTIES)
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION_PROPERTIES.ID.eq(competitionPropertiesId))
+            .fetchOne()
+            ?.value1()
     }
 }

@@ -21,14 +21,18 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object MatchResultsLocked : CompetitionExecutionError
     data object StartTimeNotSet : CompetitionExecutionError
     data object TeamWasPreviouslyDeregistered : CompetitionExecutionError
+    data object IsChallengeEvent : CompetitionExecutionError
+    data object ResultConfirmationImageMissing : CompetitionExecutionError
 
     // TODO: send out ErrorCodes for internationalization in frontend
     sealed interface ResultUploadError : CompetitionExecutionError {
         data object FileError : ResultUploadError
         data object NoHeaders : ResultUploadError
         data class ColumnUnknown(val expected: String) : ResultUploadError
-        data class CellBlank(val row: Int, val column: String): ResultUploadError
-        data class WrongCellType(val row: Int, val column: String, val actual: String, val expected: String) : ResultUploadError
+        data class CellBlank(val row: Int, val column: String) : ResultUploadError
+        data class WrongCellType(val row: Int, val column: String, val actual: String, val expected: String) :
+            ResultUploadError
+
         data class UnparsableString(val row: Int, val column: String, val value: String) : ResultUploadError
 
         data class WrongTeamCount(val actual: Int, val expected: Int) : ResultUploadError
@@ -121,10 +125,21 @@ sealed interface CompetitionExecutionError : ServiceError {
             message = "Cannot read given file",
             errorCode = ErrorCode.FILE_ERROR
         )
+
         ResultUploadError.NoHeaders -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Cannot column headers, expected them in first row.",
             errorCode = ErrorCode.SPREADSHEET_NO_HEADERS
+        )
+
+        IsChallengeEvent -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Not allowed when the event is a challenge event"
+        )
+
+        ResultConfirmationImageMissing -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "The result confirmation image is missing"
         )
 
         is ResultUploadError.CellBlank -> ApiError(
@@ -133,18 +148,21 @@ sealed interface CompetitionExecutionError : ServiceError {
             errorCode = ErrorCode.SPREADSHEET_CELL_BLANK,
             details = mapOf("row" to row, "column" to column)
         )
+
         is ResultUploadError.ColumnUnknown -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Required column '$expected' is missing",
             errorCode = ErrorCode.SPREADSHEET_COLUMN_UNKNOWN,
             details = mapOf("expected" to expected)
         )
+
         is ResultUploadError.WrongCellType -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Wrong cell type in row $row and column '$column'; actual: $actual, expected: $expected.",
             errorCode = ErrorCode.SPREADSHEET_WRONG_CELL_TYPE,
             details = mapOf("row" to row, "column" to column, "expected" to expected, "actual" to actual)
         )
+
         is ResultUploadError.UnparsableString -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Cannot parse '$value' in row $row and column '$column'.",
@@ -165,12 +183,14 @@ sealed interface CompetitionExecutionError : ServiceError {
             errorCode = ErrorCode.DUPLICATE_PLACES,
             details = mapOf("reason" to duplicates)
         )
+
         is ResultUploadError.Invalid.DuplicatedStartNumbers -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "There are duplicate start numbers in the given file.",
             errorCode = ErrorCode.DUPLICATE_START_NUMBERS,
             details = mapOf("reason" to duplicates)
         )
+
         is ResultUploadError.Invalid.Unexpected -> ApiError(
             status = HttpStatusCode.UnprocessableEntity,
             message = "Validation of given file unexpectedly failed",
