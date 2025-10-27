@@ -27,7 +27,9 @@ export type CompetitionForm = {
     }[]
     setupTemplate: AutocompleteOption
     lateRegistrationAllowed: boolean
-    resultConfirmationImageRequired: boolean
+    challengeConfirmationImage: boolean
+    challengeStartAt: string
+    challengeEndAt: string
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -40,12 +42,14 @@ export const competitionFormDefaultValues: CompetitionForm = {
     fees: [],
     setupTemplate: null,
     lateRegistrationAllowed: false,
-    resultConfirmationImageRequired: false,
+    challengeConfirmationImage: false,
+    challengeStartAt: '',
+    challengeEndAt: '',
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
     formData: CompetitionForm,
-    leaveOutSetupTemplate: boolean = false,
+    isChallengeEvent: boolean,
 ): CompetitionPropertiesRequest {
     return {
         identifier: formData.identifier,
@@ -66,11 +70,15 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             amount: value.amount.replace(',', '.'),
             lateAmount: takeIfNotEmpty(value.lateAmount.replace(',', '.')),
         })),
-        setupTemplate: !leaveOutSetupTemplate
-            ? takeIfNotEmpty(formData.setupTemplate?.id)
-            : undefined,
+        setupTemplate: !isChallengeEvent ? takeIfNotEmpty(formData.setupTemplate?.id) : undefined,
         lateRegistrationAllowed: formData.lateRegistrationAllowed,
-        resultConfirmationImageRequired: formData.resultConfirmationImageRequired,
+        challengeConfig: isChallengeEvent
+            ? {
+                  resultConfirmationImageRequired: formData.challengeConfirmationImage,
+                  startAt: formData.challengeStartAt,
+                  endAt: formData.challengeEndAt,
+              }
+            : undefined,
     }
 }
 
@@ -110,7 +118,11 @@ export function mapCompetitionPropertiesToCompetitionForm(
               }
             : null,
         lateRegistrationAllowed: dto.lateRegistrationAllowed,
-        resultConfirmationImageRequired: dto.resultConfirmationImageRequired,
+        challengeConfirmationImage: dto.challengeConfig
+            ? dto.challengeConfig.resultConfirmationImageRequired
+            : false,
+        challengeStartAt: dto.challengeConfig ? dto.challengeConfig.startAt : '',
+        challengeEndAt: dto.challengeConfig ? dto.challengeConfig.endAt : '',
     }
 }
 

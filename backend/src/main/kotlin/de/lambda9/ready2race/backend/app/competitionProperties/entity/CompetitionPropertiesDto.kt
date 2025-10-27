@@ -11,5 +11,5 @@ data class CompetitionPropertiesDto(
     val namedParticipants: List<NamedParticipantForCompetitionDto>,
     val fees: List<FeeForCompetitionDto>,
     val lateRegistrationAllowed: Boolean,
-    val resultConfirmationImageRequired: Boolean,
+    val challengeConfig: CompetitionChallengeConfigDto?,
 )

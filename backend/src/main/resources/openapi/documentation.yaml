@@ -6825,8 +6825,8 @@ components:
             $ref: '#/components/schemas/FeeForCompetitionDto'
         lateRegistrationAllowed:
           type: boolean
-        resultConfirmationImageRequired:
-          type: boolean
+        challengeConfig:
+          $ref: '#/components/schemas/CompetitionChallengeConfigDto'
 
 
     NamedParticipantForCompetitionDto:
@@ -6879,6 +6879,23 @@ components:
           type: string
           format: decimal
 
+    CompetitionChallengeConfigDto:
+      type: object
+      required:
+        - resultConfirmationImageRequired
+        - startAt
+        - endAt
+      properties:
+        resultConfirmationImageRequired:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+
+
 
     CompetitionPropertiesRequest:
       type: object
@@ -6888,7 +6905,6 @@ components:
         - namedParticipants
         - fees
         - lateRegistrationAllowed
-        - resultConfirmationImageRequired
       properties:
         identifier:
           type: string
@@ -6914,8 +6930,8 @@ components:
         setupTemplate:
           type: string
           format: uuid
-        resultConfirmationImageRequired:
-          type: boolean
+        challengeConfig:
+          $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -6957,6 +6973,22 @@ components:
         lateAmount:
           type: string
           format: decimal
+
+    CompetitionChallengeConfigRequest:
+      type: object
+      required:
+        - resultConfirmationImageRequired
+        - startAt
+        - endAt
+      properties:
+        resultConfirmationImageRequired:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
 
 
     # competition

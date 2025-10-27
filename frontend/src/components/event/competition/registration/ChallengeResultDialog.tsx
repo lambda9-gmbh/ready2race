@@ -33,6 +33,7 @@ type Props = {
     reloadTeams: () => void
     resultConfirmationImageRequired: boolean
     resultType?: MatchResultType
+    outsideOfChallengeTimespan: boolean
 }
 type Form = {
     result: string
@@ -139,6 +140,11 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
             <FormContainer formContext={formContext} onSuccess={() => setConfirming(true)}>
                 <DialogContent>
                     <Stack spacing={4}>
+                        {props.outsideOfChallengeTimespan && (
+                            <Alert severity={'warning'} variant={'outlined'}>
+                                {t('event.competition.execution.results.challenge.outsideOfTime')}
+                            </Alert>
+                        )}
                         <Card sx={{p: 2}}>
                             <Typography>
                                 {teamDto.clubName + (teamDto.name ? ` ${teamDto.name}` : '')}

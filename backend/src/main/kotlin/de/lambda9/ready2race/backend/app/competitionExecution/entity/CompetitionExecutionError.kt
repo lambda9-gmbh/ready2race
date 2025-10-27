@@ -24,6 +24,7 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object IsChallengeEvent : CompetitionExecutionError
     data object ResultConfirmationImageMissing : CompetitionExecutionError
     data object ResultDocumentNotFound : CompetitionExecutionError
+    data object NotInChallengeTimespan : CompetitionExecutionError
 
     // TODO: send out ErrorCodes for internationalization in frontend
     sealed interface ResultUploadError : CompetitionExecutionError {
@@ -146,6 +147,11 @@ sealed interface CompetitionExecutionError : ServiceError {
         ResultDocumentNotFound -> ApiError(
             status = HttpStatusCode.NotFound,
             message = "Result document not found"
+        )
+
+        NotInChallengeTimespan -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Results can not be submitted outside of the challenge timespan."
         )
 
         is ResultUploadError.CellBlank -> ApiError(

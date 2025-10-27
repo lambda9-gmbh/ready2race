@@ -45,9 +45,13 @@ object CompetitionService {
         val event = !EventRepo.get(eventId).orDie()
             .onNullFail { EventError.NotFound }
 
-        KIO.failOn(event.challengeEvent == true && request.setupTemplate != null) {
+        !KIO.failOn(event.challengeEvent == true && request.setupTemplate != null) {
             CompetitionError.CompetitionSetupForbiddenForChallengeEvent
         }
+        !KIO.failOn(event.challengeEvent == true && request.challengeConfig == null) {
+            CompetitionError.ChallengeConfigNotProvided
+        }
+
 
         val record = LocalDateTime.now().let { now ->
             CompetitionRecord(
@@ -68,9 +72,14 @@ object CompetitionService {
         val competitionPropertiesRecord = request.toRecord(competitionId, null)
         val competitionPropertiesId = !CompetitionPropertiesRepo.create(competitionPropertiesRecord).orDie()
 
+        val challengeConfig = if (request.challengeConfig != null) {
+            !request.challengeConfig.toRecord(competitionPropertiesId)
+        } else null
+
         !CompetitionPropertiesService.addCompetitionPropertiesReferences(
             namedParticipants = request.namedParticipants.map { it.toRecord(competitionPropertiesId) },
-            fees = request.fees.map { it.toRecord(competitionPropertiesId) }
+            fees = request.fees.map { it.toRecord(competitionPropertiesId) },
+            challengeConfig = challengeConfig
         )
 
         !CompetitionSetupService.createCompetitionSetup(
@@ -151,8 +160,14 @@ object CompetitionService {
     fun updateCompetition(
         request: CompetitionPropertiesRequest,
         userId: UUID,
-        competitionId: UUID
+        competitionId: UUID,
+        eventId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+
+        val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+        !KIO.failOn(isChallengeEvent && request.challengeConfig == null) {
+            CompetitionError.ChallengeConfigNotProvided
+        }
 
         !CompetitionRepo.update(competitionId) {
             updatedBy = userId
@@ -175,7 +190,8 @@ object CompetitionService {
         !CompetitionPropertiesService.updateCompetitionPropertiesReferences(
             competitionPropertiesId = competitionPropertiesId,
             namedParticipants = request.namedParticipants.map { it.toRecord(competitionPropertiesId) },
-            fees = request.fees.map { it.toRecord(competitionPropertiesId) }
+            fees = request.fees.map { it.toRecord(competitionPropertiesId) },
+            request.challengeConfig
         )
         noData
     }

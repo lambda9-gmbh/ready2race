@@ -193,7 +193,6 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
-       cp.result_confirmation_image_required,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -201,7 +200,10 @@ select c.id,
        coalesce(nps.named_participants, '{}')                                    as named_participants,
        coalesce(fs.fees, '{}')                                                   as fees,
        count(distinct cr.id)                                                     as registrations_count,
-       coalesce(array_agg(distinct ed) filter ( where ed.id is not null), '{}')  as event_days
+       coalesce(array_agg(distinct ed) filter ( where ed.id is not null), '{}')  as event_days,
+       cpcc.result_confirmation_image_required                                   as challenge_result_confirmation_image_required,
+       cpcc.start_at                                                             as challenge_start_at,
+       cpcc.end_at                                                               as challenge_end_at
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -224,9 +226,10 @@ from competition c
          left join competition_registration cr on c.id = cr.competition
          left join event_day_has_competition edhc on c.id = edhc.competition
          left join event_day ed on edhc.event_day = ed.id
+         left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
 group by c.id, c.event, cp.id, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
-         cp.result_confirmation_image_required, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees
+         cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at
 ;
 
 create view competition_for_club_view as
@@ -240,7 +243,6 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
-       cp.result_confirmation_image_required,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
@@ -248,7 +250,10 @@ select c.id,
        coalesce(nps.named_participants, '{}')                                    as named_participants,
        coalesce(fs.fees, '{}')                                                   as fees,
        count(distinct cr.id)                                                     as registrations_count,
-       cb.id                                                                     as club
+       cb.id                                                                     as club,
+       cpcc.result_confirmation_image_required                                   as challenge_result_confirmation_image_required,
+       cpcc.start_at                                                             as challenge_start_at,
+       cpcc.end_at                                                               as challenge_end_at
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -270,9 +275,10 @@ from competition c
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
          cross join club cb
          left join competition_registration cr on c.id = cr.competition and cb.id = cr.club
+         left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
-         cp.result_confirmation_image_required, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees, cb.id;
+         cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+         fs.fees, cb.id, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at;
 
 create view competition_public_view as
 select c.id,
@@ -285,13 +291,15 @@ select c.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
-       cp.result_confirmation_image_required,
        nps.total_count                                                           as total_count,
        cc.id                                                                     as category_id,
        cc.name                                                                   as category_name,
        cc.description                                                            as category_description,
        coalesce(nps.named_participants, '{}')                                    as named_participants,
-       coalesce(fs.fees, '{}')                                                   as fees
+       coalesce(fs.fees, '{}')                                                   as fees,
+       cpcc.result_confirmation_image_required                                   as challenge_result_confirmation_image_required,
+       cpcc.start_at                                                             as challenge_start_at,
+       cpcc.end_at                                                               as challenge_end_at
 from competition c
          join event e on c.event = e.id
          left join competition_properties cp on c.id = cp.competition
@@ -312,10 +320,11 @@ from competition c
                            filter (where ffcp.competition_properties is not null ) as fees
                     from fee_for_competition_properties ffcp
                     group by ffcp.competition_properties) fs on cp.id = fs.competition_properties
+         left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
 where e.published is true
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
-         cp.result_confirmation_image_required, cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees;
+         cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
+         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at;
 
 create view competition_template_view as
 select ct.id,
@@ -324,7 +333,6 @@ select ct.id,
        cp.short_name,
        cp.description,
        cp.late_registration_allowed,
-       cp.result_confirmation_image_required,
        cc.id                                  as category_id,
        cc.name                                as category_name,
        cc.description                         as category_description,

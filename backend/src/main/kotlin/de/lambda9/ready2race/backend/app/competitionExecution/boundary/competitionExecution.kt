@@ -37,9 +37,10 @@ fun Route.competitionExecution() {
         delete {
             call.respondComprehension {
                 !authenticate(Privilege.UpdateEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
                 val competitionId = !pathParam("competitionId", uuid)
 
-                CompetitionExecutionService.deleteCurrentRound(competitionId)
+                CompetitionExecutionService.deleteCurrentRound(competitionId = competitionId, eventId = eventId)
             }
         }
         route("/createNextRound") {
@@ -58,10 +59,16 @@ fun Route.competitionExecution() {
                 put {
                     call.respondComprehension {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventId = !pathParam("eventId", uuid)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                         val body = !receiveKIO(UpdateCompetitionMatchRequest.example)
-                        CompetitionExecutionService.updateMatchData(competitionMatchId, user.id!!, body)
+                        CompetitionExecutionService.updateMatchData(
+                            eventId = eventId,
+                            matchId = competitionMatchId,
+                            userId = user.id!!,
+                            request = body
+                        )
                     }
                 }
             }
@@ -69,12 +76,18 @@ fun Route.competitionExecution() {
                 put {
                     call.respondComprehension {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventId = !pathParam("eventId", uuid)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                         val body = !receiveKIO<UpdateCompetitionMatchRunningStateRequest>(
                             UpdateCompetitionMatchRunningStateRequest.example
                         )
-                        CompetitionExecutionService.updateMatchRunningState(competitionMatchId, user.id!!, body)
+                        CompetitionExecutionService.updateMatchRunningState(
+                            eventId = eventId,
+                            matchId = competitionMatchId,
+                            userId = user.id!!,
+                            request = body
+                        )
                     }
                 }
             }
@@ -82,15 +95,17 @@ fun Route.competitionExecution() {
                 put {
                     call.respondComprehension {
                         val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventId = !pathParam("eventId", uuid)
                         val competitionId = !pathParam("competitionId", uuid)
                         val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
                         val body = !receiveKIO(UpdateCompetitionMatchResultRequest.example)
                         CompetitionExecutionService.updateMatchResult(
-                            competitionId,
-                            competitionMatchId,
-                            user.id!!,
-                            body
+                            eventId = eventId,
+                            competitionId = competitionId,
+                            matchId = competitionMatchId,
+                            userId = user.id!!,
+                            request = body
                         )
                     }
                 }
@@ -99,6 +114,7 @@ fun Route.competitionExecution() {
             put("/results-file") {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
                     val competitionId = !pathParam("competitionId", uuid)
                     val competitionMatchId = !pathParam("competitionMatchId", uuid)
 
@@ -142,11 +158,12 @@ fun Route.competitionExecution() {
                     !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
 
                     CompetitionExecutionService.updateMatchResultByFile(
-                        competitionId,
-                        competitionMatchId,
-                        file,
-                        req,
-                        user.id!!
+                        eventId = eventId,
+                        competitionId = competitionId,
+                        matchId = competitionMatchId,
+                        file = file,
+                        request = req,
+                        userId = user.id!!
                     )
 
                 }
@@ -155,6 +172,7 @@ fun Route.competitionExecution() {
             get("/startList") {
                 call.respondComprehension {
                     !authenticate(Privilege.ReadEventGlobal)
+                    val eventId = !pathParam("eventId", uuid)
                     val competitionMatchId = !pathParam("competitionMatchId", uuid)
                     val typeParam = !queryParam("fileType", enum<StartListFileTypeParam>())
 
@@ -166,7 +184,11 @@ fun Route.competitionExecution() {
                         }
                     }
 
-                    CompetitionExecutionService.downloadStartlist(competitionMatchId, type)
+                    CompetitionExecutionService.downloadStartlist(
+                        eventId = eventId,
+                        matchId = competitionMatchId,
+                        type = type
+                    )
                 }
             }
         }
@@ -253,9 +275,15 @@ fun Route.competitionExecution() {
         get("/result-document/{resultDocumentId}") {
             call.respondComprehension {
                 val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.RESULT)
-                val id = !pathParam("resultDocumentId", uuid)
+                val eventId = !pathParam("eventId", uuid)
+                val docId = !pathParam("resultDocumentId", uuid)
 
-                CompetitionExecutionService.downloadTeamResultDocument(id, user.club, scope)
+                CompetitionExecutionService.downloadTeamResultDocument(
+                    eventId = eventId,
+                    documentId = docId,
+                    clubId = user.club,
+                    scope = scope
+                )
             }
         }
 

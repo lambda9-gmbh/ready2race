@@ -205,6 +205,18 @@ export type CompetitionCategoryRequest = {
     description?: string
 }
 
+export type CompetitionChallengeConfigDto = {
+    resultConfirmationImageRequired: boolean
+    startAt: string
+    endAt: string
+}
+
+export type CompetitionChallengeConfigRequest = {
+    resultConfirmationImageRequired: boolean
+    startAt: string
+    endAt: string
+}
+
 export type CompetitionChallengeResultRequest = {
     result: number
 }
@@ -284,7 +296,7 @@ export type CompetitionPropertiesDto = {
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
     lateRegistrationAllowed: boolean
-    resultConfirmationImageRequired: boolean
+    challengeConfig?: CompetitionChallengeConfigDto
 }
 
 export type CompetitionPropertiesRequest = {
@@ -297,7 +309,7 @@ export type CompetitionPropertiesRequest = {
     fees: Array<FeeForCompetitionRequestDto>
     lateRegistrationAllowed: boolean
     setupTemplate?: string
-    resultConfirmationImageRequired: boolean
+    challengeConfig?: CompetitionChallengeConfigRequest
 }
 
 export type CompetitionRegistrationDto = {

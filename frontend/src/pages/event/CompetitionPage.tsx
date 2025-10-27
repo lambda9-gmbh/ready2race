@@ -22,6 +22,7 @@ import {a11yProps, getRegistrationState} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
 import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 import CompetitionRegistrationTeams from '@components/event/competition/registration/CompetitionRegistrationTeams.tsx'
+import {format} from 'date-fns'
 
 const COMPETITION_TABS = [
     'general',
@@ -136,6 +137,13 @@ const CompetitionPage = () => {
         eventData?.lateRegistrationAvailableTo &&
         competitionData?.properties.lateRegistrationAllowed
 
+    const challengeTimespan = competitionData?.properties.challengeConfig
+        ? {
+              from: competitionData?.properties.challengeConfig?.startAt,
+              to: competitionData?.properties.challengeConfig?.endAt,
+          }
+        : undefined
+
     return (
         <Box sx={{display: 'flex', flexDirection: 'column'}}>
             {(competitionData && eventData && (
@@ -162,16 +170,18 @@ const CompetitionPage = () => {
                                 {...tabProps('setup')}
                             />
                         )}
-                        {user.checkPrivilege(updateEventGlobal) && (
+                        {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                             <Tab
                                 label={t('event.competition.execution.tabTitle')}
                                 {...tabProps('execution')}
                             />
                         )}
-                        <Tab
-                            label={t('event.competition.places.tabTitle')}
-                            {...tabProps('places')}
-                        />
+                        {!eventData.challengeEvent && (
+                            <Tab
+                                label={t('event.competition.places.tabTitle')}
+                                {...tabProps('places')}
+                            />
+                        )}
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>
                         {(competitionData.properties.description ||
@@ -319,21 +329,45 @@ const CompetitionPage = () => {
                                     </List>
                                 </Card>
                             )}
-                            <Card sx={{p: 2, flex: 1}}>
-                                {(eventDaysData && assignedEventDaysData && (
-                                    <CompetitionAndDayAssignment
-                                        entityPathId={competitionId}
-                                        options={selection}
-                                        assignedEntities={assignedEventDays}
-                                        assignEntityLabel={t('event.eventDay.eventDay')}
-                                        competitionsToDay={false}
-                                        reloadData={() => setReloadData(!reloadData)}
-                                    />
-                                )) ||
-                                    ((eventDaysPending || assignedEventDaysPending) && (
-                                        <Throbber />
-                                    ))}
-                            </Card>
+                            {!eventData.challengeEvent && (
+                                <Card sx={{p: 2, flex: 1}}>
+                                    {(eventDaysData && assignedEventDaysData && (
+                                        <CompetitionAndDayAssignment
+                                            entityPathId={competitionId}
+                                            options={selection}
+                                            assignedEntities={assignedEventDays}
+                                            assignEntityLabel={t('event.eventDay.eventDay')}
+                                            competitionsToDay={false}
+                                            reloadData={() => setReloadData(!reloadData)}
+                                        />
+                                    )) ||
+                                        ((eventDaysPending || assignedEventDaysPending) && (
+                                            <Throbber />
+                                        ))}
+                                </Card>
+                            )}
+                            {eventData.challengeEvent && (
+                                <Card sx={{p: 2, flex: 1}}>
+                                    <Typography variant={'overline'} gutterBottom>
+                                        {t(
+                                            'event.competition.challenge.resultConfirmationImageRequired',
+                                        )}
+                                    </Typography>
+                                    {challengeTimespan && (
+                                        <Typography>
+                                            {format(
+                                                new Date(challengeTimespan.from),
+                                                t('format.datetime'),
+                                            )}{' '}
+                                            -{' '}
+                                            {format(
+                                                new Date(challengeTimespan.to),
+                                                t('format.datetime'),
+                                            )}
+                                        </Typography>
+                                    )}
+                                </Card>
+                            )}
                         </Box>
                     </TabPanel>
                     {showRegistrationsTab && (
@@ -348,9 +382,7 @@ const CompetitionPage = () => {
                         <TabPanel index={'teams'} activeTab={activeTab}>
                             <CompetitionRegistrationTeams
                                 eventData={eventData}
-                                challengeConfirmationImageRequired={
-                                    competitionData.properties.resultConfirmationImageRequired
-                                }
+                                competitionData={competitionData}
                             />
                         </TabPanel>
                     )}
@@ -359,14 +391,16 @@ const CompetitionPage = () => {
                             <CompetitionSetupForEvent />
                         </TabPanel>
                     )}
-                    {user.checkPrivilege(updateEventGlobal) && (
+                    {user.checkPrivilege(updateEventGlobal) && !eventData.challengeEvent && (
                         <TabPanel index={'execution'} activeTab={activeTab}>
                             <CompetitionExecution />
                         </TabPanel>
                     )}
-                    <TabPanel index={'places'} activeTab={activeTab}>
-                        <CompetitionPlaces />
-                    </TabPanel>
+                    {!eventData.challengeEvent && (
+                        <TabPanel index={'places'} activeTab={activeTab}>
+                            <CompetitionPlaces />
+                        </TabPanel>
+                    )}
                 </Stack>
             )) ||
                 (competitionPending && eventPending && <Throbber />)}

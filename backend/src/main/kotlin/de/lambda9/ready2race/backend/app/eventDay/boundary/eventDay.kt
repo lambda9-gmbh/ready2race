@@ -50,7 +50,7 @@ fun Route.eventDay() {
                     val eventDayId = !pathParam("eventDayId", uuid)
 
                     val body = !receiveKIO(EventDayRequest.example)
-                    EventDayService.updateEvent(body, user.id!!, eventDayId)
+                    EventDayService.updateEventDay(body, user.id!!, eventDayId)
                 }
             }
 

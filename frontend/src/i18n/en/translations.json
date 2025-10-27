@@ -248,7 +248,6 @@
     "name": "Name",
     "description": "Description",
     "registerNow": "To Registration",
-    "resultConfirmationImageRequired": "Confirmation image for results required",
     "challengeEvent": {
       "challengeEvent": "Challenge mode",
       "explanation": "\"Challenge\" is an event mode where results of competitions are combined through the entire event. Teams can have a maximum of one result per competition and there will be no tournament trees.",
@@ -302,6 +301,12 @@
       "lateRegistrationAllowed": "Late registration allowed",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "challenge": {
+        "configs": "Challenge configs",
+        "resultConfirmationImageRequired": "Confirmation image for results required",
+        "start": "Challenge start",
+        "end": "Challenge end"
+      },
       "tableHint": {
         "competitionComponents": {
           "part1": "Categories, participants types and fee types for the competitions can be defined ",
@@ -621,7 +626,8 @@
             "confirmTitle": "Confirmation required",
             "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
             "confirm": "Confirm results",
-            "submitResults": "Submit results"
+            "submitResults": "Submit results",
+            "outsideOfTime": "You are currently outside of the challenge timespan."
           },
           "confirmationImage": {
             "confirmationImage": "Confirmation Image",

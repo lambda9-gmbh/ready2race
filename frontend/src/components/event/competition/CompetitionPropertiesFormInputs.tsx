@@ -20,10 +20,12 @@ import {useState} from 'react'
 import FormInputSwitch from '@components/form/input/FormInputSwitch.tsx'
 import {groupBy} from '@utils/helpers.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import FormInputDateTime from '@components/form/input/FormInputDateTime.tsx'
 
 type Props = {
     formContext: UseFormReturn<CompetitionForm>
     hideCompetitionSetupTemplate?: boolean
+    isChallengeEvent: boolean
 }
 
 // todo: rework styling
@@ -234,10 +236,31 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 name={'lateRegistrationAllowed'}
                 label={t('event.competition.lateRegistrationAllowed')}
             />
-            <FormInputCheckbox
-                name={'resultConfirmationImageRequired'}
-                label={t('event.resultConfirmationImageRequired')}
-            />
+            {props.isChallengeEvent && (
+                <Card sx={{p: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
+                    <Typography variant={'subtitle2'}>
+                        {t('event.competition.challenge.configs')}
+                    </Typography>
+                    <FormInputCheckbox
+                        name={'challengeConfirmationImage'}
+                        label={t('event.competition.challenge.resultConfirmationImageRequired')}
+                        horizontal
+                        reverse
+                    />
+                    <Box sx={{display: 'flex', gap: 2}}>
+                        <FormInputDateTime
+                            name={'challengeStartAt'}
+                            required
+                            label={t('event.competition.challenge.start')}
+                        />
+                        <FormInputDateTime
+                            name={'challengeEndAt'}
+                            required
+                            label={t('event.competition.challenge.end')}
+                        />
+                    </Box>
+                </Card>
+            )}
             <Divider />
             <FormInputLabel
                 label={t('event.competition.namedParticipant.namedParticipants')}

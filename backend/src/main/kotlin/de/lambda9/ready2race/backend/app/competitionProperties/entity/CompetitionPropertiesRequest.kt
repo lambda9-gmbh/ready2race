@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
 import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.selfValidator
 import java.util.*
 
 data class CompetitionPropertiesRequest(
@@ -20,7 +21,7 @@ data class CompetitionPropertiesRequest(
     val fees: List<FeeForCompetitionRequestDto>,
     val lateRegistrationAllowed: Boolean,
     val setupTemplate: UUID?, // Only relevant for add/edit template and add competition
-    val resultConfirmationImageRequired: Boolean,
+    val challengeConfig: CompetitionChallengeConfigRequest?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -35,7 +36,8 @@ data class CompetitionPropertiesRequest(
                 ),
                 notEmpty
             ),
-            this::fees validate collection
+            this::fees validate collection,
+            this::challengeConfig validate selfValidator
         )
 
     companion object {
@@ -50,7 +52,7 @@ data class CompetitionPropertiesRequest(
                 fees = listOf(FeeForCompetitionRequestDto.example),
                 lateRegistrationAllowed = true,
                 setupTemplate = UUID.randomUUID(),
-                resultConfirmationImageRequired = false,
+                challengeConfig = CompetitionChallengeConfigRequest.example,
             )
     }
 }

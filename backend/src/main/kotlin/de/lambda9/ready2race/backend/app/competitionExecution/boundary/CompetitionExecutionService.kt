@@ -16,9 +16,6 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
-import de.lambda9.ready2race.backend.app.eventDocument.control.EventDocumentRepo
-import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentError
-import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrationError
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
@@ -37,7 +34,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
-import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -358,11 +354,12 @@ object CompetitionExecutionService {
     }
 
     fun updateMatchData(
+        eventId: UUID,
         matchId: UUID,
         userId: UUID,
         request: UpdateCompetitionMatchRequest
-    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
-
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val setupMatch =
             !CompetitionSetupMatchRepo.get(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
@@ -458,11 +455,13 @@ object CompetitionExecutionService {
     }
 
     fun updateMatchResult(
+        eventId: UUID,
         competitionId: UUID,
         matchId: UUID,
         userId: UUID,
         request: UpdateCompetitionMatchResultRequest,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
@@ -481,12 +480,14 @@ object CompetitionExecutionService {
     }
 
     fun updateMatchResultByFile(
+        eventId: UUID,
         competitionId: UUID,
         matchId: UUID,
         file: File,
         request: UploadMatchResultRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
@@ -600,8 +601,10 @@ object CompetitionExecutionService {
     fun updateMatchRunningState(
         matchId: UUID,
         userId: UUID,
-        request: UpdateCompetitionMatchRunningStateRequest
-    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+        request: UpdateCompetitionMatchRunningStateRequest,
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
@@ -616,8 +619,11 @@ object CompetitionExecutionService {
 
 
     fun deleteCurrentRound(
-        competitionId: UUID
+        competitionId: UUID,
+        eventId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
         val currentRound = getCurrentAndNextRound(setupRounds).first
@@ -938,9 +944,11 @@ object CompetitionExecutionService {
     }
 
     fun downloadStartlist(
+        eventId: UUID,
         matchId: UUID,
         type: StartListFileType,
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val startListFile = !getStartList(matchId, type, startTimeRequired = true)
 
@@ -1221,10 +1229,12 @@ object CompetitionExecutionService {
     }
 
     fun downloadTeamResultDocument(
+        eventId: UUID,
         documentId: UUID,
         clubId: UUID?,
         scope: Privilege.Scope
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
         val document = !CompetitionMatchTeamDocumentDataRepo.getDownload(documentId).orDie()
             .onNullFail { CompetitionExecutionError.ResultDocumentNotFound }
 

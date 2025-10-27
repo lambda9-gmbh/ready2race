@@ -59,11 +59,15 @@ const CompetitionsAndEventDays = (props: Props) => {
                 {...competitionAdministrationProps.dialog}
                 isChallengeEvent={props.isChallengeEvent}
             />
-            <EventDayTable
-                {...eventDayAdministrationProps.table}
-                title={t('event.eventDay.eventDays')}
-            />
-            <EventDayDialog {...eventDayAdministrationProps.dialog} />
+            {!props.isChallengeEvent && (
+                <>
+                    <EventDayTable
+                        {...eventDayAdministrationProps.table}
+                        title={t('event.eventDay.eventDays')}
+                    />
+                    <EventDayDialog {...eventDayAdministrationProps.dialog} />
+                </>
+            )}
         </Stack>
     )
 }

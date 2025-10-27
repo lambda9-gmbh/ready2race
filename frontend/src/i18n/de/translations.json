@@ -248,7 +248,6 @@
     "name": "Name",
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
-    "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
     "challengeEvent": {
       "challengeEvent": "Challenge Modus",
       "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
@@ -302,6 +301,12 @@
       "lateRegistrationAllowed": "Nachmeldung erlaubt",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
+      "challenge": {
+        "configs": "Challenge Einstellungen",
+        "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
+        "start": "Challenge Start",
+        "end": "Challenge Ende"
+      },
       "tableHint": {
         "competitionComponents": {
           "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
@@ -619,9 +624,10 @@
             "challengeResults": "Challenge Ergebnis",
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
             "confirmTitle": "Bestätigung erforderlich",
-            "confirmBody": "Das Ergebnis kann nach dem Einreichung nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
+            "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
             "confirm": "Ergebnis bestätigen",
-            "submitResults": "Ergebnis einreichen"
+            "submitResults": "Ergebnis einreichen",
+            "outsideOfTime": "Sie befinden sich derzeit außerhalb des Challenge Zeitraums."
           },
           "confirmationImage": {
             "confirmationImage": "Bestätigungsbild",

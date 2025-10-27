@@ -122,6 +122,7 @@ const CompetitionDialog = ({
                 <CompetitionPropertiesFormInputs
                     formContext={formContext}
                     hideCompetitionSetupTemplate={props.entity !== undefined || isChallengeEvent}
+                    isChallengeEvent={isChallengeEvent}
                 />
             </Stack>
         </EntityDialog>

@@ -10,9 +10,6 @@ alter table competition_match_team
     add column result_value integer
 ;
 
-alter table competition_properties
-    add column result_confirmation_image_required boolean not null default false
-;
 
 create table competition_match_team_document
 (
@@ -29,4 +26,12 @@ create table competition_match_team_document_data
 (
     competition_match_team_document_id uuid primary key references competition_match_team_document on delete cascade,
     data                               bytea not null
+);
+
+create table competition_properties_challenge_config
+(
+    competition_properties             uuid primary key references competition_properties on delete cascade,
+    result_confirmation_image_required boolean   not null default false,
+    start_at                           timestamp not null,
+    end_at                             timestamp not null
 );

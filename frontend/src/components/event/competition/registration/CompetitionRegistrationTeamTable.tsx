@@ -27,11 +27,12 @@ import {useUser} from '@contexts/user/UserContext.ts'
 import EditNoteIcon from '@mui/icons-material/EditNote'
 import ChallengeResultDialog from '@components/event/competition/registration/ChallengeResultDialog.tsx'
 import {downloadMatchTeamResultDocument, getCompetitionRegistrationTeams} from '@api/sdk.gen'
-import {CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
+import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import BurstModeIcon from '@mui/icons-material/BurstMode'
 import DownloadIcon from '@mui/icons-material/Download'
+import {currentlyInTimespan} from '@utils/helpers.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -42,14 +43,10 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
     eventData: EventDto
-    challengeConfirmationImageRequired?: boolean
+    competitionData: CompetitionDto
 }
 
-const CompetitionRegistrationTeamTable = ({
-    eventData,
-    challengeConfirmationImageRequired,
-    ...props
-}: Props) => {
+const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
@@ -72,7 +69,12 @@ const CompetitionRegistrationTeamTable = ({
     const updateResultScope = user.getPrivilegeScope('UPDATE', 'RESULT')
     const resultSubmissionAllowed =
         updateResultScope === 'GLOBAL' ||
-        (updateResultScope === 'OWN' && eventData.allowSelfSubmission)
+        (updateResultScope === 'OWN' &&
+            eventData.allowSelfSubmission &&
+            currentlyInTimespan(
+                competitionData.properties.challengeConfig?.startAt,
+                competitionData.properties.challengeConfig?.endAt,
+            ))
 
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
@@ -289,59 +291,71 @@ const CompetitionRegistrationTeamTable = ({
                                                         {row.globalParticipantRequirements.length +
                                                             np.participantRequirements.length}{' '}
                                                     </Typography>
-                                                    <HtmlTooltip
-                                                        placement={'right'}
-                                                        title={
-                                                            <Stack spacing={1} p={1}>
-                                                                {[
-                                                                    ...row.globalParticipantRequirements.map(
-                                                                        gpr => ({
-                                                                            ...gpr,
-                                                                            qrCodeRequired: false,
-                                                                        }),
-                                                                    ),
-                                                                    ...np.participantRequirements,
-                                                                ].map(req => {
-                                                                    const note =
-                                                                        participant.participantRequirementsChecked.find(
-                                                                            c => c.id === req.id,
-                                                                        )?.note
-                                                                    return (
-                                                                        <Stack
-                                                                            direction={'row'}
-                                                                            spacing={1}
-                                                                            key={req.id}>
-                                                                            {participant.participantRequirementsChecked.some(
+                                                    {row.globalParticipantRequirements.length +
+                                                        np.participantRequirements.length >
+                                                        0 && (
+                                                        <HtmlTooltip
+                                                            placement={'right'}
+                                                            title={
+                                                                <Stack spacing={1} p={1}>
+                                                                    {[
+                                                                        ...row.globalParticipantRequirements.map(
+                                                                            gpr => ({
+                                                                                ...gpr,
+                                                                                qrCodeRequired:
+                                                                                    false,
+                                                                            }),
+                                                                        ),
+                                                                        ...np.participantRequirements,
+                                                                    ].map(req => {
+                                                                        const note =
+                                                                            participant.participantRequirementsChecked.find(
                                                                                 c =>
                                                                                     c.id === req.id,
-                                                                            ) ? (
-                                                                                <CheckCircle
-                                                                                    color={
-                                                                                        'success'
-                                                                                    }
-                                                                                />
-                                                                            ) : (
-                                                                                <Cancel
-                                                                                    color={'error'}
-                                                                                />
-                                                                            )}
-                                                                            <Typography>
-                                                                                {req.name}{' '}
-                                                                                {req.optional
-                                                                                    ? ` (${t('entity.optional')})`
-                                                                                    : ''}
-                                                                                {req.qrCodeRequired &&
-                                                                                    ' (QR)'}
-                                                                                {note &&
-                                                                                    ` [ ${note} ]`}
-                                                                            </Typography>
-                                                                        </Stack>
-                                                                    )
-                                                                })}
-                                                            </Stack>
-                                                        }>
-                                                        <Info color={'info'} fontSize={'small'} />
-                                                    </HtmlTooltip>
+                                                                            )?.note
+                                                                        return (
+                                                                            <Stack
+                                                                                direction={'row'}
+                                                                                spacing={1}
+                                                                                key={req.id}>
+                                                                                {participant.participantRequirementsChecked.some(
+                                                                                    c =>
+                                                                                        c.id ===
+                                                                                        req.id,
+                                                                                ) ? (
+                                                                                    <CheckCircle
+                                                                                        color={
+                                                                                            'success'
+                                                                                        }
+                                                                                    />
+                                                                                ) : (
+                                                                                    <Cancel
+                                                                                        color={
+                                                                                            'error'
+                                                                                        }
+                                                                                    />
+                                                                                )}
+                                                                                <Typography>
+                                                                                    {req.name}{' '}
+                                                                                    {req.optional
+                                                                                        ? ` (${t('entity.optional')})`
+                                                                                        : ''}
+                                                                                    {req.qrCodeRequired &&
+                                                                                        ' (QR)'}
+                                                                                    {note &&
+                                                                                        ` [ ${note} ]`}
+                                                                                </Typography>
+                                                                            </Stack>
+                                                                        )
+                                                                    })}
+                                                                </Stack>
+                                                            }>
+                                                            <Info
+                                                                color={'info'}
+                                                                fontSize={'small'}
+                                                            />
+                                                        </HtmlTooltip>
+                                                    )}
                                                 </Stack>
                                             </TableCell>
                                         </TableRow>
@@ -407,8 +421,17 @@ const CompetitionRegistrationTeamTable = ({
                 teamDto={selectedTeam}
                 closeDialog={closeResultsDialog}
                 reloadTeams={props.reloadData}
-                resultConfirmationImageRequired={challengeConfirmationImageRequired ?? false}
+                resultConfirmationImageRequired={
+                    competitionData.properties.challengeConfig?.resultConfirmationImageRequired ??
+                    false
+                }
                 resultType={eventData.challengeResultType}
+                outsideOfChallengeTimespan={
+                    !currentlyInTimespan(
+                        competitionData.properties.challengeConfig?.startAt,
+                        competitionData.properties.challengeConfig?.endAt,
+                    )
+                }
             />
         </>
     )

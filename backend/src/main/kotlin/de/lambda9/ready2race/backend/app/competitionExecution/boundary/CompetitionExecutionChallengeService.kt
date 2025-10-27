@@ -93,13 +93,20 @@ object CompetitionExecutionChallengeService {
         val competition = !CompetitionRepo.getById(competitionId).orDie()
             .onNullFail { CompetitionError.CompetitionNotFound }
 
-        !KIO.failOn(competition.resultConfirmationImageRequired!! && file == null) { CompetitionExecutionError.ResultConfirmationImageMissing }
+
+        val now = LocalDateTime.now()
 
         val event = !EventRepo.get(competition.event!!).orDie()
             .onNullFail { EventError.NotFound }
         !KIO.failOn(event.challengeEvent != true) { CompetitionExecutionChallengeError.NotAChallengeEvent }
         !KIO.failOn(scope == Privilege.Scope.OWN && event.selfSubmission != true) { SelfSubmissionNotAllowed }
 
+        !KIO.failOn(competition.challengeResultConfirmationImageRequired == true && file == null) { CompetitionExecutionError.ResultConfirmationImageMissing }
+
+        // Submitting results outside the timespan is only permitted for the GLOBAL Scope
+        val outsideChallengeTimespan =
+            competition.challengeStartAt?.isAfter(now) ?: false || competition.challengeEndAt?.isBefore(now) ?: false
+        !KIO.failOn(scope == Privilege.Scope.OWN && outsideChallengeTimespan) { CompetitionExecutionError.NotInChallengeTimespan }
 
         val round = !CompetitionSetupRoundRepo.getWithMatchesBySetup(competition.propertiesId!!).orDie()
             .andThen {
@@ -142,7 +149,6 @@ object CompetitionExecutionChallengeService {
 
         val highestStartNumber = !CompetitionMatchTeamRepo.getHighestStartNumber(match.competitionSetupMatch!!).orDie()
 
-        val now = LocalDateTime.now()
         val competitionMatchTeamRecord = CompetitionMatchTeamRecord(
             id = UUID.randomUUID(),
             competitionMatch = match.competitionSetupMatch!!,
