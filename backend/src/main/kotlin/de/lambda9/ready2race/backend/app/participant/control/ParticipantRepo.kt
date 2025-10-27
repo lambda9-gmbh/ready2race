@@ -21,6 +21,7 @@ object ParticipantRepo {
     private fun ParticipantView.searchFields() = listOf(FIRSTNAME, LASTNAME, EXTERNAL_CLUB_NAME)
 
     fun create(record: ParticipantRecord) = PARTICIPANT.insertReturning(record) { PARTICIPANT.ID }
+    fun create(records: List<ParticipantRecord>) = PARTICIPANT.insert(records)
 
     fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
 

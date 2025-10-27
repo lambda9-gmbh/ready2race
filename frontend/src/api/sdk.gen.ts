@@ -280,6 +280,9 @@ import type {
     AddClubParticipantData,
     AddClubParticipantError,
     AddClubParticipantResponse,
+    ImportClubParticipantsData,
+    ImportClubParticipantsError,
+    ImportClubParticipantsResponse,
     GetClubParticipantData,
     GetClubParticipantError,
     GetClubParticipantResponse,
@@ -1715,6 +1718,24 @@ export const addClubParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/club/{clubId}/participant',
+    })
+}
+
+export const importClubParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportClubParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportClubParticipantsResponse,
+        ImportClubParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/club/{clubId}/participant/import',
     })
 }
 

@@ -17,9 +17,16 @@ import de.lambda9.ready2race.backend.pagination.Direction
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.ToApiError
+import de.lambda9.ready2race.backend.csv.CSV
+import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.SubstitutionViewRecord
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.kio.onTrueFail
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.enum
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -33,6 +40,41 @@ object ParticipantService {
     private fun dtoSearchFields(): List<(ParticipantForEventDto) -> String?> =
         listOf({ it.firstname }, { it.lastname }, { it.externalClubName }, { it.clubName })
 
+
+    fun importParticipants(
+        file: File,
+        request: ParticipantImportRequest,
+        userId: UUID,
+        clubId: UUID,
+    ): App<ToApiError, ApiResponse.NoData> = KIO.comprehension {
+
+        val iStream = file.bytes.inputStream()
+
+        val entries = !CSV.read(iStream, request.separator) {
+
+            val externalClubname = !optionalCell(request.colExternalClubname)
+            val now = LocalDateTime.now()
+
+            ParticipantRecord(
+                id = UUID.randomUUID(),
+                club = clubId,
+                firstname = !cell(request.colFirstname),
+                lastname = !cell(request.colLastname),
+                year = !cell(request.colYear, int),
+                gender = !cell(request.colGender, enum<Gender>()),
+                external = externalClubname != null,
+                externalClubName = externalClubname,
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+            )
+        }
+
+        !ParticipantRepo.create(entries).orDie()
+
+        noData
+    }
 
     fun addParticipant(
         request: ParticipantUpsertDto,
