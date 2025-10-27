@@ -1,11 +1,14 @@
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {clubIndexRoute} from '@routes'
 import {deleteClubParticipant, getClubParticipants, ParticipantDto} from '../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
-import {Check} from '@mui/icons-material'
+import {Check, Upload} from '@mui/icons-material'
+import {Button} from '@mui/material'
+import ParticipantImportDialog from '@components/participant/ParticipantImportDialog.tsx'
+import {useState} from 'react'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -16,6 +19,7 @@ const initialSort: GridSortModel = [{field: 'firstname', sort: 'asc'}]
 
 const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
     const {t} = useTranslation()
+    const [showImportDialog, setShowImportDialog] = useState(false)
 
     const {clubId} = clubIndexRoute.useParams()
 
@@ -70,18 +74,33 @@ const ParticipantTable = (props: BaseEntityTableProps<ParticipantDto>) => {
     ]
 
     return (
-        <EntityTable
-            {...props}
-            deletableIf={p => !p.usedInRegistration}
-            parentResource={'CLUB'}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            entityName={t('club.participant.title')}
-            deleteRequest={deleteRequest}
-        />
+        <>
+            <EntityTable
+                {...props}
+                deletableIf={p => !p.usedInRegistration}
+                parentResource={'CLUB'}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                entityName={t('club.participant.title')}
+                deleteRequest={deleteRequest}
+                customTableActions={
+                    <Button
+                        variant={'outlined'}
+                        startIcon={<Upload />}
+                        onClick={() => setShowImportDialog(true)}>
+                        <Trans i18nKey={'club.participant.import'} />
+                    </Button>
+                }
+            />
+            <ParticipantImportDialog
+                open={showImportDialog}
+                onClose={() => setShowImportDialog(false)}
+                reloadParticipants={props.reloadData}
+            />
+        </>
     )
 }
 

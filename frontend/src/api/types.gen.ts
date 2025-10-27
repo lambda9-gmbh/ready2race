@@ -1142,11 +1142,11 @@ export type ParticipantForExecutionDto = {
 }
 
 export type ParticipantImportRequest = {
-    separator?: string
-    colFirstname?: string
-    colLastname?: string
-    colYear?: string
-    colGender?: string
+    separator: string
+    colFirstname: string
+    colLastname: string
+    colYear: string
+    colGender: string
     colExternalClubname?: string
 }
 

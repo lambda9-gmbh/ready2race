@@ -18,15 +18,19 @@ class RowReader(
     fun cell(header: String): IO<CSVReadError.CellError, String> =
         cell(header) { it }
 
-    fun <A> optionalCell(header: String, parser: Parser<A & Any>): IO<CSVReadError.CellError, A?> =
-        cellInternal(header, parser).recover {
-            when (it) {
-                is CSVReadError.CellError.ColumnUnknown, is CSVReadError.CellError.MissingValue -> KIO.ok(null)
-                else -> KIO.fail(it)
+    fun <A> optionalCell(header: String?, parser: Parser<A & Any>): IO<CSVReadError.CellError, A?> =
+        if (header == null) {
+            KIO.ok(null)
+        } else {
+            cellInternal(header, parser).recover {
+                when (it) {
+                    is CSVReadError.CellError.ColumnUnknown, is CSVReadError.CellError.MissingValue -> KIO.ok(null)
+                    else -> KIO.fail(it)
+                }
             }
         }
 
-    fun optionalCell(header: String): IO<CSVReadError.CellError, String?> =
+    fun optionalCell(header: String?): IO<CSVReadError.CellError, String?> =
         optionalCell(header) { it }
 
     private fun <A : Any> cellInternal(header: String, parser: Parser<A>): IO<CSVReadError.CellError, A> =

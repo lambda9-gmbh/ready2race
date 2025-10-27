@@ -7866,6 +7866,11 @@ components:
     ParticipantImportRequest:
       type: object
       required:
+        - separator
+        - colFirstname
+        - colLastname
+        - colYear
+        - colGender
       properties:
         separator:
           type: string

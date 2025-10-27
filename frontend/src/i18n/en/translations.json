@@ -196,6 +196,29 @@
     "clubs": "Clubs",
     "participants": "Members",
     "participant": {
+      "import": "Import members",
+      "upload": {
+        "dialog": {
+          "error": {
+            "separatorTooLong": "Please provide a single character as csv-separator."
+          },
+          "separator": "Separator",
+          "cols": "Column names",
+          "col": {
+            "firstname": "First name",
+            "lastname": "Last name",
+            "year": "Year of Birth",
+            "gender": "Gender",
+            "external": "External club name"
+          },
+          "file": {
+            "missing": "Please provide a file.",
+            "change": "Change .csv file",
+            "choose": "Choose .csv file"
+          },
+          "submit": "Import members"
+        }
+      },
       "title": "Member",
       "name": "Name",
       "yearOfBirth": "Year of birth",

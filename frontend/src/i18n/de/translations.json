@@ -196,6 +196,29 @@
     "clubs": "Vereine",
     "participants": "Mitglieder",
     "participant": {
+      "import": "Mitglieder importieren",
+      "upload": {
+        "dialog": {
+          "error": {
+            "separatorTooLong": "Bitte geben Sie nur ein einzige Zeichen als CSV-Separator an."
+          },
+          "separator": "Separator",
+          "cols": "Spaltennamen",
+          "col": {
+            "firstname": "Vorname",
+            "lastname": "Nachname",
+            "year": "Geburtsjahr",
+            "gender": "Geschlecht",
+            "external": "Vereinszugehörigkeit"
+          },
+          "file": {
+            "missing": "Bitte wählen Sie eine Datei aus.",
+            "change": ".csv Datei ändern",
+            "choose": ".csv Datei auswählen"
+          },
+          "submit": "Mitglieder importieren"
+        }
+      },
       "title": "Mitglied",
       "name": "Name",
       "yearOfBirth": "Geburtsjahr",
