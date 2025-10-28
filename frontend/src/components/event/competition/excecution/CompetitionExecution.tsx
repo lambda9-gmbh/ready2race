@@ -265,7 +265,7 @@ const CompetitionExecution = () => {
         if (error) {
             if (error.status.value === 400) {
                 if (error.errorCode === 'FILE_ERROR') {
-                    feedback.error(t('event.competition.execution.results.error.FILE_ERROR'))
+                    feedback.error(t('common.error.upload.FILE_ERROR'))
                 } else if (error.message === 'Unsupported file type') {
                     // TODO: replace with error code!
                     feedback.error(t('common.error.upload.unsupportedType'))
@@ -276,20 +276,17 @@ const CompetitionExecution = () => {
                 const details = 'details' in error && error.details
                 switch (error.errorCode) {
                     case 'SPREADSHEET_NO_HEADERS':
-                        feedback.error(t('event.competition.execution.results.error.NO_HEADERS'))
+                        feedback.error(t('common.error.upload.NO_HEADERS'))
                         break
                     case 'SPREADSHEET_COLUMN_UNKNOWN':
                         feedback.error(
-                            t(
-                                'event.competition.execution.results.error.COLUMN_UNKNOWN',
-                                details as {expected: string},
-                            ),
+                            t('common.error.upload.COLUMN_UNKNOWN', details as {expected: string}),
                         )
                         break
                     case 'SPREADSHEET_CELL_BLANK':
                         feedback.error(
                             t(
-                                'event.competition.execution.results.error.CELL_BLANK',
+                                'common.error.upload.CELL_BLANK',
                                 details as {row: number; column: string},
                             ),
                         )
@@ -297,7 +294,7 @@ const CompetitionExecution = () => {
                     case 'SPREADSHEET_WRONG_CELL_TYPE':
                         feedback.error(
                             t(
-                                'event.competition.execution.results.error.WRONG_CELL_TYPE',
+                                'common.error.upload.WRONG_CELL_TYPE',
                                 details as {
                                     row: number
                                     column: string
@@ -310,7 +307,7 @@ const CompetitionExecution = () => {
                     case 'SPREADSHEET_UNPARSABLE_STRING':
                         feedback.error(
                             t(
-                                'event.competition.execution.results.error.UNPARSABLE_STRING',
+                                'common.error.upload.UNPARSABLE_STRING',
                                 details as {
                                     row: number
                                     column: string

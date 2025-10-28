@@ -16,7 +16,14 @@
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}.",
       "upload": {
-        "unsupportedType": "This file type is not supported."
+        "unsupportedType": "This file type is not supported.",
+        "FILE_ERROR": "File could not be read.",
+        "NO_HEADERS": "There are no valid columns in the given file.",
+        "SPREADSHEET_MALFORMED": "The given file is malformed and cannot be read.",
+        "COLUMN_UNKNOWN": "Could not find expected column '{{expected}}'.",
+        "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
+        "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
+        "UNPARSABLE_STRING": "Unparsable string value '{{value}}' in row {{row}}, column '{{column}}'"
       }
     },
     "organisation": "Organisation",
@@ -615,12 +622,6 @@
             "XLS": "as XLS-File"
           },
           "error": {
-            "FILE_ERROR": "File could not be read.",
-            "NO_HEADERS": "There are no valid columns in the given file.",
-            "COLUMN_UNKNOWN": "Could not find expected column '{{expected}}'.",
-            "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
-            "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
-            "UNPARSABLE_STRING": "Unparsable string value '{{value}}' in row {{row}}, column '{{column}}'",
             "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
             "DUPLICATE_PLACES": "There are duplicate places among the teams",
             "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",

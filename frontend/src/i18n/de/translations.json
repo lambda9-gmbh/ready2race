@@ -16,7 +16,14 @@
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
       "upload": {
-        "unsupportedType": "Dieser Dateityp wird nicht unterstützt."
+        "unsupportedType": "Dieser Dateityp wird nicht unterstützt.",
+        "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
+        "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
+        "SPREADSHEET_MALFORMED": "Der Inhalt der Datei konnte nicht gelesen werden.",
+        "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
+        "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
+        "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
+        "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'"
       }
     },
     "organisation": "Organisation",
@@ -615,12 +622,6 @@
             "XLS": "als XLS-Datei"
           },
           "error": {
-            "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
-            "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
-            "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
-            "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
-            "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
-            "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'",
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",

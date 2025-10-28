@@ -10,6 +10,7 @@ import {clubIndexRoute} from '@routes'
 import SelectFileButton from '@components/SelectFileButton.tsx'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {useFeedback} from '@utils/hooks.ts'
 
 type Props = {
     open: boolean
@@ -50,6 +51,7 @@ const mapFormToRequest = (formData: Form): ParticipantImportRequest => ({
 
 const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => {
     const {t} = useTranslation()
+    const feedback = useFeedback()
     const formContext = useForm<Form>()
     const [submitting, setSubmitting] = useState(false)
 
@@ -85,7 +87,7 @@ const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => 
 
     const handleImport = async (formData: Form) => {
         setSubmitting(true)
-        await importClubParticipants({
+        const {error} = await importClubParticipants({
             path: {
                 clubId,
             },
@@ -95,8 +97,73 @@ const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => 
             },
         })
         setSubmitting(false)
-        onClose()
-        reloadParticipants()
+
+        if (error) {
+            if (error.status.value === 400) {
+                if (error.errorCode === 'FILE_ERROR') {
+                    feedback.error(t('common.error.upload.FILE_ERROR'))
+                } else if (error.message === 'Unsupported file type') {
+                    // TODO: replace with error code!
+                    feedback.error(t('common.error.upload.unsupportedType'))
+                } else {
+                    feedback.error(t('common.error.unexpected'))
+                }
+            } else if (error.status.value === 422) {
+                const details = 'details' in error && error.details
+                switch (error.errorCode) {
+                    case 'SPREADSHEET_NO_HEADERS':
+                        feedback.error(t('common.error.upload.NO_HEADERS'))
+                        break
+                    case 'SPREADSHEET_MALFORMED':
+                        feedback.error(t('common.error.upload.SPREADSHEET_MALFORMED'))
+                        break
+                    case 'SPREADSHEET_COLUMN_UNKNOWN':
+                        feedback.error(
+                            t('common.error.upload.COLUMN_UNKNOWN', details as {expected: string}),
+                        )
+                        break
+                    case 'SPREADSHEET_CELL_BLANK':
+                        feedback.error(
+                            t(
+                                'common.error.upload.CELL_BLANK',
+                                details as {row: number; column: string},
+                            ),
+                        )
+                        break
+                    case 'SPREADSHEET_WRONG_CELL_TYPE':
+                        feedback.error(
+                            t(
+                                'common.error.upload.WRONG_CELL_TYPE',
+                                details as {
+                                    row: number
+                                    column: string
+                                    actual: string
+                                    expected: string
+                                },
+                            ),
+                        )
+                        break
+                    case 'SPREADSHEET_UNPARSABLE_STRING':
+                        feedback.error(
+                            t(
+                                'common.error.upload.UNPARSABLE_STRING',
+                                details as {
+                                    row: number
+                                    column: string
+                                    value: string
+                                },
+                            ),
+                        )
+                        break
+                    default:
+                        feedback.error(t('common.error.unexpected'))
+                        break
+                }
+            }
+        } else {
+            onClose()
+            reloadParticipants()
+        }
     }
 
     return (
