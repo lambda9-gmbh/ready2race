@@ -107,10 +107,20 @@ export const createSubstitutionGlobal: Privilege = {
     resource: 'SUBSTITUTION',
     scope: 'GLOBAL',
 }
-
 export const deleteSubstitutionGlobal: Privilege = {
     action: 'DELETE',
     resource: 'SUBSTITUTION',
+    scope: 'GLOBAL',
+}
+export const updateWebDavGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'WEB_DAV',
+    scope: 'GLOBAL',
+    scope: 'GLOBAL',
+}
+export const readWebDavGlobal: Privilege = {
+    action: 'READ',
+    resource: 'WEB_DAV',
     scope: 'GLOBAL',
 }
 

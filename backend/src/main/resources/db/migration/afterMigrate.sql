@@ -2,6 +2,12 @@ set search_path to ready2race, pg_catalog, public;
 
 drop view if exists competition_match_team_document_download;
 drop view if exists competition_match_team_result;
+drop view if exists event_for_export;
+drop view if exists competition_for_export;
+drop view if exists webdav_import_data_dependency_view;
+drop view if exists webdav_import_data_dependency_view;
+drop view if exists webdav_export_data_dependency_view;
+drop view if exists webdav_import_process_status;
 drop view if exists webdav_export_process_status;
 drop view if exists webdav_export_folder_view;
 drop view if exists app_user_for_event;
@@ -1060,17 +1066,20 @@ where exists(select 1
                                                   and cd.competition_setup_round = csr.id)));
 
 create view competition_match_for_event as
-select cm.competition_setup_match as match_id,
-       e.id                       as event_id,
-       c.id                       as competition_id,
-       cp.identifier              as competition_identifier,
-       cp.name                    as competition_name
+select cm.competition_setup_match                                                      as match_id,
+       e.id                                                                            as event_id,
+       c.id                                                                            as competition_id,
+       cp.identifier                                                                   as competition_identifier,
+       cp.name                                                                         as competition_name,
+       coalesce(array_agg(st) filter ( where st.competition_match is not null ), '{}') as teams
 from competition_match cm
          join competition_setup_match csm on csm.id = cm.competition_setup_match
          join competition_setup_round csr on csr.id = csm.competition_setup_round
          join competition_properties cp on cp.id = csr.competition_setup
          join competition c on c.id = cp.competition
-         join event e on e.id = c.event;
+         join event e on e.id = c.event
+         left join startlist_team st on csm.id = st.competition_match
+group by cm.competition_setup_match, e.id, c.id, cp.identifier, cp.name;
 
 create view app_user_for_event as
 select au.id,
@@ -1103,12 +1112,71 @@ create view webdav_export_process_status as
 select wep.id,
        wep.name,
        wep.created_at,
-       cb                                                                        as created_by,
-       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}') as file_exports
+       cb                                                                          as created_by,
+       coalesce(array_agg(distinct we) filter ( where we.id is not null ), '{}')   as file_exports,
+       coalesce(array_agg(distinct wed) filter ( where wed.id is not null ), '{}') as data_exports
 from webdav_export_process wep
          left join webdav_export we on wep.id = we.webdav_export_process
+         left join webdav_export_data wed on wep.id = wed.webdav_export_process
          left join app_user_name cb on wep.created_by = cb.id
 group by wep.id, wep.name, wep.created_at, cb;
+
+create view webdav_import_process_status as
+select wip.id,
+       wip.import_folder_name,
+       wip.created_at,
+       cb                                                                          as created_by,
+       coalesce(array_agg(distinct wid) filter ( where wid.id is not null ), '{}') as imports
+from webdav_import_process wip
+         left join webdav_import_data wid on wip.id = wid.webdav_import_process
+         left join app_user_name cb on wip.created_by = cb.id
+group by wip.id, wip.import_folder_name, wip.created_at, cb;
+
+create view webdav_export_data_dependency_view as
+select data,
+       data.exported_at,
+       data.error_at,
+       data.error,
+       case
+           when count(dep_on) = 0 then true
+           else bool_and(dep_on.exported_at is not null)
+           end as all_dependencies_exported
+from webdav_export_data data
+         left join webdav_export_dependency wed on data.id = wed.webdav_export_data
+         left join webdav_export_data dep_on on dep_on.id = wed.depending_on
+group by data, data.exported_at, data.error_at, data.error
+;
+
+create view webdav_import_data_dependency_view as
+select data,
+       data.imported_at,
+       data.error_at,
+       data.error,
+       case
+           when count(dep_on) = 0 then true
+           else bool_and(dep_on.imported_at is not null)
+           end as all_dependencies_imported
+from webdav_import_data data
+         left join webdav_import_dependency wid on data.id = wid.webdav_import_data
+         left join webdav_import_data dep_on on dep_on.id = wid.depending_on
+group by data, data.imported_at, data.error_at, data.error
+;
+
+create view competition_for_export as
+select c.id,
+       c.event,
+       cp.identifier,
+       cp.name
+from competition c
+         join competition_properties cp on cp.competition = c.id;
+
+create view event_for_export as
+select e.id,
+       e.name,
+       coalesce(array_agg(distinct cfe) filter ( where cfe.id is not null ), '{}') as competitions
+from event e
+         left join competition_for_export cfe on cfe.event = e.id
+group by e.id, e.name;
 
 
 create view competition_match_team_result as

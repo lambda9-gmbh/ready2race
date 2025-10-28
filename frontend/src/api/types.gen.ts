@@ -261,6 +261,12 @@ export type CompetitionExecutionProgressDto = {
     isChallengeEvent: boolean
 }
 
+export type CompetitionForExportDto = {
+    id: string
+    identifier: string
+    name: string
+}
+
 export type CompetitionMatchDto = {
     id: string
     name?: string
@@ -682,6 +688,12 @@ export type EventDto = {
     allowSelfSubmission: boolean
 }
 
+export type EventForExportDto = {
+    id: string
+    name: string
+    competitions: Array<CompetitionForExportDto>
+}
+
 export type EventInvoicesInfoDto = {
     totalAmount: string
     paidAmount: string
@@ -850,6 +862,11 @@ export type FeeForCompetitionRequestDto = {
 export type FeeRequest = {
     name: string
     description?: string
+}
+
+export type FileExportEventStatusDto = {
+    eventName: string
+    fileExportTypes: WebDAVExportType
 }
 
 export type Gender = 'M' | 'F' | 'D'
@@ -1388,6 +1405,7 @@ export type Resource =
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
+    | 'WEB_DAV'
     | 'RESULT'
 
 export type RoleDto = {
@@ -1679,10 +1697,14 @@ export type VerifyRegistrationRequest = {
     token: string
 }
 
+export type WebDAVExportEventRequest = {
+    [key: string]: unknown
+}
+
 export type WebDAVExportRequest = {
     name: string
-    events: Array<string>
-    selectedResources: Array<WebDAVExportType>
+    events: Array<WebDAVExportEventRequest>
+    selectedDatabaseExports: Array<WebDAVExportType>
 }
 
 export type WebDAVExportStatusDto = {
@@ -1690,11 +1712,14 @@ export type WebDAVExportStatusDto = {
     exportFolderName: string
     exportInitializedAt: string
     exportInitializedBy?: AppUserNameDto
-    events: Array<string>
-    exportTypes: Array<WebDAVExportType>
+    dataExportEvents: Array<string | null>
+    fileExportEvents: Array<FileExportEventStatusDto>
     filesExported: number
     totalFilesToExport: number
     filesWithError: number
+    dataExported: number
+    totalDataToExport: number
+    dataWithError: number
 }
 
 export type WebDAVExportType =
@@ -1703,6 +1728,61 @@ export type WebDAVExportType =
     | 'DOCUMENTS'
     | 'RESULTS'
     | 'START_LISTS'
+    | 'DB_USERS'
+    | 'DB_PARTICIPANTS'
+    | 'DB_BANK_ACCOUNTS'
+    | 'DB_CONTACT_INFORMATION'
+    | 'DB_EMAIL_INDIVIDUAL_TEMPLATES'
+    | 'DB_EVENT_DOCUMENT_TYPES'
+    | 'DB_MATCH_RESULT_IMPORT_CONFIGS'
+    | 'DB_STARTLIST_EXPORT_CONFIGS'
+    | 'DB_WORK_TYPES'
+    | 'DB_PARTICIPANT_REQUIREMENTS'
+    | 'DB_RATING_CATEGORIES'
+    | 'DB_COMPETITION_CATEGORIES'
+    | 'DB_FEES'
+    | 'DB_NAMED_PARTICIPANTS'
+    | 'DB_COMPETITION_SETUP_TEMPLATES'
+    | 'DB_COMPETITION_TEMPLATES'
+    | 'DB_EVENT'
+    | 'DB_COMPETITION'
+
+export type WebDAVImportEventRequest = {
+    eventFolderName: string
+    competitionFolderNames: Array<string>
+}
+
+export type WebDAVImportOptionsCompetitionDto = {
+    competitionId: string
+    competitionFolderName: string
+}
+
+export type WebDAVImportOptionsDto = {
+    data: Array<WebDAVExportType>
+    events: Array<WebDAVImportOptionsEventDto>
+}
+
+export type WebDAVImportOptionsEventDto = {
+    eventId: string
+    eventFolderName: string
+    competitions: Array<WebDAVImportOptionsCompetitionDto>
+}
+
+export type WebDAVImportRequest = {
+    folderName: string
+    selectedData: Array<WebDAVExportType>
+    selectedEvents: Array<WebDAVImportEventRequest>
+}
+
+export type WebDAVImportStatusDto = {
+    processId: string
+    importFolderName: string
+    importInitializedAt: string
+    importInitializedBy?: AppUserNameDto
+    dataImported: number
+    totalDataToImport: number
+    dataWithError: number
+}
 
 export type WorkShiftUpsertDto = {
     workType: string
@@ -4711,6 +4791,10 @@ export type GetCompetitionsHavingResultsError =
     | ApiError
     | UnprocessableEntityError
 
+export type GetEventsForExportResponse = Array<EventForExportDto>
+
+export type GetEventsForExportError = BadRequestError | ApiError
+
 export type ExportDataByWebDavData = {
     body: WebDAVExportRequest
 }
@@ -4722,6 +4806,32 @@ export type ExportDataByWebDavError = BadRequestError | ApiError
 export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
+
+export type ImportDataFromWebDavData = {
+    body: WebDAVImportRequest
+}
+
+export type ImportDataFromWebDavResponse = void
+
+export type ImportDataFromWebDavError = BadRequestError | ApiError
+
+export type GetWebDavImportStatusResponse = Array<WebDAVImportStatusDto>
+
+export type GetWebDavImportStatusError = BadRequestError | ApiError
+
+export type GetWebDavImportOptionFoldersResponse = Array<string>
+
+export type GetWebDavImportOptionFoldersError = BadRequestError | ApiError
+
+export type GetWebDavImportOptionTypesData = {
+    path: {
+        folderName: string
+    }
+}
+
+export type GetWebDavImportOptionTypesResponse = WebDAVImportOptionsDto
+
+export type GetWebDavImportOptionTypesError = BadRequestError | ApiError
 
 export type SubmitChallengeTeamResultsData = {
     body: {

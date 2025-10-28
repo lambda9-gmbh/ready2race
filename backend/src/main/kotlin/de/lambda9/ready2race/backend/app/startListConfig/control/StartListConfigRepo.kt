@@ -11,6 +11,10 @@ import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectAsJson
+import de.lambda9.ready2race.backend.database.insertJsonData
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -44,7 +48,15 @@ object StartListConfigRepo {
 
     fun create(record: StartlistExportConfigRecord) = STARTLIST_EXPORT_CONFIG.insertReturning(record) { ID }
 
+    fun create(records: List<StartlistExportConfigRecord>) = STARTLIST_EXPORT_CONFIG.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = STARTLIST_EXPORT_CONFIG.select({ ID }) { ID.`in`(ids) }
+
     fun update(id: UUID, f: StartlistExportConfigRecord.() -> Unit) = STARTLIST_EXPORT_CONFIG.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = STARTLIST_EXPORT_CONFIG.delete { ID.eq(id) }
+
+    fun allAsJson() = STARTLIST_EXPORT_CONFIG.selectAsJson()
+
+    fun insertJsonData(data: String) = STARTLIST_EXPORT_CONFIG.insertJsonData(data)
 }

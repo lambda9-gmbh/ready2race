@@ -10,9 +10,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.EventView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_PUBLIC_VIEW
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_VIEW
+import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -138,4 +136,12 @@ object EventRepo {
     private fun filterScopeView(
         scope: Privilege.Scope?,
     ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT_VIEW.PUBLISHED.eq(true) else DSL.trueCondition()
+
+    fun getAsJson(eventId: UUID) = EVENT.selectAsJson { ID.eq(eventId) }
+
+    fun insertJsonData(data: String) = EVENT.insertJsonData(data)
+
+    fun getEventsForExport() = EVENT_FOR_EXPORT.select()
+
+    fun getEventsForExportByIds(ids: List<UUID>) = EVENT_FOR_EXPORT.select { ID.`in`(ids) }
 }

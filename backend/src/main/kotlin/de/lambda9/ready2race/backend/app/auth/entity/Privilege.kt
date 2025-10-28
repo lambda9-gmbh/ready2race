@@ -24,6 +24,7 @@ sealed class Privilege(
         APP_QR_MANAGEMENT,
         APP_COMPETITION_CHECK,
         APP_CATERER,
+        WEB_DAV,
         RESULT,
     }
 
@@ -78,6 +79,10 @@ sealed class Privilege(
 
     data object CreateSubstitutionGlobal : Privilege(Action.CREATE, Resource.SUBSTITUTION, Scope.GLOBAL)
     data object DeleteSubstitutionGlobal : Privilege(Action.DELETE, Resource.SUBSTITUTION, Scope.GLOBAL)
+
+    data object UpdateWebDavGlobal : Privilege(Action.UPDATE, Resource.WEB_DAV, Scope.GLOBAL)
+    data object ReadWebDavGlobal : Privilege(Action.READ, Resource.WEB_DAV, Scope.GLOBAL)
+
 
     data object UpdateResultGlobal : Privilege(Action.UPDATE, Resource.RESULT, Scope.GLOBAL)
     data object UpdateResultOwn : Privilege(Action.UPDATE, Resource.RESULT, Scope.OWN)

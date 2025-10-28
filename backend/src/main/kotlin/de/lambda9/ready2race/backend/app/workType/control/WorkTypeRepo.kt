@@ -15,10 +15,16 @@ object WorkTypeRepo {
 
     fun create(record: WorkTypeRecord) = WORK_TYPE.insertReturning(record) { ID }
 
+    fun create(records: List<WorkTypeRecord>) = WORK_TYPE.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = WORK_TYPE.select({ ID }) { ID.`in`(ids) }
+
     fun update(id: UUID, f: WorkTypeRecord.() -> Unit) =
         WORK_TYPE.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = WORK_TYPE.delete { ID.eq(id) }
+
+    fun all() = WORK_TYPE.select()
 
     fun countByEvent(
         search: String?
@@ -42,4 +48,7 @@ object WorkTypeRepo {
         }
     }
 
+    fun allAsJson() = WORK_TYPE.selectAsJson()
+
+    fun insertJsonData(data: String) = WORK_TYPE.insertJsonData(data)
 }

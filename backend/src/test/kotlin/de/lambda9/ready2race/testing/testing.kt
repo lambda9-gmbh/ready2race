@@ -95,7 +95,8 @@ private object TestRunner {
             webDAV = Config.WebDAV(
                 urlScheme = "https",
                 host = "localhost",
-                path = "",
+                path = null,
+                folderPath = "Ready2Race",
                 authUser = "admin",
                 authPassword = "admin",
             )

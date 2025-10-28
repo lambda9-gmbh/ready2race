@@ -21,6 +21,8 @@ object NamedParticipantRepo {
 
     fun delete(id: UUID) = NAMED_PARTICIPANT.delete { ID.eq(id) }
 
+    fun all() = NAMED_PARTICIPANT.select()
+
     fun getIfExist(
         ids: List<UUID>,
     ): JIO<List<NamedParticipantRecord>> = Jooq.query {
@@ -56,4 +58,12 @@ object NamedParticipantRepo {
             .orderBy(NAMED_PARTICIPANT.NAME)
             .fetch()
     }
+
+    fun getOverlapIds(ids: List<UUID>) = NAMED_PARTICIPANT.select({ ID }) { ID.`in`(ids) }
+
+    fun create(records: List<NamedParticipantRecord>) = NAMED_PARTICIPANT.insert(records)
+
+    fun allAsJson() = NAMED_PARTICIPANT.selectAsJson()
+
+    fun insertJsonData(data: String) = NAMED_PARTICIPANT.insertJsonData(data)
 }

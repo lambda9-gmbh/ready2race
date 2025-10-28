@@ -17,11 +17,17 @@ object CompetitionCategoryRepo {
 
     fun create(record: CompetitionCategoryRecord) = COMPETITION_CATEGORY.insertReturning(record) { ID }
 
+    fun create(records: List<CompetitionCategoryRecord>) = COMPETITION_CATEGORY.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_CATEGORY.select({ ID }) { ID.`in`(ids) }
+
     fun exists(id: UUID) = COMPETITION_CATEGORY.exists { ID.eq(id) }
 
     fun update(id: UUID, f: CompetitionCategoryRecord.() -> Unit) = COMPETITION_CATEGORY.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = COMPETITION_CATEGORY.delete { ID.eq(id) }
+
+    fun all() = COMPETITION_CATEGORY.select()
 
     fun count(
         search: String?
@@ -40,4 +46,8 @@ object CompetitionCategoryRepo {
                 .fetch()
         }
     }
+
+    fun allAsJson() = COMPETITION_CATEGORY.selectAsJson()
+
+    fun insertJsonData(data: String) = COMPETITION_CATEGORY.insertJsonData(data)
 }

@@ -12,6 +12,7 @@
     "selected": "Selected",
     "manage": "Manage",
     "all": "All",
+    "selectAll": "Select all",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}.",
@@ -79,7 +80,7 @@
     "noResults": "No results",
     "tryDifferentSearch": "Try a different search",
     "items": "Items",
-    "more": "More",
+    "more": "more",
     "create": "Create",
     "seconds": "seconds",
     "update": "Update",
@@ -1118,7 +1119,7 @@
       "eventElements": "Event elements",
       "competitionElements": "Competition elements",
       "globalSettings": "Global settings",
-      "exportData": "Export data"
+      "exportData": "Export / Import"
     },
     "ratingCategory": {
       "ratingCategory": "Rating category",
@@ -1413,29 +1414,63 @@
     }
   },
   "webDAV": {
+    "infoText": {
+      "part1": "The export/import functionality allows you to save documents (system-generated or uploaded PDFs) and/or configurations made in the application to an external server (e.g., Nextcloud via WebDAV).",
+      "part2": "This exported data can later be imported to restore your event configurations, templates, and settings."
+    },
     "export": {
       "export": "Export data",
       "confirm": "Export",
       "folderName": "Export folder name",
       "events": "Events",
       "data": "Data to export",
+      "applicationData": "Application data and settings",
       "types": {
         "registrationResults": "Registration Results",
         "invoices": "Invoices",
         "documents": "Event documents",
         "results": "Results",
-        "startLists": "Start-lists"
+        "startLists": "Start-lists",
+        "users": "Users",
+        "participants": "Participants",
+        "bankAccounts": "Bank Accounts",
+        "contactInformation": "Contact Information",
+        "emailIndividualTemplates": "Individual Email Templates",
+        "eventDocumentTypes": "Event Document Types",
+        "matchResultImportConfigs": "Match Result Import Configurations",
+        "startlistExportConfigs": "Startlist Export Configurations",
+        "workTypes": "Work Types",
+        "participantRequirements": "Participant Requirements",
+        "ratingCategories": "Rating Categories",
+        "competitionCategories": "Competition Categories",
+        "fees": "Fees",
+        "namedParticipants": "Named Participants",
+        "competitionSetupTemplates": "Competition Setup Templates",
+        "competitionTemplates": "Competition Templates",
+        "event": "Event Data",
+        "competition": "Competition Data"
+      },
+      "steps": {
+        "name": "Name",
+        "documents": "Documents",
+        "data": "Data"
       },
       "error": {
         "nameConflict": "The folder name you entered already exists. Please choose a different name.",
-        "thirdPartyError": "The external WebDAV server has reported an error. Please contact the administrator."
+        "thirdPartyError": "The external WebDAV server has reported an error. Please contact the administrator.",
+        "noDocumentTypeSelected": "Please select at least one document type for this event."
       },
+      "noEventsAvailable": "No events available to export",
       "success": "Export successfully initiated",
       "status": {
         "status": "Export status",
         "error": {
           "title": "Error during export",
-          "body": "{{exported}} / {{total}} files successfully exported."
+          "body": "{{files}} / {{total}} files successfully exported.",
+          "info": {
+            "files": "{{errors}} errors on pdf exports",
+            "data": "{{errors}} errors on data exports"
+          }
         },
         "success": {
           "title": "Export successful",
@@ -1444,7 +1479,37 @@
         },
         "pending": {
           "title": "Exporting...",
-          "body": "{{exported}} / {{total}} exported."
+          "body": "{{files}} / {{total}} exported."
+        }
+      }
+    },
+    "import": {
+      "import": "Import data",
+      "confirm": "Import",
+      "folderName": "Import folder name",
+      "selectData": "Select data to import",
+      "error": {
+        "noSelection": "Please select at least one data type to import",
+        "failed": "An error occurred while importing the data",
+        "loadFolders": "An error occurred when loading the available folders from the WebDAV Server",
+        "loadOptions": "An error occurred when loading the available import options"
+      },
+      "noEventsAvailable": "No events available to import",
+      "success": "Import successfully started",
+      "status": {
+        "status": "Import status",
+        "error": {
+          "title": "Error during import",
+          "body": "{{files}} / {{total}} files successfully imported."
+        },
+        "success": {
+          "title": "Import successful",
+          "body_one": "{{count}} file imported.",
+          "body_other": "{{count}} files imported."
+        },
+        "pending": {
+          "title": "Importing...",
+          "body": "{{files}} / {{total}} imported."
         }
       }
     }
