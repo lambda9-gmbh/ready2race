@@ -25,19 +25,19 @@ fun Route.email() {
                 EmailService.getSMTPConfigOverride()
             }
 
-            put {
-                call.respondComprehension {
-                    val user = !authenticate(Privilege.UpdateSmtpConfigGlobal)
-                    val configOverride = !receiveKIO(SmtpConfigOverrideDto.example)
-                    EmailService.setSMTPConfigOverride(configOverride, user.id!!)
-                }
+        }
+        put {
+            call.respondComprehension {
+                val user = !authenticate(Privilege.UpdateSmtpConfigGlobal)
+                val configOverride = !receiveKIO(SmtpConfigOverrideDto.example)
+                EmailService.setSMTPConfigOverride(configOverride, user.id!!)
             }
+        }
 
-            delete {
-                call.respondComprehension {
-                    !authenticate(Privilege.UpdateSmtpConfigGlobal)
-                    EmailService.deleteSMTPConfigOverride()
-                }
+        delete {
+            call.respondComprehension {
+                !authenticate(Privilege.UpdateSmtpConfigGlobal)
+                EmailService.deleteSMTPConfigOverride()
             }
         }
     }

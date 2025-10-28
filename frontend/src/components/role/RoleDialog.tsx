@@ -10,7 +10,7 @@ import {RoleDto, RoleRequest} from '@api/types.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useFetch} from '@utils/hooks.ts'
 import {scopeLevel} from '@utils/helpers.ts'
-import FormInputMultiselect from "@components/form/input/FormInputMultiselect.tsx";
+import FormInputMultiselect from '@components/form/input/FormInputMultiselect.tsx'
 
 type RoleForm = {
     name: string
@@ -101,6 +101,7 @@ const RoleDialog = (props: BaseEntityDialogProps<RoleDto>) => {
                     }
                     showCheckbox
                     showChips
+                    fullWidth
                 />
             </Stack>
         </EntityDialog>

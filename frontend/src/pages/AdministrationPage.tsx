@@ -1,33 +1,36 @@
 import {useTranslation} from 'react-i18next'
 import {Stack, Typography} from '@mui/material'
-import {FormContainer, useForm} from "react-hook-form-mui";
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import FormInputNumber from "@components/form/input/FormInputNumber.tsx";
-import FormInputPassword from "@components/form/input/FormInputPassword.tsx";
-import {FormInputToggleButtonGroup} from "@components/form/input/FormInputToggleButtonGroup.tsx";
-import {SmtpConfigOverrideDto, smtpStrategy} from "@api/types.gen.ts";
-import FormInputEmail from "@components/form/input/FormInputEmail.tsx";
-import {SubmitButton} from "@components/form/SubmitButton.tsx";
-import {useState} from "react";
-import {setSmtpOverride, getSmtpConfig, deleteSmtpOverride} from "@api/sdk.gen.ts";
-import {useFeedback, useFetch} from "@utils/hooks.ts";
-import {useConfirmation} from "@contexts/confirmation/ConfirmationContext.ts";
-import LoadingButton from "@components/form/LoadingButton.tsx";
-import {takeIfNotEmpty} from "@utils/ApiUtils.ts";
-
+import {FormContainer, useForm} from 'react-hook-form-mui'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
+import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
+import {FormInputToggleButtonGroup} from '@components/form/input/FormInputToggleButtonGroup.tsx'
+import {SmtpConfigOverrideDto, smtpStrategy} from '@api/types.gen.ts'
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
+import {SubmitButton} from '@components/form/SubmitButton.tsx'
+import {useState} from 'react'
+import {setSmtpOverride, getSmtpConfig, deleteSmtpOverride} from '@api/sdk.gen.ts'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
+import LoadingButton from '@components/form/LoadingButton.tsx'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
+import {useUser} from '@contexts/user/UserContext.ts'
+import {updateSmtpConfigGlobal} from '@authorization/privileges.ts'
 
 type Form = SmtpConfigOverrideDto
 
 const AdministrationPage = () => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const user = useUser()
 
+    const allowedToUpdate = user.checkPrivilege(updateSmtpConfigGlobal)
     const formContext = useForm<Form>()
     const smtpStrategyArray: smtpStrategy[] = ['SMTP', 'SMTP_TLS', 'SMTPS']
     const smtpStrategyOptions = smtpStrategyArray.map(strategy => ({
         id: strategy,
-        label: strategy
-    }));
+        label: strategy,
+    }))
     const [submitting, setSubmitting] = useState(true)
     const [resetting, setResetting] = useState(true)
     const {confirmAction} = useConfirmation()
@@ -43,11 +46,10 @@ const AdministrationPage = () => {
                     username: response.data.username,
                     smtpStrategy: response.data.smtpStrategy,
                     fromAddress: response.data.fromAddress,
-                    fromName: response.data.fromName ?? "",
-                    localhost: response.data.localhost ?? "",
-                    replyTo: response.data.replyTo ?? "",
-                    }
-                )
+                    fromName: response.data.fromName ?? '',
+                    localhost: response.data.localhost ?? '',
+                    replyTo: response.data.replyTo ?? '',
+                })
             }
             if (response.error) {
                 feedback.error(t('administration.smtp.errors.loading'))
@@ -60,7 +62,6 @@ const AdministrationPage = () => {
         setSubmitting(true)
         confirmAction(
             async () => {
-
                 const {data, error, response} = await setSmtpOverride({
                     body: {
                         host: formData.host,
@@ -74,8 +75,8 @@ const AdministrationPage = () => {
                         replyTo: takeIfNotEmpty(formData.replyTo),
                     },
                 })
-                    setSubmitting(false)
-                if (response.ok && (data !== undefined) ) {
+                setSubmitting(false)
+                if (response.ok && data !== undefined) {
                     currentConfig.reload()
                 } else if (error) {
                     if (error.status.value === 500) {
@@ -90,8 +91,8 @@ const AdministrationPage = () => {
                 content: t('administration.smtp.confirmation.content'),
                 okText: t('administration.smtp.submit'),
                 cancelText: t('common.cancel'),
-                cancelAction: () => setSubmitting(false)
-            }
+                cancelAction: () => setSubmitting(false),
+            },
         )
     }
 
@@ -99,7 +100,6 @@ const AdministrationPage = () => {
         setResetting(true)
         confirmAction(
             async () => {
-
                 const {error, response} = await deleteSmtpOverride()
                 setResetting(false)
 
@@ -118,33 +118,91 @@ const AdministrationPage = () => {
                 content: t('administration.smtp.confirmation.content'),
                 okText: t('administration.smtp.reset'),
                 cancelText: t('common.cancel'),
-                cancelAction: () => setResetting(false)
-            }
+                cancelAction: () => setResetting(false),
+            },
         )
     }
 
-
-
-    return ( currentConfig.data && (
-        <Stack spacing={4}>
-            <Typography variant={'h1'}>{t('administration.smtp.title')}</Typography>
-            <FormContainer formContext={formContext} onSuccess={handleSubmit}>
-            <Stack spacing={4} maxWidth="70%">
-                <FormInputText name={'host'} label={t('administration.smtp.host')} required />
-                <FormInputNumber name={'port'} label={t('administration.smtp.port')} required min={1} max={65535} />
-                <FormInputText name={'username'} label={t('administration.smtp.username')} required />
-                <FormInputPassword name={'password'} label={t('administration.smtp.password')} required />
-                <FormInputToggleButtonGroup name={'smtpStrategy'} label={t('administration.smtp.smtpStrategy')} options={smtpStrategyOptions} required exclusive enforceAtLeastOneSelected />
-                <FormInputEmail name={'fromAddress'} label={t('administration.smtp.fromAddress')} required />
-                <FormInputText name={'fromName'} label={t('administration.smtp.fromName')} />
-                <FormInputText name={'localhost'} label={t('administration.smtp.localhost')} />
-                <FormInputEmail name={'replyTo'} label={t('administration.smtp.replyTo')} />
-                <SubmitButton submitting={submitting}>{t('administration.smtp.submit')}</SubmitButton>
-                <LoadingButton variant={"outlined"} pending={resetting} onClick={handleReset}>{t('administration.smtp.reset')}</LoadingButton>
+    return (
+        currentConfig.data && (
+            <Stack spacing={4}>
+                <Typography variant={'h1'}>{t('administration.smtp.title')}</Typography>
+                <FormContainer formContext={formContext} onSuccess={handleSubmit}>
+                    <Stack spacing={4} maxWidth="70%">
+                        <FormInputText
+                            name={'host'}
+                            label={t('administration.smtp.host')}
+                            required
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputNumber
+                            name={'port'}
+                            label={t('administration.smtp.port')}
+                            required
+                            min={1}
+                            max={65535}
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputText
+                            name={'username'}
+                            label={t('administration.smtp.username')}
+                            required
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputPassword
+                            name={'password'}
+                            label={t('administration.smtp.password')}
+                            required
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputToggleButtonGroup
+                            name={'smtpStrategy'}
+                            label={t('administration.smtp.smtpStrategy')}
+                            options={smtpStrategyOptions}
+                            required
+                            exclusive
+                            enforceAtLeastOneSelected
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputEmail
+                            name={'fromAddress'}
+                            label={t('administration.smtp.fromAddress')}
+                            required
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputText
+                            name={'fromName'}
+                            label={t('administration.smtp.fromName')}
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputText
+                            name={'localhost'}
+                            label={t('administration.smtp.localhost')}
+                            disabled={!allowedToUpdate}
+                        />
+                        <FormInputEmail
+                            name={'replyTo'}
+                            label={t('administration.smtp.replyTo')}
+                            disabled={!allowedToUpdate}
+                        />
+                        {allowedToUpdate && (
+                            <>
+                                <SubmitButton submitting={submitting}>
+                                    {t('administration.smtp.submit')}
+                                </SubmitButton>
+                                <LoadingButton
+                                    variant={'outlined'}
+                                    pending={resetting}
+                                    onClick={handleReset}>
+                                    {t('administration.smtp.reset')}
+                                </LoadingButton>
+                            </>
+                        )}
+                    </Stack>
+                </FormContainer>
             </Stack>
-            </FormContainer>
-        </Stack>
-    ))
+        )
+    )
 }
 
 export default AdministrationPage
