@@ -60,6 +60,7 @@
       "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
+      "requiredCheck": "You have to accept this to continue.",
       "selectFile": "Select file",
       "select": {
         "none": "None"
@@ -840,7 +841,8 @@
     },
     "registration": {
       "initialize": {
-        "header": "Initialize registration"
+        "header": "Initialize registration",
+        "submit": "Initialize registration"
       },
       "registration": "Registration",
       "registrations": "Registrations",

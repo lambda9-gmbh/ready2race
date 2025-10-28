@@ -37,24 +37,24 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
         },
     )
 
+    const registrationInitialized = (eventData.registrationCount ?? 0) > 0
+
     return (
         <Stack spacing={2}>
-            {registrationPossible &&
-                (eventData.registrationCount ?? 0) < 1 &&
-                !eventData.challengeEvent && (
-                    <Alert severity={'info'}>
-                        <Typography sx={{mb: 1}}>
-                            <Trans i18nKey={'event.competition.registration.noEventRegistration'} />
-                            <Trans i18nKey={'event.registerHere.1'} />
-                            <InlineLink
-                                to={'/event/$eventId/register'}
-                                params={{eventId: eventData.id}}>
-                                {t('event.registerHere.2')}
-                            </InlineLink>
-                            <Trans i18nKey={'event.registerHere.3'} />
-                        </Typography>
-                    </Alert>
-                )}
+            {registrationPossible && !registrationInitialized && !eventData.challengeEvent && (
+                <Alert severity={'info'}>
+                    <Typography sx={{mb: 1}}>
+                        <Trans i18nKey={'event.competition.registration.noEventRegistration'} />
+                        <Trans i18nKey={'event.registerHere.1'} />
+                        <InlineLink
+                            to={'/event/$eventId/register'}
+                            params={{eventId: eventData.id}}>
+                            {t('event.registerHere.2')}
+                        </InlineLink>
+                        <Trans i18nKey={'event.registerHere.3'} />
+                    </Typography>
+                </Alert>
+            )}
             <CompetitionRegistrationDialog
                 {...competitionRegistrationProps.dialog}
                 competition={competitionData}
@@ -63,6 +63,7 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
             <CompetitionRegistrationTable
                 {...competitionRegistrationProps.table}
                 registrationState={registrationState}
+                registrationInitialized={registrationInitialized}
                 reloadEvent={reloadEvent}
             />
         </Stack>

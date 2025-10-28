@@ -44,10 +44,16 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationDto> & {
     registrationState: OpenForRegistrationType
+    registrationInitialized: boolean
     reloadEvent: () => void
 }
 
-const CompetitionRegistrationTable = ({registrationState, reloadEvent, ...props}: Props) => {
+const CompetitionRegistrationTable = ({
+    registrationState,
+    registrationInitialized,
+    reloadEvent,
+    ...props
+}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
@@ -278,8 +284,6 @@ const CompetitionRegistrationTable = ({registrationState, reloadEvent, ...props}
         dto.isLate === (registrationState === 'LATE') ||
         user.checkPrivilege(updateRegistrationGlobal)
 
-    const eventRegistrationExisting = false
-
     return (
         <Fragment>
             <EntityTable
@@ -292,12 +296,12 @@ const CompetitionRegistrationTable = ({registrationState, reloadEvent, ...props}
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
                 entityName={t('event.registration.registration')}
-                creatable={eventRegistrationExisting}
+                creatable={registrationInitialized || user.checkPrivilege(updateRegistrationGlobal)}
                 deletableIf={writable}
                 editableIf={writable}
                 customEntityActions={customEntityActions}
                 customTableActions={
-                    !eventRegistrationExisting ? (
+                    !registrationInitialized && !user.checkPrivilege(updateRegistrationGlobal) ? (
                         <Button
                             variant={'outlined'}
                             startIcon={<Add />}
@@ -307,11 +311,15 @@ const CompetitionRegistrationTable = ({registrationState, reloadEvent, ...props}
                     ) : undefined
                 }
             />
-            {!eventRegistrationExisting && (
+            {!registrationInitialized && !user.checkPrivilege(updateRegistrationGlobal) && (
                 <InitializeRegistrationDialog
                     eventId={eventId}
                     open={showInitRegisterDialog}
                     onClose={() => setShowInitRegisterDialog(false)}
+                    onSuccess={() => {
+                        reloadEvent()
+                        props.openDialog()
+                    }}
                 />
             )}
             <CompetitionDeregistrationDialog

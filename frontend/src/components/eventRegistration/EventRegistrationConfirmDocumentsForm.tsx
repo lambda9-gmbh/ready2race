@@ -64,7 +64,7 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                             />
                             {type.description && <Typography>{type.description}</Typography>}
                             {type.files.map(f => (
-                                <Stack direction={'row'} alignItems={'center'}>
+                                <Stack key={f.id} direction={'row'} alignItems={'center'}>
                                     <Button
                                         startIcon={<FileDownload />}
                                         onClick={() => download(f.id, f.name)}

@@ -60,6 +60,7 @@
       "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
+      "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
       "selectFile": "Datei auswählen",
       "select": {
         "none": "Keine"
@@ -840,7 +841,8 @@
     },
     "registration": {
       "initialize": {
-        "header": "Meldung initialisieren"
+        "header": "Meldung initialisieren",
+        "submit": "Meldung initialisieren"
       },
       "registration": "Anmeldung",
       "registrations": "Anmeldungen",

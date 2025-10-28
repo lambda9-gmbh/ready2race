@@ -16,7 +16,7 @@ export const FormInputCheckbox = ({horizontal, reverse, label, ...props}: BaseFo
                 rules={{
                     ...props.rules,
                     ...(props.required &&
-                        !props.rules?.required && {required: t('common.form.required')}),
+                        !props.rules?.required && {required: t('common.form.requiredCheck')}),
                 }}
                 sx={{width: 1}}
             />
