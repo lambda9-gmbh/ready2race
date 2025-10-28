@@ -105,6 +105,20 @@ object EventRegistrationRepo {
 
     fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
+    fun getEventRegistrationDocuments(eventId: UUID): JIO<List<EventRegistrationDocumentTypeDto>?> = Jooq.query {
+
+        val documents = selectDocumentsForEventRegistrationInfo()
+
+        val documentTypes = selectDocumentTypesForEventRegistrationInfo(documents)
+
+        select(
+            documentTypes
+        )
+            .from(EVENT)
+            .where(EVENT.ID.eq(eventId))
+            .fetchOne { it[documentTypes] }
+    }
+
     fun getEventRegistrationInfo(eventId: UUID, type: OpenForRegistrationType): JIO<EventRegistrationInfoDto?> = Jooq.query {
 
         val eventDays = selectEventDaysForEventRegistrationInfo()

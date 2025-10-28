@@ -21,8 +21,9 @@ import {EventRegistrationSingleCompetitionForm} from './EventRegistrationSingleC
 import EventRegistrationTeamCompetitionForm from './EventRegistrationTeamCompetitionForm.tsx'
 import {EventRegistrationFeeDisplay} from '@components/eventRegistration/EventRegistrationFeeDisplay.tsx'
 import {EventRegistrationConfirmDocumentsForm} from '@components/eventRegistration/EventRegistrationConfirmDocumentsForm.tsx'
-import {EventRegistrationFormData} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
-import {useEventRegistration} from "@contexts/eventRegistration/EventRegistrationContext.ts";
+import {EventRegistrationFormData} from '../../pages/eventRegistration/EventRegistrationCreatePage.tsx'
+import {useEventRegistration} from '@contexts/eventRegistration/EventRegistrationContext.ts'
+import {eventRegisterIndexRoute} from '@routes'
 
 export type EventRegistrationStep = {
     label: string
@@ -59,6 +60,7 @@ const EventRegistrationForm = ({
     const {t} = useTranslation()
     const [activeStep, setActiveStep] = React.useState(0)
     const {info} = useEventRegistration()
+    const {eventId} = eventRegisterIndexRoute.useParams()
 
     const handleNext = () => {
         formContext.trigger(steps[activeStep]?.validateKeys, {shouldFocus: true}).then(valid => {
@@ -118,9 +120,7 @@ const EventRegistrationForm = ({
         {
             label: t('event.registration.singleCompetition'),
             validateKeys: ['participants'],
-            content: (
-                <EventRegistrationSingleCompetitionForm />
-            ),
+            content: <EventRegistrationSingleCompetitionForm />,
         },
         {
             label: t('event.registration.teamCompetition'),
@@ -142,7 +142,7 @@ const EventRegistrationForm = ({
                                               {t('event.registration.schedule')}
                                           </AlertTitle>
                                           <Stack spacing={1}>
-                                              {info?.days.map((day) => (
+                                              {info?.days.map(day => (
                                                   <RegistrationEventDayInfo
                                                       key={day.id}
                                                       name={day.name}
@@ -155,6 +155,7 @@ const EventRegistrationForm = ({
                                   )}
                                   {info?.documentTypes && (
                                       <EventRegistrationConfirmDocumentsForm
+                                          eventId={eventId}
                                           documentTypes={info?.documentTypes}
                                       />
                                   )}

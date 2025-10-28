@@ -142,7 +142,10 @@ const UpcomingEventEntry = ({event, hideRegistration}: Props) => {
                 />
                 {!hideRegistration && registrationState !== 'CLOSED' && (
                     <Box sx={{alignSelf: 'center'}}>
-                        <Link to={'/event/$eventId/register'} params={{eventId: event.id}}>
+                        <Link
+                            to={`/event/$eventId${event.challengeEvent ? '' : '/register'}`}
+                            params={{eventId: event.id}}
+                            search={event.challengeEvent ? {tab: 'competitions'} : undefined}>
                             <Button endIcon={<Forward />} variant={'contained'}>
                                 {t('event.registerNow')}
                             </Button>

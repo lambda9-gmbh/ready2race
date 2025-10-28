@@ -13,6 +13,7 @@ import {PaginationParameters} from '@utils/ApiUtils.ts'
 import {Fragment, useMemo, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
+    Button,
     Stack,
     Table,
     TableBody,
@@ -22,7 +23,7 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import {PendingActions} from '@mui/icons-material'
+import {Add, PendingActions} from '@mui/icons-material'
 import {format} from 'date-fns'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateRegistrationGlobal} from '@authorization/privileges.ts'
@@ -32,6 +33,7 @@ import GroupAddIcon from '@mui/icons-material/GroupAdd'
 import CompetitionDeregistrationDialog from '@components/event/competition/registration/CompetitionDeregistrationDialog.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {useFeedback} from '@utils/hooks.ts'
+import InitializeRegistrationDialog from '@components/eventRegistration/InitializeRegistrationDialog.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -42,12 +44,21 @@ const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
 type Props = BaseEntityTableProps<CompetitionRegistrationDto> & {
     registrationState: OpenForRegistrationType
+    registrationInitialized: boolean
+    reloadEvent: () => void
 }
 
-const CompetitionRegistrationTable = ({registrationState, ...props}: Props) => {
+const CompetitionRegistrationTable = ({
+    registrationState,
+    registrationInitialized,
+    reloadEvent,
+    ...props
+}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
     const feedback = useFeedback()
+
+    const [showInitRegisterDialog, setShowInitRegisterDialog] = useState(false)
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
@@ -83,9 +94,7 @@ const CompetitionRegistrationTable = ({registrationState, ...props}: Props) => {
                 renderCell: ({row}) => {
                     return (
                         <Stack direction={'row'} alignItems={'center'} spacing={1}>
-                            {row.name && (<Typography>
-                                {row.name}
-                            </Typography>)}
+                            {row.name && <Typography>{row.name}</Typography>}
                             {row.isLate ? (
                                 <Tooltip title={t('event.competition.registration.isLate')}>
                                     <PendingActions />
@@ -248,7 +257,9 @@ const CompetitionRegistrationTable = ({registrationState, ...props}: Props) => {
         isLate ? registrationState === 'CLOSED' : registrationState !== 'REGULAR'
 
     const customEntityActions = (entity: CompetitionRegistrationDto): EntityAction[] => [
-        entity.deregistration === undefined && user.checkPrivilege(updateRegistrationGlobal) && afterRegistration(entity.isLate) ? (
+        entity.deregistration === undefined &&
+        user.checkPrivilege(updateRegistrationGlobal) &&
+        afterRegistration(entity.isLate) ? (
             <GridActionsCellItem
                 icon={<GroupRemoveIcon />}
                 label={t('event.competition.registration.deregister.deregister')}
@@ -285,10 +296,32 @@ const CompetitionRegistrationTable = ({registrationState, ...props}: Props) => {
                 dataRequest={dataRequest}
                 deleteRequest={deleteRequest}
                 entityName={t('event.registration.registration')}
+                creatable={registrationInitialized || user.checkPrivilege(updateRegistrationGlobal)}
                 deletableIf={writable}
                 editableIf={writable}
                 customEntityActions={customEntityActions}
+                customTableActions={
+                    !registrationInitialized && !user.checkPrivilege(updateRegistrationGlobal) ? (
+                        <Button
+                            variant={'outlined'}
+                            startIcon={<Add />}
+                            onClick={() => setShowInitRegisterDialog(true)}>
+                            {t('entity.add.action', {entity: t('event.registration.registration')})}
+                        </Button>
+                    ) : undefined
+                }
             />
+            {!registrationInitialized && !user.checkPrivilege(updateRegistrationGlobal) && (
+                <InitializeRegistrationDialog
+                    eventId={eventId}
+                    open={showInitRegisterDialog}
+                    onClose={() => setShowInitRegisterDialog(false)}
+                    onSuccess={() => {
+                        reloadEvent()
+                        props.openDialog()
+                    }}
+                />
+            )}
             <CompetitionDeregistrationDialog
                 open={showDeregistrationDialog}
                 competitionRegistration={

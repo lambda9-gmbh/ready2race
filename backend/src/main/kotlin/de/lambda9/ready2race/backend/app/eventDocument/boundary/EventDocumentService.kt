@@ -22,6 +22,7 @@ import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.pageResponse
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -32,18 +33,12 @@ import java.util.*
 
 object EventDocumentService {
 
-    fun page(
+    fun pageForEvent(
+        eventId: UUID,
         params: PaginationParameters<EventDocumentViewSort>,
     ): App<Nothing, ApiResponse.Page<EventDocumentDto, EventDocumentViewSort>> = KIO.comprehension {
-        val total = !EventDocumentRepo.count(params.search).orDie()
-        val page = !EventDocumentRepo.page(params).orDie()
-
-        page.traverse { it.toDto() }.map {
-            ApiResponse.Page(
-                data = it,
-                pagination = params.toPagination(total)
-            )
-        }
+        // TODO: Use .pageResponse { it.toDto() } after De-KIO-ization of conversions
+        EventDocumentRepo.pageForEvent(eventId, params).orDie().pageResponse { !it.toDto() }
     }
 
     fun saveDocuments(
