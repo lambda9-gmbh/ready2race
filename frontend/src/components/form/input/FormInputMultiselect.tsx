@@ -8,7 +8,7 @@ type FormInputMultiselectProps = MultiSelectElementProps &
         fullWidth?: boolean
     }
 
-const FormInputMultiselect = ({fullWidth, ...props}: FormInputMultiselectProps) => {
+const FormInputMultiselect = ({fullWidth, sx, ...props}: FormInputMultiselectProps) => {
     const {t} = useTranslation()
 
     return (
@@ -30,6 +30,7 @@ const FormInputMultiselect = ({fullWidth, ...props}: FormInputMultiselectProps) 
                         ...(fullWidth && {width: 1}),
                     },
                 }}
+                sx={{...sx}}
             />
         </FormInputLabel>
     )

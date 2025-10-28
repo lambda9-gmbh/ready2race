@@ -6,7 +6,7 @@ import FormInputLabel from './FormInputLabel.tsx'
 
 type FormInputDateProps = DatePickerElementProps & RefAttributes<HTMLDivElement>
 
-const FormInputDate = (props: FormInputDateProps) => {
+const FormInputDate = ({sx, ...props}: FormInputDateProps) => {
     const {t} = useTranslation()
 
     return (
@@ -25,7 +25,7 @@ const FormInputDate = (props: FormInputDateProps) => {
                         value === null ? undefined : formatISO(value, {representation: 'date'}),
                 }}
                 label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )
