@@ -26,6 +26,7 @@ import {
     Settings,
     Work,
     Workspaces,
+    AdminPanelSettings,
 } from '@mui/icons-material'
 import Sidebar from '@components/sidebar/Sidebar.tsx'
 import SidebarItem from '@components/sidebar/SidebarItem.tsx'
@@ -35,6 +36,7 @@ import {
     readClubGlobal,
     readClubOwn,
     readInvoiceGlobal,
+    readSmtpConfigGlobal,
     readUserGlobal,
     updateEventGlobal,
 } from '@authorization/privileges.ts'
@@ -140,6 +142,12 @@ const RootLayout = () => {
                                         icon={<Receipt />}
                                         privilege={readInvoiceGlobal}
                                         to={'/invoices'}
+                                    />
+                                    <SidebarItem
+                                        text={t('navigation.titles.administration')}
+                                        icon={<AdminPanelSettings />}
+                                        privilege={readSmtpConfigGlobal}
+                                        to={'/administration'}
                                     />
                                 </Sidebar>
                                 <Stack

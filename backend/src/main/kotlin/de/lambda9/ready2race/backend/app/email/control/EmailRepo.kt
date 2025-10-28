@@ -3,9 +3,14 @@ package de.lambda9.ready2race.backend.app.email.control
 import de.lambda9.ready2race.backend.beforeNow
 import de.lambda9.ready2race.backend.database.delete
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.SmtpConfigOverrideRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EMAIL
+import de.lambda9.ready2race.backend.database.generated.tables.references.SMTP_CONFIG_OVERRIDE
+import de.lambda9.ready2race.backend.database.insert
 import de.lambda9.ready2race.backend.database.insertReturning
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.DatePart
@@ -53,4 +58,14 @@ object EmailRepo {
             }
         }
     }
+
+    fun getSMTPConfigOverride(): JIO<SmtpConfigOverrideRecord?> =
+        SMTP_CONFIG_OVERRIDE.selectOne { DSL.trueCondition() }
+
+    fun replaceSMTPConfigOverride(override: SmtpConfigOverrideRecord) =
+        SMTP_CONFIG_OVERRIDE.delete { DSL.trueCondition() }.andThen {
+        SMTP_CONFIG_OVERRIDE.insert(override)}
+
+    fun deleteSMTPConfigOverride() =
+        SMTP_CONFIG_OVERRIDE.delete { DSL.trueCondition()}
 }

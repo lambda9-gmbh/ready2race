@@ -192,7 +192,8 @@
       "config": "Configurations",
       "clubs": "Clubs",
       "myClub": "My Club",
-      "invoices": "Invoices"
+      "invoices": "Invoices",
+      "administration": "Administration"
     }
   },
   "dashboard": {
@@ -1535,6 +1536,29 @@
           "title": "Importing...",
           "body": "{{files}} / {{total}} imported."
         }
+      }
+    }
+  },
+  "administration": {
+    "smtp": {
+      "title": "SMTP Configuration",
+      "host": "SMTP Host",
+      "port": "SMTP Port",
+      "username": "SMTP Username",
+      "password": "SMTP Password",
+      "smtpStrategy": "SMTP Strategy",
+      "fromAddress": "From Address",
+      "fromName": "From Name",
+      "localhost": "Local Host",
+      "replyTo" : "Reply-To Address",
+      "submit": "Save Configuration",
+      "reset": "Reset Configuration",
+      "confirmation": {
+        "content": "Are you sure you want to change the SMTP configuration?"
+      },
+      "errors": {
+        "loading": "An error has occurred when loading the SMTP configuration.",
+        "submit": "An error has occurred when changing the SMTP configuration."
       }
     }
   }

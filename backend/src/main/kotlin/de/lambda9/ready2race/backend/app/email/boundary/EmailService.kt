@@ -5,21 +5,32 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.email.control.EmailAttachmentRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailIndividualTemplateRepo
 import de.lambda9.ready2race.backend.app.email.control.EmailRepo
+import de.lambda9.ready2race.backend.app.email.control.toDto
+import de.lambda9.ready2race.backend.app.email.control.toSmtpConfig
 import de.lambda9.ready2race.backend.app.email.entity.*
+import de.lambda9.ready2race.backend.app.email.entity.SmtpConfigOverrideDto
 import de.lambda9.ready2race.backend.applyEither
 import de.lambda9.ready2race.backend.applyNotNull
+import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.config.Config
 import de.lambda9.ready2race.backend.database.SYSTEM_USER
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailAttachmentRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EmailRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.SmtpConfigOverrideRecord
 import de.lambda9.ready2race.backend.kio.accessConfig
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
+import de.lambda9.tailwind.core.extensions.kio.andThenNotNull
+import de.lambda9.tailwind.core.extensions.kio.mapNotNull
+import de.lambda9.tailwind.core.extensions.kio.onNull
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.activation.MimetypesFileTypeMap
 import jakarta.mail.util.ByteArrayDataSource
 import org.simplejavamail.api.email.AttachmentResource
+import org.simplejavamail.api.mailer.config.TransportStrategy
 import org.simplejavamail.email.EmailBuilder
 import java.time.LocalDateTime
 import java.util.*
@@ -117,8 +128,10 @@ object EmailService {
     }
 
     fun sendNext(): App<EmailError, Unit> = KIO.comprehension {
-
-        val smtp = !accessConfig().map { it.smtp }.onNullFail { EmailError.SmtpConfigMissing }
+        val smtpOverride = !EmailRepo.getSMTPConfigOverride().andThenNotNull {
+            it.toSmtpConfig()
+        }.orDie()
+        val smtp = smtpOverride ?: !accessConfig().map { it.smtp }.onNullFail { EmailError.SmtpConfigMissing }
 
         val email = !EmailRepo.getAndLockNext(retryAfterError).orDie().onNullFail { EmailError.NoEmailsToSend }
         val attachments = !EmailAttachmentRepo.getByEmail(email.id).orDie().map { records ->
@@ -183,4 +196,31 @@ object EmailService {
                 it?.let { EmailContentTemplate.Individual(it) }
                     ?: defaultTemplates[key to language]!!
             }
+
+    fun getSMTPConfigOverride(): App<Nothing, ApiResponse.Dto<SmtpConfigOverrideDto>> =
+        EmailRepo.getSMTPConfigOverride().orDie()
+            .andThenNotNull { it.toDto() }
+            .onNull { accessConfig().map { it.smtp!! }.andThen { it.toDto() } }
+            .map { ApiResponse.Dto(it)}
+
+    fun setSMTPConfigOverride(override: SmtpConfigOverrideDto, userId: UUID): App<Nothing, ApiResponse.NoData> =
+        EmailRepo.replaceSMTPConfigOverride(
+            SmtpConfigOverrideRecord(
+                id = UUID.randomUUID(),
+                host = override.host,
+                port = override.port,
+                username = override.username,
+                password = override.password,
+                smtpStrategy = override.smtpStrategy.name.uppercase(),
+                fromAddress = override.fromAddress,
+                fromName = override.fromName,
+                smtpLocalhost = override.localhost,
+                replyTo = override.replyTo,
+                createdAt = LocalDateTime.now(),
+                createdBy = userId,
+            )
+        ).orDie().map { ApiResponse.NoData }
+
+    fun deleteSMTPConfigOverride(): App<Nothing, ApiResponse.NoData> =
+        EmailRepo.deleteSMTPConfigOverride().orDie().map { ApiResponse.NoData }
 }

@@ -5811,6 +5811,71 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /smtp-override:
+    get:
+      operationId: getSmtpConfig
+      summary: Get SMTP configuration
+      responses:
+        200:
+          description: SMTP override configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmtpConfigOverrideDto'
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+
+    put:
+      operationId: setSmtpOverride
+      summary: Set SMTP override configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmtpConfigOverrideDto'
+      responses:
+        204:
+          description: SMTP override updated
+        400:
+          description: Bad request
+          $ref: '#/components/responses/400'
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        422:
+          description: Validation error
+          $ref: '#/components/responses/422'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+
+    delete:
+      operationId: deleteSmtpOverride
+      summary: Delete SMTP override configuration
+      responses:
+        204:
+          description: SMTP override deleted
+        401:
+          description: Unauthorized
+          $ref: '#/components/responses/401'
+        403:
+          description: Forbidden
+          $ref: '#/components/responses/403'
+        500:
+          description: Internal server error
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -6025,6 +6090,7 @@ components:
         - APP_QR_MANAGEMENT
         - APP_COMPETITION_CHECK
         - APP_CATERER
+        - ADMINISTRATION
         - WEB_DAV
         - RESULT
 
@@ -10693,3 +10759,42 @@ components:
       properties:
         result:
           type: integer
+
+
+    SmtpConfigOverrideDto:
+      type: object
+      required:
+        - host
+        - port
+        - username
+        - password
+        - smtpStrategy
+        - fromAddress
+      properties:
+        host:
+          type: string
+        port:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 65535
+        username:
+          type: string
+        password:
+          type: string
+        smtpStrategy:
+          type: string
+          enum:
+            - SMTP
+            - SMTP_TLS
+            - SMTPS
+        fromAddress:
+          type: string
+          format: email
+        fromName:
+          type: string
+        localhost:
+          type: string
+        replyTo:
+          type: string
+          format: email

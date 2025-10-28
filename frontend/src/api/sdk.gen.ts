@@ -637,6 +637,13 @@ import type {
     DownloadMatchTeamResultDocumentData,
     DownloadMatchTeamResultDocumentError,
     DownloadMatchTeamResultDocumentResponse,
+    GetSmtpConfigError,
+    GetSmtpConfigResponse,
+    SetSmtpOverrideData,
+    SetSmtpOverrideError,
+    SetSmtpOverrideResponse,
+    DeleteSmtpOverrideError,
+    DeleteSmtpOverrideResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3273,5 +3280,51 @@ export const downloadMatchTeamResultDocument = <ThrowOnError extends boolean = f
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}',
+    })
+}
+
+/**
+ * Get SMTP configuration
+ */
+export const getSmtpConfig = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetSmtpConfigResponse, GetSmtpConfigError, ThrowOnError>(
+        {
+            ...options,
+            url: '/smtp-override',
+        },
+    )
+}
+
+/**
+ * Set SMTP override configuration
+ */
+export const setSmtpOverride = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetSmtpOverrideData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetSmtpOverrideResponse,
+        SetSmtpOverrideError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/smtp-override',
+    })
+}
+
+/**
+ * Delete SMTP override configuration
+ */
+export const deleteSmtpOverride = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteSmtpOverrideResponse,
+        DeleteSmtpOverrideError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/smtp-override',
     })
 }

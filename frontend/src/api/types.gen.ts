@@ -1415,6 +1415,7 @@ export type Resource =
     | 'APP_QR_MANAGEMENT'
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
+    | 'ADMINISTRATION'
     | 'WEB_DAV'
     | 'RESULT'
 
@@ -1458,6 +1459,20 @@ export type RunningMatchTeamInfo = {
 }
 
 export type Scope = 'OWN' | 'GLOBAL'
+
+export type SmtpConfigOverrideDto = {
+    host: string
+    port: number
+    username: string
+    password: string
+    smtpStrategy: 'SMTP' | 'SMTP_TLS' | 'SMTPS'
+    fromAddress: string
+    fromName?: string
+    localhost?: string
+    replyTo?: string
+}
+
+export type smtpStrategy = 'SMTP' | 'SMTP_TLS' | 'SMTPS'
 
 export type StartListConfigDto = {
     id: string
@@ -4884,3 +4899,19 @@ export type DownloadMatchTeamResultDocumentData = {
 export type DownloadMatchTeamResultDocumentResponse = Blob | File
 
 export type DownloadMatchTeamResultDocumentError = BadRequestError | ApiError
+
+export type GetSmtpConfigResponse = SmtpConfigOverrideDto
+
+export type GetSmtpConfigError = ApiError
+
+export type SetSmtpOverrideData = {
+    body: SmtpConfigOverrideDto
+}
+
+export type SetSmtpOverrideResponse = void
+
+export type SetSmtpOverrideError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type DeleteSmtpOverrideResponse = void
+
+export type DeleteSmtpOverrideError = ApiError
