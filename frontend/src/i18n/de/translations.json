@@ -300,6 +300,7 @@
       "name": "Name",
       "description": "Beschreibung",
       "lateRegistrationAllowed": "Nachmeldung erlaubt",
+      "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
       "challenge": {

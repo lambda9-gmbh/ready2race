@@ -41,6 +41,7 @@ fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> 
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
                 challengeConfig = null,
+                ratingCategoryRequired = ratingCategoryRequired!!,
             ),
             setupTemplate = if (setupTemplateId != null) {
                 CompetitionSetupTemplateOverviewDto(
@@ -51,28 +52,4 @@ fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> 
             } else null
         )
     )
-}
-
-
-fun CompetitionTemplateViewRecord.applyCompetitionProperties(competitionId: UUID): App<Nothing, CompetitionPropertiesRecord> =
-    KIO.ok(
-        CompetitionPropertiesRecord(
-            id = UUID.randomUUID(),
-            competition = competitionId,
-            identifier = identifier!!,
-            name = name!!,
-            shortName = shortName,
-            description = description,
-            competitionCategory = categoryId,
-        ),
-    )
-
-fun CompetitionTemplateViewRecord.toUpdateFunction(): CompetitionPropertiesRecord.() -> Unit = let {
-    {
-        identifier = it.identifier!!
-        name = it.name!!
-        shortName = it.shortName
-        description = it.description
-        competitionCategory = it.categoryId
-    }
 }

@@ -321,6 +321,10 @@ object EventRegistrationService {
                         "#$it"
                     }
 
+                !KIO.failOn(competition.ratingCategoryRequired && competitionRegistrationDto.ratingCategory == null) {
+                    EventRegistrationError.InvalidRegistration("Rating category not provided for a participant in a competition that requires a rating category.")
+                }
+                
                 val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                     CompetitionRegistrationRecord(
                         UUID.randomUUID(),
@@ -333,6 +337,7 @@ object EventRegistrationService {
                         now,
                         userId,
                         isLate = type == OpenForRegistrationType.LATE,
+                        ratingCategory = competitionRegistrationDto.ratingCategory
                     )
                 ).orDie()
 
@@ -388,6 +393,11 @@ object EventRegistrationService {
 
         competitionRegistrationDto.teams?.traverse { teamDto ->
             KIO.comprehension {
+
+                !KIO.failOn(competition.ratingCategoryRequired && teamDto.ratingCategory == null) {
+                    EventRegistrationError.InvalidRegistration("Rating category not provided for a team in a competition that requires a rating category.")
+                }
+
                 val name = count
                     ?.plus(1)
                     ?.let {
@@ -407,6 +417,7 @@ object EventRegistrationService {
                         now,
                         userId,
                         isLate = type == OpenForRegistrationType.LATE,
+                        ratingCategory = teamDto.ratingCategory
                     )
                 ).orDie()
 
@@ -637,19 +648,6 @@ object EventRegistrationService {
                 )
             }
     }
-
-    fun getResultDownloads(
-        eventIds: List<UUID>,
-    ): App<Nothing, List<File>> = EventRegistrationReportRepo.getDownloads(eventIds).orDie()
-        .map { records ->
-            records.map {
-                File(
-                    name = it.name!!,
-                    bytes = it.data!!,
-                )
-            }
-
-        }
 
     private fun generateResultDocument(
         eventId: UUID,

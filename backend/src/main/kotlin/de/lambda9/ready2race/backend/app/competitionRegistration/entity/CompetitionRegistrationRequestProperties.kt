@@ -9,7 +9,6 @@ sealed interface CompetitionRegistrationRequestProperties {
 
     data class Permitted(
         val registrationType: RegistrationInvoiceType,
-        val ratingCategory: UUID?,
     ) : CompetitionRegistrationRequestProperties
 
 }

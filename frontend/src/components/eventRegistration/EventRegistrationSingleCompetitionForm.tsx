@@ -18,8 +18,9 @@ import {FilterAlt, Person} from '@mui/icons-material'
 import {EventRegistrationCompetitionDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
-import {EventRegistrationFormData} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
-import {useEventRegistration} from "@contexts/eventRegistration/EventRegistrationContext.ts";
+import {EventRegistrationFormData} from '../../pages/eventRegistration/EventRegistrationCreatePage.tsx'
+import {useEventRegistration} from '@contexts/eventRegistration/EventRegistrationContext.ts'
+import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 
 const EventSingleCompetitionField = (props: {
     option: EventRegistrationCompetitionDto
@@ -27,6 +28,9 @@ const EventSingleCompetitionField = (props: {
     locked: boolean
     isLate: boolean
 }) => {
+    const {t} = useTranslation()
+    const {ratingCategories} = useEventRegistration()
+
     const formContext = useFormContext<EventRegistrationFormData>()
 
     const [active, setActive] = useState(false)
@@ -47,7 +51,13 @@ const EventSingleCompetitionField = (props: {
         if (checked) {
             formContext.setValue(`participants.${props.participantIndex}.competitionsSingle`, [
                 ...(singleCompetitions ?? []),
-                {competitionId: props.option.id, locked: false, isLate: props.isLate, optionalFees: []},
+                {
+                    competitionId: props.option.id,
+                    locked: false,
+                    isLate: props.isLate,
+                    optionalFees: [],
+                    ratingCategory: props.option.ratingCategoryRequired ? '' : 'none',
+                },
             ])
         } else {
             formContext.setValue(
@@ -57,11 +67,26 @@ const EventSingleCompetitionField = (props: {
         }
     }
 
+    const ratingCategoryOptions = [
+        ...(props.option.ratingCategoryRequired
+            ? []
+            : [
+                  {
+                      id: 'none',
+                      label: t('common.form.select.none'),
+                  },
+              ]),
+        ...ratingCategories.map(rc => ({
+            id: rc.id,
+            label: rc.name,
+        })),
+    ]
+
     return (
         <Stack direction="row">
             <FormControlLabel
                 control={<Checkbox />}
-                disabled={props.locked || props.isLate && !props.option.lateRegistrationAllowed}
+                disabled={props.locked || (props.isLate && !props.option.lateRegistrationAllowed)}
                 checked={active}
                 onChange={(_, checked) => onChange(checked)}
                 label={
@@ -84,6 +109,19 @@ const EventSingleCompetitionField = (props: {
                         row
                     />
                 </>
+            )}
+            {active && ratingCategories.length > 0 && (
+                <Box sx={{ml: 2, my: 1}}>
+                    <Typography variant={'subtitle2'}>
+                        {t('event.competition.registration.ratingCategory')}
+                    </Typography>
+                    <FormInputSelect
+                        name={`participants.${props.participantIndex}.competitionsSingle.${competitionIndex}.ratingCategory`}
+                        options={ratingCategoryOptions}
+                        required
+                        variant={'standard'}
+                    />
+                </Box>
             )}
         </Stack>
     )
@@ -177,24 +215,26 @@ export const EventRegistrationSingleCompetitionForm = () => {
                                 </Typography>
                             </Stack>
                             <Stack flex={1}>
-                                {competitionsSingle
-                                    .get(participant.gender ?? 'O')
-                                    ?.map(option => (
-                                        <Box
-                                            key={option.id}
-                                            // We just hide the input, so fields are still validated
-                                            hidden={
-                                                category !== ALL_CATEGORIES &&
-                                                option.competitionCategory !== category
-                                            }>
-                                            <EventSingleCompetitionField
-                                                participantIndex={index}
-                                                option={option}
-                                                locked={participant.competitionsSingle?.find(c => c.competitionId === option.id)?.locked === true}
-                                                isLate={info?.state === 'LATE'}
-                                            />
-                                        </Box>
-                                    ))}
+                                {competitionsSingle.get(participant.gender ?? 'O')?.map(option => (
+                                    <Box
+                                        key={option.id}
+                                        // We just hide the input, so fields are still validated
+                                        hidden={
+                                            category !== ALL_CATEGORIES &&
+                                            option.competitionCategory !== category
+                                        }>
+                                        <EventSingleCompetitionField
+                                            participantIndex={index}
+                                            option={option}
+                                            locked={
+                                                participant.competitionsSingle?.find(
+                                                    c => c.competitionId === option.id,
+                                                )?.locked === true
+                                            }
+                                            isLate={info?.state === 'LATE'}
+                                        />
+                                    </Box>
+                                ))}
                             </Stack>
                         </Stack>
                         <Typography alignSelf={'end'} variant={'overline'} color={'grey'}>

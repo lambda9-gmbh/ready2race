@@ -6,7 +6,6 @@ import de.lambda9.ready2race.backend.app.competition.entity.CompetitionForExport
 import de.lambda9.ready2race.backend.app.event.entity.EventDto
 import de.lambda9.ready2race.backend.app.event.entity.EventForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
-import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
 import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
 import de.lambda9.ready2race.backend.app.event.entity.MatchResultType

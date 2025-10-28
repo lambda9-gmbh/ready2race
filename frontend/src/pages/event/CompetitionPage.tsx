@@ -348,11 +348,14 @@ const CompetitionPage = () => {
                             )}
                             {eventData.challengeEvent && (
                                 <Card sx={{p: 2, flex: 1}}>
-                                    <Typography variant={'overline'} gutterBottom>
-                                        {t(
-                                            'event.competition.challenge.resultConfirmationImageRequired',
-                                        )}
-                                    </Typography>
+                                    {competitionData.properties.challengeConfig
+                                        ?.resultConfirmationImageRequired && (
+                                        <Typography variant={'overline'} gutterBottom>
+                                            {t(
+                                                'event.competition.challenge.resultConfirmationImageRequired',
+                                            )}
+                                        </Typography>
+                                    )}
                                     {challengeTimespan && (
                                         <Typography>
                                             {format(

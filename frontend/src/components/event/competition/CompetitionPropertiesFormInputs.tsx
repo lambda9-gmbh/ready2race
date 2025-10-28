@@ -236,6 +236,10 @@ export const CompetitionPropertiesFormInputs = (props: Props) => {
                 name={'lateRegistrationAllowed'}
                 label={t('event.competition.lateRegistrationAllowed')}
             />
+            <FormInputCheckbox
+                name={'ratingCategoryRequired'}
+                label={t('event.competition.ratingCategoryRequired')}
+            />
             {props.isChallengeEvent && (
                 <Card sx={{p: 2, display: 'flex', flexDirection: 'column', gap: 2}}>
                     <Typography variant={'subtitle2'}>

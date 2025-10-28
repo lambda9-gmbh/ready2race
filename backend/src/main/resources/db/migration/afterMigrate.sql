@@ -209,7 +209,8 @@ select c.id,
        coalesce(array_agg(distinct ed) filter ( where ed.id is not null), '{}')  as event_days,
        cpcc.result_confirmation_image_required                                   as challenge_result_confirmation_image_required,
        cpcc.start_at                                                             as challenge_start_at,
-       cpcc.end_at                                                               as challenge_end_at
+       cpcc.end_at                                                               as challenge_end_at,
+       cp.rating_category_required
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -235,7 +236,7 @@ from competition c
          left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
 group by c.id, c.event, cp.id, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
          cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at
+         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at, cp.rating_category_required
 ;
 
 create view competition_for_club_view as
@@ -259,7 +260,8 @@ select c.id,
        cb.id                                                                     as club,
        cpcc.result_confirmation_image_required                                   as challenge_result_confirmation_image_required,
        cpcc.start_at                                                             as challenge_start_at,
-       cpcc.end_at                                                               as challenge_end_at
+       cpcc.end_at                                                               as challenge_end_at,
+       cp.rating_category_required
 from competition c
          left join competition_properties cp on c.id = cp.competition
          left join competition_category cc on cp.competition_category = cc.id
@@ -284,7 +286,8 @@ from competition c
          left join competition_properties_challenge_config cpcc on cp.id = cpcc.competition_properties
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
          cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees, cb.id, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at;
+         fs.fees, cb.id, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at,
+         cp.rating_category_required;
 
 create view competition_public_view as
 select c.id,
@@ -305,7 +308,8 @@ select c.id,
        coalesce(fs.fees, '{}')                                                   as fees,
        cpcc.result_confirmation_image_required                                   as challenge_result_confirmation_image_required,
        cpcc.start_at                                                             as challenge_start_at,
-       cpcc.end_at                                                               as challenge_end_at
+       cpcc.end_at                                                               as challenge_end_at,
+       cp.rating_category_required
 from competition c
          join event e on c.event = e.id
          left join competition_properties cp on c.id = cp.competition
@@ -330,7 +334,7 @@ from competition c
 where e.published is true
 group by c.id, c.event, cp.identifier, cp.name, cp.short_name, cp.description, cp.late_registration_allowed,
          cc.id, cc.name, cc.description, nps.total_count, nps.named_participants,
-         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at;
+         fs.fees, cpcc.result_confirmation_image_required, cpcc.start_at, cpcc.end_at, cp.rating_category_required;
 
 create view competition_template_view as
 select ct.id,
@@ -346,7 +350,8 @@ select ct.id,
        coalesce(fs.fees, '{}')                as fees,
        cst.id                                 as setup_template_id,
        cst.name                               as setup_template_name,
-       cst.description                        as setup_template_description
+       cst.description                        as setup_template_description,
+       cp.rating_category_required
 from competition_template ct
          left join competition_properties cp on ct.id = cp.competition_template
          left join competition_category cc on cp.competition_category = cc.id

@@ -49,6 +49,7 @@ import InvoicesPage from './pages/AdministrationPage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
 import SelectResultsEventPage from './pages/results/SelectResultsEventPage.tsx'
 import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
+import ResultsLayout from './layouts/ResultsLayout.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -439,6 +440,7 @@ export const invoicesRoute = createRoute({
 export const resultsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'results',
+    component: () => <ResultsLayout />,
 })
 
 export const resultsIndexRoute = createRoute({

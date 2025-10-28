@@ -9,7 +9,8 @@ enum class CompetitionRegistrationError : ServiceError {
     EventRegistrationNotFound,
     RegistrationInvalid,
     DuplicateParticipant,
-    NotFound;
+    NotFound,
+    RatingCategoryMissing;
 
     override fun respond(): ApiError = when (this) {
 
@@ -17,21 +18,30 @@ enum class CompetitionRegistrationError : ServiceError {
             status = HttpStatusCode.NotFound,
             message = "Registration not found"
         )
+
         RegistrationInvalid -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Invalid request"
         )
+
         DuplicateParticipant -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Invalid request"
         )
+
         EventRegistrationNotFound -> ApiError(
             status = HttpStatusCode.NotFound,
             message = "Event registration not found"
         )
+
         RegistrationClosed -> ApiError(
             status = HttpStatusCode.Forbidden,
             message = "Registration already closed"
+        )
+
+        RatingCategoryMissing -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "Rating category is missing. This competition requires a rating category."
         )
     }
 }

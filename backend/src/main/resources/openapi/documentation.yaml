@@ -1200,12 +1200,6 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/RegistrationInvoiceType'
-        - in: query
-          name: ratingCategory
-          required: false
-          schema:
-            type: string
-            format: uuid
       requestBody:
         required: true
         content:
@@ -6936,6 +6930,7 @@ components:
         - fees
         - lateRegistrationAllowed
         - resultConfirmationImageRequired
+        - ratingCategoryRequired
       properties:
         identifier:
           type: string
@@ -6959,6 +6954,8 @@ components:
           type: boolean
         challengeConfig:
           $ref: '#/components/schemas/CompetitionChallengeConfigDto'
+        ratingCategoryRequired:
+          type: boolean
 
 
     NamedParticipantForCompetitionDto:
@@ -7037,6 +7034,7 @@ components:
         - namedParticipants
         - fees
         - lateRegistrationAllowed
+        - ratingCategoryRequired
       properties:
         identifier:
           type: string
@@ -7064,6 +7062,8 @@ components:
           format: uuid
         challengeConfig:
           $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
+        ratingCategoryRequired:
+          type: boolean
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -8270,12 +8270,15 @@ components:
             format: uuid
         lateRegistrationAllowed:
           type: boolean
+        ratingCategoryRequired:
+          type: boolean
       required:
         - id
         - name
         - identifier
         - days
         - lateRegistrationAllowed
+        - ratingCategoryRequired
 
     EventRegistrationNamedParticipantDto:
       type: object
@@ -8378,6 +8381,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantUpsertDto'
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - id
 
@@ -8442,6 +8448,9 @@ components:
           items:
             type: string
             format: uuid
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - competitionId
 
@@ -8491,6 +8500,9 @@ components:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantLockedDto'
         isLate:
           type: boolean
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - id
         - optionalFees
@@ -8539,6 +8551,9 @@ components:
             format: uuid
         isLate:
           type: boolean
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - competitionId
         - optionalFees

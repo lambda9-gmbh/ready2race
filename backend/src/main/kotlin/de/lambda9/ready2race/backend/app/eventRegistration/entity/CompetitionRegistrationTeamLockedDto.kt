@@ -7,4 +7,5 @@ data class CompetitionRegistrationTeamLockedDto(
     val optionalFees: List<UUID>,
     val namedParticipants: List<CompetitionRegistrationNamedParticipantLockedDto>,
     val isLate: Boolean,
+    val ratingCategory: UUID?,
 )

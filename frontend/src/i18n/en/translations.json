@@ -300,6 +300,7 @@
       "name": "Name",
       "description": "Description",
       "lateRegistrationAllowed": "Late registration allowed",
+      "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
       "challenge": {

@@ -83,4 +83,8 @@ object CompetitionPropertiesRepo {
             .fetchOne()
             ?.value1()
     }
+
+    fun getRatingCategoryRequired(
+        competitionId: UUID
+    ): JIO<Boolean?> = COMPETITION_PROPERTIES.selectOne({ RATING_CATEGORY_REQUIRED }) { COMPETITION.eq(competitionId) }
 }
