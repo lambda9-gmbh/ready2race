@@ -8,6 +8,8 @@ import de.lambda9.ready2race.backend.app.event.entity.EventForExportDto
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicDto
 import de.lambda9.ready2race.backend.app.event.entity.EventRequest
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventForExportRecord
+import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
+import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
@@ -15,7 +17,7 @@ import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
 
-fun EventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
+fun CreateEventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
     KIO.ok(
         LocalDateTime.now().let { now ->
             EventRecord(
@@ -31,6 +33,9 @@ fun EventRequest.toRecord(userId: UUID): App<Nothing, EventRecord> =
                 paymentDueBy = paymentDueBy,
                 latePaymentDueBy = latePaymentDueBy,
                 mixedTeamTerm = mixedTeamTerm,
+                challengeEvent = challengeEvent,
+                challengeMatchResultType = challengeResultType?.name,
+                selfSubmission = allowSelfSubmission,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,
@@ -61,6 +66,9 @@ fun EventViewRecord.eventDto(scope: Privilege.Scope?, userClubId: UUID?): App<No
         },
         registrationsFinalized = registrationsFinalized!!,
         mixedTeamTerm = mixedTeamTerm,
+        challengeEvent = challengeEvent!!,
+        challengeResultType = challengeMatchResultType?.let { MatchResultType.valueOf(it) },
+        allowSelfSubmission = selfSubmission!!,
     )
 )
 
@@ -76,7 +84,10 @@ fun EventPublicViewRecord.eventPublicDto(): App<Nothing, EventPublicDto> = KIO.o
         createdAt = createdAt!!,
         competitionCount = competitionCount!!,
         eventFrom = eventFrom,
-        eventTo = eventTo
+        eventTo = eventTo,
+        challengeEvent = challengeEvent!!,
+        challengeResultType = challengeMatchResultType?.let { MatchResultType.valueOf(it) },
+        allowSelfSubmission = selfSubmission!!,
     )
 )
 

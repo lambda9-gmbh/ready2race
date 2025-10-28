@@ -116,9 +116,34 @@ export const updateWebDavGlobal: Privilege = {
     action: 'UPDATE',
     resource: 'WEB_DAV',
     scope: 'GLOBAL',
+    scope: 'GLOBAL',
 }
 export const readWebDavGlobal: Privilege = {
     action: 'READ',
     resource: 'WEB_DAV',
     scope: 'GLOBAL',
+}
+
+export const updateResultGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'RESULT',
+    scope: 'GLOBAL',
+}
+
+export const updateResultOwn: Privilege = {
+    action: 'UPDATE',
+    resource: 'RESULT',
+    scope: 'OWN',
+}
+
+export const readResultGlobal: Privilege = {
+    action: 'READ',
+    resource: 'RESULT',
+    scope: 'GLOBAL',
+}
+
+export const readResultOwn: Privilege = {
+    action: 'READ',
+    resource: 'RESULT',
+    scope: 'OWN',
 }

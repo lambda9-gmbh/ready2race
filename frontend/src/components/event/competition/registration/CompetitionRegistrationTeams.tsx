@@ -1,13 +1,14 @@
 import CompetitionRegistrationTeamTable from '@components/event/competition/registration/CompetitionRegistrationTeamTable.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
-import {CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
+import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
 import {useTranslation} from 'react-i18next'
 
 type Props = {
     eventData: EventDto
+    competitionData: CompetitionDto
 }
-const CompetitionRegistrationTeams = ({eventData}: Props) => {
+const CompetitionRegistrationTeams = ({eventData, competitionData}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
 
@@ -20,7 +21,11 @@ const CompetitionRegistrationTeams = ({eventData}: Props) => {
 
     return (
         ((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (
-            <CompetitionRegistrationTeamTable {...competitionRegistrationTeamProps.table} />
+            <CompetitionRegistrationTeamTable
+                {...competitionRegistrationTeamProps.table}
+                eventData={eventData}
+                competitionData={competitionData}
+            />
         )
     )
 }

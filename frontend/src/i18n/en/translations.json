@@ -95,7 +95,8 @@
     "hide": "Hide",
     "show": "Show",
     "name": "Name",
-    "by": "By"
+    "by": "By",
+    "continue": "Continue"
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -248,6 +249,13 @@
     "name": "Name",
     "description": "Description",
     "registerNow": "To Registration",
+    "challengeEvent": {
+      "challengeEvent": "Challenge mode",
+      "explanation": "\"Challenge\" is an event mode where results of competitions are combined through the entire event. Teams can have a maximum of one result per competition and there will be no tournament trees.",
+      "unchangeable": "Whether \"Challenge Mode\" is activated or not cannot be changed after creation."
+    },
+    "challengeResultType": "Challenge result type",
+    "allowSelfSubmission": "Allow self submission of results",
     "invoice": {
       "prefix": "Invoice prefix",
       "paymentDueBy": "Registration payment due by",
@@ -294,6 +302,12 @@
       "lateRegistrationAllowed": "Late registration allowed",
       "registrationCount": "Registrations",
       "shortName": "Short name",
+      "challenge": {
+        "configs": "Challenge configs",
+        "resultConfirmationImageRequired": "Confirmation image for results required",
+        "start": "Challenge start",
+        "end": "Challenge end"
+      },
       "tableHint": {
         "competitionComponents": {
           "part1": "Categories, participants types and fee types for the competitions can be defined ",
@@ -603,6 +617,32 @@
             "DUPLICATE_PLACES": "There are duplicate places among the teams",
             "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",
             "PLACES_UNCONTINUOUS": "The given places are not continuous - actual: {{actual}}, expected: {{expected}}"
+          },
+          "resultType": {
+            "distance": "Distance"
+          },
+          "challenge": {
+            "challengeResults": "Challenge result",
+            "error": "An error has occurred when saving the results",
+            "confirmTitle": "Confirmation required",
+            "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
+            "confirm": "Confirm results",
+            "submitResults": "Submit results",
+            "outsideOfTime": "You are currently outside of the challenge timespan."
+          },
+          "confirmationImage": {
+            "confirmationImage": "Confirmation Image",
+            "select": "Select an image",
+            "change": "Change image file",
+            "error": {
+              "empty": "Please select an image",
+              "tooMany": "Please select a maximum of 1 image"
+            }
+          },
+          "document": {
+            "download": {
+              "error": "An error has occurred when downloading the result document"
+            }
           }
         },
         "matchData": {
@@ -1316,7 +1356,8 @@
         "competitionCheck": "Competition Check",
         "eventRequirement": "Event Requirements",
         "caterer": "Catering"
-      }
+      },
+      "switchEvent": "Switch Event"
     },
     "forbidden": {
       "title": "Not authorized",

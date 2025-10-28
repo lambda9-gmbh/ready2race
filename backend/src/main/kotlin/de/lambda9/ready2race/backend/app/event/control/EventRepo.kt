@@ -33,7 +33,7 @@ object EventRepo {
 
     fun getPublished(id: UUID) = EVENT.selectOne({ PUBLISHED }) { ID.eq(id) }
 
-    fun update(id: UUID, f: EventRecord.() -> Unit) = EVENT.update(f) { ID.eq(id) }
+    fun update(record: EventRecord, f: EventRecord.() -> Unit) = EVENT.update(record, f)
 
     fun delete(id: UUID) = EVENT.delete { ID.eq(id) }
 
@@ -130,6 +130,8 @@ object EventRepo {
             PUBLISHED.isTrue
         )
     }
+
+    fun isChallengeEvent(id: UUID) = EVENT.selectOne({ CHALLENGE_EVENT }) { ID.eq(id) }
 
     private fun filterScopeView(
         scope: Privilege.Scope?,

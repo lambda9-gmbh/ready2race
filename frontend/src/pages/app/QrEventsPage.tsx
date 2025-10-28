@@ -1,60 +1,60 @@
 import {Box, Button, Stack, Typography} from '@mui/material'
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz'
-import {router} from '@routes'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
 import {getUserAppRights} from "@components/qrApp/common.ts";
+import LogoutIcon from '@mui/icons-material/Logout';
 import {useUser} from "@contexts/user/UserContext.ts";
 import {useEffect} from "react";
 
 const QrEventsPage = () => {
     const {t} = useTranslation()
-    const navigate = router.navigate
-    const {setAppFunction, events} = useAppSession()
+    const {events, setEventId, navigateTo, setAppFunction} = useAppSession()
     const user = useUser()
-
     const availableAppFunctions = getUserAppRights(user)
 
     useEffect(() => {
-        if (events.length === 1) {
-            navigate({to: '/app/$eventId/scanner', params: {eventId: events[0].id}})
+        if (events && events.length === 1) {
+            setEventId(events[0].id)
+            goForward(true)
         }
-    }, [events, navigate])
+    }, [events])
 
-    return (
+    function goForward(replace: boolean = false) {
+        if (availableAppFunctions.length === 1) {
+            setAppFunction(availableAppFunctions[0])
+            navigateTo("APP_Scanner", replace)
+        } else {
+            navigateTo("APP_Function_Select", replace)
+        }
+    }
+    return (events &&
         <Box sx={{width: 1, maxWidth: 600}}>
             <Stack spacing={2} sx={{width: 1}}>
                 <Typography variant="h4" textAlign="center" gutterBottom>
                     {t('qrEvents.title')}
                 </Typography>
-                {events?.map(event => (
+                {events.map(event => (
                     <Button
                         key={event.id}
-                        onClick={() =>
-                            navigate({
-                                to: '/app/$eventId/scanner',
-                                params: {eventId: event.id},
-                            })
-                        }
+                        onClick={() => {
+                            setEventId(event.id)
+                            goForward()
+                        }}
                         fullWidth
                         variant="contained"
                         color="primary">
                         {event.name}
                     </Button>
                 ))}
-            </Stack>
-            {(availableAppFunctions.length ?? 0) > 1 && (
                 <Button
-                    onClick={() => {
-                        setAppFunction(null)
-                    }}
+                    onClick={ () => 'logout' in user && user.logout(true)}
                     variant="outlined"
-                    startIcon={<SwapHorizIcon />}
+                    startIcon={<LogoutIcon/>}
                     fullWidth
                     sx={{mt: 4}}>
-                    {t('qrEvents.switchApp')}
+                    {t('user.settings.logout')}
                 </Button>
-            )}
+            </Stack>
         </Box>
     )
 }

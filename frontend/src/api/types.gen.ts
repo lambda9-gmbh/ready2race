@@ -205,6 +205,22 @@ export type CompetitionCategoryRequest = {
     description?: string
 }
 
+export type CompetitionChallengeConfigDto = {
+    resultConfirmationImageRequired: boolean
+    startAt: string
+    endAt: string
+}
+
+export type CompetitionChallengeConfigRequest = {
+    resultConfirmationImageRequired: boolean
+    startAt: string
+    endAt: string
+}
+
+export type CompetitionChallengeResultRequest = {
+    result: number
+}
+
 export type CompetitionChoiceDto = {
     id: string
     identifier: string
@@ -242,7 +258,7 @@ export type CompetitionExecutionCanNotCreateRoundReason =
 export type CompetitionExecutionProgressDto = {
     rounds: Array<CompetitionRoundDto>
     canNotCreateRoundReasons: Array<CompetitionExecutionCanNotCreateRoundReason>
-    lastRoundFinished: boolean
+    isChallengeEvent: boolean
 }
 
 export type CompetitionForExportDto = {
@@ -286,6 +302,7 @@ export type CompetitionPropertiesDto = {
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
     lateRegistrationAllowed: boolean
+    challengeConfig?: CompetitionChallengeConfigDto
 }
 
 export type CompetitionPropertiesRequest = {
@@ -298,6 +315,7 @@ export type CompetitionPropertiesRequest = {
     fees: Array<FeeForCompetitionRequestDto>
     lateRegistrationAllowed: boolean
     setupTemplate?: string
+    challengeConfig?: CompetitionChallengeConfigRequest
 }
 
 export type CompetitionRegistrationDto = {
@@ -377,6 +395,13 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationTeamNamedParticipantDto>
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
+    challengeResultValue?: number
+    /**
+     * Map of documentId to documentName
+     */
+    challengeResultDocuments?: {
+        [key: string]: string
+    }
 }
 
 export type CompetitionRegistrationTeamLockedDto = {
@@ -532,6 +557,23 @@ export type ContactInformationRequest = {
     email: string
 }
 
+export type CreateEventRequest = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+    invoicePrefix?: string
+    published: boolean
+    paymentDueBy?: string
+    latePaymentDueBy?: string
+    mixedTeamTerm?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
+}
+
 export type DocumentTemplateDto = {
     id: string
     name: string
@@ -641,6 +683,9 @@ export type EventDto = {
     registrationCount?: number
     registrationsFinalized: boolean
     mixedTeamTerm?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
 }
 
 export type EventForExportDto = {
@@ -675,6 +720,9 @@ export type EventPublicDto = {
     competitionCount: number
     eventFrom?: string
     eventTo?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -787,20 +835,6 @@ export type EventRegistrationViewDto = {
     clubName: string
     competitionRegistrationCount: number
     participantCount: number
-}
-
-export type EventRequest = {
-    name: string
-    description?: string
-    location?: string
-    registrationAvailableFrom?: string
-    registrationAvailableTo?: string
-    lateRegistrationAvailableTo?: string
-    invoicePrefix?: string
-    published: boolean
-    paymentDueBy?: string
-    latePaymentDueBy?: string
-    mixedTeamTerm?: string
 }
 
 export type FeeDto = {
@@ -988,6 +1022,8 @@ export type MatchResultTeamInfo = {
     deregisteredReason?: string
     participants: Array<ParticipantInfo>
 }
+
+export type MatchResultType = 'DISTANCE'
 
 export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
 
@@ -1370,6 +1406,7 @@ export type Resource =
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
     | 'WEB_DAV'
+    | 'RESULT'
 
 export type RoleDto = {
     id: string
@@ -1628,6 +1665,22 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     place?: number
     failed?: boolean
     failedReason?: string
+}
+
+export type UpdateEventRequest = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+    invoicePrefix?: string
+    published: boolean
+    paymentDueBy?: string
+    latePaymentDueBy?: string
+    mixedTeamTerm?: string
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
 }
 
 export type UpdateQrCodeRequirementDto = {
@@ -2074,7 +2127,7 @@ export type DeleteRoleResponse = void
 export type DeleteRoleError = BadRequestError | ApiError
 
 export type AddEventData = {
-    body: EventRequest
+    body: CreateEventRequest
 }
 
 export type AddEventResponse = string
@@ -2176,7 +2229,7 @@ export type GetEventResponse = EventDto
 export type GetEventError = BadRequestError | ApiError
 
 export type UpdateEventData = {
-    body: EventRequest
+    body: UpdateEventRequest
     path: {
         eventId: string
     }
@@ -4779,3 +4832,31 @@ export type GetWebDavImportOptionTypesData = {
 export type GetWebDavImportOptionTypesResponse = WebDAVImportOptionsDto
 
 export type GetWebDavImportOptionTypesError = BadRequestError | ApiError
+
+export type SubmitChallengeTeamResultsData = {
+    body: {
+        request: CompetitionChallengeResultRequest
+        files: Array<Blob | File>
+    }
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type SubmitChallengeTeamResultsResponse = void
+
+export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
+
+export type DownloadMatchTeamResultDocumentData = {
+    path: {
+        competitionId: string
+        eventId: string
+        resultDocumentId: string
+    }
+}
+
+export type DownloadMatchTeamResultDocumentResponse = Blob | File
+
+export type DownloadMatchTeamResultDocumentError = BadRequestError | ApiError

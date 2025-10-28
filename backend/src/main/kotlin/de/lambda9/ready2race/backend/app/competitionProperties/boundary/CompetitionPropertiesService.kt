@@ -2,13 +2,17 @@ package de.lambda9.ready2race.backend.app.competitionProperties.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionCategory.control.CompetitionCategoryRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesChallengeConfigRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionChallengeConfigRequest
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesError
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesRequest
 import de.lambda9.ready2race.backend.app.competitionSetupTemplate.control.CompetitionSetupTemplateRepo
 import de.lambda9.ready2race.backend.app.fee.control.FeeRepo
 import de.lambda9.ready2race.backend.app.namedParticipant.control.NamedParticipantRepo
+import de.lambda9.ready2race.backend.database.generated.tables.CompetitionPropertiesChallengeConfig
+import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesChallengeConfigRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasNamedParticipantRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
@@ -83,11 +87,16 @@ object CompetitionPropertiesService {
 
     fun addCompetitionPropertiesReferences(
         namedParticipants: Collection<CompetitionPropertiesHasNamedParticipantRecord>,
-        fees: Collection<CompetitionPropertiesHasFeeRecord>
+        fees: Collection<CompetitionPropertiesHasFeeRecord>,
+        challengeConfig: CompetitionPropertiesChallengeConfigRecord?,
     ): App<Nothing, Unit> = KIO.comprehension {
 
         !CompetitionPropertiesHasNamedParticipantRepo.create(namedParticipants).orDie()
         !CompetitionPropertiesHasFeeRepo.create(fees).orDie()
+
+        if (challengeConfig != null) {
+            !CompetitionPropertiesChallengeConfigRepo.create(challengeConfig).orDie()
+        }
 
         unit
     }
@@ -96,13 +105,22 @@ object CompetitionPropertiesService {
     fun updateCompetitionPropertiesReferences(
         competitionPropertiesId: UUID,
         namedParticipants: Collection<CompetitionPropertiesHasNamedParticipantRecord>,
-        fees: Collection<CompetitionPropertiesHasFeeRecord>
+        fees: Collection<CompetitionPropertiesHasFeeRecord>,
+        challengeConfig: CompetitionChallengeConfigRequest?,
     ): App<Nothing, Unit> = KIO.comprehension {
 
         !CompetitionPropertiesHasNamedParticipantRepo.deleteByCompetitionPropertiesId(competitionPropertiesId).orDie()
         !CompetitionPropertiesHasFeeRepo.deleteManyByCompetitionProperties(competitionPropertiesId).orDie()
 
-        !addCompetitionPropertiesReferences(namedParticipants, fees)
+        !addCompetitionPropertiesReferences(namedParticipants, fees, null)
+
+        challengeConfig?.let {
+            !CompetitionPropertiesChallengeConfigRepo.update(competitionPropertiesId) {
+                resultConfirmationImageRequired = it.resultConfirmationImageRequired
+                startAt = it.startAt
+                endAt = it.endAt
+            }.orDie()
+        }
 
         unit
     }

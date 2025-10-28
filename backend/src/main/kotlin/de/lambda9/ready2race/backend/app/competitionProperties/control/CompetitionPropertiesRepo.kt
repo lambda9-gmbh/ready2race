@@ -3,9 +3,8 @@ package de.lambda9.ready2race.backend.app.competitionProperties.control
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesContainingReference
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
-import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_TEMPLATE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.impl.DSL
@@ -73,4 +72,15 @@ object CompetitionPropertiesRepo {
 
     fun insertJsonData(data: String) = COMPETITION_PROPERTIES.insertJsonData(data)
 
+
+    fun getEventIdByCompetitionPropertiesId(
+        competitionPropertiesId: UUID
+    ): JIO<UUID?> = Jooq.query {
+        select(COMPETITION.EVENT)
+            .from(COMPETITION_PROPERTIES)
+            .join(COMPETITION).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .where(COMPETITION_PROPERTIES.ID.eq(competitionPropertiesId))
+            .fetchOne()
+            ?.value1()
+    }
 }

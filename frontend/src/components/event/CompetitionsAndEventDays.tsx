@@ -10,7 +10,11 @@ import {useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {Stack} from '@mui/material'
 
-const CompetitionsAndEventDays = () => {
+type Props = {
+    isChallengeEvent: boolean
+}
+
+const CompetitionsAndEventDays = (props: Props) => {
     const {t} = useTranslation()
     const user = useUser()
 
@@ -51,12 +55,19 @@ const CompetitionsAndEventDays = () => {
                         : undefined
                 }
             />
-            <CompetitionDialog {...competitionAdministrationProps.dialog} />
-            <EventDayTable
-                {...eventDayAdministrationProps.table}
-                title={t('event.eventDay.eventDays')}
+            <CompetitionDialog
+                {...competitionAdministrationProps.dialog}
+                isChallengeEvent={props.isChallengeEvent}
             />
-            <EventDayDialog {...eventDayAdministrationProps.dialog} />
+            {!props.isChallengeEvent && (
+                <>
+                    <EventDayTable
+                        {...eventDayAdministrationProps.table}
+                        title={t('event.eventDay.eventDays')}
+                    />
+                    <EventDayDialog {...eventDayAdministrationProps.dialog} />
+                </>
+            )}
         </Stack>
     )
 }

@@ -2,7 +2,6 @@ import {Stack, Typography, Card, CardContent, Box, Chip, Alert, Divider} from '@
 import {useTranslation} from 'react-i18next'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {checkInOutParticipant, getTeamsByParticipantQrCode} from '@api/sdk.gen.ts'
-import {qrEventRoute} from '@routes'
 import {useAppSession} from '@contexts/app/AppSessionContext.tsx'
 import {useState} from 'react'
 import Throbber from '@components/Throbber.tsx'
@@ -14,8 +13,7 @@ export const TeamCheckInOut = () => {
 
     const [submitting, setSubmitting] = useState(false)
 
-    const {qr} = useAppSession()
-    const {eventId} = qrEventRoute.useParams()
+    const {navigateTo, qr, eventId} = useAppSession()
 
     const {data: teamsData, pending: teamsPending} = useFetch(
         signal =>
@@ -73,7 +71,7 @@ export const TeamCheckInOut = () => {
                     : t('club.participant.tracking.checkOut.success'),
             )
         }
-        qr.reset(eventId)
+        navigateTo('APP_Scanner')
     }
 
     return (

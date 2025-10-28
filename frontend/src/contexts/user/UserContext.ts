@@ -8,8 +8,8 @@ export type AuthenticatedUser = {
     loggedIn: true
     id: string
     clubId?: string
-    login: (data: LoginDto, headers: Headers) => void
-    logout: () => void
+    login: (data: LoginDto, headers: Headers, isInApp?: boolean) => void
+    logout: (isInApp?: boolean) => void
     getPrivilegeScope: (action: Action, resource: Resource) => Scope | undefined
     checkPrivilege: (privilege: Privilege) => boolean
 }
@@ -18,7 +18,7 @@ export type AnonymousUser = {
     language: Language
     changeLanguage: (language: Language) => Promise<void>
     loggedIn: false
-    login: (data: LoginDto, headers: Headers) => void
+    login: (data: LoginDto, headers: Headers, isInApp?: boolean) => void
     getPrivilegeScope: (action: Action, resource: Resource) => undefined
     checkPrivilege: (privilege: Privilege) => false
 }

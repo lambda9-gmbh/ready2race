@@ -13,7 +13,6 @@ import {
 } from '@mui/material'
 import React, {useEffect, useState} from 'react'
 import {updateQrCodeAppuser, updateQrCodeParticipant} from '@api/sdk.gen.ts'
-import {qrEventRoute} from '@routes'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
 import PersonIcon from '@mui/icons-material/Person'
@@ -35,19 +34,18 @@ interface ConfirmationData {
 
 const QrAssignPage = () => {
     const {t} = useTranslation()
-    const {qr, appFunction} = useAppSession()
+    const {qr, appFunction, navigateTo, eventId} = useAppSession()
     const [userTyp, setUserTyp] = useState<UserTyp>('Participant')
     const [scanningSystemUser, setScanningSystemUser] = useState(false)
     const [confirmationOpen, setConfirmationOpen] = useState(false)
     const [selectedPerson, setSelectedPerson] = useState<ConfirmationData | null>(null)
-    const {eventId} = qrEventRoute.useParams()
     const feedback = useFeedback()
 
     useEffect(() => {
         if (!qr.received) {
-            qr.reset(eventId)
+            navigateTo("APP_Scanner")
         }
-    }, [qr, appFunction, eventId])
+    }, [qr, navigateTo])
 
     const handleUserTypChange = (
         _event: React.MouseEvent<HTMLElement>,
@@ -118,7 +116,7 @@ const QrAssignPage = () => {
         }
 
         setConfirmationOpen(false)
-        qr.reset(eventId)
+        navigateTo("APP_Scanner")
     }
 
     const handleCloseConfirmation = () => {
@@ -144,7 +142,7 @@ const QrAssignPage = () => {
             } else{
                 feedback.success(t('qrAssign.success'))
             }
-            qr.reset(eventId)
+            navigateTo("APP_Scanner")
         } else if (data.participantId) {
             setScanningSystemUser(false)
             const {error} = await updateQrCodeParticipant({
@@ -154,7 +152,7 @@ const QrAssignPage = () => {
                     id: data.participantId,
                 },
             })
-            qr.reset(eventId)
+            navigateTo("APP_Scanner")
             if(error){
                 feedback.error(t('qrAssign.invalidQrFormat'))
             } else{
@@ -163,7 +161,7 @@ const QrAssignPage = () => {
         } else {
             feedback.error(t('qrAssign.invalidUserQr'))
         }
-        qr.reset(eventId)
+        navigateTo("APP_Scanner")
     }
 
     const canAssign = appFunction === 'APP_QR_MANAGEMENT'

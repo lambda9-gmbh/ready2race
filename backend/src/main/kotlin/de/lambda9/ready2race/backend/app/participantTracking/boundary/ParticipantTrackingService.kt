@@ -5,6 +5,7 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.eventDay.entity.EventDaySort
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
@@ -89,7 +90,8 @@ object ParticipantTrackingService {
         !KIO.failOn(qrCodeRecord!!.participant == null) { ParticipantTrackingError.QrCodeNotAssociatedWithParticipant }
 
         // Get all registrations for this event
-        val competitionRegistrationTeams = !CompetitionRegistrationRepo.getCompetitionRegistrationTeams(eventId).orDie()
+        val competitionRegistrationTeams =
+            !CompetitionRegistrationTeamRepo.getCompetitionRegistrationTeams(eventId).orDie()
 
         val registrationIdsToSubstitutions = competitionRegistrationTeams.map { team ->
             team.competitionRegistrationId!! to team.substitutions!!.filterNotNull()

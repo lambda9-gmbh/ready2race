@@ -11,10 +11,12 @@ import de.lambda9.ready2race.backend.app.eventDay.control.eventDayDto
 import de.lambda9.ready2race.backend.app.eventDay.control.toRecord
 import de.lambda9.ready2race.backend.app.eventDay.entity.*
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventDayHasCompetitionRecord
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.traverse
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -28,9 +30,11 @@ object EventDayService {
         request: EventDayRequest,
         userId: UUID,
         eventId: UUID
-    ): App<EventError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
 
-        !EventService.checkEventExisting(eventId)
+        val event = !EventRepo.get(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+        !KIO.failOn(event.challengeEvent == true) { EventDayError.IsChallengeEvent }
 
         val record = !request.toRecord(userId, eventId)
         val id = !EventDayRepo.create(record).orDie()
@@ -66,11 +70,12 @@ object EventDayService {
         eventDayId: UUID,
         scope: Privilege.Scope?
     ): App<EventDayError, ApiResponse> = KIO.comprehension {
-        val eventDay = !EventDayRepo.getEventDay(eventDayId, scope).orDie().onNullFail { EventDayError.EventDayNotFound }
+        val eventDay =
+            !EventDayRepo.getEventDay(eventDayId, scope).orDie().onNullFail { EventDayError.EventDayNotFound }
         eventDay.eventDayDto().map { ApiResponse.Dto(it) }
     }
 
-    fun updateEvent(
+    fun updateEventDay(
         request: EventDayRequest,
         userId: UUID,
         eventDayId: UUID,

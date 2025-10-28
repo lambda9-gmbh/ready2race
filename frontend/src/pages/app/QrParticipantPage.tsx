@@ -1,6 +1,5 @@
 import {Alert, Box, Button, Stack} from '@mui/material'
 import {useEffect, useState} from 'react'
-import {qrEventRoute} from '@routes'
 import {
     approveParticipantRequirementsForEvent,
     deleteQrCode,
@@ -26,8 +25,7 @@ import {CheckedParticipantRequirement} from "@api/types.gen.ts";
 
 const QrParticipantPage = () => {
     const {t} = useTranslation()
-    const {qr, appFunction} = useAppSession()
-    const {eventId} = qrEventRoute.useParams()
+    const {qr, appFunction, eventId, navigateTo} = useAppSession()
     const [dialogOpen, setDialogOpen] = useState(false)
     const [checkedRequirements, setCheckedRequirements] = useState<CheckedParticipantRequirement[]>([])
     const [participantRoles, setParticipantRoles] = useState<string[]>([])
@@ -37,9 +35,9 @@ const QrParticipantPage = () => {
 
     useEffect(() => {
         if (!qr.received) {
-            qr.reset(eventId)
+            navigateTo("APP_Scanner")
         }
-    }, [qr, appFunction, eventId])
+    }, [qr, navigateTo])
 
     const {data: participantRequirementsData} = useFetch(
         signal => {
@@ -139,7 +137,7 @@ const QrParticipantPage = () => {
         }
         setDialogOpen(false)
         setSubmitting(false)
-        qr.reset(eventId)
+        navigateTo("APP_Scanner")
     }
 
     return (

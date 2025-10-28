@@ -1,12 +1,10 @@
 import { Stack, Typography, Button } from '@mui/material';
-import { router } from '@routes';
 import { useTranslation } from 'react-i18next';
-import {useUser} from "@contexts/user/UserContext.ts";
+import {useAppSession} from "@contexts/app/AppSessionContext.tsx";
 
 const ForbiddenPage = () => {
     const { t } = useTranslation();
-    const navigate = router.navigate;
-    const user = useUser();
+    const {navigateTo} = useAppSession()
 
     return (
         <Stack spacing={2} alignItems="center" justifyContent="center" p={4}>
@@ -17,10 +15,7 @@ const ForbiddenPage = () => {
                 {t('app.forbidden.message')}
             </Typography>
             <Button variant="contained" onClick={() => {
-                if(user.loggedIn) {
-                    user.logout()
-                }
-                navigate({to: '/app'})
+                navigateTo("App_Login")
             }}>
                 {t('app.forbidden.backButton')}
             </Button>

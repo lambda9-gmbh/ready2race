@@ -21,4 +21,7 @@ data class EventDto(
     val registrationCount: Int?,
     val registrationsFinalized: Boolean,
     val mixedTeamTerm: String?,
+    val challengeEvent: Boolean,
+    val challengeResultType: MatchResultType?,
+    val allowSelfSubmission: Boolean,
 )

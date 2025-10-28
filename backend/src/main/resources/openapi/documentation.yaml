@@ -527,7 +527,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EventRequest'
+              $ref: '#/components/schemas/CreateEventRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -677,7 +677,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EventRequest'
+              $ref: '#/components/schemas/UpdateEventRequest'
       responses:
         204:
           description: Event successfully updated
@@ -5707,6 +5707,71 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    post:
+      operationId: submitChallengeTeamResults
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/CompetitionChallengeResultRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - in: path
+        name: resultDocumentId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadMatchTeamResultDocument
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -5922,6 +5987,7 @@ components:
         - APP_COMPETITION_CHECK
         - APP_CATERER
         - WEB_DAV
+        - RESULT
 
     Scope:
       type: string
@@ -6002,6 +6068,11 @@ components:
         - 'DB_COMPETITION_TEMPLATES'
         - 'DB_EVENT'
         - 'DB_COMPETITION'
+
+    MatchResultType:
+      type: string
+      enum:
+        - 'DISTANCE'
 
 
     # error
@@ -6586,6 +6657,8 @@ components:
         - id
         - name
         - registrationsFinalized
+        - challengeEvent
+        - allowSelfSubmission
       properties:
         id:
           type: string
@@ -6627,6 +6700,12 @@ components:
           type: boolean
         mixedTeamTerm:
           type: string
+        challengeEvent:
+          type: boolean
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -6635,6 +6714,8 @@ components:
         - name
         - competitionCount
         - createdAt
+        - challengeEvent
+        - allowSelfSubmission
       properties:
         id:
           type: string
@@ -6665,6 +6746,12 @@ components:
         eventTo:
           type: string
           format: date
+        challengeEvent:
+          type: boolean
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
 
     EventRegistrationViewDto:
       type: object
@@ -6705,11 +6792,13 @@ components:
         participantCount:
           type: number
 
-    EventRequest:
+    CreateEventRequest:
       type: object
       required:
         - name
         - published
+        - challengeEvent
+        - allowSelfSubmission
       properties:
         name:
           type: string
@@ -6738,6 +6827,52 @@ components:
           format: date
         mixedTeamTerm:
           type: string
+        challengeEvent:
+          type: boolean
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
+
+    UpdateEventRequest:
+      type: object
+      required:
+        - name
+        - published
+        - challengeEvent
+        - allowSelfSubmission
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        registrationAvailableFrom:
+          type: string
+          format: date-time
+        registrationAvailableTo:
+          type: string
+          format: date-time
+        lateRegistrationAvailableTo:
+          type: string
+          format: date-time
+        invoicePrefix:
+          type: string
+        published:
+          type: boolean
+        paymentDueBy:
+          type: string
+          format: date
+        latePaymentDueBy:
+          type: string
+          format: date
+        mixedTeamTerm:
+          type: string
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
 
 
     # eventDay
@@ -6800,6 +6935,7 @@ components:
         - namedParticipants
         - fees
         - lateRegistrationAllowed
+        - resultConfirmationImageRequired
       properties:
         identifier:
           type: string
@@ -6821,6 +6957,8 @@ components:
             $ref: '#/components/schemas/FeeForCompetitionDto'
         lateRegistrationAllowed:
           type: boolean
+        challengeConfig:
+          $ref: '#/components/schemas/CompetitionChallengeConfigDto'
 
 
     NamedParticipantForCompetitionDto:
@@ -6873,6 +7011,23 @@ components:
           type: string
           format: decimal
 
+    CompetitionChallengeConfigDto:
+      type: object
+      required:
+        - resultConfirmationImageRequired
+        - startAt
+        - endAt
+      properties:
+        resultConfirmationImageRequired:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+
+
 
     CompetitionPropertiesRequest:
       type: object
@@ -6907,6 +7062,8 @@ components:
         setupTemplate:
           type: string
           format: uuid
+        challengeConfig:
+          $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -6948,6 +7105,22 @@ components:
         lateAmount:
           type: string
           format: decimal
+
+    CompetitionChallengeConfigRequest:
+      type: object
+      required:
+        - resultConfirmationImageRequired
+        - startAt
+        - endAt
+      properties:
+        resultConfirmationImageRequired:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
 
 
     # competition
@@ -7125,6 +7298,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantRequirementDto'
+        challengeResultValue:
+          type: integer
+        challengeResultDocuments:
+          type: object
+          description: Map of documentId to documentName
+          additionalProperties:
+            type: string
 
 
     CompetitionRegistrationTeamNamedParticipantDto:
@@ -8774,7 +8954,7 @@ components:
       required:
         - rounds
         - canNotCreateRoundReasons
-        - lastRoundFinished
+        - isChallengeEvent
       properties:
         rounds:
           type: array
@@ -8784,7 +8964,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionExecutionCanNotCreateRoundReason'
-        lastRoundFinished:
+        isChallengeEvent:
           type: boolean
 
     CompetitionExecutionCanNotCreateRoundReason:
@@ -10219,8 +10399,8 @@ components:
           type: string
         name:
           type: string
-    
-    
+
+
     EventForExportDto:
       type: object
       required:
@@ -10288,7 +10468,7 @@ components:
           items:
           $ref: '#/components/schemas/WebDAVExportType'
 
-    
+
     WebDAVExportStatusDto:
       type: object
       required:
@@ -10441,3 +10621,12 @@ components:
           type: array
           items:
             type: string
+
+
+    CompetitionChallengeResultRequest:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: integer

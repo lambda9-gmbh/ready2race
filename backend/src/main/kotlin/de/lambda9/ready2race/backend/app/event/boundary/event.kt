@@ -7,8 +7,9 @@ import de.lambda9.ready2race.backend.app.caterer.entity.CatererTransactionViewSo
 import de.lambda9.ready2race.backend.app.competition.boundary.competition
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.event.entity.EventPublicViewSort
-import de.lambda9.ready2race.backend.app.event.entity.EventRequest
+import de.lambda9.ready2race.backend.app.event.entity.CreateEventRequest
 import de.lambda9.ready2race.backend.app.event.entity.EventViewSort
+import de.lambda9.ready2race.backend.app.event.entity.UpdateEventRequest
 import de.lambda9.ready2race.backend.app.eventDay.boundary.eventDay
 import de.lambda9.ready2race.backend.app.eventDocument.boundary.eventDocument
 import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
@@ -17,11 +18,9 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.EventRegistrat
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.InvoiceForEventRegistrationSort
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoicesRequest
-import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.app.participant.boundary.participantForEvent
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
-import de.lambda9.ready2race.backend.app.participantTracking.boundary.ParticipantTrackingService
 import de.lambda9.ready2race.backend.app.participantTracking.boundary.participantTracking
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
@@ -37,7 +36,7 @@ fun Route.event() {
             call.respondComprehension {
                 val user = !authenticate(Privilege.CreateEventGlobal)
 
-                val body = !receiveKIO(EventRequest.example)
+                val body = !receiveKIO(CreateEventRequest.example)
                 EventService.addEvent(body, user.id!!)
             }
         }
@@ -141,7 +140,7 @@ fun Route.event() {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
                     val id = !pathParam("eventId", uuid)
 
-                    val body = !receiveKIO(EventRequest.example)
+                    val body = !receiveKIO(UpdateEventRequest.example)
                     EventService.updateEvent(body, user.id!!, id)
                 }
             }

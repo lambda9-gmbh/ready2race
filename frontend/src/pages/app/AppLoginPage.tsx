@@ -5,15 +5,12 @@ import {Box, Stack, Typography, Button, TextField, Paper, useMediaQuery, useThem
 import {userLogin} from '@api/sdk.gen.ts'
 import {LoginRequest} from '@api/types.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {useRouter, useSearch} from '@tanstack/react-router'
-import {appLoginRoute} from '@routes'
 import {useFeedback} from "@utils/hooks.ts";
 
 const AppLoginPage = () => {
-    const {login} = useUser()
+    const user = useUser()
+    const {login} = user
     const {t} = useTranslation()
-    const router = useRouter()
-    const search = useSearch({from: appLoginRoute.id})
     const [submitting, setSubmitting] = useState(false)
     const formContext = useForm<LoginRequest>()
     const feedback = useFeedback();
@@ -23,13 +20,7 @@ const AppLoginPage = () => {
         const {data, error, response} = await userLogin({ body: formData })
         setSubmitting(false)
         if (data !== undefined && response.ok) {
-            login(data, response.headers)
-
-            if (search && typeof search.redirect === 'string' && search.redirect) {
-                router.navigate({to: search.redirect})
-            } else {
-                router.navigate({to: '/app/function'})
-            }
+            login(data, response.headers, true)
         } else if (error) {
             if (error.status.value === 429) {
                 feedback.error(t('user.login.error.tooManyRequests'))

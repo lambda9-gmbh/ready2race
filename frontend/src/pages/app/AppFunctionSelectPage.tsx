@@ -1,5 +1,6 @@
 import {
     Box,
+    Button,
     Card,
     CardActionArea,
     CardContent,
@@ -10,7 +11,6 @@ import {
 } from '@mui/material'
 import {AppFunction, useAppSession} from '@contexts/app/AppSessionContext.tsx'
 import {useEffect} from 'react'
-import {router} from '@routes'
 import {useTranslation} from 'react-i18next'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
@@ -18,6 +18,8 @@ import AssignmentIcon from '@mui/icons-material/Assignment'
 import RestaurantIcon from '@mui/icons-material/Restaurant'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {getUserAppRights} from '@components/qrApp/common.ts'
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const APP_FUNCTIONS = [
     {
@@ -44,8 +46,7 @@ const APP_FUNCTIONS = [
 
 const AppFunctionSelectPage = () => {
     const {t} = useTranslation()
-    const {setAppFunction} = useAppSession()
-    const navigate = router.navigate
+    const {setAppFunction, events, navigateTo} = useAppSession()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
     const user = useUser()
@@ -53,15 +54,14 @@ const AppFunctionSelectPage = () => {
     const availableAppFunctions = getUserAppRights(user)
 
     useEffect(() => {
-        if (availableAppFunctions.length === 0) {
-            navigate({to: '/app/forbidden'})
-        } else if (availableAppFunctions.length === 1) {
-            setAppFunction(availableAppFunctions[0])
+        if (availableAppFunctions.length === 0 && user.loggedIn) {
+            navigateTo("APP_Forbidden")
         }
-    }, [setAppFunction, navigate, availableAppFunctions])
+    }, [setAppFunction, availableAppFunctions])
 
     const handleSelect = (fn: AppFunction) => {
         setAppFunction(fn)
+        navigateTo("APP_Scanner")
     }
 
     return (
@@ -135,6 +135,25 @@ const AppFunctionSelectPage = () => {
                     )
                 })}
             </Box>
+            {((events?.length ?? 0) > 1) ? (
+                <Button
+                    onClick={ () => navigateTo("APP_Event_List")}
+                    variant="outlined"
+                    startIcon={<SwapHorizIcon/>}
+                    fullWidth
+                    sx={{mt: 4}}>
+                    {t('app.functionSelect.switchEvent')}
+                </Button>
+            ): (
+                <Button
+                    onClick={ () => 'logout' in user && user.logout(true)}
+                    startIcon={<LogoutIcon/>}
+                    fullWidth
+                    variant="outlined"
+                    sx={{mt: 4}}>
+                    {t('user.settings.logout')}
+                </Button>
+            )}
         </Stack>
     )
 }

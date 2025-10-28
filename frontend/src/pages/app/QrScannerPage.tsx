@@ -1,38 +1,46 @@
 import {Button, Stack, Typography, useMediaQuery, useTheme} from '@mui/material'
 import {CheckQrCodeResponse} from '@api/types.gen.ts'
-import {qrEventRoute, router} from '@routes'
-import {useEffect} from 'react'
+import {useEffect, useRef} from 'react'
 import QrNimiqScanner from '@components/qrApp/QrNimiqScanner.tsx'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
 import {checkQrCode} from '@api/sdk.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import Config from '../../Config.ts'
+import {getUserAppRights} from "@components/qrApp/common.ts";
+import {useUser} from "@contexts/user/UserContext.ts";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const uuidRegex = /([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/
 
 const QrScannerPage = () => {
     const {t} = useTranslation()
-    const navigate = router.navigate
-    const {eventId} = qrEventRoute.useParams()
-    const {qr, appFunction, goBack, showBackButton} = useAppSession()
+    const {qr, events, navigateTo} = useAppSession()
     const feedback = useFeedback()
     const theme = useTheme()
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
-    useEffect(() => {
-        if (qr.received) {
-            const response = qr.response
+    const initialEffect = useRef<boolean>(true)
 
-            if (response === null || response === undefined) {
-                navigate({to: '/app/$eventId/assign', params: {eventId: eventId}})
-            } else if (response.type == 'Participant') {
-                navigate({to: '/app/$eventId/participant', params: {eventId: eventId}})
-            } else if (response.type == 'User') {
-                navigate({to: '/app/$eventId/user', params: {eventId: eventId}})
+    useEffect(() => {
+        if (initialEffect.current) {
+            qr.reset()
+            initialEffect.current = false
+        } else {
+            if (qr.received && !qr.handled) {
+                const response = qr.response
+
+                if (response === null || response === undefined) {
+                    navigateTo("App_Assign")
+                } else if (response.type == 'Participant') {
+                    navigateTo("APP_Participant")
+                } else if (response.type == 'User') {
+                    navigateTo("App_User")
+                }
+                qr.update({...qr, handled: true})
             }
         }
-    }, [qr, appFunction, navigate])
+    }, [qr, navigateTo])
 
     async function handleScannerResult(qrCodeContent: string) {
         const match = qrCodeContent.match(uuidRegex)
@@ -48,13 +56,23 @@ const QrScannerPage = () => {
                     response = result.data
                 }
                 qr.update({...qr, qrCodeId: qrCodeId, response: response, received: true})
-            } catch (error) {
+
+            } catch {
                 feedback.error(
                     t('common.load.error.single', {
                         entity: t('qrCode.qrCode'),
                     }),
                 )
             }
+        }
+    }
+    const user = useUser()
+    const availableAppFunctions = getUserAppRights(user)
+    function goBack() {
+        if (availableAppFunctions.length === 1) {
+            navigateTo("APP_Event_List")
+        } else {
+            navigateTo("APP_Function_Select")
         }
     }
 
@@ -92,9 +110,20 @@ const QrScannerPage = () => {
                         Skip ({Config.mode}-mode)
                     </Button>
                 )}
-                {showBackButton && (
-                    <Button onClick={goBack} fullWidth variant="outlined">
+                {(availableAppFunctions.length > 1 || (events?.length ?? 0) > 1) ? (
+                    <Button
+                        onClick={goBack}
+                        fullWidth
+                        variant="outlined">
                         {t('common.back')}
+                    </Button>
+                ): (
+                    <Button
+                        onClick={ () => 'logout' in user && user.logout(true)}
+                        startIcon={<LogoutIcon/>}
+                        fullWidth
+                        variant="outlined">
+                        {t('user.settings.logout')}
                     </Button>
                 )}
             </Stack>
