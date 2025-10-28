@@ -4,7 +4,6 @@ import {FormContainer, useForm} from 'react-hook-form-mui'
 import {FormInputText} from '@components/form/input/FormInputText.tsx'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 import FormInputPassword from '@components/form/input/FormInputPassword.tsx'
-import {FormInputToggleButtonGroup} from '@components/form/input/FormInputToggleButtonGroup.tsx'
 import {SmtpConfigOverrideDto, smtpStrategy} from '@api/types.gen.ts'
 import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
@@ -16,6 +15,7 @@ import LoadingButton from '@components/form/LoadingButton.tsx'
 import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {updateSmtpConfigGlobal} from '@authorization/privileges.ts'
+import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioButtonGroup.tsx'
 
 type Form = SmtpConfigOverrideDto
 
@@ -155,13 +155,11 @@ const AdministrationPage = () => {
                             required
                             disabled={!allowedToUpdate}
                         />
-                        <FormInputToggleButtonGroup
+                        <FormInputRadioButtonGroup
+                            options={smtpStrategyOptions}
                             name={'smtpStrategy'}
                             label={t('administration.smtp.smtpStrategy')}
-                            options={smtpStrategyOptions}
                             required
-                            exclusive
-                            enforceAtLeastOneSelected
                             disabled={!allowedToUpdate}
                         />
                         <FormInputEmail
