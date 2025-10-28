@@ -842,7 +842,11 @@
     "registration": {
       "initialize": {
         "header": "Initialize registration",
-        "submit": "Initialize registration"
+        "submit": "Initialize registration",
+        "info": {
+          "1": "To register teams for competitions, registration must be initialized once per event.",
+          "2": "The following documents were made available for this event."
+        }
       },
       "registration": "Registration",
       "registrations": "Registrations",

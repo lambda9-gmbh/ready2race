@@ -842,7 +842,11 @@
     "registration": {
       "initialize": {
         "header": "Meldung initialisieren",
-        "submit": "Meldung initialisieren"
+        "submit": "Meldung initialisieren",
+        "info": {
+          "1": "Um Teams für Wettkämpfe zu melden, muss einmalig pro Veranstaltung die Meldung initialisiert werden.",
+          "2": "Für diese Veranstaltung wurden die folgenden Dokumente zur Verfügung gestellt."
+        }
       },
       "registration": "Anmeldung",
       "registrations": "Anmeldungen",

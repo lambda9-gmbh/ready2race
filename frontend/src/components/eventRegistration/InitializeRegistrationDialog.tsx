@@ -1,5 +1,5 @@
 import BaseDialog from '@components/BaseDialog.tsx'
-import {Button, DialogActions, DialogContent, DialogTitle} from '@mui/material'
+import {Button, DialogActions, DialogContent, DialogTitle, Stack, Typography} from '@mui/material'
 import {Trans, useTranslation} from 'react-i18next'
 import {EventRegistrationConfirmDocumentsForm} from '@components/eventRegistration/EventRegistrationConfirmDocumentsForm.tsx'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
@@ -55,6 +55,16 @@ const InitializeRegistrationDialog = ({eventId, open, onClose, onSuccess}: Props
             </DialogTitle>
             <FormContainer onSuccess={handleSubmit}>
                 <DialogContent>
+                    <Stack spacing={4}>
+                        <Typography>
+                            <Trans i18nKey={'event.registration.initialize.info.1'} />
+                        </Typography>
+                        {(data?.length ?? 0) > 0 && (
+                            <Typography>
+                                <Trans i18nKey={'event.registration.initialize.info.2'} />
+                            </Typography>
+                        )}
+                    </Stack>
                     <EventRegistrationConfirmDocumentsForm
                         eventId={eventId}
                         documentTypes={data ?? []}
