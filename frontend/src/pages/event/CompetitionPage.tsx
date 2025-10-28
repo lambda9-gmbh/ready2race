@@ -51,17 +51,18 @@ const CompetitionPage = () => {
         navigate({from: competitionIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const {data: eventData, pending: eventPending} = useFetch(
-        signal => getEvent({signal, path: {eventId: eventId}}),
-        {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                }
-            },
-            deps: [eventId],
+    const {
+        data: eventData,
+        pending: eventPending,
+        reload: reloadEvent,
+    } = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+            }
         },
-    )
+        deps: [eventId],
+    })
 
     const [reloadData, setReloadData] = useState(false)
 
@@ -375,6 +376,7 @@ const CompetitionPage = () => {
                             <CompetitionRegistrations
                                 eventData={eventData}
                                 competitionData={competitionData}
+                                reloadEvent={reloadEvent}
                             />
                         </TabPanel>
                     )}

@@ -279,6 +279,11 @@
     "name": "Name",
     "description": "Description",
     "registerNow": "To Registration",
+    "registerHere": {
+      "1": " You can register for the whole event ",
+      "2": "here",
+      "3": "."
+    },
     "challengeEvent": {
       "challengeEvent": "Challenge mode",
       "explanation": "\"Challenge\" is an event mode where results of competitions are combined through the entire event. Teams can have a maximum of one result per competition and there will be no tournament trees.",
@@ -348,7 +353,8 @@
           "part1": "For reuse in different events, ",
           "part2Link": "templates",
           "part3": " can be defined."
-        }
+        },
+        "registration": "You can register Teams for the individual competitions."
       },
       "category": {
         "category": "Category",
@@ -833,6 +839,9 @@
       }
     },
     "registration": {
+      "initialize": {
+        "header": "Initialize registration"
+      },
       "registration": "Registration",
       "registrations": "Registrations",
       "addParticipant": "Add Participant",

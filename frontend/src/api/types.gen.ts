@@ -2853,6 +2853,16 @@ export type GetPossibleSubInsResponse = PossibleSubstitutionsForParticipantDto
 
 export type GetPossibleSubInsError = BadRequestError | ApiError
 
+export type GetRegistrationDocumentsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRegistrationDocumentsResponse = Array<EventRegistrationDocumentTypeDto>
+
+export type GetRegistrationDocumentsError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type AddDocumentsData = {
     body: {
         documentType?: string

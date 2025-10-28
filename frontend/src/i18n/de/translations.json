@@ -279,6 +279,11 @@
     "name": "Name",
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
+    "registerHere": {
+      "1": " ",
+      "2": "Hier",
+      "3": " kannst du für die gesamte Veranstaltung melden."
+    },
     "challengeEvent": {
       "challengeEvent": "Challenge Modus",
       "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
@@ -348,7 +353,8 @@
           "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
           "part2Link": "Vorlagen",
           "part3": " definiert werden."
-        }
+        },
+        "registration": "Für die einzelnen Wettkämpfe können Teams angemeldet werden."
       },
       "category": {
         "category": "Kategorie",
@@ -833,6 +839,9 @@
       }
     },
     "registration": {
+      "initialize": {
+        "header": "Meldung initialisieren"
+      },
       "registration": "Anmeldung",
       "registrations": "Anmeldungen",
       "addParticipant": "Mitglied hinzufügen",
