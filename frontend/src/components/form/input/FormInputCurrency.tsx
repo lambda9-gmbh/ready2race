@@ -4,7 +4,7 @@ import {formRegexCurrency} from '@utils/helpers.ts'
 import {InputAdornment} from '@mui/material'
 
 type FormInputCurrencyProps = Omit<BaseFormInputProps, 'type'>
-export const FormInputCurrency = (props: FormInputCurrencyProps) => {
+export const FormInputCurrency = ({sx, ...props}: FormInputCurrencyProps) => {
     const {t} = useTranslation()
 
     return (
@@ -28,6 +28,7 @@ export const FormInputCurrency = (props: FormInputCurrencyProps) => {
                       }
                     : {endAdornment: <InputAdornment position={'end'}>€</InputAdornment>},
             }}
+            sx={{...sx}}
         />
     )
 }

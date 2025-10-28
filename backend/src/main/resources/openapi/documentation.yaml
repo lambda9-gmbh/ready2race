@@ -527,7 +527,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EventRequest'
+              $ref: '#/components/schemas/CreateEventRequest'
       responses:
         201:
           $ref: '#/components/responses/201'
@@ -677,7 +677,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EventRequest'
+              $ref: '#/components/schemas/UpdateEventRequest'
       responses:
         204:
           description: Event successfully updated
@@ -2459,6 +2459,45 @@ paths:
       responses:
         201:
           $ref: '#/components/responses/201'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+  /club/{clubId}/participant/import:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: importClubParticipants
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/ParticipantImportRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -5548,6 +5587,26 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/export:
+    get:
+      operationId: getEventsForExport
+      responses:
+        200:
+          description: Events for export successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventForExportDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
   /webDAV/export:
     post:
       operationId: exportDataByWebDAV
@@ -5591,6 +5650,164 @@ paths:
           $ref: '#/components/responses/401'
         403:
           $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /webDAV/import:
+    post:
+      operationId: importDataFromWebDAV
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebDAVImportRequest'
+      responses:
+        204:
+          description: Data successfully exported
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        409:
+          $ref: '#/components/responses/409'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+    get:
+      operationId: getWebDAVImportStatus
+      responses:
+        200:
+          description: WebDAV Status successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WebDAVImportStatusDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+  /webDAV/import/options:
+    get:
+      operationId: getWebDAVImportOptionFolders
+      responses:
+        200:
+          description: WebDAV import options successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        500:
+          $ref: '#/components/responses/500'
+        502:
+          $ref: '#/components/responses/502'
+  /webDAV/import/options/{folderName}:
+    parameters:
+      - name: folderName
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getWebDAVImportOptionTypes
+      responses:
+        200:
+          description: WebDAV import types successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebDAVImportOptionsDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+    post:
+      operationId: submitChallengeTeamResults
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/CompetitionChallengeResultRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - in: path
+        name: resultDocumentId
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: downloadMatchTeamResultDocument
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
         500:
           $ref: '#/components/responses/500'
 
@@ -5874,6 +6091,8 @@ components:
         - APP_COMPETITION_CHECK
         - APP_CATERER
         - ADMINISTRATION
+        - WEB_DAV
+        - RESULT
 
     Scope:
       type: string
@@ -5899,6 +6118,7 @@ components:
         - NO_ASSIGNED_CONTACT_INFORMATION
         - FILE_ERROR
         - SPREADSHEET_NO_HEADERS
+        - SPREADSHEET_MALFORMED
         - SPREADSHEET_COLUMN_UNKNOWN
         - SPREADSHEET_CELL_BLANK
         - SPREADSHEET_WRONG_CELL_TYPE
@@ -5936,6 +6156,29 @@ components:
         - 'DOCUMENTS'
         - 'RESULTS'
         - 'START_LISTS'
+        - 'DB_USERS'
+        - 'DB_PARTICIPANTS'
+        - 'DB_BANK_ACCOUNTS'
+        - 'DB_CONTACT_INFORMATION'
+        - 'DB_EMAIL_INDIVIDUAL_TEMPLATES'
+        - 'DB_EVENT_DOCUMENT_TYPES'
+        - 'DB_MATCH_RESULT_IMPORT_CONFIGS'
+        - 'DB_STARTLIST_EXPORT_CONFIGS'
+        - 'DB_WORK_TYPES'
+        - 'DB_PARTICIPANT_REQUIREMENTS'
+        - 'DB_RATING_CATEGORIES'
+        - 'DB_COMPETITION_CATEGORIES'
+        - 'DB_FEES'
+        - 'DB_NAMED_PARTICIPANTS'
+        - 'DB_COMPETITION_SETUP_TEMPLATES'
+        - 'DB_COMPETITION_TEMPLATES'
+        - 'DB_EVENT'
+        - 'DB_COMPETITION'
+
+    MatchResultType:
+      type: string
+      enum:
+        - 'DISTANCE'
 
 
     # error
@@ -6520,6 +6763,8 @@ components:
         - id
         - name
         - registrationsFinalized
+        - challengeEvent
+        - allowSelfSubmission
       properties:
         id:
           type: string
@@ -6561,6 +6806,12 @@ components:
           type: boolean
         mixedTeamTerm:
           type: string
+        challengeEvent:
+          type: boolean
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
 
     EventPublicDto:
       type: object
@@ -6569,6 +6820,8 @@ components:
         - name
         - competitionCount
         - createdAt
+        - challengeEvent
+        - allowSelfSubmission
       properties:
         id:
           type: string
@@ -6599,6 +6852,12 @@ components:
         eventTo:
           type: string
           format: date
+        challengeEvent:
+          type: boolean
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
 
     EventRegistrationViewDto:
       type: object
@@ -6639,11 +6898,13 @@ components:
         participantCount:
           type: number
 
-    EventRequest:
+    CreateEventRequest:
       type: object
       required:
         - name
         - published
+        - challengeEvent
+        - allowSelfSubmission
       properties:
         name:
           type: string
@@ -6672,6 +6933,52 @@ components:
           format: date
         mixedTeamTerm:
           type: string
+        challengeEvent:
+          type: boolean
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
+
+    UpdateEventRequest:
+      type: object
+      required:
+        - name
+        - published
+        - challengeEvent
+        - allowSelfSubmission
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        registrationAvailableFrom:
+          type: string
+          format: date-time
+        registrationAvailableTo:
+          type: string
+          format: date-time
+        lateRegistrationAvailableTo:
+          type: string
+          format: date-time
+        invoicePrefix:
+          type: string
+        published:
+          type: boolean
+        paymentDueBy:
+          type: string
+          format: date
+        latePaymentDueBy:
+          type: string
+          format: date
+        mixedTeamTerm:
+          type: string
+        challengeResultType:
+          $ref: '#/components/schemas/MatchResultType'
+        allowSelfSubmission:
+          type: boolean
 
 
     # eventDay
@@ -6734,6 +7041,7 @@ components:
         - namedParticipants
         - fees
         - lateRegistrationAllowed
+        - resultConfirmationImageRequired
       properties:
         identifier:
           type: string
@@ -6755,6 +7063,8 @@ components:
             $ref: '#/components/schemas/FeeForCompetitionDto'
         lateRegistrationAllowed:
           type: boolean
+        challengeConfig:
+          $ref: '#/components/schemas/CompetitionChallengeConfigDto'
 
 
     NamedParticipantForCompetitionDto:
@@ -6807,6 +7117,23 @@ components:
           type: string
           format: decimal
 
+    CompetitionChallengeConfigDto:
+      type: object
+      required:
+        - resultConfirmationImageRequired
+        - startAt
+        - endAt
+      properties:
+        resultConfirmationImageRequired:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+
+
 
     CompetitionPropertiesRequest:
       type: object
@@ -6841,6 +7168,8 @@ components:
         setupTemplate:
           type: string
           format: uuid
+        challengeConfig:
+          $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -6882,6 +7211,22 @@ components:
         lateAmount:
           type: string
           format: decimal
+
+    CompetitionChallengeConfigRequest:
+      type: object
+      required:
+        - resultConfirmationImageRequired
+        - startAt
+        - endAt
+      properties:
+        resultConfirmationImageRequired:
+          type: boolean
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
 
 
     # competition
@@ -7059,6 +7404,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ParticipantRequirementDto'
+        challengeResultValue:
+          type: integer
+        challengeResultDocuments:
+          type: object
+          description: Map of documentId to documentName
+          additionalProperties:
+            type: string
 
 
     CompetitionRegistrationTeamNamedParticipantDto:
@@ -7890,6 +8242,29 @@ components:
           type: string
           nullable: true
 
+    ParticipantImportRequest:
+      type: object
+      required:
+        - separator
+        - colFirstname
+        - colLastname
+        - colYear
+        - colGender
+      properties:
+        separator:
+          type: string
+          format: character
+        colFirstname:
+          type: string
+        colLastname:
+          type: string
+        colYear:
+          type: string
+        colGender:
+          type: string
+        colExternalClubname:
+          type: string
+
     # event registration
 
     EventRegistrationTemplateDto:
@@ -8708,7 +9083,7 @@ components:
       required:
         - rounds
         - canNotCreateRoundReasons
-        - lastRoundFinished
+        - isChallengeEvent
       properties:
         rounds:
           type: array
@@ -8718,7 +9093,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionExecutionCanNotCreateRoundReason'
-        lastRoundFinished:
+        isChallengeEvent:
           type: boolean
 
     CompetitionExecutionCanNotCreateRoundReason:
@@ -9875,7 +10250,7 @@ components:
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
         eventId: { type: string }
-        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        type: { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
         competitions:
           type: array
@@ -9891,7 +10266,7 @@ components:
         id: { type: string, format: uuid }
         qrCodeId: { type: string }
         eventId: { type: string }
-        type:      { $ref: '#/components/schemas/QrCodeDtoType' }
+        type: { $ref: '#/components/schemas/QrCodeDtoType' }
         clubName: { type: string, nullable: true }
 
     QrCodeAppuserUpdate:
@@ -9923,7 +10298,7 @@ components:
 
     QrCodeDtoType:
       type: string
-      enum: [Participant, User]
+      enum: [ Participant, User ]
 
     # Team Tracking schemas
 
@@ -10139,24 +10514,89 @@ components:
           type: string
 
 
+    CompetitionForExportDto:
+      type: object
+      required:
+        - id
+        - identifier
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        identifier:
+          type: string
+        name:
+          type: string
+
+
+    EventForExportDto:
+      type: object
+      required:
+        - id
+        - name
+        - competitions
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CompetitionForExportDto'
+
     WebDAVExportRequest:
       type: object
       required:
         - name
         - events
-        - selectedResources
+        - selectedDatabaseExports
       properties:
         name:
           type: string
         events:
           type: array
           items:
-            type: string
-            format: uuid
-        selectedResources:
+            $ref: '#/components/schemas/WebDAVExportEventRequest'
+        selectedDatabaseExports:
           type: array
           items:
             $ref: '#/components/schemas/WebDAVExportType'
+
+    WebDAVExportEventRequest:
+      type: object
+      required:
+        - eventId
+        - selectedExports
+        - selectedCompetitions
+      eventId:
+        type: string
+        format: uuid
+      selectedExports:
+        type: array
+        items:
+          $ref: '#/components/schemas/WebDAVExportType'
+      selectedCompetitions:
+        type: array
+        items:
+          type: string
+          format: uuid
+
+    FileExportEventStatusDto:
+      type: object
+      required:
+        - eventName
+        - fileExportTypes
+      properties:
+        eventName:
+          type: string
+        fileExportTypes:
+          type: array
+          items:
+          $ref: '#/components/schemas/WebDAVExportType'
+
 
     WebDAVExportStatusDto:
       type: object
@@ -10164,11 +10604,14 @@ components:
         - processId
         - exportFolderName
         - exportInitializedAt
-        - events
-        - exportTypes
+        - dataExportEvents
+        - fileExportEvents
         - filesExported
         - totalFilesToExport
         - filesWithError
+        - dataExported
+        - totalDataToExport
+        - dataWithError
       properties:
         processId:
           type: string
@@ -10180,19 +10623,141 @@ components:
           format: date-time
         exportInitializedBy:
           $ref: '#/components/schemas/AppUserNameDto'
-        events:
+        dataExportEvents:
           type: array
           items:
             type: string
-        exportTypes:
+            nullable: true
+        fileExportEvents:
           type: array
           items:
-            $ref: '#/components/schemas/WebDAVExportType'
+            $ref: '#/components/schemas/FileExportEventStatusDto'
+            nullable: true
         filesExported:
           type: integer
         totalFilesToExport:
           type: integer
         filesWithError:
+          type: integer
+        dataExported:
+          type: integer
+        totalDataToExport:
+          type: integer
+        dataWithError:
+          type: integer
+
+    WebDAVImportStatusDto:
+      type: object
+      required:
+        - processId
+        - importFolderName
+        - importInitializedAt
+        - dataImported
+        - totalDataToImport
+        - dataWithError
+      properties:
+        processId:
+          type: string
+          format: uuid
+        importFolderName:
+          type: string
+        importInitializedAt:
+          type: string
+          format: date-time
+        importInitializedBy:
+          $ref: '#/components/schemas/AppUserNameDto'
+        dataImported:
+          type: integer
+        totalDataToImport:
+          type: integer
+        dataWithError:
+          type: integer
+
+
+    WebDAVImportOptionsDto:
+      type: object
+      required:
+        - data
+        - events
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVImportOptionsEventDto'
+
+    WebDAVImportOptionsEventDto:
+      type: object
+      required:
+        - eventId
+        - eventFolderName
+        - competitions
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventFolderName:
+          type: string
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVImportOptionsCompetitionDto'
+
+    WebDAVImportOptionsCompetitionDto:
+      type: object
+      required:
+        - competitionId
+        - competitionFolderName
+      properties:
+        competitionId:
+          type: string
+          format: uuid
+        competitionFolderName:
+          type: string
+
+
+    WebDAVImportRequest:
+      type: object
+      required:
+        - folderName
+        - selectedData
+        - selectedEvents
+      properties:
+        folderName:
+          type: string
+        selectedData:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVExportType'
+        selectedEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebDAVImportEventRequest'
+
+
+    WebDAVImportEventRequest:
+      type: object
+      required:
+        - eventFolderName
+        - competitionFolderNames
+      properties:
+        eventFolderName:
+          type: string
+        competitionFolderNames:
+          type: array
+          items:
+            type: string
+
+
+    CompetitionChallengeResultRequest:
+      type: object
+      required:
+        - result
+      properties:
+        result:
           type: integer
 
 
@@ -10233,4 +10798,3 @@ components:
         replyTo:
           type: string
           format: email
-  

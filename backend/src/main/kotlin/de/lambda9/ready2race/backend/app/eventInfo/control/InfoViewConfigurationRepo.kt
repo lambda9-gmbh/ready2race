@@ -9,21 +9,24 @@ import java.util.UUID
 
 object InfoViewConfigurationRepo {
 
-    fun findByEvent(eventId: UUID, includeInactive: Boolean = false): JIO<List<InfoViewConfigurationRecord>> = Jooq.query {
-        selectFrom(INFO_VIEW_CONFIGURATION)
-            .where(INFO_VIEW_CONFIGURATION.EVENT_ID.eq(eventId))
-            .apply {
-                if (!includeInactive) {
-                    and(INFO_VIEW_CONFIGURATION.IS_ACTIVE.eq(true))
+    fun findByEvent(eventId: UUID, includeInactive: Boolean = false): JIO<List<InfoViewConfigurationRecord>> =
+        Jooq.query {
+            selectFrom(INFO_VIEW_CONFIGURATION)
+                .where(INFO_VIEW_CONFIGURATION.EVENT_ID.eq(eventId))
+                .apply {
+                    if (!includeInactive) {
+                        and(INFO_VIEW_CONFIGURATION.IS_ACTIVE.eq(true))
+                    }
                 }
-            }
-            .orderBy(INFO_VIEW_CONFIGURATION.SORT_ORDER.asc())
-            .fetch()
-    }
+                .orderBy(INFO_VIEW_CONFIGURATION.SORT_ORDER.asc())
+                .fetch()
+        }
 
     fun findById(id: UUID) = INFO_VIEW_CONFIGURATION.selectOne { ID.eq(id) }
 
-    fun create(record: InfoViewConfigurationRecord) = INFO_VIEW_CONFIGURATION.insertReturning(record) {ID}
+    fun create(record: InfoViewConfigurationRecord) = INFO_VIEW_CONFIGURATION.insertReturning(record) { ID }
+
+    fun create(records: List<InfoViewConfigurationRecord>) = INFO_VIEW_CONFIGURATION.insert(records)
 
     fun update(id: UUID, f: InfoViewConfigurationRecord.() -> Unit) =
         INFO_VIEW_CONFIGURATION.update(f) { ID.eq(id) }
@@ -31,4 +34,10 @@ object InfoViewConfigurationRepo {
     fun delete(id: UUID) = INFO_VIEW_CONFIGURATION.delete { ID.eq(id) }
 
     fun exists(id: UUID) = INFO_VIEW_CONFIGURATION.exists { ID.eq(id) }
+
+    fun getByEvent(eventId: UUID) = INFO_VIEW_CONFIGURATION.select { EVENT_ID.eq(eventId) }
+
+    fun getAsJson(eventId: UUID) = INFO_VIEW_CONFIGURATION.selectAsJson { EVENT_ID.eq(eventId) }
+
+    fun insertJsonData(data: String) = INFO_VIEW_CONFIGURATION.insertJsonData(data)
 }

@@ -12,11 +12,19 @@
     "selected": "Ausgewählt",
     "manage": "Verwalten",
     "all": "Alle",
+    "selectAll": "Alles auswählen",
     "error": {
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
       "upload": {
-        "unsupportedType": "Dieser Dateityp wird nicht unterstützt."
+        "unsupportedType": "Dieser Dateityp wird nicht unterstützt.",
+        "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
+        "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
+        "SPREADSHEET_MALFORMED": "Der Inhalt der Datei konnte nicht gelesen werden.",
+        "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
+        "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
+        "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
+        "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'"
       }
     },
     "organisation": "Organisation",
@@ -79,7 +87,7 @@
     "noResults": "Keine Ergebnisse",
     "tryDifferentSearch": "Versuchen Sie eine andere Suche",
     "items": "Elemente",
-    "more": "Mehr",
+    "more": "weitere",
     "create": "Erstellen",
     "seconds": "Sekunden",
     "update": "Aktualisieren",
@@ -94,7 +102,8 @@
     "hide": "Ausblenden",
     "show": "Anzeigen",
     "name": "Name",
-    "by": "Von"
+    "by": "Von",
+    "continue": "Weiter"
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -197,6 +206,29 @@
     "clubs": "Vereine",
     "participants": "Mitglieder",
     "participant": {
+      "import": "Mitglieder importieren",
+      "upload": {
+        "dialog": {
+          "error": {
+            "separatorTooLong": "Bitte geben Sie nur ein einzige Zeichen als CSV-Separator an."
+          },
+          "separator": "Separator",
+          "cols": "Spaltennamen",
+          "col": {
+            "firstname": "Vorname",
+            "lastname": "Nachname",
+            "year": "Geburtsjahr",
+            "gender": "Geschlecht",
+            "external": "Vereinszugehörigkeit"
+          },
+          "file": {
+            "missing": "Bitte wählen Sie eine Datei aus.",
+            "change": ".csv Datei ändern",
+            "choose": ".csv Datei auswählen"
+          },
+          "submit": "Mitglieder importieren"
+        }
+      },
       "title": "Mitglied",
       "name": "Name",
       "yearOfBirth": "Geburtsjahr",
@@ -248,6 +280,13 @@
     "name": "Name",
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
+    "challengeEvent": {
+      "challengeEvent": "Challenge Modus",
+      "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
+      "unchangeable": "Dass \"Challenge-Modus\" aktiviert ist oder nicht, kann nach der Erstellung nicht mehr geändert werden."
+    },
+    "challengeResultType": "Challenge Ergebnistyp",
+    "allowSelfSubmission": "Selbstständiges Einreichen von Ergebnissen erlauben",
     "invoice": {
       "prefix": "Rechnungspräfix",
       "paymentDueBy": "Zahlungstermin Meldegebühren",
@@ -294,6 +333,12 @@
       "lateRegistrationAllowed": "Nachmeldung erlaubt",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
+      "challenge": {
+        "configs": "Challenge Einstellungen",
+        "resultConfirmationImageRequired": "Bestätigungsbild für Ergebnisse erforderlich",
+        "start": "Challenge Start",
+        "end": "Challenge Ende"
+      },
       "tableHint": {
         "competitionComponents": {
           "part1": "Kategorien, Teilnehmertypen und Gebührenarten für die Wettkämpfe können ",
@@ -593,16 +638,36 @@
             "XLS": "als XLS-Datei"
           },
           "error": {
-            "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
-            "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
-            "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
-            "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
-            "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
-            "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'",
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
             "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}"
+          },
+          "resultType": {
+            "distance": "Distanz"
+          },
+          "challenge": {
+            "challengeResults": "Challenge Ergebnis",
+            "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "confirmTitle": "Bestätigung erforderlich",
+            "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
+            "confirm": "Ergebnis bestätigen",
+            "submitResults": "Ergebnis einreichen",
+            "outsideOfTime": "Sie befinden sich derzeit außerhalb des Challenge Zeitraums."
+          },
+          "confirmationImage": {
+            "confirmationImage": "Bestätigungsbild",
+            "select": "Bild auswählen",
+            "change": "Bild Datei ändern",
+            "error": {
+              "empty": "Bitte wählen Sie ein Bild aus",
+              "tooMany": "Bitte wählen Sie maximal 1 Bild aus"
+            }
+          },
+          "document": {
+            "download": {
+              "error": "Beim herunterladen des Ergebnisdokuments ist ein Fehler aufgetreten."
+            }
           }
         },
         "matchData": {
@@ -1078,7 +1143,8 @@
       "competitionTemplates": "Vorlagen Wettkampf",
       "eventElements": "Komponenten Veranstaltung",
       "competitionElements": "Komponenten Wettkampf",
-      "globalSettings": "Globale Einstellungen"
+      "globalSettings": "Globale Einstellungen",
+      "exportData": "Export / Import"
     },
     "ratingCategory": {
       "ratingCategory": "Wertungskategorie",
@@ -1374,29 +1440,63 @@
     }
   },
   "webDAV": {
+    "infoText": {
+      "part1": "Die Export-/Import-Funktion ermöglicht es, Dokumente (systemgenerierte oder hochgeladene PDFs) und/oder in der Anwendung erstellte Konfigurationen auf einen externen Server (z.B. Nextcloud über WebDAV) zu speichern.",
+      "part2": "Diese exportierten Daten können später wieder importiert werden, um Ihre Veranstaltungskonfigurationen, Vorlagen und Einstellungen wiederherzustellen."
+    },
     "export": {
       "export": "Daten exportieren",
       "confirm": "Exportieren",
       "folderName": "Export Ordnername",
       "events": "Veranstaltungen",
       "data": "Zu exportierende Daten",
+      "applicationData": "Anwendungsdaten und Einstellungen",
       "types": {
         "registrationResults": "Meldeergebnisse",
         "invoices": "Rechnungen",
         "documents": "Veranstaltungsdokumente",
         "results": "Ergebnisse",
-        "startLists": "Startlisten"
+        "startLists": "Startlisten",
+        "users": "Benutzer",
+        "participants": "Teilnehmer",
+        "bankAccounts": "Bankkonten",
+        "contactInformation": "Kontaktinformationen",
+        "emailIndividualTemplates": "Individuelle E-Mail-Vorlagen",
+        "eventDocumentTypes": "Veranstaltungsdokumenttypen",
+        "matchResultImportConfigs": "Wettkampfergebnis-Importkonfigurationen",
+        "startlistExportConfigs": "Startlisten-Exportkonfigurationen",
+        "workTypes": "Arbeitstypen",
+        "participantRequirements": "Teilnehmeranforderungen",
+        "ratingCategories": "Wertungskategorien",
+        "competitionCategories": "Wettkampfkategorien",
+        "fees": "Gebühren",
+        "namedParticipants": "Benannte Teilnehmer",
+        "competitionSetupTemplates": "Wettkampf-Setup-Vorlagen",
+        "competitionTemplates": "Wettkampfvorlagen",
+        "event": "Veranstaltungsdaten",
+        "competition": "Wettkampfdaten"
+      },
+      "steps": {
+        "name": "Name",
+        "documents": "Dokumente",
+        "data": "Daten"
       },
       "error": {
         "nameConflict": "Der eingegebene Ordnername existiert bereits. Bitte wählen Sie einen anderen Namen.",
-        "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator."
+        "thirdPartyError": "Der externe WebDAV-Server hat einen Fehler gemeldet. Bitte wenden Sie sich an den Administrator.",
+        "noDocumentTypeSelected": "Bitte wählen Sie mindestens einen Dokumenttyp für diese Veranstaltung aus."
       },
+      "noEventsAvailable": "Keine Veranstaltungen zum Exportieren verfügbar",
       "success": "Export erfolgreich gestartet",
       "status": {
         "status": "Exportstatus",
         "error": {
           "title": "Fehler beim Export",
-          "body": "{{exported}} / {{total}} Dateien erfolgreich exportiert."
+          "body": "{{files}} / {{total}} Dateien erfolgreich exportiert.",
+          "info": {
+            "files": "{{errors}} Fehler bei PDF-Exports",
+            "data": "{{errors}} Fehler bei Daten-Exports"
+          }
         },
         "success": {
           "title": "Export erfolgreich",
@@ -1405,7 +1505,37 @@
         },
         "pending": {
           "title": "Wird exportiert...",
-          "body": "{{exported}} / {{total}} Dateien exportiert."
+          "body": "{{files}} / {{total}} Dateien exportiert."
+        }
+      }
+    },
+    "import": {
+      "import": "Daten importieren",
+      "confirm": "Importieren",
+      "folderName": "Import Ordnername",
+      "selectData": "Zu importierende Daten auswählen",
+      "error": {
+        "noSelection": "Bitte wählen Sie mindestens einen Datentyp zum Importieren aus",
+        "failed": "Beim Importieren der Daten ist ein Fehler aufgetreten",
+        "loadFolders": "Beim Laden der verfügbaren Ordner vom WebDAV-Server ist ein Fehler aufgetreten",
+        "loadOptions": "Beim Laden der verfügbaren Importoptionen ist ein Fehler aufgetreten"
+      },
+      "noEventsAvailable": "Keine Veranstaltungen zum Importieren verfügbar",
+      "success": "Import erfolgreich gestartet",
+      "status": {
+        "status": "Importstatus",
+        "error": {
+          "title": "Fehler beim Import",
+          "body": "{{files}} / {{total}} Dateien erfolgreich importiert."
+        },
+        "success": {
+          "title": "Import erfolgreich",
+          "body_one": "{{count}} Datei importiert.",
+          "body_other": "{{count}} Dateien importiert."
+        },
+        "pending": {
+          "title": "Wird importiert...",
+          "body": "{{files}} / {{total}} Dateien importiert."
         }
       }
     }

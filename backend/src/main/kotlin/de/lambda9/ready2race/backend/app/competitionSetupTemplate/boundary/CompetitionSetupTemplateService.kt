@@ -24,7 +24,7 @@ object CompetitionSetupTemplateService {
     fun add(
         request: CompetitionSetupTemplateRequest,
         userId: UUID,
-    ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
         val competitionSetupTemplateId = !CompetitionSetupTemplateRepo.create(
             LocalDateTime.now().let { now ->
                 CompetitionSetupTemplateRecord(

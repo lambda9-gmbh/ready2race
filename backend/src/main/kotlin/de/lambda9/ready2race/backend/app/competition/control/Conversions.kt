@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competition.entity.CompetitionDto
 import de.lambda9.ready2race.backend.app.competitionCategory.entity.CompetitionCategoryDto
 import de.lambda9.ready2race.backend.app.competitionProperties.control.toDto
+import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionChallengeConfigDto
 import de.lambda9.ready2race.backend.app.competitionProperties.entity.CompetitionPropertiesDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionForClubViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPublicViewRecord
@@ -41,6 +42,13 @@ fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehens
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                challengeConfig = challengeResultConfirmationImageRequired?.let {
+                    CompetitionChallengeConfigDto(
+                        resultConfirmationImageRequired = challengeResultConfirmationImageRequired!!,
+                        startAt = challengeStartAt!!,
+                        endAt = challengeEndAt!!,
+                    )
+                }
             ),
             registrationCount = registrationsCount ?: 0
         )
@@ -75,6 +83,13 @@ fun CompetitionForClubViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.com
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                challengeConfig = challengeResultConfirmationImageRequired?.let {
+                    CompetitionChallengeConfigDto(
+                        resultConfirmationImageRequired = challengeResultConfirmationImageRequired!!,
+                        startAt = challengeStartAt!!,
+                        endAt = challengeEndAt!!,
+                    )
+                }
             ),
             registrationCount = registrationsCount ?: 0
         )
@@ -109,6 +124,13 @@ fun CompetitionPublicViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comp
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                challengeConfig = challengeResultConfirmationImageRequired?.let {
+                    CompetitionChallengeConfigDto(
+                        resultConfirmationImageRequired = challengeResultConfirmationImageRequired!!,
+                        startAt = challengeStartAt!!,
+                        endAt = challengeEndAt!!,
+                    )
+                }
             ),
             registrationCount = 0
         )

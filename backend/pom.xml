@@ -411,7 +411,7 @@
                         <database>
                             <name>org.jooq.meta.postgres.PostgresDatabase</name>
                             <includes>.*</includes>
-                            <excludes />
+                            <excludes/>
                             <inputSchema>${database.schemas}</inputSchema>
                             <outputSchemaToDefault>false</outputSchemaToDefault>
                             <includeSystemSequences>true</includeSystemSequences>

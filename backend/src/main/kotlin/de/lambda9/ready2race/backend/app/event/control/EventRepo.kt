@@ -10,9 +10,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.EventView
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventPublicViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventViewRecord
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_PUBLIC_VIEW
-import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_VIEW
+import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import org.jooq.Condition
@@ -35,11 +33,11 @@ object EventRepo {
 
     fun getPublished(id: UUID) = EVENT.selectOne({ PUBLISHED }) { ID.eq(id) }
 
-    fun update(id: UUID, f: EventRecord.() -> Unit) = EVENT.update(f) { ID.eq(id) }
+    fun update(record: EventRecord, f: EventRecord.() -> Unit) = EVENT.update(record, f)
 
     fun delete(id: UUID) = EVENT.delete { ID.eq(id) }
 
-    fun getEvents(ids: List<UUID>, ) = EVENT.select { ID.`in`(ids) }
+    fun getEvents(ids: List<UUID>) = EVENT.select { ID.`in`(ids) }
 
     fun count(
         search: String?,
@@ -133,7 +131,17 @@ object EventRepo {
         )
     }
 
+    fun isChallengeEvent(id: UUID) = EVENT.selectOne({ CHALLENGE_EVENT }) { ID.eq(id) }
+
     private fun filterScopeView(
         scope: Privilege.Scope?,
     ): Condition = if (scope != Privilege.Scope.GLOBAL) EVENT_VIEW.PUBLISHED.eq(true) else DSL.trueCondition()
+
+    fun getAsJson(eventId: UUID) = EVENT.selectAsJson { ID.eq(eventId) }
+
+    fun insertJsonData(data: String) = EVENT.insertJsonData(data)
+
+    fun getEventsForExport() = EVENT_FOR_EXPORT.select()
+
+    fun getEventsForExportByIds(ids: List<UUID>) = EVENT_FOR_EXPORT.select { ID.`in`(ids) }
 }

@@ -1,9 +1,8 @@
 package de.lambda9.ready2race.backend.app.eventInfo.boundary
 
-import com.fasterxml.jackson.databind.JsonNode
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
-import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfigurationRepo
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
@@ -15,7 +14,6 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import org.jooq.JSONB
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 

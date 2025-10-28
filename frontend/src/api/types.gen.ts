@@ -205,6 +205,22 @@ export type CompetitionCategoryRequest = {
     description?: string
 }
 
+export type CompetitionChallengeConfigDto = {
+    resultConfirmationImageRequired: boolean
+    startAt: string
+    endAt: string
+}
+
+export type CompetitionChallengeConfigRequest = {
+    resultConfirmationImageRequired: boolean
+    startAt: string
+    endAt: string
+}
+
+export type CompetitionChallengeResultRequest = {
+    result: number
+}
+
 export type CompetitionChoiceDto = {
     id: string
     identifier: string
@@ -242,7 +258,13 @@ export type CompetitionExecutionCanNotCreateRoundReason =
 export type CompetitionExecutionProgressDto = {
     rounds: Array<CompetitionRoundDto>
     canNotCreateRoundReasons: Array<CompetitionExecutionCanNotCreateRoundReason>
-    lastRoundFinished: boolean
+    isChallengeEvent: boolean
+}
+
+export type CompetitionForExportDto = {
+    id: string
+    identifier: string
+    name: string
 }
 
 export type CompetitionMatchDto = {
@@ -280,6 +302,7 @@ export type CompetitionPropertiesDto = {
     namedParticipants: Array<NamedParticipantForCompetitionDto>
     fees: Array<FeeForCompetitionDto>
     lateRegistrationAllowed: boolean
+    challengeConfig?: CompetitionChallengeConfigDto
 }
 
 export type CompetitionPropertiesRequest = {
@@ -292,6 +315,7 @@ export type CompetitionPropertiesRequest = {
     fees: Array<FeeForCompetitionRequestDto>
     lateRegistrationAllowed: boolean
     setupTemplate?: string
+    challengeConfig?: CompetitionChallengeConfigRequest
 }
 
 export type CompetitionRegistrationDto = {
@@ -371,6 +395,13 @@ export type CompetitionRegistrationTeamDto = {
     namedParticipants: Array<CompetitionRegistrationTeamNamedParticipantDto>
     deregistration?: CompetitionDeregistrationDto
     globalParticipantRequirements: Array<ParticipantRequirementDto>
+    challengeResultValue?: number
+    /**
+     * Map of documentId to documentName
+     */
+    challengeResultDocuments?: {
+        [key: string]: string
+    }
 }
 
 export type CompetitionRegistrationTeamLockedDto = {
@@ -526,6 +557,23 @@ export type ContactInformationRequest = {
     email: string
 }
 
+export type CreateEventRequest = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+    invoicePrefix?: string
+    published: boolean
+    paymentDueBy?: string
+    latePaymentDueBy?: string
+    mixedTeamTerm?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
+}
+
 export type DocumentTemplateDto = {
     id: string
     name: string
@@ -566,6 +614,7 @@ export type ErrorCode =
     | 'NO_ASSIGNED_CONTACT_INFORMATION'
     | 'FILE_ERROR'
     | 'SPREADSHEET_NO_HEADERS'
+    | 'SPREADSHEET_MALFORMED'
     | 'SPREADSHEET_COLUMN_UNKNOWN'
     | 'SPREADSHEET_CELL_BLANK'
     | 'SPREADSHEET_WRONG_CELL_TYPE'
@@ -635,6 +684,15 @@ export type EventDto = {
     registrationCount?: number
     registrationsFinalized: boolean
     mixedTeamTerm?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
+}
+
+export type EventForExportDto = {
+    id: string
+    name: string
+    competitions: Array<CompetitionForExportDto>
 }
 
 export type EventInvoicesInfoDto = {
@@ -663,6 +721,9 @@ export type EventPublicDto = {
     competitionCount: number
     eventFrom?: string
     eventTo?: string
+    challengeEvent: boolean
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
 }
 
 export type EventRegistrationCompetitionDto = {
@@ -777,20 +838,6 @@ export type EventRegistrationViewDto = {
     participantCount: number
 }
 
-export type EventRequest = {
-    name: string
-    description?: string
-    location?: string
-    registrationAvailableFrom?: string
-    registrationAvailableTo?: string
-    lateRegistrationAvailableTo?: string
-    invoicePrefix?: string
-    published: boolean
-    paymentDueBy?: string
-    latePaymentDueBy?: string
-    mixedTeamTerm?: string
-}
-
 export type FeeDto = {
     id: string
     name: string
@@ -816,6 +863,11 @@ export type FeeForCompetitionRequestDto = {
 export type FeeRequest = {
     name: string
     description?: string
+}
+
+export type FileExportEventStatusDto = {
+    eventName: string
+    fileExportTypes: WebDAVExportType
 }
 
 export type Gender = 'M' | 'F' | 'D'
@@ -971,6 +1023,8 @@ export type MatchResultTeamInfo = {
     deregisteredReason?: string
     participants: Array<ParticipantInfo>
 }
+
+export type MatchResultType = 'DISTANCE'
 
 export type MatchStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED'
 
@@ -1139,6 +1193,15 @@ export type ParticipantForExecutionDto = {
     competitionRegistrationName?: string
     external?: boolean
     externalClubName?: string
+}
+
+export type ParticipantImportRequest = {
+    separator: string
+    colFirstname: string
+    colLastname: string
+    colYear: string
+    colGender: string
+    colExternalClubname?: string
 }
 
 export type ParticipantInfo = {
@@ -1353,6 +1416,8 @@ export type Resource =
     | 'APP_COMPETITION_CHECK'
     | 'APP_CATERER'
     | 'ADMINISTRATION'
+    | 'WEB_DAV'
+    | 'RESULT'
 
 export type RoleDto = {
     id: string
@@ -1627,6 +1692,22 @@ export type UpdateCompetitionMatchTeamResultRequest = {
     failedReason?: string
 }
 
+export type UpdateEventRequest = {
+    name: string
+    description?: string
+    location?: string
+    registrationAvailableFrom?: string
+    registrationAvailableTo?: string
+    lateRegistrationAvailableTo?: string
+    invoicePrefix?: string
+    published: boolean
+    paymentDueBy?: string
+    latePaymentDueBy?: string
+    mixedTeamTerm?: string
+    challengeResultType?: MatchResultType
+    allowSelfSubmission: boolean
+}
+
 export type UpdateQrCodeRequirementDto = {
     requirementId: string
     namedParticipantId?: string
@@ -1641,10 +1722,14 @@ export type VerifyRegistrationRequest = {
     token: string
 }
 
+export type WebDAVExportEventRequest = {
+    [key: string]: unknown
+}
+
 export type WebDAVExportRequest = {
     name: string
-    events: Array<string>
-    selectedResources: Array<WebDAVExportType>
+    events: Array<WebDAVExportEventRequest>
+    selectedDatabaseExports: Array<WebDAVExportType>
 }
 
 export type WebDAVExportStatusDto = {
@@ -1652,11 +1737,14 @@ export type WebDAVExportStatusDto = {
     exportFolderName: string
     exportInitializedAt: string
     exportInitializedBy?: AppUserNameDto
-    events: Array<string>
-    exportTypes: Array<WebDAVExportType>
+    dataExportEvents: Array<string | null>
+    fileExportEvents: Array<FileExportEventStatusDto>
     filesExported: number
     totalFilesToExport: number
     filesWithError: number
+    dataExported: number
+    totalDataToExport: number
+    dataWithError: number
 }
 
 export type WebDAVExportType =
@@ -1665,6 +1753,61 @@ export type WebDAVExportType =
     | 'DOCUMENTS'
     | 'RESULTS'
     | 'START_LISTS'
+    | 'DB_USERS'
+    | 'DB_PARTICIPANTS'
+    | 'DB_BANK_ACCOUNTS'
+    | 'DB_CONTACT_INFORMATION'
+    | 'DB_EMAIL_INDIVIDUAL_TEMPLATES'
+    | 'DB_EVENT_DOCUMENT_TYPES'
+    | 'DB_MATCH_RESULT_IMPORT_CONFIGS'
+    | 'DB_STARTLIST_EXPORT_CONFIGS'
+    | 'DB_WORK_TYPES'
+    | 'DB_PARTICIPANT_REQUIREMENTS'
+    | 'DB_RATING_CATEGORIES'
+    | 'DB_COMPETITION_CATEGORIES'
+    | 'DB_FEES'
+    | 'DB_NAMED_PARTICIPANTS'
+    | 'DB_COMPETITION_SETUP_TEMPLATES'
+    | 'DB_COMPETITION_TEMPLATES'
+    | 'DB_EVENT'
+    | 'DB_COMPETITION'
+
+export type WebDAVImportEventRequest = {
+    eventFolderName: string
+    competitionFolderNames: Array<string>
+}
+
+export type WebDAVImportOptionsCompetitionDto = {
+    competitionId: string
+    competitionFolderName: string
+}
+
+export type WebDAVImportOptionsDto = {
+    data: Array<WebDAVExportType>
+    events: Array<WebDAVImportOptionsEventDto>
+}
+
+export type WebDAVImportOptionsEventDto = {
+    eventId: string
+    eventFolderName: string
+    competitions: Array<WebDAVImportOptionsCompetitionDto>
+}
+
+export type WebDAVImportRequest = {
+    folderName: string
+    selectedData: Array<WebDAVExportType>
+    selectedEvents: Array<WebDAVImportEventRequest>
+}
+
+export type WebDAVImportStatusDto = {
+    processId: string
+    importFolderName: string
+    importInitializedAt: string
+    importInitializedBy?: AppUserNameDto
+    dataImported: number
+    totalDataToImport: number
+    dataWithError: number
+}
 
 export type WorkShiftUpsertDto = {
     workType: string
@@ -2009,7 +2152,7 @@ export type DeleteRoleResponse = void
 export type DeleteRoleError = BadRequestError | ApiError
 
 export type AddEventData = {
-    body: EventRequest
+    body: CreateEventRequest
 }
 
 export type AddEventResponse = string
@@ -2111,7 +2254,7 @@ export type GetEventResponse = EventDto
 export type GetEventError = BadRequestError | ApiError
 
 export type UpdateEventData = {
-    body: EventRequest
+    body: UpdateEventRequest
     path: {
         eventId: string
     }
@@ -3107,6 +3250,20 @@ export type AddClubParticipantData = {
 export type AddClubParticipantResponse = string
 
 export type AddClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ImportClubParticipantsData = {
+    body: {
+        request: ParticipantImportRequest
+        files: Array<Blob | File>
+    }
+    path: {
+        clubId: string
+    }
+}
+
+export type ImportClubParticipantsResponse = void
+
+export type ImportClubParticipantsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type GetClubParticipantData = {
     path: {
@@ -4673,6 +4830,10 @@ export type GetCompetitionsHavingResultsError =
     | ApiError
     | UnprocessableEntityError
 
+export type GetEventsForExportResponse = Array<EventForExportDto>
+
+export type GetEventsForExportError = BadRequestError | ApiError
+
 export type ExportDataByWebDavData = {
     body: WebDAVExportRequest
 }
@@ -4684,6 +4845,60 @@ export type ExportDataByWebDavError = BadRequestError | ApiError
 export type GetWebDavExportStatusResponse = Array<WebDAVExportStatusDto>
 
 export type GetWebDavExportStatusError = BadRequestError | ApiError
+
+export type ImportDataFromWebDavData = {
+    body: WebDAVImportRequest
+}
+
+export type ImportDataFromWebDavResponse = void
+
+export type ImportDataFromWebDavError = BadRequestError | ApiError
+
+export type GetWebDavImportStatusResponse = Array<WebDAVImportStatusDto>
+
+export type GetWebDavImportStatusError = BadRequestError | ApiError
+
+export type GetWebDavImportOptionFoldersResponse = Array<string>
+
+export type GetWebDavImportOptionFoldersError = BadRequestError | ApiError
+
+export type GetWebDavImportOptionTypesData = {
+    path: {
+        folderName: string
+    }
+}
+
+export type GetWebDavImportOptionTypesResponse = WebDAVImportOptionsDto
+
+export type GetWebDavImportOptionTypesError = BadRequestError | ApiError
+
+export type SubmitChallengeTeamResultsData = {
+    body: {
+        request: CompetitionChallengeResultRequest
+        files: Array<Blob | File>
+    }
+    path: {
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type SubmitChallengeTeamResultsResponse = void
+
+export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
+
+export type DownloadMatchTeamResultDocumentData = {
+    path: {
+        competitionId: string
+        eventId: string
+        resultDocumentId: string
+    }
+}
+
+export type DownloadMatchTeamResultDocumentResponse = Blob | File
+
+export type DownloadMatchTeamResultDocumentError = BadRequestError | ApiError
 
 export type GetSmtpConfigResponse = SmtpConfigOverrideDto
 

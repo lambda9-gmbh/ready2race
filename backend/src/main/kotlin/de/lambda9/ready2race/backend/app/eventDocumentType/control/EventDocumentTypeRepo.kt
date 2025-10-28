@@ -18,6 +18,10 @@ object EventDocumentTypeRepo {
 
     fun create(record: EventDocumentTypeRecord) = EVENT_DOCUMENT_TYPE.insertReturning(record) { ID }
 
+    fun create(records: List<EventDocumentTypeRecord>) = EVENT_DOCUMENT_TYPE.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = EVENT_DOCUMENT_TYPE.select({ ID }) { ID.`in`(ids) }
+
     fun update(id: UUID, f: EventDocumentTypeRecord.() -> Unit) = EVENT_DOCUMENT_TYPE.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = EVENT_DOCUMENT_TYPE.delete { ID.eq(id) }
@@ -39,4 +43,8 @@ object EventDocumentTypeRepo {
                 .fetch()
         }
     }
+
+    fun allAsJson() = EVENT_DOCUMENT_TYPE.selectAsJson()
+
+    fun insertJsonData(data: String) = EVENT_DOCUMENT_TYPE.insertJsonData(data)
 }

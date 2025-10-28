@@ -58,7 +58,11 @@ fun Route.competition() {
                 call.respondComprehension {
                     val optionalUserAndScope = !optionalAuthenticate(Privilege.Action.READ, Privilege.Resource.EVENT)
                     val competitionId = !pathParam("competitionId", uuid)
-                    CompetitionService.getCompetitionWithProperties(competitionId, optionalUserAndScope?.first, optionalUserAndScope?.second)
+                    CompetitionService.getCompetitionWithProperties(
+                        competitionId,
+                        optionalUserAndScope?.first,
+                        optionalUserAndScope?.second
+                    )
                 }
             }
 
@@ -66,9 +70,10 @@ fun Route.competition() {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateEventGlobal)
                     val competitionId = !pathParam("competitionId", uuid)
+                    val eventId = !pathParam("eventId", uuid)
 
                     val body = !receiveKIO(CompetitionPropertiesRequest.example)
-                    CompetitionService.updateCompetition(body, user.id!!, competitionId)
+                    CompetitionService.updateCompetition(body, user.id!!, competitionId, eventId)
                 }
             }
 

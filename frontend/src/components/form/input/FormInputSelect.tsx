@@ -2,7 +2,7 @@ import {SelectElement, SelectElementProps} from 'react-hook-form-mui'
 import {useTranslation} from 'react-i18next'
 import FormInputLabel from '@components/form/input/FormInputLabel.tsx'
 
-export const FormInputSelect = (props: SelectElementProps) => {
+export const FormInputSelect = ({sx, ...props}: SelectElementProps) => {
     const {t} = useTranslation()
 
     return (
@@ -17,7 +17,7 @@ export const FormInputSelect = (props: SelectElementProps) => {
                         !props.rules?.required && {required: t('common.form.required')}),
                 }}
                 label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )

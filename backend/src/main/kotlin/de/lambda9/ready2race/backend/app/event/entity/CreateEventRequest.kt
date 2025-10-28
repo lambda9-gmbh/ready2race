@@ -1,13 +1,16 @@
 package de.lambda9.ready2race.backend.app.event.entity
 
-import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validate
 import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-data class EventRequest(
+data class CreateEventRequest(
     val name: String,
     val description: String?,
     val location: String?,
@@ -19,6 +22,9 @@ data class EventRequest(
     val paymentDueBy: LocalDate?,
     val latePaymentDueBy: LocalDate?,
     val mixedTeamTerm: String?,
+    val challengeEvent: Boolean,
+    val challengeResultType: MatchResultType?,
+    val allowSelfSubmission: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -27,11 +33,21 @@ data class EventRequest(
             this::location validate notBlank,
             this::invoicePrefix validate notBlank,
             this::mixedTeamTerm validate notBlank,
+            ValidationResult.oneOf(
+                ValidationResult.allOf(
+                    this::challengeEvent validate isValue(true),
+                    this::challengeResultType validate notNull
+                ),
+                ValidationResult.allOf(
+                    this::challengeEvent validate isValue(false),
+                    this::challengeResultType validate isNull
+                )
+            )
         )
 
     companion object {
         val example
-            get() = EventRequest(
+            get() = CreateEventRequest(
                 name = "Name",
                 description = "Description",
                 location = "Town",
@@ -43,6 +59,9 @@ data class EventRequest(
                 paymentDueBy = LocalDate.now().plusDays(14),
                 latePaymentDueBy = LocalDate.now().minusDays(28),
                 mixedTeamTerm = "Renngemeinschaft",
+                challengeEvent = true,
+                challengeResultType = MatchResultType.DISTANCE,
+                allowSelfSubmission = false,
             )
     }
 }

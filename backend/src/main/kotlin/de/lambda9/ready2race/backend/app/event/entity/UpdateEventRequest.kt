@@ -1,0 +1,55 @@
+package de.lambda9.ready2race.backend.app.event.entity
+
+import de.lambda9.ready2race.backend.validation.Validatable
+import de.lambda9.ready2race.backend.validation.ValidationResult
+import de.lambda9.ready2race.backend.validation.validate
+import de.lambda9.ready2race.backend.validation.validators.StringValidators.notBlank
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isValue
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
+import java.time.LocalDate
+import java.time.LocalDateTime
+
+data class UpdateEventRequest(
+    val name: String,
+    val description: String?,
+    val location: String?,
+    val registrationAvailableFrom: LocalDateTime?,
+    val registrationAvailableTo: LocalDateTime?,
+    val lateRegistrationAvailableTo: LocalDateTime?,
+    val invoicePrefix: String?,
+    val published: Boolean,
+    val paymentDueBy: LocalDate?,
+    val latePaymentDueBy: LocalDate?,
+    val mixedTeamTerm: String?,
+    val challengeResultType: MatchResultType?,
+    val allowSelfSubmission: Boolean,
+) : Validatable {
+    override fun validate(): ValidationResult =
+        ValidationResult.allOf(
+            this::name validate notBlank,
+            this::description validate notBlank,
+            this::location validate notBlank,
+            this::invoicePrefix validate notBlank,
+            this::mixedTeamTerm validate notBlank,
+        )
+
+    companion object {
+        val example
+            get() = UpdateEventRequest(
+                name = "Name",
+                description = "Description",
+                location = "Town",
+                registrationAvailableFrom = LocalDateTime.now(),
+                registrationAvailableTo = LocalDateTime.now().plusDays(7),
+                lateRegistrationAvailableTo = LocalDateTime.now().plusDays(21),
+                invoicePrefix = "Invoice-Prefix",
+                published = false,
+                paymentDueBy = LocalDate.now().plusDays(14),
+                latePaymentDueBy = LocalDate.now().minusDays(28),
+                mixedTeamTerm = "Renngemeinschaft",
+                challengeResultType = MatchResultType.DISTANCE,
+                allowSelfSubmission = false,
+            )
+    }
+}

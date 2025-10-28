@@ -5,7 +5,7 @@ import FormInputLabel from './FormInputLabel.tsx'
 
 type FormInputPasswordProps = Omit<PasswordElementProps & RefAttributes<HTMLDivElement>, 'type'>
 
-const FormInputPassword = (props: FormInputPasswordProps) => {
+const FormInputPassword = ({sx, ...props}: FormInputPasswordProps) => {
     const {t} = useTranslation()
 
     return (
@@ -20,7 +20,7 @@ const FormInputPassword = (props: FormInputPasswordProps) => {
                         !props.rules?.required && {required: t('common.form.required')}),
                 }}
                 label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )

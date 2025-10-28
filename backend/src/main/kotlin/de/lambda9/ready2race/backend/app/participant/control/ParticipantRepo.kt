@@ -21,10 +21,17 @@ object ParticipantRepo {
     private fun ParticipantView.searchFields() = listOf(FIRSTNAME, LASTNAME, EXTERNAL_CLUB_NAME)
 
     fun create(record: ParticipantRecord) = PARTICIPANT.insertReturning(record) { PARTICIPANT.ID }
+    fun create(records: List<ParticipantRecord>) = PARTICIPANT.insert(records)
 
     fun get(id: UUID) = PARTICIPANT.selectOne { ID.eq(id) }
 
+    fun getOverlapIds(ids: List<UUID>) = PARTICIPANT.select({ID}) { ID.`in`(ids) }
+
+    fun all() = PARTICIPANT.select()
+
     fun update(id: UUID, f: ParticipantRecord.() -> Unit) = PARTICIPANT.update(f) { ID.eq(id) }
+
+    fun any() = PARTICIPANT.exists { DSL.trueCondition() }
 
     fun update(
         id: UUID,
@@ -118,5 +125,9 @@ object ParticipantRepo {
         scope: Privilege.Scope,
         clubId: UUID?,
     ): Condition = if (scope == Privilege.Scope.OWN) PARTICIPANT_VIEW.CLUB.eq(clubId) else DSL.trueCondition()
+
+    fun allAsJson() = PARTICIPANT.selectAsJson()
+
+    fun insertJsonData(data: String) = PARTICIPANT.insertJsonData(data)
 
 }

@@ -280,6 +280,9 @@ import type {
     AddClubParticipantData,
     AddClubParticipantError,
     AddClubParticipantResponse,
+    ImportClubParticipantsData,
+    ImportClubParticipantsError,
+    ImportClubParticipantsResponse,
     GetClubParticipantData,
     GetClubParticipantError,
     GetClubParticipantResponse,
@@ -611,11 +614,29 @@ import type {
     GetCompetitionsHavingResultsData,
     GetCompetitionsHavingResultsError,
     GetCompetitionsHavingResultsResponse,
+    GetEventsForExportError,
+    GetEventsForExportResponse,
     ExportDataByWebDavData,
     ExportDataByWebDavError,
     ExportDataByWebDavResponse,
     GetWebDavExportStatusError,
     GetWebDavExportStatusResponse,
+    ImportDataFromWebDavData,
+    ImportDataFromWebDavError,
+    ImportDataFromWebDavResponse,
+    GetWebDavImportStatusError,
+    GetWebDavImportStatusResponse,
+    GetWebDavImportOptionFoldersError,
+    GetWebDavImportOptionFoldersResponse,
+    GetWebDavImportOptionTypesData,
+    GetWebDavImportOptionTypesError,
+    GetWebDavImportOptionTypesResponse,
+    SubmitChallengeTeamResultsData,
+    SubmitChallengeTeamResultsError,
+    SubmitChallengeTeamResultsResponse,
+    DownloadMatchTeamResultDocumentData,
+    DownloadMatchTeamResultDocumentError,
+    DownloadMatchTeamResultDocumentResponse,
     GetSmtpConfigError,
     GetSmtpConfigResponse,
     SetSmtpOverrideData,
@@ -1722,6 +1743,24 @@ export const addClubParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/club/{clubId}/participant',
+    })
+}
+
+export const importClubParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportClubParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportClubParticipantsResponse,
+        ImportClubParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/club/{clubId}/participant/import',
     })
 }
 
@@ -3122,6 +3161,19 @@ export const getCompetitionsHavingResults = <ThrowOnError extends boolean = fals
     })
 }
 
+export const getEventsForExport = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetEventsForExportResponse,
+        GetEventsForExportError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/export',
+    })
+}
+
 export const exportDataByWebDav = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<ExportDataByWebDavData, ThrowOnError>,
 ) => {
@@ -3145,6 +3197,89 @@ export const getWebDavExportStatus = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/webDAV/export',
+    })
+}
+
+export const importDataFromWebDav = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportDataFromWebDavData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportDataFromWebDavResponse,
+        ImportDataFromWebDavError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import',
+    })
+}
+
+export const getWebDavImportStatus = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWebDavImportStatusResponse,
+        GetWebDavImportStatusError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import',
+    })
+}
+
+export const getWebDavImportOptionFolders = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWebDavImportOptionFoldersResponse,
+        GetWebDavImportOptionFoldersError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import/options',
+    })
+}
+
+export const getWebDavImportOptionTypes = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetWebDavImportOptionTypesData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetWebDavImportOptionTypesResponse,
+        GetWebDavImportOptionTypesError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/webDAV/import/options/{folderName}',
+    })
+}
+
+export const submitChallengeTeamResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SubmitChallengeTeamResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        SubmitChallengeTeamResultsResponse,
+        SubmitChallengeTeamResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}',
+    })
+}
+
+export const downloadMatchTeamResultDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadMatchTeamResultDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadMatchTeamResultDocumentResponse,
+        DownloadMatchTeamResultDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}',
     })
 }
 

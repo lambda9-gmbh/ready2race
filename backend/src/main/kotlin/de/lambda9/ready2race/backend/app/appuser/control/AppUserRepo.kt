@@ -2,21 +2,17 @@ package de.lambda9.ready2race.backend.app.appuser.control
 
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserWithRolesSort
 import de.lambda9.ready2race.backend.app.appuser.entity.EveryAppUserWithRolesSort
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.AppUserWithRoles
 import de.lambda9.ready2race.backend.database.generated.tables.EveryAppUserWithRoles
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithRolesRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EveryAppUserWithRolesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER_WITH_ROLES
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVERY_APP_USER_WITH_ROLES
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
-import org.jooq.Condition
 import org.jooq.impl.DSL
 import java.util.*
 
@@ -164,4 +160,16 @@ object AppUserRepo {
                 .fetch()
         }
     }
+
+    fun getAllIdsExceptSystemAdmin() = APP_USER.select({ ID }) { ID.ne(SYSTEM_USER) }
+
+    fun getAllExceptSystemAdminAsJson() = APP_USER.selectAsJson { ID.ne(SYSTEM_USER) }
+
+    fun insert(records: List<AppUserRecord>) = APP_USER.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = APP_USER.select({ ID }) { ID.`in`(ids) }
+
+    fun getOverlappingEmails(emails: List<String>) = APP_USER.select({ EMAIL }) { EMAIL.`in`(emails) }
+
+    fun parseJsonToRecord(data: String) = APP_USER.parseJsonToRecords(data)
 }

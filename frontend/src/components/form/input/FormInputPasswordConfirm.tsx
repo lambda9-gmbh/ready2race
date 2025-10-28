@@ -8,7 +8,7 @@ type FormInputPasswordConfirmProps = Omit<
     'type'
 >
 
-const FormInputPasswordConfirm = (props: FormInputPasswordConfirmProps) => {
+const FormInputPasswordConfirm = ({sx, ...props}: FormInputPasswordConfirmProps) => {
     const {t} = useTranslation()
 
     return (
@@ -26,7 +26,7 @@ const FormInputPasswordConfirm = (props: FormInputPasswordConfirmProps) => {
                         !props.rules?.required && {required: t('common.form.required')}),
                 }}
                 label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )

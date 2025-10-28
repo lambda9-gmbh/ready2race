@@ -3,17 +3,15 @@ import {
     Card,
     CardActionArea,
     CardContent,
-    InputAdornment,
     Stack,
-    TextField,
     Typography,
 } from '@mui/material'
-import React from 'react'
+import React, {useMemo} from 'react'
 import {useFetch} from '@utils/hooks.ts'
 import {getUsersForEvent} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
-import SearchIcon from '@mui/icons-material/Search'
 import PersonIcon from '@mui/icons-material/Person'
+import AssignmentSearchField from "@components/qrApp/assign/AssignmentSearchField.tsx";
 
 interface UserAssignmentProps {
     eventId: string
@@ -26,11 +24,19 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({eventId, onSelectUser}) 
 
     const users = useFetch(signal => getUsersForEvent({signal, path: {eventId}})).data
 
-    const filteredUsers = users?.data.filter(
-        user =>
-            searchQuery === '' ||
-            `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
+    const filteredUsers = useMemo(() => {
+        return users?.data
+            .filter(
+                user =>
+                    searchQuery === '' ||
+                    `${user.firstname} ${user.lastname}`.toLowerCase().includes(searchQuery.toLowerCase()),
+            )
+            .sort((a, b) => {
+                const nameA = `${a.firstname} ${a.lastname}`.toLowerCase()
+                const nameB = `${b.firstname} ${b.lastname}`.toLowerCase()
+                return nameA.localeCompare(nameB)
+            })
+    },[searchQuery, users])
 
     return (
         <Stack sx={{width: '100%'}} spacing={2}>
@@ -38,22 +44,7 @@ const UserAssignment: React.FC<UserAssignmentProps> = ({eventId, onSelectUser}) 
                 {t('qrAssign.users')}
             </Typography>
 
-            <TextField
-                fullWidth
-                placeholder={t('common.search')}
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                slotProps={{
-                    input: {
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
-                        ),
-                    },
-                }}
-                sx={{mb: 1}}
-            />
+            <AssignmentSearchField setSearchQuery={setSearchQuery} />
 
             <Stack spacing={1}>
                 {filteredUsers && filteredUsers.length > 0 ? (

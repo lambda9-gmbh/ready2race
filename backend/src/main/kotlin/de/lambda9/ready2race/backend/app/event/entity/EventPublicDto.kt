@@ -16,4 +16,7 @@ data class EventPublicDto(
     val competitionCount: Long,
     val eventFrom: LocalDate?,
     val eventTo: LocalDate?,
+    val challengeEvent: Boolean,
+    val challengeResultType: MatchResultType?,
+    val allowSelfSubmission: Boolean,
 )

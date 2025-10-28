@@ -40,7 +40,7 @@ fun Route.participantForEvent() {
         route("/{participantId}/checkInOut") {
             post {
                 call.respondComprehension {
-                    val (user, _) = !authenticate(Privilege.Action.UPDATE, Privilege.Resource.APP_COMPETITION_CHECK)
+                    val user = !authenticate(Privilege.UpdateAppCompetitionCheckGlobal)
                     val participantId = !pathParam("participantId", uuid)
                     val eventId = !pathParam("eventId", uuid)
                     val checkIn = !queryParam("checkIn", boolean)
@@ -53,7 +53,7 @@ fun Route.participantForEvent() {
 
     // todo: Remove this on refactoring - this is just a quick solution to provide the participants to the
     //  eventRequirements check page in the app with a different Privilege
-    route("/participant-app"){
+    route("/participant-app") {
         get {
             call.respondComprehension {
                 val user = !authenticate(Privilege.UpdateAppEventRequirementGlobal)

@@ -98,6 +98,17 @@ fun <R : Record, T : TableImpl<R>> T.selectAny(
     fetchAny(this@selectAny, condition())
 }
 
+fun <R : Record, T : TableImpl<R>, A> T.selectAny(
+    selection: T.() -> TableField<R, A>,
+    condition: T.() -> Condition
+): JIO<A?> = Jooq.query {
+    select(selection())
+        .from(this@selectAny)
+        .where(condition())
+        .fetchAny()
+        ?.value1()
+}
+
 fun <R : Record, T : TableImpl<R>> T.selectOne(
     condition: T.() -> Condition
 ): JIO<R?> = Jooq.query {
@@ -113,6 +124,12 @@ fun <R : Record, T : TableImpl<R>, A> T.selectOne(
         .where(condition())
         .fetchOne()
         ?.value1()
+}
+
+fun <R : Record, T : TableImpl<R>> T.selectAsJson(
+    condition: T.() -> Condition = { DSL.trueCondition() }
+): JIO<String> = Jooq.query {
+    fetch(this@selectAsJson, condition()).formatJSON()
 }
 
 // TODO: @Evaluate need for similar function without pagination, just search
@@ -184,3 +201,40 @@ fun <R : Record, T : TableImpl<R>> T.findOneBy(
 ): JIO<R?> = Jooq.query {
     fetchOne(this@findOneBy, condition())
 }
+
+inline fun <reified R : Record, T : TableImpl<R>> T.parseJsonToRecords(data: String): JIO<List<R>> = Jooq.query {
+    val records = fetchFromJSON(data)
+        .into(R::class.java)
+
+    records.forEach { it.changed(true) }
+    records
+}
+
+fun <R : Record, T : TableImpl<R>> T.insertJsonData(data: String) = Jooq.query {
+    this.loadInto(this@insertJsonData).onDuplicateKeyIgnore().loadJSON(data).fieldsCorresponding().execute()
+}
+
+// Use this if there is more than one primary key or a uniqueConstraint is present
+inline fun <reified R : Record, T : TableImpl<R>> T.insertJsonDataIgnoringUniqueIndexes(data: String) = Jooq.query {
+    val records = fetchFromJSON(data)
+        .into(R::class.java)
+
+    records.forEach { it.changed(true) }
+
+    records
+        .forEach { record ->
+            val hasNonNullValues = (0 until record.size()).any { index ->
+                record.get(index) != null
+            }
+
+            if (hasNonNullValues) {
+                insertInto(this@insertJsonDataIgnoringUniqueIndexes)
+                    .set(record)
+                    .onConflictDoNothing()
+                    .execute()
+            }
+        }
+}
+
+
+
