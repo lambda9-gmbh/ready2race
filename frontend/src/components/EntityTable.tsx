@@ -54,6 +54,7 @@ type ExtendedEntityTableProps<
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
     editableIf?: (entity: Entity) => boolean
+    hideEntityActions?: boolean
 } & (
     | {
           deleteRequest: (entity: Entity) => RequestResult<void, DeleteError, false>
@@ -177,6 +178,7 @@ const EntityTableInternal = <
     onDeleteError,
     deletableIf,
     editableIf,
+    hideEntityActions,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
     const {t} = useTranslation()
@@ -207,57 +209,69 @@ const EntityTableInternal = <
               ]
             : []),
         ...columns.filter(c => !c.requiredPrivilege || user.checkPrivilege(c.requiredPrivilege)),
-        {
-            field: 'actions',
-            type: 'actions' as const,
-            getActions: (params: GridRowParams<Entity>) => [
-                ...customEntityActions(params.row, user.checkPrivilege).filter(action => !!action),
-                ...(crud.update && options.entityUpdate && (editableIf?.(params.row) ?? true)
-                    ? [
-                          <GridActionsCellItem
-                              icon={<Edit />}
-                              label={t('common.edit')}
-                              onClick={() => openDialog({...params.row})}
-                              showInMenu={true}
-                          />,
-                      ]
-                    : []),
-                ...(deleteRequest &&
-                crud.delete &&
-                options.entityDelete &&
-                (deletableIf?.(params.row) ?? true)
-                    ? [
-                          <GridActionsCellItem
-                              icon={<Delete />}
-                              label={t('common.delete')}
-                              onClick={() => {
-                                  confirmAction(async () => {
-                                      setIsDeletingRow(true)
-                                      const {error} = await deleteRequest(params.row)
-                                      setIsDeletingRow(false)
-                                      if (error) {
-                                          if (onDeleteError !== undefined) {
-                                              onDeleteError(error)
-                                          } else {
-                                              feedback.error(
-                                                  t('entity.delete.error', {entity: entityName}),
-                                              )
-                                          }
-                                      } else {
-                                          onDelete?.()
-                                          feedback.success(
-                                              t('entity.delete.success', {entity: entityName}),
-                                          )
-                                      }
-                                      reloadData()
-                                  })
-                              }}
-                              showInMenu={true}
-                          />,
-                      ]
-                    : []),
-            ],
-        },
+        ...(!hideEntityActions
+            ? [
+                  {
+                      field: 'actions',
+                      type: 'actions' as const,
+                      getActions: (params: GridRowParams<Entity>) => [
+                          ...customEntityActions(params.row, user.checkPrivilege).filter(
+                              action => !!action,
+                          ),
+                          ...(crud.update &&
+                          options.entityUpdate &&
+                          (editableIf?.(params.row) ?? true)
+                              ? [
+                                    <GridActionsCellItem
+                                        icon={<Edit />}
+                                        label={t('common.edit')}
+                                        onClick={() => openDialog({...params.row})}
+                                        showInMenu={true}
+                                    />,
+                                ]
+                              : []),
+                          ...(deleteRequest &&
+                          crud.delete &&
+                          options.entityDelete &&
+                          (deletableIf?.(params.row) ?? true)
+                              ? [
+                                    <GridActionsCellItem
+                                        icon={<Delete />}
+                                        label={t('common.delete')}
+                                        onClick={() => {
+                                            confirmAction(async () => {
+                                                setIsDeletingRow(true)
+                                                const {error} = await deleteRequest(params.row)
+                                                setIsDeletingRow(false)
+                                                if (error) {
+                                                    if (onDeleteError !== undefined) {
+                                                        onDeleteError(error)
+                                                    } else {
+                                                        feedback.error(
+                                                            t('entity.delete.error', {
+                                                                entity: entityName,
+                                                            }),
+                                                        )
+                                                    }
+                                                } else {
+                                                    onDelete?.()
+                                                    feedback.success(
+                                                        t('entity.delete.success', {
+                                                            entity: entityName,
+                                                        }),
+                                                    )
+                                                }
+                                                reloadData()
+                                            })
+                                        }}
+                                        showInMenu={true}
+                                    />,
+                                ]
+                              : []),
+                      ],
+                  },
+              ]
+            : []),
     ]
 
     const [paginationModel, setPaginationModel] = useState<GridPaginationModel>(initialPagination)

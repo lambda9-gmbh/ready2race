@@ -41,6 +41,8 @@ object CompetitionRepo {
 
     fun getByEvent(eventId: UUID) = COMPETITION_VIEW.select { EVENT.eq(eventId) }
 
+    fun getById(id: UUID) = COMPETITION_VIEW.selectOne { ID.eq(id) }
+
     fun isOpenForRegistration(id: UUID, at: LocalDateTime) = Jooq.query {
         fetchExists(
             COMPETITION_VIEW

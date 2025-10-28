@@ -19,14 +19,14 @@ const CompetitionTemplateDialog = (props: BaseEntityDialogProps<CompetitionTempl
 
     const addAction = (formData: CompetitionForm) => {
         return addCompetitionTemplate({
-            body: mapCompetitionFormToCompetitionPropertiesRequest(formData),
+            body: mapCompetitionFormToCompetitionPropertiesRequest(formData, false),
         })
     }
 
     const editAction = (formData: CompetitionForm, entity: CompetitionTemplateDto) => {
         return updateCompetitionTemplate({
             path: {competitionTemplateId: entity.id},
-            body: mapCompetitionFormToCompetitionPropertiesRequest(formData),
+            body: mapCompetitionFormToCompetitionPropertiesRequest(formData, false),
         })
     }
 
@@ -52,7 +52,10 @@ const CompetitionTemplateDialog = (props: BaseEntityDialogProps<CompetitionTempl
             addAction={addAction}
             editAction={editAction}>
             <Stack spacing={4}>
-                <CompetitionPropertiesFormInputs formContext={formContext} />
+                <CompetitionPropertiesFormInputs
+                    formContext={formContext}
+                    isChallengeEvent={false}
+                />
             </Stack>
         </EntityDialog>
     )

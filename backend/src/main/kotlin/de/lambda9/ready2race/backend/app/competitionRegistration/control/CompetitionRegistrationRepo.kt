@@ -44,6 +44,9 @@ object CompetitionRegistrationRepo {
 
     fun update(id: UUID, f: CompetitionRegistrationRecord.() -> Unit) = COMPETITION_REGISTRATION.update(f) { ID.eq(id) }
 
+    fun update(record: CompetitionRegistrationRecord, f: CompetitionRegistrationRecord.() -> Unit) =
+        COMPETITION_REGISTRATION.update(record, f)
+
     fun allForEvent(eventId: UUID): JIO<List<CompetitionRegistrationRecord>> = Jooq.query {
         select(COMPETITION_REGISTRATION)
             .from(COMPETITION_REGISTRATION)
@@ -109,24 +112,6 @@ object CompetitionRegistrationRepo {
                 .and(filterScope(scope, user.club))
                 .and(search.metaSearch(searchFieldsForCompetition))
         )
-    }
-
-    fun teamCountForCompetition(
-        competitionId: UUID,
-        search: String?,
-        scope: Privilege.Scope,
-        user: AppUserWithPrivilegesRecord,
-    ): JIO<Int> = Jooq.query {
-        with(COMPETITION_REGISTRATION_TEAM) {
-            fetchCount(
-                this,
-                DSL.and(
-                    COMPETITION_ID.eq(competitionId),
-                    filterScope(scope, user.club),
-                    search.metaSearch(searchFields())
-                ),
-            )
-        }
     }
 
     fun registrationPageForCompetition(
@@ -298,28 +283,14 @@ object CompetitionRegistrationRepo {
             }
 
 
-    fun selectParticipantForEvent(eventId: UUID, participantId: UUID) =
-        PARTICIPANT_FOR_EVENT.selectOne { EVENT_ID.eq(eventId).and(ID.eq(participantId)) }
-
-
-    fun getCompetitionRegistrationTeams(
-        eventId: UUID
-    ): JIO<List<CompetitionRegistrationTeamRecord>> = COMPETITION_REGISTRATION_TEAM.select { EVENT_ID.eq(eventId) }
-
-    fun teamPageForCompetition(
+    fun getHighestTeamNumber(
         competitionId: UUID,
-        params: PaginationParameters<CompetitionRegistrationTeamSort>,
-        scope: Privilege.Scope,
-        user: AppUserWithPrivilegesRecord,
-    ): JIO<List<CompetitionRegistrationTeamRecord>> = Jooq.query {
-        with(COMPETITION_REGISTRATION_TEAM) {
-            selectFrom(this)
-                .page(params, searchFields()) {
-                    COMPETITION_ID.eq(competitionId).and(
-                        filterScope(scope, user.club)
-                    )
-                }
-                .fetch()
+    ): JIO<Int?> = Jooq.query {
+        with(COMPETITION_REGISTRATION) {
+            select(DSL.max(TEAM_NUMBER))
+                .from(this)
+                .where(COMPETITION.eq(competitionId))
+                .fetchOneInto(Int::class.java)
         }
     }
 

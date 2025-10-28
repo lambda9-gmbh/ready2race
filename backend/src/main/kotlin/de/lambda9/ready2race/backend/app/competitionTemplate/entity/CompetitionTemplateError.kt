@@ -11,6 +11,7 @@ sealed interface CompetitionTemplateError : ServiceError {
     data object NotFound : CompetitionTemplateError
     data object CompetitionPropertiesNotFound : CompetitionTemplateError
     data object CompetitionCategoryUnknown : CompetitionTemplateError
+    data object ChallengeConfigNotSupported : CompetitionTemplateError
 
     data class NamedParticipantsUnknown(val namedParticipants: List<UUID>) : CompetitionTemplateError
 
@@ -30,6 +31,10 @@ sealed interface CompetitionTemplateError : ServiceError {
             message = "Referenced competitionCategory unknown"
         )
 
+        is ChallengeConfigNotSupported -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "The challenge config is not supported for templates."
+        )
 
         is NamedParticipantsUnknown -> ApiError(
             status = HttpStatusCode.BadRequest,

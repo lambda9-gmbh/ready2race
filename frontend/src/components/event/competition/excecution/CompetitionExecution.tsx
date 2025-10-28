@@ -8,7 +8,6 @@ import {
 } from '@api/sdk.gen.ts'
 import {
     Box,
-    Button,
     Checkbox,
     Divider,
     Link,
@@ -619,17 +618,13 @@ const CompetitionExecution = () => {
         <Box>
             {!allRoundsCreated && (
                 <Box sx={{my: 2, display: 'flex', alignItems: 'center'}}>
-                    <Button
-                        disabled={
-                            progressDto.canNotCreateRoundReasons.length > 0 ||
-                            progressDto.lastRoundFinished
-                                ? true
-                                : undefined
-                        }
+                    <LoadingButton
+                        pending={submitting}
+                        disabled={progressDto.canNotCreateRoundReasons.length > 0}
                         variant={'contained'}
                         onClick={handleCreateNextRound}>
                         {t('event.competition.execution.nextRound.create')}
-                    </Button>
+                    </LoadingButton>
                     {progressDto.canNotCreateRoundReasons.length > 0 && (
                         <HtmlTooltip
                             placement={'right'}

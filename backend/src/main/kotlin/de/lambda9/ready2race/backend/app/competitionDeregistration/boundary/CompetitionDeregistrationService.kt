@@ -6,10 +6,9 @@ import de.lambda9.ready2race.backend.app.competitionDeregistration.control.Compe
 import de.lambda9.ready2race.backend.app.competitionDeregistration.control.toRecord
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationError
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationRequest
-import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService.getCurrentAndNextRound
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.CompetitionExecutionError
-import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
+import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.CompetitionRegistrationError
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService

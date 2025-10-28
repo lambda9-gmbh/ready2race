@@ -40,6 +40,7 @@ fun CompetitionTemplateViewRecord.toDto(): App<Nothing, CompetitionTemplateDto> 
                 namedParticipants = namedParticipantDtos,
                 fees = feeDtos,
                 lateRegistrationAllowed = lateRegistrationAllowed!!,
+                challengeConfig = null,
             ),
             setupTemplate = if (setupTemplateId != null) {
                 CompetitionSetupTemplateOverviewDto(

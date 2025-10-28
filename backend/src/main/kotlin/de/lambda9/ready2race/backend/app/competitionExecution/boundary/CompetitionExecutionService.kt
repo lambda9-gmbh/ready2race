@@ -2,12 +2,10 @@ package de.lambda9.ready2race.backend.app.competitionExecution.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchRepo
-import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionRoundDto
-import de.lambda9.ready2race.backend.app.competitionExecution.control.toCompetitionTeamPlaceDto
+import de.lambda9.ready2race.backend.app.competitionExecution.control.*
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
-import de.lambda9.ready2race.backend.app.competitionMatchTeam.control.CompetitionMatchTeamRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
 import de.lambda9.ready2race.backend.app.competitionSetup.boundary.CompetitionSetupService
 import de.lambda9.ready2race.backend.app.competitionSetup.control.*
@@ -15,6 +13,7 @@ import de.lambda9.ready2race.backend.app.competitionSetup.entity.CompetitionSetu
 import de.lambda9.ready2race.backend.app.documentTemplate.control.DocumentTemplateRepo
 import de.lambda9.ready2race.backend.app.documentTemplate.control.toPdfTemplate
 import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
@@ -35,6 +34,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
@@ -69,9 +69,13 @@ object CompetitionExecutionService {
     }
 
     fun createNewRound(
+        eventId: UUID,
         competitionId: UUID,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId)
+            .onTrueFail { CompetitionExecutionChallengeError.NotAChallengeEvent }
+
         var createFollowingRound = true
         while (createFollowingRound) {
             val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
@@ -227,6 +231,7 @@ object CompetitionExecutionService {
     }
 
     fun getProgress(
+        eventId: UUID,
         competitionId: UUID,
     ): App<ServiceError, ApiResponse.Dto<CompetitionExecutionProgressDto>> =
         KIO.comprehension {
@@ -245,13 +250,9 @@ object CompetitionExecutionService {
                 registrations,
             )
 
-            val lastRoundFinished =
-                if (currentAndNextRound.second == null && currentAndNextRound.first != null) {
-                    currentAndNextRound.first!!.matches.flatMap { match -> match.teams.filter { it.place == null } }
-                        .isEmpty()
-                } else false
-
             val sortedRounds = sortRounds(setupRounds)
+
+            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
 
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
@@ -261,7 +262,7 @@ object CompetitionExecutionService {
                     CompetitionExecutionProgressDto(
                         rounds = it,
                         canNotCreateRoundReasons,
-                        lastRoundFinished
+                        isChallengeEvent = isChallengeEvent
                     )
                 )
             }
@@ -353,11 +354,12 @@ object CompetitionExecutionService {
     }
 
     fun updateMatchData(
+        eventId: UUID,
         matchId: UUID,
         userId: UUID,
         request: UpdateCompetitionMatchRequest
-    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
-
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val setupMatch =
             !CompetitionSetupMatchRepo.get(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
@@ -453,11 +455,13 @@ object CompetitionExecutionService {
     }
 
     fun updateMatchResult(
+        eventId: UUID,
         competitionId: UUID,
         matchId: UUID,
         userId: UUID,
         request: UpdateCompetitionMatchResultRequest,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
@@ -476,12 +480,14 @@ object CompetitionExecutionService {
     }
 
     fun updateMatchResultByFile(
+        eventId: UUID,
         competitionId: UUID,
         matchId: UUID,
         file: File,
         request: UploadMatchResultRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val match = !checkUpdateMatchResult(competitionId, matchId)
         !prepareForNewPlaces(matchId, userId)
@@ -595,8 +601,10 @@ object CompetitionExecutionService {
     fun updateMatchRunningState(
         matchId: UUID,
         userId: UUID,
-        request: UpdateCompetitionMatchRunningStateRequest
-    ): App<CompetitionExecutionError, ApiResponse.NoData> = KIO.comprehension {
+        request: UpdateCompetitionMatchRunningStateRequest,
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         !CompetitionMatchRepo.exists(matchId).orDie().onNullFail { CompetitionExecutionError.MatchNotFound }
 
@@ -611,8 +619,11 @@ object CompetitionExecutionService {
 
 
     fun deleteCurrentRound(
-        competitionId: UUID
+        competitionId: UUID,
+        eventId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+
         val setupRounds = !CompetitionSetupService.getSetupRoundsWithMatches(competitionId)
 
         val currentRound = getCurrentAndNextRound(setupRounds).first
@@ -933,9 +944,11 @@ object CompetitionExecutionService {
     }
 
     fun downloadStartlist(
+        eventId: UUID,
         matchId: UUID,
         type: StartListFileType,
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
 
         val startListFile = !getStartList(matchId, type, startTimeRequired = true)
 
@@ -1213,5 +1226,27 @@ object CompetitionExecutionService {
         }
 
         return bytes
+    }
+
+    fun downloadTeamResultDocument(
+        eventId: UUID,
+        documentId: UUID,
+        clubId: UUID?,
+        scope: Privilege.Scope
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
+        val document = !CompetitionMatchTeamDocumentDataRepo.getDownload(documentId).orDie()
+            .onNullFail { CompetitionExecutionError.ResultDocumentNotFound }
+
+        !KIO.failOn(scope == Privilege.Scope.OWN && clubId != document.club) {
+            AuthError.PrivilegeMissing
+        }
+
+        KIO.ok(
+            ApiResponse.File(
+                name = document.name!!,
+                bytes = document.data!!,
+            )
+        )
     }
 }

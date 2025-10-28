@@ -616,6 +616,12 @@ import type {
     ExportDataByWebDavResponse,
     GetWebDavExportStatusError,
     GetWebDavExportStatusResponse,
+    SubmitChallengeTeamResultsData,
+    SubmitChallengeTeamResultsError,
+    SubmitChallengeTeamResultsResponse,
+    DownloadMatchTeamResultDocumentData,
+    DownloadMatchTeamResultDocumentError,
+    DownloadMatchTeamResultDocumentResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3138,5 +3144,36 @@ export const getWebDavExportStatus = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/webDAV/export',
+    })
+}
+
+export const submitChallengeTeamResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SubmitChallengeTeamResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        SubmitChallengeTeamResultsResponse,
+        SubmitChallengeTeamResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}',
+    })
+}
+
+export const downloadMatchTeamResultDocument = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadMatchTeamResultDocumentData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadMatchTeamResultDocumentResponse,
+        DownloadMatchTeamResultDocumentError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}',
     })
 }
