@@ -1,13 +1,14 @@
 import FinalizeRegistrations from '@components/event/competition/excecution/FinalizeRegistrations.tsx'
 import EventRegistrationTable from '@components/eventRegistration/EventRegistrationTable.tsx'
 import {Stack} from '@mui/material'
-import {useEntityAdministration} from "@utils/hooks.ts";
-import {EventRegistrationViewDto} from "@api/types.gen.ts";
-import {eventRoute} from "@routes";
-import {useTranslation} from "react-i18next";
+import {useEntityAdministration} from '@utils/hooks.ts'
+import {EventDto, EventRegistrationViewDto} from '@api/types.gen.ts'
+import {eventRoute} from '@routes'
+import {useTranslation} from 'react-i18next'
 
 type Props = {
     registrationsFinalized: boolean
+    eventDto: EventDto
 }
 const EventRegistrations = (props: Props) => {
     const {t} = useTranslation()
@@ -21,7 +22,9 @@ const EventRegistrations = (props: Props) => {
 
     return (
         <Stack spacing={4}>
-            <FinalizeRegistrations registrationsFinalized={props.registrationsFinalized} />
+            {!props.eventDto.challengeEvent && (
+                <FinalizeRegistrations registrationsFinalized={props.registrationsFinalized} />
+            )}
             <EventRegistrationTable
                 {...eventRegistrationProps.table}
                 title={t('event.registration.registrations')}

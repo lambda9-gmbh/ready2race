@@ -9,6 +9,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object CompetitionTemplateRepo {
@@ -18,11 +19,15 @@ object CompetitionTemplateRepo {
 
     fun create(record: CompetitionTemplateRecord) = COMPETITION_TEMPLATE.insertReturning(record) { ID }
 
+    fun create(records: List<CompetitionTemplateRecord>) = COMPETITION_TEMPLATE.insert(records)
+
     fun exists(id: UUID) = COMPETITION_TEMPLATE.exists { ID.eq(id) }
 
     fun update(id: UUID, f: CompetitionTemplateRecord.() -> Unit) = COMPETITION_TEMPLATE.update(f) { ID.eq(id) }
 
     fun delete(id: UUID) = COMPETITION_TEMPLATE.delete { ID.eq(id) }
+
+    fun allIds() = COMPETITION_TEMPLATE.select({ ID }) { DSL.trueCondition() }
 
     fun countWithProperties(
         search: String?
@@ -51,4 +56,10 @@ object CompetitionTemplateRepo {
                 .fetchOne()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_TEMPLATE.select({ ID }) { ID.`in`(ids) }
+
+    fun allAsJson() = COMPETITION_TEMPLATE.selectAsJson()
+
+    fun insertJsonData(data: String) = COMPETITION_TEMPLATE.insertJsonData(data)
 }

@@ -20,6 +20,7 @@ import de.lambda9.ready2race.backend.calls.responses.fileResponse
 import de.lambda9.ready2race.backend.calls.responses.pageResponse
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
+import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
@@ -69,105 +70,108 @@ object ResultsService {
 
         val competitions = !CompetitionRepo.getByEvent(eventId).orDie()
 
-        val competitionsData = !competitions.traverse { competition ->
-            KIO.comprehension {
-                val places = !CompetitionExecutionService.computeCompetitionPlaces(competition.id!!)
+        val competitionsData = !competitions
+            .sortedWith(lexiNumberComp { it.identifier })
+            .traverse { competition ->
+                KIO.comprehension {
+                    val places = !CompetitionExecutionService.computeCompetitionPlaces(competition.id!!)
 
-                KIO.ok(
-                    EventResultData.CompetitionResultData(
-                        identifier = competition.identifier!!,
-                        name = competition.name!!,
-                        shortName = competition.shortName,
-                        days = competition.eventDays!!.map { it!! },
-                        teams = places.map { (team, place) ->
+                    KIO.ok(
+                        EventResultData.CompetitionResultData(
+                            identifier = competition.identifier!!,
+                            name = competition.name!!,
+                            shortName = competition.shortName,
+                            days = competition.eventDays!!.map { it!! },
+                            teams = places.map { (team, place) ->
 
-                            val substitutions =
-                                !SubstitutionRepo.getOriginalsByCompetitionRegistration(team.competitionRegistration).orDie()
+                                val substitutions =
+                                    !SubstitutionRepo.getOriginalsByCompetitionRegistration(team.competitionRegistration)
+                                        .orDie()
 
 
-                            val clubs = team.participants.map { it.externalClubName }.toSet()
-                            val actualClubName = if (clubs.size == 1) {
-                                clubs.first()
-                            } else {
-                                event.mixedTeamTerm
-                            }
+                                val clubs = team.participants.map { it.externalClubName }.toSet()
+                                val actualClubName = if (clubs.size == 1) {
+                                    clubs.first()
+                                } else {
+                                    event.mixedTeamTerm
+                                }
 
-                            EventResultData.TeamResultData(
-                                place = place,
-                                clubName = team.clubName,
-                                teamName = team.registrationName,
-                                participatingClubName = actualClubName,
-                                ratingCategory = team.ratingCategory,
-                                participants = team.participants.map {
-                                    EventResultData.ParticipantResultData(
-                                        role = it.namedParticipantName,
-                                        firstname = it.firstName,
-                                        lastname = it.lastName,
-                                        year = it.year,
-                                        gender = it.gender,
-                                        externalClubName = it.externalClubName,
-                                    )
-                                },
-                                sortedSubstitutions = substitutions.sortedBy { it.orderForRound!! }
-                                    .fold(emptyList<EventResultData.SubstitutionResultData>() to false) { (acc, skip), sub ->
-                                        if (skip) {
-                                            acc to false
-                                        } else {
-                                            val swappedWithId =
-                                                SubstitutionService.getSwapSubstitution(sub, substitutions)
-
-                                            if (swappedWithId != null) {
-
-                                                val sub2 = substitutions.first { it.id == swappedWithId }
-
-                                                (acc + EventResultData.SubstitutionResultData.RoleSwap(
-                                                    left = EventResultData.ParticipantResultData(
-                                                        role = sub.namedParticipantName!!,
-                                                        firstname = sub.participantOut!!.firstname,
-                                                        lastname = sub.participantOut!!.lastname,
-                                                        year = sub.participantOut!!.year,
-                                                        gender = sub.participantOut!!.gender,
-                                                        externalClubName = sub.participantOut!!.externalClubName,
-                                                    ),
-                                                    right = EventResultData.ParticipantResultData(
-                                                        role = sub2.namedParticipantName!!,
-                                                        firstname = sub2.participantOut!!.firstname,
-                                                        lastname = sub2.participantOut!!.lastname,
-                                                        year = sub2.participantOut!!.year,
-                                                        gender = sub2.participantOut!!.gender,
-                                                        externalClubName = sub2.participantOut!!.externalClubName,
-                                                    ),
-                                                    round = sub.competitionSetupRoundName!!
-                                                )) to true
+                                EventResultData.TeamResultData(
+                                    place = place,
+                                    clubName = team.clubName,
+                                    teamName = team.registrationName,
+                                    participatingClubName = actualClubName,
+                                    ratingCategory = team.ratingCategory,
+                                    participants = team.participants.map {
+                                        EventResultData.ParticipantResultData(
+                                            role = it.namedParticipantName,
+                                            firstname = it.firstName,
+                                            lastname = it.lastName,
+                                            year = it.year,
+                                            gender = it.gender,
+                                            externalClubName = it.externalClubName,
+                                        )
+                                    },
+                                    sortedSubstitutions = substitutions.sortedBy { it.orderForRound!! }
+                                        .fold(emptyList<EventResultData.SubstitutionResultData>() to false) { (acc, skip), sub ->
+                                            if (skip) {
+                                                acc to false
                                             } else {
-                                                (acc + EventResultData.SubstitutionResultData.ParticipantSwap(
-                                                    subOut = EventResultData.ParticipantResultData(
-                                                        role = sub.namedParticipantName!!,
-                                                        firstname = sub.participantOut!!.firstname,
-                                                        lastname = sub.participantOut!!.lastname,
-                                                        year = sub.participantOut!!.year,
-                                                        gender = sub.participantOut!!.gender,
-                                                        externalClubName = sub.participantOut!!.externalClubName,
-                                                    ),
-                                                    subIn = EventResultData.ParticipantResultData(
-                                                        role = sub.namedParticipantName!!,
-                                                        firstname = sub.participantIn!!.firstname,
-                                                        lastname = sub.participantIn!!.lastname,
-                                                        year = sub.participantIn!!.year,
-                                                        gender = sub.participantIn!!.gender,
-                                                        externalClubName = sub.participantIn!!.externalClubName,
-                                                    ),
-                                                    round = sub.competitionSetupRoundName!!
-                                                )) to false
+                                                val swappedWithId =
+                                                    SubstitutionService.getSwapSubstitution(sub, substitutions)
+
+                                                if (swappedWithId != null) {
+
+                                                    val sub2 = substitutions.first { it.id == swappedWithId }
+
+                                                    (acc + EventResultData.SubstitutionResultData.RoleSwap(
+                                                        left = EventResultData.ParticipantResultData(
+                                                            role = sub.namedParticipantName!!,
+                                                            firstname = sub.participantOut!!.firstname,
+                                                            lastname = sub.participantOut!!.lastname,
+                                                            year = sub.participantOut!!.year,
+                                                            gender = sub.participantOut!!.gender,
+                                                            externalClubName = sub.participantOut!!.externalClubName,
+                                                        ),
+                                                        right = EventResultData.ParticipantResultData(
+                                                            role = sub2.namedParticipantName!!,
+                                                            firstname = sub2.participantOut!!.firstname,
+                                                            lastname = sub2.participantOut!!.lastname,
+                                                            year = sub2.participantOut!!.year,
+                                                            gender = sub2.participantOut!!.gender,
+                                                            externalClubName = sub2.participantOut!!.externalClubName,
+                                                        ),
+                                                        round = sub.competitionSetupRoundName!!
+                                                    )) to true
+                                                } else {
+                                                    (acc + EventResultData.SubstitutionResultData.ParticipantSwap(
+                                                        subOut = EventResultData.ParticipantResultData(
+                                                            role = sub.namedParticipantName!!,
+                                                            firstname = sub.participantOut!!.firstname,
+                                                            lastname = sub.participantOut!!.lastname,
+                                                            year = sub.participantOut!!.year,
+                                                            gender = sub.participantOut!!.gender,
+                                                            externalClubName = sub.participantOut!!.externalClubName,
+                                                        ),
+                                                        subIn = EventResultData.ParticipantResultData(
+                                                            role = sub.namedParticipantName!!,
+                                                            firstname = sub.participantIn!!.firstname,
+                                                            lastname = sub.participantIn!!.lastname,
+                                                            year = sub.participantIn!!.year,
+                                                            gender = sub.participantIn!!.gender,
+                                                            externalClubName = sub.participantIn!!.externalClubName,
+                                                        ),
+                                                        round = sub.competitionSetupRoundName!!
+                                                    )) to false
+                                                }
                                             }
-                                        }
-                                    }.first,
-                            )
-                        }
+                                        }.first,
+                                )
+                            }
+                        )
                     )
-                )
+                }
             }
-        }
 
         val bytes = buildPdf(EventResultData(event.name, competitionsData), null)
 

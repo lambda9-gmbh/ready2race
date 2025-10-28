@@ -55,7 +55,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty'
 import {format} from 'date-fns'
 import AppUserWithQrCodeTable from '@components/event/appUser/AppUserWithQrCodeTable.tsx'
-import InvoicesTabPanel from './tabs/InvoicesTabPanel.tsx'
+import InvoicesTab from './tabs/InvoicesTab.tsx'
 import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
 import ParticipantTrackingLogTable from '@components/event/participantTracking/ParticipantTrackingLogTable.tsx'
 import EventRegistrations from '@components/event/competition/registration/EventRegistrations.tsx'
@@ -292,7 +292,7 @@ const EventPage = () => {
                                         </Button>
                                     </Card>
                                 )}
-                                {user.checkPrivilege(readEventGlobal) && (
+                                {user.checkPrivilege(readEventGlobal) && !data.challengeEvent && (
                                     <Card sx={{p: 2}}>
                                         <Typography variant="h6" sx={{mb: 1}}>
                                             {t('event.info.sectionTitle')}
@@ -324,11 +324,12 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'competitions'} activeTab={activeTab}>
-                            <CompetitionsAndEventDays />
+                            <CompetitionsAndEventDays isChallengeEvent={data.challengeEvent} />
                         </TabPanel>
                         <TabPanel index={'registrations'} activeTab={activeTab}>
                             <EventRegistrations
                                 registrationsFinalized={data.registrationsFinalized}
+                                eventDto={data}
                             />
                         </TabPanel>
                         <TabPanel index={'participants'} activeTab={activeTab}>
@@ -394,7 +395,9 @@ const EventPage = () => {
                                 />
                             </Stack>
                         </TabPanel>
-                        <InvoicesTabPanel activeTab={activeTab} event={data} reloadEvent={reload} />
+                        <TabPanel index={'invoices'} activeTab={activeTab}>
+                            <InvoicesTab event={data} reloadEvent={reload} />
+                        </TabPanel>
                     </Stack>
                 ) : (
                     pending && <Throbber />

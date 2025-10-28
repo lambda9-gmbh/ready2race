@@ -27,6 +27,9 @@ export type CompetitionForm = {
     }[]
     setupTemplate: AutocompleteOption
     lateRegistrationAllowed: boolean
+    challengeConfirmationImage: boolean
+    challengeStartAt: string
+    challengeEndAt: string
 }
 
 export const competitionFormDefaultValues: CompetitionForm = {
@@ -39,10 +42,14 @@ export const competitionFormDefaultValues: CompetitionForm = {
     fees: [],
     setupTemplate: null,
     lateRegistrationAllowed: false,
+    challengeConfirmationImage: false,
+    challengeStartAt: '',
+    challengeEndAt: '',
 }
 
 export function mapCompetitionFormToCompetitionPropertiesRequest(
     formData: CompetitionForm,
+    isChallengeEvent: boolean,
 ): CompetitionPropertiesRequest {
     return {
         identifier: formData.identifier,
@@ -63,8 +70,15 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
             amount: value.amount.replace(',', '.'),
             lateAmount: takeIfNotEmpty(value.lateAmount.replace(',', '.')),
         })),
-        setupTemplate: takeIfNotEmpty(formData.setupTemplate?.id),
+        setupTemplate: !isChallengeEvent ? takeIfNotEmpty(formData.setupTemplate?.id) : undefined,
         lateRegistrationAllowed: formData.lateRegistrationAllowed,
+        challengeConfig: isChallengeEvent
+            ? {
+                  resultConfirmationImageRequired: formData.challengeConfirmationImage,
+                  startAt: formData.challengeStartAt,
+                  endAt: formData.challengeEndAt,
+              }
+            : undefined,
     }
 }
 
@@ -104,6 +118,11 @@ export function mapCompetitionPropertiesToCompetitionForm(
               }
             : null,
         lateRegistrationAllowed: dto.lateRegistrationAllowed,
+        challengeConfirmationImage: dto.challengeConfig
+            ? dto.challengeConfig.resultConfirmationImageRequired
+            : false,
+        challengeStartAt: dto.challengeConfig ? dto.challengeConfig.startAt : '',
+        challengeEndAt: dto.challengeConfig ? dto.challengeConfig.endAt : '',
     }
 }
 

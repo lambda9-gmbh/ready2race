@@ -1,14 +1,15 @@
 import {useTranslation} from 'react-i18next'
 import {GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
 import {competitionRoute, eventRoute} from '@routes'
-import {CompetitionRegistrationTeamDto, getCompetitionRegistrationTeams} from '../../../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
-import {useMemo} from 'react'
+import {useMemo, useRef, useState} from 'react'
 import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
     Chip,
+    IconButton,
+    Link,
     Stack,
     Table,
     TableBody,
@@ -22,6 +23,16 @@ import QrCodeIcon from '@mui/icons-material/QrCode'
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import Cancel from '@mui/icons-material/Cancel'
+import {useUser} from '@contexts/user/UserContext.ts'
+import EditNoteIcon from '@mui/icons-material/EditNote'
+import ChallengeResultDialog from '@components/event/competition/registration/ChallengeResultDialog.tsx'
+import {downloadMatchTeamResultDocument, getCompetitionRegistrationTeams} from '@api/sdk.gen'
+import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
+import {useFeedback} from '@utils/hooks.ts'
+import SelectionMenu from '@components/SelectionMenu.tsx'
+import BurstModeIcon from '@mui/icons-material/BurstMode'
+import DownloadIcon from '@mui/icons-material/Download'
+import {currentlyInTimespan} from '@utils/helpers.ts'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -30,13 +41,20 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
-type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto>
+type Props = BaseEntityTableProps<CompetitionRegistrationTeamDto> & {
+    eventData: EventDto
+    competitionData: CompetitionDto
+}
 
-const CompetitionRegistrationTeamTable = ({...props}: Props) => {
+const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}: Props) => {
     const {t} = useTranslation()
+    const user = useUser()
+    const feedback = useFeedback()
 
     const {eventId} = eventRoute.useParams()
     const {competitionId} = competitionRoute.useParams()
+
+    const downloadRef = useRef<HTMLAnchorElement>(null)
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getCompetitionRegistrationTeams({
@@ -45,6 +63,18 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
             query: {...paginationParameters},
         })
     }
+
+    const challengeResultTypeUnit = eventData.challengeResultType === 'DISTANCE' ? 'm' : ''
+
+    const updateResultScope = user.getPrivilegeScope('UPDATE', 'RESULT')
+    const resultSubmissionAllowed =
+        updateResultScope === 'GLOBAL' ||
+        (updateResultScope === 'OWN' &&
+            eventData.allowSelfSubmission &&
+            currentlyInTimespan(
+                competitionData.properties.challengeConfig?.startAt,
+                competitionData.properties.challengeConfig?.endAt,
+            ))
 
     const columns: GridColDef<CompetitionRegistrationTeamDto>[] = useMemo(
         () => [
@@ -58,11 +88,71 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
                 headerName: t('entity.name'),
                 valueGetter: value => value ?? '-',
             },
+            ...(eventData.challengeEvent
+                ? [
+                      {
+                          field: 'challengeResultValue',
+                          headerName: t(
+                              'event.competition.execution.results.challenge.challengeResults',
+                          ),
+                          minWidth: 150,
+                          sortable: false,
+                          renderCell: ({row}: {row: CompetitionRegistrationTeamDto}) => {
+                              const challengeResultDocuments = eventData.challengeEvent
+                                  ? Object.entries(row.challengeResultDocuments ?? {}).map(
+                                        ([key, value]) => {
+                                            return {id: key, fileName: value}
+                                        },
+                                    )
+                                  : []
+                              return row.challengeResultValue ? (
+                                  <>
+                                      <Typography>
+                                          {row.challengeResultValue} {challengeResultTypeUnit}
+                                      </Typography>
+                                      {challengeResultDocuments.length > 0 && (
+                                          <SelectionMenu
+                                              keyLabel={'challenge-team-result-doc'}
+                                              buttonContent={<BurstModeIcon />}
+                                              onSelectItem={async (docId: string) => {
+                                                  const docName =
+                                                      row.challengeResultDocuments?.[docId]
+                                                  if (!docName) return
+                                                  void handleDownloadResultDocument(docId, docName)
+                                              }}
+                                              items={challengeResultDocuments.map(doc => ({
+                                                  id: doc.id,
+                                                  label: doc.fileName,
+                                              }))}
+                                              itemIcon={<DownloadIcon color={'primary'} />}
+                                          />
+                                      )}
+                                  </>
+                              ) : resultSubmissionAllowed ? (
+                                  <HtmlTooltip
+                                      title={
+                                          <Typography>
+                                              {t(
+                                                  'event.competition.execution.results.challenge.submitResults',
+                                              )}
+                                          </Typography>
+                                      }>
+                                      <IconButton onClick={() => openResultsDialog(row)}>
+                                          <EditNoteIcon />
+                                      </IconButton>
+                                  </HtmlTooltip>
+                              ) : (
+                                  '-'
+                              )
+                          },
+                      },
+                  ]
+                : []),
             {
                 field: 'namedParticipants',
                 headerName: t('event.registration.teamMembers'),
                 flex: 2,
-                minWidth: 300,
+                minWidth: 550,
                 sortable: false,
                 renderCell: ({row}) => {
                     return (
@@ -201,59 +291,71 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
                                                         {row.globalParticipantRequirements.length +
                                                             np.participantRequirements.length}{' '}
                                                     </Typography>
-                                                    <HtmlTooltip
-                                                        placement={'right'}
-                                                        title={
-                                                            <Stack spacing={1} p={1}>
-                                                                {[
-                                                                    ...row.globalParticipantRequirements.map(
-                                                                        gpr => ({
-                                                                            ...gpr,
-                                                                            qrCodeRequired: false,
-                                                                        }),
-                                                                    ),
-                                                                    ...np.participantRequirements,
-                                                                ].map(req => {
-                                                                    const note =
-                                                                        participant.participantRequirementsChecked.find(
-                                                                            c => c.id === req.id,
-                                                                        )?.note
-                                                                    return (
-                                                                        <Stack
-                                                                            direction={'row'}
-                                                                            spacing={1}
-                                                                            key={req.id}>
-                                                                            {participant.participantRequirementsChecked.some(
+                                                    {row.globalParticipantRequirements.length +
+                                                        np.participantRequirements.length >
+                                                        0 && (
+                                                        <HtmlTooltip
+                                                            placement={'right'}
+                                                            title={
+                                                                <Stack spacing={1} p={1}>
+                                                                    {[
+                                                                        ...row.globalParticipantRequirements.map(
+                                                                            gpr => ({
+                                                                                ...gpr,
+                                                                                qrCodeRequired:
+                                                                                    false,
+                                                                            }),
+                                                                        ),
+                                                                        ...np.participantRequirements,
+                                                                    ].map(req => {
+                                                                        const note =
+                                                                            participant.participantRequirementsChecked.find(
                                                                                 c =>
                                                                                     c.id === req.id,
-                                                                            ) ? (
-                                                                                <CheckCircle
-                                                                                    color={
-                                                                                        'success'
-                                                                                    }
-                                                                                />
-                                                                            ) : (
-                                                                                <Cancel
-                                                                                    color={'error'}
-                                                                                />
-                                                                            )}
-                                                                            <Typography>
-                                                                                {req.name}{' '}
-                                                                                {req.optional
-                                                                                    ? ` (${t('entity.optional')})`
-                                                                                    : ''}
-                                                                                {req.qrCodeRequired &&
-                                                                                    ' (QR)'}
-                                                                                {note &&
-                                                                                    ` [ ${note} ]`}
-                                                                            </Typography>
-                                                                        </Stack>
-                                                                    )
-                                                                })}
-                                                            </Stack>
-                                                        }>
-                                                        <Info color={'info'} fontSize={'small'} />
-                                                    </HtmlTooltip>
+                                                                            )?.note
+                                                                        return (
+                                                                            <Stack
+                                                                                direction={'row'}
+                                                                                spacing={1}
+                                                                                key={req.id}>
+                                                                                {participant.participantRequirementsChecked.some(
+                                                                                    c =>
+                                                                                        c.id ===
+                                                                                        req.id,
+                                                                                ) ? (
+                                                                                    <CheckCircle
+                                                                                        color={
+                                                                                            'success'
+                                                                                        }
+                                                                                    />
+                                                                                ) : (
+                                                                                    <Cancel
+                                                                                        color={
+                                                                                            'error'
+                                                                                        }
+                                                                                    />
+                                                                                )}
+                                                                                <Typography>
+                                                                                    {req.name}{' '}
+                                                                                    {req.optional
+                                                                                        ? ` (${t('entity.optional')})`
+                                                                                        : ''}
+                                                                                    {req.qrCodeRequired &&
+                                                                                        ' (QR)'}
+                                                                                    {note &&
+                                                                                        ` [ ${note} ]`}
+                                                                                </Typography>
+                                                                            </Stack>
+                                                                        )
+                                                                    })}
+                                                                </Stack>
+                                                            }>
+                                                            <Info
+                                                                color={'info'}
+                                                                fontSize={'small'}
+                                                            />
+                                                        </HtmlTooltip>
+                                                    )}
                                                 </Stack>
                                             </TableCell>
                                         </TableRow>
@@ -268,17 +370,70 @@ const CompetitionRegistrationTeamTable = ({...props}: Props) => {
         [],
     )
 
+    const handleDownloadResultDocument = async (docId: string, docName: string) => {
+        const {data, error} = await downloadMatchTeamResultDocument({
+            path: {
+                eventId,
+                competitionId,
+                resultDocumentId: docId,
+            },
+        })
+        const anchor = downloadRef.current
+
+        if (error) {
+            feedback.error(t('event.competition.execution.results.document.download.error'))
+        } else if (data !== undefined && anchor) {
+            anchor.href = URL.createObjectURL(data)
+            anchor.download = docName
+            anchor.click()
+            anchor.href = ''
+            anchor.download = ''
+        }
+    }
+
+    const [resultsDialogOpen, setResultsDialogOpen] = useState(false)
+    const openResultsDialog = (entity: CompetitionRegistrationTeamDto) => {
+        setResultsDialogOpen(true)
+        setSelectedTeam(entity)
+    }
+    const closeResultsDialog = () => {
+        setResultsDialogOpen(false)
+        setSelectedTeam(null)
+    }
+    const [selectedTeam, setSelectedTeam] = useState<CompetitionRegistrationTeamDto | null>(null)
+
     return (
-        <EntityTable
-            {...props}
-            parentResource={'REGISTRATION'}
-            initialPagination={initialPagination}
-            pageSizeOptions={pageSizeOptions}
-            initialSort={initialSort}
-            columns={columns}
-            dataRequest={dataRequest}
-            entityName={t('event.registration.teams')}
-        />
+        <>
+            <Link ref={downloadRef} display={'none'}></Link>
+            <EntityTable
+                {...props}
+                parentResource={'REGISTRATION'}
+                initialPagination={initialPagination}
+                pageSizeOptions={pageSizeOptions}
+                initialSort={initialSort}
+                columns={columns}
+                dataRequest={dataRequest}
+                entityName={t('event.registration.teams')}
+                hideEntityActions
+            />
+            <ChallengeResultDialog
+                dialogOpen={resultsDialogOpen}
+                teamDto={selectedTeam}
+                closeDialog={closeResultsDialog}
+                reloadTeams={props.reloadData}
+                resultConfirmationImageRequired={
+                    competitionData.properties.challengeConfig?.resultConfirmationImageRequired ??
+                    false
+                }
+                resultType={eventData.challengeResultType}
+                outsideOfChallengeTimespan={
+                    !currentlyInTimespan(
+                        competitionData.properties.challengeConfig?.startAt,
+                        competitionData.properties.challengeConfig?.endAt,
+                    )
+                }
+            />
+        </>
     )
 }
 

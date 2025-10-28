@@ -1,6 +1,5 @@
 package de.lambda9.ready2race.backend
 
-import de.lambda9.ready2race.backend.config.Config.Companion.parseConfig
 import de.lambda9.ready2race.backend.app.Env
 import de.lambda9.ready2race.backend.app.JEnv
 import de.lambda9.ready2race.backend.app.appuser.boundary.AppUserService
@@ -10,14 +9,15 @@ import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailError
 import de.lambda9.ready2race.backend.app.invoice.boundary.InvoiceService
 import de.lambda9.ready2race.backend.app.invoice.entity.ProduceInvoiceError
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVExportService
 import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVService
+import de.lambda9.ready2race.backend.app.webDAV.boundary.WebDAVImportService
 import de.lambda9.ready2race.backend.app.webDAV.entity.WebDAVError
+import de.lambda9.ready2race.backend.config.Config.Companion.parseConfig
 import de.lambda9.ready2race.backend.database.initializeDatabase
 import de.lambda9.ready2race.backend.plugins.*
 import de.lambda9.ready2race.backend.schedule.DynamicIntervalJobState
 import de.lambda9.ready2race.backend.schedule.Scheduler
-import de.lambda9.tailwind.core.KIO.Companion.unsafeRunSync
-import de.lambda9.tailwind.core.extensions.exit.getOrThrow
 import de.lambda9.tailwind.core.extensions.kio.recoverDefault
 import io.github.cdimascio.dotenv.dotenv
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -99,7 +99,7 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
             }*/
 
             scheduleDynamic("Export next file to WebDAV Server", 10.seconds) {
-                WebDAVService.exportNext(env)
+                WebDAVExportService.exportNext(env)
                     .map { DynamicIntervalJobState.Processed }
                     .recoverDefault { error ->
                         when (error) {
@@ -110,20 +110,27 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                                 logger.warn { error.message }
                                 DynamicIntervalJobState.Processed
                             }
-                            is WebDAVError.FileNotFound ->{
+
+                            is WebDAVError.FileNotFound -> {
                                 logger.warn { "Error on exporting file. ExportId: ${error.exportId}; ReferencedFileId: ${error.referenceId}" }
                                 DynamicIntervalJobState.Processed
                             }
+
                             is WebDAVError.CannotTransferFile -> {
                                 logger.warn { "Third party error on WebDAV Export ${error.exportId}: ${error.errorMsg}" }
                                 DynamicIntervalJobState.Processed
                             }
-                            WebDAVError.Unexpected -> {
+
+                            is WebDAVError.Unexpected -> {
                                 logger.warn { "An unexpected error has occurred on export" }
                                 DynamicIntervalJobState.Processed
                             }
                         }
                     }
+            }
+
+            scheduleDynamic("Import next file from WebDAV Server", 10.seconds) {
+                WebDAVImportService.importNext(env)
             }
 
             scheduleFixed("Delete expired session tokens", 5.minutes) {
@@ -150,13 +157,13 @@ private fun CoroutineScope.scheduleJobs(env: JEnv) = with(Scheduler(env)) {
                 }
             }
 
-            scheduleFixed("Delete expired captchas", 5.minutes){
-                CaptchaService.deleteExpired().map{
+            scheduleFixed("Delete expired captchas", 5.minutes) {
+                CaptchaService.deleteExpired().map {
                     logger.info { "${"expired captchas".count(it)} deleted" }
                 }
             }
 
-            logger.info { "Scheduling done."}
+            logger.info { "Scheduling done." }
         }
     }
 }

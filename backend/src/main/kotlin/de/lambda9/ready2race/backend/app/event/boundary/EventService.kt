@@ -2,30 +2,24 @@ package de.lambda9.ready2race.backend.app.event.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
-import de.lambda9.ready2race.backend.app.event.control.EventRepo
-import de.lambda9.ready2race.backend.app.event.control.eventDto
-import de.lambda9.ready2race.backend.app.event.control.eventPublicDto
-import de.lambda9.ready2race.backend.app.event.control.toRecord
+import de.lambda9.ready2race.backend.app.event.control.*
 import de.lambda9.ready2race.backend.app.event.entity.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
-import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.kio.discard
 import de.lambda9.ready2race.backend.kio.onFalseFail
+import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
-import de.lambda9.tailwind.core.extensions.kio.failIf
-import de.lambda9.tailwind.core.extensions.kio.onNullFail
-import de.lambda9.tailwind.core.extensions.kio.orDie
-import de.lambda9.tailwind.core.extensions.kio.traverse
+import de.lambda9.tailwind.core.extensions.kio.*
 import java.time.LocalDateTime
 import java.util.*
 
 object EventService {
 
     fun addEvent(
-        request: EventRequest,
+        request: CreateEventRequest,
         userId: UUID,
     ): App<Nothing, ApiResponse.Created> = KIO.comprehension {
         val record = !request.toRecord(userId)
@@ -73,12 +67,19 @@ object EventService {
         event.eventDto(scope, user?.club).map { ApiResponse.Dto(it) }
     }
 
+    // challenge_event can not be updated - this would have too many consequences for an event
     fun updateEvent(
-        request: EventRequest,
+        request: UpdateEventRequest,
         userId: UUID,
         eventId: UUID,
-    ): App<EventError, ApiResponse.NoData> =
-        EventRepo.update(eventId) {
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+
+        val eventRecord = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
+
+        !KIO.failOn(eventRecord.challengeEvent == false && request.challengeResultType != null) { EventError.ChallengeResultTypeNotAllowed }
+        !KIO.failOn(eventRecord.challengeEvent == true && request.challengeResultType == null) { EventError.NoChallengeResultTypeProvided }
+
+        !EventRepo.update(eventRecord) {
             name = request.name
             description = request.description
             location = request.location
@@ -90,11 +91,14 @@ object EventService {
             paymentDueBy = request.paymentDueBy
             latePaymentDueBy = request.latePaymentDueBy
             mixedTeamTerm = request.mixedTeamTerm
+            challengeMatchResultType = request.challengeResultType?.name
+            selfSubmission = request.allowSelfSubmission
             updatedBy = userId
             updatedAt = LocalDateTime.now()
         }.orDie()
-            .onNullFail { EventError.NotFound }
-            .map { ApiResponse.NoData }
+
+        KIO.ok(ApiResponse.NoData)
+    }
 
     fun deleteEvent(
         id: UUID,
@@ -118,7 +122,7 @@ object EventService {
         id: UUID,
     ): App<EventError, Unit> = EventRepo.getPublished(id)
         .orDie()
-        .failIf({it != true}) { EventError.NotFound }
+        .failIf({ it != true }) { EventError.NotFound }
         .discard()
 
     fun getOpenForRegistrationType(
@@ -141,4 +145,17 @@ object EventService {
 
         KIO.ok(type)
     }
+
+    fun getEventsForExport(): App<Nothing, ApiResponse.ListDto<EventForExportDto>> =
+        EventRepo.getEventsForExport().orDie().andThen { list ->
+            list.traverse {
+                it.toDto()
+            }
+        }.map { ApiResponse.ListDto(it) }
+
+    fun checkIsChallengeEvent(
+        eventId: UUID,
+    ): App<EventError, Boolean> = EventRepo.isChallengeEvent(eventId)
+        .orDie()
+        .onNullFail { EventError.NotFound }
 }

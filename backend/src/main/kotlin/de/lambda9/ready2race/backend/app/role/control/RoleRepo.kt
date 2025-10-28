@@ -3,8 +3,11 @@ package de.lambda9.ready2race.backend.app.role.control
 import de.lambda9.ready2race.backend.app.role.entity.RoleWithPrivilegesSort
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.RoleWithPrivileges
+import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserHasRoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.RoleWithPrivilegesRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.APP_USER
+import de.lambda9.ready2race.backend.database.generated.tables.references.BANK_ACCOUNT
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE
 import de.lambda9.ready2race.backend.database.generated.tables.references.ROLE_WITH_PRIVILEGES
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -20,8 +23,15 @@ object RoleRepo {
     fun exists(id: UUID) = ROLE.exists { ID.eq(id) }
 
     fun create(record: RoleRecord) = ROLE.insertReturning(record) { ID }
+    fun create(records: Collection<RoleRecord>) = ROLE.insert(records)
 
     fun update(record: RoleRecord, f: RoleRecord.() -> Unit) = ROLE.update(record, f)
+
+    fun getAllIdsExceptStatic() = ROLE.select({ ID }) { STATIC.isFalse }
+
+    fun getAllExceptStaticAsJson() = ROLE.selectAsJson { STATIC.isFalse }
+
+    fun existsExceptStatic() = ROLE.exists { STATIC.isFalse }
 
     fun get(
         id: UUID,
@@ -60,4 +70,8 @@ object RoleRepo {
                 .fetch()
         }
     }
+
+    fun getOverlapIds(ids: List<UUID>) = ROLE.select({ ID }) { ID.`in`(ids) }
+
+    fun insertJsonData(data: String) = ROLE.insertJsonData(data)
 }

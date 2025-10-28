@@ -4,7 +4,12 @@ import de.lambda9.ready2race.backend.app.competitionProperties.entity.Competitio
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionPropertiesHasFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_PROPERTIES_HAS_FEE
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_ROUND
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.insertJsonData
+import de.lambda9.ready2race.backend.database.select
+import de.lambda9.ready2race.backend.database.selectAsJson
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.*
@@ -57,4 +62,11 @@ object CompetitionPropertiesHasFeeRepo {
                 )
             }
     }
+
+    fun getByPropertiesAsJson(ids: List<UUID>) =
+        COMPETITION_PROPERTIES_HAS_FEE.selectAsJson { COMPETITION_PROPERTIES.`in`(ids) }
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_PROPERTIES_HAS_FEE.select({ ID }) { ID.`in`(ids) }
+
+    fun insertJsonData(data: String) = COMPETITION_PROPERTIES_HAS_FEE.insertJsonData(data)
 }

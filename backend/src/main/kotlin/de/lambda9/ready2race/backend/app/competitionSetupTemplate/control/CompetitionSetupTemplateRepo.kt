@@ -5,9 +5,11 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.CompetitionSetupTemplate
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionSetupTemplateRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_CATEGORY
 import de.lambda9.ready2race.backend.database.generated.tables.references.COMPETITION_SETUP_TEMPLATE
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.*
 
 object CompetitionSetupTemplateRepo {
@@ -58,4 +60,14 @@ object CompetitionSetupTemplateRepo {
                 .fetch()
         }
     }
+
+    fun allIds() = COMPETITION_SETUP_TEMPLATE.select({ ID }) { DSL.trueCondition() }
+
+    fun create(records: Collection<CompetitionSetupTemplateRecord>) = COMPETITION_SETUP_TEMPLATE.insert(records)
+
+    fun getOverlapIds(ids: List<UUID>) = COMPETITION_SETUP_TEMPLATE.select({ ID }) { ID.`in`(ids) }
+
+    fun allAsJson() = COMPETITION_SETUP_TEMPLATE.selectAsJson()
+
+    fun insertJsonData(data: String) = COMPETITION_SETUP_TEMPLATE.insertJsonData(data)
 }

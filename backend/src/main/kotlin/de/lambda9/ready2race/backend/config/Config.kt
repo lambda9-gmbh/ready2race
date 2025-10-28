@@ -102,7 +102,8 @@ data class Config(
     data class WebDAV(
         val urlScheme: String,
         val host: String,
-        val path: String,
+        val path: String?,
+        val folderPath: String?,
         val authUser: String,
         val authPassword: String,
     )
@@ -158,7 +159,16 @@ data class Config(
 
                 val from = Smtp.From(name = name, address = address)
 
-                Smtp(host = host, port = port, user = user, password = password, strategy = strategy, from = from, replyTo = replyTo, localhost = localhost)
+                Smtp(
+                    host = host,
+                    port = port,
+                    user = user,
+                    password = password,
+                    strategy = strategy,
+                    from = from,
+                    replyTo = replyTo,
+                    localhost = localhost
+                )
             }
 
             val security = run {
@@ -178,12 +188,20 @@ data class Config(
                 val urlScheme = !optional("WEBDAV_URL_SCHEME")
                 val host = !optional("WEBDAV_HOST")
                 val path = !optional("WEBDAV_PATH")
+                val folderPath = !optional("WEBDAV_FOLDER_PATH")
                 val authUser = !optional("WEBDAV_AUTH_USER")
                 val authPassword = !optional("WEBDAV_AUTH_PASSWORD")
 
-                if (urlScheme != null && host != null && path != null && authUser != null && authPassword != null) {
-                    WebDAV(urlScheme = urlScheme, host = host, path = path, authUser = authUser, authPassword = authPassword)
-                } else if (urlScheme == null && host == null && path == null && authUser == null && authPassword == null) {
+                if (urlScheme != null && host != null && authUser != null && authPassword != null) {
+                    WebDAV(
+                        urlScheme = urlScheme,
+                        host = host,
+                        path = path,
+                        folderPath = folderPath,
+                        authUser = authUser,
+                        authPassword = authPassword
+                    )
+                } else if (urlScheme == null && host == null && authUser == null && authPassword == null && path == null && folderPath == null) {
                     null
                 } else {
                     !KIO.fail(
@@ -191,6 +209,7 @@ data class Config(
                             "WEBDAV_URL_SCHEME" to urlScheme,
                             "WEBDAV_HOST" to host,
                             "WEBDAV_PATH" to path,
+                            "WEBDAV_FOLDER_PATH" to folderPath,
                             "WEBDAV_AUTH_USER" to authUser,
                             "WEBDAV_AUTH_PASSWORD" to authPassword
                         ).partition { it.second != null }

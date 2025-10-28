@@ -30,6 +30,11 @@ object CompetitionTemplateService {
         request: CompetitionPropertiesRequest,
         userId: UUID,
     ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
+
+        !KIO.failOn(request.challengeConfig != null) {
+            CompetitionTemplateError.ChallengeConfigNotSupported
+        }
+
         val competitionTemplateId = !CompetitionTemplateRepo.create(
             LocalDateTime.now().let { now ->
                 CompetitionTemplateRecord(
@@ -50,7 +55,8 @@ object CompetitionTemplateService {
 
         !CompetitionPropertiesService.addCompetitionPropertiesReferences(
             namedParticipants = request.namedParticipants.map { it.toRecord(competitionPropertiesId) },
-            fees = request.fees.map { it.toRecord(competitionPropertiesId) }
+            fees = request.fees.map { it.toRecord(competitionPropertiesId) },
+            challengeConfig = null
         )
 
         KIO.ok(ApiResponse.Created(competitionTemplateId))
@@ -85,6 +91,10 @@ object CompetitionTemplateService {
         userId: UUID,
     ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
 
+        !KIO.failOn(request.challengeConfig != null) {
+            CompetitionTemplateError.ChallengeConfigNotSupported
+        }
+
         !CompetitionPropertiesService.checkRequestReferences(request)
 
         !CompetitionTemplateRepo.update(templateId) {
@@ -107,7 +117,9 @@ object CompetitionTemplateService {
         !CompetitionPropertiesService.updateCompetitionPropertiesReferences(
             competitionPropertiesId = competitionPropertiesId,
             namedParticipants = request.namedParticipants.map { it.toRecord(competitionPropertiesId) },
-            fees = request.fees.map { it.toRecord(competitionPropertiesId) })
+            fees = request.fees.map { it.toRecord(competitionPropertiesId) },
+            challengeConfig = null,
+        )
 
         noData
     }

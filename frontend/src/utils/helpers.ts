@@ -48,7 +48,7 @@ export const groupBy = <T, K>(list: T[], keyGetter: (v: T) => K): Map<K, T[]> =>
 
 export const adminId = '00000000-0000-0000-0000-000000000000'
 
-const eventRegistrationPossible = (from?: string, to?: string) => {
+export const currentlyInTimespan = (from?: string, to?: string) => {
     return (
         from !== undefined &&
         new Date(from) < new Date() &&
@@ -70,11 +70,11 @@ export const getRegistrationState = (
     }: RegistrationPeriodBoundary,
     lateAllowed = true,
 ): OpenForRegistrationType =>
-    eventRegistrationPossible(registrationAvailableFrom, registrationAvailableTo)
+    currentlyInTimespan(registrationAvailableFrom, registrationAvailableTo)
         ? 'REGULAR'
         : lateRegistrationAvailableTo &&
             lateAllowed &&
-            eventRegistrationPossible(registrationAvailableTo, lateRegistrationAvailableTo)
+            currentlyInTimespan(registrationAvailableTo, lateRegistrationAvailableTo)
           ? 'LATE'
           : 'CLOSED'
 

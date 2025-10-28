@@ -10,8 +10,12 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.CONTAC
 import de.lambda9.ready2race.backend.database.insertReturning
 import de.lambda9.ready2race.backend.database.metaSearch
 import de.lambda9.ready2race.backend.database.page
+import de.lambda9.ready2race.backend.database.select
 import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.ready2race.backend.database.update
+import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectAsJson
+import de.lambda9.ready2race.backend.database.insertJsonData
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
@@ -48,4 +52,11 @@ object ContactInformationRepo {
 
     fun update(id: UUID, f: ContactInformationRecord.() -> Unit) = CONTACT_INFORMATION.update(f) { ID.eq(id) }
 
+    fun getOverlapIds(ids: List<UUID>) = CONTACT_INFORMATION.select({ ID }) { ID.`in`(ids) }
+
+    fun create(records: List<ContactInformationRecord>) = CONTACT_INFORMATION.insert(records)
+
+    fun allAsJson() = CONTACT_INFORMATION.selectAsJson()
+
+    fun insertJsonData(data: String) = CONTACT_INFORMATION.insertJsonData(data)
 }
