@@ -15,7 +15,7 @@ import {
     produceInvoicesForEventRegistrations,
 } from '@api/sdk.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {createInvoiceGlobal} from '@authorization/privileges.ts'
+import {createInvoiceGlobal, readInvoiceGlobal} from '@authorization/privileges.ts'
 import CatererTransactionTable from '@components/caterertransaction/CatererTransactionTable.tsx'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {arrayOfNotNull, getRegistrationState} from '@utils/helpers.ts'
@@ -34,6 +34,7 @@ type InvoiceType = (typeof invoiceTypes)[number]
 const InvoicesTab = ({event, reloadEvent}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
+    const user = useUser()
     const {checkPrivilege} = useUser()
     const {confirmAction} = useConfirmation()
 
@@ -200,19 +201,21 @@ const InvoicesTab = ({event, reloadEvent}: Props) => {
                     ) : undefined
                 }
             />
-            <Box sx={{mt: 4}}>
-                <CatererTransactionTable
-                    {...catererTransactionAdministrationProps.table}
-                    title={t('catererTransaction.catererTransactions')}
-                    dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
-                        getEventCatererTransactions({
-                            signal,
-                            path: {eventId: event.id},
-                            query: {...params},
-                        })
-                    }
-                />
-            </Box>
+            {user.checkPrivilege(readInvoiceGlobal) && (
+                <Box sx={{mt: 4}}>
+                    <CatererTransactionTable
+                        {...catererTransactionAdministrationProps.table}
+                        title={t('catererTransaction.catererTransactions')}
+                        dataRequest={(signal: AbortSignal, params: PaginationParameters) =>
+                            getEventCatererTransactions({
+                                signal,
+                                path: {eventId: event.id},
+                                query: {...params},
+                            })
+                        }
+                    />
+                </Box>
+            )}
         </Stack>
     )
 }

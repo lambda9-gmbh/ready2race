@@ -120,7 +120,7 @@ fun Route.event() {
 
             get("/caterer-transactions") {
                 call.respondComprehension {
-                    !authenticate(Privilege.Action.READ, Privilege.Resource.INVOICE)
+                    !authenticate(Privilege.ReadInvoiceGlobal)
                     val eventId = !pathParam("eventId", uuid)
                     val params = !pagination<CatererTransactionViewSort>()
                     CatererService.pageByEventId(eventId, params)

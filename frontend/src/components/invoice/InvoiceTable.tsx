@@ -8,7 +8,7 @@ import {RequestResult} from '@hey-api/client-fetch'
 import {Check, Close, CreditCardOff, Download, Payment} from '@mui/icons-material'
 import {downloadInvoice, setInvoicePaid} from '@api/sdk.gen.ts'
 import {ReactNode, useRef} from 'react'
-import {Link, Tooltip} from '@mui/material'
+import {Box, Link, Tooltip} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
 import {format} from 'date-fns'
 import {updateInvoiceGlobal} from '@authorization/privileges.ts'
@@ -123,7 +123,7 @@ const InvoiceTable = (props: Props) => {
     ]
 
     return (
-        <>
+        <Box>
             <Link ref={downloadRef} display={'none'}></Link>
             <EntityTable
                 {...props}
@@ -134,7 +134,7 @@ const InvoiceTable = (props: Props) => {
                 columns={columns}
                 customEntityActions={customEntityActions}
             />
-        </>
+        </Box>
     )
 }
 
