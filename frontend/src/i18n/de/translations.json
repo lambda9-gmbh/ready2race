@@ -661,6 +661,7 @@
           "challenge": {
             "challengeResults": "Challenge Ergebnis",
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
+            "success": "Das Ergebnis wurde erfolgreich übermittelt.",
             "confirmTitle": "Bestätigung erforderlich",
             "confirmBody": "Das Ergebnis kann nach dem Einreichen nicht mehr geändert werden. Bitte stellen Sie sicher, dass das Ergebnis korrekt ist.",
             "confirm": "Ergebnis bestätigen",

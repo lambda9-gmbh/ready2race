@@ -1234,7 +1234,6 @@ object CompetitionExecutionService {
         clubId: UUID?,
         scope: Privilege.Scope
     ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
-        !EventService.checkIsChallengeEvent(eventId).onTrueFail { CompetitionExecutionError.IsChallengeEvent }
         val document = !CompetitionMatchTeamDocumentDataRepo.getDownload(documentId).orDie()
             .onNullFail { CompetitionExecutionError.ResultDocumentNotFound }
 

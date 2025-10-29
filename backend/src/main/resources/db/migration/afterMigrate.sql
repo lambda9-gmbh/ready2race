@@ -989,7 +989,8 @@ select cr.id          as competition_registration_id,
                 '{}') as participants,
        coalesce(array_agg(distinct sv) filter (where sv.id is not null),
                 '{}') as substitutions,
-       cd             as deregistration
+       cd             as deregistration,
+       rc             as rating_category
 from competition_registration cr
          left join competition_registration_team_participant crtp on cr.id = crtp.competition_registration_id
          left join club cl on cr.club = cl.id
@@ -997,7 +998,8 @@ from competition_registration cr
          left join competition_properties cp on co.id = cp.competition
          left join substitution_view sv on cr.id = sv.competition_registration_id
          left join competition_deregistration cd on cr.id = cd.competition_registration
-group by cr.id, cr.competition, cp.identifier, cp.name, co.event, cl.id, cl.name, cr.name, cd;
+         left join rating_category rc on cr.rating_category = rc.id
+group by cr.id, cr.competition, cp.identifier, cp.name, co.event, cl.id, cl.name, cr.name, cd, rc.id;
 
 
 create view participant_qr_assignment_view as

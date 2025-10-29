@@ -10,6 +10,7 @@ import de.lambda9.ready2race.backend.app.participantRequirement.control.toNamedP
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toRequirementDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.CheckedParticipantRequirement
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
+import de.lambda9.ready2race.backend.app.ratingcategory.control.toDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
@@ -17,6 +18,8 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.tailwind.core.KIO
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.collections.get
+import kotlin.text.get
 
 fun CompetitionRegistrationTeamRecord.toDto(
     requirementsForEvent: List<ParticipantRequirementForEventRecord>,
@@ -24,7 +27,7 @@ fun CompetitionRegistrationTeamRecord.toDto(
     challengeResultValue: Int?,
     challengeResultDocuments: Map<UUID, String>?
 ): App<Nothing, CompetitionRegistrationTeamDto> =
-    KIO.ok(
+    (ratingCategory?.toDto() ?: KIO.ok(null)).map { cat ->
         CompetitionRegistrationTeamDto(
             id = competitionRegistrationId!!,
             name = teamName,
@@ -50,8 +53,9 @@ fun CompetitionRegistrationTeamRecord.toDto(
                 .map { it.toRequirementDto() },
             challengeResultValue = challengeResultValue,
             challengeResultDocuments = challengeResultDocuments,
+            ratingCategory = cat,
         )
-    )
+    }
 
 fun CompetitionRegistrationTeamParticipantRecord.toParticipantForExecutionDto(
     clubId: UUID,

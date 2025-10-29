@@ -661,6 +661,7 @@
           "challenge": {
             "challengeResults": "Challenge result",
             "error": "An error has occurred when saving the results",
+            "success": "The challenge result was transmitted successfully.",
             "confirmTitle": "Confirmation required",
             "confirmBody": "The result can no longer be changed after submission. Please make sure the results are correct.",
             "confirm": "Confirm results",

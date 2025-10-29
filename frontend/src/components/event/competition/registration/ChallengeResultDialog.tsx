@@ -92,6 +92,7 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
         if (error) {
             feedback.error(t('event.competition.execution.results.challenge.error'))
         } else {
+            feedback.success(t('event.competition.execution.results.challenge.success'))
             props.reloadTeams()
             props.closeDialog()
         }

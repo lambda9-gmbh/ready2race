@@ -406,6 +406,7 @@ export type CompetitionRegistrationTeamDto = {
     challengeResultDocuments?: {
         [key: string]: string
     }
+    ratingCategory?: RatingCategoryDto
 }
 
 export type CompetitionRegistrationTeamLockedDto = {

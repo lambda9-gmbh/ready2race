@@ -321,7 +321,7 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                         },
                                     )
                                   : []
-                              return row.challengeResultValue ? (
+                              return (
                                   <Box
                                       sx={{
                                           display: 'flex',
@@ -331,61 +331,66 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                           justifyContent: 'center',
                                           alignItems: 'center',
                                       }}>
-                                      <Typography>
-                                          {row.challengeResultValue} {challengeResultTypeUnit}
-                                      </Typography>
-                                      {challengeResultDocuments.length > 0 && (
-                                          <SelectionMenu
-                                              keyLabel={'challenge-team-result-doc'}
-                                              buttonContent={<Download />}
-                                              onSelectItem={async (docId: string) => {
-                                                  const docName =
-                                                      row.challengeResultDocuments?.[docId]
-                                                  if (!docName) return
-                                                  void handleDownloadResultDocument(docId, docName)
-                                              }}
-                                              items={challengeResultDocuments.map(doc => ({
-                                                  id: doc.id,
-                                                  label: doc.fileName,
-                                              }))}
-                                              itemIcon={<DownloadIcon color={'primary'} />}
-                                              anchor={{
-                                                  button: {
-                                                      vertical: 'top',
-                                                      horizontal: 'right',
-                                                  },
-                                                  menu: {
-                                                      vertical: 'top',
-                                                      horizontal: 'right',
-                                                  },
-                                              }}
-                                          />
+                                      {row.challengeResultValue ? (
+                                          <>
+                                              <Typography variant={'body2'} color={'textSecondary'}>
+                                                  {row.ratingCategory?.name ?? ''}
+                                              </Typography>
+                                              <Typography>
+                                                  {row.challengeResultValue}{' '}
+                                                  {challengeResultTypeUnit}
+                                              </Typography>
+                                              {challengeResultDocuments.length > 0 && (
+                                                  <SelectionMenu
+                                                      keyLabel={'challenge-team-result-doc'}
+                                                      buttonContent={<Download />}
+                                                      onSelectItem={async (docId: string) => {
+                                                          const docName =
+                                                              row.challengeResultDocuments?.[docId]
+                                                          if (!docName) return
+                                                          void handleDownloadResultDocument(
+                                                              docId,
+                                                              docName,
+                                                          )
+                                                      }}
+                                                      items={challengeResultDocuments.map(doc => ({
+                                                          id: doc.id,
+                                                          label: doc.fileName,
+                                                      }))}
+                                                      itemIcon={<DownloadIcon color={'primary'} />}
+                                                      anchor={{
+                                                          button: {
+                                                              vertical: 'top',
+                                                              horizontal: 'right',
+                                                          },
+                                                          menu: {
+                                                              vertical: 'top',
+                                                              horizontal: 'right',
+                                                          },
+                                                      }}
+                                                  />
+                                              )}
+                                          </>
+                                      ) : resultSubmissionAllowed ? (
+                                          <>
+                                              <HtmlTooltip
+                                                  title={
+                                                      <Typography>
+                                                          {t(
+                                                              'event.competition.execution.results.challenge.submitResults',
+                                                          )}
+                                                      </Typography>
+                                                  }>
+                                                  <IconButton
+                                                      onClick={() => openResultsDialog(row)}>
+                                                      <Add />
+                                                  </IconButton>
+                                              </HtmlTooltip>
+                                          </>
+                                      ) : (
+                                          '-'
                                       )}
                                   </Box>
-                              ) : resultSubmissionAllowed ? (
-                                  <Box
-                                      sx={{
-                                          display: 'flex',
-                                          width: 1,
-                                          height: 1,
-                                          justifyContent: 'center',
-                                          alignItems: 'center',
-                                      }}>
-                                      <HtmlTooltip
-                                          title={
-                                              <Typography>
-                                                  {t(
-                                                      'event.competition.execution.results.challenge.submitResults',
-                                                  )}
-                                              </Typography>
-                                          }>
-                                          <IconButton onClick={() => openResultsDialog(row)}>
-                                              <Add />
-                                          </IconButton>
-                                      </HtmlTooltip>
-                                  </Box>
-                              ) : (
-                                  '-'
                               )
                           },
                       },
