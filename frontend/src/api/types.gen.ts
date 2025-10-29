@@ -1426,6 +1426,64 @@ export type Resource =
     | 'WEB_DAV'
     | 'RESULT'
 
+export type ResultChallengeClubDto = {
+    id: string
+    clubName: string
+    totalRank: number
+    totalResult: number
+    relativeRank: number
+    relativeResult: number
+    teams: Array<ResultChallengeClubTeamDto>
+}
+
+export type ResultChallengeClubNamedParticipantDto = {
+    id: string
+    name: string
+    participants: Array<ResultChallengeClubParticipantDto>
+}
+
+export type ResultChallengeClubParticipantDto = {
+    id: string
+    firstName: string
+    lastName: string
+    gender: Gender
+    year: number
+    external: boolean
+    externalClubName?: string
+}
+
+export type ResultChallengeClubTeamDto = {
+    competitionRegistrationId: string
+    competitionRegistrationName: string | null
+    result: number
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    namedParticipants: Array<ResultChallengeClubNamedParticipantDto>
+    ratingCategoryDto?: RatingCategoryDto
+}
+
+export type ResultChallengeParticipantDto = {
+    id: string
+    firstName: string
+    lastName: string
+    rank: number
+    result: number
+    clubId: string
+    clubName: string
+    teams: Array<ResultChallengeParticipantTeamDto>
+}
+
+export type ResultChallengeParticipantTeamDto = {
+    competitionRegistrationId: string
+    competitionRegistrationName: string | null
+    result: number
+    competitionId: string
+    competitionIdentifier: string
+    competitionName: string
+    ratingCategoryDto?: RatingCategoryDto
+}
+
 export type RoleDto = {
     id: string
     name: string
@@ -4842,6 +4900,87 @@ export type GetCompetitionsHavingResultsResponse = {
 }
 
 export type GetCompetitionsHavingResultsError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetChallengeClubResultsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Optional parameter to filter by competition
+         */
+        competition?: string
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Optional parameter to filter by rating category
+         */
+        ratingCategory?: string
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetChallengeClubResultsResponse = {
+    data: Array<ResultChallengeClubDto>
+    pagination: Pagination
+}
+
+export type GetChallengeClubResultsError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type GetChallengeParticipantResultsData = {
+    path: {
+        eventId: string
+    }
+    query?: {
+        /**
+         * Optional parameter to filter by competition
+         */
+        competition?: string
+        /**
+         * Page size for pagination
+         */
+        limit?: number
+        /**
+         * Result offset for pagination
+         */
+        offset?: number
+        /**
+         * Optional parameter to filter by rating category
+         */
+        ratingCategory?: string
+        /**
+         * Filter result with space-separated search terms for pagination
+         */
+        search?: string
+        /**
+         * Fields with direction (as JSON [{field: <field>, direction: ASC | DESC}, ...]) sorting result for pagination
+         */
+        sort?: string
+    }
+}
+
+export type GetChallengeParticipantResultsResponse = {
+    data: Array<ResultChallengeParticipantDto>
+    pagination: Pagination
+}
+
+export type GetChallengeParticipantResultsError =
     | BadRequestError
     | ApiError
     | UnprocessableEntityError

@@ -617,6 +617,12 @@ import type {
     GetCompetitionsHavingResultsData,
     GetCompetitionsHavingResultsError,
     GetCompetitionsHavingResultsResponse,
+    GetChallengeClubResultsData,
+    GetChallengeClubResultsError,
+    GetChallengeClubResultsResponse,
+    GetChallengeParticipantResultsData,
+    GetChallengeParticipantResultsError,
+    GetChallengeParticipantResultsResponse,
     GetEventsForExportError,
     GetEventsForExportResponse,
     ExportDataByWebDavData,
@@ -3174,6 +3180,32 @@ export const getCompetitionsHavingResults = <ThrowOnError extends boolean = fals
     >({
         ...options,
         url: '/results/event/{eventId}/competition',
+    })
+}
+
+export const getChallengeClubResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetChallengeClubResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetChallengeClubResultsResponse,
+        GetChallengeClubResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/results/event/{eventId}/challenge/clubs',
+    })
+}
+
+export const getChallengeParticipantResults = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetChallengeParticipantResultsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetChallengeParticipantResultsResponse,
+        GetChallengeParticipantResultsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/results/event/{eventId}/challenge/participants',
     })
 }
 

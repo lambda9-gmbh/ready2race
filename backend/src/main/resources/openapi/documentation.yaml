@@ -5605,6 +5605,106 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /results/event/{eventId}/challenge/clubs:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - name: competition
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional parameter to filter by competition
+        - name: ratingCategory
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional parameter to filter by rating category
+      operationId: getChallengeClubResults
+      responses:
+        200:
+          description: Challenge club results page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResultChallengeClubDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
+  /results/event/{eventId}/challenge/participants:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      parameters:
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/sort'
+        - $ref: '#/components/parameters/search'
+        - name: competition
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional parameter to filter by competition
+        - name: ratingCategory
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Optional parameter to filter by rating category
+      operationId: getChallengeParticipantResults
+      responses:
+        200:
+          description: Challenge participant results page successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - pagination
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResultChallengeParticipantDto'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/export:
     get:
       operationId: getEventsForExport
@@ -10162,6 +10262,172 @@ components:
         description:
           type: string
 
+    ResultChallengeClubDto:
+      type: object
+      required:
+        - id
+        - clubName
+        - totalRank
+        - totalResult
+        - relativeRank
+        - relativeResult
+        - teams
+      properties:
+        id:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        totalRank:
+          type: integer
+        totalResult:
+          type: integer
+        relativeRank:
+          type: integer
+        relativeResult:
+          type: integer
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultChallengeClubTeamDto'
+
+    ResultChallengeClubTeamDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - competitionRegistrationName
+        - result
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+        - namedParticipants
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+          nullable: true
+        result:
+          type: integer
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultChallengeClubNamedParticipantDto'
+        ratingCategoryDto:
+          $ref: '#/components/schemas/RatingCategoryDto'
+
+    ResultChallengeClubNamedParticipantDto:
+      type: object
+      required:
+        - id
+        - name
+        - participants
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultChallengeClubParticipantDto'
+
+    ResultChallengeClubParticipantDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - gender
+        - year
+        - external
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        year:
+          type: integer
+        external:
+          type: boolean
+        externalClubName:
+          type: string
+
+    ResultChallengeParticipantDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - rank
+        - result
+        - clubId
+        - clubName
+        - teams
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        rank:
+          type: integer
+        result:
+          type: integer
+        clubId:
+          type: string
+          format: uuid
+        clubName:
+          type: string
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultChallengeParticipantTeamDto'
+
+    ResultChallengeParticipantTeamDto:
+      type: object
+      required:
+        - competitionRegistrationId
+        - competitionRegistrationName
+        - result
+        - competitionId
+        - competitionIdentifier
+        - competitionName
+      properties:
+        competitionRegistrationId:
+          type: string
+          format: uuid
+        competitionRegistrationName:
+          type: string
+          nullable: true
+        result:
+          type: integer
+        competitionId:
+          type: string
+          format: uuid
+        competitionIdentifier:
+          type: string
+        competitionName:
+          type: string
+        ratingCategoryDto:
+          $ref: '#/components/schemas/RatingCategoryDto'
+
     MatchResultImportConfigRequest:
       type: object
       required:
@@ -10837,3 +11103,4 @@ components:
         replyTo:
           type: string
           format: email
+

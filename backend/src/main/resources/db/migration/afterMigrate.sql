@@ -1,5 +1,7 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists challenge_result_participant_view;
+drop view if exists challenge_result_team_view;
 drop view if exists competition_match_team_document_download;
 drop view if exists competition_match_team_result;
 drop view if exists event_for_export;
@@ -1203,3 +1205,51 @@ from competition_match_team_document cmtd
          join competition_match_team_document_data cmtdd on cmtd.id = cmtdd.competition_match_team_document_id
          join competition_match_team cmt on cmtd.competition_match_team_id = cmt.id
          join competition_registration cr on cmt.competition_registration = cr.id;
+
+create view challenge_result_team_view as
+select cr.id              as competition_registration_id,
+       cr.name            as competition_registration_name,
+       cmt.result_value   as team_result_value,
+       cr.rating_category as rating_category_id,
+       rc.name            as rating_category_name,
+       rc.description     as rating_category_description,
+       er.id              as event_registration_id,
+       er.event           as event_id,
+       er.club            as club_id,
+       c.name             as club_name,
+       cr.competition     as competition_id,
+       cp.identifier      as competition_identifier,
+       cp.name            as competition_name
+from competition_match_team cmt
+         join competition_registration cr on cr.id = cmt.competition_registration
+         join club c on c.id = cr.club
+         join competition_properties cp on cr.competition = cp.competition
+         join event_registration er on er.id = cr.event_registration
+         left join rating_category rc on rc.id = cr.rating_category
+;
+
+create view challenge_result_participant_view as
+select p.id,
+       p.firstname,
+       p.lastname,
+       cmt.result_value as team_result_value,
+       cr.id            as competition_registration_id,
+       cr.name          as competition_registration_name,
+       rc.id            as rating_category_id,
+       rc.name          as rating_category_name,
+       rc.description   as rating_category_description,
+       er.event         as event_id,
+       er.club          as club_id,
+       c.name           as club_name,
+       cr.competition   as competition_id,
+       cp.identifier    as competition_identifier,
+       cp.name          as competition_name
+from participant p
+         join competition_registration_named_participant crnp on crnp.participant = p.id
+         join competition_match_team cmt on cmt.competition_registration = crnp.competition_registration
+         join competition_registration cr on cr.id = cmt.competition_registration
+         join club c on c.id = cr.club
+         join competition_properties cp on cp.competition = cr.competition
+         join event_registration er on er.id = cr.event_registration
+         left join rating_category rc on rc.id = cr.rating_category
+;

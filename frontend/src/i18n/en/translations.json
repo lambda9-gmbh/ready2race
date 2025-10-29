@@ -1452,6 +1452,15 @@
     "liveMatches": {
       "liveMatches": "Currently running matches",
       "noMatches": "There are no matches currently taking place."
+    },
+    "clubRanking": {
+      "error": "Error loading club rankings",
+      "participants": "Participants"
+    },
+    "challengeTabs": {
+      "club": "Club",
+      "relative": "Relative",
+      "individual": "Individual"
     }
   },
   "webDAV": {
@@ -1566,7 +1575,7 @@
       "fromAddress": "From Address",
       "fromName": "From Name",
       "localhost": "Local Host",
-      "replyTo" : "Reply-To Address",
+      "replyTo": "Reply-To Address",
       "submit": "Save Configuration",
       "reset": "Reset Configuration",
       "confirmation": {

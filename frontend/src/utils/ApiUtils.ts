@@ -7,7 +7,7 @@ export type PaginationParameters = {
     search?: string
 }
 
-function toSnakeCase(value: string) {
+export function toSnakeCase(value: string) {
     if (value.length < 1) {
         return ''
     } else {
