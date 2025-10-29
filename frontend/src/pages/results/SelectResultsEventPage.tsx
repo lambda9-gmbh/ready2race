@@ -1,9 +1,10 @@
-import {Button, Stack, Typography} from '@mui/material'
+import {Box, Button, Stack, Typography} from '@mui/material'
 import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEvents} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import Throbber from '@components/Throbber.tsx'
 import {Link} from '@tanstack/react-router'
+import ResultsConfigurationTopBar from '@components/results/ResultsConfigurationTopBar.tsx'
 
 const SelectResultsEventPage = () => {
     const {t} = useTranslation()
@@ -19,28 +20,35 @@ const SelectResultsEventPage = () => {
     })
 
     return (
-        <Stack spacing={2} sx={{m: 4}}>
-            <Typography variant={'h4'} align={'center'}>
-                {t('event.events')}
-            </Typography>
-            {pending ? (
-                <Throbber />
-            ) : (
-                data?.data
-                    .sort((a, b) => (a.name > b.name ? 1 : -1))
-                    .map(event => (
-                        <Link
-                            key={event.id}
-                            to={'/results/event/$eventId'}
-                            params={{eventId: event.id}}
-                            style={{width: '100%'}}>
-                            <Button variant={'outlined'} fullWidth>
-                                {event.name}
-                            </Button>
-                        </Link>
-                    ))
-            )}
-        </Stack>
+        <Box>
+            <ResultsConfigurationTopBar showBackButton={false} />
+            <Stack spacing={2} sx={{m: 4}}>
+                <Typography variant={'h4'} align={'center'}>
+                    {t('event.events')}
+                </Typography>
+                {pending ? (
+                    <Throbber />
+                ) : (data?.data.length ?? 0) > 0 ? (
+                    data?.data
+                        .sort((a, b) => (a.name > b.name ? 1 : -1))
+                        .map(event => (
+                            <Link
+                                key={event.id}
+                                to={'/results/event/$eventId'}
+                                params={{eventId: event.id}}
+                                style={{width: '100%'}}>
+                                <Button variant={'outlined'} fullWidth>
+                                    {event.name}
+                                </Button>
+                            </Link>
+                        ))
+                ) : (
+                    <Typography sx={{textAlign: 'center'}}>
+                        {'[todo] No events available'}
+                    </Typography>
+                )}
+            </Stack>
+        </Box>
     )
 }
 export default SelectResultsEventPage

@@ -32,10 +32,12 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.createdResponse
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -82,9 +84,18 @@ object EventRegistrationService {
         }
     }
 
+    fun getEventRegistrationDocuments(
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.ListDto<EventRegistrationDocumentTypeDto>> =
+        EventRegistrationRepo.getEventRegistrationDocuments(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+            .map { ApiResponse.ListDto(it) }
+
     fun getEventRegistrationTemplate(
         eventId: UUID, clubId: UUID
     ): App<ServiceError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
+
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { EventRegistrationError.NoWizardInChallengeMode }
 
         val type = !EventService.getOpenForRegistrationType(eventId)
 
@@ -321,6 +332,10 @@ object EventRegistrationService {
                         "#$it"
                     }
 
+                !KIO.failOn(competition.ratingCategoryRequired && competitionRegistrationDto.ratingCategory == null) {
+                    EventRegistrationError.InvalidRegistration("Rating category not provided for a participant in a competition that requires a rating category.")
+                }
+                
                 val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                     CompetitionRegistrationRecord(
                         UUID.randomUUID(),
@@ -333,6 +348,7 @@ object EventRegistrationService {
                         now,
                         userId,
                         isLate = type == OpenForRegistrationType.LATE,
+                        ratingCategory = competitionRegistrationDto.ratingCategory
                     )
                 ).orDie()
 
@@ -388,6 +404,11 @@ object EventRegistrationService {
 
         competitionRegistrationDto.teams?.traverse { teamDto ->
             KIO.comprehension {
+
+                !KIO.failOn(competition.ratingCategoryRequired && teamDto.ratingCategory == null) {
+                    EventRegistrationError.InvalidRegistration("Rating category not provided for a team in a competition that requires a rating category.")
+                }
+
                 val name = count
                     ?.plus(1)
                     ?.let {
@@ -407,6 +428,7 @@ object EventRegistrationService {
                         now,
                         userId,
                         isLate = type == OpenForRegistrationType.LATE,
+                        ratingCategory = teamDto.ratingCategory
                     )
                 ).orDie()
 
@@ -637,19 +659,6 @@ object EventRegistrationService {
                 )
             }
     }
-
-    fun getResultDownloads(
-        eventIds: List<UUID>,
-    ): App<Nothing, List<File>> = EventRegistrationReportRepo.getDownloads(eventIds).orDie()
-        .map { records ->
-            records.map {
-                File(
-                    name = it.name!!,
-                    bytes = it.data!!,
-                )
-            }
-
-        }
 
     private fun generateResultDocument(
         eventId: UUID,

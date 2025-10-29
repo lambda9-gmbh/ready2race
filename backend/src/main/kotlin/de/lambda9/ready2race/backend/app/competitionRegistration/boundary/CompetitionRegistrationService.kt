@@ -5,10 +5,12 @@ import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.appuser.entity.AppUserNameDto
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competition.control.CompetitionRepo
+import de.lambda9.ready2race.backend.app.competition.entity.CompetitionError
 import de.lambda9.ready2race.backend.app.competitionExecution.boundary.CompetitionExecutionService
 import de.lambda9.ready2race.backend.app.competitionExecution.control.CompetitionMatchTeamResultRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasFeeRepo
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesHasNamedParticipantRepo
+import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.*
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.*
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
@@ -37,6 +39,7 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -182,11 +185,11 @@ object CompetitionRegistrationService {
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
         requestProperties: CompetitionRegistrationRequestProperties,
-    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Dto<CompetitionRegistrationDto>> = KIO.comprehension {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
 
-        val (type, ratingCategory) = when (requestProperties) {
+        val registrationType = when (requestProperties) {
             CompetitionRegistrationRequestProperties.None ->
                 !EventService.getOpenForRegistrationType(eventId).map {
                     when (it) {
@@ -195,12 +198,16 @@ object CompetitionRegistrationService {
                         OpenForRegistrationType.CLOSED -> null
                     }
                 }
-                    .onNullDie("Already validated: Either global permission with specified type or failed on own permission when closed") to null
+                    .onNullDie("Already validated: Either global permission with specified type or failed on own permission when closed")
 
-            is CompetitionRegistrationRequestProperties.Permitted -> requestProperties.registrationType to requestProperties.ratingCategory
+            is CompetitionRegistrationRequestProperties.Permitted -> requestProperties.registrationType
         }
 
-        val isLate = type == RegistrationInvoiceType.LATE
+        !CompetitionPropertiesRepo.getRatingCategoryRequired(competitionId).orDie()
+            .onNullFail { CompetitionError.CompetitionNotFound }
+            .andThen { KIO.failOn(it && request.ratingCategory == null) { CompetitionRegistrationError.RatingCategoryMissing } }
+
+        val isLate = registrationType == RegistrationInvoiceType.LATE
 
         val registrationId = !EventRegistrationRepo.findByEventAndClub(eventId, request.clubId).map { it?.id }.orDie()
             .onNullFail { CompetitionRegistrationError.EventRegistrationNotFound }
@@ -239,7 +246,7 @@ object CompetitionRegistrationService {
                 now,
                 user.id,
                 isLate = isLate,
-                ratingCategory = ratingCategory,
+                ratingCategory = request.ratingCategory,
             )
         ).orDie()
 
@@ -251,7 +258,9 @@ object CompetitionRegistrationService {
             insertOptionalFees(competitionId, it, competitionRegistrationId)
         }?.not()
 
-        ok(ApiResponse.Created(competitionRegistrationId))
+        val dto = !CompetitionRegistrationRepo.getForResponse(competitionRegistrationId).orDie()
+
+        ok(ApiResponse.Dto(dto!!))
     }
 
     fun update(
@@ -270,6 +279,10 @@ object CompetitionRegistrationService {
             !CompetitionRegistrationRepo.findByIdAndCompetitionId(competitionRegistrationId, competitionId).orDie()
                 .onNullFail { CompetitionRegistrationError.NotFound }
 
+        registration.ratingCategory = request.ratingCategory
+        registration.updatedAt = LocalDateTime.now()
+        registration.updatedBy = user.id!!
+
         when (requestProperties) {
             CompetitionRegistrationRequestProperties.None -> {
                 val type = !EventService.getOpenForRegistrationType(eventId)
@@ -279,11 +292,15 @@ object CompetitionRegistrationService {
 
             is CompetitionRegistrationRequestProperties.Permitted -> {
                 registration.isLate = requestProperties.registrationType == RegistrationInvoiceType.LATE
-                registration.ratingCategory = requestProperties.ratingCategory
-                registration.updatedAt = LocalDateTime.now()
-                registration.updatedBy = user.id!!
-                registration.update()
             }
+        }
+        registration.update()
+
+
+        if (request.ratingCategory == null) {
+            !CompetitionPropertiesRepo.getRatingCategoryRequired(competitionId).orDie()
+                .onNullFail { CompetitionError.CompetitionNotFound }
+                .onTrueFail { CompetitionRegistrationError.RatingCategoryMissing }
         }
 
         !CompetitionRegistrationNamedParticipantRepo.deleteAllByRegistrationId(registration.id).orDie()

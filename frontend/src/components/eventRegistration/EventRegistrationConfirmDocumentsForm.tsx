@@ -3,16 +3,15 @@ import {useTranslation} from 'react-i18next'
 import {EventRegistrationDocumentTypeDto} from '@api/types.gen.ts'
 import {useMemo, useRef} from 'react'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
-import {eventRegisterIndexRoute} from '@routes'
 import {useFeedback} from '@utils/hooks.ts'
 import {downloadDocument} from '@api/sdk.gen.ts'
 import {FileDownload} from '@mui/icons-material'
 
 export const EventRegistrationConfirmDocumentsForm = (props: {
+    eventId: string
     documentTypes: EventRegistrationDocumentTypeDto[]
 }) => {
     const {t} = useTranslation()
-    const {eventId} = eventRegisterIndexRoute.useParams()
     const feedback = useFeedback()
 
     const requiredDocs = useMemo(
@@ -30,7 +29,7 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
     const download = async (documentId: string, name: string) => {
         const {data, error} = await downloadDocument({
             path: {
-                eventId,
+                eventId: props.eventId,
                 eventDocumentId: documentId,
             },
         })
@@ -65,7 +64,7 @@ export const EventRegistrationConfirmDocumentsForm = (props: {
                             />
                             {type.description && <Typography>{type.description}</Typography>}
                             {type.files.map(f => (
-                                <Stack direction={'row'} alignItems={'center'}>
+                                <Stack key={f.id} direction={'row'} alignItems={'center'}>
                                     <Button
                                         startIcon={<FileDownload />}
                                         onClick={() => download(f.id, f.name)}

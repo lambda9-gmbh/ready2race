@@ -105,61 +105,76 @@ object EventRegistrationRepo {
 
     fun getRegistrationResult(eventId: UUID) = EVENT_REGISTRATION_RESULT_VIEW.selectOne { ID.eq(eventId) }
 
-    fun getEventRegistrationInfo(eventId: UUID, type: OpenForRegistrationType): JIO<EventRegistrationInfoDto?> = Jooq.query {
-
-        val eventDays = selectEventDaysForEventRegistrationInfo()
-
-        val competitionDays = selectCompetitionDaysForEventRegistrationInfo()
-
-        val fees = selectFeesForEventRegistrationInfo()
-
-        val namedParticipants = selectNamedParticipantsForEventRegistrationInfo()
+    fun getEventRegistrationDocuments(eventId: UUID): JIO<List<EventRegistrationDocumentTypeDto>?> = Jooq.query {
 
         val documents = selectDocumentsForEventRegistrationInfo()
 
         val documentTypes = selectDocumentTypesForEventRegistrationInfo(documents)
 
-        val competitionsSingle = selectCompetitionsForEventRegistrationInfo(
-            namedParticipants,
-            competitionDays,
-            fees,
-            COMPETITION_VIEW.TOTAL_COUNT.eq(1),
-            "competitionsSingle"
-        )
-
-        val competitionsTeam = selectCompetitionsForEventRegistrationInfo(
-            namedParticipants,
-            competitionDays,
-            fees,
-            COMPETITION_VIEW.TOTAL_COUNT.greaterThan(1),
-            "competitionTeam"
-        )
-
         select(
-            EVENT.NAME,
-            EVENT.DESCRIPTION,
-            EVENT.LOCATION,
-            eventDays,
-            documentTypes,
-            competitionsSingle,
-            competitionsTeam
+            documentTypes
         )
             .from(EVENT)
             .where(EVENT.ID.eq(eventId))
-            .fetch {
-                EventRegistrationInfoDto(
-                    type,
-                    it[EVENT.NAME]!!,
-                    it[EVENT.DESCRIPTION],
-                    it[EVENT.LOCATION],
-                    it[eventDays],
-                    it[documentTypes],
-                    it[competitionsSingle],
-                    it[competitionsTeam],
-                )
-            }.firstOrNull()
-
+            .fetchOne { it[documentTypes] }
     }
+
+    fun getEventRegistrationInfo(eventId: UUID, type: OpenForRegistrationType): JIO<EventRegistrationInfoDto?> =
+        Jooq.query {
+
+            val eventDays = selectEventDaysForEventRegistrationInfo()
+
+            val competitionDays = selectCompetitionDaysForEventRegistrationInfo()
+
+            val fees = selectFeesForEventRegistrationInfo()
+
+            val namedParticipants = selectNamedParticipantsForEventRegistrationInfo()
+
+            val documents = selectDocumentsForEventRegistrationInfo()
+
+            val documentTypes = selectDocumentTypesForEventRegistrationInfo(documents)
+
+            val competitionsSingle = selectCompetitionsForEventRegistrationInfo(
+                namedParticipants,
+                competitionDays,
+                fees,
+                COMPETITION_VIEW.TOTAL_COUNT.eq(1),
+                "competitionsSingle"
+            )
+
+            val competitionsTeam = selectCompetitionsForEventRegistrationInfo(
+                namedParticipants,
+                competitionDays,
+                fees,
+                COMPETITION_VIEW.TOTAL_COUNT.greaterThan(1),
+                "competitionTeam"
+            )
+
+            select(
+                EVENT.NAME,
+                EVENT.DESCRIPTION,
+                EVENT.LOCATION,
+                eventDays,
+                documentTypes,
+                competitionsSingle,
+                competitionsTeam
+            )
+                .from(EVENT)
+                .where(EVENT.ID.eq(eventId))
+                .fetch {
+                    EventRegistrationInfoDto(
+                        type,
+                        it[EVENT.NAME]!!,
+                        it[EVENT.DESCRIPTION],
+                        it[EVENT.LOCATION],
+                        it[eventDays],
+                        it[documentTypes],
+                        it[competitionsSingle],
+                        it[competitionsTeam],
+                    )
+                }.firstOrNull()
+
+        }
 
     enum class RegistrationFilter {
         REGULAR,
@@ -182,6 +197,7 @@ object EventRegistrationRepo {
                 it[COMPETITION_VIEW.ID]!!,
                 it[fees],
                 it[COMPETITION_REGISTRATION.IS_LATE]!!,
+                it[COMPETITION_REGISTRATION.RATING_CATEGORY],
             )
         }
 
@@ -198,6 +214,7 @@ object EventRegistrationRepo {
                 it[fees],
                 it[namedParticipants],
                 it[COMPETITION_REGISTRATION.IS_LATE]!!,
+                it[COMPETITION_REGISTRATION.RATING_CATEGORY],
             )
         }
 
@@ -249,7 +266,8 @@ object EventRegistrationRepo {
             val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
                 CompetitionRegistrationSingleUpsertDto(
                     it[COMPETITION_VIEW.ID]!!,
-                    it[fees]
+                    it[fees],
+                    it[COMPETITION_REGISTRATION.RATING_CATEGORY],
                 )
             }
 
@@ -266,7 +284,8 @@ object EventRegistrationRepo {
                     it[COMPETITION_REGISTRATION.ID]!!,
                     null,
                     it[fees],
-                    it[namedParticipants]
+                    it[namedParticipants],
+                    it[COMPETITION_REGISTRATION.RATING_CATEGORY],
                 )
             }
 
@@ -367,6 +386,7 @@ object EventRegistrationRepo {
         COMPETITION_VIEW.DESCRIPTION,
         COMPETITION_VIEW.CATEGORY_NAME,
         COMPETITION_VIEW.LATE_REGISTRATION_ALLOWED,
+        COMPETITION_VIEW.RATING_CATEGORY_REQUIRED,
         namedParticipants,
         fees,
         competitionDays,
@@ -389,6 +409,7 @@ object EventRegistrationRepo {
                     it[fees],
                     it[competitionDays],
                     it[COMPETITION_VIEW.LATE_REGISTRATION_ALLOWED]!!,
+                    it[COMPETITION_VIEW.RATING_CATEGORY_REQUIRED]!!,
                 )
             }
         }
@@ -521,6 +542,7 @@ object EventRegistrationRepo {
     ) = DSL.select(
         COMPETITION_REGISTRATION.ID,
         COMPETITION_REGISTRATION.IS_LATE,
+        COMPETITION_REGISTRATION.RATING_CATEGORY,
         fees,
         namedParticipants
     )
@@ -563,7 +585,8 @@ object EventRegistrationRepo {
     ) = DSL.select(
         COMPETITION_VIEW.ID,
         COMPETITION_REGISTRATION.IS_LATE,
-        fees
+        COMPETITION_REGISTRATION.RATING_CATEGORY,
+        fees,
     ).from(COMPETITION_VIEW)
         .join(COMPETITION_REGISTRATION).on(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION_VIEW.ID))
         .join(COMPETITION_REGISTRATION_NAMED_PARTICIPANT).on(
@@ -592,6 +615,5 @@ object EventRegistrationRepo {
         .where(COMPETITION_REGISTRATION_OPTIONAL_FEE.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
         .asMultiset("fees")
         .convertFrom { it.map { it[COMPETITION_REGISTRATION_OPTIONAL_FEE.FEE] } }
-
 
 }

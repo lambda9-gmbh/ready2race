@@ -1200,12 +1200,6 @@ paths:
           required: false
           schema:
             $ref: '#/components/schemas/RegistrationInvoiceType'
-        - in: query
-          name: ratingCategory
-          required: false
-          schema:
-            type: string
-            format: uuid
       requestBody:
         required: true
         content:
@@ -1213,8 +1207,11 @@ paths:
             schema:
               $ref: '#/components/schemas/CompetitionRegistrationTeamUpsertDto'
       responses:
-        201:
-          $ref: '#/components/responses/201'
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionRegistrationDto'
         400:
           $ref: '#/components/responses/400'
         401:
@@ -1735,6 +1732,30 @@ paths:
           $ref: '#/components/responses/403'
         404:
           $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/registrationDocuments:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    get:
+      operationId: getRegistrationDocuments
+      responses:
+        200:
+          description: Retrieved event registration documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventRegistrationDocumentTypeDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
   /event/{eventId}/eventDocument:
@@ -7042,6 +7063,7 @@ components:
         - fees
         - lateRegistrationAllowed
         - resultConfirmationImageRequired
+        - ratingCategoryRequired
       properties:
         identifier:
           type: string
@@ -7065,6 +7087,8 @@ components:
           type: boolean
         challengeConfig:
           $ref: '#/components/schemas/CompetitionChallengeConfigDto'
+        ratingCategoryRequired:
+          type: boolean
 
 
     NamedParticipantForCompetitionDto:
@@ -7143,6 +7167,7 @@ components:
         - namedParticipants
         - fees
         - lateRegistrationAllowed
+        - ratingCategoryRequired
       properties:
         identifier:
           type: string
@@ -7170,6 +7195,8 @@ components:
           format: uuid
         challengeConfig:
           $ref: '#/components/schemas/CompetitionChallengeConfigRequest'
+        ratingCategoryRequired:
+          type: boolean
 
 
     NamedParticipantForCompetitionRequestDto:
@@ -8399,12 +8426,15 @@ components:
             format: uuid
         lateRegistrationAllowed:
           type: boolean
+        ratingCategoryRequired:
+          type: boolean
       required:
         - id
         - name
         - identifier
         - days
         - lateRegistrationAllowed
+        - ratingCategoryRequired
 
     EventRegistrationNamedParticipantDto:
       type: object
@@ -8507,6 +8537,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantUpsertDto'
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - id
 
@@ -8571,6 +8604,9 @@ components:
           items:
             type: string
             format: uuid
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - competitionId
 
@@ -8620,6 +8656,9 @@ components:
             $ref: '#/components/schemas/CompetitionRegistrationNamedParticipantLockedDto'
         isLate:
           type: boolean
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - id
         - optionalFees
@@ -8668,6 +8707,9 @@ components:
             format: uuid
         isLate:
           type: boolean
+        ratingCategory:
+          type: string
+          format: uuid
       required:
         - competitionId
         - optionalFees

@@ -60,6 +60,7 @@
       "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
+      "requiredCheck": "You have to accept this to continue.",
       "selectFile": "Select file",
       "select": {
         "none": "None"
@@ -280,6 +281,11 @@
     "name": "Name",
     "description": "Description",
     "registerNow": "To Registration",
+    "registerHere": {
+      "1": " You can register for the whole event ",
+      "2": "here",
+      "3": "."
+    },
     "challengeEvent": {
       "challengeEvent": "Challenge mode",
       "explanation": "\"Challenge\" is an event mode where results of competitions are combined through the entire event. Teams can have a maximum of one result per competition and there will be no tournament trees.",
@@ -331,6 +337,7 @@
       "name": "Name",
       "description": "Description",
       "lateRegistrationAllowed": "Late registration allowed",
+      "ratingCategoryRequired": "Rating category required",
       "registrationCount": "Registrations",
       "shortName": "Short name",
       "challenge": {
@@ -349,7 +356,8 @@
           "part1": "For reuse in different events, ",
           "part2Link": "templates",
           "part3": " can be defined."
-        }
+        },
+        "registration": "You can register Teams for the individual competitions."
       },
       "category": {
         "category": "Category",
@@ -419,6 +427,9 @@
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
       "registration": {
+        "challenge": {
+          "includeResult": "Include result directly"
+        },
         "noEventRegistration": "No registration from your club has been made for this event yet.",
         "dialog": {
           "registrationType": {
@@ -834,6 +845,14 @@
       }
     },
     "registration": {
+      "initialize": {
+        "header": "Initialize registration",
+        "submit": "Initialize registration",
+        "info": {
+          "1": "To register teams for competitions, registration must be initialized once per event.",
+          "2": "The following documents were made available for this event."
+        }
+      },
       "registration": "Registration",
       "registrations": "Registrations",
       "addParticipant": "Add Participant",

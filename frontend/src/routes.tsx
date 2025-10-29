@@ -50,6 +50,7 @@ import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
 import SelectResultsEventPage from './pages/results/SelectResultsEventPage.tsx'
 import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
+import ResultsLayout from './layouts/ResultsLayout.tsx'
 import AdministrationPage from './pages/AdministrationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
@@ -447,6 +448,7 @@ export const invoicesRoute = createRoute({
 export const resultsRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'results',
+    component: () => <ResultsLayout />,
 })
 
 export const resultsIndexRoute = createRoute({

@@ -22,7 +22,6 @@ fun Route.ratingCategory() {
 
         get {
             call.respondComprehension {
-                !authenticate(Privilege.ReadEventGlobal)
                 val params = !pagination<RatingCategorySort>()
                 RatingCategoryService.page(params)
             }

@@ -51,17 +51,18 @@ const CompetitionPage = () => {
         navigate({from: competitionIndexRoute.fullPath, search: {tab}}).then()
     }
 
-    const {data: eventData, pending: eventPending} = useFetch(
-        signal => getEvent({signal, path: {eventId: eventId}}),
-        {
-            onResponse: ({error}) => {
-                if (error) {
-                    feedback.error(t('common.load.error.single', {entity: t('event.event')}))
-                }
-            },
-            deps: [eventId],
+    const {
+        data: eventData,
+        pending: eventPending,
+        reload: reloadEvent,
+    } = useFetch(signal => getEvent({signal, path: {eventId: eventId}}), {
+        onResponse: ({error}) => {
+            if (error) {
+                feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+            }
         },
-    )
+        deps: [eventId],
+    })
 
     const [reloadData, setReloadData] = useState(false)
 
@@ -348,11 +349,14 @@ const CompetitionPage = () => {
                             )}
                             {eventData.challengeEvent && (
                                 <Card sx={{p: 2, flex: 1}}>
-                                    <Typography variant={'overline'} gutterBottom>
-                                        {t(
-                                            'event.competition.challenge.resultConfirmationImageRequired',
-                                        )}
-                                    </Typography>
+                                    {competitionData.properties.challengeConfig
+                                        ?.resultConfirmationImageRequired && (
+                                        <Typography variant={'overline'} gutterBottom>
+                                            {t(
+                                                'event.competition.challenge.resultConfirmationImageRequired',
+                                            )}
+                                        </Typography>
+                                    )}
                                     {challengeTimespan && (
                                         <Typography>
                                             {format(
@@ -375,6 +379,7 @@ const CompetitionPage = () => {
                             <CompetitionRegistrations
                                 eventData={eventData}
                                 competitionData={competitionData}
+                                reloadEvent={reloadEvent}
                             />
                         </TabPanel>
                     )}

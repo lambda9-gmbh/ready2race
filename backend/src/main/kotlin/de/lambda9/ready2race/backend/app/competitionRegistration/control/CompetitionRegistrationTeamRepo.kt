@@ -30,6 +30,7 @@ object CompetitionRegistrationTeamRepo {
 
     private fun CompetitionRegistrationTeam.searchFields() = listOf(CLUB_NAME, TEAM_NAME)
 
+    fun get(competitionRegistrationId: UUID) = COMPETITION_REGISTRATION_TEAM.selectOne { COMPETITION_REGISTRATION_ID.eq(competitionRegistrationId) }
 
     fun teamCountForCompetition(
         competitionId: UUID,

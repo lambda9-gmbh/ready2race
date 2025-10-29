@@ -4,7 +4,6 @@ import {
     GridActionsCellItem,
     GridColDef,
     GridPaginationModel,
-    GridRenderCellParams,
     GridRowParams,
     GridSortModel,
     GridValidRowModel,
@@ -12,13 +11,13 @@ import {
 import {ReactNode, useMemo, useRef, useState} from 'react'
 import {paginationParameters, PaginationParameters} from '@utils/ApiUtils.ts'
 import {BaseEntityTableProps, EntityAction, PageResponse, PartialRequired} from '@utils/types.ts'
-import {Link, LinkComponentProps} from '@tanstack/react-router'
+import {LinkComponentProps, useNavigate} from '@tanstack/react-router'
 import {RequestResult} from '@hey-api/client-fetch'
 import {useTranslation} from 'react-i18next'
 import {useDebounce, useFeedback, useFetch} from '@utils/hooks.ts'
 import {useConfirmation} from '@contexts/confirmation/ConfirmationContext.ts'
 import {Alert, Box, Button, Stack, TextField, Typography, useTheme} from '@mui/material'
-import {Add, Delete, Edit, Input} from '@mui/icons-material'
+import {Add, Delete, Edit} from '@mui/icons-material'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {ApiError, Privilege, Resource} from '@api/types.gen.ts'
 
@@ -54,6 +53,7 @@ type ExtendedEntityTableProps<
     gridProps?: Partial<DataGridProps>
     withSearch?: boolean
     editableIf?: (entity: Entity) => boolean
+    creatable?: boolean
     hideEntityActions?: boolean
 } & (
     | {
@@ -178,6 +178,7 @@ const EntityTableInternal = <
     onDeleteError,
     deletableIf,
     editableIf,
+    creatable = true,
     hideEntityActions,
 }: EntityTableInternalProps<Entity, GetError, DeleteError>) => {
     const user = useUser()
@@ -185,29 +186,11 @@ const EntityTableInternal = <
     const feedback = useFeedback()
     const {confirmAction} = useConfirmation()
     const theme = useTheme()
+    const navigate = useNavigate()
 
     const [isDeletingRow, setIsDeletingRow] = useState(false)
 
     const cols: GridColDef<Entity>[] = [
-        ...(linkColumn
-            ? [
-                  {
-                      field: 'jumpTo',
-                      headerName: '',
-                      sortable: false,
-                      width: 80,
-                      renderCell: (params: GridRenderCellParams<Entity>) => (
-                          <Box display={'flex'} justifyContent={'center'} width={1}>
-                              <Link {...linkColumn(params.row)}>
-                                  <Box display={'flex'} alignItems={'center'}>
-                                      <Input />
-                                  </Box>
-                              </Link>
-                          </Box>
-                      ),
-                  },
-              ]
-            : []),
         ...columns.filter(c => !c.requiredPrivilege || user.checkPrivilege(c.requiredPrivilege)),
         ...(!hideEntityActions
             ? [
@@ -334,7 +317,7 @@ const EntityTableInternal = <
                         )}
                         <Stack direction={'row'} spacing={1}>
                             {customTableActions}
-                            {crud.create && options.entityCreate && (
+                            {crud.create && options.entityCreate && creatable && (
                                 <Button
                                     variant={'outlined'}
                                     startIcon={<Add />}
@@ -346,6 +329,9 @@ const EntityTableInternal = <
                     </Box>
                     <Box sx={{display: 'flex', flexDirection: 'column'}}>
                         <DataGrid
+                            onRowClick={
+                                linkColumn ? params => navigate(linkColumn(params.row)) : undefined
+                            }
                             isRowSelectable={() => false}
                             paginationMode="server"
                             pageSizeOptions={[
@@ -376,6 +362,9 @@ const EntityTableInternal = <
                                 },
                                 '& .MuiDataGrid-columnHeader': {
                                     backgroundColor: t => t.palette.primary.light,
+                                },
+                                '& .MuiDataGrid-row': {
+                                    cursor: linkColumn ? 'pointer' : 'default',
                                 },
                             }}
                             {...gridProps}

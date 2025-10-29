@@ -48,7 +48,8 @@ fun CompetitionViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comprehens
                         startAt = challengeStartAt!!,
                         endAt = challengeEndAt!!,
                     )
-                }
+                },
+                ratingCategoryRequired = ratingCategoryRequired!!
             ),
             registrationCount = registrationsCount ?: 0
         )
@@ -89,7 +90,8 @@ fun CompetitionForClubViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.com
                         startAt = challengeStartAt!!,
                         endAt = challengeEndAt!!,
                     )
-                }
+                },
+                ratingCategoryRequired = ratingCategoryRequired!!
             ),
             registrationCount = registrationsCount ?: 0
         )
@@ -130,7 +132,8 @@ fun CompetitionPublicViewRecord.toDto(): App<Nothing, CompetitionDto> = KIO.comp
                         startAt = challengeStartAt!!,
                         endAt = challengeEndAt!!,
                     )
-                }
+                },
+                ratingCategoryRequired = ratingCategoryRequired!!
             ),
             registrationCount = 0
         )

@@ -92,6 +92,7 @@ class CompetitionSetupTemplateServiceTest {
                 lateRegistrationAllowed = false,
                 setupTemplate = null,
                 challengeConfig = null,
+                ratingCategoryRequired = false,
             ),
             userId = SYSTEM_USER,
             eventId = event.id

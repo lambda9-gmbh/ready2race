@@ -60,6 +60,7 @@
       "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
+      "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
       "selectFile": "Datei auswählen",
       "select": {
         "none": "Keine"
@@ -280,6 +281,11 @@
     "name": "Name",
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
+    "registerHere": {
+      "1": " ",
+      "2": "Hier",
+      "3": " kannst du für die gesamte Veranstaltung melden."
+    },
     "challengeEvent": {
       "challengeEvent": "Challenge Modus",
       "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
@@ -331,6 +337,7 @@
       "name": "Name",
       "description": "Beschreibung",
       "lateRegistrationAllowed": "Nachmeldung erlaubt",
+      "ratingCategoryRequired": "Wertungskategorie erforderlich",
       "registrationCount": "Meldungen",
       "shortName": "Kurzname",
       "challenge": {
@@ -349,7 +356,8 @@
           "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
           "part2Link": "Vorlagen",
           "part3": " definiert werden."
-        }
+        },
+        "registration": "Für die einzelnen Wettkämpfe können Teams angemeldet werden."
       },
       "category": {
         "category": "Kategorie",
@@ -419,6 +427,9 @@
         "referenced": "{{entity}} konnte aufgrund von Verweisen in Wettkämpfen und/oder Vorlagen nicht gelöscht werden"
       },
       "registration": {
+        "challenge": {
+          "includeResult": "direkte Ergebniseingabe"
+        },
         "noEventRegistration": "Für diese Veranstaltung wurde von deinem Verein noch keine Meldung abgegeben.",
         "dialog": {
           "registrationType": {
@@ -834,6 +845,14 @@
       }
     },
     "registration": {
+      "initialize": {
+        "header": "Meldung initialisieren",
+        "submit": "Meldung initialisieren",
+        "info": {
+          "1": "Um Teams für Wettkämpfe zu melden, muss einmalig pro Veranstaltung die Meldung initialisiert werden.",
+          "2": "Für diese Veranstaltung wurden die folgenden Dokumente zur Verfügung gestellt."
+        }
+      },
       "registration": "Anmeldung",
       "registrations": "Anmeldungen",
       "addParticipant": "Mitglied hinzufügen",

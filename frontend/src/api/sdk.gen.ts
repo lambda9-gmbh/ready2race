@@ -196,6 +196,9 @@ import type {
     GetPossibleSubInsData,
     GetPossibleSubInsError,
     GetPossibleSubInsResponse,
+    GetRegistrationDocumentsData,
+    GetRegistrationDocumentsError,
+    GetRegistrationDocumentsResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -1397,6 +1400,19 @@ export const getPossibleSubIns = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/substitution/possibleSubIns/{participantId}',
+    })
+}
+
+export const getRegistrationDocuments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationDocumentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationDocumentsResponse,
+        GetRegistrationDocumentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationDocuments',
     })
 }
 

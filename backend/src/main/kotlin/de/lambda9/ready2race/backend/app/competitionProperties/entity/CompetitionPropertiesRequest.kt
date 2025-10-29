@@ -22,6 +22,7 @@ data class CompetitionPropertiesRequest(
     val lateRegistrationAllowed: Boolean,
     val setupTemplate: UUID?, // Only relevant for add/edit template and add competition
     val challengeConfig: CompetitionChallengeConfigRequest?,
+    val ratingCategoryRequired: Boolean,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -53,6 +54,7 @@ data class CompetitionPropertiesRequest(
                 lateRegistrationAllowed = true,
                 setupTemplate = UUID.randomUUID(),
                 challengeConfig = CompetitionChallengeConfigRequest.example,
+                ratingCategoryRequired = false,
             )
     }
 }

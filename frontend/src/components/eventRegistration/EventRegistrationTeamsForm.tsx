@@ -1,17 +1,9 @@
-import {
-    CheckboxButtonGroup,
-    useFieldArray,
-    useFormContext,
-    useWatch,
-} from 'react-hook-form-mui'
-import {Button, Chip, Divider, IconButton, Paper, Stack, Typography} from '@mui/material'
+import {CheckboxButtonGroup, useFieldArray, useFormContext, useWatch} from 'react-hook-form-mui'
+import {Box, Button, Chip, Divider, IconButton, Paper, Stack, Typography} from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {GroupAdd} from '@mui/icons-material'
 import {v4 as uuid} from 'uuid'
-import {
-    EventRegistrationCompetitionDto,
-    EventRegistrationNamedParticipantDto,
-} from '../../api'
+import {EventRegistrationCompetitionDto, EventRegistrationNamedParticipantDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
 import {useCallback, useMemo} from 'react'
@@ -19,8 +11,10 @@ import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamPar
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
 import {
     EventRegistrationFormData,
-    EventRegistrationParticipantFormData
-} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
+    EventRegistrationParticipantFormData,
+} from '../../pages/eventRegistration/EventRegistrationCreatePage.tsx'
+import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
+import {useEventRegistration} from '@contexts/eventRegistration/EventRegistrationContext.ts'
 
 const TeamInput = (props: {
     competition: EventRegistrationCompetitionDto
@@ -31,6 +25,7 @@ const TeamInput = (props: {
     locked: boolean
 }) => {
     const {t} = useTranslation()
+    const {ratingCategories} = useEventRegistration()
 
     const getFilteredParticipants = useCallback(
         (namedParticipant: EventRegistrationNamedParticipantDto) => {
@@ -49,6 +44,21 @@ const TeamInput = (props: {
         },
         [props.participants],
     )
+
+    const ratingCategoryOptions = [
+        ...(props.competition.ratingCategoryRequired
+            ? []
+            : [
+                  {
+                      id: 'none',
+                      label: t('common.form.select.none'),
+                  },
+              ]),
+        ...ratingCategories.map(rc => ({
+            id: rc.id,
+            label: rc.name,
+        })),
+    ]
 
     return (
         <Paper sx={{p: 2}} elevation={2}>
@@ -98,7 +108,21 @@ const TeamInput = (props: {
                         row
                     />
                 )}
-                <IconButton sx={{alignSelf: 'end'}} disabled={props.locked} onClick={() => props.onRemove(props.teamIndex)}>
+                {ratingCategories.length > 0 && (
+                    <Box sx={{ml: 2, my: 1, maxWidth: 300}}>
+                        <FormInputSelect
+                            name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.ratingCategory`}
+                            options={ratingCategoryOptions}
+                            required
+                            label={t('event.competition.registration.ratingCategory')}
+                        />
+                    </Box>
+                )}
+
+                <IconButton
+                    sx={{alignSelf: 'end'}}
+                    disabled={props.locked}
+                    onClick={() => props.onRemove(props.teamIndex)}>
                     <DeleteIcon />
                 </IconButton>
             </Stack>
@@ -166,7 +190,14 @@ const EventRegistrationTeamsForm = (props: {
                 <Button
                     disabled={props.isLate && !props.competition.lateRegistrationAllowed}
                     onClick={() => {
-                        append({id: uuid(), namedParticipants: [], optionalFees: [], locked: false, isLate: props.isLate})
+                        append({
+                            id: uuid(),
+                            namedParticipants: [],
+                            optionalFees: [],
+                            locked: false,
+                            isLate: props.isLate,
+                            ratingCategory: props.competition.ratingCategoryRequired ? '' : 'none',
+                        })
                     }}>
                     <GroupAdd />
                 </Button>

@@ -9,6 +9,7 @@ data class CompetitionRegistrationTeamUpsertDto(
     val clubId: UUID?,
     val optionalFees: List<UUID>?,
     val namedParticipants: List<CompetitionRegistrationNamedParticipantUpsertDto>,
+    val ratingCategory: UUID?,
 ) : Validatable {
     override fun validate(): ValidationResult = ValidationResult.Valid
 
@@ -19,6 +20,7 @@ data class CompetitionRegistrationTeamUpsertDto(
                 clubId = UUID.randomUUID(),
                 optionalFees = emptyList(),
                 namedParticipants = emptyList(),
+                ratingCategory = UUID.randomUUID(),
             )
     }
 }

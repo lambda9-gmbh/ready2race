@@ -42,10 +42,8 @@ fun Route.competitionRegistration() {
                     Privilege.Scope.OWN -> CompetitionRegistrationRequestProperties.None
                     Privilege.Scope.GLOBAL -> {
                         val registrationType = !queryParam("registrationType", enum<RegistrationInvoiceType>())
-                        val ratingCategory = !optionalQueryParam("ratingCategory", uuid)
                         CompetitionRegistrationRequestProperties.Permitted(
                             registrationType = registrationType,
-                            ratingCategory = ratingCategory,
                         )
                     }
                 }
@@ -68,10 +66,8 @@ fun Route.competitionRegistration() {
                         Privilege.Scope.OWN -> CompetitionRegistrationRequestProperties.None
                         Privilege.Scope.GLOBAL -> {
                             val registrationType = !queryParam("registrationType", enum<RegistrationInvoiceType>())
-                            val ratingCategory = !optionalQueryParam("ratingCategory", uuid)
                             CompetitionRegistrationRequestProperties.Permitted(
                                 registrationType = registrationType,
-                                ratingCategory = ratingCategory,
                             )
                         }
                     }

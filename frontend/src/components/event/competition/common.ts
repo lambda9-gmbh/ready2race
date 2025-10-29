@@ -27,6 +27,7 @@ export type CompetitionForm = {
     }[]
     setupTemplate: AutocompleteOption
     lateRegistrationAllowed: boolean
+    ratingCategoryRequired: boolean
     challengeConfirmationImage: boolean
     challengeStartAt: string
     challengeEndAt: string
@@ -42,6 +43,7 @@ export const competitionFormDefaultValues: CompetitionForm = {
     fees: [],
     setupTemplate: null,
     lateRegistrationAllowed: false,
+    ratingCategoryRequired: false,
     challengeConfirmationImage: false,
     challengeStartAt: '',
     challengeEndAt: '',
@@ -72,6 +74,7 @@ export function mapCompetitionFormToCompetitionPropertiesRequest(
         })),
         setupTemplate: !isChallengeEvent ? takeIfNotEmpty(formData.setupTemplate?.id) : undefined,
         lateRegistrationAllowed: formData.lateRegistrationAllowed,
+        ratingCategoryRequired: formData.ratingCategoryRequired,
         challengeConfig: isChallengeEvent
             ? {
                   resultConfirmationImageRequired: formData.challengeConfirmationImage,
@@ -118,6 +121,7 @@ export function mapCompetitionPropertiesToCompetitionForm(
               }
             : null,
         lateRegistrationAllowed: dto.lateRegistrationAllowed,
+        ratingCategoryRequired: dto.ratingCategoryRequired,
         challengeConfirmationImage: dto.challengeConfig
             ? dto.challengeConfig.resultConfirmationImageRequired
             : false,

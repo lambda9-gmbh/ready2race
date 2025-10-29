@@ -303,6 +303,7 @@ export type CompetitionPropertiesDto = {
     fees: Array<FeeForCompetitionDto>
     lateRegistrationAllowed: boolean
     challengeConfig?: CompetitionChallengeConfigDto
+    ratingCategoryRequired: boolean
 }
 
 export type CompetitionPropertiesRequest = {
@@ -316,6 +317,7 @@ export type CompetitionPropertiesRequest = {
     lateRegistrationAllowed: boolean
     setupTemplate?: string
     challengeConfig?: CompetitionChallengeConfigRequest
+    ratingCategoryRequired: boolean
 }
 
 export type CompetitionRegistrationDto = {
@@ -371,11 +373,13 @@ export type CompetitionRegistrationSingleLockedDto = {
     competitionId: string
     optionalFees: Array<string>
     isLate: boolean
+    ratingCategory?: string
 }
 
 export type CompetitionRegistrationSingleUpsertDto = {
     competitionId: string
     optionalFees?: Array<string>
+    ratingCategory?: string
 }
 
 export type CompetitionRegistrationsWithoutTeamNumberDto = {
@@ -409,6 +413,7 @@ export type CompetitionRegistrationTeamLockedDto = {
     optionalFees: Array<string>
     namedParticipants: Array<CompetitionRegistrationNamedParticipantLockedDto>
     isLate: boolean
+    ratingCategory?: string
 }
 
 export type CompetitionRegistrationTeamNamedParticipantDto = {
@@ -423,6 +428,7 @@ export type CompetitionRegistrationTeamUpsertDto = {
     clubId?: string
     optionalFees?: Array<string>
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
+    ratingCategory?: string
 }
 
 export type CompetitionRegistrationUpsertDto = {
@@ -737,6 +743,7 @@ export type EventRegistrationCompetitionDto = {
     fees?: Array<EventRegistrationFeeDto>
     days: Array<string>
     lateRegistrationAllowed: boolean
+    ratingCategoryRequired: boolean
 }
 
 export type EventRegistrationDayDto = {
@@ -2592,12 +2599,11 @@ export type AddCompetitionRegistrationData = {
         eventId: string
     }
     query?: {
-        ratingCategory?: string
         registrationType?: RegistrationInvoiceType
     }
 }
 
-export type AddCompetitionRegistrationResponse = string
+export type AddCompetitionRegistrationResponse = CompetitionRegistrationDto
 
 export type AddCompetitionRegistrationError = BadRequestError | ApiError | UnprocessableEntityError
 
@@ -2867,6 +2873,16 @@ export type GetPossibleSubInsData = {
 export type GetPossibleSubInsResponse = PossibleSubstitutionsForParticipantDto
 
 export type GetPossibleSubInsError = BadRequestError | ApiError
+
+export type GetRegistrationDocumentsData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRegistrationDocumentsResponse = Array<EventRegistrationDocumentTypeDto>
+
+export type GetRegistrationDocumentsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type AddDocumentsData = {
     body: {

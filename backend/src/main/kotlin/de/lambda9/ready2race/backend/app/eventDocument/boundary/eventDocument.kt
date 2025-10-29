@@ -3,6 +3,7 @@ package de.lambda9.ready2race.backend.app.eventDocument.boundary
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentRequest
 import de.lambda9.ready2race.backend.app.eventDocument.entity.EventDocumentViewSort
+import de.lambda9.ready2race.backend.app.eventRegistration.boundary.EventRegistrationService
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.file.File
@@ -15,6 +16,14 @@ import io.ktor.utils.io.*
 import java.util.*
 
 fun Route.eventDocument() {
+
+    get("/registrationDocuments") {
+        call.respondComprehension {
+            val eventId = !pathParam("eventId", uuid)
+            EventRegistrationService.getEventRegistrationDocuments(eventId)
+        }
+    }
+
     route("/eventDocument") {
 
         post {
@@ -78,8 +87,9 @@ fun Route.eventDocument() {
         get {
             call.respondComprehension {
                 !authenticate(Privilege.ReadEventGlobal)
+                val eventId = !pathParam("eventId", uuid)
                 val params = !pagination<EventDocumentViewSort>()
-                EventDocumentService.page(params)
+                EventDocumentService.pageForEvent(eventId, params)
             }
         }
 

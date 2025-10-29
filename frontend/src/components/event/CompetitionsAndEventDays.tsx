@@ -6,7 +6,7 @@ import EventDayTable from '@components/event/eventDay/EventDayTable.tsx'
 import EventDayDialog from '@components/event/eventDay/EventDayDialog.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {CompetitionDto, EventDayDto} from '@api/types.gen.ts'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {Stack} from '@mui/material'
 
@@ -30,8 +30,8 @@ const CompetitionsAndEventDays = (props: Props) => {
             <CompetitionTable
                 {...competitionAdministrationProps.table}
                 title={t('event.competition.competitions')}
-                hints={
-                    user.checkPrivilege(updateEventGlobal)
+                hints={[
+                    ...(user.checkPrivilege(updateEventGlobal)
                         ? [
                               <>
                                   {t('event.competition.tableHint.templates.part1')}
@@ -52,8 +52,15 @@ const CompetitionsAndEventDays = (props: Props) => {
                                   {t('event.competition.tableHint.competitionComponents.part3')}
                               </>,
                           ]
-                        : undefined
-                }
+                        : []),
+                    ...(user.loggedIn && user.clubId
+                        ? [
+                              <>
+                                  <Trans i18nKey={'event.competition.tableHint.registration'} />
+                              </>,
+                          ]
+                        : []),
+                ]}
             />
             <CompetitionDialog
                 {...competitionAdministrationProps.dialog}
