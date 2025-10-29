@@ -200,7 +200,7 @@ object EventRegistrationRepo {
                 it[fees],
                 it[namedParticipants],
                 it[COMPETITION_REGISTRATION.IS_LATE]!!,
-                it[COMPETITION_REGISTRATION.RATING_CATEGORY]!!,
+                it[COMPETITION_REGISTRATION.RATING_CATEGORY],
             )
         }
 
@@ -271,7 +271,7 @@ object EventRegistrationRepo {
                     null,
                     it[fees],
                     it[namedParticipants],
-                    it[COMPETITION_REGISTRATION.RATING_CATEGORY]!!,
+                    it[COMPETITION_REGISTRATION.RATING_CATEGORY],
                 )
             }
 
