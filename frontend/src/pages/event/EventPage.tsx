@@ -285,15 +285,24 @@ const EventPage = () => {
                                         </List>
                                     </Box>
                                 </Card>
-                                {(user.checkPrivilege(readEventGlobal) || data.published) && (
-                                    <Card sx={{p: 2}}>
-                                        <Button
-                                            variant={'outlined'}
-                                            onClick={handleResultsDownload}>
-                                            <Trans i18nKey={'event.results.download'} />
+                                <Card sx={{p: 2}}>
+                                    <Link
+                                        to={'/results/event/$eventId'}
+                                        params={{eventId: data.id}}>
+                                        <Button variant={'outlined'}>
+                                            <Trans i18nKey={'event.toResults'} />
                                         </Button>
-                                    </Card>
-                                )}
+                                    </Link>
+                                    {(user.checkPrivilege(readEventGlobal) || data.published) &&
+                                        !data.challengeEvent && (
+                                            <Button
+                                                variant={'outlined'}
+                                                onClick={handleResultsDownload}
+                                                sx={{ml: 2}}>
+                                                <Trans i18nKey={'event.results.download'} />
+                                            </Button>
+                                        )}
+                                </Card>
                                 {user.checkPrivilege(readEventGlobal) && !data.challengeEvent && (
                                     <Card sx={{p: 2}}>
                                         <Typography variant="h6" sx={{mb: 1}}>

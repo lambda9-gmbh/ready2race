@@ -308,6 +308,7 @@
     "location": "Location",
     "mixedTeamTerm": "Term for club-mixed teams",
     "upcoming": "Upcoming events",
+    "toResults": "Go to result view",
     "registrationAvailable": {
       "timespan": "Registration period",
       "timespanFrom": "Registration period start",
