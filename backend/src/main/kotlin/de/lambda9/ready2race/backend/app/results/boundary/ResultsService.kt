@@ -7,11 +7,12 @@ import de.lambda9.ready2race.backend.app.competitionExecution.boundary.Competiti
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
+import de.lambda9.ready2race.backend.app.results.control.ChallengeResultParticipantViewRepo
+import de.lambda9.ready2race.backend.app.results.control.ChallengeResultTeamViewRepo
 import de.lambda9.ready2race.backend.app.results.control.ResultsRepo
 import de.lambda9.ready2race.backend.app.results.control.toDto
-import de.lambda9.ready2race.backend.app.results.entity.CompetitionChoiceDto
-import de.lambda9.ready2race.backend.app.results.entity.CompetitionHavingResultsSort
-import de.lambda9.ready2race.backend.app.results.entity.EventResultData
+import de.lambda9.ready2race.backend.app.results.entity.*
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
@@ -49,6 +50,253 @@ object ResultsService {
 
         ResultsRepo.pageCompetitionsHavingResults(eventId, params).orDie().pageResponse { it.toDto() }
     }
+
+    fun pageChallengeClubs(
+        eventId: UUID,
+        params: PaginationParameters<ResultsChallengeClubSort>,
+        publishedOnly: Boolean,
+        competition: UUID?,
+        ratingCategory: UUID?,
+    ): App<ServiceError, ApiResponse.Page<ResultChallengeClubDto, ResultsChallengeClubSort>> = KIO.comprehension {
+
+        if (publishedOnly) {
+            !EventService.checkEventPublished(eventId)
+        } else {
+            !EventService.checkEventExisting(eventId)
+        }
+
+        val allTeams = !ChallengeResultTeamViewRepo.get(eventId, competition, ratingCategory).orDie()
+
+        // Get all participants for the teams
+        val registrationIds = allTeams.mapNotNull { it.competitionRegistrationId }
+        val allParticipants = !ChallengeResultTeamViewRepo.getParticipantsByRegistrations(registrationIds).orDie()
+
+        // Group teams by club
+        val clubGroups = allTeams.groupBy { it.clubId!! to it.clubName!! }
+
+        // Calculate rankings for each club
+        val clubDtos = clubGroups.map { (clubInfo, teams) ->
+            val (clubId, clubName) = clubInfo
+
+            // Calculate total result (sum of all team result values)
+            val totalResult = teams.sumOf { it.teamResultValue ?: 0 }
+            val teamCount = teams.size
+
+            // Calculate relative result (average per team)
+            val relativeResult = if (teamCount > 0) totalResult / teamCount else 0
+
+            // Build team DTOs
+            val teamDtos = teams.map { team ->
+                val teamParticipants = allParticipants.filter { it.teamId == team.competitionRegistrationId }
+
+                // Group participants by named participant (role)
+                val namedParticipantDtos = teamParticipants
+                    .groupBy { it.roleId!! to it.role!! }
+                    .map { (roleInfo, participants) ->
+                        val (roleId, roleName) = roleInfo
+                        ResultChallengeClubDto.ResultChallengeClubNamedParticipantDto(
+                            id = roleId,
+                            name = roleName,
+                            participants = participants.map { p ->
+                                ResultChallengeClubDto.ResultChallengeClubParticipantDto(
+                                    id = p.participantId!!,
+                                    firstName = p.firstname!!,
+                                    lastName = p.lastname!!,
+                                    gender = p.gender!!,
+                                    year = p.year!!,
+                                    external = p.external ?: false,
+                                    externalClubName = p.externalClubName
+                                )
+                            }
+                        )
+                    }
+
+                ResultChallengeClubDto.ResultChallengeClubTeamDto(
+                    competitionRegistrationId = team.competitionRegistrationId!!,
+                    competitionRegistrationName = team.competitionRegistrationName,
+                    result = team.teamResultValue ?: 0,
+                    competitionId = team.competitionId!!,
+                    competitionIdentifier = team.competitionIdentifier!!,
+                    competitionName = team.competitionName!!,
+                    namedParticipants = namedParticipantDtos,
+                    ratingCategoryDto = team.ratingCategoryId?.let {
+                        RatingCategoryDto(
+                            id = team.ratingCategoryId!!,
+                            name = team.ratingCategoryName!!,
+                            description = team.ratingCategoryDescription
+                        )
+                    }
+                )
+            }
+
+            ResultChallengeClubDto(
+                id = clubId,
+                clubName = clubName,
+                totalRank = 0, // Will be calculated after sorting
+                totalResult = totalResult,
+                relativeRank = 0, // Will be calculated after sorting
+                relativeResult = relativeResult,
+                teams = teamDtos
+            )
+        }
+
+        // Sort by total result (descending) to calculate total ranks
+        val sortedByTotal = clubDtos.sortedByDescending { it.totalResult }
+        val withTotalRanks = sortedByTotal.mapIndexed { index, dto ->
+            dto.copy(totalRank = index + 1)
+        }
+
+        // Sort by relative result (descending) to calculate relative ranks
+        val sortedByRelative = withTotalRanks.sortedByDescending { it.relativeResult }
+        val withAllRanks = sortedByRelative.mapIndexed { index, dto ->
+            dto.copy(relativeRank = index + 1)
+        }
+
+        // Apply fake pagination
+        val allClubs = withAllRanks
+
+        // Search (if provided)
+        val searchedClubs = params.search?.takeIf { it.isNotBlank() }?.let { searchText ->
+            val searchTokens = searchText.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+            if (searchTokens.isEmpty()) return@let allClubs
+
+            allClubs.filter { club ->
+                val haystack = club.clubName.lowercase()
+                searchTokens.all { token -> haystack.contains(token) }
+            }
+        } ?: allClubs
+
+        // Sort (if provided)
+        val sortedClubs = params.sort?.let { orders ->
+            val comparator = orders
+                .map {
+                    if (it.direction == de.lambda9.ready2race.backend.pagination.Direction.ASC) it.field.comparator() else it.field.comparator()
+                        .reversed()
+                }
+                .reduce { acc, comparator -> acc.thenComparing(comparator) }
+
+            searchedClubs.sortedWith(comparator)
+        } ?: searchedClubs
+
+        // Pagination
+        val offsetClubs = params.offset?.let { sortedClubs.drop(it) } ?: sortedClubs
+        val limitedClubs = params.limit?.let { offsetClubs.take(it) } ?: offsetClubs
+
+        KIO.ok(
+            ApiResponse.Page(
+                data = limitedClubs,
+                pagination = params.toPagination(allClubs.size)
+            )
+        )
+    }
+
+    fun pageChallengeParticipants(
+        eventId: UUID,
+        params: PaginationParameters<ResultsChallengeParticipantSort>,
+        publishedOnly: Boolean,
+        competition: UUID?,
+        ratingCategory: UUID?,
+    ): App<ServiceError, ApiResponse.Page<ResultChallengeParticipantDto, ResultsChallengeParticipantSort>> =
+        KIO.comprehension {
+
+            if (publishedOnly) {
+                !EventService.checkEventPublished(eventId)
+            } else {
+                !EventService.checkEventExisting(eventId)
+            }
+
+            val allParticipantResults =
+                !ChallengeResultParticipantViewRepo.get(eventId, competition, ratingCategory).orDie()
+
+            // Group results by participant
+            val participantGroups = allParticipantResults.groupBy { it.id!! to (it.firstname!! to it.lastname!!) }
+
+            // Calculate rankings for each participant
+            val participantDtos = participantGroups.map { (participantInfo, results) ->
+                val (participantId, names) = participantInfo
+                val (firstName, lastName) = names
+
+                // Sum up all team results for this participant
+                val totalResult = results.sumOf { it.teamResultValue ?: 0 }
+
+                // Get club info (should be same for all results)
+                val clubId = results.first().clubId!!
+                val clubName = results.first().clubName!!
+
+                // Build team DTOs
+                val teamDtos = results.map { result ->
+                    ResultChallengeParticipantDto.ResultChallengeParticipantTeamDto(
+                        competitionRegistrationId = result.competitionRegistrationId!!,
+                        competitionRegistrationName = result.competitionRegistrationName,
+                        result = result.teamResultValue ?: 0,
+                        competitionId = result.competitionId!!,
+                        competitionIdentifier = result.competitionIdentifier!!,
+                        competitionName = result.competitionName!!,
+                        ratingCategoryDto = result.ratingCategoryId?.let {
+                            RatingCategoryDto(
+                                id = result.ratingCategoryId!!,
+                                name = result.ratingCategoryName!!,
+                                description = result.ratingCategoryDescription
+                            )
+                        }
+                    )
+                }
+
+                ResultChallengeParticipantDto(
+                    id = participantId,
+                    firstName = firstName,
+                    lastName = lastName,
+                    rank = 0, // Will be calculated after sorting
+                    result = totalResult,
+                    clubId = clubId,
+                    clubName = clubName,
+                    teams = teamDtos
+                )
+            }
+
+            // Sort by result (descending) to calculate ranks
+            val sortedByResult = participantDtos.sortedByDescending { it.result }
+            val withRanks = sortedByResult.mapIndexed { index, dto ->
+                dto.copy(rank = index + 1)
+            }
+
+            val allParticipants = withRanks
+
+            // Search (if provided)
+            val searchedParticipants = params.search?.takeIf { it.isNotBlank() }?.let { searchText ->
+                val searchTokens = searchText.trim().lowercase().split(Regex("\\s+")).filter { it.isNotBlank() }
+                if (searchTokens.isEmpty()) return@let allParticipants
+
+                allParticipants.filter { participant ->
+                    val haystack =
+                        "${participant.firstName} ${participant.lastName} ${participant.clubName}".lowercase()
+                    searchTokens.all { token -> haystack.contains(token) }
+                }
+            } ?: allParticipants
+
+            // Sort (if provided)
+            val sortedParticipants = params.sort?.let { orders ->
+                val comparator = orders
+                    .map {
+                        if (it.direction == de.lambda9.ready2race.backend.pagination.Direction.ASC) it.field.comparator() else it.field.comparator()
+                            .reversed()
+                    }
+                    .reduce { acc, comparator -> acc.thenComparing(comparator) }
+
+                searchedParticipants.sortedWith(comparator)
+            } ?: searchedParticipants
+
+            // Pagination
+            val offsetParticipants = params.offset?.let { sortedParticipants.drop(it) } ?: sortedParticipants
+            val limitedParticipants = params.limit?.let { offsetParticipants.take(it) } ?: offsetParticipants
+
+            KIO.ok(
+                ApiResponse.Page(
+                    data = limitedParticipants,
+                    pagination = params.toPagination(allParticipants.size)
+                )
+            )
+        }
 
     fun downloadResultsDocument(
         eventId: UUID,

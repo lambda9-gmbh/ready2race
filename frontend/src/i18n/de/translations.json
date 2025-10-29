@@ -1456,6 +1456,14 @@
     "liveMatches": {
       "liveMatches": "Laufende Partien",
       "noMatches": "Momentan finden keine Partien statt."
+    },
+    "clubRanking": {
+      "error": "Fehler beim Laden der Vereinsrangliste"
+    },
+    "challengeTabs": {
+      "club": "Verein",
+      "relative": "Relativ",
+      "individual": "Individuell"
     }
   },
   "webDAV": {

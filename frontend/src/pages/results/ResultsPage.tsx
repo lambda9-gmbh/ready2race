@@ -1,5 +1,5 @@
 import MatchResults from '@components/results/MatchResults.tsx'
-import {Box, Divider, Stack, Tab, useMediaQuery, useTheme} from '@mui/material'
+import {Box, Divider, Tab, useMediaQuery, useTheme} from '@mui/material'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import {a11yProps} from '@utils/helpers.ts'
 import {useState} from 'react'
@@ -16,6 +16,7 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {getEvent} from '@api/sdk.gen.ts'
 import Throbber from '@components/Throbber.tsx'
 import ResultsConfigurationTopBar from '@components/results/ResultsConfigurationTopBar.tsx'
+import ResultsClubRanking from '@components/results/ResultsClubRanking.tsx'
 
 const RESULTS_TABS = ['latest-results', 'live', 'upcoming'] as const
 export type ResultsTab = (typeof RESULTS_TABS)[number]
@@ -74,59 +75,58 @@ const ResultsPage = () => {
                 showBackButton={true}
                 competitionSelected={competitionSelected !== null}
                 resetSelectedCompetition={() => setCompetitionSelected(null)}
+                title={eventData.name}
             />
             <Divider />
-            <Stack direction={'row'} sx={{alignItems: 'center'}}>
-                <Box sx={{flex: 1}}>
-                    {!eventData?.challengeEvent ? (
-                        <TabSelectionContainer
-                            activeTab={activeResultsTab}
-                            setActiveTab={switchResultsTab}>
-                            <Tab
-                                label={t('results.tabs.results')}
-                                icon={<EmojiEventsOutlinedIcon />}
-                                iconPosition={smallScreenLayout ? 'top' : 'start'}
-                                sx={{flex: 1}}
-                                {...resultsTabProps('latest-results')}
-                            />
-                            <Tab
-                                label={t('results.tabs.live')}
-                                icon={<CellTowerOutlinedIcon />}
-                                iconPosition={smallScreenLayout ? 'top' : 'start'}
-                                sx={{flex: 1}}
-                                {...resultsTabProps('live')}
-                            />
-                        </TabSelectionContainer>
-                    ) : (
-                        <TabSelectionContainer
-                            activeTab={activeChallengeTab}
-                            setActiveTab={switchChallengeTab}>
-                            <Tab
-                                label={'[todo] Club'}
-                                icon={<EmojiEventsOutlinedIcon />}
-                                iconPosition={smallScreenLayout ? 'top' : 'start'}
-                                sx={{flex: 1}}
-                                {...challengeTabProps('club')}
-                            />
-                            <Tab
-                                label={'[todo] Individual'}
-                                icon={<PersonIcon />}
-                                iconPosition={smallScreenLayout ? 'top' : 'start'}
-                                sx={{flex: 1}}
-                                {...challengeTabProps('individual')}
-                            />
-                            <Tab
-                                label={'[todo] Relative'}
-                                icon={<PercentIcon />}
-                                iconPosition={smallScreenLayout ? 'top' : 'start'}
-                                sx={{flex: 1}}
-                                {...challengeTabProps('relative')}
-                            />
-                        </TabSelectionContainer>
-                    )}
-                </Box>
-            </Stack>
-            {eventData.challengeEvent ? (
+            <Box sx={{mb: 2}}>
+                {!eventData?.challengeEvent ? (
+                    <TabSelectionContainer
+                        activeTab={activeResultsTab}
+                        setActiveTab={switchResultsTab}>
+                        <Tab
+                            label={t('results.tabs.results')}
+                            icon={<EmojiEventsOutlinedIcon />}
+                            iconPosition={smallScreenLayout ? 'top' : 'start'}
+                            sx={{flex: 1}}
+                            {...resultsTabProps('latest-results')}
+                        />
+                        <Tab
+                            label={t('results.tabs.live')}
+                            icon={<CellTowerOutlinedIcon />}
+                            iconPosition={smallScreenLayout ? 'top' : 'start'}
+                            sx={{flex: 1}}
+                            {...resultsTabProps('live')}
+                        />
+                    </TabSelectionContainer>
+                ) : (
+                    <TabSelectionContainer
+                        activeTab={activeChallengeTab}
+                        setActiveTab={switchChallengeTab}>
+                        <Tab
+                            label={t('results.challengeTabs.club')}
+                            icon={<EmojiEventsOutlinedIcon />}
+                            iconPosition={smallScreenLayout ? 'top' : 'start'}
+                            sx={{flex: 1}}
+                            {...challengeTabProps('club')}
+                        />
+                        <Tab
+                            label={t('results.challengeTabs.relative')}
+                            icon={<PercentIcon />}
+                            iconPosition={smallScreenLayout ? 'top' : 'start'}
+                            sx={{flex: 1}}
+                            {...challengeTabProps('relative')}
+                        />
+                        <Tab
+                            label={t('results.challengeTabs.individual')}
+                            icon={<PersonIcon />}
+                            iconPosition={smallScreenLayout ? 'top' : 'start'}
+                            sx={{flex: 1}}
+                            {...challengeTabProps('individual')}
+                        />
+                    </TabSelectionContainer>
+                )}
+            </Box>
+            {!eventData.challengeEvent ? (
                 <>
                     <TabPanel index={'latest-results'} activeTab={activeResultsTab}>
                         <MatchResults
@@ -142,17 +142,13 @@ const ResultsPage = () => {
             ) : (
                 <>
                     <TabPanel index={'club'} activeTab={activeChallengeTab}>
-                        <MatchResults
-                            eventId={eventId}
-                            competitionSelected={competitionSelected}
-                            setCompetitionSelected={setCompetitionSelected}
-                        />
-                    </TabPanel>
-                    <TabPanel index={'individual'} activeTab={activeChallengeTab}>
-                        <ResultsLiveMatches eventId={eventId} />
+                        <ResultsClubRanking eventData={eventData} totalRanking={true} />
                     </TabPanel>
                     <TabPanel index={'relative'} activeTab={activeChallengeTab}>
-                        <ResultsLiveMatches eventId={eventId} />
+                        <ResultsClubRanking eventData={eventData} totalRanking={false} />
+                    </TabPanel>
+                    <TabPanel index={'individual'} activeTab={activeChallengeTab}>
+                        {/*todo*/}
                     </TabPanel>
                 </>
             )}
