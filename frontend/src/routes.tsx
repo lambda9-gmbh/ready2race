@@ -12,6 +12,7 @@ import LoginPage from './pages/user/LoginPage.tsx'
 import {Action, Privilege, Resource, Scope} from './api'
 import {
     readInvoiceGlobal,
+    readSmtpConfigGlobal,
     readUserGlobal,
     updateEventGlobal,
     updateUserGlobal,
@@ -45,11 +46,12 @@ import AppLoginPage from './pages/app/AppLoginPage.tsx'
 import ForbiddenPage from './pages/app/ForbiddenPage.tsx'
 import AppFunctionSelectPage from './pages/app/AppFunctionSelectPage.tsx'
 import EventRegistrationPage from './pages/eventRegistration/EventRegistrationPage.tsx'
-import InvoicesPage from './pages/AdministrationPage.tsx'
+import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
 import SelectResultsEventPage from './pages/results/SelectResultsEventPage.tsx'
 import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
 import ResultsLayout from './layouts/ResultsLayout.tsx'
+import AdministrationPage from './pages/AdministrationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -365,6 +367,20 @@ export const clubsIndexRoute = createRoute({
     },
 })
 
+export const administrationRoute = createRoute({
+    getParentRoute: () => mainLayoutRoute,
+    path: 'administration',
+})
+
+export const administrationIndexRoute = createRoute({
+    getParentRoute: () => administrationRoute,
+    path: '/',
+    component: () => <AdministrationPage />,
+    beforeLoad: ({context, location}) => {
+        checkAuth(context, location, readSmtpConfigGlobal)
+    },
+})
+
 export const appRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: 'app',
@@ -467,6 +483,7 @@ const routeTree = rootRoute.addChildren([
         loginRoute,
         dashboardRoute,
         configurationRoute.addChildren([configurationIndexRoute]),
+        administrationRoute.addChildren([administrationIndexRoute]),
         eventsRoute.addChildren([
             eventsIndexRoute,
             eventRoute.addChildren([

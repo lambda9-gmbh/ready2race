@@ -11,6 +11,7 @@ import de.lambda9.ready2race.backend.app.competitionSetupTemplate.boundary.compe
 import de.lambda9.ready2race.backend.app.competitionTemplate.boundary.competitionTemplate
 import de.lambda9.ready2race.backend.app.contactInformation.boundary.contactInformation
 import de.lambda9.ready2race.backend.app.documentTemplate.boundary.documentTemplate
+import de.lambda9.ready2race.backend.app.email.boundary.email
 import de.lambda9.ready2race.backend.app.event.boundary.event
 import de.lambda9.ready2race.backend.app.eventDocumentType.boundary.eventDocumentType
 import de.lambda9.ready2race.backend.app.eventInfo.boundary.eventInfo
@@ -60,6 +61,7 @@ fun Application.configureRouting() {
             matchResultImportConfig()
             results()
             webDAV()
+            email()
         }
     }
 }

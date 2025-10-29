@@ -26,6 +26,7 @@ sealed class Privilege(
         APP_CATERER,
         WEB_DAV,
         RESULT,
+        ADMINISTRATION,
     }
 
     enum class Scope(val level: Int) {
@@ -88,6 +89,9 @@ sealed class Privilege(
     data object UpdateResultOwn : Privilege(Action.UPDATE, Resource.RESULT, Scope.OWN)
     data object ReadResultGlobal : Privilege(Action.READ, Resource.RESULT, Scope.GLOBAL)
     data object ReadResultOwn : Privilege(Action.READ, Resource.RESULT, Scope.OWN)
+
+    data object UpdateSmtpConfigGlobal: Privilege(Action.UPDATE, Resource.ADMINISTRATION, Scope.GLOBAL)
+    data object ReadSmtpConfigGlobal: Privilege(Action.READ, Resource.ADMINISTRATION, Scope.GLOBAL)
 
     companion object {
         val entries get() = Privilege::class.sealedSubclasses.map { it.objectInstance!! }

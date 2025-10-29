@@ -17,7 +17,14 @@
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}.",
       "upload": {
-        "unsupportedType": "This file type is not supported."
+        "unsupportedType": "This file type is not supported.",
+        "FILE_ERROR": "File could not be read.",
+        "NO_HEADERS": "There are no valid columns in the given file.",
+        "SPREADSHEET_MALFORMED": "The given file is malformed and cannot be read.",
+        "COLUMN_UNKNOWN": "Could not find expected column '{{expected}}'.",
+        "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
+        "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
+        "UNPARSABLE_STRING": "Unparsable string value '{{value}}' in row {{row}}, column '{{column}}'"
       }
     },
     "organisation": "Organisation",
@@ -53,6 +60,7 @@
       "seconds": "Seconds",
       "optional": "Optional",
       "required": "Please fill in this field.",
+      "requiredCheck": "You have to accept this to continue.",
       "selectFile": "Select file",
       "select": {
         "none": "None"
@@ -185,7 +193,8 @@
       "config": "Configurations",
       "clubs": "Clubs",
       "myClub": "My Club",
-      "invoices": "Invoices"
+      "invoices": "Invoices",
+      "administration": "Administration"
     }
   },
   "dashboard": {
@@ -198,6 +207,29 @@
     "clubs": "Clubs",
     "participants": "Members",
     "participant": {
+      "import": "Import members",
+      "upload": {
+        "dialog": {
+          "error": {
+            "separatorTooLong": "Please provide a single character as csv-separator."
+          },
+          "separator": "Separator",
+          "cols": "Column names",
+          "col": {
+            "firstname": "First name",
+            "lastname": "Last name",
+            "year": "Year of Birth",
+            "gender": "Gender",
+            "external": "External club name"
+          },
+          "file": {
+            "missing": "Please provide a file.",
+            "change": "Change .csv file",
+            "choose": "Choose .csv file"
+          },
+          "submit": "Import members"
+        }
+      },
       "title": "Member",
       "name": "Name",
       "yearOfBirth": "Year of birth",
@@ -249,6 +281,11 @@
     "name": "Name",
     "description": "Description",
     "registerNow": "To Registration",
+    "registerHere": {
+      "1": " You can register for the whole event ",
+      "2": "here",
+      "3": "."
+    },
     "challengeEvent": {
       "challengeEvent": "Challenge mode",
       "explanation": "\"Challenge\" is an event mode where results of competitions are combined through the entire event. Teams can have a maximum of one result per competition and there will be no tournament trees.",
@@ -319,7 +356,8 @@
           "part1": "For reuse in different events, ",
           "part2Link": "templates",
           "part3": " can be defined."
-        }
+        },
+        "registration": "You can register Teams for the individual competitions."
       },
       "category": {
         "category": "Category",
@@ -608,12 +646,6 @@
             "XLS": "as XLS-File"
           },
           "error": {
-            "FILE_ERROR": "File could not be read.",
-            "NO_HEADERS": "There are no valid columns in the given file.",
-            "COLUMN_UNKNOWN": "Could not find expected column '{{expected}}'.",
-            "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
-            "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
-            "UNPARSABLE_STRING": "Unparsable string value '{{value}}' in row {{row}}, column '{{column}}'",
             "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
             "DUPLICATE_PLACES": "There are duplicate places among the teams",
             "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",
@@ -810,6 +842,14 @@
       }
     },
     "registration": {
+      "initialize": {
+        "header": "Initialize registration",
+        "submit": "Initialize registration",
+        "info": {
+          "1": "To register teams for competitions, registration must be initialized once per event.",
+          "2": "The following documents were made available for this event."
+        }
+      },
       "registration": "Registration",
       "registrations": "Registrations",
       "addParticipant": "Add Participant",
@@ -1512,6 +1552,29 @@
           "title": "Importing...",
           "body": "{{files}} / {{total}} imported."
         }
+      }
+    }
+  },
+  "administration": {
+    "smtp": {
+      "title": "SMTP Configuration",
+      "host": "SMTP Host",
+      "port": "SMTP Port",
+      "username": "SMTP Username",
+      "password": "SMTP Password",
+      "smtpStrategy": "SMTP Strategy",
+      "fromAddress": "From Address",
+      "fromName": "From Name",
+      "localhost": "Local Host",
+      "replyTo" : "Reply-To Address",
+      "submit": "Save Configuration",
+      "reset": "Reset Configuration",
+      "confirmation": {
+        "content": "Are you sure you want to change the SMTP configuration?"
+      },
+      "errors": {
+        "loading": "An error has occurred when loading the SMTP configuration.",
+        "submit": "An error has occurred when changing the SMTP configuration."
       }
     }
   }

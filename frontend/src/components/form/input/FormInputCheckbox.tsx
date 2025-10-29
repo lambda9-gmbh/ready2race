@@ -6,24 +6,19 @@ import {RefAttributes} from 'react'
 export type BaseFormInputProps = CheckboxElementProps &
     RefAttributes<HTMLDivElement> & {horizontal?: boolean; reverse?: boolean}
 
-export const FormInputCheckbox = (props: BaseFormInputProps) => {
+export const FormInputCheckbox = ({horizontal, reverse, label, sx, ...props}: BaseFormInputProps) => {
     const {t} = useTranslation()
 
     return (
-        <FormInputLabel
-            label={props.label}
-            required={true}
-            horizontal={props.horizontal}
-            reverse={props.reverse}>
+        <FormInputLabel label={label} required={true} horizontal={horizontal} reverse={reverse}>
             <CheckboxElement
                 {...props}
                 rules={{
                     ...props.rules,
                     ...(props.required &&
-                        !props.rules?.required && {required: t('common.form.required')}),
+                        !props.rules?.required && {required: t('common.form.requiredCheck')}),
                 }}
-                label={null}
-                sx={{width: 1}}
+                sx={{width: 1, ...sx}}
             />
         </FormInputLabel>
     )

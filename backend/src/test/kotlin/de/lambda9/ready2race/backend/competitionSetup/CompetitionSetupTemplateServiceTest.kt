@@ -74,6 +74,9 @@ class CompetitionSetupTemplateServiceTest {
                 latePaymentDueBy = null,
                 lateRegistrationAvailableTo = null,
                 mixedTeamTerm = null,
+                challengeEvent = false,
+                challengeResultType = null,
+                allowSelfSubmission = false,
             ),
             userId = SYSTEM_USER
         )
@@ -87,7 +90,8 @@ class CompetitionSetupTemplateServiceTest {
                 namedParticipants = emptyList(),
                 fees = emptyList(),
                 lateRegistrationAllowed = false,
-                setupTemplate = null
+                setupTemplate = null,
+                challengeConfig = null,
             ),
             userId = SYSTEM_USER,
             eventId = event.id

@@ -4,7 +4,7 @@ import {InputAdornment} from '@mui/material'
 import FormInputNumber from '@components/form/input/FormInputNumber.tsx'
 
 type FormInputSecondsProps = Omit<BaseFormInputProps, 'type'>
-export const FormInputSeconds = (props: FormInputSecondsProps) => {
+export const FormInputSeconds = ({sx, ...props}: FormInputSecondsProps) => {
     const {t} = useTranslation()
 
     return (
@@ -30,6 +30,7 @@ export const FormInputSeconds = (props: FormInputSecondsProps) => {
                           ),
                       },
             }}
+            sx={{...sx}}
         />
     )
 }

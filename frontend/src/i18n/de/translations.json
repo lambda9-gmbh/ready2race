@@ -17,7 +17,14 @@
       "unexpected": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.",
       "tooManyRequests": "Zu viele Versuche. Versuchen Sie es in {{val, relativetime(minute)}} erneut.",
       "upload": {
-        "unsupportedType": "Dieser Dateityp wird nicht unterstützt."
+        "unsupportedType": "Dieser Dateityp wird nicht unterstützt.",
+        "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
+        "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
+        "SPREADSHEET_MALFORMED": "Der Inhalt der Datei konnte nicht gelesen werden.",
+        "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
+        "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
+        "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
+        "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'"
       }
     },
     "organisation": "Organisation",
@@ -53,6 +60,7 @@
       "seconds": "Sekunden",
       "optional": "Optional",
       "required": "Bitte füllen Sie dieses Feld aus.",
+      "requiredCheck": "Zum Fortfahren muss dies akzeptiert werden.",
       "selectFile": "Datei auswählen",
       "select": {
         "none": "Keine"
@@ -185,7 +193,8 @@
       "config": "Konfigurationen",
       "clubs": "Vereine",
       "myClub": "Mein Verein",
-      "invoices": "Rechnungen"
+      "invoices": "Rechnungen",
+      "administration": "Administration"
     }
   },
   "dashboard": {
@@ -198,6 +207,29 @@
     "clubs": "Vereine",
     "participants": "Mitglieder",
     "participant": {
+      "import": "Mitglieder importieren",
+      "upload": {
+        "dialog": {
+          "error": {
+            "separatorTooLong": "Bitte geben Sie nur ein einzige Zeichen als CSV-Separator an."
+          },
+          "separator": "Separator",
+          "cols": "Spaltennamen",
+          "col": {
+            "firstname": "Vorname",
+            "lastname": "Nachname",
+            "year": "Geburtsjahr",
+            "gender": "Geschlecht",
+            "external": "Vereinszugehörigkeit"
+          },
+          "file": {
+            "missing": "Bitte wählen Sie eine Datei aus.",
+            "change": ".csv Datei ändern",
+            "choose": ".csv Datei auswählen"
+          },
+          "submit": "Mitglieder importieren"
+        }
+      },
       "title": "Mitglied",
       "name": "Name",
       "yearOfBirth": "Geburtsjahr",
@@ -249,6 +281,11 @@
     "name": "Name",
     "description": "Beschreibung",
     "registerNow": "Zur Meldung",
+    "registerHere": {
+      "1": " ",
+      "2": "Hier",
+      "3": " kannst du für die gesamte Veranstaltung melden."
+    },
     "challengeEvent": {
       "challengeEvent": "Challenge Modus",
       "explanation": "\"Challenge\" ist ein Veranstaltungsmodus, bei dem die Ergebnisse aus Wettbewerben über die gesamte Veranstaltung hinweg zusammengefasst werden. Teams können pro Wettbewerb maximal ein Ergebnis erzielen, und es gibt keine Turnierbäume.",
@@ -319,7 +356,8 @@
           "part1": "Zur Wiederverwendung in verschiedenen Veranstaltungen können ",
           "part2Link": "Vorlagen",
           "part3": " definiert werden."
-        }
+        },
+        "registration": "Für die einzelnen Wettkämpfe können Teams angemeldet werden."
       },
       "category": {
         "category": "Kategorie",
@@ -608,12 +646,6 @@
             "XLS": "als XLS-Datei"
           },
           "error": {
-            "FILE_ERROR": "Die Datei konnte nicht gelesen werden.",
-            "NO_HEADERS": "In der Datei wurden keine validen Spalten gefunden.",
-            "COLUMN_UNKNOWN": "Erwartete Spalte '{{expected}}' wurde nicht gefunden.",
-            "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
-            "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
-            "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'",
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
@@ -810,6 +842,14 @@
       }
     },
     "registration": {
+      "initialize": {
+        "header": "Meldung initialisieren",
+        "submit": "Meldung initialisieren",
+        "info": {
+          "1": "Um Teams für Wettkämpfe zu melden, muss einmalig pro Veranstaltung die Meldung initialisiert werden.",
+          "2": "Für diese Veranstaltung wurden die folgenden Dokumente zur Verfügung gestellt."
+        }
+      },
       "registration": "Anmeldung",
       "registrations": "Anmeldungen",
       "addParticipant": "Mitglied hinzufügen",
@@ -1332,14 +1372,14 @@
   },
   "qrParticipant": {
     "title": "Teilnehmer",
-    "noRight": "Du hast für diesen QR-Code-Typ keine Berechtigung.",
+    "noRight": "Sie haben für diesen QR-Code-Typ keine Berechtigung.",
     "loading": "Lade...",
     "noRequirements": "Keine Bedingungen mit CheckInApp vorhanden.",
     "enterArea": "Eintritt Wettkampfbereich",
     "leaveArea": "Austritt Wettkampfbereich",
     "removeAssignment": "QR-Code-Zuordnung entfernen",
     "removeAssignmentTitle": "Zuordnung entfernen",
-    "removeAssignmentConfirm": "Möchtest du die Zuordnung wirklich entfernen?",
+    "removeAssignmentConfirm": "Möchten Sie die Zuordnung wirklich entfernen?",
     "deleteError": "Fehler beim Löschen des QR-Codes.",
     "assignmentInfo": "Zuordnungsinformationen"
   },
@@ -1513,6 +1553,29 @@
           "title": "Wird importiert...",
           "body": "{{files}} / {{total}} Dateien importiert."
         }
+      }
+    }
+  },
+  "administration": {
+    "smtp": {
+      "title": "SMTP Konfiguration",
+      "host": "SMTP-Host",
+      "port": "SMTP-Port",
+      "username": "SMTP-Benutzername",
+      "password": "SMTP-Passwort",
+      "smtpStrategy": "SMTP-Strategie",
+      "fromAddress": "Absenderadresse",
+      "fromName": "Absendername",
+      "localhost": "Local Host",
+      "replyTo": "Antwortadresse",
+      "submit": "Konfiguration speichern",
+      "reset": "Konfiguration zurücksetzen",
+      "confirmation": {
+        "content": "Möchten Sie die SMTP-Konfiguration wirklich ändern?"
+      },
+      "errors": {
+        "loading": "Beim Laden der SMTP-Konfiguration ist ein Fehler aufgetreten.",
+        "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
       }
     }
   }

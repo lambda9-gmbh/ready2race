@@ -12,6 +12,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.tailwind.jooq.JIO
 import de.lambda9.tailwind.jooq.Jooq
+import org.jooq.impl.DSL
 import java.util.UUID
 
 object EventDocumentRepo {
@@ -24,23 +25,10 @@ object EventDocumentRepo {
 
     fun delete(id: UUID) = EVENT_DOCUMENT.delete { ID.eq(id) }
 
-    fun count(
-        search: String?
-    ): JIO<Int> = Jooq.query {
-        with(EVENT_DOCUMENT_VIEW) {
-            fetchCount(this, search.metaSearch(searchFields()))
-        }
-    }
-
-    fun page(
+    fun pageForEvent(
+        eventId: UUID,
         params: PaginationParameters<EventDocumentViewSort>,
-    ): JIO<List<EventDocumentViewRecord>> = Jooq.query {
-        with(EVENT_DOCUMENT_VIEW) {
-            selectFrom(this)
-                .page(params, searchFields())
-                .fetch()
-        }
-    }
+    ) = EVENT_DOCUMENT_VIEW.page(params, { searchFields() }) { EVENT.eq(eventId) }
 
     fun getDownload(id: UUID): JIO<EventDocumentDownloadRecord?> = EVENT_DOCUMENT_DOWNLOAD.selectOne { ID.eq(id) }
 

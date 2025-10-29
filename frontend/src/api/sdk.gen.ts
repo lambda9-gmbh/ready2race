@@ -196,6 +196,9 @@ import type {
     GetPossibleSubInsData,
     GetPossibleSubInsError,
     GetPossibleSubInsResponse,
+    GetRegistrationDocumentsData,
+    GetRegistrationDocumentsError,
+    GetRegistrationDocumentsResponse,
     AddDocumentsData,
     AddDocumentsError,
     AddDocumentsResponse,
@@ -280,6 +283,9 @@ import type {
     AddClubParticipantData,
     AddClubParticipantError,
     AddClubParticipantResponse,
+    ImportClubParticipantsData,
+    ImportClubParticipantsError,
+    ImportClubParticipantsResponse,
     GetClubParticipantData,
     GetClubParticipantError,
     GetClubParticipantResponse,
@@ -634,6 +640,13 @@ import type {
     DownloadMatchTeamResultDocumentData,
     DownloadMatchTeamResultDocumentError,
     DownloadMatchTeamResultDocumentResponse,
+    GetSmtpConfigError,
+    GetSmtpConfigResponse,
+    SetSmtpOverrideData,
+    SetSmtpOverrideError,
+    SetSmtpOverrideResponse,
+    DeleteSmtpOverrideError,
+    DeleteSmtpOverrideResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -1390,6 +1403,19 @@ export const getPossibleSubIns = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getRegistrationDocuments = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRegistrationDocumentsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRegistrationDocumentsResponse,
+        GetRegistrationDocumentsError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/registrationDocuments',
+    })
+}
+
 export const addDocuments = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<AddDocumentsData, ThrowOnError>,
 ) => {
@@ -1733,6 +1759,24 @@ export const addClubParticipant = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/club/{clubId}/participant',
+    })
+}
+
+export const importClubParticipants = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ImportClubParticipantsData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        ImportClubParticipantsResponse,
+        ImportClubParticipantsError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/club/{clubId}/participant/import',
     })
 }
 
@@ -3252,5 +3296,51 @@ export const downloadMatchTeamResultDocument = <ThrowOnError extends boolean = f
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}',
+    })
+}
+
+/**
+ * Get SMTP configuration
+ */
+export const getSmtpConfig = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<GetSmtpConfigResponse, GetSmtpConfigError, ThrowOnError>(
+        {
+            ...options,
+            url: '/smtp-override',
+        },
+    )
+}
+
+/**
+ * Set SMTP override configuration
+ */
+export const setSmtpOverride = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SetSmtpOverrideData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        SetSmtpOverrideResponse,
+        SetSmtpOverrideError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/smtp-override',
+    })
+}
+
+/**
+ * Delete SMTP override configuration
+ */
+export const deleteSmtpOverride = <ThrowOnError extends boolean = false>(
+    options?: OptionsLegacyParser<unknown, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        DeleteSmtpOverrideResponse,
+        DeleteSmtpOverrideError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/smtp-override',
     })
 }

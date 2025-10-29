@@ -116,7 +116,6 @@ export const updateWebDavGlobal: Privilege = {
     action: 'UPDATE',
     resource: 'WEB_DAV',
     scope: 'GLOBAL',
-    scope: 'GLOBAL',
 }
 export const readWebDavGlobal: Privilege = {
     action: 'READ',
@@ -146,4 +145,16 @@ export const readResultOwn: Privilege = {
     action: 'READ',
     resource: 'RESULT',
     scope: 'OWN',
+}
+
+export const updateSmtpConfigGlobal: Privilege = {
+    action: 'UPDATE',
+    resource: 'ADMINISTRATION',
+    scope: 'GLOBAL',
+}
+
+export const readSmtpConfigGlobal: Privilege = {
+    action: 'READ',
+    resource: 'ADMINISTRATION',
+    scope: 'GLOBAL',
 }

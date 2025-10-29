@@ -8,7 +8,7 @@ type FormInputNumberProps = Omit<BaseFormInputProps, 'type'> & {
     integer?: boolean
 }
 
-const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) => {
+const FormInputNumber = ({min, max, integer, sx, ...props}: FormInputNumberProps) => {
     const {t} = useTranslation()
 
     const minMaxMsgStart = t('common.form.number.invalid.value.messageStart')
@@ -57,6 +57,7 @@ const FormInputNumber = ({min, max, integer, ...props}: FormInputNumberProps) =>
                     },
                 }),
             }}
+            sx={{...sx}}
         />
     )
 }

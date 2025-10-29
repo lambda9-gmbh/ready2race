@@ -2,18 +2,18 @@ import CompetitionRegistrationDialog from '@components/event/competition/registr
 import CompetitionRegistrationTable from '@components/event/competition/registration/CompetitionRegistrationTable.tsx'
 import {useEntityAdministration} from '@utils/hooks.ts'
 import {CompetitionDto, CompetitionRegistrationDto, EventDto} from '@api/types.gen.ts'
-import {useTranslation} from 'react-i18next'
+import {Trans, useTranslation} from 'react-i18next'
 import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
-import {Link} from '@tanstack/react-router'
-import {Box, Button, Stack, Typography} from '@mui/material'
-import {Forward} from '@mui/icons-material'
+import {Alert, Stack, Typography} from '@mui/material'
 import {getRegistrationState} from '@utils/helpers.ts'
+import InlineLink from '@components/InlineLink.tsx'
 
 type Props = {
     eventData: EventDto
     competitionData: CompetitionDto
+    reloadEvent: () => void
 }
-const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
+const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
 
@@ -37,32 +37,36 @@ const CompetitionRegistrations = ({eventData, competitionData}: Props) => {
         },
     )
 
+    const registrationInitialized = (eventData.registrationCount ?? 0) > 0
+
     return (
-        (((eventData.registrationCount ?? 0 > 0) || !user.clubId) && (
-            <Stack spacing={2}>
-                <CompetitionRegistrationDialog
-                    {...competitionRegistrationProps.dialog}
-                    competition={competitionData}
-                    eventData={eventData}
-                />
-                <CompetitionRegistrationTable
-                    {...competitionRegistrationProps.table}
-                    registrationState={registrationState}
-                />
-            </Stack>
-        )) ||
-        (registrationPossible && (
-            <Box>
-                <Typography sx={{mb: 1}}>
-                    {t('event.competition.registration.noEventRegistration')}
-                </Typography>
-                <Link to={'/event/$eventId/register'} params={{eventId: eventData.id}}>
-                    <Button endIcon={<Forward />} variant={'contained'}>
-                        {t('event.registerNow')}
-                    </Button>
-                </Link>
-            </Box>
-        ))
+        <Stack spacing={2}>
+            {registrationPossible && !registrationInitialized && !eventData.challengeEvent && (
+                <Alert severity={'info'}>
+                    <Typography sx={{mb: 1}}>
+                        <Trans i18nKey={'event.competition.registration.noEventRegistration'} />
+                        <Trans i18nKey={'event.registerHere.1'} />
+                        <InlineLink
+                            to={'/event/$eventId/register'}
+                            params={{eventId: eventData.id}}>
+                            {t('event.registerHere.2')}
+                        </InlineLink>
+                        <Trans i18nKey={'event.registerHere.3'} />
+                    </Typography>
+                </Alert>
+            )}
+            <CompetitionRegistrationDialog
+                {...competitionRegistrationProps.dialog}
+                competition={competitionData}
+                eventData={eventData}
+            />
+            <CompetitionRegistrationTable
+                {...competitionRegistrationProps.table}
+                registrationState={registrationState}
+                registrationInitialized={registrationInitialized}
+                reloadEvent={reloadEvent}
+            />
+        </Stack>
     )
 }
 export default CompetitionRegistrations

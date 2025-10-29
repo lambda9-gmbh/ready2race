@@ -26,7 +26,6 @@ sealed interface CompetitionExecutionError : ServiceError {
     data object ResultDocumentNotFound : CompetitionExecutionError
     data object NotInChallengeTimespan : CompetitionExecutionError
 
-    // TODO: send out ErrorCodes for internationalization in frontend
     sealed interface ResultUploadError : CompetitionExecutionError {
         data object FileError : ResultUploadError
         data object NoHeaders : ResultUploadError

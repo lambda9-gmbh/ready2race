@@ -15,6 +15,7 @@ import {eventRegisterRoute} from '@routes'
 import {Result} from '@components/Result.tsx'
 import EventRegistrationForm from '../../components/eventRegistration/EventRegistrationForm.tsx'
 import EventRegistrationProvider from '@contexts/eventRegistration/EventRegistrationProvider.tsx'
+import {useNavigate} from '@tanstack/react-router'
 
 export type CompetitionRegistrationSingleFormData = CompetitionRegistrationSingleUpsertDto & {
     locked: boolean
@@ -77,6 +78,7 @@ const formDataToRequest = (formData: EventRegistrationFormData): EventRegistrati
 
 const EventRegistrationCreatePage = () => {
     const {t} = useTranslation()
+    const navigate = useNavigate()
     // const user = useUser() // TODO use later for explicit clubId
     const feedback = useFeedback()
     const [registrationWasSuccessful, setRegistrationWasSuccessful] = useState<boolean>(false)
@@ -88,6 +90,7 @@ const EventRegistrationCreatePage = () => {
             onResponse: ({error}) => {
                 if (error) {
                     feedback.error(t('common.load.error.single', {entity: t('event.event')}))
+                    void navigate({to: '/dashboard'})
                 }
             },
             deps: [eventId],

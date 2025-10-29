@@ -32,10 +32,12 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.createdResponse
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -82,9 +84,18 @@ object EventRegistrationService {
         }
     }
 
+    fun getEventRegistrationDocuments(
+        eventId: UUID,
+    ): App<ServiceError, ApiResponse.ListDto<EventRegistrationDocumentTypeDto>> =
+        EventRegistrationRepo.getEventRegistrationDocuments(eventId).orDie()
+            .onNullFail { EventError.NotFound }
+            .map { ApiResponse.ListDto(it) }
+
     fun getEventRegistrationTemplate(
         eventId: UUID, clubId: UUID
     ): App<ServiceError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
+
+        !EventService.checkIsChallengeEvent(eventId).onTrueFail { EventRegistrationError.NoWizardInChallengeMode }
 
         val type = !EventService.getOpenForRegistrationType(eventId)
 
