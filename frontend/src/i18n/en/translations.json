@@ -1457,9 +1457,12 @@
       "noMatches": "There are no matches currently taking place."
     },
     "clubRanking": {
-      "error": "Error loading club rankings",
-      "participants": "Participants"
+      "error": "Error loading club rankings"
     },
+    "individualRanking": {
+      "error": "Error loading individual rankings"
+    },
+    "noResults": "No results",
     "challengeTabs": {
       "club": "Club",
       "relative": "Relative",

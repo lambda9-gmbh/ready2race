@@ -3205,7 +3205,7 @@ export const getChallengeParticipantResults = <ThrowOnError extends boolean = fa
         ThrowOnError
     >({
         ...options,
-        url: '/results/event/{eventId}/challenge/participants',
+        url: '/results/event/{eventId}/challenge/individual',
     })
 }
 

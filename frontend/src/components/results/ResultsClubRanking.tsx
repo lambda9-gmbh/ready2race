@@ -7,8 +7,6 @@ import {
     Pagination,
     Collapse,
     useTheme,
-    Autocomplete,
-    TextField,
     CardActionArea,
 } from '@mui/material'
 import {useState} from 'react'
@@ -19,6 +17,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import {useTranslation} from 'react-i18next'
 import {toSnakeCase} from '@utils/ApiUtils'
 import {EventDto} from '@api/types.gen.ts'
+import ResultsFilterBar from '@components/results/ResultsFilterBar'
 
 type Props = {
     eventData: EventDto
@@ -115,17 +114,17 @@ const ResultsClubRanking = ({eventData, ...props}: Props) => {
         setPage(value)
     }
 
-    const handleCompetitionChange = (_event: unknown, value: FilterOption | null) => {
+    const handleCompetitionChange = (value: FilterOption | null) => {
         setSelectedCompetition(value)
         setPage(1)
     }
 
-    const handleRatingCategoryChange = (_event: unknown, value: FilterOption | null) => {
+    const handleRatingCategoryChange = (value: FilterOption | null) => {
         setSelectedRatingCategory(value)
         setPage(1)
     }
 
-    if (pending) {
+    if (pending || !data) {
         return (
             <Box sx={{display: 'flex', justifyContent: 'center', p: 4}}>
                 <Throbber />
@@ -133,7 +132,7 @@ const ResultsClubRanking = ({eventData, ...props}: Props) => {
         )
     }
 
-    if (error || !data) {
+    if (error) {
         return (
             <Box sx={{p: 2}}>
                 <Typography color="error">{t('results.clubRanking.error')}</Typography>
@@ -147,230 +146,207 @@ const ResultsClubRanking = ({eventData, ...props}: Props) => {
 
     return (
         <Box>
-            <Stack spacing={2} sx={{mb: 3}}>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: 2,
-                        [theme.breakpoints.down('sm')]: {
-                            flexDirection: 'column',
-                        },
-                    }}>
-                    <Autocomplete
-                        options={competitions || []}
-                        value={selectedCompetition}
-                        onChange={handleCompetitionChange}
-                        getOptionLabel={option => option.label}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        renderInput={params => (
-                            <TextField
-                                {...params}
-                                label={t('event.competition.competition')}
-                                size="small"
-                            />
-                        )}
-                        sx={{flex: 1}}
-                    />
-                    <Autocomplete
-                        options={ratingCategories || []}
-                        value={selectedRatingCategory}
-                        onChange={handleRatingCategoryChange}
-                        getOptionLabel={option => option.label}
-                        isOptionEqualToValue={(option, value) => option.id === value.id}
-                        renderInput={params => (
-                            <TextField
-                                {...params}
-                                label={t('configuration.ratingCategory.ratingCategory')}
-                                size="small"
-                            />
-                        )}
-                        sx={{flex: 1}}
-                    />
+            <ResultsFilterBar
+                competitions={competitions}
+                selectedCompetition={selectedCompetition}
+                onCompetitionChange={handleCompetitionChange}
+                ratingCategories={ratingCategories}
+                selectedRatingCategory={selectedRatingCategory}
+                onRatingCategoryChange={handleRatingCategoryChange}
+            />
+
+            {data.data.length === 0 ? (
+                <Box sx={{p: 4, textAlign: 'center'}}>
+                    <Typography color="text.secondary">{t('results.noResults')}</Typography>
                 </Box>
-            </Stack>
+            ) : (
+                <Stack spacing={2}>
+                    {data.data.map(club => {
+                        const isExpanded = expandedClubs.has(club.id)
 
-            <Stack spacing={2}>
-                {data.data.map(club => {
-                    const isExpanded = expandedClubs.has(club.id)
-
-                    return (
-                        <Card key={club.id} sx={{width: '100%'}}>
-                            <CardActionArea
-                                onClick={() => toggleClubExpansion(club.id)}
-                                sx={{p: 2, cursor: 'pointer'}}>
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        gap: 1,
-                                        justifyContent: 'space-between',
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                    }}>
+                        return (
+                            <Card key={club.id} sx={{width: '100%'}}>
+                                <CardActionArea
+                                    onClick={() => toggleClubExpansion(club.id)}
+                                    sx={{p: 2, cursor: 'pointer'}}>
                                     <Box
                                         sx={{
-                                            flex: 1,
                                             display: 'flex',
                                             gap: 1,
                                             justifyContent: 'space-between',
-                                            [theme.breakpoints.down('md')]: {
-                                                flexDirection: 'column',
-                                                justifyContent: 'space-between',
-                                            },
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
                                         }}>
-                                        <Stack
-                                            direction={'row'}
-                                            spacing={2}
-                                            alignItems={'center'}
-                                            sx={{flex: 1}}>
-                                            <Chip
-                                                label={`#${props.totalRanking ? club.totalRank : club.relativeRank}`}
-                                                color="primary"
-                                                size="small"
-                                            />
-                                            <Typography variant="h6" fontWeight="bold">
-                                                {club.clubName}
-                                            </Typography>
-                                        </Stack>
-                                        <Stack direction={'row'} spacing={2} alignItems={'center'}>
-                                            <Typography variant="h5" fontWeight="bold">
-                                                {props.totalRanking
-                                                    ? club.totalResult.toFixed(2)
-                                                    : club.relativeResult.toFixed(2)}
-                                                {` ${resultSuffix}`}
-                                            </Typography>
-                                        </Stack>
+                                        <Box
+                                            sx={{
+                                                flex: 1,
+                                                display: 'flex',
+                                                gap: 1,
+                                                justifyContent: 'space-between',
+                                                [theme.breakpoints.down('md')]: {
+                                                    flexDirection: 'column',
+                                                    justifyContent: 'space-between',
+                                                },
+                                            }}>
+                                            <Stack
+                                                direction={'row'}
+                                                spacing={2}
+                                                alignItems={'center'}
+                                                sx={{flex: 1}}>
+                                                <Chip
+                                                    label={`#${props.totalRanking ? club.totalRank : club.relativeRank}`}
+                                                    color="primary"
+                                                    size="small"
+                                                />
+                                                <Typography variant="h6" fontWeight="bold">
+                                                    {club.clubName}
+                                                </Typography>
+                                            </Stack>
+                                            <Stack
+                                                direction={'row'}
+                                                spacing={2}
+                                                alignItems={'center'}>
+                                                <Typography variant="h5" fontWeight="bold">
+                                                    {props.totalRanking
+                                                        ? club.totalResult.toFixed(2)
+                                                        : club.relativeResult.toFixed(2)}
+                                                    {` ${resultSuffix}`}
+                                                </Typography>
+                                            </Stack>
+                                        </Box>
+                                        <ExpandMoreIcon
+                                            sx={{
+                                                transform: isExpanded
+                                                    ? 'rotate(180deg)'
+                                                    : 'rotate(0deg)',
+                                                transition: 'transform 0.3s',
+                                            }}
+                                        />
                                     </Box>
-                                    <ExpandMoreIcon
-                                        sx={{
-                                            transform: isExpanded
-                                                ? 'rotate(180deg)'
-                                                : 'rotate(0deg)',
-                                            transition: 'transform 0.3s',
-                                        }}
-                                    />
-                                </Box>
 
-                                <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                                    <Box sx={{p: 2}}>
-                                        <Stack spacing={1}>
-                                            {club.teams.map(team => {
-                                                const allParticipants =
-                                                    team.namedParticipants?.flatMap(
-                                                        np => np.participants,
-                                                    ) || []
-                                                const singleParticipant =
-                                                    allParticipants.length === 1
-                                                        ? allParticipants[0]
-                                                        : null
+                                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                        <Box sx={{p: 2}}>
+                                            <Stack spacing={1}>
+                                                {club.teams.map(team => {
+                                                    const allParticipants =
+                                                        team.namedParticipants?.flatMap(
+                                                            np => np.participants,
+                                                        ) || []
+                                                    const singleParticipant =
+                                                        allParticipants.length === 1
+                                                            ? allParticipants[0]
+                                                            : null
 
-                                                return (
-                                                    <Box
-                                                        key={team.competitionRegistrationId}
-                                                        sx={{
-                                                            p: 1.5,
-                                                            border: '1px solid',
-                                                            borderColor: 'divider',
-                                                            borderRadius: 1,
-                                                        }}>
+                                                    return (
                                                         <Box
+                                                            key={team.competitionRegistrationId}
                                                             sx={{
-                                                                display: 'flex',
-                                                                flexWrap: 'wrap',
-                                                                gap: 1,
-                                                                justifyContent: 'space-between',
+                                                                p: 1.5,
+                                                                border: '1px solid',
+                                                                borderColor: 'divider',
+                                                                borderRadius: 1,
                                                             }}>
-                                                            {!singleParticipant ? (
-                                                                <Typography variant="body2">
-                                                                    {team.competitionRegistrationName ||
-                                                                        'Unnamed Team'}
-                                                                </Typography>
-                                                            ) : (
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    flexWrap: 'wrap',
+                                                                    gap: 1,
+                                                                    justifyContent: 'space-between',
+                                                                }}>
+                                                                {!singleParticipant ? (
+                                                                    <Typography variant="body2">
+                                                                        {team.competitionRegistrationName ||
+                                                                            'Unnamed Team'}
+                                                                    </Typography>
+                                                                ) : (
+                                                                    <Typography
+                                                                        component="span"
+                                                                        variant="body2">
+                                                                        {
+                                                                            singleParticipant.firstName
+                                                                        }{' '}
+                                                                        {singleParticipant.lastName}
+                                                                    </Typography>
+                                                                )}
                                                                 <Typography
-                                                                    component="span"
-                                                                    variant="body2">
-                                                                    {singleParticipant.firstName}{' '}
-                                                                    {singleParticipant.lastName}
+                                                                    variant="body2"
+                                                                    color="text.secondary">
+                                                                    {team.result.toFixed(2)}
+                                                                    {` ${resultSuffix}`}
                                                                 </Typography>
-                                                            )}
-                                                            <Typography
-                                                                variant="body2"
-                                                                color="text.secondary">
-                                                                {team.result.toFixed(2)}
-                                                                {` ${resultSuffix}`}
-                                                            </Typography>
-                                                        </Box>
-                                                        {team.namedParticipants &&
-                                                            team.namedParticipants.length > 0 &&
-                                                            !singleParticipant && (
-                                                                <Box sx={{mt: 1}}>
-                                                                    <Stack spacing={0.5}>
-                                                                        {team.namedParticipants.map(
-                                                                            namedParticipant => (
-                                                                                <Box
-                                                                                    key={
-                                                                                        namedParticipant.id
-                                                                                    }>
-                                                                                    {namedParticipant.name && (
-                                                                                        <Typography
-                                                                                            variant="caption"
-                                                                                            fontWeight="medium"
-                                                                                            color="text.secondary">
-                                                                                            {
-                                                                                                namedParticipant.name
-                                                                                            }
-                                                                                            :
-                                                                                        </Typography>
-                                                                                    )}
-                                                                                    {namedParticipant.participants.map(
-                                                                                        (
-                                                                                            participant,
-                                                                                            idx,
-                                                                                        ) => (
+                                                            </Box>
+                                                            {team.namedParticipants &&
+                                                                team.namedParticipants.length > 0 &&
+                                                                !singleParticipant && (
+                                                                    <Box sx={{mt: 1}}>
+                                                                        <Stack spacing={0.5}>
+                                                                            {team.namedParticipants.map(
+                                                                                namedParticipant => (
+                                                                                    <Box
+                                                                                        key={
+                                                                                            namedParticipant.id
+                                                                                        }>
+                                                                                        {namedParticipant.name && (
                                                                                             <Typography
-                                                                                                key={
-                                                                                                    participant.id
-                                                                                                }
                                                                                                 variant="caption"
-                                                                                                color="text.secondary"
-                                                                                                sx={{
-                                                                                                    ml: namedParticipant.name
-                                                                                                        ? 0.5
-                                                                                                        : 0,
-                                                                                                }}>
+                                                                                                fontWeight="medium"
+                                                                                                color="text.secondary">
                                                                                                 {
-                                                                                                    participant.firstName
-                                                                                                }{' '}
-                                                                                                {
-                                                                                                    participant.lastName
+                                                                                                    namedParticipant.name
                                                                                                 }
-                                                                                                {idx <
-                                                                                                namedParticipant
-                                                                                                    .participants
-                                                                                                    .length -
-                                                                                                    1
-                                                                                                    ? ', '
-                                                                                                    : ''}
+                                                                                                :
                                                                                             </Typography>
-                                                                                        ),
-                                                                                    )}
-                                                                                </Box>
-                                                                            ),
-                                                                        )}
-                                                                    </Stack>
-                                                                </Box>
-                                                            )}
-                                                    </Box>
-                                                )
-                                            })}
-                                        </Stack>
-                                    </Box>
-                                </Collapse>
-                            </CardActionArea>
-                        </Card>
-                    )
-                })}
-            </Stack>
+                                                                                        )}
+                                                                                        {namedParticipant.participants.map(
+                                                                                            (
+                                                                                                participant,
+                                                                                                idx,
+                                                                                            ) => (
+                                                                                                <Typography
+                                                                                                    key={
+                                                                                                        participant.id
+                                                                                                    }
+                                                                                                    variant="caption"
+                                                                                                    color="text.secondary"
+                                                                                                    sx={{
+                                                                                                        ml: namedParticipant.name
+                                                                                                            ? 0.5
+                                                                                                            : 0,
+                                                                                                    }}>
+                                                                                                    {
+                                                                                                        participant.firstName
+                                                                                                    }{' '}
+                                                                                                    {
+                                                                                                        participant.lastName
+                                                                                                    }
+                                                                                                    {idx <
+                                                                                                    namedParticipant
+                                                                                                        .participants
+                                                                                                        .length -
+                                                                                                        1
+                                                                                                        ? ', '
+                                                                                                        : ''}
+                                                                                                </Typography>
+                                                                                            ),
+                                                                                        )}
+                                                                                    </Box>
+                                                                                ),
+                                                                            )}
+                                                                        </Stack>
+                                                                    </Box>
+                                                                )}
+                                                        </Box>
+                                                    )
+                                                })}
+                                            </Stack>
+                                        </Box>
+                                    </Collapse>
+                                </CardActionArea>
+                            </Card>
+                        )
+                    })}
+                </Stack>
+            )}
 
             {totalPages > 1 && (
                 <Box sx={{display: 'flex', justifyContent: 'center', mt: 3}}>

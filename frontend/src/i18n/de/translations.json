@@ -1460,6 +1460,10 @@
     "clubRanking": {
       "error": "Fehler beim Laden der Vereinsrangliste"
     },
+    "individualRanking": {
+      "error": "Fehler beim Laden der Individualrangliste"
+    },
+    "noResults": "Keine Ergebnisse",
     "challengeTabs": {
       "club": "Verein",
       "relative": "Relativ",

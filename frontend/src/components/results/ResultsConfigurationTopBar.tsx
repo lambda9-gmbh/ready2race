@@ -20,6 +20,7 @@ const ResultsConfigurationTopBar = (props: Props) => {
                 width: '100%',
                 display: 'flex',
                 justifyContent: props.showBackButton ? 'space-between' : 'end',
+                mb: smallScreenLayout ? 0 : 1,
             }}>
             {props.showBackButton && (
                 <Box>

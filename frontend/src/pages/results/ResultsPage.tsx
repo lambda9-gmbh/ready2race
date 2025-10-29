@@ -1,5 +1,5 @@
 import MatchResults from '@components/results/MatchResults.tsx'
-import {Box, Divider, Tab, useMediaQuery, useTheme} from '@mui/material'
+import {Box, Divider, Stack, Tab, useMediaQuery, useTheme} from '@mui/material'
 import TabSelectionContainer from '@components/tab/TabSelectionContainer.tsx'
 import {a11yProps} from '@utils/helpers.ts'
 import {useState} from 'react'
@@ -17,6 +17,7 @@ import {getEvent} from '@api/sdk.gen.ts'
 import Throbber from '@components/Throbber.tsx'
 import ResultsConfigurationTopBar from '@components/results/ResultsConfigurationTopBar.tsx'
 import ResultsClubRanking from '@components/results/ResultsClubRanking.tsx'
+import ResultsIndividualRanking from '@components/results/ResultsIndividualRanking.tsx'
 
 const RESULTS_TABS = ['latest-results', 'live', 'upcoming'] as const
 export type ResultsTab = (typeof RESULTS_TABS)[number]
@@ -59,16 +60,21 @@ const ResultsPage = () => {
             }),
         {
             onResponse: ({error}) => {
-                if (error) feedback.error('[todo] Error when loading the event')
+                if (error)
+                    feedback.error(
+                        t('common.load.error.single', {
+                            entity: t('event.event'),
+                        }),
+                    )
             },
             deps: [eventId],
         },
     )
 
     return eventPending ? (
-        <Box sx={{display: 'flex', height: 1}}>
+        <Stack sx={{display: 'flex', flex: 1, justifyContent: 'center'}}>
             <Throbber />
-        </Box>
+        </Stack>
     ) : eventData ? (
         <>
             <ResultsConfigurationTopBar
@@ -106,21 +112,21 @@ const ResultsPage = () => {
                             label={t('results.challengeTabs.club')}
                             icon={<EmojiEventsOutlinedIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
-                            sx={{flex: 1}}
+                            sx={{flex: 1, maxWidth: 'unset'}}
                             {...challengeTabProps('club')}
                         />
                         <Tab
                             label={t('results.challengeTabs.relative')}
                             icon={<PercentIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
-                            sx={{flex: 1}}
+                            sx={{flex: 1, maxWidth: 'unset'}}
                             {...challengeTabProps('relative')}
                         />
                         <Tab
                             label={t('results.challengeTabs.individual')}
                             icon={<PersonIcon />}
                             iconPosition={smallScreenLayout ? 'top' : 'start'}
-                            sx={{flex: 1}}
+                            sx={{flex: 1, maxWidth: 'unset'}}
                             {...challengeTabProps('individual')}
                         />
                     </TabSelectionContainer>
@@ -148,7 +154,7 @@ const ResultsPage = () => {
                         <ResultsClubRanking eventData={eventData} totalRanking={false} />
                     </TabPanel>
                     <TabPanel index={'individual'} activeTab={activeChallengeTab}>
-                        {/*todo*/}
+                        <ResultsIndividualRanking eventData={eventData} />
                     </TabPanel>
                 </>
             )}
