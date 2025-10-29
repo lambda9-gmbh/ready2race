@@ -1,10 +1,19 @@
-import React, {createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState} from 'react'
+import React, {
+    createContext,
+    PropsWithChildren,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import {CheckQrCodeResponse, EventDto} from '@api/types.gen.ts'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {useNavigate} from "@tanstack/react-router";
-import {useFeedback, useFetch} from "@utils/hooks.ts";
-import {getEvents} from "@api/sdk.gen.ts";
-import {useTranslation} from "react-i18next";
+import {useNavigate} from '@tanstack/react-router'
+import {useFeedback, useFetch} from '@utils/hooks.ts'
+import {getEvents} from '@api/sdk.gen.ts'
+import {useTranslation} from 'react-i18next'
 
 export type AppFunction =
     | 'APP_QR_MANAGEMENT'
@@ -24,19 +33,19 @@ export type AppView =
     | 'APP_Forbidden'
 
 const appViewPaths: Record<AppView, string> = {
-    'APP_Event_List': '/app',
-    'APP_Function_Select': '/app/function',
-    'APP_Scanner': '/app/scanner',
-    'APP_Participant': '/app/participant',
-    'App_Assign': '/app/assign',
-    'App_User': '/app/user',
-    'App_Login': '/app/login',
-    'APP_Forbidden': '/app/forbidden',
+    APP_Event_List: '/app',
+    APP_Function_Select: '/app/function',
+    APP_Scanner: '/app/scanner',
+    APP_Participant: '/app/participant',
+    App_Assign: '/app/assign',
+    App_User: '/app/user',
+    App_Login: '/app/login',
+    APP_Forbidden: '/app/forbidden',
 }
 
 export type AppViewState = {
-    view: AppView,
-    replace?: boolean,
+    view: AppView
+    replace?: boolean
 }
 
 export type QrState = {
@@ -54,7 +63,8 @@ interface AppSessionContextType {
     setEventId: (fn: string) => void
     eventId: string
     qr: QrState
-    events: EventDto[] | undefined,
+    qrLastScanned: React.MutableRefObject<number>
+    events: EventDto[] | undefined
     setEvents: (events: EventDto[]) => void
     navigateTo: (view: AppView, replace?: boolean) => void
 }
@@ -72,10 +82,11 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
     })
 
     const [events, setEvents] = useState<EventDto[]>()
+    const qrLastScanned = useRef<number>(0)
 
     // Persistiere eventId im sessionStorage
     const [eventId, setEventIdValue] = useState<string>(() => {
-        return (sessionStorage.getItem('eventId')) || ""
+        return sessionStorage.getItem('eventId') || ''
     })
 
     useFetch(signal => getEvents({signal}), {
@@ -94,12 +105,10 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
     const navigate = useNavigate()
 
     useEffect(() => {
-
         if (viewState !== undefined) {
             void navigate({to: appViewPaths[viewState.view], replace: viewState.replace})
         }
-
-    }, [viewState, navigate]);
+    }, [viewState, navigate])
 
     const setAppFunction = (fn: AppFunction) => {
         setAppFunctionState(fn)
@@ -126,15 +135,23 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
         handled: false,
     })
 
-    const qr: QrState = useMemo(() => ({
-        ...qrState,
-        update: (state: Omit<QrState, 'update' | 'reset'>) => {
-            setQrState(prev => ({...prev, ...state}))
-        },
-        reset: () => {
-            setQrState({qrCodeId: null, response: null, received: false, handled: false})
-        }
-    }), [qrState])
+    const qr: QrState = useMemo(
+        () => ({
+            ...qrState,
+            update: (state: Omit<QrState, 'update' | 'reset'>) => {
+                setQrState(prev => ({...prev, ...state}))
+            },
+            reset: () => {
+                setQrState({
+                    qrCodeId: null,
+                    response: null,
+                    received: false,
+                    handled: false,
+                })
+            },
+        }),
+        [qrState],
+    )
 
     const navigateTo = useCallback((view: AppView, replace: boolean = false) => {
         setViewState({view, replace})
@@ -148,8 +165,9 @@ export const AppSessionProvider: React.FC<PropsWithChildren> = ({children}) => {
                 setEventId,
                 eventId,
                 qr,
+                qrLastScanned,
                 events,
-                setEvents: (events) => setEvents(events),
+                setEvents: events => setEvents(events),
                 navigateTo,
             }}>
             {children}

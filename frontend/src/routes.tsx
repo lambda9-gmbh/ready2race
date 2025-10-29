@@ -50,7 +50,7 @@ import InvoicesPage from './pages/InvoicePage.tsx'
 import ResultsPage from './pages/results/ResultsPage.tsx'
 import SelectResultsEventPage from './pages/results/SelectResultsEventPage.tsx'
 import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
-import AdministrationPage from "./pages/AdministrationPage.tsx";
+import AdministrationPage from './pages/AdministrationPage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -238,14 +238,6 @@ export const configurationIndexRoute = createRoute({
         checkAuth(context, location, updateEventGlobal)
     },
     validateSearch: validateTabSearch<ConfigurationTab>,
-})
-
-export const qrEventRoute = createRoute({
-    getParentRoute: () => appRoute,
-    path: '$eventId',
-    beforeLoad: ({context}) => {
-        checkAuthApp(context)
-    },
 })
 
 export const qrEventsRoute = createRoute({
