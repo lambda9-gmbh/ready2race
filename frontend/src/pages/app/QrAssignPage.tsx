@@ -11,7 +11,7 @@ import {
     ToggleButtonGroup,
     Typography,
 } from '@mui/material'
-import React, {useEffect, useState} from 'react'
+import React, {useEffect, useRef, useState} from 'react'
 import {updateQrCodeAppuser, updateQrCodeParticipant} from '@api/sdk.gen.ts'
 import {useTranslation} from 'react-i18next'
 import {useAppSession} from '@contexts/app/AppSessionContext'
@@ -19,11 +19,11 @@ import PersonIcon from '@mui/icons-material/Person'
 import ParticipantAssignment from '@components/qrApp/assign/ParticipantAssignment'
 import UserAssignment from '@components/qrApp/assign/UserAssignment'
 import SystemUserScanner from '@components/qrApp/assign/SystemUserScanner'
-import {useFeedback} from "@utils/hooks.ts";
-import AppTopTitle from "@components/qrApp/AppTopTitle.tsx";
-import {ParticipantQrAssignmentDto} from "@api/types.gen.ts";
+import {useFeedback} from '@utils/hooks.ts'
+import AppTopTitle from '@components/qrApp/AppTopTitle.tsx'
+import {ParticipantQrAssignmentDto} from '@api/types.gen.ts'
 
-type UserTyp = 'Participant' | 'User' | 'SystemUser'
+type UserTyp = 'Participant' | 'User'
 
 interface ConfirmationData {
     id: string
@@ -35,15 +35,16 @@ interface ConfirmationData {
 const QrAssignPage = () => {
     const {t} = useTranslation()
     const {qr, appFunction, navigateTo, eventId} = useAppSession()
-    const [userTyp, setUserTyp] = useState<UserTyp>('Participant')
+    const [userTyp, setUserTyp] = useState<UserTyp | null>('Participant')
     const [scanningSystemUser, setScanningSystemUser] = useState(false)
     const [confirmationOpen, setConfirmationOpen] = useState(false)
     const [selectedPerson, setSelectedPerson] = useState<ConfirmationData | null>(null)
     const feedback = useFeedback()
+    const qrCheckPending = useRef<boolean>(false)
 
     useEffect(() => {
         if (!qr.received) {
-            navigateTo("APP_Scanner")
+            navigateTo('APP_Scanner')
         }
     }, [qr, navigateTo])
 
@@ -51,7 +52,7 @@ const QrAssignPage = () => {
         _event: React.MouseEvent<HTMLElement>,
         newUserTyp: UserTyp | null,
     ) => {
-        if (newUserTyp !== null && newUserTyp !== 'SystemUser') {
+        if (newUserTyp !== null) {
             setUserTyp(newUserTyp)
             setScanningSystemUser(false)
         }
@@ -59,7 +60,7 @@ const QrAssignPage = () => {
 
     const handleScanSystemUser = () => {
         setScanningSystemUser(true)
-        setUserTyp(null as any) // Clear toggle group selection
+        setUserTyp(null) // Clear toggle group selection
     }
 
     const handleParticipantClick = (
@@ -95,7 +96,7 @@ const QrAssignPage = () => {
                     id: selectedPerson.id,
                 },
             })
-            if(error){
+            if (error) {
                 feedback.error(t('common.error.unexpected'))
             } else {
                 feedback.success(t('qrAssign.successParticipant'))
@@ -108,7 +109,7 @@ const QrAssignPage = () => {
                     id: selectedPerson.id,
                 },
             })
-            if(error){
+            if (error) {
                 feedback.error(t('common.error.unexpected'))
             } else {
                 feedback.success(t('qrAssign.successUser'))
@@ -116,7 +117,7 @@ const QrAssignPage = () => {
         }
 
         setConfirmationOpen(false)
-        navigateTo("APP_Scanner")
+        navigateTo('APP_Scanner')
     }
 
     const handleCloseConfirmation = () => {
@@ -125,43 +126,53 @@ const QrAssignPage = () => {
     }
 
     const handleSystemUserScan = async (qrCodeContent: string) => {
+        if (!qrCheckPending.current) {
+            qrCheckPending.current = true
+            try {
+                const data = JSON.parse(qrCodeContent)
 
-        const data = JSON.parse(qrCodeContent)
-        setScanningSystemUser(false)
-        if (data.appUserId) {
-            setScanningSystemUser(false)
-            const {error} = await updateQrCodeAppuser({
-                body: {
-                    qrCodeId: qr.qrCodeId!,
-                    eventId: eventId,
-                    id: data.appUserId,
-                },
-            })
-            if(error){
-                feedback.error(t('qrAssign.invalidQrFormat'))
-            } else{
-                feedback.success(t('qrAssign.success'))
+                if (data.appUserId) {
+                    setScanningSystemUser(false)
+                    const {error} = await updateQrCodeAppuser({
+                        body: {
+                            qrCodeId: qr.qrCodeId!,
+                            eventId: eventId,
+                            id: data.appUserId,
+                        },
+                    })
+                    if (error) {
+                        setScanningSystemUser(true)
+                        feedback.error(t('qrAssign.notAssigned'))
+                    } else {
+                        navigateTo('APP_Scanner')
+
+                        feedback.success(t('qrAssign.success'))
+                    }
+                } else if (data.participantId) {
+                    setScanningSystemUser(false)
+                    const {error} = await updateQrCodeParticipant({
+                        body: {
+                            qrCodeId: qr.qrCodeId!,
+                            eventId: eventId,
+                            id: data.participantId,
+                        },
+                    })
+                    if (error) {
+                        setScanningSystemUser(true)
+                        feedback.error(t('qrAssign.notAssigned'))
+                    } else {
+                        navigateTo('APP_Scanner')
+                        feedback.success(t('qrAssign.success'))
+                    }
+                } else {
+                    feedback.error(t('qrAssign.invalidUserQr'))
+                }
+            } catch {
+                feedback.error(t('qrAssign.invalidUserQr'))
             }
-            navigateTo("APP_Scanner")
-        } else if (data.participantId) {
-            setScanningSystemUser(false)
-            const {error} = await updateQrCodeParticipant({
-                body: {
-                    qrCodeId: qr.qrCodeId!,
-                    eventId: eventId,
-                    id: data.participantId,
-                },
-            })
-            navigateTo("APP_Scanner")
-            if(error){
-                feedback.error(t('qrAssign.invalidQrFormat'))
-            } else{
-                feedback.success(t('qrAssign.success'))
-            }
-        } else {
-            feedback.error(t('qrAssign.invalidUserQr'))
+
+            qrCheckPending.current = false
         }
-        navigateTo("APP_Scanner")
     }
 
     const canAssign = appFunction === 'APP_QR_MANAGEMENT'
@@ -173,7 +184,7 @@ const QrAssignPage = () => {
             justifyContent="flex-start"
             sx={{width: '100%', maxWidth: 600, px: 2, py: 3}}>
             <Box sx={{width: '100%', textAlign: 'center'}}>
-                <AppTopTitle title={t('qrAssign.title')} disableBackButton={scanningSystemUser}/>
+                <AppTopTitle title={t('qrAssign.title')} disableBackButton={scanningSystemUser} />
                 <Typography variant="body2" color="text.secondary">
                     {qr.qrCodeId}
                 </Typography>
