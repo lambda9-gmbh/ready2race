@@ -2603,7 +2603,7 @@ export type AddCompetitionRegistrationData = {
     }
 }
 
-export type AddCompetitionRegistrationResponse = string
+export type AddCompetitionRegistrationResponse = CompetitionRegistrationDto
 
 export type AddCompetitionRegistrationError = BadRequestError | ApiError | UnprocessableEntityError
 

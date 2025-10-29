@@ -185,7 +185,7 @@ object CompetitionRegistrationService {
         scope: Privilege.Scope,
         user: AppUserWithPrivilegesRecord,
         requestProperties: CompetitionRegistrationRequestProperties,
-    ): App<ServiceError, ApiResponse.Created> = KIO.comprehension {
+    ): App<ServiceError, ApiResponse.Dto<CompetitionRegistrationDto>> = KIO.comprehension {
 
         !validateScope(scope, competitionId, user, request.clubId!!)
 
@@ -258,7 +258,9 @@ object CompetitionRegistrationService {
             insertOptionalFees(competitionId, it, competitionRegistrationId)
         }?.not()
 
-        ok(ApiResponse.Created(competitionRegistrationId))
+        val dto = !CompetitionRegistrationRepo.getForResponse(competitionRegistrationId).orDie()
+
+        ok(ApiResponse.Dto(dto!!))
     }
 
     fun update(

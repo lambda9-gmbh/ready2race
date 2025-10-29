@@ -427,6 +427,9 @@
         "referenced": "{{entity}} could not be deleted due to references in competitions and/or templates"
       },
       "registration": {
+        "challenge": {
+          "includeResult": "Include result directly"
+        },
         "noEventRegistration": "No registration from your club has been made for this event yet.",
         "dialog": {
           "registrationType": {

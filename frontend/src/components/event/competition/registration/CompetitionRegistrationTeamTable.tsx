@@ -18,19 +18,17 @@ import {
     TableRow,
     Typography,
 } from '@mui/material'
-import {CheckCircle, Info, Warning} from '@mui/icons-material'
+import {Add, CheckCircle, Download, Info, Warning} from '@mui/icons-material'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 import {format} from 'date-fns'
 import {HtmlTooltip} from '@components/HtmlTooltip.tsx'
 import Cancel from '@mui/icons-material/Cancel'
 import {useUser} from '@contexts/user/UserContext.ts'
-import EditNoteIcon from '@mui/icons-material/EditNote'
 import ChallengeResultDialog from '@components/event/competition/registration/ChallengeResultDialog.tsx'
 import {downloadMatchTeamResultDocument, getCompetitionRegistrationTeams} from '@api/sdk.gen'
 import {CompetitionDto, CompetitionRegistrationTeamDto, EventDto} from '@api/types.gen.ts'
 import {useFeedback} from '@utils/hooks.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
-import BurstModeIcon from '@mui/icons-material/BurstMode'
 import DownloadIcon from '@mui/icons-material/Download'
 import {currentlyInTimespan} from '@utils/helpers.ts'
 
@@ -88,66 +86,6 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                 headerName: t('entity.name'),
                 valueGetter: value => value ?? '-',
             },
-            ...(eventData.challengeEvent
-                ? [
-                      {
-                          field: 'challengeResultValue',
-                          headerName: t(
-                              'event.competition.execution.results.challenge.challengeResults',
-                          ),
-                          minWidth: 150,
-                          sortable: false,
-                          renderCell: ({row}: {row: CompetitionRegistrationTeamDto}) => {
-                              const challengeResultDocuments = eventData.challengeEvent
-                                  ? Object.entries(row.challengeResultDocuments ?? {}).map(
-                                        ([key, value]) => {
-                                            return {id: key, fileName: value}
-                                        },
-                                    )
-                                  : []
-                              return row.challengeResultValue ? (
-                                  <>
-                                      <Typography>
-                                          {row.challengeResultValue} {challengeResultTypeUnit}
-                                      </Typography>
-                                      {challengeResultDocuments.length > 0 && (
-                                          <SelectionMenu
-                                              keyLabel={'challenge-team-result-doc'}
-                                              buttonContent={<BurstModeIcon />}
-                                              onSelectItem={async (docId: string) => {
-                                                  const docName =
-                                                      row.challengeResultDocuments?.[docId]
-                                                  if (!docName) return
-                                                  void handleDownloadResultDocument(docId, docName)
-                                              }}
-                                              items={challengeResultDocuments.map(doc => ({
-                                                  id: doc.id,
-                                                  label: doc.fileName,
-                                              }))}
-                                              itemIcon={<DownloadIcon color={'primary'} />}
-                                          />
-                                      )}
-                                  </>
-                              ) : resultSubmissionAllowed ? (
-                                  <HtmlTooltip
-                                      title={
-                                          <Typography>
-                                              {t(
-                                                  'event.competition.execution.results.challenge.submitResults',
-                                              )}
-                                          </Typography>
-                                      }>
-                                      <IconButton onClick={() => openResultsDialog(row)}>
-                                          <EditNoteIcon />
-                                      </IconButton>
-                                  </HtmlTooltip>
-                              ) : (
-                                  '-'
-                              )
-                          },
-                      },
-                  ]
-                : []),
             {
                 field: 'namedParticipants',
                 headerName: t('event.registration.teamMembers'),
@@ -366,6 +304,93 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                     )
                 },
             },
+            ...(eventData.challengeEvent
+                ? [
+                      {
+                          field: 'challengeResultValue',
+                          headerName: t(
+                              'event.competition.execution.results.challenge.challengeResults',
+                          ),
+                          minWidth: 150,
+                          sortable: false,
+                          renderCell: ({row}: {row: CompetitionRegistrationTeamDto}) => {
+                              const challengeResultDocuments = eventData.challengeEvent
+                                  ? Object.entries(row.challengeResultDocuments ?? {}).map(
+                                        ([key, value]) => {
+                                            return {id: key, fileName: value}
+                                        },
+                                    )
+                                  : []
+                              return row.challengeResultValue ? (
+                                  <Box
+                                      sx={{
+                                          display: 'flex',
+                                          flexDirection: 'column',
+                                          width: 1,
+                                          height: 1,
+                                          justifyContent: 'center',
+                                          alignItems: 'center',
+                                      }}>
+                                      <Typography>
+                                          {row.challengeResultValue} {challengeResultTypeUnit}
+                                      </Typography>
+                                      {challengeResultDocuments.length > 0 && (
+                                          <SelectionMenu
+                                              keyLabel={'challenge-team-result-doc'}
+                                              buttonContent={<Download />}
+                                              onSelectItem={async (docId: string) => {
+                                                  const docName =
+                                                      row.challengeResultDocuments?.[docId]
+                                                  if (!docName) return
+                                                  void handleDownloadResultDocument(docId, docName)
+                                              }}
+                                              items={challengeResultDocuments.map(doc => ({
+                                                  id: doc.id,
+                                                  label: doc.fileName,
+                                              }))}
+                                              itemIcon={<DownloadIcon color={'primary'} />}
+                                              anchor={{
+                                                  button: {
+                                                      vertical: 'top',
+                                                      horizontal: 'right',
+                                                  },
+                                                  menu: {
+                                                      vertical: 'top',
+                                                      horizontal: 'right',
+                                                  },
+                                              }}
+                                          />
+                                      )}
+                                  </Box>
+                              ) : resultSubmissionAllowed ? (
+                                  <Box
+                                      sx={{
+                                          display: 'flex',
+                                          width: 1,
+                                          height: 1,
+                                          justifyContent: 'center',
+                                          alignItems: 'center',
+                                      }}>
+                                      <HtmlTooltip
+                                          title={
+                                              <Typography>
+                                                  {t(
+                                                      'event.competition.execution.results.challenge.submitResults',
+                                                  )}
+                                              </Typography>
+                                          }>
+                                          <IconButton onClick={() => openResultsDialog(row)}>
+                                              <Add />
+                                          </IconButton>
+                                      </HtmlTooltip>
+                                  </Box>
+                              ) : (
+                                  '-'
+                              )
+                          },
+                      },
+                  ]
+                : []),
         ],
         [],
     )

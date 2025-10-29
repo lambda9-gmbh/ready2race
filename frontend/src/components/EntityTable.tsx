@@ -364,7 +364,7 @@ const EntityTableInternal = <
                                     backgroundColor: t => t.palette.primary.light,
                                 },
                                 '& .MuiDataGrid-row': {
-                                    cursor: 'pointer',
+                                    cursor: linkColumn ? 'pointer' : 'default',
                                 },
                             }}
                             {...gridProps}

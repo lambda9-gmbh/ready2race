@@ -5,8 +5,12 @@ import {CompetitionDto, CompetitionRegistrationDto, EventDto} from '@api/types.g
 import {Trans, useTranslation} from 'react-i18next'
 import {useAuthenticatedUser} from '@contexts/user/UserContext.ts'
 import {Alert, Stack, Typography} from '@mui/material'
-import {getRegistrationState} from '@utils/helpers.ts'
+import {currentlyInTimespan, getRegistrationState} from '@utils/helpers.ts'
 import InlineLink from '@components/InlineLink.tsx'
+import ChallengeResultDialog, {
+    ResultInputTeamInfo,
+} from '@components/event/competition/registration/ChallengeResultDialog.tsx'
+import {useState} from 'react'
 
 type Props = {
     eventData: EventDto
@@ -16,6 +20,9 @@ type Props = {
 const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Props) => {
     const {t} = useTranslation()
     const user = useAuthenticatedUser()
+
+    const [lastChallengeRegistration, setLastChallengeRegistration] =
+        useState<ResultInputTeamInfo | null>(null)
 
     const registrationState = getRegistrationState(
         eventData,
@@ -57,9 +64,27 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
             )}
             <CompetitionRegistrationDialog
                 {...competitionRegistrationProps.dialog}
+                openResultDialog={reg => setLastChallengeRegistration(reg)}
                 competition={competitionData}
                 eventData={eventData}
             />
+            {eventData.challengeEvent && (
+                <ChallengeResultDialog
+                    dialogOpen={!!lastChallengeRegistration}
+                    teamDto={lastChallengeRegistration}
+                    closeDialog={() => setLastChallengeRegistration(null)}
+                    reloadTeams={() => null}
+                    resultConfirmationImageRequired={
+                        competitionData.properties.challengeConfig
+                            ?.resultConfirmationImageRequired ?? false
+                    }
+                    resultType={eventData.challengeResultType}
+                    outsideOfChallengeTimespan={currentlyInTimespan(
+                        competitionData.properties.challengeConfig?.startAt,
+                        competitionData.properties.challengeConfig?.endAt,
+                    )}
+                />
+            )}
             <CompetitionRegistrationTable
                 {...competitionRegistrationProps.table}
                 registrationState={registrationState}

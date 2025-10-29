@@ -27,8 +27,11 @@ import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamed
 import {TeamParticipantAutocomplete} from '@components/eventRegistration/TeamParticipantAutocomplete.tsx'
 import FormInputAutocomplete from '@components/form/input/FormInputAutocomplete.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {updateRegistrationGlobal} from '@authorization/privileges.ts'
+import {updateRegistrationGlobal, updateResultGlobal} from '@authorization/privileges.ts'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
+import {currentlyInTimespan} from '@utils/helpers.ts'
+import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
+import {ResultInputTeamInfo} from '@components/event/competition/registration/ChallengeResultDialog.tsx'
 
 const registrationTypes: RegistrationInvoiceType[] = ['REGULAR', 'LATE']
 type RegistrationType = (typeof registrationTypes)[number]
@@ -40,15 +43,18 @@ type CompetitionRegistrationForm = {
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
     asRegistrationType: RegistrationType
     ratingCategory: string
+    includeResult: boolean
 }
 
 const CompetitionRegistrationDialog = ({
     competition,
     eventData,
+    openResultDialog,
     ...props
 }: BaseEntityDialogProps<CompetitionRegistrationDto> & {
     competition: CompetitionDto
     eventData: EventDto
+    openResultDialog: (reg: ResultInputTeamInfo) => void
 }) => {
     const {t} = useTranslation()
     const user = useUser()
@@ -187,14 +193,22 @@ const CompetitionRegistrationDialog = ({
             ),
     })
 
-    const addAction = (formData: CompetitionRegistrationForm) => {
-        return addCompetitionRegistration({
+    const addAction = async (formData: CompetitionRegistrationForm) => {
+        const registerRes = await addCompetitionRegistration({
             path: {eventId: eventData.id, competitionId: competition.id},
             body: mapFormToRequest(formData),
             query: {
                 registrationType: globalPrivilege ? formData.asRegistrationType : undefined,
             },
         })
+        if (
+            !registerRes.error &&
+            eventData.challengeEvent &&
+            formContext.getValues('includeResult')
+        ) {
+            openResultDialog(registerRes.data)
+        }
+        return registerRes
     }
 
     const editAction = (
@@ -220,6 +234,13 @@ const CompetitionRegistrationDialog = ({
         clubId: user.loggedIn ? user.clubId : undefined,
         asRegistrationType: 'LATE',
         ratingCategory: competition.properties.ratingCategoryRequired ? '' : 'none',
+        includeResult:
+            eventData.challengeEvent &&
+            (eventData.allowSelfSubmission || user.checkPrivilege(updateResultGlobal)) &&
+            currentlyInTimespan(
+                competition.properties.challengeConfig?.startAt,
+                competition.properties.challengeConfig?.endAt,
+            ),
     }
 
     const optionalFees = useMemo(
@@ -340,6 +361,14 @@ const CompetitionRegistrationDialog = ({
                             row
                         />
                     )}
+                    {eventData.challengeEvent && (
+                        <FormInputCheckbox
+                            name={'includeResult'}
+                            label={t('event.competition.registration.challenge.includeResult')}
+                            horizontal
+                            reverse
+                        />
+                    )}
                 </Stack>
             </Stack>
         </EntityDialog>
@@ -369,6 +398,7 @@ function mapDtoToForm(dto: CompetitionRegistrationDto): CompetitionRegistrationF
         })),
         asRegistrationType: dto.isLate ? 'LATE' : 'REGULAR',
         ratingCategory: dto.ratingCategory ? dto.ratingCategory.id : 'none',
+        includeResult: false,
     }
 }
 

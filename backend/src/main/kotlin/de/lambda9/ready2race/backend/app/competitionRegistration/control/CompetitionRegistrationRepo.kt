@@ -114,6 +114,68 @@ object CompetitionRegistrationRepo {
         )
     }
 
+    fun getForResponse(
+        competitionRegistrationId: UUID,
+    ): JIO<CompetitionRegistrationDto?> = Jooq.query {
+        val optionalFees = selectFees()
+
+        val participants = selectParticipants()
+
+        val namedParticipants = selectNamedParticipants(participants)
+
+        select(
+            COMPETITION_REGISTRATION.ID,
+            COMPETITION_REGISTRATION.NAME,
+            COMPETITION_REGISTRATION.CLUB,
+            CLUB.NAME,
+            optionalFees,
+            namedParticipants,
+            COMPETITION_REGISTRATION.IS_LATE,
+            RATING_CATEGORY.ID,
+            RATING_CATEGORY.NAME,
+            RATING_CATEGORY.DESCRIPTION,
+            COMPETITION_REGISTRATION.CREATED_AT,
+            COMPETITION_REGISTRATION.UPDATED_AT,
+            COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION,
+            COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND,
+            COMPETITION_DEREGISTRATION.REASON,
+        )
+            .from(COMPETITION_REGISTRATION)
+            .join(COMPETITION).on(COMPETITION.ID.eq(COMPETITION_REGISTRATION.COMPETITION))
+            .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)) // also user for sort + search
+            .leftJoin(RATING_CATEGORY)
+            .on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)) // also user for sort + search
+            .leftJoin(COMPETITION_DEREGISTRATION)
+            .on(COMPETITION_REGISTRATION.ID.eq(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION))
+            .where(COMPETITION_REGISTRATION.ID.eq(competitionRegistrationId))
+            .fetchOne {
+                CompetitionRegistrationDto(
+                    id = it[COMPETITION_REGISTRATION.ID]!!,
+                    name = it[COMPETITION_REGISTRATION.NAME],
+                    clubId = it[COMPETITION_REGISTRATION.CLUB]!!,
+                    clubName = it[CLUB.NAME]!!,
+                    optionalFees = it[optionalFees],
+                    namedParticipants = it[namedParticipants],
+                    isLate = it[COMPETITION_REGISTRATION.IS_LATE]!!,
+                    ratingCategory = it[RATING_CATEGORY.ID]?.run {
+                        RatingCategoryDto(
+                            id = this,
+                            name = it[RATING_CATEGORY.NAME]!!,
+                            description = it[RATING_CATEGORY.DESCRIPTION]
+                        )
+                    },
+                    createdAt = it[COMPETITION_REGISTRATION.CREATED_AT]!!,
+                    updatedAt = it[COMPETITION_REGISTRATION.UPDATED_AT]!!,
+                    deregistration = if (it[COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION] != null) {
+                        CompetitionDeregistrationDto(
+                            competitionSetupRoundId = it[COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND],
+                            reason = it[COMPETITION_DEREGISTRATION.REASON],
+                        )
+                    } else null
+                )
+            }
+    }
+
     fun registrationPageForCompetition(
         competitionId: UUID,
         params: PaginationParameters<CompetitionRegistrationSort>,
