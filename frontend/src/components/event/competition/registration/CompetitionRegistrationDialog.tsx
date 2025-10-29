@@ -228,11 +228,17 @@ const CompetitionRegistrationDialog = ({
         })
     }
 
+    const adminLatePossible =
+        globalPrivilege &&
+        competition.properties.lateRegistrationAllowed &&
+        eventData.registrationAvailableTo &&
+        new Date(eventData.registrationAvailableTo) < new Date()
+
     const defaultValues: CompetitionRegistrationForm = {
         namedParticipants: [],
         optionalFees: [],
         clubId: user.loggedIn ? user.clubId : undefined,
-        asRegistrationType: 'LATE',
+        asRegistrationType: adminLatePossible ? 'LATE' : 'REGULAR',
         ratingCategory: competition.properties.ratingCategoryRequired ? '' : 'none',
         includeResult:
             eventData.challengeEvent &&
@@ -263,27 +269,24 @@ const CompetitionRegistrationDialog = ({
             editAction={editAction}>
             <Stack spacing={4}>
                 <Stack spacing={2}>
-                    {globalPrivilege &&
-                        competition.properties.lateRegistrationAllowed &&
-                        eventData.registrationAvailableTo &&
-                        new Date(eventData.registrationAvailableTo) < new Date() && (
-                            <FormInputSelect
-                                name={'asRegistrationType'}
-                                label={t(
-                                    'event.competition.registration.dialog.registrationType.label',
-                                )}
-                                options={registrationTypes.map(
-                                    type =>
-                                        ({
-                                            id: type,
-                                            label: t(
-                                                `event.competition.registration.dialog.registrationType.${type}`,
-                                            ),
-                                        }) satisfies {id: RegistrationType; label: string},
-                                )}
-                                required
-                            />
-                        )}
+                    {adminLatePossible && (
+                        <FormInputSelect
+                            name={'asRegistrationType'}
+                            label={t(
+                                'event.competition.registration.dialog.registrationType.label',
+                            )}
+                            options={registrationTypes.map(
+                                type =>
+                                    ({
+                                        id: type,
+                                        label: t(
+                                            `event.competition.registration.dialog.registrationType.${type}`,
+                                        ),
+                                    }) satisfies {id: RegistrationType; label: string},
+                            )}
+                            required
+                        />
+                    )}
                     {(ratingCategories?.length ?? 0) > 0 && (
                         <FormInputSelect
                             name={'ratingCategory'}
