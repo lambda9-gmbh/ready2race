@@ -2,11 +2,11 @@ import React, {PropsWithChildren, useEffect, useState} from 'react'
 import {AnonymousUser, AuthenticatedUser, User, UserContext} from './UserContext.ts'
 import {router} from '@routes'
 import {useFetch} from '@utils/hooks.ts'
-import {scopeLevel} from '@utils/helpers.ts'
+import {i18nLanguage, scopeLevel} from '@utils/helpers.ts'
 import {Action, LoginDto, Privilege, Resource, Scope} from '@api/types.gen.ts'
 import {checkUserLogin, client, userLogout} from '@api/sdk.gen.ts'
 import i18next from 'i18next'
-import {fallbackLng, isLanguage, Language} from '@i18n/config.ts'
+import {Language} from '@i18n/config.ts'
 import PanicPage from '../../pages/PanicPage.tsx'
 
 type Session = {
@@ -40,9 +40,7 @@ type UserData =
       }
 
 const UserProvider = ({children}: PropsWithChildren) => {
-    const [language, setLanguage] = useState(
-        isLanguage(i18next.language) ? i18next.language : fallbackLng,
-    )
+    const [language, setLanguage] = useState(i18nLanguage())
     const [userData, setUserData] = useState<UserData>({
         userInfo: undefined,
         token: sessionStorage.getItem('session'),

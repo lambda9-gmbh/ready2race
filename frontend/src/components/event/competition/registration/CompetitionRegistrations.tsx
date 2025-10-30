@@ -79,10 +79,12 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
                             ?.resultConfirmationImageRequired ?? false
                     }
                     resultType={eventData.challengeResultType}
-                    outsideOfChallengeTimespan={currentlyInTimespan(
-                        competitionData.properties.challengeConfig?.startAt,
-                        competitionData.properties.challengeConfig?.endAt,
-                    )}
+                    outsideOfChallengeTimespan={
+                        !currentlyInTimespan(
+                            competitionData.properties.challengeConfig?.startAt,
+                            competitionData.properties.challengeConfig?.endAt,
+                        )
+                    }
                 />
             )}
             <CompetitionRegistrationTable
