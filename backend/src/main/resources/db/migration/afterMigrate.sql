@@ -477,6 +477,7 @@ select er.event                                                                 
        p.gender,
        p.external,
        p.external_club_name,
+       p.email,
        coalesce(array_agg(distinct cpr) filter ( where cpr.id is not null ), '{}') as participant_requirements_checked,
        qc.qr_code_id,
        array_agg(distinct crnp.named_participant)                                  as named_participant_ids
@@ -488,7 +489,7 @@ from event_registration er
          left join checked_participant_requirement cpr on p.id = cpr.participant and er.event = cpr.event
          left join qr_codes qc on qc.participant = p.id
 group by er.event, c.id, c.name, p.id, p.firstname, p.lastname, p.year, p.gender, p.external, p.external_club_name,
-         qc.id
+         qc.id, p.email
 order by c.name, p.firstname, p.lastname;
 
 create view event_public_view as

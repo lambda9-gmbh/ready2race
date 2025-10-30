@@ -304,6 +304,7 @@ object CompetitionRegistrationRepo {
             PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
             PARTICIPANT_FOR_EVENT.QR_CODE_ID,
             PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS,
+            PARTICIPANT_FOR_EVENT.EMAIL
         )
             .from(PARTICIPANT_FOR_EVENT)
             .join(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
@@ -323,7 +324,8 @@ object CompetitionRegistrationRepo {
                 PARTICIPANT_FOR_EVENT.EXTERNAL,
                 PARTICIPANT_FOR_EVENT.EXTERNAL_CLUB_NAME,
                 PARTICIPANT_FOR_EVENT.QR_CODE_ID,
-                PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS
+                PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS,
+                PARTICIPANT_FOR_EVENT.EMAIL
             )
             .orderBy(PARTICIPANT_FOR_EVENT.FIRSTNAME, PARTICIPANT_FOR_EVENT.LASTNAME)
             .asMultiset("participants")
@@ -343,6 +345,7 @@ object CompetitionRegistrationRepo {
                         qrCodeId = it[PARTICIPANT_FOR_EVENT.QR_CODE_ID],
                         namedParticipantIds = it[PARTICIPANT_FOR_EVENT.NAMED_PARTICIPANT_IDS]?.filterNotNull()
                             ?: emptyList(),
+                        email = it[PARTICIPANT_FOR_EVENT.EMAIL],
                     )
                 }
             }

@@ -1189,6 +1189,7 @@ export type ParticipantForEventDto = {
     participantRequirementsChecked?: Array<CheckedParticipantRequirement>
     qrCodeId?: string
     namedParticipantIds?: Array<string>
+    email?: string
 }
 
 export type ParticipantForExecutionDto = {
@@ -1420,6 +1421,10 @@ export type RegisterRequest = {
 }
 
 export type RegistrationInvoiceType = 'REGULAR' | 'LATE'
+
+export type ResendAccessTokenRequest = {
+    callbackUrl: string
+}
 
 export type Resource =
     | 'USER'
@@ -5080,3 +5085,15 @@ export type SetSmtpOverrideError = BadRequestError | ApiError | UnprocessableEnt
 export type DeleteSmtpOverrideResponse = void
 
 export type DeleteSmtpOverrideError = ApiError
+
+export type ResendAccessTokenData = {
+    body: ResendAccessTokenRequest
+    path: {
+        eventId: string
+        participantId: string
+    }
+}
+
+export type ResendAccessTokenResponse = void
+
+export type ResendAccessTokenError = BadRequestError | ApiError | UnprocessableEntityError

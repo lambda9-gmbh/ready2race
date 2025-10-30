@@ -21,6 +21,7 @@ fun EventRegistrationParticipantUpsertDto.toRecord(userId: UUID, clubId: UUID): 
                 gender = this.gender,
                 external = this.external,
                 externalClubName = this.externalClubName?.trim()?.takeIf { it.isNotBlank() },
+                email = email,
                 createdAt = now,
                 createdBy = userId,
                 updatedAt = now,

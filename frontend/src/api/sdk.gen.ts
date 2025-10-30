@@ -653,6 +653,9 @@ import type {
     SetSmtpOverrideResponse,
     DeleteSmtpOverrideError,
     DeleteSmtpOverrideResponse,
+    ResendAccessTokenData,
+    ResendAccessTokenError,
+    ResendAccessTokenResponse,
 } from './types.gen'
 
 export const client = createClient(createConfig())
@@ -3374,5 +3377,18 @@ export const deleteSmtpOverride = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/smtp-override',
+    })
+}
+
+export const resendAccessToken = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<ResendAccessTokenData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).put<
+        ResendAccessTokenResponse,
+        ResendAccessTokenError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/participant/{participantId}/resendAccessToken',
     })
 }

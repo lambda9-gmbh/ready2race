@@ -67,6 +67,7 @@ fun SubstitutionViewRecord.participantInToParticipantForEventDto(
         participantRequirementsChecked = participantRequirementsChecked,
         namedParticipantIds = namedParticipantIds,
         qrCodeId = qrCode,
+        email = participantIn!!.email
     )
 )
 
@@ -90,6 +91,7 @@ fun ParticipantForEventRecord.toDto(
             )
         },
         namedParticipantIds = overwriteNamedParticipantIds ?: namedParticipantIds!!.filterNotNull(),
-        qrCodeId = qrCodeId
+        qrCodeId = qrCodeId,
+        email = email,
     )
 )

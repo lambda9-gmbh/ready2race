@@ -5997,6 +5997,36 @@ paths:
           description: Internal server error
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/participant/{participantId}/resendAccessToken:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - in: path
+        name: participantId
+        required: true
+        schema:
+          type: string
+    put:
+      operationId: resendAccessToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendAccessTokenRequest'
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+
 components:
 
   parameters:
@@ -8343,6 +8373,8 @@ components:
           items:
             type: string
             format: uuid
+        email:
+          type: string
 
 
     # participant
@@ -11130,3 +11162,10 @@ components:
           type: string
           format: email
 
+    ResendAccessTokenRequest:
+      type: object
+      required:
+        - callbackUrl
+      properties:
+        callbackUrl:
+          type: string

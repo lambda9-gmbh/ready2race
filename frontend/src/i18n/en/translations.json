@@ -258,6 +258,8 @@
       "qrCodeDelete": "Delete QR Code value",
       "qrCodeDeleteConfirm": "Do you really want to delete the QR Code?",
       "qrCodeEditDescription": "Please enter the new QR Code value.",
+      "resendAccessToken": "Send new access token",
+      "resendAccessTokenSuccess": "New token sent.",
       "userQrCode": "User QR Code",
       "qrCode": "QR Code",
       "id": "Participant ID",

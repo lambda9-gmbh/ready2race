@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.participant.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.eventParticipant.boundary.eventParticipant
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventSort
 import de.lambda9.ready2race.backend.app.participantTracking.boundary.ParticipantTrackingService
 import de.lambda9.ready2race.backend.calls.requests.authenticate
@@ -37,8 +38,11 @@ fun Route.participantForEvent() {
             }
         }
 
-        route("/{participantId}/checkInOut") {
-            post {
+        route("/{participantId}") {
+
+            eventParticipant()
+
+            post("/checkInOut") {
                 call.respondComprehension {
                     val user = !authenticate(Privilege.UpdateAppCompetitionCheckGlobal)
                     val participantId = !pathParam("participantId", uuid)
@@ -48,6 +52,7 @@ fun Route.participantForEvent() {
                     ParticipantTrackingService.participantCheckInOut(participantId, eventId, user.id!!, checkIn)
                 }
             }
+
         }
     }
 

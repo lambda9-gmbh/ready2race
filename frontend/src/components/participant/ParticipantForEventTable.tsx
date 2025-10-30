@@ -1,20 +1,21 @@
 import {useTranslation} from 'react-i18next'
 import {GridActionsCellItem, GridColDef, GridPaginationModel, GridSortModel} from '@mui/x-data-grid'
-import {eventIndexRoute} from '@routes'
 import {
+    EventDto,
     getActiveParticipantRequirementsForEvent,
     getNamedParticipantsForEvent,
     getParticipantsForEvent,
     ParticipantForEventDto,
     ParticipantRequirementCheckForEventConfigDto,
+    resendAccessToken,
 } from '../../api'
 import {BaseEntityTableProps} from '@utils/types.ts'
 import {PaginationParameters} from '@utils/ApiUtils.ts'
 import EntityTable from '../EntityTable.tsx'
-import {Cancel, CheckCircle, Delete, Edit, Info, VerifiedUser} from '@mui/icons-material'
+import {Cancel, CheckCircle, Delete, Edit, Email, Info, VerifiedUser} from '@mui/icons-material'
 import SplitButton, {SplitButtonOption} from '@components/SplitButton.tsx'
 import {Fragment, useMemo, useState} from 'react'
-import {useEntityAdministration, useFetch} from '@utils/hooks.ts'
+import {useEntityAdministration, useFeedback, useFetch} from '@utils/hooks.ts'
 import ParticipantRequirementApproveManuallyForEventDialog, {
     ParticipantRequirementApproveManuallyForEventForm,
 } from '@components/event/participantRequirement/ParticipantRequirementApproveManuallyForEventDialog.tsx'
@@ -28,6 +29,9 @@ import {deleteQrCode} from '@api/sdk.gen.ts'
 import {QrCodeEditDialog} from '@components/participant/QrCodeEditDialog.tsx'
 import QrCodeIcon from '@mui/icons-material/QrCode'
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 const initialPagination: GridPaginationModel = {
     page: 0,
     pageSize: 10,
@@ -35,14 +39,20 @@ const initialPagination: GridPaginationModel = {
 const pageSizeOptions: (number | {value: number; label: string})[] = [10]
 const initialSort: GridSortModel = [{field: 'clubName', sort: 'asc'}]
 
-const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEventDto>) => {
+type Props = BaseEntityTableProps<ParticipantForEventDto> & {
+    eventData: EventDto
+}
+
+const ParticipantForEventTable = ({eventData, ...props}: Props) => {
     const {t} = useTranslation()
     const user = useUser()
-    const {eventId} = eventIndexRoute.useParams()
     const {confirmAction} = useConfirmation()
+    const feedback = useFeedback()
 
     const [editDialogOpen, setEditDialogOpen] = useState(false)
     const [editQrParticipant, setEditQrParticipant] = useState<ParticipantForEventDto | null>(null)
+
+    const eventId = eventData.id
 
     const dataRequest = (signal: AbortSignal, paginationParameters: PaginationParameters) => {
         return getParticipantsForEvent({
@@ -334,6 +344,24 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
         )
     }
 
+    const handleResendAccessToken = (participant: ParticipantForEventDto) => {
+        confirmAction(async () => {
+            const {error} = await resendAccessToken({
+                path: {eventId, participantId: participant.id},
+                body: {
+                    callbackUrl: location.origin + (basepath ? `/${basepath}` : '') + '/challenge/',
+                },
+            })
+
+            if (error) {
+                feedback.error(t('common.error.unexpected'))
+            } else {
+                feedback.success(t('club.participant.resendAccessTokenSuccess'))
+            }
+            props.reloadData()
+        })
+    }
+
     const customEntityActions = (entity: ParticipantForEventDto) => {
         return [
             <GridActionsCellItem
@@ -348,6 +376,16 @@ const ParticipantForEventTable = (props: BaseEntityTableProps<ParticipantForEven
                 onClick={() => handleDeleteQr(entity)}
                 showInMenu
             />,
+            ...(eventData.challengeEvent && eventData.allowSelfSubmission && entity.email
+                ? [
+                      <GridActionsCellItem
+                          icon={<Email />}
+                          label={t('club.participant.resendAccessToken')}
+                          onClick={() => handleResendAccessToken(entity)}
+                          showInMenu
+                      />,
+                  ]
+                : []),
         ]
     }
 

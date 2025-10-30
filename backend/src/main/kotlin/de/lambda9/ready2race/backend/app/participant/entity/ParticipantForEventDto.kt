@@ -17,4 +17,5 @@ data class ParticipantForEventDto(
     val participantRequirementsChecked: List<CheckedParticipantRequirement>?,
     val qrCodeId: String?,
     val namedParticipantIds: List<UUID>,
+    val email: String?,
 )

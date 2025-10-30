@@ -346,6 +346,7 @@ const EventPage = () => {
                         <TabPanel index={'participants'} activeTab={activeTab}>
                             <Stack spacing={2}>
                                 <ParticipantForEventTable
+                                    eventData={data}
                                     {...participantForEventProps.table}
                                     title={t('event.participants')}
                                 />
