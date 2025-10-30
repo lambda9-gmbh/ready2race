@@ -13,6 +13,7 @@
     "manage": "Manage",
     "all": "All",
     "selectAll": "Select all",
+    "deselectAll": "Deselect all",
     "error": {
       "unexpected": "An unexpected error has occurred. Please try again later.",
       "tooManyRequests": "Too many requests. Try again in {{val, relativetime(minute)}}.",

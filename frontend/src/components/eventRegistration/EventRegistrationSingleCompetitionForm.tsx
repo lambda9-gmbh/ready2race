@@ -2,6 +2,7 @@ import {CheckboxButtonGroup, useFormContext, useWatch} from 'react-hook-form-mui
 import {
     Alert,
     Box,
+    Button,
     Checkbox,
     Chip,
     Divider,
@@ -13,8 +14,14 @@ import {
     Typography,
 } from '@mui/material'
 import * as React from 'react'
-import {useCallback, useEffect, useMemo, useState} from 'react'
-import {FilterAlt, Person} from '@mui/icons-material'
+import {ReactNode, useCallback, useEffect, useMemo, useState} from 'react'
+import {
+    CheckBox,
+    CheckBoxOutlineBlank,
+    FilterAlt,
+    IndeterminateCheckBox,
+    Person,
+} from '@mui/icons-material'
 import {EventRegistrationCompetitionDto, RatingCategoryToEventDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
@@ -81,6 +88,21 @@ const EventSingleCompetitionField = (props: {
 
     const onChange = (checked: boolean) => {
         if (checked) {
+            // Determine the rating category to use
+            let selectedRatingCategory = props.option.ratingCategoryRequired ? '' : 'none'
+
+            // If rating category is required, check if there's exactly one valid option
+            if (props.option.ratingCategoryRequired) {
+                const validRatingCategories = ratingCategories.filter(rc =>
+                    isRatingCategoryValidForParticipant(rc, participant),
+                )
+
+                // Auto-select if there's exactly one valid rating category
+                if (validRatingCategories.length === 1) {
+                    selectedRatingCategory = validRatingCategories[0].ratingCategory.id
+                }
+            }
+
             formContext.setValue(`participants.${props.participantIndex}.competitionsSingle`, [
                 ...(singleCompetitions ?? []),
                 {
@@ -88,7 +110,7 @@ const EventSingleCompetitionField = (props: {
                     locked: false,
                     isLate: props.isLate,
                     optionalFees: [],
-                    ratingCategory: props.option.ratingCategoryRequired ? '' : 'none',
+                    ratingCategory: selectedRatingCategory,
                 },
             ])
         } else {
@@ -175,7 +197,7 @@ export const EventRegistrationSingleCompetitionForm = () => {
     const {t} = useTranslation()
     const [category, setCategory] = React.useState<string>(ALL_CATEGORIES)
     const formContext = useFormContext<EventRegistrationFormData>()
-    const {info} = useEventRegistration()
+    const {info, ratingCategories} = useEventRegistration()
 
     const competitionsSingle: Map<string, Array<EventRegistrationCompetitionDto>> = useMemo(() => {
         return new Map([
@@ -243,9 +265,145 @@ export const EventRegistrationSingleCompetitionForm = () => {
         }
     }, [competitionsSingle, category])
 
+    // Calculate selection state for "Select All" button
+    const selectionState = useMemo(() => {
+        let totalSelectableCompetitions = 0
+        let totalSelectedCompetitions = 0
+
+        participantList.forEach(participant => {
+            const availableCompetitions = competitionsSingle.get(participant.gender ?? 'O') ?? []
+
+            availableCompetitions.forEach(competition => {
+                const isLocked =
+                    participant.competitionsSingle?.find(c => c.competitionId === competition.id)
+                        ?.locked === true
+                const isDisabled =
+                    isLocked || (info?.state === 'LATE' && !competition.lateRegistrationAllowed)
+
+                if (!isDisabled) {
+                    totalSelectableCompetitions++
+                    const isSelected =
+                        participant.competitionsSingle?.some(
+                            c => c.competitionId === competition.id,
+                        ) ?? false
+                    if (isSelected) {
+                        totalSelectedCompetitions++
+                    }
+                }
+            })
+        })
+
+        if (totalSelectedCompetitions === 0) {
+            return 'none'
+        } else if (totalSelectedCompetitions === totalSelectableCompetitions) {
+            return 'all'
+        } else {
+            return 'partial'
+        }
+    }, [participantList, competitionsSingle, info?.state])
+
+    const handleSelectAll = useCallback(() => {
+        const shouldSelect = selectionState !== 'all'
+
+        participantList.forEach((participant, participantIndex) => {
+            const availableCompetitions = competitionsSingle.get(participant.gender ?? 'O') ?? []
+
+            if (shouldSelect) {
+                // Select all non-locked, non-disabled competitions
+                const competitionsToAdd = availableCompetitions
+                    .filter(competition => {
+                        const isLocked =
+                            participant.competitionsSingle?.find(
+                                c => c.competitionId === competition.id,
+                            )?.locked === true
+                        const isDisabled =
+                            isLocked ||
+                            (info?.state === 'LATE' && !competition.lateRegistrationAllowed)
+                        const isAlreadySelected =
+                            participant.competitionsSingle?.some(
+                                c => c.competitionId === competition.id,
+                            ) ?? false
+
+                        return !isDisabled && !isAlreadySelected
+                    })
+                    .map(competition => {
+                        // Determine the rating category to use
+                        let selectedRatingCategory = competition.ratingCategoryRequired ? '' : 'none'
+
+                        // If rating category is required, check if there's exactly one valid option
+                        if (competition.ratingCategoryRequired) {
+                            const validRatingCategories = ratingCategories.filter(rc =>
+                                isRatingCategoryValidForParticipant(rc, participant),
+                            )
+
+                            // Auto-select if there's exactly one valid rating category
+                            if (validRatingCategories.length === 1) {
+                                selectedRatingCategory = validRatingCategories[0].ratingCategory.id
+                            }
+                        }
+
+                        return {
+                            competitionId: competition.id,
+                            locked: false,
+                            isLate: info?.state === 'LATE',
+                            optionalFees: [],
+                            ratingCategory: selectedRatingCategory,
+                        }
+                    })
+
+                if (competitionsToAdd.length > 0) {
+                    formContext.setValue(`participants.${participantIndex}.competitionsSingle`, [
+                        ...(participant.competitionsSingle ?? []),
+                        ...competitionsToAdd,
+                    ])
+                }
+            } else {
+                // Deselect all non-locked competitions
+                const filteredCompetitions =
+                    participant.competitionsSingle?.filter(c => c.locked === true) ?? []
+                formContext.setValue(
+                    `participants.${participantIndex}.competitionsSingle`,
+                    filteredCompetitions,
+                )
+            }
+        })
+    }, [selectionState, participantList, competitionsSingle, info?.state, formContext, ratingCategories])
+
+    const getSelectAllButton = () => {
+        let icon: ReactNode
+        let label = ''
+
+        switch (selectionState) {
+            case 'all':
+                icon = <CheckBox />
+                label = t('common.deselectAll')
+                break
+            case 'partial':
+                icon = <IndeterminateCheckBox />
+                label = t('common.selectAll')
+                break
+            case 'none':
+            default:
+                icon = <CheckBoxOutlineBlank />
+                label = t('common.selectAll')
+                break
+        }
+
+        return (
+            <Button
+                variant="outlined"
+                startIcon={icon}
+                onClick={handleSelectAll}
+                sx={{cursor: 'pointer'}}>
+                {label}
+            </Button>
+        )
+    }
+
     return (
         <Stack spacing={2}>
             {getToggleButtons()}
+            {participantList.length > 0 && <Box>{getSelectAllButton()}</Box>}
             {participantList.map((participant, index) => (
                 <Paper sx={{p: 2}} elevation={2} key={participant.id}>
                     <Stack direction="row" spacing={1}>
