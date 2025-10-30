@@ -20,8 +20,7 @@ import {MatchResultType} from '@api/types.gen.ts'
 import {FormContainer, useForm} from 'react-hook-form-mui'
 import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import LoadingButton from '@components/form/LoadingButton.tsx'
-import {submitChallengeTeamResults} from '@api/sdk.gen.ts'
-import {competitionRoute, eventRoute} from '@routes'
+import {submitChallengeTeamResults, submitChallengeTeamResultsByToken} from '@api/sdk.gen.ts'
 import ChallengeResultForm from '@components/event/competition/registration/ChallengeResultForm.tsx'
 
 export type ResultInputTeamInfo = {
@@ -45,6 +44,9 @@ type Props = {
     resultConfirmationImageRequired: boolean
     resultType?: MatchResultType
     outsideOfChallengeTimespan: boolean
+    accessToken?: string
+    eventId: string
+    competitionId: string
 }
 type Form = {
     result: string
@@ -61,9 +63,6 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
 
-    const {eventId} = eventRoute.useParams()
-    const {competitionId} = competitionRoute.useParams()
-
     const [submitting, setSubmitting] = useState(false)
 
     const formContext = useForm<Form>()
@@ -72,22 +71,38 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
 
     const onSubmit = async (formData: Form) => {
         if (!teamDto) return
-        if (formData.files.length !== 1) return
 
         setSubmitting(true)
-        const {error} = await submitChallengeTeamResults({
-            path: {
-                eventId: eventId,
-                competitionId: competitionId,
-                competitionRegistrationId: teamDto.id,
-            },
-            body: {
-                request: {
-                    result: Number(formData.result),
-                },
-                files: [formData.files[0].file],
-            },
-        })
+
+        const {error} = props.accessToken
+            ? await submitChallengeTeamResultsByToken({
+                  path: {
+                      eventId: props.eventId,
+                      competitionId: props.competitionId,
+                      competitionRegistrationId: teamDto.id,
+                      accessToken: props.accessToken,
+                  },
+                  body: {
+                      request: {
+                          result: Number(formData.result),
+                      },
+                      files: formData.files.map(({file}) => file),
+                  },
+              })
+            : await submitChallengeTeamResults({
+                  path: {
+                      eventId: props.eventId,
+                      competitionId: props.competitionId,
+                      competitionRegistrationId: teamDto.id,
+                  },
+                  body: {
+                      request: {
+                          result: Number(formData.result),
+                      },
+                      files: formData.files.map(({file}) => file),
+                  },
+              })
+
         setSubmitting(false)
         setConfirming(false)
         if (error) {

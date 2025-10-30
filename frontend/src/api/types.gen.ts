@@ -5108,6 +5108,23 @@ export type SubmitChallengeTeamResultsResponse = void
 
 export type SubmitChallengeTeamResultsError = BadRequestError | ApiError
 
+export type SubmitChallengeTeamResultsByTokenData = {
+    body: {
+        request: CompetitionChallengeResultRequest
+        files: Array<Blob | File>
+    }
+    path: {
+        accessToken: string
+        competitionId: string
+        competitionRegistrationId: string
+        eventId: string
+    }
+}
+
+export type SubmitChallengeTeamResultsByTokenResponse = void
+
+export type SubmitChallengeTeamResultsByTokenError = BadRequestError | ApiError
+
 export type DownloadMatchTeamResultDocumentData = {
     path: {
         competitionId: string
@@ -5119,6 +5136,19 @@ export type DownloadMatchTeamResultDocumentData = {
 export type DownloadMatchTeamResultDocumentResponse = Blob | File
 
 export type DownloadMatchTeamResultDocumentError = BadRequestError | ApiError
+
+export type DownloadMatchTeamResultDocumentByTokenData = {
+    path: {
+        accessToken: string
+        competitionId: string
+        eventId: string
+        resultDocumentId: string
+    }
+}
+
+export type DownloadMatchTeamResultDocumentByTokenResponse = Blob | File
+
+export type DownloadMatchTeamResultDocumentByTokenError = BadRequestError | ApiError
 
 export type GetSmtpConfigResponse = SmtpConfigOverrideDto
 

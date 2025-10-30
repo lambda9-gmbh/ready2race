@@ -350,15 +350,30 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                       buttonContent={<Download />}
                                                       onSelectItem={async (itemId: string) => {
                                                           if (itemId.startsWith('$view')) {
-                                                              const docId = itemId.replace('$view', '')
+                                                              const docId = itemId.replace(
+                                                                  '$view',
+                                                                  '',
+                                                              )
                                                               const docName =
-                                                                  row.challengeResultDocuments?.[docId]
+                                                                  row.challengeResultDocuments?.[
+                                                                      docId
+                                                                  ]
                                                               if (!docName) return
-                                                              void openViewDocumentDialog(docId, docName)
-                                                          } else if (itemId.startsWith('$download')) {
-                                                              const docId = itemId.replace('$download', '')
+                                                              void openViewDocumentDialog(
+                                                                  docId,
+                                                                  docName,
+                                                              )
+                                                          } else if (
+                                                              itemId.startsWith('$download')
+                                                          ) {
+                                                              const docId = itemId.replace(
+                                                                  '$download',
+                                                                  '',
+                                                              )
                                                               const docName =
-                                                                  row.challengeResultDocuments?.[docId]
+                                                                  row.challengeResultDocuments?.[
+                                                                      docId
+                                                                  ]
                                                               if (!docName) return
                                                               void handleDownloadResultDocument(
                                                                   docId,
@@ -533,6 +548,8 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                         competitionData.properties.challengeConfig?.endAt,
                     )
                 }
+                eventId={eventId}
+                competitionId={competitionId}
             />
             <BaseDialog
                 open={viewDocumentDialogOpen}

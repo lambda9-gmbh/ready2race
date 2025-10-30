@@ -5930,6 +5930,49 @@ paths:
         500:
           $ref: '#/components/responses/500'
 
+  /event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/accessToken/{accessToken}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - $ref: '#/components/parameters/competitionRegistrationId'
+      - in: path
+        name: accessToken
+        required: true
+        schema:
+          type: string
+    post:
+      operationId: submitChallengeTeamResultsByToken
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/CompetitionChallengeResultRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}:
     parameters:
       - $ref: '#/components/parameters/eventId'
@@ -5942,6 +5985,37 @@ paths:
           format: uuid
     get:
       operationId: downloadMatchTeamResultDocument
+      responses:
+        200:
+          $ref: '#/components/responses/file'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+          
+  /event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}/accessToken/{accessToken}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - $ref: '#/components/parameters/competitionId'
+      - in: path
+        name: resultDocumentId
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - in: path
+        name: accessToken
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: downloadMatchTeamResultDocumentByToken
       responses:
         200:
           $ref: '#/components/responses/file'

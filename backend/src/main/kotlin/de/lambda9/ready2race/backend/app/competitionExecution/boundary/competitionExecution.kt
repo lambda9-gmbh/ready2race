@@ -209,6 +209,65 @@ fun Route.competitionExecution() {
         }
         route("/challenge") {
             route("/team-results") {
+                post("/{competitionRegistrationId}/accessToken/{accessToken}") {
+                    call.respondComprehension {
+
+                        val accessToken = !pathParam("accessToken")
+                        val competitionId = !pathParam("competitionId", uuid)
+                        val competitionRegistrationId = !pathParam("competitionRegistrationId", uuid)
+
+                        val multiPartData = receiveMultipart()
+
+                        // Todo: Limit file size
+                        var upload: File? = null
+                        var request: CompetitionChallengeResultRequest? = null
+
+                        var done = false
+                        while (!done) {
+                            val part = multiPartData.readPart()
+                            if (part == null) {
+                                done = true
+                            } else {
+                                when (part) {
+                                    is PartData.FileItem -> {
+                                        if (upload == null) {
+                                            upload = File(
+                                                part.originalFileName!!,
+                                                part.provider().toByteArray(),
+                                            )
+                                        } else {
+                                            KIO.fail(RequestError.File.Multiple)
+                                        }
+                                    }
+
+                                    is PartData.FormItem -> {
+                                        if (part.name == "request") {
+                                            request =
+                                                jsonMapper.readValue<CompetitionChallengeResultRequest>(part.value)
+                                        }
+                                    }
+
+                                    else -> {}
+                                }
+                            }
+                        }
+
+                        val req =
+                            !KIO.failOnNull(request) { RequestError.BodyMissing(UploadMatchResultRequest.example) }
+
+                        // TODO: check valid image
+                        // !KIO.failOn(!checkValidXls(file.bytes)) { RequestError.File.UnsupportedType }
+
+                        CompetitionExecutionChallengeService.saveChallengeResult(
+                            accessToken = accessToken,
+                            competitionId = competitionId,
+                            competitionRegistrationId = competitionRegistrationId,
+                            request = req,
+                            file = upload
+                        )
+
+                    }
+                }
                 post("/{competitionRegistrationId}") {
                     call.respondComprehension {
 
@@ -272,20 +331,37 @@ fun Route.competitionExecution() {
                 }
             }
         }
-        get("/result-document/{resultDocumentId}") {
-            call.respondComprehension {
-                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.RESULT)
-                val eventId = !pathParam("eventId", uuid)
-                val docId = !pathParam("resultDocumentId", uuid)
 
-                CompetitionExecutionService.downloadTeamResultDocument(
-                    eventId = eventId,
-                    documentId = docId,
-                    clubId = user.club,
-                    scope = scope
-                )
+        route("/result-document/{resultDocumentId}") {
+
+            get {
+                call.respondComprehension {
+                    val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.RESULT)
+                    val docId = !pathParam("resultDocumentId", uuid)
+
+                    CompetitionExecutionService.downloadTeamResultDocument(
+                        documentId = docId,
+                        clubId = user.club,
+                        scope = scope
+                    )
+                }
             }
+
+            get("/accessToken/{accessToken}") {
+                call.respondComprehension {
+                    val docId = !pathParam("resultDocumentId", uuid)
+                    val accessToken = !pathParam("accessToken")
+
+                    CompetitionExecutionService.downloadTeamResultDocument(
+                        documentId = docId,
+                        accessToken = accessToken,
+                    )
+                }
+            }
+
         }
+
+
 
         substitution()
     }

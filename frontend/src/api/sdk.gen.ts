@@ -646,9 +646,15 @@ import type {
     SubmitChallengeTeamResultsData,
     SubmitChallengeTeamResultsError,
     SubmitChallengeTeamResultsResponse,
+    SubmitChallengeTeamResultsByTokenData,
+    SubmitChallengeTeamResultsByTokenError,
+    SubmitChallengeTeamResultsByTokenResponse,
     DownloadMatchTeamResultDocumentData,
     DownloadMatchTeamResultDocumentError,
     DownloadMatchTeamResultDocumentResponse,
+    DownloadMatchTeamResultDocumentByTokenData,
+    DownloadMatchTeamResultDocumentByTokenError,
+    DownloadMatchTeamResultDocumentByTokenResponse,
     GetSmtpConfigError,
     GetSmtpConfigResponse,
     SetSmtpOverrideData,
@@ -3337,6 +3343,24 @@ export const submitChallengeTeamResults = <ThrowOnError extends boolean = false>
     })
 }
 
+export const submitChallengeTeamResultsByToken = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<SubmitChallengeTeamResultsByTokenData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        SubmitChallengeTeamResultsByTokenResponse,
+        SubmitChallengeTeamResultsByTokenError,
+        ThrowOnError
+    >({
+        ...options,
+        ...formDataBodySerializer,
+        headers: {
+            'Content-Type': null,
+            ...options?.headers,
+        },
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/challenge/team-results/{competitionRegistrationId}/accessToken/{accessToken}',
+    })
+}
+
 export const downloadMatchTeamResultDocument = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<DownloadMatchTeamResultDocumentData, ThrowOnError>,
 ) => {
@@ -3347,6 +3371,19 @@ export const downloadMatchTeamResultDocument = <ThrowOnError extends boolean = f
     >({
         ...options,
         url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}',
+    })
+}
+
+export const downloadMatchTeamResultDocumentByToken = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<DownloadMatchTeamResultDocumentByTokenData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        DownloadMatchTeamResultDocumentByTokenResponse,
+        DownloadMatchTeamResultDocumentByTokenError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/competition/{competitionId}/competitionExecution/result-document/{resultDocumentId}/accessToken/{accessToken}',
     })
 }
 

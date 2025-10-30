@@ -1610,5 +1610,16 @@
         "submit": "Beim Ändern der SMTP-Konfiguration ist ein Fehler aufgetreten."
       }
     }
+  },
+  "challenge": {
+    "challenge": "Challenge",
+    "title": "Challenge-Informationen",
+    "team": "Team",
+    "period": "Challenge-Zeitraum",
+    "result": "Ergebnis",
+    "proofSubmitted": "Nachweis-Dokument eingereicht",
+    "proofRequired": "Nachweis-Dokument erforderlich für diesen Wettbewerb",
+    "notFound": "Challenge nicht gefunden",
+    "submitResult": "Ergebnis einreichen"
   }
 }

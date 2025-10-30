@@ -85,6 +85,8 @@ const CompetitionRegistrations = ({eventData, competitionData, reloadEvent}: Pro
                             competitionData.properties.challengeConfig?.endAt,
                         )
                     }
+                    eventId={eventData.id}
+                    competitionId={competitionData.id}
                 />
             )}
             <CompetitionRegistrationTable

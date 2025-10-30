@@ -1609,5 +1609,16 @@
         "submit": "An error has occurred when changing the SMTP configuration."
       }
     }
+  },
+  "challenge": {
+    "challenge": "Challenge",
+    "title": "Challenge Information",
+    "team": "Team",
+    "period": "Challenge Period",
+    "result": "Result",
+    "proofSubmitted": "Proof document submitted",
+    "proofRequired": "Proof document required for this competition",
+    "notFound": "Challenge not found",
+    "submitResult": "Submit result"
   }
 }

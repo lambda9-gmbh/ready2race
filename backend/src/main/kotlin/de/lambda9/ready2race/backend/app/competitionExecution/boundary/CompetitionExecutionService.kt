@@ -16,8 +16,11 @@ import de.lambda9.ready2race.backend.app.documentTemplate.entity.DocumentType
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.control.MatchResultImportConfigRepo
 import de.lambda9.ready2race.backend.app.matchResultImportConfig.entity.MatchResultImportConfigError
+import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.startListConfig.control.StartListConfigRepo
 import de.lambda9.ready2race.backend.app.startListConfig.entity.StartListConfigError
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
@@ -34,6 +37,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
+import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
@@ -1229,7 +1233,6 @@ object CompetitionExecutionService {
     }
 
     fun downloadTeamResultDocument(
-        eventId: UUID,
         documentId: UUID,
         clubId: UUID?,
         scope: Privilege.Scope
@@ -1247,5 +1250,32 @@ object CompetitionExecutionService {
                 bytes = document.data!!,
             )
         )
+    }
+
+    fun downloadTeamResultDocument(
+        documentId: UUID,
+        accessToken: String
+    ): App<ServiceError, ApiResponse.File> = KIO.comprehension {
+
+        val document = !CompetitionMatchTeamDocumentDataRepo.getDownload(documentId).orDie()
+            .onNullFail { CompetitionExecutionError.ResultDocumentNotFound }
+
+        val eventParticipant = !EventParticipantRepo.getByToken(accessToken).orDie().onNullFail { EventParticipantError.TokenNotFound }
+
+        val participant = !ParticipantRepo.get(eventParticipant.participant).orDie().onNullDie("Referenced entity")
+
+        !KIO.failOn(participant.club != document.club) {
+            AuthError.PrivilegeMissing
+        }
+
+        // TODO: @Improve validation, only okay, if document is from team including this participant
+
+        KIO.ok(
+            ApiResponse.File(
+                name = document.name!!,
+                bytes = document.data!!,
+            )
+        )
+
     }
 }

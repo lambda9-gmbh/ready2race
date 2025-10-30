@@ -52,6 +52,7 @@ import SelectResultsEventPage from './pages/results/SelectResultsEventPage.tsx'
 import ResultsQrCodePage from './pages/results/ResultsQrCodePage.tsx'
 import ResultsLayout from './layouts/ResultsLayout.tsx'
 import AdministrationPage from './pages/AdministrationPage.tsx'
+import ChallengePage from './pages/challenge/ChallengePage.tsx'
 
 const checkAuth = (context: User, location: ParsedLocation, privilege?: Privilege) => {
     if (!context.loggedIn) {
@@ -90,6 +91,12 @@ export const mainLayoutRoute = createRoute({
     getParentRoute: () => rootRoute,
     id: 'main-layout',
     component: () => <RootLayout />,
+})
+
+export const mobileRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    id: 'mobile',
+    component: () => <ResultsLayout />,
 })
 
 export const indexRoute = createRoute({
@@ -477,6 +484,12 @@ export const resultsQRCodeRoute = createRoute({
     component: () => <ResultsQrCodePage />,
 })
 
+export const challengeRoute = createRoute({
+    getParentRoute: () => mobileRoute,
+    path: 'challenge/$accessToken',
+    component: () => <ChallengePage />,
+})
+
 const routeTree = rootRoute.addChildren([
     mainLayoutRoute.addChildren([
         indexRoute,
@@ -514,6 +527,7 @@ const routeTree = rootRoute.addChildren([
         appForbiddenRoute,
     ]),
     resultsRoute.addChildren([resultsIndexRoute, resultsQRCodeRoute, resultsEventRoute]),
+    mobileRoute.addChildren([challengeRoute]),
 ])
 
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
