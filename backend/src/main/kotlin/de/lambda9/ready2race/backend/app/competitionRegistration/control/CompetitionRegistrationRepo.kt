@@ -107,7 +107,9 @@ object CompetitionRegistrationRepo {
         user: AppUserWithPrivilegesRecord,
     ): JIO<Int> = Jooq.query {
         fetchCount(
-            COMPETITION_REGISTRATION.join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB)),
+            COMPETITION_REGISTRATION
+                .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
+                .join(RATING_CATEGORY).on(RATING_CATEGORY.ID.eq(COMPETITION_REGISTRATION.RATING_CATEGORY)),
             COMPETITION_REGISTRATION.COMPETITION.eq(competitionId)
                 .and(filterScope(scope, user.club))
                 .and(search.metaSearch(searchFieldsForCompetition))
