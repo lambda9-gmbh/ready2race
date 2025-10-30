@@ -61,6 +61,7 @@ import {AppUserWithQrCodeDto} from '@api/types.gen.ts'
 import ParticipantTrackingLogTable from '@components/event/participantTracking/ParticipantTrackingLogTable.tsx'
 import EventRegistrations from '@components/event/competition/registration/EventRegistrations.tsx'
 import ManageRunningMatchesDialog from '@components/event/match/ManageRunningMatchesDialog.tsx'
+import RatingCategoriesForEvent from '@components/ratingCategory/RatingCategoriesForEvent.tsx'
 
 const EVENT_TABS = [
     'general',
@@ -368,7 +369,7 @@ const EventPage = () => {
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'settings'} activeTab={activeTab}>
-                            <Stack spacing={2}>
+                            <Stack spacing={4}>
                                 <DocumentTable
                                     {...documentAdministrationProps.table}
                                     title={t('event.document.documents')}
@@ -405,6 +406,7 @@ const EventPage = () => {
                                         </>,
                                     ]}
                                 />
+                                <RatingCategoriesForEvent />
                             </Stack>
                         </TabPanel>
                         <TabPanel index={'invoices'} activeTab={activeTab}>

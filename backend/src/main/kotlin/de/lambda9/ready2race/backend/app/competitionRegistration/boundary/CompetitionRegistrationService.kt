@@ -30,6 +30,7 @@ import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.ParticipantRequirementForEventRepo
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
 import de.lambda9.ready2race.backend.app.participantTracking.entity.ParticipantScanType
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryService
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
@@ -215,13 +216,19 @@ object CompetitionRegistrationService {
             .onNullFail { CompetitionError.CompetitionNotFound }
             .andThen { KIO.failOn(it && request.ratingCategory == null) { CompetitionRegistrationError.RatingCategoryMissing } }
 
+        // Age validation by ratingCategory
+        !checkAgeRestriction(eventId, request)
+
+
         val isLate = registrationType == RegistrationInvoiceType.LATE
+
 
         val registrationId = !EventRegistrationRepo.findByEventAndClub(eventId, request.clubId).map { it?.id }.orDie()
             .onNullFail { CompetitionRegistrationError.EventRegistrationNotFound }
 
         val existingCount =
             !CompetitionRegistrationRepo.countForCompetitionAndClub(competitionId, request.clubId).orDie()
+
 
         val name = when {
 
@@ -258,8 +265,16 @@ object CompetitionRegistrationService {
             )
         ).orDie()
 
+
         !request.namedParticipants.traverse { namedParticipantDto ->
-            insertNamedParticipants(eventId, competitionId, namedParticipantDto, request.callbackUrl!!, competitionRegistrationId, request.clubId)
+            insertNamedParticipants(
+                eventId,
+                competitionId,
+                namedParticipantDto,
+                request.callbackUrl!!,
+                competitionRegistrationId,
+                request.clubId
+            )
         }
 
         request.optionalFees?.traverse {
@@ -311,10 +326,20 @@ object CompetitionRegistrationService {
                 .onTrueFail { CompetitionRegistrationError.RatingCategoryMissing }
         }
 
+        // Age validation by ratingCategory
+        !checkAgeRestriction(eventId, request)
+
         !CompetitionRegistrationNamedParticipantRepo.deleteAllByRegistrationId(registration.id).orDie()
 
         !request.namedParticipants.traverse { namedParticipantDto ->
-            insertNamedParticipants(eventId, competitionId, namedParticipantDto, request.callbackUrl!!, competitionRegistrationId, request.clubId)
+            insertNamedParticipants(
+                eventId,
+                competitionId,
+                namedParticipantDto,
+                request.callbackUrl!!,
+                competitionRegistrationId,
+                request.clubId
+            )
         }
 
         !CompetitionRegistrationOptionalFeeRepo.deleteAllByRegistrationId(registration.id).orDie()
@@ -324,6 +349,27 @@ object CompetitionRegistrationService {
         }?.not()
 
         ok(ApiResponse.NoData)
+    }
+
+    private fun checkAgeRestriction(
+        eventId: UUID,
+        request: CompetitionRegistrationTeamUpsertDto
+    ): App<ServiceError, Unit> = KIO.comprehension {
+        // Age validation by ratingCategory
+        val agesAreValid = request.ratingCategory?.let { ratingCategoryId ->
+            val allParticipantIds = request.namedParticipants.flatMap { it.participantIds }
+            if (allParticipantIds.isNotEmpty()) {
+                val ageRange = !ParticipantRepo.getAgeRange(allParticipantIds).orDie()
+                val valid = !RatingCategoryService.getParticipantAgesAreValid(eventId, ratingCategoryId, ageRange!!)
+                valid
+            } else null
+        } ?: true
+
+        !KIO.failOn(!agesAreValid) {
+            CompetitionRegistrationError.ParticipantOutOfAgeRestriction
+        }
+
+        unit
     }
 
     private fun validateScope(

@@ -30,6 +30,9 @@ import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequirements
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantForEventRepo
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryService
+import de.lambda9.ready2race.backend.app.ratingcategory.control.EventRatingCategoryViewRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.AgeRestriction
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
@@ -126,6 +129,16 @@ object EventRegistrationService {
 
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
 
+        val ratingCategoryAgeRestrictions = !EventRatingCategoryViewRepo.get(eventId).orDie()
+            .map { list ->
+                list.associate {
+                    it.ratingCategory!! to AgeRestriction(
+                        from = it.yearRestrictionFrom,
+                        to = it.yearRestrictionTo
+                    )
+                }
+            }
+
         val now = LocalDateTime.now()
 
         val (persistedRegistrationId, isUpdate) = !EventRegistrationRepo.findByEventAndClub(eventId, user.club!!)
@@ -197,6 +210,7 @@ object EventRegistrationService {
                     now,
                     singleCompetitionMultipleCounts,
                     type,
+                    ratingCategoryAgeRestrictions
                 )
 
                 if (
@@ -242,7 +256,6 @@ object EventRegistrationService {
                 ok(result)
             }
 
-
         }.map { it.toMap(mutableMapOf()) }
 
         !registrationDto.competitionRegistrations.traverse { competitionRegistrationDto ->
@@ -255,7 +268,8 @@ object EventRegistrationService {
                 user.id!!,
                 userInfoMap,
                 type,
-                remainingRegistrations
+                remainingRegistrations,
+                ratingCategoryAgeRestrictions
             )
         }
 
@@ -331,7 +345,8 @@ object EventRegistrationService {
 
     data class PersistedIdAndGender(
         val id: UUID,
-        val gender: Gender
+        val gender: Gender,
+        val year: Int
     )
 
     private fun handleSingleCompetitionRegistration(
@@ -343,10 +358,11 @@ object EventRegistrationService {
         now: LocalDateTime,
         singleCompetitionMultiCounts: MutableMap<UUID, Int>,
         type: OpenForRegistrationType,
+        ratingCategoryAgeRestrictions: Map<UUID, AgeRestriction>?
     ): App<EventRegistrationError, Pair<UUID, PersistedIdAndGender>> = KIO.comprehension {
         val persistedUserInfo = if (pDto.isNew == true) {
             !ParticipantRepo.create(!pDto.toRecord(userId, clubId)).orDie().map {
-                PersistedIdAndGender(it, pDto.gender)
+                PersistedIdAndGender(it, pDto.gender, pDto.year)
             }
         } else {
             if (!!ParticipantRepo.existsByIdAndClub(pDto.id, clubId).orDie()) {
@@ -364,7 +380,7 @@ object EventRegistrationService {
                 }.orDie()
             }
 
-            PersistedIdAndGender(pDto.id, pDto.gender)
+            PersistedIdAndGender(pDto.id, pDto.gender, pDto.year)
         }
 
         pDto.competitionsSingle?.traverse { competitionRegistrationDto ->
@@ -383,6 +399,20 @@ object EventRegistrationService {
 
                 !KIO.failOn(competition.ratingCategoryRequired && competitionRegistrationDto.ratingCategory == null) {
                     EventRegistrationError.InvalidRegistration("Rating category not provided for a participant in a competition that requires a rating category.")
+                }
+
+                // Validate age if rating category is provided
+                competitionRegistrationDto.ratingCategory?.let { ratingCategoryId ->
+                    ratingCategoryAgeRestrictions?.get(ratingCategoryId)?.let { ageRestriction ->
+                        val participantYear = pDto.year
+                        val isValid =
+                            ((ageRestriction.from != null && ageRestriction.from <= participantYear) || ageRestriction.from == null) &&
+                                ((ageRestriction.to != null && ageRestriction.to >= participantYear) || ageRestriction.to == null)
+
+                        !KIO.failOn(!isValid) {
+                            EventRegistrationError.InvalidRegistration("Participant age does not meet rating category requirements.")
+                        }
+                    }
                 }
 
                 val competitionRegistrationId = !CompetitionRegistrationRepo.create(
@@ -434,6 +464,7 @@ object EventRegistrationService {
         participantIdMap: MutableMap<UUID, PersistedIdAndGender>,
         type: OpenForRegistrationType,
         regularRegistrations: Map<UUID, Int>?,
+        ratingCategoryAgeRestrictions: Map<UUID, AgeRestriction>?
     ): App<EventRegistrationError, Unit> = KIO.comprehension {
 
         val userIdsList =
@@ -456,6 +487,25 @@ object EventRegistrationService {
 
                 !KIO.failOn(competition.ratingCategoryRequired && teamDto.ratingCategory == null) {
                     EventRegistrationError.InvalidRegistration("Rating category not provided for a team in a competition that requires a rating category.")
+                }
+
+                // Validate age if rating category is provided
+                teamDto.ratingCategory?.let { ratingCategoryId ->
+                    ratingCategoryAgeRestrictions?.get(ratingCategoryId)?.let { ageRestriction ->
+                        val participantYears = teamDto.namedParticipants
+                            .flatMap { it.participantIds }
+                            .mapNotNull { participantIdMap[it]?.year }
+
+                        participantYears.forEach { year ->
+                            val isValid =
+                                ((ageRestriction.from != null && ageRestriction.from <= year) || ageRestriction.from == null) &&
+                                    ((ageRestriction.to != null && ageRestriction.to >= year) || ageRestriction.to == null)
+
+                            !KIO.failOn(!isValid) {
+                                EventRegistrationError.InvalidRegistration("Team participant age does not meet rating category requirements.")
+                            }
+                        }
+                    }
                 }
 
                 val name = count

@@ -108,7 +108,8 @@
     "file": {
       "download": "Download",
       "view": "View"
-    }
+    },
+    "add": "Add"
   },
   "format": {
     "date": "MM/dd/yyyy",
@@ -456,6 +457,7 @@
         },
         "isLate": "registered late",
         "ratingCategory": "Rating category",
+        "ratingCategoryInvalid": "The selected rating category is not valid for the participants in this team",
         "infos": "Infos",
         "deregister": {
           "deregister": "Deregister",
@@ -958,6 +960,26 @@
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."
+    },
+    "ratingCategory": {
+      "title": "Rating categories",
+      "yearFrom": "From",
+      "yearTo": "To",
+      "noEntries": "No rating categories assigned",
+      "ageRestriction": "Age restriction",
+      "year": "Year",
+      "delete": {
+        "confirm": {
+          "title": "Remove assignment?"
+        },
+        "success": "Rating category successfully removed",
+        "error": "An error has occurred when removing the rating category from the event"
+      },
+      "add": {
+        "title": "Assign rating category",
+        "success": "Rating category successfully added",
+        "error": "An error has occurred when adding the rating category to the event"
+      }
     }
   },
   "task": {

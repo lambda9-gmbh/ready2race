@@ -10,7 +10,8 @@ enum class CompetitionRegistrationError : ServiceError {
     RegistrationInvalid,
     DuplicateParticipant,
     NotFound,
-    RatingCategoryMissing;
+    RatingCategoryMissing,
+    ParticipantOutOfAgeRestriction;
 
     override fun respond(): ApiError = when (this) {
 
@@ -42,6 +43,11 @@ enum class CompetitionRegistrationError : ServiceError {
         RatingCategoryMissing -> ApiError(
             status = HttpStatusCode.BadRequest,
             message = "Rating category is missing. This competition requires a rating category."
+        )
+
+        ParticipantOutOfAgeRestriction -> ApiError(
+            status = HttpStatusCode.BadRequest,
+            message = "A participant is outside of the age restriction of the rating category"
         )
     }
 }

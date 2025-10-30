@@ -1,19 +1,18 @@
 package de.lambda9.ready2race.backend.app.ratingcategory.boundary
 
 import de.lambda9.ready2race.backend.app.App
-import de.lambda9.ready2race.backend.app.ratingcategory.control.RatingCategoryRepo
-import de.lambda9.ready2race.backend.app.ratingcategory.control.toDto
-import de.lambda9.ready2race.backend.app.ratingcategory.control.toRecord
-import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
-import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryError
-import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryRequest
-import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategorySort
+import de.lambda9.ready2race.backend.app.ServiceError
+import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.ratingcategory.control.*
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.*
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.createdResponse
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.tailwind.core.KIO
+import de.lambda9.tailwind.core.extensions.kio.andThen
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
 import de.lambda9.tailwind.core.extensions.kio.traverse
@@ -68,5 +67,69 @@ object RatingCategoryService {
         } else {
             noData
         }
+    }
+
+
+    fun assignToEvent(
+        eventId: UUID,
+        userId: UUID,
+        request: RatingCategoriesToEventRequest,
+    ): App<EventError, ApiResponse.NoData> = KIO.comprehension {
+
+        !EventService.checkEventExisting(eventId)
+
+        val records = !request.ratingCategories.traverse { it.toRecord(eventId, userId) }
+        !EventRatingCategoryRepo.insert(records).orDie()
+
+        KIO.ok(ApiResponse.NoData)
+    }
+
+    fun getRatingCategoriesForEvent(
+        eventId: UUID
+    ): App<EventError, ApiResponse.ListDto<RatingCategoryToEventDto>> = KIO.comprehension {
+        !EventService.checkEventExisting(eventId)
+
+        val eventRCs = !EventRatingCategoryViewRepo.get(eventId).orDie()
+            .andThen { list -> list.traverse { it.toDto() } }
+
+        KIO.ok(ApiResponse.ListDto(eventRCs))
+    }
+
+    fun removeFromEvent(
+        eventId: UUID,
+        ratingCategoryId: UUID,
+    ): App<ServiceError, ApiResponse.NoData> = KIO.comprehension {
+        !EventRatingCategoryRepo.delete(eventId, ratingCategoryId).orDie()
+
+        KIO.ok(ApiResponse.NoData)
+    }
+
+    fun getParticipantAgesAreValid(
+        eventId: UUID,
+        ratingCategoryId: UUID,
+        participantYears: Pair<Int, Int>,
+    ): App<RatingCategoryError, Boolean> = KIO.comprehension {
+        val ageRestriction = !EventRatingCategoryRepo.getByEventAndRatingCategory(eventId, ratingCategoryId).orDie()
+            .onNullFail { RatingCategoryError.NotFound }
+            .map { record ->
+                if (record.yearRestrictionFrom == null && record.yearRestrictionTo == null) {
+                    null
+                } else {
+                    AgeRestriction(
+                        from = record.yearRestrictionFrom,
+                        to = record.yearRestrictionTo,
+                    )
+                }
+            }
+        if (ageRestriction == null) {
+            KIO.ok(true)
+        } else {
+
+            KIO.ok(
+                ((ageRestriction.from != null && ageRestriction.from <= participantYears.first) || ageRestriction.from == null) &&
+                    ((ageRestriction.to != null && ageRestriction.to >= participantYears.second) || ageRestriction.to == null)
+            )
+        }
+
     }
 }

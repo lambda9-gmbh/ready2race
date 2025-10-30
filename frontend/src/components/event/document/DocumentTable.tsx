@@ -7,7 +7,7 @@ import {deleteDocument, downloadDocument, getDocuments} from '@api/sdk.gen.ts'
 import {eventIndexRoute} from '@routes'
 import {Download} from '@mui/icons-material'
 import {useRef} from 'react'
-import {Link} from '@mui/material'
+import {Box, Link} from '@mui/material'
 import {useFeedback} from '@utils/hooks.ts'
 import {useTranslation} from 'react-i18next'
 
@@ -88,7 +88,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
     ]
 
     return (
-        <>
+        <Box>
             <Link ref={downloadRef} display={'none'}></Link>
             <EntityTable
                 {...props}
@@ -101,7 +101,7 @@ const DocumentTable = (props: BaseEntityTableProps<EventDocumentDto>) => {
                 deleteRequest={deleteRequest}
                 customEntityActions={customEntityActions}
             />
-        </>
+        </Box>
     )
 }
 

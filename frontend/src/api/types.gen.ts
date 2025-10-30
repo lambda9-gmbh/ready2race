@@ -1439,6 +1439,10 @@ export type QrCodeParticipantUpdate = {
     eventId: string
 }
 
+export type RatingCategoriesToEventRequest = {
+    ratingCategories: Array<RatingCategoryToEventRequest>
+}
+
 export type RatingCategoryDto = {
     id: string
     name: string
@@ -1448,6 +1452,18 @@ export type RatingCategoryDto = {
 export type RatingCategoryRequest = {
     name: string
     description?: string
+}
+
+export type RatingCategoryToEventDto = {
+    ratingCategory: RatingCategoryDto
+    yearFrom?: number
+    yearTo?: number
+}
+
+export type RatingCategoryToEventRequest = {
+    ratingCategory: string
+    yearFrom?: number
+    yearTo?: number
 }
 
 export type RegisterRequest = {
@@ -3404,6 +3420,20 @@ export type ImportClubParticipantsResponse = void
 
 export type ImportClubParticipantsError = BadRequestError | ApiError | UnprocessableEntityError
 
+export type GetClubParticipantsForEventData = {
+    path: {
+        clubId: string
+    }
+    query: {
+        eventId: string
+        ratingCategoryId?: string
+    }
+}
+
+export type GetClubParticipantsForEventResponse = Array<ParticipantDto>
+
+export type GetClubParticipantsForEventError = BadRequestError | ApiError | UnprocessableEntityError
+
 export type GetClubParticipantData = {
     path: {
         clubId: string
@@ -4368,6 +4398,41 @@ export type DeleteQrCodeForEventData = {
 export type DeleteQrCodeForEventResponse = void
 
 export type DeleteQrCodeForEventError = BadRequestError | ApiError
+
+export type AssignRatingCategoriesToEventData = {
+    body: RatingCategoriesToEventRequest
+    path: {
+        eventId: string
+    }
+}
+
+export type AssignRatingCategoriesToEventResponse = void
+
+export type AssignRatingCategoriesToEventError =
+    | BadRequestError
+    | ApiError
+    | UnprocessableEntityError
+
+export type GetRatingCategoriesForEventData = {
+    path: {
+        eventId: string
+    }
+}
+
+export type GetRatingCategoriesForEventResponse = Array<RatingCategoryToEventDto>
+
+export type GetRatingCategoriesForEventError = BadRequestError | ApiError
+
+export type RemoveRatingCategoryFromEventData = {
+    path: {
+        eventId: string
+        ratingCategoryId: string
+    }
+}
+
+export type RemoveRatingCategoryFromEventResponse = void
+
+export type RemoveRatingCategoryFromEventError = BadRequestError | ApiError
 
 export type ProduceInvoicesForEventRegistrationsData = {
     body: ProduceInvoicesRequest

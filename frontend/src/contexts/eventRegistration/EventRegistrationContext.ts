@@ -1,9 +1,12 @@
 import {createContext, useContext} from 'react'
-import {EventRegistrationInfoDto, RatingCategoryDto} from '@api/types.gen.ts'
+import {
+    EventRegistrationInfoDto,
+    RatingCategoryToEventDto,
+} from '@api/types.gen.ts'
 
 export type EventRegistration = {
     info: EventRegistrationInfoDto | null
-    ratingCategories: RatingCategoryDto[]
+    ratingCategories: RatingCategoryToEventDto[]
 }
 
 export const EventRegistrationContext = createContext<EventRegistration | null>(null)

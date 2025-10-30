@@ -22,6 +22,8 @@ import de.lambda9.ready2race.backend.app.participant.boundary.participantForEven
 import de.lambda9.ready2race.backend.app.participantRequirement.boundary.participantRequirementForEvent
 import de.lambda9.ready2race.backend.app.task.boundary.task
 import de.lambda9.ready2race.backend.app.participantTracking.boundary.participantTracking
+import de.lambda9.ready2race.backend.app.ratingcategory.boundary.RatingCategoryService
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoriesToEventRequest
 import de.lambda9.ready2race.backend.app.workShift.boundary.workShift
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
@@ -159,6 +161,37 @@ fun Route.event() {
                     val id = !pathParam("eventId", uuid)
                     val body = !receiveKIO(ProduceInvoicesRequest.example)
                     InvoiceService.createRegistrationInvoicesForEventJobs(id, body, user.id!!)
+                }
+            }
+
+            route("/ratingCategories") {
+                post {
+                    call.respondComprehension {
+                        val user = !authenticate(Privilege.UpdateEventGlobal)
+                        val eventId = !pathParam("eventId", uuid)
+                        val body = !receiveKIO(RatingCategoriesToEventRequest.example)
+
+                        RatingCategoryService.assignToEvent(eventId, user.id!!, body)
+                    }
+                }
+                get {
+                    call.respondComprehension {
+                        !authenticate()
+                        val eventId = !pathParam("eventId", uuid)
+
+                        RatingCategoryService.getRatingCategoriesForEvent(eventId)
+                    }
+                }
+                route("/{ratingCategoryId}") {
+                    delete {
+                        call.respondComprehension {
+                            !authenticate(Privilege.UpdateEventGlobal)
+                            val eventId = !pathParam("eventId", uuid)
+                            val ratingCategoryId = !pathParam("ratingCategoryId", uuid)
+
+                            RatingCategoryService.removeFromEvent(eventId, ratingCategoryId)
+                        }
+                    }
                 }
             }
         }
