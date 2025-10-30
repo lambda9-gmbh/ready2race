@@ -8,7 +8,9 @@ import de.lambda9.ready2race.backend.calls.requests.receiveKIO
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
 import io.ktor.server.routing.put
+import io.ktor.server.routing.route
 
 fun Route.eventParticipant() {
 
@@ -21,6 +23,24 @@ fun Route.eventParticipant() {
 
             EventParticipantService.resendAccessToken(body, eventId, participantId, user, scope)
         }
+    }
+
+}
+
+fun Route.challengeAccess() {
+
+    route("/challenge/{accessToken}") {
+
+        get {
+
+            call.respondComprehension {
+                val accessToken = !pathParam("accessToken")
+
+                EventParticipantService.getChallengeInfo(accessToken)
+            }
+
+        }
+
     }
 
 }

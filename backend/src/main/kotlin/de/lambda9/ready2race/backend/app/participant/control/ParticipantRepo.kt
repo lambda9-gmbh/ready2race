@@ -8,6 +8,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.ParticipantView
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantViewRecord
+import de.lambda9.ready2race.backend.database.generated.tables.references.CLUB
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT
 import de.lambda9.ready2race.backend.database.generated.tables.references.PARTICIPANT_VIEW
 import de.lambda9.tailwind.jooq.JIO

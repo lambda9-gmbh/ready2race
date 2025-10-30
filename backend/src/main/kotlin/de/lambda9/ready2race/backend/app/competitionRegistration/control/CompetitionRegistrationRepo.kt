@@ -3,6 +3,11 @@ package de.lambda9.ready2race.backend.app.competitionRegistration.control
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.competitionDeregistration.entity.CompetitionDeregistrationDto
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.*
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeCompetitionInfoDto
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeNamedParticipantInfoDto
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeParticipantInfoDto
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeResultInfoDto
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeTeamInfoDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.OpenForRegistrationType
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantForEventDto
 import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryDto
@@ -115,6 +120,79 @@ object CompetitionRegistrationRepo {
                 .and(filterScope(scope, user.club))
                 .and(search.metaSearch(searchFieldsForCompetition))
         )
+    }
+
+    fun getForChallengeInfo(
+        eventId: UUID,
+        participantId: UUID,
+    ): JIO<List<ChallengeCompetitionInfoDto>> = Jooq.query {
+
+        val participants = selectParticipants()
+
+        val namedParticipants = selectNamedParticipants(participants)
+
+        select(
+            COMPETITION_REGISTRATION.ID,
+            COMPETITION_REGISTRATION.NAME,
+            COMPETITION.ID,
+            COMPETITION_PROPERTIES.NAME,
+            COMPETITION_PROPERTIES.IDENTIFIER,
+            COMPETITION_PROPERTIES_CHALLENGE_CONFIG.RESULT_CONFIRMATION_IMAGE_REQUIRED,
+            COMPETITION_PROPERTIES_CHALLENGE_CONFIG.START_AT,
+            COMPETITION_PROPERTIES_CHALLENGE_CONFIG.END_AT,
+            namedParticipants,
+            COMPETITION_MATCH_TEAM.RESULT_VALUE,
+            COMPETITION_MATCH_TEAM_DOCUMENT.ID,
+            CLUB.NAME,
+        )
+            .from(COMPETITION_REGISTRATION)
+            .join(CLUB).on(CLUB.ID.eq(COMPETITION_REGISTRATION.CLUB))
+            .join(COMPETITION).on(COMPETITION.ID.eq(COMPETITION_REGISTRATION.COMPETITION))
+            .join(COMPETITION_PROPERTIES).on(COMPETITION_PROPERTIES.COMPETITION.eq(COMPETITION.ID))
+            .join(COMPETITION_PROPERTIES_CHALLENGE_CONFIG).on(COMPETITION_PROPERTIES_CHALLENGE_CONFIG.COMPETITION_PROPERTIES.eq(COMPETITION_PROPERTIES.ID))
+            .leftJoin(COMPETITION_MATCH_TEAM).on(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            .leftJoin(COMPETITION_MATCH_TEAM_DOCUMENT).on(COMPETITION_MATCH_TEAM_DOCUMENT.COMPETITION_MATCH_TEAM_ID.eq(COMPETITION_MATCH_TEAM.ID))
+            .where(
+                DSL.exists(
+                    DSL.selectOne().from(COMPETITION_REGISTRATION_NAMED_PARTICIPANT)
+                        .where(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+                        .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(participantId))
+                )
+            )
+            .and(COMPETITION.EVENT.eq(eventId))
+            .fetch {
+                ChallengeCompetitionInfoDto(
+                    id = it[COMPETITION.ID]!!,
+                    name = it[COMPETITION_PROPERTIES.NAME]!!,
+                    identifier = it[COMPETITION_PROPERTIES.IDENTIFIER]!!,
+                    resultInfo = it[COMPETITION_MATCH_TEAM.RESULT_VALUE]?.let { result ->
+                        ChallengeResultInfoDto(
+                            result = result,
+                            proofDocumentId = it[COMPETITION_MATCH_TEAM_DOCUMENT.ID]
+                        )
+                    },
+                    proofRequired = it[COMPETITION_PROPERTIES_CHALLENGE_CONFIG.RESULT_CONFIRMATION_IMAGE_REQUIRED]!!,
+                    teamInfo = ChallengeTeamInfoDto(
+                        id = it[COMPETITION_REGISTRATION.ID]!!,
+                        name = it[COMPETITION_REGISTRATION.NAME],
+                        namedParticipants = it[namedParticipants].map { named ->
+                            ChallengeNamedParticipantInfoDto(
+                                name = named.namedParticipantName,
+                                participants = named.participants.map { p ->
+                                    ChallengeParticipantInfoDto(
+                                        firstname = p.firstname,
+                                        lastname = p.lastname,
+                                        clubName = p.externalClubName ?: it[CLUB.NAME]!!,
+                                    )
+                                }
+                            )
+                        }
+                    ),
+                    challengeStart = it[COMPETITION_PROPERTIES_CHALLENGE_CONFIG.START_AT]!!,
+                    challengeEnd = it[COMPETITION_PROPERTIES_CHALLENGE_CONFIG.END_AT]!!
+                )
+            }
+
     }
 
     fun getForResponse(

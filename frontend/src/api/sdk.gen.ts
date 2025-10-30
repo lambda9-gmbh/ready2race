@@ -243,6 +243,9 @@ import type {
     DeleteCompetitionCategoryData,
     DeleteCompetitionCategoryError,
     DeleteCompetitionCategoryResponse,
+    GetChallengeInfoData,
+    GetChallengeInfoError,
+    GetChallengeInfoResponse,
     AddNamedParticipantData,
     AddNamedParticipantError,
     AddNamedParticipantResponse,
@@ -1614,6 +1617,19 @@ export const deleteCompetitionCategory = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/competitionCategory/{competitionCategoryId}',
+    })
+}
+
+export const getChallengeInfo = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetChallengeInfoData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetChallengeInfoResponse,
+        GetChallengeInfoError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/challenge/{accessToken}',
     })
 }
 

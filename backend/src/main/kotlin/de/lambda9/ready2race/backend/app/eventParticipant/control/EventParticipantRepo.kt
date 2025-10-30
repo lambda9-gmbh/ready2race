@@ -4,6 +4,7 @@ import de.lambda9.ready2race.backend.database.exists
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_PARTICIPANT
 import de.lambda9.ready2race.backend.database.insert
+import de.lambda9.ready2race.backend.database.selectOne
 import de.lambda9.tailwind.jooq.Jooq
 import java.util.UUID
 
@@ -23,5 +24,7 @@ object EventParticipantRepo {
     }
 
     fun exists(eventId: UUID, participantID: UUID) = EVENT_PARTICIPANT.exists { EVENT.eq(eventId).and(PARTICIPANT.eq(participantID)) }
+
+    fun getByToken(accessToken: String) = EVENT_PARTICIPANT.selectOne { ACCESS_TOKEN.eq(accessToken) }
 
 }

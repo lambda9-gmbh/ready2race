@@ -173,6 +173,46 @@ export type CatererTransactionViewDto = {
     createdAt: string
 }
 
+export type ChallengeCompetitionInfoDto = {
+    id: string
+    name: string
+    identifier: string
+    resultInfo?: ChallengeResultInfoDto | null
+    proofRequired: boolean
+    teamInfo: ChallengeTeamInfoDto
+    challengeStart: string
+    challengeEnd: string
+}
+
+export type ChallengeInfoDto = {
+    eventId: string
+    eventName: string
+    resultType: MatchResultType
+    competitions: Array<ChallengeCompetitionInfoDto>
+}
+
+export type ChallengeNamedParticipantInfoDto = {
+    name: string
+    participants: Array<ChallengeParticipantInfoDto>
+}
+
+export type ChallengeParticipantInfoDto = {
+    firstname: string
+    lastname: string
+    clubName: string
+}
+
+export type ChallengeResultInfoDto = {
+    result: number
+    proofDocumentId?: string | null
+}
+
+export type ChallengeTeamInfoDto = {
+    id: string
+    name?: string | null
+    namedParticipants: Array<ChallengeNamedParticipantInfoDto>
+}
+
 export type CheckedParticipantRequirement = {
     id: string
     note?: string
@@ -3170,6 +3210,16 @@ export type DeleteCompetitionCategoryData = {
 export type DeleteCompetitionCategoryResponse = void
 
 export type DeleteCompetitionCategoryError = BadRequestError | ApiError
+
+export type GetChallengeInfoData = {
+    path: {
+        accessToken: string
+    }
+}
+
+export type GetChallengeInfoResponse = ChallengeInfoDto
+
+export type GetChallengeInfoError = BadRequestError | ApiError
 
 export type AddNamedParticipantData = {
     body: NamedParticipantRequest

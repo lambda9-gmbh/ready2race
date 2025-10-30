@@ -6,7 +6,9 @@ import io.ktor.http.HttpStatusCode
 
 enum class EventParticipantError : ServiceError{
     NoChallengeWithSelfSubmission,
-    NoEmail;
+    NoEmail,
+
+    TokenNotFound;
 
     override fun respond(): ApiError = when(this) {
         NoChallengeWithSelfSubmission ->
@@ -21,6 +23,12 @@ enum class EventParticipantError : ServiceError{
                 status = HttpStatusCode.Conflict,
                 message = "Can only send access token to participants with email address",
                 //TODO: error-code
+            )
+
+        TokenNotFound ->
+            ApiError(
+                status = HttpStatusCode.NotFound,
+                message = "Access token not found",
             )
     }
 }

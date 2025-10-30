@@ -4,13 +4,18 @@ import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
 import de.lambda9.ready2race.backend.app.auth.entity.AuthError
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.club.control.ClubRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationTeamRepo
 import de.lambda9.ready2race.backend.app.email.boundary.EmailService
 import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
 import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.control.EventRepo
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.event.entity.MatchResultType
 import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
+import de.lambda9.ready2race.backend.app.eventParticipant.entity.ChallengeInfoDto
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.EventParticipantError
 import de.lambda9.ready2race.backend.app.eventParticipant.entity.ResendAccessTokenRequest
 import de.lambda9.ready2race.backend.app.participant.control.ParticipantRepo
@@ -18,6 +23,7 @@ import de.lambda9.ready2race.backend.app.participant.entity.ParticipantError
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
+import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
@@ -26,6 +32,30 @@ import de.lambda9.tailwind.core.extensions.kio.orDie
 import java.util.UUID
 
 object EventParticipantService {
+
+    fun getChallengeInfo(
+        accessToken: String,
+    ): App<ServiceError, ApiResponse.Dto<ChallengeInfoDto>> = KIO.comprehension {
+
+        val eventParticipant = !EventParticipantRepo.getByToken(accessToken).orDie().onNullFail { EventParticipantError.TokenNotFound }
+
+        val event = !EventRepo.get(eventParticipant.event).orDie().onNullDie("Referenced entity")
+
+        !KIO.failOn(event.challengeEvent != true) { EventError.NotFound }
+
+        val competitions = !CompetitionRegistrationRepo.getForChallengeInfo(event.id, eventParticipant.participant).orDie()
+
+        KIO.ok(
+            ApiResponse.Dto(
+                ChallengeInfoDto(
+                    eventId = event.id,
+                    eventName = event.name,
+                    resultType = MatchResultType.valueOf(event.challengeMatchResultType!!),
+                    competitions = competitions,
+                )
+            )
+        )
+    }
 
     fun resendAccessToken(
         request: ResendAccessTokenRequest,

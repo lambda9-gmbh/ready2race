@@ -2157,6 +2157,30 @@ paths:
           $ref: '#/components/responses/409'
         500:
           $ref: '#/components/responses/500'
+
+  /challenge/{accessToken}:
+    parameters:
+      - name: accessToken
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getChallengeInfo
+      responses:
+        200:
+          description: Challenge information successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChallengeInfoDto'
+        400:
+          $ref: '#/components/responses/400'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
   /namedParticipant:
     post:
       operationId: addNamedParticipant
@@ -11169,3 +11193,112 @@ components:
       properties:
         callbackUrl:
           type: string
+
+    ChallengeParticipantInfoDto:
+      type: object
+      required:
+        - firstname
+        - lastname
+        - clubName
+      properties:
+        firstname:
+          type: string
+        lastname:
+          type: string
+        clubName:
+          type: string
+
+    ChallengeNamedParticipantInfoDto:
+      type: object
+      required:
+        - name
+        - participants
+      properties:
+        name:
+          type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeParticipantInfoDto'
+
+    ChallengeTeamInfoDto:
+      type: object
+      required:
+        - id
+        - namedParticipants
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          nullable: true
+        namedParticipants:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeNamedParticipantInfoDto'
+
+    ChallengeResultInfoDto:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: integer
+        proofDocumentId:
+          type: string
+          format: uuid
+          nullable: true
+
+    ChallengeCompetitionInfoDto:
+      type: object
+      required:
+        - id
+        - name
+        - identifier
+        - proofRequired
+        - teamInfo
+        - challengeStart
+        - challengeEnd
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        identifier:
+          type: string
+        resultInfo:
+          allOf:
+            - $ref: '#/components/schemas/ChallengeResultInfoDto'
+          nullable: true
+        proofRequired:
+          type: boolean
+        teamInfo:
+          $ref: '#/components/schemas/ChallengeTeamInfoDto'
+        challengeStart:
+          type: string
+          format: date-time
+        challengeEnd:
+          type: string
+          format: date-time
+
+    ChallengeInfoDto:
+      type: object
+      required:
+        - eventId
+        - eventName
+        - resultType
+        - competitions
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        eventName:
+          type: string
+        resultType:
+          $ref: '#/components/schemas/MatchResultType'
+        competitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeCompetitionInfoDto'
