@@ -28,9 +28,10 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Competiti
 
 object CompetitionRegistrationTeamRepo {
 
-    private fun CompetitionRegistrationTeam.searchFields() = listOf(CLUB_NAME, TEAM_NAME)
+    private fun CompetitionRegistrationTeam.searchFields() = listOf(CLUB_NAME, TEAM_NAME, PARTICIPANTS, RATING_CATEGORY)
 
-    fun get(competitionRegistrationId: UUID) = COMPETITION_REGISTRATION_TEAM.selectOne { COMPETITION_REGISTRATION_ID.eq(competitionRegistrationId) }
+    fun get(competitionRegistrationId: UUID) =
+        COMPETITION_REGISTRATION_TEAM.selectOne { COMPETITION_REGISTRATION_ID.eq(competitionRegistrationId) }
 
     fun teamCountForCompetition(
         competitionId: UUID,
