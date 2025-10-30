@@ -108,7 +108,8 @@
     "file": {
       "download": "Herunterladen",
       "view": "Anzeigen"
-    }
+    },
+    "add": "Hinzufügen"
   },
   "format": {
     "date": "dd.MM.yyyy",
@@ -456,6 +457,7 @@
         },
         "isLate": "als Nachmeldung",
         "ratingCategory": "Wertungskategorie",
+        "ratingCategoryInvalid": "Die ausgewählte Wertungskategorie ist für die Teilnehmer in diesem Team nicht gültig",
         "infos": "Infos",
         "deregister": {
           "deregister": "Abmelden",
@@ -958,6 +960,26 @@
     "results": {
       "download": "Bisherige Ergebnisse herunterladen",
       "downloadError": "Die datei konnte nicht heruntergeladen werden."
+    },
+    "ratingCategory": {
+      "title": "Wertungskategorien",
+      "yearFrom": "Von",
+      "yearTo": "Bis",
+      "noEntries": "Keine Wertungskategorien zugewiesen",
+      "ageRestriction": "Altersklasse",
+      "year": "Jahrgang",
+      "delete": {
+        "confirm": {
+          "title": "Zuweisung wirklich entfernen?"
+        },
+        "success": "Wertungskategorie erfolgreich entfernt",
+        "error": "Beim Löschen der Wertungskategorie in diesem Event ist ein Fehler aufgetreten"
+      },
+      "add": {
+        "title": "Wertungskategorie zuweisen",
+        "success": "Wertungskategorie erfolgreich hinzugefügt",
+        "error": "Beim Hinzufügen der Wertungskategorie zu diesem Event ist ein Fehler aufgetreten"
+      }
     }
   },
   "task": {

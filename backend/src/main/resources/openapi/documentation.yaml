@@ -2529,6 +2529,49 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /club/{clubId}/participant/event:
+    parameters:
+      - in: path
+        name: clubId
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getClubParticipantsForEvent
+      parameters:
+        - in: query
+          name: eventId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: ratingCategoryId
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Participants filtered by event and rating category
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /club/{clubId}/participant/{participantId}:
     parameters:
       - in: path
@@ -4303,6 +4346,78 @@ paths:
       responses:
         204:
           description: QR code successfully deleted
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+
+  /event/{eventId}/ratingCategories:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+    post:
+      operationId: assignRatingCategoriesToEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingCategoriesToEventRequest'
+      responses:
+        204:
+          description: Rating categories successfully assigned to event
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
+    get:
+      operationId: getRatingCategoriesForEvent
+      responses:
+        200:
+          description: Rating categories for event successfully retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RatingCategoryToEventDto'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        404:
+          $ref: '#/components/responses/404'
+        500:
+          $ref: '#/components/responses/500'
+  /event/{eventId}/ratingCategories/{ratingCategoryId}:
+    parameters:
+      - $ref: '#/components/parameters/eventId'
+      - name: ratingCategoryId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    delete:
+      operationId: removeRatingCategoryFromEvent
+      responses:
+        204:
+          description: Rating category successfully removed from event
         400:
           $ref: '#/components/responses/400'
         401:
@@ -10319,6 +10434,45 @@ components:
           type: string
         description:
           type: string
+
+    RatingCategoryToEventRequest:
+      type: object
+      required:
+        - ratingCategory
+      properties:
+        ratingCategory:
+          type: string
+          format: uuid
+        yearFrom:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+        yearTo:
+          type: integer
+          minimum: 1900
+          maximum: 2100
+
+    RatingCategoriesToEventRequest:
+      type: object
+      required:
+        - ratingCategories
+      properties:
+        ratingCategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingCategoryToEventRequest'
+
+    RatingCategoryToEventDto:
+      type: object
+      required:
+        - ratingCategory
+      properties:
+        ratingCategory:
+          $ref: '#/components/schemas/RatingCategoryDto'
+        yearFrom:
+          type: integer
+        yearTo:
+          type: integer
 
     ResultChallengeClubDto:
       type: object

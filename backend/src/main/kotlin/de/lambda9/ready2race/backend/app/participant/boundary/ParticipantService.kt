@@ -11,6 +11,9 @@ import de.lambda9.ready2race.backend.app.participantRequirement.control.Particip
 import de.lambda9.ready2race.backend.app.participantRequirement.control.toDto
 import de.lambda9.ready2race.backend.app.participantTracking.control.ParticipantTrackingRepo
 import de.lambda9.ready2race.backend.app.qrCodeApp.control.QrCodeRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.control.EventRatingCategoryRepo
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.AgeRestriction
+import de.lambda9.ready2race.backend.app.ratingcategory.entity.RatingCategoryError
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService
 import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.pagination.Direction
@@ -62,7 +65,8 @@ object ParticipantService {
             val now = LocalDateTime.now()
 
             val genderValue = !cell(request.colGender)
-            val gender = !KIO.failOnNull(genderMap[genderValue]) { ParticipantError.ImportError.UnknownGenderValue(genderValue) }
+            val gender =
+                !KIO.failOnNull(genderMap[genderValue]) { ParticipantError.ImportError.UnknownGenderValue(genderValue) }
 
             ParticipantRecord(
                 id = UUID.randomUUID(),
@@ -113,6 +117,36 @@ object ParticipantService {
                 pagination = params.toPagination(total)
             )
         }
+    }
+
+    fun getByClubFilteredByEventRatingCategory(
+        clubId: UUID,
+        user: AppUserWithPrivilegesRecord,
+        scope: Privilege.Scope,
+        eventId: UUID,
+        ratingCategoryId: UUID?,
+    ): App<ServiceError, ApiResponse.ListDto<ParticipantDto>> = KIO.comprehension {
+
+        val ageRestriction = ratingCategoryId?.let {
+            !EventRatingCategoryRepo.getByEventAndRatingCategory(eventId = eventId, ratingCategoryId = ratingCategoryId)
+                .orDie()
+                .onNullFail { RatingCategoryError.NotFound }
+                .map { record ->
+                    if (record.yearRestrictionFrom == null && record.yearRestrictionTo == null) {
+                        null
+                    } else {
+                        AgeRestriction(
+                            from = record.yearRestrictionFrom,
+                            to = record.yearRestrictionTo,
+                        )
+                    }
+                }
+        }
+
+        val list = !ParticipantRepo.getByClubAndAgeRestriction(clubId, user, scope, ageRestriction).orDie()
+
+        list.traverse { it.participantDto() }
+            .map { ApiResponse.ListDto(it) }
     }
 
     fun pageForEvent(

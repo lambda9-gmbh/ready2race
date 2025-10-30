@@ -286,6 +286,9 @@ import type {
     ImportClubParticipantsData,
     ImportClubParticipantsError,
     ImportClubParticipantsResponse,
+    GetClubParticipantsForEventData,
+    GetClubParticipantsForEventError,
+    GetClubParticipantsForEventResponse,
     GetClubParticipantData,
     GetClubParticipantError,
     GetClubParticipantResponse,
@@ -478,6 +481,15 @@ import type {
     DeleteQrCodeForEventData,
     DeleteQrCodeForEventError,
     DeleteQrCodeForEventResponse,
+    AssignRatingCategoriesToEventData,
+    AssignRatingCategoriesToEventError,
+    AssignRatingCategoriesToEventResponse,
+    GetRatingCategoriesForEventData,
+    GetRatingCategoriesForEventError,
+    GetRatingCategoriesForEventResponse,
+    RemoveRatingCategoryFromEventData,
+    RemoveRatingCategoryFromEventError,
+    RemoveRatingCategoryFromEventResponse,
     ProduceInvoicesForEventRegistrationsData,
     ProduceInvoicesForEventRegistrationsError,
     ProduceInvoicesForEventRegistrationsResponse,
@@ -1789,6 +1801,19 @@ export const importClubParticipants = <ThrowOnError extends boolean = false>(
     })
 }
 
+export const getClubParticipantsForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetClubParticipantsForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetClubParticipantsForEventResponse,
+        GetClubParticipantsForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/club/{clubId}/participant/event',
+    })
+}
+
 export const getClubParticipant = <ThrowOnError extends boolean = false>(
     options: OptionsLegacyParser<GetClubParticipantData, ThrowOnError>,
 ) => {
@@ -2605,6 +2630,45 @@ export const deleteQrCodeForEvent = <ThrowOnError extends boolean = false>(
     >({
         ...options,
         url: '/event/{eventId}/appUserWithQrCode/qrCode/{qrCodeId}',
+    })
+}
+
+export const assignRatingCategoriesToEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<AssignRatingCategoriesToEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).post<
+        AssignRatingCategoriesToEventResponse,
+        AssignRatingCategoriesToEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/ratingCategories',
+    })
+}
+
+export const getRatingCategoriesForEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<GetRatingCategoriesForEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).get<
+        GetRatingCategoriesForEventResponse,
+        GetRatingCategoriesForEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/ratingCategories',
+    })
+}
+
+export const removeRatingCategoryFromEvent = <ThrowOnError extends boolean = false>(
+    options: OptionsLegacyParser<RemoveRatingCategoryFromEventData, ThrowOnError>,
+) => {
+    return (options?.client ?? client).delete<
+        RemoveRatingCategoryFromEventResponse,
+        RemoveRatingCategoryFromEventError,
+        ThrowOnError
+    >({
+        ...options,
+        url: '/event/{eventId}/ratingCategories/{ratingCategoryId}',
     })
 }
 

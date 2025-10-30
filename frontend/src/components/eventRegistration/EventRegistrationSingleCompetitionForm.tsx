@@ -15,12 +15,38 @@ import {
 import * as React from 'react'
 import {useCallback, useEffect, useMemo, useState} from 'react'
 import {FilterAlt, Person} from '@mui/icons-material'
-import {EventRegistrationCompetitionDto} from '../../api'
+import {EventRegistrationCompetitionDto, RatingCategoryToEventDto} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
-import {EventRegistrationFormData} from '../../pages/eventRegistration/EventRegistrationCreatePage.tsx'
+import {
+    EventRegistrationFormData,
+    EventRegistrationParticipantFormData,
+} from '../../pages/eventRegistration/EventRegistrationCreatePage.tsx'
 import {useEventRegistration} from '@contexts/eventRegistration/EventRegistrationContext.ts'
 import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
+
+/**
+ * Check if a rating category's age restriction is valid for a participant
+ */
+const isRatingCategoryValidForParticipant = (
+    ratingCategory: RatingCategoryToEventDto,
+    participant: EventRegistrationParticipantFormData,
+): boolean => {
+    // If no age restriction, category is valid for everyone
+    if (!ratingCategory.yearFrom && !ratingCategory.yearTo) {
+        return true
+    }
+
+    // If participant has no year, we can't validate - assume invalid
+    if (!participant.year) {
+        return false
+    }
+
+    const meetsMinAge = !ratingCategory.yearFrom || participant.year >= ratingCategory.yearFrom
+    const meetsMaxAge = !ratingCategory.yearTo || participant.year <= ratingCategory.yearTo
+
+    return meetsMinAge && meetsMaxAge
+}
 
 const EventSingleCompetitionField = (props: {
     option: EventRegistrationCompetitionDto
@@ -39,6 +65,12 @@ const EventSingleCompetitionField = (props: {
     const singleCompetitions = useWatch({
         control: formContext.control,
         name: `participants.${props.participantIndex}.competitionsSingle`,
+    })
+
+    // Watch the current participant to get their birth year
+    const participant = useWatch({
+        control: formContext.control,
+        name: `participants.${props.participantIndex}`,
     })
 
     useEffect(() => {
@@ -67,20 +99,29 @@ const EventSingleCompetitionField = (props: {
         }
     }
 
-    const ratingCategoryOptions = [
-        ...(props.option.ratingCategoryRequired
+    // Filter rating categories based on age restrictions
+    const ratingCategoryOptions = useMemo(() => {
+        const baseOptions = props.option.ratingCategoryRequired
             ? []
             : [
                   {
                       id: 'none',
                       label: t('common.form.select.none'),
                   },
-              ]),
-        ...ratingCategories.map(rc => ({
-            id: rc.id,
-            label: rc.name,
-        })),
-    ]
+              ]
+
+        const filteredRatingCategories = ratingCategories.filter(rc =>
+            isRatingCategoryValidForParticipant(rc, participant),
+        )
+
+        return [
+            ...baseOptions,
+            ...filteredRatingCategories.map(rc => ({
+                id: rc.ratingCategory.id,
+                label: rc.ratingCategory.name,
+            })),
+        ]
+    }, [props.option.ratingCategoryRequired, ratingCategories, participant, t])
 
     return (
         <Stack direction="row" sx={{alignItems: 'center'}}>

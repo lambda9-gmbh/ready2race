@@ -1,5 +1,6 @@
 set search_path to ready2race, pg_catalog, public;
 
+drop view if exists event_rating_category_view;
 drop view if exists challenge_result_participant_view;
 drop view if exists challenge_result_team_view;
 drop view if exists competition_match_team_document_download;
@@ -1255,4 +1256,16 @@ from participant p
          join competition_properties cp on cp.competition = cr.competition
          join event_registration er on er.id = cr.event_registration
          left join rating_category rc on rc.id = cr.rating_category
+;
+
+
+create view event_rating_category_view as
+select erc.event,
+       erc.rating_category,
+       rc.name        as rating_category_name,
+       rc.description as rating_category_description,
+       erc.year_restriction_from,
+       erc.year_restriction_to
+from event_rating_category erc
+         join rating_category rc on rc.id = erc.rating_category
 ;

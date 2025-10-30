@@ -3,7 +3,11 @@ import {Box, Button, Chip, Divider, IconButton, Paper, Stack, Typography} from '
 import DeleteIcon from '@mui/icons-material/Delete'
 import {GroupAdd} from '@mui/icons-material'
 import {v4 as uuid} from 'uuid'
-import {EventRegistrationCompetitionDto, EventRegistrationNamedParticipantDto} from '../../api'
+import {
+    EventRegistrationCompetitionDto,
+    EventRegistrationNamedParticipantDto,
+    RatingCategoryToEventDto,
+} from '../../api'
 import {EventRegistrationPriceTooltip} from './EventRegistrationPriceTooltip.tsx'
 import {useTranslation} from 'react-i18next'
 import {useCallback, useMemo} from 'react'
@@ -26,6 +30,7 @@ const TeamInput = (props: {
 }) => {
     const {t} = useTranslation()
     const {ratingCategories} = useEventRegistration()
+    const formContext = useFormContext<EventRegistrationFormData>()
 
     const getFilteredParticipants = useCallback(
         (namedParticipant: EventRegistrationNamedParticipantDto) => {
@@ -45,20 +50,45 @@ const TeamInput = (props: {
         [props.participants],
     )
 
-    const ratingCategoryOptions = [
-        ...(props.competition.ratingCategoryRequired
+    // Watch the current team's named participants to get all participant IDs
+    const teamNamedParticipants = useWatch({
+        control: formContext.control,
+        name: `competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.namedParticipants`,
+    })
+
+    // Collect all participant IDs in this team
+    const teamParticipantIds = useMemo(() => {
+        if (!teamNamedParticipants) return []
+        return teamNamedParticipants.flatMap(np => np?.participantIds || [])
+    }, [teamNamedParticipants])
+
+    // Mark invalid rating categories as disabled based on age restrictions
+    const ratingCategoryOptions = useMemo(() => {
+        const baseOptions = props.competition.ratingCategoryRequired
             ? []
             : [
                   {
                       id: 'none',
                       label: t('common.form.select.none'),
+                      disabled: false,
                   },
-              ]),
-        ...ratingCategories.map(rc => ({
-            id: rc.id,
-            label: rc.name,
-        })),
-    ]
+              ]
+
+        return [
+            ...baseOptions,
+            ...ratingCategories.map(rc => ({
+                id: rc.ratingCategory.id,
+                label: rc.ratingCategory.name,
+                disabled: !isRatingCategoryValidForTeam(rc, teamParticipantIds, props.participants),
+            })),
+        ]
+    }, [
+        props.competition.ratingCategoryRequired,
+        ratingCategories,
+        teamParticipantIds,
+        props.participants,
+        t,
+    ])
 
     return (
         <Paper sx={{p: 2}} elevation={2}>
@@ -116,6 +146,18 @@ const TeamInput = (props: {
                             required
                             label={t('event.competition.registration.ratingCategory')}
                             disabled={props.locked}
+                            rules={{
+                                validate: (value: string) => {
+                                    if (!value || value === 'none') return true
+                                    const selectedOption = ratingCategoryOptions.find(
+                                        opt => opt.id === value,
+                                    )
+                                    return (
+                                        !selectedOption?.disabled ||
+                                        t('event.competition.registration.ratingCategoryInvalid')
+                                    )
+                                },
+                            }}
                         />
                     </Box>
                 )}
@@ -206,6 +248,36 @@ const EventRegistrationTeamsForm = (props: {
             <Divider />
         </Stack>
     )
+}
+
+/**
+ * Check if a rating category's age restriction is valid for all participants in a team
+ */
+const isRatingCategoryValidForTeam = (
+    ratingCategory: RatingCategoryToEventDto,
+    teamParticipantIds: string[],
+    allParticipants: EventRegistrationParticipantFormData[],
+): boolean => {
+    // If no age restriction, category is valid for everyone
+    if (!ratingCategory.yearFrom && !ratingCategory.yearTo) {
+        return true
+    }
+
+    // Get all participants in this team
+    const teamParticipants = allParticipants.filter(p => teamParticipantIds.includes(p.id))
+
+    // Check if all participants meet the age restriction
+    return teamParticipants.every(participant => {
+        // If participant has no year, we can't validate - assume invalid
+        if (!participant.year) {
+            return false
+        }
+
+        const meetsMinAge = !ratingCategory.yearFrom || participant.year >= ratingCategory.yearFrom
+        const meetsMaxAge = !ratingCategory.yearTo || participant.year <= ratingCategory.yearTo
+
+        return meetsMinAge && meetsMaxAge
+    })
 }
 
 export default EventRegistrationTeamsForm

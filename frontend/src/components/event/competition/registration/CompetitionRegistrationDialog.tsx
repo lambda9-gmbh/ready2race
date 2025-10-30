@@ -18,9 +18,9 @@ import {useFeedback, useFetch} from '@utils/hooks.ts'
 import {
     addCompetitionRegistration,
     getClubNames,
-    getClubParticipants,
+    getClubParticipantsForEvent,
     getCompetitionRegistrations,
-    getRatingCategories,
+    getRatingCategoriesForEvent,
     updateCompetitionRegistration,
 } from '@api/sdk.gen.ts'
 import {TeamNamedParticipantLabel} from '@components/eventRegistration/TeamNamedParticipantLabel.tsx'
@@ -32,6 +32,7 @@ import {FormInputSelect} from '@components/form/input/FormInputSelect.tsx'
 import {currentlyInTimespan} from '@utils/helpers.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {ResultInputTeamInfo} from '@components/event/competition/registration/ChallengeResultDialog.tsx'
+import {takeIfNotEmpty} from '@utils/ApiUtils.ts'
 
 // TODO: validate/sanitize basepath (also in routes.tsx)
 const basepath = document.getElementById('ready2race-root')!.dataset.basepath
@@ -66,12 +67,17 @@ const CompetitionRegistrationDialog = ({
     const formContext = useForm<CompetitionRegistrationForm>()
 
     const globalPrivilege = user.checkPrivilege(updateRegistrationGlobal)
-    //const categoryPrivilege = globalPrivilege && user.checkPrivilege(readEventGlobal)
 
     const clubId = useWatch({
         control: formContext.control,
         name: 'clubId',
         defaultValue: props.entity?.clubId,
+    })
+
+    const ratingCategoryId = useWatch({
+        control: formContext.control,
+        name: 'ratingCategory',
+        defaultValue: props.entity?.ratingCategory?.id ?? '',
     })
 
     const {data: clubs} = useFetch(
@@ -99,16 +105,12 @@ const CompetitionRegistrationDialog = ({
 
     const {data: participantsData, pending: participantsPending} = useFetch(
         signal =>
-            getClubParticipants({
+            getClubParticipantsForEvent({
                 signal,
                 path: {clubId: clubId!!},
                 query: {
-                    sort: JSON.stringify([
-                        {field: 'EXTERNAL', direction: 'ASC'},
-                        {field: 'EXTERNAL_CLUB_NAME', direction: 'ASC'},
-                        {field: 'FIRSTNAME', direction: 'ASC'},
-                        {field: 'LASTNAME', direction: 'ASC'},
-                    ]),
+                    eventId: eventData.id,
+                    ratingCategoryId: takeIfNotEmpty(ratingCategoryId),
                 },
             }),
         {
@@ -122,7 +124,7 @@ const CompetitionRegistrationDialog = ({
                     )
                 }
             },
-            deps: [clubId],
+            deps: [clubId, ratingCategoryId],
         },
     )
 
@@ -148,7 +150,7 @@ const CompetitionRegistrationDialog = ({
     )
 
     const participants = useMemo(() => {
-        return participantsData?.data ?? []
+        return participantsData ?? []
     }, [participantsData])
 
     const getFilteredParticipants = useCallback(
@@ -169,32 +171,40 @@ const CompetitionRegistrationDialog = ({
         [participants],
     )
 
-    const {data: ratingCategories} = useFetch(signal => getRatingCategories({signal}), {
-        mapData: data =>
-            data.data.length > 0
-                ? [
-                      ...(competition.properties.ratingCategoryRequired
-                          ? []
-                          : [
-                                {
-                                    id: 'none',
-                                    label: t('common.form.select.none'),
-                                },
-                            ]),
-                      ...data.data.map(dto => ({
-                          id: dto.id,
-                          label: dto.name,
-                      })),
-                  ]
-                : [],
-        onResponse: ({error}) =>
-            error &&
-            feedback.error(
-                t('common.load.error.multiple.short', {
-                    entity: t('configuration.ratingCategory.ratingCategories'),
-                }),
-            ),
-    })
+    const {data: ratingCategories} = useFetch(
+        signal =>
+            getRatingCategoriesForEvent({
+                signal,
+                path: {eventId: eventData.id},
+            }),
+        {
+            onResponse: ({error}) =>
+                error &&
+                feedback.error(
+                    t('common.load.error.multiple.short', {
+                        entity: t('configuration.ratingCategory.ratingCategories'),
+                    }),
+                ),
+        },
+    )
+
+    const ratingCategoryOptions =
+        (ratingCategories?.length ?? 0) > 0
+            ? [
+                  ...(competition.properties.ratingCategoryRequired
+                      ? []
+                      : [
+                            {
+                                id: 'none',
+                                label: t('common.form.select.none'),
+                            },
+                        ]),
+                  ...(ratingCategories?.map(dto => ({
+                      id: dto.ratingCategory.id,
+                      label: dto.ratingCategory.name,
+                  })) ?? []),
+              ]
+            : []
 
     const addAction = async (formData: CompetitionRegistrationForm) => {
         const registerRes = await addCompetitionRegistration({
@@ -297,7 +307,7 @@ const CompetitionRegistrationDialog = ({
                         <FormInputSelect
                             name={'ratingCategory'}
                             label={t('event.competition.registration.ratingCategory')}
-                            options={ratingCategories ?? []}
+                            options={ratingCategoryOptions ?? []}
                             required
                         />
                     )}

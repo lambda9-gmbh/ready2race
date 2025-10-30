@@ -7,11 +7,7 @@ import de.lambda9.ready2race.backend.app.competitionExecution.entity.UploadMatch
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantImportRequest
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.participant.entity.ParticipantSort
-import de.lambda9.ready2race.backend.calls.requests.RequestError
-import de.lambda9.ready2race.backend.calls.requests.authenticate
-import de.lambda9.ready2race.backend.calls.requests.pagination
-import de.lambda9.ready2race.backend.calls.requests.pathParam
-import de.lambda9.ready2race.backend.calls.requests.receiveKIO
+import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
 import de.lambda9.ready2race.backend.file.File
@@ -33,6 +29,22 @@ fun Route.participant() {
                 val clubId = !pathParam("clubId", uuid)
                 val params = !pagination<ParticipantSort>()
                 ParticipantService.page(params, clubId, user, scope)
+            }
+        }
+
+        get("/event") {
+            call.respondComprehension {
+                val (user, scope) = !authenticate(Privilege.Action.READ, Privilege.Resource.CLUB)
+                val clubId = !pathParam("clubId", uuid)
+                val eventId = !queryParam("eventId", uuid)
+                val ratingCategoryId = !optionalQueryParam("ratingCategoryId", uuid)
+                ParticipantService.getByClubFilteredByEventRatingCategory(
+                    clubId,
+                    user,
+                    scope,
+                    eventId,
+                    ratingCategoryId
+                )
             }
         }
 
@@ -100,6 +112,8 @@ fun Route.participant() {
                 }
             }
         }
+
+
 
         route("/{participantId}") {
 
