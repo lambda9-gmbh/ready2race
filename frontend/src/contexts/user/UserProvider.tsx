@@ -53,7 +53,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
 
     useEffect(() => {
         const f = async (res: Response) => {
-            if (res.status === 401) {
+            if (res.status === 401 && userData.authStatus === 'authenticated') {
                 const isInApp = router.state.resolvedLocation.pathname.startsWith('/app')
                 await logout(isInApp)
             }
