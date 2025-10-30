@@ -16,4 +16,5 @@ data class ParticipantDto(
     val usedInRegistration: Boolean,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime,
+    val email: String?,
 )

@@ -82,6 +82,20 @@
         "",
         "We look forward to seeing you."
       ]
+    },
+    {
+      "key": "PARTICIPANT_CHALLENGE_REGISTERED",
+      "subject": "Ready2Race - Eintragung Challenge Ergebnisse",
+      "body": [
+        "Hello ##recipient##,",
+        "",
+        "You have been registered for a challenge at the event '##event##'.",
+        "You can enter your results yourself during the relevant deadlines via the following link.",
+        "",
+        "##link##",
+        "",
+        "We look forward to your participation."
+      ]
     }
   ]
 }

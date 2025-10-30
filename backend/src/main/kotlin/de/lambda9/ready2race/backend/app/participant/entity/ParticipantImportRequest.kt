@@ -13,6 +13,7 @@ data class ParticipantImportRequest(
     val valueGenderMale: String,
     val valueGenderFemale: String,
     val valueGenderDiverse: String,
+    val colEmail: String?,
 ) : Validatable {
 
     override fun validate(): ValidationResult = ValidationResult.Valid
@@ -29,6 +30,7 @@ data class ParticipantImportRequest(
             valueGenderMale = "M",
             valueGenderFemale = "F",
             valueGenderDiverse = "D",
+            colEmail = "Email",
         )
 
     }

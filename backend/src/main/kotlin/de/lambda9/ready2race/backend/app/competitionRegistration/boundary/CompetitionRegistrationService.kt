@@ -13,7 +13,13 @@ import de.lambda9.ready2race.backend.app.competitionProperties.control.Competiti
 import de.lambda9.ready2race.backend.app.competitionProperties.control.CompetitionPropertiesRepo
 import de.lambda9.ready2race.backend.app.competitionRegistration.control.*
 import de.lambda9.ready2race.backend.app.competitionRegistration.entity.*
+import de.lambda9.ready2race.backend.app.email.boundary.EmailService
+import de.lambda9.ready2race.backend.app.email.entity.EmailLanguage
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplateKey
+import de.lambda9.ready2race.backend.app.email.entity.EmailTemplatePlaceholder
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
+import de.lambda9.ready2race.backend.app.event.control.EventRepo
+import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.EventRegistrationRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationNamedParticipantUpsertDto
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.CompetitionRegistrationTeamUpsertDto
@@ -31,11 +37,13 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWi
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationNamedParticipantRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationOptionalFeeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationRecord
+import de.lambda9.ready2race.backend.database.generated.tables.records.EventParticipantRecord
 import de.lambda9.ready2race.backend.kio.onFalseFail
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
+import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
@@ -251,7 +259,7 @@ object CompetitionRegistrationService {
         ).orDie()
 
         !request.namedParticipants.traverse { namedParticipantDto ->
-            insertNamedParticipants(competitionId, namedParticipantDto, competitionRegistrationId, request.clubId)
+            insertNamedParticipants(eventId, competitionId, namedParticipantDto, request.callbackUrl!!, competitionRegistrationId, request.clubId)
         }
 
         request.optionalFees?.traverse {
@@ -306,7 +314,7 @@ object CompetitionRegistrationService {
         !CompetitionRegistrationNamedParticipantRepo.deleteAllByRegistrationId(registration.id).orDie()
 
         !request.namedParticipants.traverse { namedParticipantDto ->
-            insertNamedParticipants(competitionId, namedParticipantDto, competitionRegistrationId, request.clubId)
+            insertNamedParticipants(eventId, competitionId, namedParticipantDto, request.callbackUrl!!, competitionRegistrationId, request.clubId)
         }
 
         !CompetitionRegistrationOptionalFeeRepo.deleteAllByRegistrationId(registration.id).orDie()
@@ -336,8 +344,10 @@ object CompetitionRegistrationService {
     }
 
     private fun insertNamedParticipants(
+        eventId: UUID,
         competitionId: UUID,
         namedParticipantDto: CompetitionRegistrationNamedParticipantUpsertDto,
+        callbackUrl: String,
         competitionRegistrationId: UUID,
         clubId: UUID
     ) = KIO.comprehension {
@@ -373,13 +383,49 @@ object CompetitionRegistrationService {
 
                 counts[participant.gender] = (counts[participant.gender] ?: 0) + 1
 
-                CompetitionRegistrationNamedParticipantRepo.create(
+                !CompetitionRegistrationNamedParticipantRepo.create(
                     CompetitionRegistrationNamedParticipantRecord(
                         competitionRegistrationId,
                         namedParticipantDto.namedParticipantId,
                         participantId
                     )
                 ).orDie()
+
+                if (participant.email != null) {
+                    val accessTokenExists = !EventParticipantRepo.exists(eventId, participantId).orDie()
+                    if (!accessTokenExists) {
+
+                        val eventName = !EventRepo.getName(eventId).orDie().onNullDie("Referenced entity must exist.")
+
+                        val newAccessToken = RandomUtilities.token()
+
+                        !EventParticipantRepo.create(
+                            EventParticipantRecord(
+                                event = eventId,
+                                participant = participantId,
+                                accessToken = newAccessToken,
+                            )
+                        ).orDie()
+
+                        val content = !EmailService.getTemplate(
+                            EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,
+                            EmailLanguage.DE, // TODO: somehow get a language
+                        ).map { template ->
+                            template.toContent(
+                                EmailTemplatePlaceholder.RECIPIENT to participant.firstname + " " +participant.lastname,
+                                EmailTemplatePlaceholder.EVENT to eventName,
+                                EmailTemplatePlaceholder.LINK to callbackUrl + newAccessToken,
+                            )
+                        }
+
+                        !EmailService.enqueue(
+                            recipient = participant.email!!,
+                            content = content,
+                        )
+                    }
+                }
+
+                unit
             }
         }
 

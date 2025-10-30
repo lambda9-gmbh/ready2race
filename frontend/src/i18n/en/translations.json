@@ -224,7 +224,8 @@
             "lastname": "Last name",
             "year": "Year of Birth",
             "gender": "Gender",
-            "external": "External club name"
+            "external": "External club name",
+            "email": "Email"
           },
           "genderValues": "Values for gender differentiation",
           "value": {

@@ -27,6 +27,7 @@ fun ParticipantUpsertDto.toRecord(userId: UUID, clubId: UUID): App<Nothing, Part
                 createdBy = userId,
                 updatedAt = now,
                 updatedBy = userId,
+                email = email,
             )
         }
     )
@@ -44,6 +45,7 @@ fun ParticipantViewRecord.participantDto(): App<Nothing, ParticipantDto> = KIO.o
         usedInRegistration = usedInRegistration!!,
         createdAt = createdAt!!,
         updatedAt = updatedAt!!,
+        email = email,
     )
 )
 

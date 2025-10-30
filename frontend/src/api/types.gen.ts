@@ -430,6 +430,7 @@ export type CompetitionRegistrationTeamUpsertDto = {
     optionalFees?: Array<string>
     namedParticipants?: Array<CompetitionRegistrationNamedParticipantUpsertDto>
     ratingCategory?: string
+    callbackUrl?: string
 }
 
 export type CompetitionRegistrationUpsertDto = {
@@ -1155,6 +1156,7 @@ export type ParticipantDto = {
     usedInRegistration: boolean
     createdAt: string
     updatedAt: string
+    email?: string
 }
 
 export type ParticipantForCompetitionRegistrationTeam = {
@@ -1213,6 +1215,7 @@ export type ParticipantImportRequest = {
     valueGenderMale: string
     valueGenderFemale: string
     valueGenderDiverse: string
+    colEmail?: string
 }
 
 export type ParticipantInfo = {
@@ -1309,6 +1312,7 @@ export type ParticipantUpsertDto = {
     phone?: string | null
     external?: boolean | null
     externalClubName?: string | null
+    email?: string
 }
 
 export type PasswordResetInitRequest = {

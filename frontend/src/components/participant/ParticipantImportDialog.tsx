@@ -25,6 +25,7 @@ type Form = {
     colYear: string
     colGender: string
     colExternalClubname: string
+    colEmail: string
     valueGenderMale: string
     valueGenderFemale: string
     valueGenderDiverse: string
@@ -40,6 +41,7 @@ const defaultValues: Form = {
     colYear: '',
     colGender: '',
     colExternalClubname: '',
+    colEmail: '',
     valueGenderMale: 'M',
     valueGenderFemale: 'F',
     valueGenderDiverse: 'D',
@@ -53,6 +55,7 @@ const mapFormToRequest = (formData: Form): ParticipantImportRequest => ({
     colYear: formData.colYear,
     colGender: formData.colGender,
     colExternalClubname: takeIfNotEmpty(formData.colExternalClubname),
+    colEmail: takeIfNotEmpty(formData.colEmail),
     valueGenderMale: formData.valueGenderMale,
     valueGenderFemale: formData.valueGenderFemale,
     valueGenderDiverse: formData.valueGenderDiverse,
@@ -220,6 +223,10 @@ const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => 
                                 name={'colGender'}
                                 label={t('club.participant.upload.dialog.col.gender')}
                                 required
+                            />
+                            <FormInputText
+                                name={'colEmail'}
+                                label={t('club.participant.upload.dialog.col.email')}
                             />
                             <FormInputText
                                 name={'colExternalClubname'}

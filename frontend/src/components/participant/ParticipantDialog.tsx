@@ -27,6 +27,7 @@ type ParticipantForm = {
     phone?: string | null
     external?: boolean | null
     externalClubName?: string | null
+    email?: string
 }
 
 const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
@@ -110,6 +111,7 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                     min={currentYear - 120}
                     max={currentYear}
                 />
+                <FormInputText name={'email'} label={t('user.email.email')} />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
                 <Stack direction="row" spacing={2} alignItems={'center'}>
                     <FormInputCheckbox
@@ -149,6 +151,7 @@ function mapFormToRequest(formData: ParticipantForm): ParticipantUpsertDto {
         phone: formData.phone,
         external: formData.external,
         externalClubName: formData.externalClubName,
+        email: formData.email,
     }
 }
 
@@ -161,6 +164,7 @@ function mapDtoToForm(dto: ParticipantDto): ParticipantForm {
         phone: dto.phone,
         external: dto.external,
         externalClubName: dto.externalClubName,
+        email: dto.email,
     }
 }
 

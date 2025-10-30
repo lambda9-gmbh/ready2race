@@ -21,7 +21,8 @@ data class ParticipantUpsertDto(
     val gender: Gender,
     val phone: String?,
     val external: Boolean?,
-    val externalClubName: String?
+    val externalClubName: String?,
+    val email: String?,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -51,6 +52,7 @@ data class ParticipantUpsertDto(
                 phone = null,
                 external = false,
                 externalClubName = null,
+                email = "max.mustermann@example.com"
             )
     }
 }

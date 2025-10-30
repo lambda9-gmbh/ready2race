@@ -33,6 +33,9 @@ import {currentlyInTimespan} from '@utils/helpers.ts'
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {ResultInputTeamInfo} from '@components/event/competition/registration/ChallengeResultDialog.tsx'
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 const registrationTypes: RegistrationInvoiceType[] = ['REGULAR', 'LATE']
 type RegistrationType = (typeof registrationTypes)[number]
 
@@ -196,7 +199,7 @@ const CompetitionRegistrationDialog = ({
     const addAction = async (formData: CompetitionRegistrationForm) => {
         const registerRes = await addCompetitionRegistration({
             path: {eventId: eventData.id, competitionId: competition.id},
-            body: mapFormToRequest(formData),
+            body: mapFormToRequest(formData, eventData.id),
             query: {
                 registrationType: globalPrivilege ? formData.asRegistrationType : undefined,
             },
@@ -221,7 +224,7 @@ const CompetitionRegistrationDialog = ({
                 competitionId: competition.id,
                 competitionRegistrationId: entity.id,
             },
-            body: mapFormToRequest(formData),
+            body: mapFormToRequest(formData, eventData.id),
             query: {
                 registrationType: globalPrivilege ? formData.asRegistrationType : undefined,
             },
@@ -383,6 +386,7 @@ const CompetitionRegistrationDialog = ({
 
 function mapFormToRequest(
     formData: CompetitionRegistrationForm,
+    eventId: string,
 ): CompetitionRegistrationTeamUpsertDto {
     return {
         id: formData.id ?? '',
@@ -390,6 +394,12 @@ function mapFormToRequest(
         optionalFees: formData.optionalFees,
         namedParticipants: formData.namedParticipants,
         ratingCategory: formData.ratingCategory !== 'none' ? formData.ratingCategory : undefined,
+        callbackUrl:
+            location.origin +
+            (basepath ? `/${basepath}` : '') +
+            '/event/' +
+            eventId +
+            '/challenge/',
     }
 }
 

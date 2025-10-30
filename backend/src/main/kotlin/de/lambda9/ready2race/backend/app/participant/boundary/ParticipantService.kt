@@ -77,6 +77,7 @@ object ParticipantService {
                 createdBy = userId,
                 updatedAt = now,
                 updatedBy = userId,
+                email = !optionalCell(request.colEmail),
             )
         }
 
@@ -264,6 +265,7 @@ object ParticipantService {
             externalClubName = request.externalClubName?.trim()?.takeIf { it.isNotBlank() }
             updatedBy = userId
             updatedAt = LocalDateTime.now()
+            email = request.email
         }.orDie()
             .onNullFail { ParticipantError.ParticipantNotFound }
             .map { ApiResponse.NoData }

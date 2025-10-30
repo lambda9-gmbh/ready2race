@@ -8296,6 +8296,8 @@ components:
         updatedAt:
           type: string
           format: date-time
+        email:
+          type: string
 
     ParticipantForEventDto:
       type: object
@@ -8370,6 +8372,8 @@ components:
         externalClubName:
           type: string
           nullable: true
+        email:
+          type: string
 
     ParticipantImportRequest:
       type: object
@@ -8401,6 +8405,8 @@ components:
         valueGenderFemale:
           type: string
         valueGenderDiverse:
+          type: string
+        colEmail:
           type: string
 
     # event registration
@@ -8651,6 +8657,8 @@ components:
         ratingCategory:
           type: string
           format: uuid
+        callbackUrl:
+          type: string
       required:
         - id
 

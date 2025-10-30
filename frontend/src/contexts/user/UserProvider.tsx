@@ -64,16 +64,14 @@ const UserProvider = ({children}: PropsWithChildren) => {
         return () => client.interceptors.response.eject(f)
     }, [])
 
-    const prevAuthStatus = React.useRef<'initial' | 'pending' | 'anonymous' | 'authenticated'>(
-        'initial',
-    )
+    const prevAuthStatus = React.useRef<'initial' | 'anonymous' | 'authenticated'>('initial')
 
     useEffect(() => {
         if (userData.authStatus !== 'initial') {
             if (userData.authStatus !== 'pending') {
                 const authenticated = userData.authStatus === 'authenticated'
                 if (
-                    prevAuthStatus.current !== 'pending' &&
+                    prevAuthStatus.current !== 'initial' &&
                     (authenticated || prevAuthStatus.current === 'authenticated')
                 ) {
                     if (userData.isInApp) {

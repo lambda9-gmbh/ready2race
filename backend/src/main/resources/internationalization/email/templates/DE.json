@@ -82,6 +82,20 @@
         "",
         "Wir freuen uns auf euch."
       ]
+    },
+    {
+      "key": "PARTICIPANT_CHALLENGE_REGISTERED",
+      "subject": "Ready2Race - Eintragung Challenge Ergebnisse",
+      "body": [
+        "Hallo ##recipient##,",
+        "",
+        "du wurdest für eine Challenge der Veranstaltung '##event##' angemeldet.",
+        "Unter folgendem Link kannst du deine Ergebnisse während der entsprechenden Fristen selbst eintragen.",
+        "",
+        "##link##",
+        "",
+        "Wir freuen uns über deine Teilnahme."
+      ]
     }
   ]
 }
