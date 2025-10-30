@@ -104,7 +104,11 @@
     "show": "Anzeigen",
     "name": "Name",
     "by": "Von",
-    "continue": "Weiter"
+    "continue": "Weiter",
+    "file": {
+      "download": "Herunterladen",
+      "view": "Anzeigen"
+    }
   },
   "format": {
     "date": "dd.MM.yyyy",

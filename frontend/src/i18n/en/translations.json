@@ -104,7 +104,11 @@
     "show": "Show",
     "name": "Name",
     "by": "By",
-    "continue": "Continue"
+    "continue": "Continue",
+    "file": {
+      "download": "Download",
+      "view": "View"
+    }
   },
   "format": {
     "date": "MM/dd/yyyy",

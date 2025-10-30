@@ -18,12 +18,11 @@ type Anchor = {
 
 type Props = {
     buttonContent?: ReactNode
-    items?: {id: string; label: string; problems?: string[]}[]
+    items?: {id: string; label: string; problems?: string[]; icon?: ReactNode}[]
     keyLabel: string
     onSelectItem: (id: string) => Promise<void>
     pending?: boolean
     anchor?: Anchor
-    itemIcon?: ReactNode
 }
 const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
     const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null)
@@ -82,9 +81,9 @@ const SelectionMenu = ({items, keyLabel, anchor, ...props}: Props) => {
                                     handleMenuClose()
                                 }}
                                 value={item.id}>
-                                {props.itemIcon !== undefined && (
+                                {item.icon !== undefined && (
                                     <Box sx={{mr: 1, display: 'flex', alignItems: 'center'}}>
-                                        {props.itemIcon}
+                                        {item.icon}
                                     </Box>
                                 )}
                                 {item.label}

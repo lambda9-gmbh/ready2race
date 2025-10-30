@@ -8,6 +8,8 @@ import EntityTable from '@components/EntityTable.tsx'
 import {
     Box,
     Chip,
+    DialogContent,
+    DialogTitle,
     IconButton,
     Link,
     Stack,
@@ -31,6 +33,8 @@ import {useFeedback} from '@utils/hooks.ts'
 import SelectionMenu from '@components/SelectionMenu.tsx'
 import DownloadIcon from '@mui/icons-material/Download'
 import {currentlyInTimespan} from '@utils/helpers.ts'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import BaseDialog from '@components/BaseDialog.tsx'
 
 const initialPagination: GridPaginationModel = {
     page: 0,
@@ -344,20 +348,56 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                                                   <SelectionMenu
                                                       keyLabel={'challenge-team-result-doc'}
                                                       buttonContent={<Download />}
-                                                      onSelectItem={async (docId: string) => {
-                                                          const docName =
-                                                              row.challengeResultDocuments?.[docId]
-                                                          if (!docName) return
-                                                          void handleDownloadResultDocument(
-                                                              docId,
-                                                              docName,
-                                                          )
+                                                      onSelectItem={async (itemId: string) => {
+                                                          if (itemId.startsWith('$view')) {
+                                                              const docId = itemId.replace('$view', '')
+                                                              const docName =
+                                                                  row.challengeResultDocuments?.[docId]
+                                                              if (!docName) return
+                                                              void openViewDocumentDialog(docId, docName)
+                                                          } else if (itemId.startsWith('$download')) {
+                                                              const docId = itemId.replace('$download', '')
+                                                              const docName =
+                                                                  row.challengeResultDocuments?.[docId]
+                                                              if (!docName) return
+                                                              void handleDownloadResultDocument(
+                                                                  docId,
+                                                                  docName,
+                                                              )
+                                                          }
                                                       }}
-                                                      items={challengeResultDocuments.map(doc => ({
-                                                          id: doc.id,
-                                                          label: doc.fileName,
-                                                      }))}
-                                                      itemIcon={<DownloadIcon color={'primary'} />}
+                                                      items={challengeResultDocuments.flatMap(
+                                                          doc => [
+                                                              {
+                                                                  id: '$download' + doc.id,
+                                                                  label:
+                                                                      challengeResultDocuments.length >
+                                                                      1
+                                                                          ? doc.fileName
+                                                                          : t(
+                                                                                'common.file.download',
+                                                                            ),
+                                                                  icon: (
+                                                                      <DownloadIcon
+                                                                          color={'primary'}
+                                                                      />
+                                                                  ),
+                                                              },
+                                                              {
+                                                                  id: '$view' + doc.id,
+                                                                  label:
+                                                                      challengeResultDocuments.length >
+                                                                      1
+                                                                          ? doc.fileName
+                                                                          : t('common.file.view'),
+                                                                  icon: (
+                                                                      <VisibilityIcon
+                                                                          color={'primary'}
+                                                                      />
+                                                                  ),
+                                                              },
+                                                          ],
+                                                      )}
                                                       anchor={{
                                                           button: {
                                                               vertical: 'top',
@@ -432,6 +472,37 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
     }
     const [selectedTeam, setSelectedTeam] = useState<CompetitionRegistrationTeamDto | null>(null)
 
+    const [viewDocumentDialogOpen, setViewDocumentDialogOpen] = useState(false)
+    const [viewDocumentUrl, setViewDocumentUrl] = useState<string | null>(null)
+    const [viewDocumentName, setViewDocumentName] = useState<string>('')
+
+    const openViewDocumentDialog = async (docId: string, docName: string) => {
+        const {data, error} = await downloadMatchTeamResultDocument({
+            path: {
+                eventId,
+                competitionId,
+                resultDocumentId: docId,
+            },
+        })
+
+        if (error) {
+            feedback.error(t('event.competition.execution.results.document.download.error'))
+        } else if (data !== undefined) {
+            setViewDocumentUrl(URL.createObjectURL(data))
+            setViewDocumentName(docName)
+            setViewDocumentDialogOpen(true)
+        }
+    }
+
+    const closeViewDocumentDialog = () => {
+        if (viewDocumentUrl) {
+            URL.revokeObjectURL(viewDocumentUrl)
+        }
+        setViewDocumentDialogOpen(false)
+        setViewDocumentUrl(null)
+        setViewDocumentName('')
+    }
+
     return (
         <>
             <Link ref={downloadRef} display={'none'}></Link>
@@ -463,6 +534,33 @@ const CompetitionRegistrationTeamTable = ({eventData, competitionData, ...props}
                     )
                 }
             />
+            <BaseDialog
+                open={viewDocumentDialogOpen}
+                onClose={closeViewDocumentDialog}
+                maxWidth={'xl'}>
+                <DialogTitle>{viewDocumentName}</DialogTitle>
+                <DialogContent>
+                    {viewDocumentUrl && (
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                minHeight: '400px',
+                            }}>
+                            <img
+                                src={viewDocumentUrl}
+                                alt={viewDocumentName}
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '80vh',
+                                    objectFit: 'contain',
+                                }}
+                            />
+                        </Box>
+                    )}
+                </DialogContent>
+            </BaseDialog>
         </>
     )
 }

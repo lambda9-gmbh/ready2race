@@ -1,5 +1,5 @@
 import BaseDialog from '@components/BaseDialog.tsx'
-import {useEffect, useMemo, useState} from 'react'
+import {Fragment, useEffect, useMemo, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
 import {
@@ -8,6 +8,7 @@ import {
     Box,
     Button,
     Card,
+    Container,
     DialogActions,
     DialogContent,
     DialogTitle,
@@ -99,8 +100,8 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
     }
 
     useEffect(() => {
+        formContext.reset(defaultValues)
         if (dialogOpen) {
-            formContext.reset(defaultValues)
             setConfirming(false)
         }
     }, [dialogOpen])
@@ -115,70 +116,100 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
     const resultTypeAdornment = props.resultType === 'DISTANCE' ? 'm' : undefined
 
     return teamDto ? (
-        <BaseDialog open={dialogOpen} onClose={props.closeDialog} maxWidth={'xs'}>
+        <BaseDialog
+            open={dialogOpen}
+            onClose={props.closeDialog}
+            maxWidth={confirming ? 'md' : 'xs'}>
             <DialogTitle>
                 {t('event.competition.execution.results.challenge.challengeResults')}
             </DialogTitle>
             <FormContainer formContext={formContext} onSuccess={() => setConfirming(true)}>
                 <DialogContent>
-                    <Stack spacing={4}>
-                        {props.outsideOfChallengeTimespan && (
-                            <Alert severity={'warning'} variant={'outlined'}>
-                                {t('event.competition.execution.results.challenge.outsideOfTime')}
-                            </Alert>
-                        )}
-                        <Card sx={{p: 2}}>
-                            <Typography>
-                                {teamDto.clubName + (teamDto.name ? ` ${teamDto.name}` : '')}
-                            </Typography>
-                            {teamDto.namedParticipants.map((namedParticipant, npIdx) => (
-                                <>
-                                    {npIdx > 0 && <Divider />}
-                                    <Stack spacing={2}>
-                                        <Typography>
-                                            {namedParticipant.namedParticipantName}
-                                        </Typography>
-                                        {namedParticipant.participants.map(participant => (
-                                            <Typography>
-                                                {participant.firstname} {participant.lastname}
-                                            </Typography>
-                                        ))}
-                                    </Stack>
-                                </>
-                            ))}
-                        </Card>
-                        <Divider />
-
-                        {!confirming ? (
-                            <ChallengeResultForm
-                                dialogOpen={dialogOpen}
-                                proofRequired={props.resultConfirmationImageRequired}
-                                resultTypeDescriptor={resultTypeDescriptor}
-                                resultTypeAdornment={resultTypeAdornment}
-                            />
-                        ) : (
-                            <>
-                                <Box>
+                    <Box>
+                        <Container maxWidth={'xs'}>
+                            <Stack spacing={4}>
+                                {props.outsideOfChallengeTimespan && (
+                                    <Alert severity={'warning'} variant={'outlined'}>
+                                        {t(
+                                            'event.competition.execution.results.challenge.outsideOfTime',
+                                        )}
+                                    </Alert>
+                                )}
+                                <Card sx={{p: 2}}>
                                     <Typography>
+                                        {teamDto.clubName +
+                                            (teamDto.name ? ` ${teamDto.name}` : '')}
+                                    </Typography>
+                                    {teamDto.namedParticipants.map((namedParticipant, npIdx) => (
+                                        <Fragment
+                                            key={namedParticipant.namedParticipantName + npIdx}>
+                                            {npIdx > 0 && <Divider />}
+                                            <Stack spacing={2}>
+                                                <Typography>
+                                                    {namedParticipant.namedParticipantName}
+                                                </Typography>
+                                                {namedParticipant.participants.map(participant => (
+                                                    <Typography>
+                                                        {participant.firstname}{' '}
+                                                        {participant.lastname}
+                                                    </Typography>
+                                                ))}
+                                            </Stack>
+                                        </Fragment>
+                                    ))}
+                                </Card>
+                                <Divider />
+
+                                {!confirming ? (
+                                    <ChallengeResultForm
+                                        dialogOpen={dialogOpen}
+                                        proofRequired={props.resultConfirmationImageRequired}
+                                        resultTypeDescriptor={resultTypeDescriptor}
+                                        resultTypeAdornment={resultTypeAdornment}
+                                    />
+                                ) : (
+                                    <Typography variant={'h6'}>
                                         <span style={{fontWeight: 'bold'}}>
                                             {resultTypeDescriptor}:{' '}
                                         </span>
                                         {confirmationFormState.result +
                                             (resultTypeAdornment ? ` ${resultTypeAdornment}` : '')}
                                     </Typography>
-                                </Box>
-                                {confirmationFormState.files.length === 1 && (
-                                    <Typography>
-                                        <span style={{fontWeight: 'bold'}}>
-                                            {t(
-                                                'event.competition.execution.results.confirmationImage.confirmationImage',
-                                            )}
-                                            :{' '}
-                                        </span>
-                                        {confirmationFormState.files[0].file.name}
-                                    </Typography>
                                 )}
-                                <Alert severity={'warning'}>
+                            </Stack>
+                        </Container>
+                        {confirming && confirmationFormState.files.length === 1 && (
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    flexDirection: 'column',
+                                    gap: 1,
+                                    my: 4,
+                                }}>
+                                {formContext.watch('files')?.[0]?.file && (
+                                    <img
+                                        src={URL.createObjectURL(
+                                            formContext.watch('files')[0].file,
+                                        )}
+                                        alt="Challenge confirmation"
+                                        style={{
+                                            maxWidth: '100%',
+                                            maxHeight: '600px',
+                                            objectFit: 'contain',
+                                        }}
+                                    />
+                                )}
+                            </Box>
+                        )}
+                    </Box>
+                    {confirming && (
+                        <>
+                            <Divider sx={{mb: 2}} />
+                            <Box sx={{display: 'flex', justifyContent: 'center'}}>
+                                <Alert severity={'error'} sx={{maxWidth: 400}}>
                                     <AlertTitle>
                                         {t(
                                             'event.competition.execution.results.challenge.confirmTitle',
@@ -191,14 +222,20 @@ const ChallengeResultDialog = ({teamDto, dialogOpen, ...props}: Props) => {
                                         )}
                                     </Typography>
                                 </Alert>
-                            </>
-                        )}
-                    </Stack>
+                            </Box>
+                        </>
+                    )}
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={props.closeDialog} disabled={submitting}>
-                        {t('common.cancel')}
-                    </Button>
+                    {!confirming ? (
+                        <Button onClick={props.closeDialog} disabled={submitting}>
+                            {t('common.cancel')}
+                        </Button>
+                    ) : (
+                        <Button onClick={() => setConfirming(false)} disabled={submitting}>
+                            {t('common.back')}
+                        </Button>
+                    )}
                     {!confirming ? (
                         <SubmitButton submitting={submitting}>{t('common.continue')}</SubmitButton>
                     ) : (
