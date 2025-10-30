@@ -234,19 +234,22 @@ const CompetitionRegistrationDialog = ({
         eventData.registrationAvailableTo &&
         new Date(eventData.registrationAvailableTo) < new Date()
 
+    const directResultPossible =
+        eventData.challengeEvent &&
+        ((eventData.allowSelfSubmission &&
+            currentlyInTimespan(
+                competition.properties.challengeConfig?.startAt,
+                competition.properties.challengeConfig?.endAt,
+            )) ||
+            user.checkPrivilege(updateResultGlobal))
+
     const defaultValues: CompetitionRegistrationForm = {
         namedParticipants: [],
         optionalFees: [],
         clubId: user.loggedIn ? user.clubId : undefined,
         asRegistrationType: adminLatePossible ? 'LATE' : 'REGULAR',
         ratingCategory: competition.properties.ratingCategoryRequired ? '' : 'none',
-        includeResult:
-            eventData.challengeEvent &&
-            (eventData.allowSelfSubmission || user.checkPrivilege(updateResultGlobal)) &&
-            currentlyInTimespan(
-                competition.properties.challengeConfig?.startAt,
-                competition.properties.challengeConfig?.endAt,
-            ),
+        includeResult: directResultPossible,
     }
 
     const optionalFees = useMemo(
@@ -364,7 +367,7 @@ const CompetitionRegistrationDialog = ({
                             row
                         />
                     )}
-                    {eventData.challengeEvent && (
+                    {directResultPossible && (
                         <FormInputCheckbox
                             name={'includeResult'}
                             label={t('event.competition.registration.challenge.includeResult')}

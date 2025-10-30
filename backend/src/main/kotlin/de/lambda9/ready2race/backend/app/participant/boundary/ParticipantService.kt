@@ -48,6 +48,12 @@ object ParticipantService {
         clubId: UUID,
     ): App<ToApiError, ApiResponse.NoData> = KIO.comprehension {
 
+        val genderMap = mapOf(
+            request.valueGenderMale to Gender.M,
+            request.valueGenderFemale to Gender.F,
+            request.valueGenderDiverse to Gender.D,
+        )
+
         val iStream = file.bytes.inputStream()
 
         val entries = !CSV.read(iStream, request.separator) {
@@ -55,13 +61,16 @@ object ParticipantService {
             val externalClubname = !optionalCell(request.colExternalClubname)
             val now = LocalDateTime.now()
 
+            val genderValue = !cell(request.colGender)
+            val gender = !KIO.failOnNull(genderMap[genderValue]) { ParticipantError.ImportError.UnknownGenderValue(genderValue) }
+
             ParticipantRecord(
                 id = UUID.randomUUID(),
                 club = clubId,
                 firstname = !cell(request.colFirstname),
                 lastname = !cell(request.colLastname),
                 year = !cell(request.colYear, int),
-                gender = !cell(request.colGender, enum<Gender>()),
+                gender = gender,
                 external = externalClubname != null,
                 externalClubName = externalClubname,
                 createdAt = now,

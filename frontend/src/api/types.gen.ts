@@ -1210,6 +1210,9 @@ export type ParticipantImportRequest = {
     colYear: string
     colGender: string
     colExternalClubname?: string
+    valueGenderMale: string
+    valueGenderFemale: string
+    valueGenderDiverse: string
 }
 
 export type ParticipantInfo = {

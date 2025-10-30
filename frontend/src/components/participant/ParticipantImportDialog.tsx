@@ -25,6 +25,9 @@ type Form = {
     colYear: string
     colGender: string
     colExternalClubname: string
+    valueGenderMale: string
+    valueGenderFemale: string
+    valueGenderDiverse: string
     files: {
         file: File
     }[]
@@ -37,6 +40,9 @@ const defaultValues: Form = {
     colYear: '',
     colGender: '',
     colExternalClubname: '',
+    valueGenderMale: 'M',
+    valueGenderFemale: 'F',
+    valueGenderDiverse: 'D',
     files: [],
 }
 
@@ -47,6 +53,9 @@ const mapFormToRequest = (formData: Form): ParticipantImportRequest => ({
     colYear: formData.colYear,
     colGender: formData.colGender,
     colExternalClubname: takeIfNotEmpty(formData.colExternalClubname),
+    valueGenderMale: formData.valueGenderMale,
+    valueGenderFemale: formData.valueGenderFemale,
+    valueGenderDiverse: formData.valueGenderDiverse,
 })
 
 const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => {
@@ -215,6 +224,26 @@ const ParticipantImportDialog = ({open, onClose, reloadParticipants}: Props) => 
                             <FormInputText
                                 name={'colExternalClubname'}
                                 label={t('club.participant.upload.dialog.col.external')}
+                            />
+                        </Stack>
+                        <Stack spacing={2}>
+                            <Typography variant={'subtitle1'}>
+                                <Trans i18nKey={'club.participant.upload.dialog.genderValues'} />
+                            </Typography>
+                            <FormInputText
+                                name={'valueGenderMale'}
+                                label={t('club.participant.upload.dialog.value.gender.male')}
+                                required
+                            />
+                            <FormInputText
+                                name={'valueGenderFemale'}
+                                label={t('club.participant.upload.dialog.value.gender.female')}
+                                required
+                            />
+                            <FormInputText
+                                name={'valueGenderDiverse'}
+                                label={t('club.participant.upload.dialog.value.gender.diverse')}
+                                required
                             />
                         </Stack>
                         <Stack spacing={2}>

@@ -8379,6 +8379,9 @@ components:
         - colLastname
         - colYear
         - colGender
+        - valueGenderMale
+        - valueGenderFemale
+        - valueGenderDiverse
       properties:
         separator:
           type: string
@@ -8392,6 +8395,12 @@ components:
         colGender:
           type: string
         colExternalClubname:
+          type: string
+        valueGenderMale:
+          type: string
+        valueGenderFemale:
+          type: string
+        valueGenderDiverse:
           type: string
 
     # event registration

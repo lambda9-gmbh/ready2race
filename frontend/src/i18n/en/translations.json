@@ -222,6 +222,14 @@
             "gender": "Gender",
             "external": "External club name"
           },
+          "genderValues": "Values for gender differentiation",
+          "value": {
+            "gender": {
+              "male": "Male",
+              "female": "Female",
+              "diverse": "Diverse"
+            }
+          },
           "file": {
             "missing": "Please provide a file.",
             "change": "Change .csv file",

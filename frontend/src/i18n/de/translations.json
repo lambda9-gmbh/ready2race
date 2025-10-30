@@ -222,6 +222,14 @@
             "gender": "Geschlecht",
             "external": "Vereinszugehörigkeit"
           },
+          "genderValues": "Werte für Geschlechterunterscheidung",
+          "value": {
+            "gender": {
+              "male": "männlich",
+              "female": "weiblich",
+              "diverse": "divers"
+            }
+          },
           "file": {
             "missing": "Bitte wählen Sie eine Datei aus.",
             "change": ".csv Datei ändern",
