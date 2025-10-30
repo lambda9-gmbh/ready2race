@@ -32,6 +32,12 @@ type UserData =
           isInApp: boolean
           authStatus: 'pending' | 'anonymous'
       }
+    | {
+          userInfo: undefined
+          token: string | null
+          isInApp: boolean
+          authStatus: 'initial'
+      }
 
 const UserProvider = ({children}: PropsWithChildren) => {
     const [language, setLanguage] = useState(
@@ -41,7 +47,7 @@ const UserProvider = ({children}: PropsWithChildren) => {
         userInfo: undefined,
         token: sessionStorage.getItem('session'),
         isInApp: router.state.resolvedLocation.pathname.startsWith('/app'),
-        authStatus: 'pending',
+        authStatus: 'initial',
     })
     const [error, setError] = useState<string | null>(null)
 
@@ -60,38 +66,42 @@ const UserProvider = ({children}: PropsWithChildren) => {
         return () => client.interceptors.response.eject(f)
     }, [])
 
-    const prevAuthStatus = React.useRef<'pending' | 'anonymous' | 'authenticated'>('pending')
+    const prevAuthStatus = React.useRef<'initial' | 'pending' | 'anonymous' | 'authenticated'>(
+        'initial',
+    )
 
     useEffect(() => {
-        if (userData.authStatus !== 'pending') {
-            const authenticated = userData.authStatus === 'authenticated'
-            if (
-                prevAuthStatus.current !== 'pending' &&
-                (authenticated || prevAuthStatus.current === 'authenticated')
-            ) {
-                if (userData.isInApp) {
-                    navigate({to: authenticated ? '/app' : '/app/login'})
-                } else {
-                    const redirect = router.state.resolvedLocation.search.redirect
-                    navigate({to: authenticated ? (redirect ? redirect : '/dashboard') : '/'})
+        if (userData.authStatus !== 'initial') {
+            if (userData.authStatus !== 'pending') {
+                const authenticated = userData.authStatus === 'authenticated'
+                if (
+                    prevAuthStatus.current !== 'pending' &&
+                    (authenticated || prevAuthStatus.current === 'authenticated')
+                ) {
+                    if (userData.isInApp) {
+                        navigate({to: authenticated ? '/app' : '/app/login'})
+                    } else {
+                        const redirect = router.state.resolvedLocation.search.redirect
+                        navigate({to: authenticated ? (redirect ? redirect : '/dashboard') : '/'})
+                    }
                 }
-            }
-            prevAuthStatus.current = userData.authStatus
-        } else {
-            if (userData.userInfo && userData.token) {
-                setUserData({
-                    userInfo: userData.userInfo,
-                    token: userData.token,
-                    isInApp: userData.isInApp,
-                    authStatus: 'authenticated',
-                })
-            } else if (!userData.userInfo && !userData.token) {
-                setUserData(prevState => ({
-                    userInfo: undefined,
-                    token: null,
-                    isInApp: prevState.isInApp,
-                    authStatus: 'anonymous',
-                }))
+                prevAuthStatus.current = userData.authStatus
+            } else {
+                if (userData.userInfo && userData.token) {
+                    setUserData({
+                        userInfo: userData.userInfo,
+                        token: userData.token,
+                        isInApp: userData.isInApp,
+                        authStatus: 'authenticated',
+                    })
+                } else if (!userData.userInfo && !userData.token) {
+                    setUserData(prevState => ({
+                        userInfo: undefined,
+                        token: null,
+                        isInApp: prevState.isInApp,
+                        authStatus: 'anonymous',
+                    }))
+                }
             }
         }
         if (userData.token) {
@@ -209,9 +219,15 @@ const UserProvider = ({children}: PropsWithChildren) => {
         } satisfies AuthenticatedUser
     }
 
+    console.log(userData.authStatus)
+
     return (
         <UserContext.Provider value={userValue}>
-            {error !== null ? <PanicPage /> : userData.authStatus !== 'pending' && children}
+            {error !== null ? (
+                <PanicPage />
+            ) : (
+                userData.authStatus !== 'pending' && userData.authStatus !== 'initial' && children
+            )}
         </UserContext.Provider>
     )
 }

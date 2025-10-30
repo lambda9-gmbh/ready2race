@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {verifyUserRegistration} from '@api/sdk.gen.ts'
 import {registrationTokenRoute} from '@routes'
 import {Typography} from '@mui/material'
@@ -11,13 +11,16 @@ const VerifyRegistrationPage = () => {
     const {t} = useTranslation()
     const {registrationToken} = registrationTokenRoute.useParams()
 
+    const verificationRequested = useRef(false)
+
     const [requestResult, setRequestResult] = useState<
         'NotFound' | 'Unexpected' | 'Success' | null
     >(null)
 
     useEffect(() => {
-        // todo: should this be useFetch instead?
         ;(async () => {
+            if (verificationRequested.current) return
+            verificationRequested.current = true
             const result = await verifyUserRegistration({
                 body: {
                     token: registrationToken,
