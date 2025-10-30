@@ -33,6 +33,7 @@ import ParticipantRequirementForEventTable from '@components/event/participantRe
 import ParticipantForEventTable from '@components/participant/ParticipantForEventTable.tsx'
 import {useUser} from '@contexts/user/UserContext.ts'
 import {
+    createInvoiceGlobal,
     readEventGlobal,
     readRegistrationGlobal,
     readRegistrationOwn,
@@ -205,7 +206,8 @@ const EventPage = () => {
                             {user.checkPrivilege(readEventGlobal) && (
                                 <Tab label={t('event.tabs.settings')} {...tabProps('settings')} />
                             )}
-                            {user.getPrivilegeScope('READ', 'INVOICE') && (
+                            {((user.getPrivilegeScope('READ', 'INVOICE') && true) ||
+                                user.checkPrivilege(createInvoiceGlobal)) && (
                                 <Tab label={t('event.tabs.invoices')} {...tabProps('invoices')} />
                             )}
                         </TabSelectionContainer>

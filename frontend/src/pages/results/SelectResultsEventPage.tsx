@@ -21,7 +21,7 @@ const SelectResultsEventPage = () => {
 
     return (
         <Box>
-            <ResultsConfigurationTopBar showBackButton={false} />
+            <ResultsConfigurationTopBar navigateToHome={true} />
             <Stack spacing={2} sx={{m: 4}}>
                 <Typography variant={'h4'} align={'center'}>
                     {t('event.events')}

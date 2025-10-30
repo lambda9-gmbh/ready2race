@@ -78,7 +78,6 @@ const ResultsPage = () => {
     ) : eventData ? (
         <>
             <ResultsConfigurationTopBar
-                showBackButton={true}
                 competitionSelected={competitionSelected !== null}
                 resetSelectedCompetition={() => setCompetitionSelected(null)}
                 title={eventData.name}

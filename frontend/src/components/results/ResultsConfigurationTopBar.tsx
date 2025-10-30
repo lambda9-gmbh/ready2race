@@ -4,10 +4,10 @@ import {Link} from '@tanstack/react-router'
 import LanguageWidget from '@components/appbar/LanguageWidget.tsx'
 
 type Props = {
-    showBackButton: boolean
     competitionSelected?: boolean
     resetSelectedCompetition?: () => void
     title?: string
+    navigateToHome?: boolean
 }
 
 const ResultsConfigurationTopBar = (props: Props) => {
@@ -19,24 +19,28 @@ const ResultsConfigurationTopBar = (props: Props) => {
             sx={{
                 width: '100%',
                 display: 'flex',
-                justifyContent: props.showBackButton ? 'space-between' : 'end',
+                justifyContent: 'space-between',
                 mb: smallScreenLayout ? 0 : 1,
             }}>
-            {props.showBackButton && (
-                <Box>
-                    {props.competitionSelected ? (
-                        <IconButton onClick={props.resetSelectedCompetition}>
+            <Box>
+                {props.navigateToHome ? (
+                    <Link to={'/'}>
+                        <IconButton>
                             <ArrowBackIcon />
                         </IconButton>
-                    ) : (
-                        <Link to={'/results'}>
-                            <IconButton>
-                                <ArrowBackIcon />
-                            </IconButton>
-                        </Link>
-                    )}
-                </Box>
-            )}
+                    </Link>
+                ) : props.competitionSelected ? (
+                    <IconButton onClick={props.resetSelectedCompetition}>
+                        <ArrowBackIcon />
+                    </IconButton>
+                ) : (
+                    <Link to={'/results'}>
+                        <IconButton>
+                            <ArrowBackIcon />
+                        </IconButton>
+                    </Link>
+                )}
+            </Box>
             {props.title && !smallScreenLayout && (
                 <Typography variant={'h6'}>{props.title}</Typography>
             )}
