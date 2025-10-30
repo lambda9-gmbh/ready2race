@@ -26,7 +26,7 @@ data class CompetitionRegistrationTeamUpsertDto(
                 optionalFees = emptyList(),
                 namedParticipants = emptyList(),
                 ratingCategory = UUID.randomUUID(),
-                callbackUrl = "ready2race.info/event/${UUID.randomUUID()}/challenge/",
+                callbackUrl = "https://ready2race.info/challenge/",
             )
     }
 }

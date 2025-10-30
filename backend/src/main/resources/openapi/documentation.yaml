@@ -8619,6 +8619,8 @@ components:
             $ref: '#/components/schemas/CompetitionRegistrationUpsertDto'
         message:
           type: string
+        callbackUrl:
+          type: string
       required:
         - participants
         - competitionRegistrations
@@ -8701,6 +8703,8 @@ components:
           nullable: true
         gender:
           $ref: '#/components/schemas/Gender'
+        email:
+          type: string
         external:
           type: boolean
           nullable: true

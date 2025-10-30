@@ -77,7 +77,7 @@ object ParticipantService {
                 createdBy = userId,
                 updatedAt = now,
                 updatedBy = userId,
-                email = !optionalCell(request.colEmail),
+                email = !optionalCell(request.colEmail), // TODO: validate pattern
             )
         }
 

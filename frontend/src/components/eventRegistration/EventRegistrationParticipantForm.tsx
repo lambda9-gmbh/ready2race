@@ -12,8 +12,9 @@ import {Edit, HelpOutline} from '@mui/icons-material'
 import {grey} from '@mui/material/colors'
 import {
     EventRegistrationFormData,
-    EventRegistrationParticipantFormData
-} from "../../pages/eventRegistration/EventRegistrationCreatePage.tsx";
+    EventRegistrationParticipantFormData,
+} from '../../pages/eventRegistration/EventRegistrationCreatePage.tsx'
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 
 export const EventRegistrationParticipantForm = (props: {
     index: number
@@ -119,6 +120,14 @@ export const EventRegistrationParticipantForm = (props: {
                                     required
                                     min={currentYear - 120}
                                     max={currentYear}
+                                    size={'small'}
+                                    onChange={handleChange}
+                                />
+                            </Stack>
+                            <Stack direction="row" spacing={2} alignItems={'center'}>
+                                <FormInputEmail
+                                    name={`participants.${props.index}.email`}
+                                    label={t('user.email.email')}
                                     size={'small'}
                                     onChange={handleChange}
                                 />

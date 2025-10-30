@@ -24,6 +24,7 @@ import de.lambda9.ready2race.backend.app.eventRegistration.control.toDto
 import de.lambda9.ready2race.backend.app.eventRegistration.control.toRecord
 import de.lambda9.ready2race.backend.app.event.boundary.EventService
 import de.lambda9.ready2race.backend.app.event.entity.EventError
+import de.lambda9.ready2race.backend.app.eventParticipant.control.EventParticipantRepo
 import de.lambda9.ready2race.backend.app.eventRegistration.control.*
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.namedParticipant.entity.NamedParticipantRequirements
@@ -37,12 +38,14 @@ import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_COMPETITION_REGISTRATION
 import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
 import de.lambda9.ready2race.backend.lexiNumberComp
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
+import de.lambda9.ready2race.backend.security.RandomUtilities
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.KIO.Companion.unit
@@ -119,6 +122,8 @@ object EventRegistrationService {
             it == OpenForRegistrationType.CLOSED || user.club == null
         }) { EventRegistrationError.RegistrationClosed }
 
+        val event = !EventRepo.get(eventId).orDie().onNullDie("Existing already checked.")
+
         val template = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
 
         val now = LocalDateTime.now()
@@ -181,16 +186,63 @@ object EventRegistrationService {
                 .mapValues { remainingRegistrations?.get(it.key) ?: 0 }.toMutableMap()
 
         val userInfoMap = !registrationDto.participants.traverse { pDto ->
-            handleSingleCompetitionRegistration(
-                pDto,
-                user.id!!,
-                user.club!!,
-                template,
-                persistedRegistrationId,
-                now,
-                singleCompetitionMultipleCounts,
-                type,
-            )
+
+            KIO.comprehension {
+                val result = !handleSingleCompetitionRegistration(
+                    pDto,
+                    user.id!!,
+                    user.club!!,
+                    template,
+                    persistedRegistrationId,
+                    now,
+                    singleCompetitionMultipleCounts,
+                    type,
+                )
+
+                if (
+                    event.challengeEvent == true &&
+                    event.selfSubmission == true &&
+                    pDto.email != null &&
+                    (!pDto.competitionsSingle.isNullOrEmpty() || registrationDto.competitionRegistrations.flatMap {
+                        it.teams ?: emptyList()
+                    }.flatMap { it.namedParticipants }.flatMap { it.participantIds }.any { it == result.first })
+                ) {
+                    val accessTokenExists = !EventParticipantRepo.exists(eventId, result.second.id).orDie()
+
+                    if (!accessTokenExists) {
+
+                        val newAccessToken = RandomUtilities.token()
+
+                        !EventParticipantRepo.create(
+                            EventParticipantRecord(
+                                event = eventId,
+                                participant = result.second.id,
+                                accessToken = newAccessToken,
+                            )
+                        ).orDie()
+
+                        val content = !EmailService.getTemplate(
+                            EmailTemplateKey.PARTICIPANT_CHALLENGE_REGISTERED,
+                            EmailLanguage.DE, // TODO: somehow get a language
+                        ).map { template ->
+                            template.toContent(
+                                EmailTemplatePlaceholder.RECIPIENT to pDto.firstname + " " + pDto.lastname,
+                                EmailTemplatePlaceholder.EVENT to event.name,
+                                EmailTemplatePlaceholder.LINK to registrationDto.callbackUrl!! + newAccessToken,
+                            )
+                        }
+
+                        !EmailService.enqueue(
+                            recipient = pDto.email,
+                            content = content,
+                        )
+                    }
+                }
+
+                ok(result)
+            }
+
+
         }.map { it.toMap(mutableMapOf()) }
 
         !registrationDto.competitionRegistrations.traverse { competitionRegistrationDto ->
@@ -207,7 +259,6 @@ object EventRegistrationService {
             )
         }
 
-        val eventName = !EventRepo.getName(eventId).orDie()
         val clubName = !ClubRepo.getName(user.club!!).orDie()
         val participants = !ParticipantForEventRepo.getByClub(user.club!!).orDie()
 
@@ -252,7 +303,7 @@ object EventRegistrationService {
         ).map { mailTemplate ->
             mailTemplate.toContent(
                 EmailTemplatePlaceholder.RECIPIENT to user.firstname + " " + user.lastname,
-                EmailTemplatePlaceholder.EVENT to (eventName ?: ""),
+                EmailTemplatePlaceholder.EVENT to (event.name),
                 EmailTemplatePlaceholder.CLUB to (clubName ?: ""),
                 EmailTemplatePlaceholder.PARTICIPANTS to summaryParticipants,
                 EmailTemplatePlaceholder.COMPETITIONS to summaryCompetitions,

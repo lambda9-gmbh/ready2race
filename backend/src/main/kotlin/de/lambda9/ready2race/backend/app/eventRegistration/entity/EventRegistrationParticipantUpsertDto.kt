@@ -23,6 +23,7 @@ data class EventRegistrationParticipantUpsertDto (
     val lastname: String,
     val year: Int,
     val gender: Gender,
+    val email: String?,
     val external: Boolean?,
     val externalClubName: String?,
     val competitionsSingle: List<CompetitionRegistrationSingleUpsertDto>?,
@@ -41,6 +42,6 @@ data class EventRegistrationParticipantUpsertDto (
                     this::external validate isFalseOrNull,
                     this::externalClubName validate isNull,
                 ),
-            )
+            ),
         )
 }

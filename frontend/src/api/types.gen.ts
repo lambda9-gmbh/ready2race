@@ -817,6 +817,7 @@ export type EventRegistrationParticipantUpsertDto = {
     lastname: string
     year?: number | null
     gender: Gender
+    email?: string
     external?: boolean | null
     externalClubName?: string | null
     competitionsSingle?: Array<CompetitionRegistrationSingleUpsertDto>
@@ -832,6 +833,7 @@ export type EventRegistrationUpsertDto = {
     participants: Array<EventRegistrationParticipantUpsertDto>
     competitionRegistrations: Array<CompetitionRegistrationUpsertDto>
     message?: string
+    callbackUrl?: string
 }
 
 export type EventRegistrationViewDto = {

@@ -18,6 +18,7 @@ import {FormInputRadioButtonGroup} from '@components/form/input/FormInputRadioBu
 import {FormInputCheckbox} from '@components/form/input/FormInputCheckbox.tsx'
 import {AutocompleteClub} from '@components/club/AutocompleteClub.tsx'
 import {HelpOutline} from '@mui/icons-material'
+import FormInputEmail from '@components/form/input/FormInputEmail.tsx'
 
 type ParticipantForm = {
     firstname: string
@@ -111,7 +112,7 @@ const ParticipantDialog = (props: BaseEntityDialogProps<ParticipantDto>) => {
                     min={currentYear - 120}
                     max={currentYear}
                 />
-                <FormInputText name={'email'} label={t('user.email.email')} />
+                <FormInputEmail name={'email'} label={t('user.email.email')} />
                 <FormInputText name={'phone'} label={t('entity.phone')} />
                 <Stack direction="row" spacing={2} alignItems={'center'}>
                     <FormInputCheckbox

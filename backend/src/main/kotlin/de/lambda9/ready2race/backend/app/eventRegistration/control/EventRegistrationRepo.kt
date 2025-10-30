@@ -337,6 +337,7 @@ object EventRegistrationRepo {
                     lastname = it[PARTICIPANT.LASTNAME]!!,
                     year = it[PARTICIPANT.YEAR]!!,
                     gender = it[PARTICIPANT.GENDER]!!,
+                    email = it[PARTICIPANT.EMAIL],
                     external = it[PARTICIPANT.EXTERNAL],
                     externalClubName = it[PARTICIPANT.EXTERNAL_CLUB_NAME],
                     competitionsSingle = it[singleCompetitions],
@@ -539,6 +540,7 @@ object EventRegistrationRepo {
         PARTICIPANT.GENDER,
         PARTICIPANT.EXTERNAL,
         PARTICIPANT.EXTERNAL_CLUB_NAME,
+        PARTICIPANT.EMAIL,
         singleCompetitions
     )
         .from(PARTICIPANT)

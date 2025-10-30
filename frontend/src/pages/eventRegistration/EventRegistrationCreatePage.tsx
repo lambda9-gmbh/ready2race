@@ -44,6 +44,9 @@ export type EventRegistrationFormData = {
     message?: string
 }
 
+// TODO: validate/sanitize basepath (also in routes.tsx)
+const basepath = document.getElementById('ready2race-root')!.dataset.basepath
+
 const formDataToRequest = (formData: EventRegistrationFormData): EventRegistrationUpsertDto => ({
     participants: formData.participants.map(p => ({
         ...p,
@@ -74,6 +77,7 @@ const formDataToRequest = (formData: EventRegistrationFormData): EventRegistrati
             }),
     })),
     message: formData.message,
+    callbackUrl: location.origin + (basepath ? `/${basepath}` : '') + '/challenge/',
 })
 
 const EventRegistrationCreatePage = () => {
