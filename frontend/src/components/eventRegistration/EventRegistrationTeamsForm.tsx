@@ -109,12 +109,13 @@ const TeamInput = (props: {
                     />
                 )}
                 {ratingCategories.length > 0 && (
-                    <Box sx={{ml: 2, my: 1, maxWidth: 300}}>
+                    <Box sx={{my: 1, maxWidth: 300}}>
                         <FormInputSelect
                             name={`competitionRegistrations.${props.competitionIndex}.teams.${props.teamIndex}.ratingCategory`}
                             options={ratingCategoryOptions}
                             required
                             label={t('event.competition.registration.ratingCategory')}
+                            disabled={props.locked}
                         />
                     </Box>
                 )}

@@ -10,8 +10,6 @@ sealed interface EventRegistrationError : ServiceError {
     data object RegistrationClosed : EventRegistrationError
     data object RegistrationsNotFinalized : EventRegistrationError
 
-    data object NoWizardInChallengeMode : EventRegistrationError
-
     data class InvalidRegistration(val msg: String) : EventRegistrationError
 
     override fun respond(): ApiError = when (this) {
@@ -20,6 +18,5 @@ sealed interface EventRegistrationError : ServiceError {
         EventNotFound -> ApiError(status = HttpStatusCode.NotFound, message = "Event not found")
         RegistrationClosed -> ApiError(status = HttpStatusCode.Forbidden, message = "Registration closed")
         RegistrationsNotFinalized -> ApiError(status = HttpStatusCode.BadRequest, message = "Event not finalized")
-        NoWizardInChallengeMode -> ApiError(status = HttpStatusCode.Forbidden, message = "No Registration Wizard In Challenge Mode")
     }
 }

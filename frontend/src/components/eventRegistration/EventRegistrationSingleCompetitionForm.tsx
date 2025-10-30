@@ -83,7 +83,7 @@ const EventSingleCompetitionField = (props: {
     ]
 
     return (
-        <Stack direction="row">
+        <Stack direction="row" sx={{alignItems: 'center'}}>
             <FormControlLabel
                 control={<Checkbox />}
                 disabled={props.locked || (props.isLate && !props.option.lateRegistrationAllowed)}
@@ -120,6 +120,7 @@ const EventSingleCompetitionField = (props: {
                         options={ratingCategoryOptions}
                         required
                         variant={'standard'}
+                        disabled={props.locked}
                     />
                 </Box>
             )}

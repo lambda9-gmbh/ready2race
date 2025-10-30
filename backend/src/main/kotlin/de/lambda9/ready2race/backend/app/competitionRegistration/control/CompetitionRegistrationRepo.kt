@@ -70,7 +70,8 @@ object CompetitionRegistrationRepo {
                     OpenForRegistrationType.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
                     OpenForRegistrationType.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
                     OpenForRegistrationType.CLOSED -> DSL.falseCondition()
-                }
+                },
+                competitionRgistrationReferenced().not()
             )
         }
 
@@ -363,4 +364,22 @@ object CompetitionRegistrationRepo {
         clubId: UUID?,
     ): Condition = if (scope == Privilege.Scope.OWN) COMPETITION_REGISTRATION.CLUB.eq(clubId) else DSL.trueCondition()
 
+    fun competitionRgistrationReferenced(): Condition =
+        DSL.exists(
+            DSL.selectOne()
+                .from(COMPETITION_MATCH_TEAM)
+                .where(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+        ).or(
+            DSL.exists(
+                DSL.selectOne()
+                    .from(SUBSTITUTION)
+                    .where(SUBSTITUTION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            )
+        ).or(
+            DSL.exists(
+                DSL.selectOne()
+                    .from(COMPETITION_DEREGISTRATION)
+                    .where(COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_REGISTRATION.ID))
+            )
+        )
 }

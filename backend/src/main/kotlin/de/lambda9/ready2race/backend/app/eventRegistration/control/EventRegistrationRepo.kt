@@ -1,12 +1,11 @@
 package de.lambda9.ready2race.backend.app.eventRegistration.control
 
+import de.lambda9.ready2race.backend.app.competitionRegistration.control.CompetitionRegistrationRepo.competitionRgistrationReferenced
 import de.lambda9.ready2race.backend.app.eventRegistration.entity.*
 import de.lambda9.ready2race.backend.app.invoice.entity.RegistrationInvoiceType
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.EventRegistrationsView
-import de.lambda9.ready2race.backend.database.generated.tables.records.CompetitionRegistrationTeamRecord
-import de.lambda9.ready2race.backend.database.generated.tables.records.EventCompetitionRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRegistrationsViewRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
@@ -192,7 +191,14 @@ object EventRegistrationRepo {
 
         val fees = selectFeesForEventRegistration()
 
-        val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
+        val singleCompetitions = selectSingleCompetitionsForEventRegistration(
+            fees,
+            condition = when (filter) {
+                RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                RegistrationFilter.ALL -> DSL.trueCondition()
+            }.or(competitionRgistrationReferenced())
+        ) {
             CompetitionRegistrationSingleLockedDto(
                 it[COMPETITION_VIEW.ID]!!,
                 it[fees],
@@ -208,7 +214,16 @@ object EventRegistrationRepo {
             )
         }
 
-        val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
+        val teams = selectTeamsForEventRegistration(
+            fees,
+            namedParticipants,
+            clubId,
+            condition = when (filter) {
+                RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                RegistrationFilter.ALL -> DSL.trueCondition()
+            }.or(competitionRgistrationReferenced())
+        ) {
             CompetitionRegistrationTeamLockedDto(
                 it[COMPETITION_REGISTRATION.ID]!!,
                 it[fees],
@@ -263,13 +278,21 @@ object EventRegistrationRepo {
 
             val fees = selectFeesForEventRegistration()
 
-            val singleCompetitions = selectSingleCompetitionsForEventRegistration(fees, filter) {
-                CompetitionRegistrationSingleUpsertDto(
-                    it[COMPETITION_VIEW.ID]!!,
-                    it[fees],
-                    it[COMPETITION_REGISTRATION.RATING_CATEGORY],
-                )
-            }
+            val singleCompetitions =
+                selectSingleCompetitionsForEventRegistration(
+                    fees,
+                    condition = when (filter) {
+                        RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                        RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                        RegistrationFilter.ALL -> DSL.trueCondition()
+                    }.and(competitionRgistrationReferenced().not())
+                ) {
+                    CompetitionRegistrationSingleUpsertDto(
+                        it[COMPETITION_VIEW.ID]!!,
+                        it[fees],
+                        it[COMPETITION_REGISTRATION.RATING_CATEGORY],
+                    )
+                }
 
             val namedParticipants = selectNamedParticipantsForEventRegistration {
                 CompetitionRegistrationNamedParticipantUpsertDto(
@@ -279,7 +302,16 @@ object EventRegistrationRepo {
                 )
             }
 
-            val teams = selectTeamsForEventRegistration(fees, namedParticipants, clubId, filter) {
+            val teams = selectTeamsForEventRegistration(
+                fees,
+                namedParticipants,
+                clubId,
+                condition = when (filter) {
+                    RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
+                    RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
+                    RegistrationFilter.ALL -> DSL.trueCondition()
+                }.and(competitionRgistrationReferenced().not())
+            ) {
                 CompetitionRegistrationTeamUpsertDto(
                     it[COMPETITION_REGISTRATION.ID]!!,
                     null,
@@ -533,11 +565,12 @@ object EventRegistrationRepo {
                 it!!.map { convert(it) }
             }
 
+
     private fun <A, NP> selectTeamsForEventRegistration(
         fees: Field<MutableList<UUID>>,
         namedParticipants: Field<MutableList<NP>>,
         clubId: UUID,
-        filter: RegistrationFilter,
+        condition: Condition,
         convert: (Record) -> A
     ) = DSL.select(
         COMPETITION_REGISTRATION.ID,
@@ -549,13 +582,7 @@ object EventRegistrationRepo {
         .from(COMPETITION_REGISTRATION)
         .where(COMPETITION_REGISTRATION.COMPETITION.eq(COMPETITION_VIEW.ID))
         .and(COMPETITION_REGISTRATION.CLUB.eq(clubId))
-        .and(
-            when (filter) {
-                RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
-                RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
-                RegistrationFilter.ALL -> DSL.trueCondition()
-            }
-        )
+        .and(condition)
         .asMultiset("teams")
         .convertFrom {
             it!!.map { convert(it) }
@@ -580,7 +607,7 @@ object EventRegistrationRepo {
 
     private fun <A> selectSingleCompetitionsForEventRegistration(
         fees: Field<MutableList<UUID>>,
-        filter: RegistrationFilter,
+        condition: Condition,
         convert: (Record) -> A,
     ) = DSL.select(
         COMPETITION_VIEW.ID,
@@ -597,13 +624,7 @@ object EventRegistrationRepo {
         .where(COMPETITION_VIEW.TOTAL_COUNT.eq(1))
         .and(COMPETITION_REGISTRATION_NAMED_PARTICIPANT.PARTICIPANT.eq(PARTICIPANT.ID))
         .and(COMPETITION_VIEW.EVENT.eq(EVENT.ID))
-        .and(
-            when (filter) {
-                RegistrationFilter.REGULAR -> COMPETITION_REGISTRATION.IS_LATE.isFalse
-                RegistrationFilter.LATE -> COMPETITION_REGISTRATION.IS_LATE.isTrue
-                RegistrationFilter.ALL -> DSL.trueCondition()
-            }
-        )
+        .and(condition)
         .asMultiset("singleCompetitions")
         .convertFrom {
             it!!.map { convert(it) }

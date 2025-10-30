@@ -95,8 +95,6 @@ object EventRegistrationService {
         eventId: UUID, clubId: UUID
     ): App<ServiceError, ApiResponse.Dto<EventRegistrationTemplateDto>> = KIO.comprehension {
 
-        !EventService.checkIsChallengeEvent(eventId).onTrueFail { EventRegistrationError.NoWizardInChallengeMode }
-
         val type = !EventService.getOpenForRegistrationType(eventId)
 
         val info = !EventRegistrationRepo.getEventRegistrationInfo(eventId, type).orDie()
@@ -335,7 +333,7 @@ object EventRegistrationService {
                 !KIO.failOn(competition.ratingCategoryRequired && competitionRegistrationDto.ratingCategory == null) {
                     EventRegistrationError.InvalidRegistration("Rating category not provided for a participant in a competition that requires a rating category.")
                 }
-                
+
                 val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                     CompetitionRegistrationRecord(
                         UUID.randomUUID(),

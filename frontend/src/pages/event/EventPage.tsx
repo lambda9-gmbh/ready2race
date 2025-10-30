@@ -167,16 +167,14 @@ const EventPage = () => {
                             justifyContent={'space-between'}
                             alignItems={'center'}>
                             <Typography variant="h1">{data.name}</Typography>
-                            {!data.challengeEvent && (
-                                <Link
-                                    to={'/event/$eventId/register'}
-                                    params={{eventId}}
-                                    hidden={!canRegister}>
-                                    <Button endIcon={<Forward />} variant={'contained'}>
-                                        {t('event.registerNow')}
-                                    </Button>
-                                </Link>
-                            )}
+                            <Link
+                                to={'/event/$eventId/register'}
+                                params={{eventId}}
+                                hidden={!canRegister}>
+                                <Button endIcon={<Forward />} variant={'contained'}>
+                                    {t('event.registerNow')}
+                                </Button>
+                            </Link>
                         </Stack>
                         <TabSelectionContainer activeTab={activeTab} setActiveTab={switchTab}>
                             <Tab label={t('event.tabs.general')} {...tabProps('general')} />
