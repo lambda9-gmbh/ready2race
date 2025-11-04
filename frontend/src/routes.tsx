@@ -248,14 +248,6 @@ export const configurationIndexRoute = createRoute({
     validateSearch: validateTabSearch<ConfigurationTab>,
 })
 
-export const qrEventRoute = createRoute({
-    getParentRoute: () => appRoute,
-    path: '$eventId',
-    beforeLoad: ({context}) => {
-        checkAuthApp(context)
-    },
-})
-
 export const qrEventsRoute = createRoute({
     getParentRoute: () => appRoute,
     path: '/',

@@ -1383,7 +1383,7 @@
     "userAssigned": "Benutzer {{userId}} zugewiesen",
     "participantQrDetected": "Teilnehmer-QR-Code erkannt",
     "appUserQrDetected": "Benutzer-QR-Code erkannt",
-    "notAssigned": "Dieser QR-Code wurde keiner Person zugewiesen.",
+    "notAssigned": "Dieser QR-Code konnte nicht zugewiesen werden.",
     "successParticipant": "QR-Code erfolgreich dem Teilnehmer zugewiesen",
     "successUser": "QR-Code erfolgreich dem Benutzer zugewiesen",
     "selectClub": "Verein auswählen",
@@ -1401,7 +1401,8 @@
     "delete": "QR-Code löschen",
     "show": "QR-Code anzeigen",
     "deleteConfirm": "Möchten Sie den QR-Code wirklich löschen?",
-    "noQrCodeAssigned": "Kein QR-Code zugewiesen"
+    "noQrCodeAssigned": "Kein QR-Code zugewiesen",
+    "cameraError": "Kamera kann nicht gestartet werden"
   },
   "qrAppuser": {
     "title": "QR-Appuser",
