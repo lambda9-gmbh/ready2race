@@ -1,11 +1,8 @@
 package de.lambda9.ready2race.backend.app.ratingcategory.control
 
-import de.lambda9.ready2race.backend.database.delete
+import de.lambda9.ready2race.backend.database.*
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventRatingCategoryRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.EVENT_RATING_CATEGORY
-import de.lambda9.ready2race.backend.database.insert
-import de.lambda9.ready2race.backend.database.select
-import de.lambda9.ready2race.backend.database.selectOne
 import java.util.*
 
 object EventRatingCategoryRepo {
@@ -17,4 +14,6 @@ object EventRatingCategoryRepo {
 
     fun getByEventAndRatingCategory(eventId: UUID, ratingCategoryId: UUID) =
         EVENT_RATING_CATEGORY.selectOne { EVENT.eq(eventId).and(RATING_CATEGORY.eq(ratingCategoryId)) }
+
+    fun existsByEvent(eventId: UUID) = EVENT_RATING_CATEGORY.exists { EVENT.eq(eventId) }
 }
