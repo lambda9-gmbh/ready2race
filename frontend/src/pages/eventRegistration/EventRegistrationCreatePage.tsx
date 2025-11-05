@@ -107,7 +107,32 @@ const EventRegistrationCreatePage = () => {
             body: formDataToRequest(formContext.getValues()),
         }).then(({error}) => {
             if (error) {
-                feedback.error(t('common.error.unexpected'))
+                if (error.status.value === 404)
+                    feedback.error(t('common.error.notFound', {entity: t('event.event')}))
+                else if (error.status.value === 403) feedback.error(t('common.error.unauthorized'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_CLOSED')
+                    feedback.error(t('event.registration.error.closed'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_UPSERT_PARTICIPANT_NOT_FOUND')
+                    feedback.error(t('event.registration.error.participantUpsertNotFound'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_TEAM_PARTICIPANT_NOT_FOUND')
+                    feedback.error(t('event.registration.error.teamParticipantNotFound'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_COMPETITION_NOT_FOUND')
+                    feedback.error(t('event.registration.error.competitionNotFound'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_NAMED_PARTICIPANT_NOT_FOUND')
+                    feedback.error(t('event.registration.error.namedParticipantNotFound'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_FEE_NOT_FOUND')
+                    feedback.error(t('event.registration.error.feeNotFound'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_RATING_CATEGORY_NOT_FOUND')
+                    feedback.error(t('event.registration.error.ratingCategoryNotFound'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_RATING_CATEGORY_MISSING')
+                    feedback.error(t('event.registration.error.ratingCategoryMissing'))
+                else if (error.errorCode === 'EVENT_REGISTRATION_AGE_REQUIREMENT_NOT_MET')
+                    feedback.error(t('event.registration.error.ageRequirementNotMet'))
+                else if (
+                    error.errorCode === 'EVENT_REGISTRATION_PARTICIPANT_DUPLICATE_IN_COMPETITION'
+                )
+                    feedback.error(t('event.registration.error.participantDuplicateInCompetition'))
+                else feedback.error(t('common.error.unexpected'))
             } else {
                 setRegistrationWasSuccessful(true)
             }

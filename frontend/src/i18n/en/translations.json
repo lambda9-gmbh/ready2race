@@ -26,7 +26,9 @@
         "CELL_BLANK": "Required cell is blank in row {{row}}, column '{{column}}'",
         "WRONG_CELL_TYPE": "Wrong cell type in row {{row}}, column '{{column}}' - actual: {{actual}}, expected: {{expected}}",
         "UNPARSABLE_STRING": "Unparsable string value '{{value}}' in row {{row}}, column '{{column}}'"
-      }
+      },
+      "notFound": "{{entity}} not found.",
+      "unauthorized": "Unauthorized"
     },
     "organisation": "Organisation",
     "form": {
@@ -894,6 +896,18 @@
       "success": {
         "title": "Registration successful!",
         "subtitle": "You will receive a confirmation by e-mail."
+      },
+      "error": {
+        "closed": "Registration for this event is closed",
+        "participantUpsertNotFound": "Participant from participant list not found",
+        "teamParticipantNotFound": "Team participant could not be found",
+        "competitionNotFound": "Competition not found",
+        "namedParticipantNotFound": "Named participant not found",
+        "feeNotFound": "Fee not found",
+        "ratingCategoryNotFound": "Rating category not found",
+        "ratingCategoryMissing": "Rating category not specified for team where it is required",
+        "ageRequirementNotMet": "Age requirement of a rating category not met by a participant",
+        "participantDuplicateInCompetition": "Participant is registered multiple times in a competition"
       },
       "mostRecent": "Latest registrations",
       "teams": "Teams",

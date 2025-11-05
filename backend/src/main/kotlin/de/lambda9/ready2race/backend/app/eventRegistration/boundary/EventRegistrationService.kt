@@ -364,9 +364,8 @@ object EventRegistrationService {
                 PersistedIdAndGender(it, pDto.gender, pDto.year)
             }
         } else {
-            if (!!ParticipantRepo.existsByIdAndClub(pDto.id, clubId).orDie()) {
-                KIO.fail(EventRegistrationError.InvalidRegistration("Invalid participant"))
-            }
+            val participantExists = !ParticipantRepo.existsByIdAndClub(pDto.id, clubId).orDie()
+            !KIO.failOn(!participantExists) { EventRegistrationError.UpsertParticipantNotFound(pDto.id) }
 
             if (pDto.hasChanged == true) {
                 !ParticipantRepo.update(pDto.id) {
@@ -385,9 +384,11 @@ object EventRegistrationService {
         pDto.competitionsSingle?.traverse { competitionRegistrationDto ->
 
             KIO.comprehension {
+
                 val competition =
-                    template?.competitionsSingle?.first { it.id == competitionRegistrationDto.competitionId }
-                        ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid competition"))
+                    !KIO.failOnNull(template?.competitionsSingle?.find { it.id == competitionRegistrationDto.competitionId }) {
+                        EventRegistrationError.CompetitionNotFound(competitionRegistrationDto.competitionId)
+                    }
 
                 val name = singleCompetitionMultiCounts[competitionRegistrationDto.competitionId]
                     ?.plus(1)
@@ -396,21 +397,35 @@ object EventRegistrationService {
                         "#$it"
                     }
 
+                val participantName = "${pDto.firstname} ${pDto.lastname}"
+
                 !KIO.failOn(ratingCategoryExistsForEvent && competition.ratingCategoryRequired && competitionRegistrationDto.ratingCategory == null) {
-                    EventRegistrationError.InvalidRegistration("Rating category not provided for a participant in a competition that requires a rating category.")
+                    EventRegistrationError.RatingCategoryMissing(
+                        teamName = participantName,
+                        competitionName = competition.name
+                    )
                 }
 
                 // Validate age if rating category is provided
                 competitionRegistrationDto.ratingCategory?.let { ratingCategoryId ->
-                    ratingCategoryAgeRestrictions?.get(ratingCategoryId)?.let { ageRestriction ->
-                        val participantYear = pDto.year
-                        val isValid =
-                            ((ageRestriction.from != null && ageRestriction.from <= participantYear) || ageRestriction.from == null) &&
-                                ((ageRestriction.to != null && ageRestriction.to >= participantYear) || ageRestriction.to == null)
+                    val ageRestriction = !KIO.failOnNull(ratingCategoryAgeRestrictions?.get(ratingCategoryId)) {
+                        EventRegistrationError.RatingCategoryNotFound(
+                            id = ratingCategoryId,
+                            competitionName = competition.name
+                        )
+                    }
 
-                        !KIO.failOn(!isValid) {
-                            EventRegistrationError.InvalidRegistration("Participant age does not meet rating category requirements.")
-                        }
+                    val participantYear = pDto.year
+                    val isValid =
+                        ((ageRestriction.from != null && ageRestriction.from <= participantYear) || ageRestriction.from == null) &&
+                            ((ageRestriction.to != null && ageRestriction.to >= participantYear) || ageRestriction.to == null)
+
+                    !KIO.failOn(!isValid) {
+                        EventRegistrationError.AgeRequirementNotMet(
+                            participantName = participantName,
+                            competitionName = competition.name,
+                            teamName = null
+                        )
                     }
                 }
 
@@ -467,16 +482,25 @@ object EventRegistrationService {
         ratingCategoryExistsForEvent: Boolean,
     ): App<EventRegistrationError, Unit> = KIO.comprehension {
 
-        val userIdsList =
+        val competition =
+            !KIO.failOnNull(template?.competitionsTeam?.find { it.id == competitionRegistrationDto.competitionId }) {
+                EventRegistrationError.CompetitionNotFound(
+                    competitionRegistrationDto.competitionId
+                )
+            }
+
+        val participantIds =
             competitionRegistrationDto.teams?.flatMap { teamDto -> teamDto.namedParticipants.flatMap { np -> np.participantIds } }
                 ?: emptyList()
 
-        if (userIdsList.size != userIdsList.toSet().size) {
-            return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Participant used multiple times in competition."))
+        !KIO.failOn(participantIds.size != participantIds.toSet().size) {
+            val invalidParticipants = participantIds.groupBy { it }.filter { it.value.size > 1 }.keys
+            EventRegistrationError.ParticipantDuplicateInCompetition(
+                participantIds = invalidParticipants,
+                competitionName = competition.name,
+            )
         }
 
-        val competition = template?.competitionsTeam?.first { it.id == competitionRegistrationDto.competitionId }
-            ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid competition"))
 
         var count = competitionRegistrationDto.teams
             ?.takeIf { (regularRegistrations?.get(competitionRegistrationDto.competitionId) ?: 0) + it.size > 1 }
@@ -485,35 +509,50 @@ object EventRegistrationService {
         competitionRegistrationDto.teams?.traverse { teamDto ->
             KIO.comprehension {
 
-                !KIO.failOn(ratingCategoryExistsForEvent && competition.ratingCategoryRequired && teamDto.ratingCategory == null) {
-                    EventRegistrationError.InvalidRegistration("Rating category not provided for a team in a competition that requires a rating category.")
-                }
-
-                // Validate age if rating category is provided
-                teamDto.ratingCategory?.let { ratingCategoryId ->
-                    ratingCategoryAgeRestrictions?.get(ratingCategoryId)?.let { ageRestriction ->
-                        val participantYears = teamDto.namedParticipants
-                            .flatMap { it.participantIds }
-                            .mapNotNull { participantIdMap[it]?.year }
-
-                        participantYears.forEach { year ->
-                            val isValid =
-                                ((ageRestriction.from != null && ageRestriction.from <= year) || ageRestriction.from == null) &&
-                                    ((ageRestriction.to != null && ageRestriction.to >= year) || ageRestriction.to == null)
-
-                            !KIO.failOn(!isValid) {
-                                EventRegistrationError.InvalidRegistration("Team participant age does not meet rating category requirements.")
-                            }
-                        }
-                    }
-                }
-
                 val name = count
                     ?.plus(1)
                     ?.let {
                         count = it
                         "#$it"
                     }
+
+                !KIO.failOn(ratingCategoryExistsForEvent && competition.ratingCategoryRequired && teamDto.ratingCategory == null) {
+                    EventRegistrationError.RatingCategoryMissing(
+                        teamName = name ?: "team",
+                        competitionName = competition.name
+                    )
+                }
+
+
+                // Validate age if rating category is provided
+                teamDto.ratingCategory?.let { ratingCategoryId ->
+                    val ageRestriction = !KIO.failOnNull(ratingCategoryAgeRestrictions?.get(ratingCategoryId)) {
+                        EventRegistrationError.RatingCategoryNotFound(
+                            id = ratingCategoryId,
+                            competitionName = competition.name
+                        )
+                    }
+
+                    val participantYears = teamDto.namedParticipants
+                        .flatMap { it.participantIds }
+                        .mapNotNull { participantIdMap[it]?.year }
+
+                    participantYears.forEach { year ->
+                        val isValid =
+                            ((ageRestriction.from != null && ageRestriction.from <= year) || ageRestriction.from == null) &&
+                                ((ageRestriction.to != null && ageRestriction.to >= year) || ageRestriction.to == null)
+
+                        !KIO.failOn(!isValid) {
+                            EventRegistrationError.AgeRequirementNotMet(
+                                participantName = null,
+                                teamName = name,
+                                competitionName = competition.name
+                            )
+                        }
+                    }
+
+                }
+
 
                 val competitionRegistrationId = !CompetitionRegistrationRepo.create(
                     CompetitionRegistrationRecord(
@@ -564,8 +603,13 @@ object EventRegistrationService {
 
         !namedParticipantDto.participantIds.traverse { participantId ->
             KIO.comprehension {
-                val persistedUserInfo = participantIdMap[participantId]
-                    ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid participant"))
+                val persistedUserInfo = !KIO.failOnNull(participantIdMap[participantId]) {
+                    EventRegistrationError.TeamParticipantNotFound(
+                        participantId = participantId,
+                        competitionName = competition.name,
+                        namedParticipantId = namedParticipantDto.namedParticipantId
+                    )
+                }
 
                 counts[persistedUserInfo.gender] = (counts[persistedUserInfo.gender] ?: 0) + 1
 
@@ -580,8 +624,12 @@ object EventRegistrationService {
         }
 
         val requirements =
-            competition.namedParticipant?.find { np -> np.id == namedParticipantDto.namedParticipantId }
-                ?: return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid team setup"))
+            !KIO.failOnNull(competition.namedParticipant?.find { np -> np.id == namedParticipantDto.namedParticipantId }) {
+                EventRegistrationError.NamedParticipantNotFound(
+                    id = namedParticipantDto.namedParticipantId,
+                    competitionName = competition.name
+                )
+            }
 
         val enoughMixedSlots = checkEnoughMixedSpots(
             requirements = NamedParticipantRequirements(
@@ -593,14 +641,18 @@ object EventRegistrationService {
             counts
         )
 
-        if ((requirements.countMixed
+        !KIO.failOn(
+            (requirements.countMixed
                 + requirements.countMales
                 + requirements.countFemales
                 + requirements.countNonBinary
                 ) != counts.values.sum()
-            || !enoughMixedSlots
+                || !enoughMixedSlots
         ) {
-            return@comprehension KIO.fail(EventRegistrationError.InvalidRegistration("Invalid team distribution"))
+            EventRegistrationError.InvalidTeamDistribution(
+                namedParticipantId = namedParticipantDto.namedParticipantId,
+                competitionName = competition.name
+            )
         }
 
         unit
@@ -631,8 +683,11 @@ object EventRegistrationService {
         optionalFee: UUID
     ): App<EventRegistrationError, Unit> = KIO.comprehension {
 
-        if (competition.fees.find { it.id == optionalFee }?.required != false) {
-            KIO.fail(EventRegistrationError.InvalidRegistration("Invalid fee"))
+        !KIO.failOn(competition.fees.find { it.id == optionalFee }?.required != false) {
+            EventRegistrationError.FeeNotFound(
+                id = optionalFee,
+                competitionName = competition.name
+            )
         }
 
         CompetitionRegistrationOptionalFeeRepo.create(
