@@ -1382,7 +1382,7 @@
     "invalidUserQr": "Invalid User QR Code",
     "invalidQrFormat": "Invalid QR Code Format",
     "userAssigned": "User {{userId}} assigned",
-    "notAssigned": "This QR Code has not been assigned to a person.",
+    "notAssigned": "This QR Code could not be assigned.",
     "successParticipant": "QR code successfully assigned to participant",
     "successUser": "QR code successfully assigned to user",
     "selectClub": "Select club",
@@ -1400,7 +1400,8 @@
     "delete": "Delete QR Code",
     "show": "Show QR Code",
     "deleteConfirm": "Do you really want to delete the QR code?",
-    "noQrCodeAssigned": "No QR code assigned"
+    "noQrCodeAssigned": "No QR code assigned",
+    "cameraError": "Error accessing camera"
   },
   "qrAppuser": {
     "title": "QR Appuser",
