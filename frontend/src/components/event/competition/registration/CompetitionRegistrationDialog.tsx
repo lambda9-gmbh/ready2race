@@ -2,8 +2,8 @@ import {BaseEntityDialogProps} from '@utils/types.ts'
 import {
     ClubSearchDto,
     CompetitionDto,
-    CompetitionRegistrationNamedParticipantUpsertDto,
     CompetitionRegistrationDto,
+    CompetitionRegistrationNamedParticipantUpsertDto,
     CompetitionRegistrationTeamUpsertDto,
     EventDto,
     EventRegistrationNamedParticipantDto,
@@ -110,7 +110,8 @@ const CompetitionRegistrationDialog = ({
                 path: {clubId: clubId!!},
                 query: {
                     eventId: eventData.id,
-                    ratingCategoryId: takeIfNotEmpty(ratingCategoryId),
+                    ratingCategoryId:
+                        ratingCategoryId !== 'none' ? takeIfNotEmpty(ratingCategoryId) : undefined,
                 },
             }),
         {
