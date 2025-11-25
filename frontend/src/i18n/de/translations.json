@@ -26,7 +26,9 @@
         "CELL_BLANK": "Zelle ohne Inhalt in Zeile {{row}}, Spalte '{{column}}'",
         "WRONG_CELL_TYPE": "Falscher Zellentyp in Zeile {{row}}, Spalte '{{column}}' - tatsächlich: {{actual}}, erwartet: {{expected}}",
         "UNPARSABLE_STRING": "Nicht-interpretierbarer Wert '{{value}}' in Zeile {{row}}, Spalte '{{column}}'"
-      }
+      },
+      "notFound": "{{entity}} nicht gefunden.",
+      "unauthorized": "Nicht autorisiert"
     },
     "organisation": "Organisation",
     "form": {
@@ -904,6 +906,18 @@
       "success": {
         "title": "Erfolgreich angemeldet!",
         "subtitle": "Sie bekommen eine Bestätigung per Mail."
+      },
+      "error": {
+        "closed": "Die Anmeldung für diese Veranstaltung ist geschlossen",
+        "participantUpsertNotFound": "Teilnehmer aus der Teilnehmerliste nicht gefunden",
+        "teamParticipantNotFound": "Team-Teilnehmer konnte nicht gefunden werden",
+        "competitionNotFound": "Wettkampf nicht gefunden",
+        "namedParticipantNotFound": "Teilnehmertyp nicht gefunden",
+        "feeNotFound": "Gebühr nicht gefunden",
+        "ratingCategoryNotFound": "Wertungskategorie nicht gefunden",
+        "ratingCategoryMissing": "Wertungskategorie bei Team nicht angegeben, wo sie erforderlich ist",
+        "ageRequirementNotMet": "Altersanforderung einer Wertungskategorie von einem Teilnehmer nicht erfüllt",
+        "participantDuplicateInCompetition": "Teilnehmer ist in einem Wettkampf mehrfach gemeldet"
       },
       "mostRecent": "Neuste Anmeldungen",
       "teams": "Teams",

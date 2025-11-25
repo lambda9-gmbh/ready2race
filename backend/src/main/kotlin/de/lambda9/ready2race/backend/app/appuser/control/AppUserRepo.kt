@@ -32,7 +32,7 @@ object AppUserRepo {
     ): JIO<AppUserRecord?> = Jooq.query {
         with(APP_USER) {
             selectFrom(this)
-                .where(EMAIL.eq(email))
+                .where(EMAIL.equalIgnoreCase(email))
                 .fetchOne()
         }
     }
@@ -146,7 +146,7 @@ object AppUserRepo {
     ): JIO<AppUserWithPrivilegesRecord?> = Jooq.query {
         with(APP_USER_WITH_PRIVILEGES) {
             selectFrom(this)
-                .where(EMAIL.eq(email))
+                .where(EMAIL.equalIgnoreCase(email))
                 .fetchOne()
         }
     }
