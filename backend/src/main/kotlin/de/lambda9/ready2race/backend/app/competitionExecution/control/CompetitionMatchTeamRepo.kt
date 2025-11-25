@@ -26,6 +26,9 @@ object CompetitionMatchTeamRepo {
         }
     }
 
+    fun getByMatchAndRegistrationId(matchId: UUID, registrationId: UUID): JIO<CompetitionMatchTeamRecord?> =
+        COMPETITION_MATCH_TEAM.selectOne { COMPETITION_MATCH.eq(matchId).and(COMPETITION_REGISTRATION.eq(registrationId)) }
+
     fun create(records: List<CompetitionMatchTeamRecord>) = COMPETITION_MATCH_TEAM.insert(records)
 
     fun update(record: CompetitionMatchTeamRecord, f: CompetitionMatchTeamRecord.() -> Unit) =
@@ -59,7 +62,10 @@ object CompetitionMatchTeamRepo {
                 PARTICIPANT.ID.`as`("participant_id"),
                 PARTICIPANT.FIRSTNAME,
                 PARTICIPANT.LASTNAME,
-                NAMED_PARTICIPANT.NAME.`as`("named_role")
+                NAMED_PARTICIPANT.NAME.`as`("named_role"),
+                TIMECODE.TIME,
+                TIMECODE.BASE_UNIT,
+                TIMECODE.MILLISECOND_PRECISION
             )
                 .from(COMPETITION_MATCH_TEAM)
                 .join(COMPETITION_SETUP_MATCH)
@@ -77,6 +83,7 @@ object CompetitionMatchTeamRepo {
                     COMPETITION_DEREGISTRATION.COMPETITION_REGISTRATION.eq(COMPETITION_MATCH_TEAM.COMPETITION_REGISTRATION)
                         .and(COMPETITION_DEREGISTRATION.COMPETITION_SETUP_ROUND.eq(COMPETITION_SETUP_MATCH.COMPETITION_SETUP_ROUND))
                 )
+                .leftJoin(TIMECODE).on(COMPETITION_MATCH_TEAM.TIMECODE.eq(TIMECODE.ID))
                 .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.eq(matchId))
                 .and(COMPETITION_MATCH_TEAM.OUT.isTrue.not())
                 .orderBy(COMPETITION_MATCH_TEAM.PLACE.asc())
@@ -159,4 +166,12 @@ object CompetitionMatchTeamRepo {
 
     fun getByCompetitionRegistrations(competitionRegistrationIds: List<UUID>) =
         COMPETITION_MATCH_TEAM.select { COMPETITION_REGISTRATION.`in`(competitionRegistrationIds) }
+
+    fun deleteTimecodesByMatchIds(matchIds: List<UUID>) = Jooq.query {
+        deleteFrom(TIMECODE).where(DSL.exists(
+            DSL.selectOne().from(COMPETITION_MATCH_TEAM)
+                .where(COMPETITION_MATCH_TEAM.COMPETITION_MATCH.`in`(matchIds))
+                .and(TIMECODE.ID.eq(COMPETITION_MATCH_TEAM.TIMECODE))
+        )).execute()
+    }
 }

@@ -60,6 +60,7 @@ object MatchResultImportConfigService {
             name = request.name
             colTeamStartNumber = request.colTeamStartNumber
             colTeamPlace = request.colTeamPlace
+            colTeamTime = request.colTeamTime
             updatedAt = LocalDateTime.now()
             updatedBy = userId
         }.orDie()

@@ -11,6 +11,7 @@ data class MatchResultImportConfigRequest(
     val name: String,
     val colTeamStartNumber: String,
     val colTeamPlace: String,
+    val colTeamTime: String,
 ) : Validatable {
     override fun validate(): ValidationResult =
         ValidationResult.allOf(
@@ -25,6 +26,7 @@ data class MatchResultImportConfigRequest(
             name = "Einzelrennen",
             colTeamStartNumber = "Start Number",
             colTeamPlace = "Place",
+            colTeamTime = "2:31",
         )
     }
 }

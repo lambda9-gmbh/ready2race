@@ -8,8 +8,11 @@ import de.lambda9.ready2race.backend.app.eventInfo.control.InfoViewConfiguration
 import de.lambda9.ready2race.backend.app.eventInfo.control.toDto
 import de.lambda9.ready2race.backend.app.eventInfo.control.toRecord
 import de.lambda9.ready2race.backend.app.eventInfo.entity.*
+import de.lambda9.ready2race.backend.app.timecode.control.toTimecode
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.data.Timecode
+import de.lambda9.ready2race.backend.database.generated.tables.records.TimecodeRecord
 import de.lambda9.ready2race.backend.database.generated.tables.references.*
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -210,6 +213,13 @@ object EventInfoService {
                     clubName = first.get("club_name", String::class.java),
                     startNumber = first[COMPETITION_MATCH_TEAM.START_NUMBER]!!,
                     place = first[COMPETITION_MATCH_TEAM.PLACE],
+                    timeString = first[TIMECODE.TIME]?.let {
+                        Timecode(
+                            millis = it,
+                            baseUnit = Timecode.BaseUnit.valueOf(first[TIMECODE.BASE_UNIT]!!),
+                            millisecondPrecision = Timecode.MillisecondPrecision.valueOf(first[TIMECODE.MILLISECOND_PRECISION]!!)
+                        ).toString()
+                    },
                     failed = first[COMPETITION_MATCH_TEAM.FAILED] == true,
                     failedReason = first[COMPETITION_MATCH_TEAM.FAILED_REASON],
                     deregistered = first.get("deregistered", Boolean::class.java),

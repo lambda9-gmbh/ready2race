@@ -28,10 +28,13 @@ import de.lambda9.ready2race.backend.app.substitution.control.SubstitutionRepo
 import de.lambda9.ready2race.backend.app.substitution.control.applyNewRound
 import de.lambda9.ready2race.backend.app.substitution.control.toParticipantForExecutionDto
 import de.lambda9.ready2race.backend.app.substitution.entity.ParticipantForExecutionDto
+import de.lambda9.ready2race.backend.app.timecode.control.TimecodeRepo
+import de.lambda9.ready2race.backend.app.timecode.control.toRecord
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.noDataResponse
 import de.lambda9.ready2race.backend.csv.CSV
+import de.lambda9.ready2race.backend.data.Timecode
 import de.lambda9.ready2race.backend.database.generated.enums.Gender
 import de.lambda9.ready2race.backend.database.generated.tables.records.*
 import de.lambda9.ready2race.backend.file.File
@@ -39,12 +42,20 @@ import de.lambda9.ready2race.backend.hr
 import de.lambda9.ready2race.backend.hrTime
 import de.lambda9.ready2race.backend.kio.onNullDie
 import de.lambda9.ready2race.backend.kio.onTrueFail
+import de.lambda9.ready2race.backend.parsing.Parser
 import de.lambda9.ready2race.backend.pdf.FontStyle
 import de.lambda9.ready2race.backend.pdf.Padding
 import de.lambda9.ready2race.backend.pdf.PageTemplate
 import de.lambda9.ready2race.backend.pdf.document
 import de.lambda9.ready2race.backend.validation.ValidationResult
 import de.lambda9.ready2race.backend.validation.validators.CollectionValidators.noDuplicates
+import de.lambda9.ready2race.backend.validation.validators.Validator
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.allOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.anyOf
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.collection
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.isNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.notNull
+import de.lambda9.ready2race.backend.validation.validators.Validator.Companion.oneOf
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.int
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.maybe
 import de.lambda9.ready2race.backend.xls.CellParser.Companion.string
@@ -471,15 +482,43 @@ object CompetitionExecutionService {
         !prepareForNewPlaces(matchId, userId)
 
         // TODO: validate places continuous
+        val calculatedPlaces : List<Pair<UUID, Timecode?>> =
+            request.teamResults.filter { !it.failed }
+                .map { result ->
+                result.registrationId to result.timeString?.let { timestring -> (!Parser.timecode(timestring) {it.orDie()})}
+                }
+                .sortedBy { it.second?.millis }
 
+        val noPlaces = request.teamResults.filter { !it.failed }.any { it.place == null }
+        println(calculatedPlaces)
         request.teamResults.traverse { result ->
-            CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
-                this.place = result.place
-                this.failed = result.failed
-                this.failedReason = result.failedReason
-                updatedBy = userId
-                updatedAt = LocalDateTime.now()
-            }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+            KIO.comprehension {
+
+                val record =
+                    !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, result.registrationId).orDie()
+                        .onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+                !TimecodeRepo.delete(record.id).orDie()
+                val timecode = if (!result.failed && result.timeString != null) {
+                    !TimecodeRepo.create(
+                        calculatedPlaces.find { (id) -> id == result.registrationId }!!.second!!.toRecord(record.id)
+                    ).orDie()
+                } else null
+
+                CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, result.registrationId) {
+                    this.place = if (noPlaces) {
+                        calculatedPlaces.indexOfFirst { (id, _) -> id == result.registrationId } + 1
+                    } else {
+                        result.place
+                    }
+                    this.placesCalculated = noPlaces
+                    this.timecode = timecode
+                    this.failed = result.failed
+                    this.failedReason = result.failedReason
+                    updatedBy = userId
+                    updatedAt = LocalDateTime.now()
+                }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+
+            }
         }.noDataResponse()
     }
 
@@ -502,10 +541,14 @@ object CompetitionExecutionService {
         val iStream = file.bytes.inputStream()
 
         val teams = !XLS.read(iStream) {
+            val place = !optionalCell(config.colTeamPlace, maybe(int))
+            val time = (!optionalCell(config.colTeamTime, string))?.takeIf { it.isNotBlank() }
+            val noResultReason = (!optionalCell(config.colTeamPlace, maybe(string)))?.takeIf { (it.isNotBlank() || time == null) && place == null  }
             ParsedTeamResult(
                 startNumber = !cell(config.colTeamStartNumber, int),
-                place = !optionalCell(config.colTeamPlace, maybe(int)),
-                noResultReason = !optionalCell(config.colTeamPlace, maybe(string))
+                place = place,
+                time = time,
+                noResultReason = noResultReason
             )
         }.mapError {
             when (it) {
@@ -565,6 +608,51 @@ object CompetitionExecutionService {
             }
         )
 
+        !allOf(
+            oneOf(
+                collection(
+                    oneOf(
+                        Validator.Companion.select(notNull, ParsedTeamResult::place),
+                        Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                    )
+                ),
+                collection(
+                    Validator.Companion.select(isNull, ParsedTeamResult::place)
+                ),
+            ),
+            oneOf(
+                collection(
+                    oneOf(
+                        Validator.Companion.select(notNull, ParsedTeamResult::time),
+                        Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+                    )
+                ),
+                collection(
+                    Validator.Companion.select(isNull, ParsedTeamResult::time)
+                ),
+            )
+        )(teams).fold(
+            onValid = { unit},
+            onInvalid = {
+                KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.DataInListIncomplete(it))
+            }
+        )
+
+        !collection(
+            oneOf(
+                anyOf(
+                    Validator.Companion.select(notNull, ParsedTeamResult::place),
+                    Validator.Companion.select(notNull, ParsedTeamResult::time)
+                ),
+                Validator.Companion.select(notNull, ParsedTeamResult::noResultReason)
+            )
+        )(teams).fold(
+            onValid = { unit },
+            onInvalid = {
+                KIO.fail(CompetitionExecutionError.ResultUploadError.Invalid.ResultNotFailedAndNoData(it))
+            }
+        )
+
         // TODO: disabled for now, because it helps with parallel matches (can upload results to multiple matches with the same file)
         //!KIO.failOn(teams.size != match.teams.size) { CompetitionExecutionError.ResultUploadError.WrongTeamCount(teams.size, match.teams.size) }
 
@@ -580,25 +668,50 @@ object CompetitionExecutionService {
         val correctedTeams = teamWithoutPlace + teamWithPlace.sortedBy { it.place!! }
             .mapIndexed { idx, res -> res.copy(place = idx + 1) }
 
-        !correctedTeams.traverse { result ->
+
+        val calculatedPlaces : List<Pair<Int, Timecode?>> =
+            correctedTeams.filter { it.noResultReason == null }
+                .map { result ->
+                result.startNumber to result.time?.let { timeString -> (!Parser.timecode(timeString) {it.orDie()})}
+            }.sortedBy { it.second?.millis }
+
+        val noPlaces = correctedTeams.filter { it.noResultReason == null }.any { it.place == null }
+
+        correctedTeams.traverse { result ->
 
             KIO.comprehension {
-
-                // TODO: better error for frontend
                 val registrationId =
                     !KIO.failOnNull(match.teams.find { it.startNumber == result.startNumber }?.competitionRegistration) { CompetitionExecutionError.MatchTeamNotFound }
 
+                val record =
+                    !CompetitionMatchTeamRepo.getByMatchAndRegistrationId(matchId, registrationId).orDie()
+                        .onNullFail { CompetitionExecutionError.MatchTeamNotFound }
+                !TimecodeRepo.delete(record.id).orDie()
+                val timecode = if (result.time != null) {
+                    !TimecodeRepo.create(
+                        calculatedPlaces.find { (id) -> id == result.startNumber }!!.second!!.toRecord(record.id)
+                    ).orDie()
+                } else null
+
+                // TODO: better error for frontend
+
                 CompetitionMatchTeamRepo.updateByMatchAndRegistrationId(matchId, registrationId) {
-                    this.place = result.place
-                    this.failed = result.place == null
+                    this.place = if (noPlaces) {
+                        (calculatedPlaces.indexOfFirst { (id, _) -> id == result.startNumber } + 1).takeIf { it > 0 }
+                    } else {
+                        result.place
+                    }
+                    this.placesCalculated = noPlaces
+                    this.failed = result.noResultReason != null
                     this.failedReason = result.noResultReason
+                    this.timecode = timecode
                     updatedBy = userId
                     updatedAt = LocalDateTime.now()
                 }.orDie().onNullFail { CompetitionExecutionError.MatchTeamNotFound }
             }
-        }
+        }.noDataResponse()
 
-        noData
+
 
     }
 
@@ -635,7 +748,11 @@ object CompetitionExecutionService {
 
         !SubstitutionRepo.deleteBySetupRoundId(currentRound.setupRoundId).orDie()
 
-        val deleted = !CompetitionMatchRepo.delete(currentRound.matches.map { it.competitionSetupMatch }).orDie()
+        val matchIds = currentRound.matches.map { it.competitionSetupMatch }
+
+        val deleted = !CompetitionMatchRepo.delete(matchIds).orDie()
+
+        !CompetitionMatchTeamRepo.deleteTimecodesByMatchIds(matchIds).orDie()
 
         if (deleted < 1) {
             KIO.fail(CompetitionExecutionError.RoundNotFound)

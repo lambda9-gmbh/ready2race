@@ -746,6 +746,8 @@ select cmt.id,
        cmt.competition_match,
        cmt.start_number,
        cmt.place,
+       cmt.places_calculated,
+       tc as timecode,
        cmt.competition_registration,
        cmt.out,
        cmt.failed,
@@ -766,7 +768,8 @@ from competition_match_team cmt
          left join competition_deregistration cd
                    on cr.id = cd.competition_registration and cd.competition_setup_round = csm.competition_setup_round
          left join rating_category rc on cr.rating_category = rc.id
-group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, cmt.competition_registration, cr.club, c.name,
+         left join timecode tc on cmt.timecode = tc.id
+group by cmt.id, cmt.competition_match, cmt.start_number, cmt.place, tc, cmt.competition_registration, cr.club, c.name,
          cr.name, cr.team_number, cd.competition_registration, cd.reason, rc.id
 ;
 

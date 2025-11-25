@@ -65,6 +65,9 @@
       "selectFile": "Datei auswählen",
       "select": {
         "none": "Keine"
+      },
+      "timecode": {
+        "invalid": "Bitte geben Sie einen gültigen Zeitcode (HH:mm:ss.SSS) ein."
       }
     },
     "load": {
@@ -614,6 +617,8 @@
           },
           "team": "Team",
           "place": "Platz",
+          "time": "Zeit",
+          "placeAndTime": "Platz/Zeit",
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",
           "roundAndMatch": "Runde {{round}}, Partie {{match}}",
@@ -642,7 +647,10 @@
               "single": "Der Platz: {{places}} wird mehrfach verwendet.",
               "multiple": "Die Plätze: {{places}} werden mehrfach verwendet.",
               "message": "Bitte wählen Sie einzigartige Plätze pro Partie."
-            }
+            },
+            "noResultsEntered": "Bitte geben Sie mindestens alle Plätze oder alle Zeiten für alle Teams in dieser Partie an.",
+            "missingPlaces": "Bitte geben Sie Plätze für alle Teams in dieser Partie an.",
+            "missingTimes": "Bitte geben Sie Zeiten für alle Teams in dieser Partie an."
           },
           "submit": {
             "error": "Beim speichern des Ergebnisses ist ein Fehler aufgetreten",
@@ -671,7 +679,9 @@
             "WRONG_TEAM_COUNT": "Die Anzahl der Teams stimmt nicht überein - gelesen: {{actual}}, erwartet: {{expected}}",
             "DUPLICATE_PLACES": "Für die Teams wurden Plätze mehrfach vergeben",
             "DUPLICATE_START_NUMBERS": "Für die Teams wurden Startnummern mehrfach vergeben",
-            "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}"
+            "PLACES_UNCONTINUOUS": "Die angegebenen Plätze sind nicht durchgehend nummeriert - tatsächlich: {{actual}}, erwartet: {{expected}}",
+            "LIST_DATA_INCOMPLETE": "Die Spalten für die Plätze oder Zeiten sind unvollständig.",
+            "RESULT_NOT_FAILED_AND_NO_DATA": "Ein Ergebnis hat keinen Ausscheidungsgrund und keinen Platz und keine Zeit."
           },
           "resultType": {
             "distance": "Distanz"
@@ -1221,8 +1231,12 @@
         "col": {
           "team": {
             "startNumber": "Startnummer",
-            "place": "Platz"
+            "place": "Platz",
+            "time": "Zeit"
           }
+        },
+        "error": {
+          "noPlaceOrTime": "Bitte geben Sie die Spalte für Plätze oder Zeiten an."
         }
       }
     },

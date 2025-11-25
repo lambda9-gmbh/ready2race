@@ -7,6 +7,8 @@ data class CompetitionMatchTeamWithRegistration(
     val competitionMatch: UUID,
     val startNumber: Int,
     val place: Int?,
+    val timeString: String?,
+    val placesCalculated: Boolean,
     val competitionRegistration: UUID,
     val clubId: UUID,
     val clubName: String,

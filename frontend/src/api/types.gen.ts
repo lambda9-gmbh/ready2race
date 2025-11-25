@@ -326,6 +326,7 @@ export type CompetitionMatchTeamDto = {
     name?: string
     startNumber: number
     place?: number
+    timeString?: string
     deregistered: boolean
     deregistrationLocked?: boolean
     deregistrationReason?: string
@@ -671,6 +672,8 @@ export type ErrorCode =
     | 'DUPLICATE_START_NUMBERS'
     | 'DUPLICATE_PLACES'
     | 'PLACES_UNCONTINUOUS'
+    | 'LIST_DATA_INCOMPLETE'
+    | 'RESULT_NOT_FAILED_AND_NO_DATA'
 
 export type EventDayDto = {
     id: string
@@ -1053,13 +1056,15 @@ export type MatchResultImportConfigDto = {
     id: string
     name: string
     colTeamStartNumber: string
-    colTeamPlace: string
+    colTeamPlace?: string
+    colTeamTime?: string
 }
 
 export type MatchResultImportConfigRequest = {
     name: string
     colTeamStartNumber: string
-    colTeamPlace: string
+    colTeamPlace?: string
+    colTeamTime?: string
 }
 
 export type MatchResultTeamInfo = {
@@ -1068,6 +1073,7 @@ export type MatchResultTeamInfo = {
     teamNumber?: number | null
     clubName?: string | null
     place?: number
+    timeString?: string
     failed: boolean
     failedReason?: string
     deregistered: boolean
@@ -1824,6 +1830,7 @@ export type UpdateCompetitionMatchTeamRequest = {
 export type UpdateCompetitionMatchTeamResultRequest = {
     registrationId: string
     place?: number
+    timeString?: string
     failed?: boolean
     failedReason?: string
 }
