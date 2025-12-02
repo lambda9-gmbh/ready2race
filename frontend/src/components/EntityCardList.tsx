@@ -1,7 +1,12 @@
 import {Box, CircularProgress, Stack, TablePagination, Typography} from '@mui/material'
-import {GridColDef, GridPaginationModel, GridValidRowModel, GridActionsCellItemProps} from '@mui/x-data-grid'
+import {
+    GridColDef,
+    GridPaginationModel,
+    GridValidRowModel,
+    GridActionsCellItemProps,
+} from '@mui/x-data-grid'
 import EntityCard from './EntityCard'
-import {ReactElement} from 'react'
+import React, {ReactElement} from 'react'
 import {EntityAction} from '@utils/types.ts'
 
 type EntityCardListProps<Entity extends GridValidRowModel> = {
@@ -53,7 +58,7 @@ const EntityCardList = <Entity extends GridValidRowModel>({
 
     if (!data || data.length === 0) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={150}>
                 <Typography color="text.secondary">{emptyMessage}</Typography>
             </Box>
         )

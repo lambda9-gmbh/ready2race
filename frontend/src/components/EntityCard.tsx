@@ -6,7 +6,7 @@ import {
     GridRenderCellParams,
 } from '@mui/x-data-grid'
 import {MoreVert} from '@mui/icons-material'
-import {useState, ReactElement} from 'react'
+import React, {useState, ReactElement} from 'react'
 
 type EntityCardProps<Entity extends GridValidRowModel> = {
     entity: Entity
@@ -38,7 +38,9 @@ const EntityCard = <Entity extends GridValidRowModel>({
         (event: React.MouseEvent<HTMLButtonElement | HTMLLIElement>) => {
             handleMenuClose()
             if (action.props.onClick) {
-                action.props.onClick(event as React.MouseEvent<HTMLButtonElement> & React.MouseEvent<HTMLLIElement>)
+                action.props.onClick(
+                    event as React.MouseEvent<HTMLButtonElement> & React.MouseEvent<HTMLLIElement>,
+                )
             }
         }
 
@@ -53,10 +55,7 @@ const EntityCard = <Entity extends GridValidRowModel>({
             <CardContent>
                 {actions.length > 0 && (
                     <Box sx={{position: 'absolute', top: 8, right: 8}}>
-                        <IconButton
-                            size="small"
-                            onClick={handleMenuOpen}
-                            sx={{cursor: 'pointer'}}>
+                        <IconButton size="small" onClick={handleMenuOpen} sx={{cursor: 'pointer'}}>
                             <MoreVert />
                         </IconButton>
                         <Menu
@@ -89,9 +88,16 @@ const EntityCard = <Entity extends GridValidRowModel>({
                     {columns
                         .filter(col => col.field !== 'actions')
                         .map((col, index) => {
-                            const value = entity[col.field]
+                            let value = entity[col.field]
                             let displayValue: React.ReactNode = value
 
+                            // First, compute the value using valueGetter if present
+                            if (col.valueGetter) {
+                                // @ts-expect-error - valueGetter requires GridApi ref which we don't have in card view
+                                value = col.valueGetter(value, entity, col, {current: null})
+                            }
+
+                            // Then apply formatting or custom rendering
                             if (col.renderCell) {
                                 const params = {
                                     value,
@@ -106,10 +112,13 @@ const EntityCard = <Entity extends GridValidRowModel>({
                                     cellMode: 'view' as const,
                                 } as GridRenderCellParams<Entity>
                                 displayValue = col.renderCell(params)
-                            } else if (col.valueGetter) {
-                                displayValue = String(value ?? '')
                             } else if (col.valueFormatter) {
-                                displayValue = String(value ?? '')
+                                // @ts-expect-error - valueFormatter requires GridApi ref which we don't have in card view
+                                displayValue = col.valueFormatter(value, entity, col, {
+                                    current: null,
+                                })
+                            } else {
+                                displayValue = value
                             }
 
                             return (
