@@ -215,8 +215,6 @@ const UserProvider = ({children}: PropsWithChildren) => {
         } satisfies AuthenticatedUser
     }
 
-    console.log(userData.authStatus)
-
     return (
         <UserContext.Provider value={userValue}>
             {error !== null ? (

@@ -21,6 +21,7 @@ import BaseDialog from '@components/BaseDialog.tsx'
 import {useTranslation} from 'react-i18next'
 import {ResultsMatchInfo} from '@components/results/ResultsMatchCard.tsx'
 import {sortByPlaces, compareNullsHigh} from '@utils/helpers.ts'
+import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined'
 
 type Props<M extends ResultsMatchInfo> = {
     match: M | null
@@ -121,6 +122,17 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                 </Typography>
                                             </Box>
                                         </Stack>
+                                        {'failed' in team && !team.failed && team.timeString && (
+                                            <Box display="flex" gap={1} alignItems={'center'}>
+                                                <TimerOutlinedIcon
+                                                    color={'action'}
+                                                    fontSize={'inherit'}
+                                                />
+                                                <Typography color={'textSecondary'}>
+                                                    {team.timeString}
+                                                </Typography>
+                                            </Box>
+                                        )}
                                         <Divider sx={{my: 1}} />
                                         <Grid2 container>
                                             {team.participants

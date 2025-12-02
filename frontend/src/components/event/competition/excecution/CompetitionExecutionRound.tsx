@@ -407,8 +407,11 @@ const CompetitionExecutionRound = ({
                                             <TableCell width="30%">
                                                 {t('event.competition.execution.match.team')}
                                             </TableCell>
-                                            <TableCell width="30%">
+                                            <TableCell width="10%">
                                                 {t('event.competition.execution.match.place')}
+                                            </TableCell>
+                                            <TableCell width="25%">
+                                                {t('event.competition.execution.match.time')}
                                             </TableCell>
                                         </TableRow>
                                     </TableHead>
@@ -427,7 +430,7 @@ const CompetitionExecutionRound = ({
                                                         {(team.name ? `${team.name} ` : '') +
                                                             `(${team.actualClubName})`}
                                                     </TableCell>
-                                                    <TableCell width="30%">
+                                                    <TableCell width="10%">
                                                         {team.deregistered
                                                             ? t(
                                                                   'event.competition.registration.deregister.deregistered',
@@ -443,6 +446,9 @@ const CompetitionExecutionRound = ({
                                                                     ? ` (${team.failedReason})`
                                                                     : '')
                                                               : team.place}
+                                                    </TableCell>
+                                                    <TableCell width="25%">
+                                                        {team.timeString}
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

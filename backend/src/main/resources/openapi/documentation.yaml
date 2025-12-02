@@ -6501,6 +6501,8 @@ components:
         - DUPLICATE_START_NUMBERS
         - DUPLICATE_PLACES
         - PLACES_UNCONTINUOUS
+        - LIST_DATA_INCOMPLETE
+        - RESULT_NOT_FAILED_AND_NO_DATA
 
     Gender:
       type: string
@@ -9611,6 +9613,8 @@ components:
           type: integer
         place:
           type: integer
+        timeString:
+          type: string
         deregistered:
           type: boolean
         deregistrationLocked:
@@ -9713,6 +9717,8 @@ components:
           format: uuid
         place:
           type: integer
+        timeString:
+          type: string
         failed:
           type: boolean
         failedReason:
@@ -10427,6 +10433,8 @@ components:
           type: string
         place:
           type: integer
+        timeString:
+          type: string
         failed:
           type: boolean
         failedReason:
@@ -10763,13 +10771,14 @@ components:
       required:
         - name
         - colTeamStartNumber
-        - colTeamPlace
       properties:
         name:
           type: string
         colTeamStartNumber:
           type: string
         colTeamPlace:
+          type: string
+        colTeamTime:
           type: string
 
     MatchResultImportConfigDto:
@@ -10778,7 +10787,6 @@ components:
         - id
         - name
         - colTeamStartNumber
-        - colTeamPlace
       properties:
         id:
           type: string
@@ -10788,6 +10796,8 @@ components:
         colTeamStartNumber:
           type: string
         colTeamPlace:
+          type: string
+        colTeamTime:
           type: string
 
     UploadMatchResultRequest:

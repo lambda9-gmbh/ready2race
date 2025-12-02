@@ -1,40 +1,41 @@
-import {BaseEntityDialogProps} from "@utils/types.ts";
-import EntityDialog from "@components/EntityDialog.tsx";
-import {useForm} from "react-hook-form-mui";
-import {useCallback} from "react";
-import {Stack} from "@mui/material";
-import {FormInputText} from "@components/form/input/FormInputText.tsx";
-import {
-    addMatchResultImportConfig,
-    updateMatchResultImportConfig,
-} from "@api/sdk.gen.ts";
-import {useTranslation} from "react-i18next";
-import {MatchResultImportConfigDto, MatchResultImportConfigRequest} from "@api/types.gen.ts";
+import {BaseEntityDialogProps} from '@utils/types.ts'
+import EntityDialog from '@components/EntityDialog.tsx'
+import {useForm} from 'react-hook-form-mui'
+import {useCallback} from 'react'
+import {Stack} from '@mui/material'
+import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {addMatchResultImportConfig, updateMatchResultImportConfig} from '@api/sdk.gen.ts'
+import {useTranslation} from 'react-i18next'
+import {MatchResultImportConfigDto, MatchResultImportConfigRequest} from '@api/types.gen.ts'
 
 type Form = {
     name: string
     colTeamStartNumber: string
-    colTeamPlace: string
+    colTeamPlace?: string
+    colTeamTime?: string
 }
 
 const defaultValues: Form = {
     name: '',
     colTeamStartNumber: '',
     colTeamPlace: '',
+    colTeamTime: '',
 }
 
 const addAction = (formData: Form) =>
     addMatchResultImportConfig({
-        body: mapFormToRequest(formData)
+        body: mapFormToRequest(formData),
     })
 
 const editAction = (formData: Form, entity: MatchResultImportConfigDto) =>
     updateMatchResultImportConfig({
         path: {matchResultImportConfigId: entity.id},
-        body: mapFormToRequest(formData)
+        body: mapFormToRequest(formData),
     })
 
-const MatchResultImportConfigDialog = (props: BaseEntityDialogProps<MatchResultImportConfigDto>) => {
+const MatchResultImportConfigDialog = (
+    props: BaseEntityDialogProps<MatchResultImportConfigDto>,
+) => {
     const {t} = useTranslation()
     const formContext = useForm<Form>()
 
@@ -48,12 +49,40 @@ const MatchResultImportConfigDialog = (props: BaseEntityDialogProps<MatchResultI
             formContext={formContext}
             onOpen={onOpen}
             addAction={addAction}
-            editAction={editAction}
-        >
+            editAction={editAction}>
             <Stack spacing={4}>
-                <FormInputText name={'name'} label={t('configuration.import.matchResult.name')} required />
-                <FormInputText name={'colTeamStartNumber'} label={t('configuration.import.matchResult.col.team.startNumber')} required />
-                <FormInputText name={'colTeamPlace'} label={t('configuration.import.matchResult.col.team.place')} required />
+                <FormInputText
+                    name={'name'}
+                    label={t('configuration.import.matchResult.name')}
+                    required
+                />
+                <FormInputText
+                    name={'colTeamStartNumber'}
+                    label={t('configuration.import.matchResult.col.team.startNumber')}
+                    required
+                />
+                <FormInputText
+                    name={'colTeamPlace'}
+                    label={t('configuration.import.matchResult.col.team.place')}
+                    rules={{
+                        validate: (value, formValues) => {
+                            if (value === '' && formValues.colTeamTime === '') {
+                                return t('configuration.import.matchResult.error.noPlaceOrTime')
+                            }
+                        },
+                    }}
+                />
+                <FormInputText
+                    name={'colTeamTime'}
+                    label={t('configuration.import.matchResult.col.team.time')}
+                    rules={{
+                        validate: (value, formValues) => {
+                            if (value === '' && formValues.colTeamPlace === '') {
+                                return t('configuration.import.matchResult.error.noPlaceOrTime')
+                            }
+                        },
+                    }}
+                />
             </Stack>
         </EntityDialog>
     )
@@ -65,6 +94,7 @@ const mapDtoToForm = (dto: MatchResultImportConfigDto): Form => ({
     name: dto.name,
     colTeamStartNumber: dto.colTeamStartNumber,
     colTeamPlace: dto.colTeamPlace,
+    colTeamTime: dto.colTeamTime,
 })
 
 export default MatchResultImportConfigDialog

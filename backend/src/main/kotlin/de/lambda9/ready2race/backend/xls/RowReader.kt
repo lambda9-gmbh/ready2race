@@ -14,11 +14,18 @@ class RowReader(
     fun <A> cell(header: String, parser: CellParser<A>): IO<XLSReadError.CellError, A> =
         cellInternal(header, parser)
 
-    fun <A> optionalCell(header: String, parser: CellParser<A>): IO<XLSReadError.CellError, A?> =
-        cellInternal(header, parser).recover {
-            when (it) {
-                is XLSReadError.CellError.ColumnUnknown, is XLSReadError.CellError.ParseError.CellBlank -> KIO.ok(null)
-                else -> KIO.fail(it)
+    fun <A> optionalCell(header: String?, parser: CellParser<A>): IO<XLSReadError.CellError, A?> =
+        if (header == null) {
+            KIO.ok(null)
+        } else {
+            cellInternal(header, parser).recover {
+                when (it) {
+                    is XLSReadError.CellError.ColumnUnknown, is XLSReadError.CellError.ParseError.CellBlank -> KIO.ok(
+                        null
+                    )
+
+                    else -> KIO.fail(it)
+                }
             }
         }
 

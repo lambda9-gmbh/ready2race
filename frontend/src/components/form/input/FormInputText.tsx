@@ -12,8 +12,8 @@ export const FormInputText = ({sx, ...props}: BaseFormInputProps) => {
             label={props.label}
             required={props.required === true || props.rules?.required !== undefined}>
             <TextFieldElement
-                {...props}
                 type={'text'}
+                {...props}
                 rules={{
                     ...props.rules,
                     ...(props.required &&

@@ -67,6 +67,9 @@
       "selectFile": "Select file",
       "select": {
         "none": "None"
+      },
+      "timecode": {
+        "invalid": "Please enter a valid timecode (HH:mm:ss.SSS)."
       }
     },
     "load": {
@@ -618,6 +621,8 @@
           "team": "Team",
           "registrant": "Registrant",
           "place": "Place",
+          "time": "Time",
+          "placeAndTime": "Place/Time",
           "manageRunning": "Manage Running Matches",
           "running": "Running",
           "roundAndMatch": "Round {{round}}, Match {{match}}",
@@ -646,7 +651,10 @@
               "single": "The place: {{places}} is used several times.",
               "multiple": "The places: {{places}} are used several times.",
               "message": "Please select each place only once per match."
-            }
+            },
+            "noResultsEntered": "Please enter at least all places or all times for the teams in this match.",
+            "missingPlaces": "Please enter all places for the teams in this match.",
+            "missingTimes": "Please enter times for all teams in this match."
           },
           "submit": {
             "error": "An error has occurred when entering the results",
@@ -675,7 +683,9 @@
             "WRONG_TEAM_COUNT": "The team count is different from expected - actual: {{actual}}, expected: {{expected}}",
             "DUPLICATE_PLACES": "There are duplicate places among the teams",
             "DUPLICATE_START_NUMBERS": "There are duplicate start numbers among the teams",
-            "PLACES_UNCONTINUOUS": "The given places are not continuous - actual: {{actual}}, expected: {{expected}}"
+            "PLACES_UNCONTINUOUS": "The given places are not continuous - actual: {{actual}}, expected: {{expected}}",
+            "LIST_DATA_INCOMPLETE": "The columns for the places or times are incomplete.",
+            "RESULT_NOT_FAILED_AND_NO_DATA": "A result has no fail reason and no place and time."
           },
           "resultType": {
             "distance": "Distance"
@@ -1237,8 +1247,12 @@
         "col": {
           "team": {
             "startNumber": "Start number",
-            "place": "Place"
+            "place": "Place",
+            "time": "Time"
           }
+        },
+        "error": {
+          "noPlaceOrTime": "Please specify at least the place or time column."
         }
       }
     },

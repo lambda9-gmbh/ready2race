@@ -20,7 +20,7 @@ import CompetitionTeamCompositionEntry from '@components/event/competition/Compe
 import CompetitionRegistrations from '@components/event/competition/registration/CompetitionRegistrations.tsx'
 import {a11yProps, getRegistrationState} from '@utils/helpers.ts'
 import CompetitionExecution from '@components/event/competition/excecution/CompetitionExecution.tsx'
-import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
+// import CompetitionPlaces from '@components/event/competition/excecution/CompetitionPlaces.tsx'
 import CompetitionRegistrationTeams from '@components/event/competition/registration/CompetitionRegistrationTeams.tsx'
 import {format} from 'date-fns'
 
@@ -30,7 +30,7 @@ const COMPETITION_TABS = [
     'teams',
     'setup',
     'execution',
-    'places',
+    // 'places',
 ] as const
 export type CompetitionTab = (typeof COMPETITION_TABS)[number]
 
@@ -177,12 +177,12 @@ const CompetitionPage = () => {
                                 {...tabProps('execution')}
                             />
                         )}
-                        {!eventData.challengeEvent && (
+                        {/*{!eventData.challengeEvent && (
                             <Tab
                                 label={t('event.competition.places.tabTitle')}
                                 {...tabProps('places')}
                             />
-                        )}
+                        )}*/}
                     </TabSelectionContainer>
                     <TabPanel index={'general'} activeTab={activeTab}>
                         {(competitionData.properties.description ||
@@ -401,11 +401,11 @@ const CompetitionPage = () => {
                             <CompetitionExecution />
                         </TabPanel>
                     )}
-                    {!eventData.challengeEvent && (
+                    {/*{!eventData.challengeEvent && (
                         <TabPanel index={'places'} activeTab={activeTab}>
                             <CompetitionPlaces />
                         </TabPanel>
-                    )}
+                    )}*/}
                 </Stack>
             )) ||
                 (competitionPending && eventPending && <Throbber />)}

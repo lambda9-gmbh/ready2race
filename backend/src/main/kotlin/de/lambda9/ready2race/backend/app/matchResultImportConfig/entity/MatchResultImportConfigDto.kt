@@ -6,5 +6,6 @@ data class MatchResultImportConfigDto(
     val id: UUID,
     val name: String,
     val colTeamStartNumber: String,
-    val colTeamPlace: String,
+    val colTeamPlace: String?,
+    val colTeamTime: String?,
 )
