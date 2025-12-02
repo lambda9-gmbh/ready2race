@@ -2514,6 +2514,39 @@ paths:
           $ref: '#/components/responses/422'
         500:
           $ref: '#/components/responses/500'
+  /club/import:
+    post:
+      operationId: importClubs
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - request
+                - files
+              properties:
+                request:
+                  $ref: '#/components/schemas/ClubImportRequest'
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        204:
+          $ref: '#/components/responses/204'
+        400:
+          $ref: '#/components/responses/400'
+        401:
+          $ref: '#/components/responses/401'
+        403:
+          $ref: '#/components/responses/403'
+        422:
+          $ref: '#/components/responses/422'
+        500:
+          $ref: '#/components/responses/500'
   /club/{clubId}/participant/import:
     parameters:
       - in: path
@@ -11550,3 +11583,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChallengeCompetitionInfoDto'
+
+    ClubImportRequest:
+      type: object
+      required:
+        - separator
+        - colName
+      properties:
+        separator: string
+        colName: string

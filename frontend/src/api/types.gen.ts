@@ -225,6 +225,11 @@ export type ClubDto = {
     updatedAt: string
 }
 
+export type ClubImportRequest = {
+    separator: unknown
+    colName: unknown
+}
+
 export type ClubSearchDto = {
     id: string
     name: string
@@ -3422,6 +3427,17 @@ export type AddClubParticipantData = {
 export type AddClubParticipantResponse = string
 
 export type AddClubParticipantError = BadRequestError | ApiError | UnprocessableEntityError
+
+export type ImportClubsData = {
+    body: {
+        request: ClubImportRequest
+        files: Array<Blob | File>
+    }
+}
+
+export type ImportClubsResponse = void
+
+export type ImportClubsError = BadRequestError | ApiError | UnprocessableEntityError
 
 export type ImportClubParticipantsData = {
     body: {

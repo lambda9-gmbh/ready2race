@@ -8,13 +8,17 @@ import de.lambda9.ready2race.backend.app.club.control.clubDto
 import de.lambda9.ready2race.backend.app.club.control.toRecord
 import de.lambda9.ready2race.backend.app.club.entity.ClubDto
 import de.lambda9.ready2race.backend.app.club.entity.ClubError
+import de.lambda9.ready2race.backend.app.club.entity.ClubImportRequest
 import de.lambda9.ready2race.backend.app.club.entity.ClubSort
 import de.lambda9.ready2race.backend.app.club.entity.ClubUpsertDto
 import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.ToApiError
+import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
 import de.lambda9.tailwind.core.extensions.kio.orDie
@@ -23,6 +27,32 @@ import java.time.LocalDateTime
 import java.util.*
 
 object ClubService {
+
+    fun importClubs(
+        file: File,
+        request: ClubImportRequest,
+        userId: UUID,
+    ): App<ToApiError, ApiResponse.NoData> = KIO.comprehension {
+
+        val iStream = file.bytes.inputStream()
+
+        val now = LocalDateTime.now()
+
+        val entries = !CSV.read(iStream, request.separator) {
+            ClubRecord(
+                id = UUID.randomUUID(),
+                name = !cell(request.colName),
+                createdAt = now,
+                createdBy = userId,
+                updatedAt = now,
+                updatedBy = userId,
+            )
+        }
+
+        !ClubRepo.create(entries).orDie()
+
+        noData
+    }
 
     fun addClub(
         request: ClubUpsertDto,

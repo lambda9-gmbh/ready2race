@@ -216,6 +216,13 @@
   "club": {
     "club": "Verein",
     "clubs": "Vereine",
+    "name": "Vereinsname",
+    "import": "Vereine importieren",
+    "upload": {
+      "dialog": {
+        "submit": "Vereine importieren"
+      }
+    },
     "participants": "Mitglieder",
     "participant": {
       "import": "Mitglieder importieren",
