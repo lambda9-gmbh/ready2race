@@ -1,6 +1,5 @@
-import {Grid2, Typography} from '@mui/material'
+import {Grid2} from '@mui/material'
 import {useUser} from '@contexts/user/UserContext.ts'
-import {useTranslation} from 'react-i18next'
 import {useMemo} from 'react'
 import {UpcomingEventsWidget} from '@components/dashboard/UpcomingEventsWidget.tsx'
 import {EventRegistrationsWidget} from '@components/dashboard/EventRegistrationsWidget.tsx'
@@ -10,7 +9,6 @@ import {ShiftWidget} from '@components/dashboard/ShiftWidget.tsx'
 
 const Dashboard = () => {
     const user = useUser()
-    const {t} = useTranslation()
 
     const {userId, clubId, registrationReadPrivilege, eventReadPrivilege} = useMemo(() => {
         return {
@@ -26,23 +24,17 @@ const Dashboard = () => {
     return (
         <Grid2
             container
-            spacing={2}
-            p={1}
+            spacing={{xs: 1.5, lg: 4}}
+            p={{xs: 1, lg: 2}}
             height={'100%'}
             alignContent={'flex-start'}
             alignItems={'stretch'}>
             {userId && eventReadPrivilege && (
                 <>
-                    <Grid2 size={{xs: 12}}>
-                        <Typography variant={'h5'}>{t('common.organisation')}</Typography>
-                    </Grid2>
                     <TasksWidget userId={userId} />
                     <ShiftWidget userId={userId} />
                 </>
             )}
-            <Grid2 size={{xs: 12}}>
-                <Typography variant={'h5'}>{t('event.events')}</Typography>
-            </Grid2>
             {registrationReadPrivilege && <EventRegistrationsWidget />}
             {clubId && <UpcomingEventsWidget />}
         </Grid2>

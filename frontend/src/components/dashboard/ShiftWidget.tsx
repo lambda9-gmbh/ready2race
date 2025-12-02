@@ -1,5 +1,6 @@
 import React, {useMemo} from 'react'
 import {
+    Box,
     Button,
     Divider,
     List,
@@ -18,7 +19,7 @@ import {Link} from '@tanstack/react-router'
 import {formatISO} from 'date-fns'
 import {WorkShiftWithAssignedUsersDto} from '@api/types.gen.ts'
 import {blue} from '@mui/material/colors'
-import {InfoOutlined} from '@mui/icons-material'
+import {InfoOutlined, WorkOutline} from '@mui/icons-material'
 
 type GroupedShiftWithFormatedTime = WorkShiftWithAssignedUsersDto & {
     timeFromFormated: string
@@ -116,52 +117,68 @@ export function ShiftWidget({userId}: {userId: string}) {
     return (
         <React.Fragment>
             <DashboardWidget
-                size={12}
+                size={{xs: 12, lg: 6}}
                 header={`${t('work.shift.myShifts')} (${shifts?.pagination.total ?? 0})`}
                 content={
                     <React.Fragment>
-                        <List
-                            subheader={<li />}
-                            sx={{
-                                width: '100%',
-                                position: 'relative',
-                                overflow: 'auto',
-                                maxHeight: 280,
-                                '& ul': {padding: 0},
-                            }}>
-                            {groupedShifts.map(group => (
-                                <>
-                                    <ListSubheader
-                                        key={group.date}
-                                        style={{
-                                            backgroundColor: blue['50'],
-                                        }}>
-                                        <Stack direction="row" spacing={2} alignItems={'center'}>
-                                            <CalendarIcon />
-                                            <Typography
-                                                variant={'overline'}
-                                                fontSize={'small'}
-                                                fontWeight={'bold'}>
-                                                {group.date}
-                                            </Typography>
-                                        </Stack>
-                                    </ListSubheader>
-                                    {group.items.map((shift, index) => (
-                                        <>
-                                            {index !== 0 && (
-                                                <Divider
-                                                    key={'div-' + shift.id}
-                                                    variant={'middle'}
-                                                />
-                                            )}
-                                            <ListItem key={shift.id}>
-                                                <ListItemText
-                                                    primary={
-                                                        <Stack
-                                                            direction={'row'}
-                                                            spacing={2}
-                                                            alignItems={'center'}>
-                                                            <Stack direction={'row'}>
+                        {groupedShifts.length === 0 ? (
+                            <Stack
+                                alignItems={'center'}
+                                justifyContent={'center'}
+                                spacing={2}
+                                py={2}>
+                                <WorkOutline sx={{fontSize: 48, color: 'text.secondary'}} />
+                                <Typography color={'text.secondary'} textAlign={'center'}>
+                                    No upcoming shifts
+                                </Typography>
+                            </Stack>
+                        ) : (
+                            <List
+                                subheader={<li />}
+                                sx={{
+                                    width: '100%',
+                                    position: 'relative',
+                                    overflow: 'auto',
+                                    '& ul': {padding: 0},
+                                }}>
+                                {groupedShifts.map(group => (
+                                    <>
+                                        <ListSubheader
+                                            key={group.date}
+                                            style={{
+                                                backgroundColor: blue['50'],
+                                            }}>
+                                            <Stack
+                                                direction="row"
+                                                spacing={2}
+                                                alignItems={'center'}>
+                                                <CalendarIcon />
+                                                <Typography
+                                                    variant={'overline'}
+                                                    fontSize={'small'}
+                                                    fontWeight={'bold'}>
+                                                    {group.date}
+                                                </Typography>
+                                            </Stack>
+                                        </ListSubheader>
+                                        {group.items.map((shift, index) => (
+                                            <>
+                                                {index !== 0 && (
+                                                    <Divider
+                                                        key={'div-' + shift.id}
+                                                        variant={'middle'}
+                                                    />
+                                                )}
+                                                <ListItem key={shift.id}>
+                                                    <ListItemText
+                                                        primary={
+                                                            <Box
+                                                                sx={{
+                                                                    display: 'flex',
+                                                                    flexWrap: 'wrap',
+                                                                    gap: 1,
+                                                                    alignItems: 'center',
+                                                                }}>
                                                                 <Typography
                                                                     variant={'overline'}
                                                                     fontSize={'small'}
@@ -169,61 +186,84 @@ export function ShiftWidget({userId}: {userId: string}) {
                                                                     {shift.timeFromFormated} -{' '}
                                                                     {shift.timeToFormated}
                                                                 </Typography>
-                                                            </Stack>
-                                                            <Typography>
-                                                                {shift.workTypeName}
-                                                            </Typography>
-                                                            <Typography>|</Typography>
-                                                            <Link
-                                                                to={'/event/$eventId'}
-                                                                search={{
-                                                                    tab: 'organization',
-                                                                }}
-                                                                params={{eventId: shift.event}}>
-                                                                <Button>
-                                                                    <Typography color={'primary'}>
-                                                                        {shift.eventName}
-                                                                    </Typography>
-                                                                </Button>
-                                                            </Link>
-                                                            <Stack
-                                                                flexGrow={1}
-                                                                direction={'row'}
-                                                                alignItems={'center'}
-                                                                justifyContent={'end'}
-                                                                color={'textSecondary'}
-                                                                spacing={1}>
-                                                                <ClockIcon fontSize={'small'} />
                                                                 <Typography
-                                                                    fontSize={'small'}
-                                                                    color={'textSecondary'}>
-                                                                    {new Date(
-                                                                        shift.createdAt,
-                                                                    ).toLocaleString()}
+                                                                    sx={{flexGrow: {xs: 1, md: 0}}}>
+                                                                    {shift.workTypeName}
                                                                 </Typography>
-                                                            </Stack>
-                                                        </Stack>
-                                                    }
-                                                    secondary={
-                                                        shift.remark && (
-                                                            <Stack
-                                                                spacing={1}
-                                                                direction={'row'}
-                                                                alignItems={'center'}>
-                                                                <InfoOutlined fontSize={'small'} />
-                                                                <Typography fontSize={'small'}>
-                                                                    {shift.remark}
-                                                                </Typography>
-                                                            </Stack>
-                                                        )
-                                                    }
-                                                />
-                                            </ListItem>
-                                        </>
-                                    ))}
-                                </>
-                            ))}
-                        </List>
+                                                                <Box
+                                                                    sx={{
+                                                                        display: {
+                                                                            xs: 'none',
+                                                                            md: 'block',
+                                                                        },
+                                                                    }}>
+                                                                    <Typography>|</Typography>
+                                                                </Box>
+                                                                <Link
+                                                                    to={'/event/$eventId'}
+                                                                    search={{
+                                                                        tab: 'organization',
+                                                                    }}
+                                                                    params={{eventId: shift.event}}>
+                                                                    <Button size={'small'}>
+                                                                        <Typography
+                                                                            color={'primary'}>
+                                                                            {shift.eventName}
+                                                                        </Typography>
+                                                                    </Button>
+                                                                </Link>
+                                                                <Stack
+                                                                    direction={'row'}
+                                                                    alignItems={'center'}
+                                                                    spacing={1}
+                                                                    sx={{
+                                                                        marginLeft: {
+                                                                            xs: 0,
+                                                                            md: 'auto',
+                                                                        },
+                                                                        width: {
+                                                                            xs: '100%',
+                                                                            md: 'auto',
+                                                                        },
+                                                                        justifyContent: {
+                                                                            xs: 'flex-start',
+                                                                            md: 'flex-end',
+                                                                        },
+                                                                    }}>
+                                                                    <ClockIcon fontSize={'small'} />
+                                                                    <Typography
+                                                                        fontSize={'small'}
+                                                                        color={'textSecondary'}>
+                                                                        {new Date(
+                                                                            shift.createdAt,
+                                                                        ).toLocaleString()}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            </Box>
+                                                        }
+                                                        secondary={
+                                                            shift.remark && (
+                                                                <Stack
+                                                                    spacing={1}
+                                                                    direction={'row'}
+                                                                    alignItems={'center'}>
+                                                                    <InfoOutlined
+                                                                        fontSize={'small'}
+                                                                    />
+                                                                    <Typography fontSize={'small'}>
+                                                                        {shift.remark}
+                                                                    </Typography>
+                                                                </Stack>
+                                                            )
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            </>
+                                        ))}
+                                    </>
+                                ))}
+                            </List>
+                        )}
                     </React.Fragment>
                 }
             />
