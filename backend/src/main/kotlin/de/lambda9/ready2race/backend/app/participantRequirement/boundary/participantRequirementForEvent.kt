@@ -1,6 +1,7 @@
 package de.lambda9.ready2race.backend.app.participantRequirement.boundary
 
 import de.lambda9.ready2race.backend.app.auth.entity.Privilege
+import de.lambda9.ready2race.backend.app.participant.entity.ParticipantImportRequest
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.AssignRequirementToNamedParticipantDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventConfigDto
 import de.lambda9.ready2race.backend.app.participantRequirement.entity.ParticipantRequirementCheckForEventUpsertDto
@@ -9,8 +10,10 @@ import de.lambda9.ready2race.backend.app.participantRequirement.entity.UpdateQrC
 import de.lambda9.ready2race.backend.calls.requests.*
 import de.lambda9.ready2race.backend.calls.responses.respondComprehension
 import de.lambda9.ready2race.backend.calls.serialization.jsonMapper
+import de.lambda9.ready2race.backend.file.File
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.boolean
 import de.lambda9.ready2race.backend.parsing.Parser.Companion.uuid
+import de.lambda9.tailwind.core.KIO
 import io.ktor.http.content.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
@@ -32,7 +35,7 @@ fun Route.participantRequirementForEvent() {
 
                 val multiPartData = call.receiveMultipart()
 
-                val uploads = mutableListOf<Pair<String, ByteArray>>()
+                var upload: File? = null
                 var config: ParticipantRequirementCheckForEventConfigDto? = null
 
                 var done = false
@@ -43,9 +46,14 @@ fun Route.participantRequirementForEvent() {
                     } else {
                         when (part) {
                             is PartData.FileItem -> {
-                                uploads.add(
-                                    part.originalFileName!! to part.provider().toByteArray()
-                                )
+                                if (upload == null) {
+                                    upload = File(
+                                        part.originalFileName!!,
+                                        part.provider().toByteArray(),
+                                    )
+                                } else {
+                                    KIO.fail(RequestError.File.Multiple)
+                                }
                             }
 
                             is PartData.FormItem -> {
@@ -65,10 +73,14 @@ fun Route.participantRequirementForEvent() {
 
                 val user = !authenticate(Privilege.UpdateEventGlobal)
                 val eventId = !pathParam("eventId", uuid)
+
+                val file = !KIO.failOnNull(upload) { RequestError.File.Missing }
+                val req = !KIO.failOnNull(config) { RequestError.BodyMissing(ParticipantRequirementCheckForEventConfigDto.example) }
+
                 ParticipantRequirementService.checkRequirementForEvent(
                     eventId,
-                    uploads,
-                    config!!,
+                    file,
+                    req,
                     user.id!!
                 )
             }

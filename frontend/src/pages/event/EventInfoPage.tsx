@@ -54,7 +54,7 @@ const EventInfoPage = () => {
         }
 
         // Set new timer to hide controls after 5 seconds
-        const timer = setTimeout(() => {
+        const timer = window.setTimeout(() => {
             setShowControls(false)
         }, 5000)
 
@@ -108,7 +108,7 @@ const EventInfoPage = () => {
         const currentView = views[currentViewIndex]
         if (!currentView) return
 
-        const timer = setTimeout(() => {
+        const timer = window.setTimeout(() => {
             if (views.length > 1) {
                 // Multiple views: rotate to next view
                 setCurrentViewIndex(prev => (prev + 1) % views.length)

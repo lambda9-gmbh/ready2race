@@ -404,8 +404,9 @@ const ParticipantForEventTable = ({eventData, ...props}: Props) => {
                 reloadData={props.reloadData}
             />
             <ParticipantRequirementCheckForEventUploadFileDialog
-                {...participantRequirementCheckForEventConfigProps.dialog}
-                reloadData={props.reloadData}
+                open={participantRequirementCheckForEventConfigProps.dialog.dialogIsOpen}
+                onClose={participantRequirementCheckForEventConfigProps.dialog.closeDialog}
+                onSuccess={props.reloadData}
             />
             <EntityTable
                 {...props}

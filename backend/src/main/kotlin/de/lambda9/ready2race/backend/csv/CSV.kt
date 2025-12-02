@@ -7,9 +7,11 @@ import com.opencsv.CSVWriter
 import de.lambda9.tailwind.core.IO
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.extensions.kio.failIf
+import io.ktor.utils.io.charsets.forName
 import java.io.InputStream
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import java.nio.charset.Charset
 
 object CSV {
 
@@ -37,32 +39,53 @@ object CSV {
 
     fun <A> read(
         `in`: InputStream,
+        noHeader: Boolean = false,
         separator: Char = ',',
+        charset: String = "UTF-8",
         reader: RowReader.() -> A
     ): IO<CSVReadError, List<A>> = KIO.comprehension {
+
+        val cs = try {
+            charset(charset)
+        } catch (e: Exception) {
+            Charsets.UTF_8
+        }
 
         val csvParser = CSVParserBuilder()
             .withSeparator(separator)
             .build()
 
-        val reader = CSVReaderBuilder(`in`.bufferedReader())
+        val reader = CSVReaderBuilder(`in`.bufferedReader(cs))
             .withCSVParser(csvParser)
             .build()
 
-        val header = reader.readNext()
-
-        val columns = !KIO.failOnNull(header) { CSVReadError.NoHeaders }
-            .map {
-                it.mapIndexedNotNull { idx, item ->
-                    item?.let { it to idx }
-                }.toMap()
-            }
-            .failIf({ it.isEmpty() }) { CSVReadError.NoHeaders }
-
-        val maxIndex = columns.maxOf { it.value }
-
         val result = mutableListOf<A>()
         var rowNum = 0
+
+        val columns = if (noHeader) {
+            val first = reader.peek()
+
+            if (first == null) {
+                return@comprehension KIO.ok(result)
+            } else {
+                first.mapIndexed { idx, _ ->
+                    (idx + 1).toString() to idx
+                }.toMap()
+            }
+        } else {
+            val header = reader.readNext()
+
+            !KIO.failOnNull(header) { CSVReadError.NoHeaders }
+                .map {
+                    it.mapIndexedNotNull { idx, item ->
+                        item?.let { it to idx }
+                    }.toMap()
+                }
+                .failIf({ it.isEmpty() }) { CSVReadError.NoHeaders }
+        }
+
+
+        val maxIndex = columns.maxOf { it.value }
 
         do {
             val row = reader.readNext()

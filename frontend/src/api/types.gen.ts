@@ -226,8 +226,10 @@ export type ClubDto = {
 }
 
 export type ClubImportRequest = {
-    separator: unknown
-    colName: unknown
+    separator: string
+    charset: string
+    colName: string
+    noHeader: boolean
 }
 
 export type ClubSearchDto = {
@@ -1271,15 +1273,17 @@ export type ParticipantForExecutionDto = {
 
 export type ParticipantImportRequest = {
     separator: string
+    charset: string
     colFirstname: string
     colLastname: string
     colYear: string
     colGender: string
     colExternalClubname?: string
+    colEmail?: string
+    noHeader: boolean
     valueGenderMale: string
     valueGenderFemale: string
     valueGenderDiverse: string
-    colEmail?: string
 }
 
 export type ParticipantInfo = {
@@ -1305,6 +1309,7 @@ export type ParticipantRequirementCheckForEventConfigDto = {
     lastnameColName: string
     yearsColName?: string
     clubColName?: string
+    noHeader: boolean
     requirementColName?: string
     requirementIsValidValue?: string
 }

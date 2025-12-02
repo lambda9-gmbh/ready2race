@@ -59,7 +59,12 @@ object ParticipantService {
 
         val iStream = file.bytes.inputStream()
 
-        val entries = !CSV.read(iStream, request.separator) {
+        val entries = !CSV.read(
+            `in` = iStream,
+            noHeader = request.noHeader,
+            separator = request.separator,
+            charset = request.charset,
+        ) {
 
             val externalClubname = !optionalCell(request.colExternalClubname)
             val now = LocalDateTime.now()

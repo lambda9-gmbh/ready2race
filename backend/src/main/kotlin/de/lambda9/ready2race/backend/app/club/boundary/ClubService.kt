@@ -38,7 +38,12 @@ object ClubService {
 
         val now = LocalDateTime.now()
 
-        val entries = !CSV.read(iStream, request.separator) {
+        val entries = !CSV.read(
+            `in` = iStream,
+            noHeader = request.noHeader,
+            separator = request.separator,
+            charset = request.charset,
+        ) {
             ClubRecord(
                 id = UUID.randomUUID(),
                 name = !cell(request.colName),

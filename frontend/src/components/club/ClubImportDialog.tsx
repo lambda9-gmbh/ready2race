@@ -1,14 +1,9 @@
-import BaseDialog from '@components/BaseDialog.tsx'
-import {Button, DialogActions, DialogContent, DialogTitle, Stack, Typography} from '@mui/material'
-import {Trans, useTranslation} from 'react-i18next'
-import {FormContainer, useFieldArray, useForm} from 'react-hook-form-mui'
-import {FormInputText} from '@components/form/input/FormInputText.tsx'
+import {useTranslation} from 'react-i18next'
 import {useFeedback} from '@utils/hooks.ts'
-import {useEffect, useState} from 'react'
-import SelectFileButton from '@components/SelectFileButton.tsx'
-import {SubmitButton} from '@components/form/SubmitButton.tsx'
 import {ClubImportRequest} from '@api/types.gen.ts'
 import {importClubs} from '@api/sdk.gen.ts'
+import CsvImportWizard from '@components/csv/CsvImportWizard'
+import {CsvImportWizardConfig, CsvImportWizardResult} from '@components/csv/types'
 
 type Props = {
     open: boolean
@@ -16,68 +11,37 @@ type Props = {
     reloadClubs: () => void
 }
 
-type Form = {
-    separator: string
-    colName: string
-    files: {
-        file: File
-    }[]
-}
-
-const defaultValues: Form = {
-    separator: ',',
-    colName: '',
-    files: [],
-}
-
-const mapFormToRequest = (formData: Form): ClubImportRequest => ({
-    separator: formData.separator,
-    colName: formData.colName,
-})
-
 const ClubImportDialog = ({open, onClose, reloadClubs}: Props) => {
     const {t} = useTranslation()
     const feedback = useFeedback()
-    const formContext = useForm<Form>()
-    const [submitting, setSubmitting] = useState(false)
 
-    const [fileError, setFileError] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (open) {
-            formContext.reset(defaultValues)
-            setFileError(null)
-        }
-    }, [open])
-
-    const {fields, append, update} = useFieldArray({
-        control: formContext.control,
-        name: 'files',
-        keyName: 'fieldId',
-        rules: {
-            validate: values => {
-                if (values.length !== 1) {
-                    setFileError(t('club.participant.upload.dialog.file.missing'))
-                    return 'empty'
-                } else {
-                    setFileError(null)
-                    return undefined
-                }
+    const wizardConfig: CsvImportWizardConfig = {
+        title: t('club.import'),
+        fieldMappings: [
+            {
+                key: 'colName',
+                label: t('club.name'),
+                required: true,
             },
-        },
-    })
+        ],
+        defaultSeparator: ',',
+        defaultCharset: 'UTF-8',
+    }
 
-    const filename = fields[0]?.file?.name
+    const handleComplete = async (result: CsvImportWizardResult) => {
+        const request: ClubImportRequest = {
+            separator: result.config.separator,
+            charset: result.config.charset,
+            noHeader: !result.config.hasHeader,
+            colName: result.columnMappings.colName as string,
+        }
 
-    const handleImport = async (formData: Form) => {
-        setSubmitting(true)
         const {error} = await importClubs({
             body: {
-                request: mapFormToRequest(formData),
-                files: formData.files.map(o => o.file),
+                request,
+                files: [result.config.file],
             },
         })
-        setSubmitting(false)
 
         if (error) {
             if (error.status.value === 400) {
@@ -89,6 +53,7 @@ const ClubImportDialog = ({open, onClose, reloadClubs}: Props) => {
                 } else {
                     feedback.error(t('common.error.unexpected'))
                 }
+                throw error
             } else if (error.status.value === 422) {
                 const details = 'details' in error && error.details
                 switch (error.errorCode) {
@@ -140,6 +105,7 @@ const ClubImportDialog = ({open, onClose, reloadClubs}: Props) => {
                         feedback.error(t('common.error.unexpected'))
                         break
                 }
+                throw error
             }
         } else {
             onClose()
@@ -147,65 +113,7 @@ const ClubImportDialog = ({open, onClose, reloadClubs}: Props) => {
         }
     }
 
-    return (
-        <BaseDialog open={open} onClose={onClose}>
-            <DialogTitle>
-                <Trans i18nKey={'club.import'} />
-            </DialogTitle>
-            <FormContainer formContext={formContext} onSuccess={handleImport}>
-                <DialogContent>
-                    <Stack spacing={4}>
-                        <FormInputText
-                            name={'separator'}
-                            label={t('club.participant.upload.dialog.separator')}
-                            required
-                            rules={{
-                                validate: val => {
-                                    if (val.length > 1) {
-                                        return t(
-                                            'club.participant.upload.dialog.error.separatorTooLong',
-                                        )
-                                    }
-                                },
-                            }}
-                        />
-                        <Stack spacing={2}>
-                            <Typography variant={'subtitle1'}>
-                                <Trans i18nKey={'club.participant.upload.dialog.cols'} />
-                            </Typography>
-                            <FormInputText name={'colName'} label={t('club.name')} required />
-                        </Stack>
-                        <Stack spacing={2}>
-                            <Typography>{filename}</Typography>
-                            <SelectFileButton
-                                variant={'text'}
-                                onSelected={file => {
-                                    if (fields.length < 1) {
-                                        append({file})
-                                    } else {
-                                        update(0, {file})
-                                    }
-                                }}
-                                accept={'.csv'}>
-                                {filename
-                                    ? t('club.participant.upload.dialog.file.change')
-                                    : t('club.participant.upload.dialog.file.choose')}
-                            </SelectFileButton>
-                            {fileError && <Typography color={'error'}>{fileError}</Typography>}
-                        </Stack>
-                    </Stack>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onClose} disabled={submitting}>
-                        <Trans i18nKey={'common.cancel'} />
-                    </Button>
-                    <SubmitButton submitting={submitting}>
-                        <Trans i18nKey={'club.upload.dialog.submit'} />
-                    </SubmitButton>
-                </DialogActions>
-            </FormContainer>
-        </BaseDialog>
-    )
+    return <CsvImportWizard open={open} onClose={onClose} config={wizardConfig} onComplete={handleComplete} />
 }
 
 export default ClubImportDialog

@@ -12,6 +12,7 @@ data class ParticipantRequirementCheckForEventConfigDto(
     val lastnameColName: String,
     val yearsColName: String?,
     val clubColName: String?,
+    val noHeader: Boolean,
     val requirementColName: String?,
     val requirementIsValidValue: String?
 ) : Validatable {
@@ -36,6 +37,7 @@ data class ParticipantRequirementCheckForEventConfigDto(
                 lastnameColName = "lastname",
                 yearsColName = "year",
                 clubColName = "club",
+                noHeader = false,
                 requirementColName = "active",
                 requirementIsValidValue = "true"
             )

@@ -13,8 +13,12 @@ import de.lambda9.ready2race.backend.pagination.PaginationParameters
 import de.lambda9.ready2race.backend.calls.requests.logger
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
+import de.lambda9.ready2race.backend.calls.responses.ToApiError
+import de.lambda9.ready2race.backend.csv.CSV
 import de.lambda9.ready2race.backend.database.generated.tables.records.EventHasParticipantRequirementRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ParticipantHasRequirementForEventRecord
+import de.lambda9.ready2race.backend.file.File
+import de.lambda9.ready2race.backend.parsing.Parser.Companion.int
 import de.lambda9.tailwind.core.KIO
 import de.lambda9.tailwind.core.KIO.Companion.ok
 import de.lambda9.tailwind.core.extensions.kio.onNullFail
@@ -166,10 +170,10 @@ object ParticipantRequirementService {
 
     fun checkRequirementForEvent(
         eventId: UUID,
-        csvList: MutableList<Pair<String, ByteArray>>,
+        csvFile: File,
         config: ParticipantRequirementCheckForEventConfigDto,
         userId: UUID
-    ): App<ParticipantRequirementError, ApiResponse.NoData> = KIO.comprehension {
+    ): App<ToApiError, ApiResponse.NoData> = KIO.comprehension {
 
         // TODO: Add optional checked note
 
@@ -186,7 +190,7 @@ object ParticipantRequirementService {
                 .orDie()
 
         // Even if the @uncheckedParticipants list is empty, we should still try to parse and validate the uploaded csv and return any errors.
-        val validParticipants = !parseParticipantListUpload(csvList, config)
+        val validParticipants = !parseParticipantListUpload(csvFile, config)
 
         // persist requirements for all matches
         !validParticipants.traverse { vp ->
@@ -214,78 +218,33 @@ object ParticipantRequirementService {
     }
 
     private fun parseParticipantListUpload(
-        csvList: MutableList<Pair<String, ByteArray>>,
+        file: File,
         config: ParticipantRequirementCheckForEventConfigDto,
-    ): App<ParticipantRequirementError, List<ValidRequirementParticipant>> = KIO.comprehension {
-        val validEntries = csvList.flatMap { (_, csv) ->
+    ): App<ToApiError, List<ValidRequirementParticipant>> = KIO.comprehension {
 
-            var header: Map<String, Int> = emptyMap()
+        val entries = !CSV.read(
+            `in` = file.bytes.inputStream(),
+            noHeader = config.noHeader,
+            separator = config.separator ?: ',',
+            charset = config.charset ?: "UTF-8",
+        ) {
+            val valid = config.requirementColName == null ||
+                config.requirementIsValidValue == null ||
+                !cell(config.requirementColName) == config.requirementIsValidValue
 
-            val charset = if (config.charset != null) {
-                if (Charset.isSupported(config.charset)) {
-                    Charset.forName(config.charset)
-                } else {
-                    return@comprehension KIO.fail(ParticipantRequirementError.InvalidConfig("Charset is not supported" to config.charset))
-                }
+            if (valid) {
+                ValidRequirementParticipant(
+                    firstname = !cell(config.firstnameColName),
+                    lastname = !cell(config.lastnameColName),
+                    year = !optionalCell(config.yearsColName, int),
+                    club = !optionalCell(config.clubColName),
+                )
             } else {
-                Charsets.UTF_8
-            }
-
-            csv.inputStream().bufferedReader(charset).let { reader ->
-                CSVReader(reader, config.separator ?: ';')
-                    .asSequence()
-                    .toList()
-                    .filterNotNull()
-                    .mapIndexedNotNull { index, arr ->
-                        if (index == 0) {
-
-                            header = arr.mapIndexed { headerIndex, value ->
-                                value to headerIndex
-                            }.toMap()
-
-                            if (!header.keys.containsAll(config.getColNames())) {
-                                return@comprehension KIO.fail(
-                                    ParticipantRequirementError.InvalidConfig(
-                                        "Missing columns in csv" to config.getColNames()
-                                            .filter { !header.keys.contains(it) }
-                                            .joinToString("; ")
-                                    )
-                                )
-                            }
-                            null
-                        } else {
-                            val valid =
-                                config.requirementColName == null || config.requirementIsValidValue == null || arr.getOrNull(
-                                    header.getOrDefault(config.requirementColName, -1)
-                                ).equals(config.requirementIsValidValue)
-
-                            if (valid) {
-                                ValidRequirementParticipant(
-                                    firstname = arr.getOrNull(
-                                        header.getOrDefault(
-                                            config.firstnameColName,
-                                            -1
-                                        )
-                                    ),
-                                    lastname = arr.getOrNull(
-                                        header.getOrDefault(
-                                            config.lastnameColName,
-                                            -1
-                                        )
-                                    ),
-                                    year = arr.getOrNull(header.getOrDefault(config.yearsColName, -1))
-                                        ?.toIntOrNull(),
-                                    club = arr.getOrNull(header.getOrDefault(config.clubColName, -1)),
-                                )
-                            } else {
-                                null
-                            }
-                        }
-                    }
+                null
             }
         }
 
-        ok(validEntries)
+        ok(entries.filterNotNull())
     }
 
     private data class ValidRequirementParticipant(
