@@ -165,8 +165,13 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="caption"
                                                                             color="text.secondary">
-                                                                            {team.teamName ||
-                                                                                team.clubName}
+                                                                            {team.teamName +
+                                                                                ' ' +
+                                                                                (team.actualClubName ??
+                                                                                    team.clubName ??
+                                                                                    t(
+                                                                                        'event.info.unnamed',
+                                                                                    ))}
                                                                         </Typography>
                                                                     </>
                                                                 ) : (
@@ -174,11 +179,13 @@ const RunningMatchesView = ({eventId, limit}: RunningMatchesViewProps) => {
                                                                         <Typography
                                                                             variant="body1"
                                                                             fontWeight="medium">
-                                                                            {team.teamName ||
-                                                                                team.clubName ||
-                                                                                t(
-                                                                                    'event.info.unnamed',
-                                                                                )}
+                                                                            {team.teamName +
+                                                                                ' ' +
+                                                                                (team.actualClubName ??
+                                                                                    team.clubName ??
+                                                                                    t(
+                                                                                        'event.info.unnamed',
+                                                                                    ))}
                                                                         </Typography>
                                                                         {team.participants.length >
                                                                             0 && (

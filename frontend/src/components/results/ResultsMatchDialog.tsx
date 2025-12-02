@@ -58,14 +58,16 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                 {match.competitionName} - {match.roundName}
                             </Typography>
                             {match.matchName ?? ''}
-                            <Box>
-                                <Chip
-                                    label={match.categoryName}
-                                    variant={'outlined'}
-                                    color={'primary'}
-                                    size={'small'}
-                                />
-                            </Box>
+                            {match.categoryName && (
+                                <Box>
+                                    <Chip
+                                        label={match.categoryName}
+                                        variant={'outlined'}
+                                        color={'primary'}
+                                        size={'small'}
+                                    />
+                                </Box>
+                            )}
                         </Stack>
                     </DialogTitle>
                     <DialogContent>
@@ -108,10 +110,16 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                             : ''}
                                                 </Typography>
                                             )}
-                                            <Typography textAlign={'right'}>
-                                                {team.clubName +
-                                                    (team.teamName ? ` ${team.teamName}` : '')}
-                                            </Typography>
+                                            <Box>
+                                                <Typography textAlign={'right'}>
+                                                    {(team.teamName ? `${team.teamName} ` : '') +
+                                                        (team.actualClubName ?? team.clubName)}
+                                                </Typography>
+                                                <Typography textAlign={'right'}>
+                                                    {(team.teamName ? `${team.teamName} ` : '') +
+                                                        (team.actualClubName ?? team.clubName)}
+                                                </Typography>
+                                            </Box>
                                         </Stack>
                                         <Divider sx={{my: 1}} />
                                         <Grid2 container>
@@ -137,7 +145,21 @@ const ResultsMatchDialog = <M extends ResultsMatchInfo>({
                                                                 ' ' +
                                                                 participant.lastName
                                                             }
-                                                            secondary={participant.namedRole}
+                                                            secondary={
+                                                                <>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        color="text.secondary">
+                                                                        {participant.namedRole}
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        color="text.secondary">
+                                                                        {participant.externalClubName ??
+                                                                            team.clubName}
+                                                                    </Typography>
+                                                                </>
+                                                            }
                                                         />
                                                     </Grid2>
                                                 ))}

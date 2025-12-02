@@ -742,12 +742,12 @@ const CompetitionExecution = () => {
                                                                 }
                                                             </TableCell>
                                                             <TableCell width="40%">
-                                                                {`${selectedResultsMatch.teams[fieldIndex].clubName}` +
-                                                                    (selectedResultsMatch.teams[
-                                                                        fieldIndex
-                                                                    ].name
-                                                                        ? ` - ${selectedResultsMatch.teams[fieldIndex].name}`
-                                                                        : '')}
+                                                                {(selectedResultsMatch.teams[
+                                                                    fieldIndex
+                                                                ].name
+                                                                    ? `${selectedResultsMatch.teams[fieldIndex].name} - `
+                                                                    : '') +
+                                                                    `${selectedResultsMatch.teams[fieldIndex].actualClubName}`}
                                                             </TableCell>
                                                             <TableCell width="40%">
                                                                 {!failedValue ? (

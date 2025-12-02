@@ -1,5 +1,6 @@
 package de.lambda9.ready2race.backend.app.competitionExecution.control
 
+import de.lambda9.ready2race.backend.app.club.control.getActualClubname
 import de.lambda9.ready2race.backend.app.competitionExecution.entity.*
 import de.lambda9.ready2race.backend.app.substitution.boundary.SubstitutionService.getSwapSubstitution
 import de.lambda9.ready2race.backend.app.substitution.entity.SubstitutionDto
@@ -9,7 +10,7 @@ import de.lambda9.ready2race.backend.database.generated.tables.records.Participa
 import de.lambda9.tailwind.core.KIO
 import java.util.*
 
-fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
+fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto(mixedTeamTerm: String?) = KIO.ok(
     CompetitionRoundDto(
         setupRoundId = setupRoundId,
         name = setupRoundName,
@@ -24,6 +25,7 @@ fun CompetitionSetupRoundWithMatches.toCompetitionRoundDto() = KIO.ok(
                             teamNumber = team.teamNumber!!, // This should not be null because competition_match_teams are not created if the registration teamNumber is missing
                             clubId = team.clubId,
                             clubName = team.clubName,
+                            actualClubName = getActualClubname(team.participants.map { it.externalClubName }.toSet(), mixedTeamTerm),
                             name = team.registrationName,
                             startNumber = team.startNumber,
                             place = team.place,

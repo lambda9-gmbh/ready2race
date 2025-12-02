@@ -212,6 +212,7 @@
   },
   "club": {
     "club": "Verein",
+    "registrant": "Anmelder",
     "clubs": "Vereine",
     "participants": "Mitglieder",
     "participant": {
@@ -615,6 +616,7 @@
             "short": "Nr."
           },
           "team": "Team",
+          "registrant": "Anmelder",
           "place": "Platz",
           "manageRunning": "Laufende Partien verwalten",
           "running": "Läuft",

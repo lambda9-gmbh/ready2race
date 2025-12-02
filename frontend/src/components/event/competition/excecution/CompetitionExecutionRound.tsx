@@ -401,7 +401,10 @@ const CompetitionExecutionRound = ({
                                                           'event.competition.execution.match.startNumber.startNumber',
                                                       )}
                                             </TableCell>
-                                            <TableCell width="55%">
+                                            <TableCell width="20%">
+                                                {t('event.competition.execution.match.registrant')}
+                                            </TableCell>
+                                            <TableCell width="30%">
                                                 {t('event.competition.execution.match.team')}
                                             </TableCell>
                                             <TableCell width="30%">
@@ -417,9 +420,12 @@ const CompetitionExecutionRound = ({
                                                     <TableCell width="15%">
                                                         {team.startNumber}
                                                     </TableCell>
-                                                    <TableCell width="55%">
-                                                        {team.clubName +
-                                                            (team.name ? ` ${team.name}` : '')}
+                                                    <TableCell width="20%">
+                                                        {team.clubName}
+                                                    </TableCell>
+                                                    <TableCell width="30%">
+                                                        {(team.name ? `${team.name} ` : '') +
+                                                            `(${team.actualClubName})`}
                                                     </TableCell>
                                                     <TableCell width="30%">
                                                         {team.deregistered

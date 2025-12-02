@@ -256,17 +256,17 @@ object CompetitionExecutionService {
 
             val sortedRounds = sortRounds(setupRounds)
 
-            val isChallengeEvent = !EventService.checkIsChallengeEvent(eventId)
+            val event = !EventRepo.get(eventId).orDie().onNullFail { EventError.NotFound }
 
             sortedRounds.filter { it.matches.isNotEmpty() }.traverse { round ->
                 round.copy(matches = round.matches.map { match -> match.copy(teams = match.teams.filter { !it.out }) })
-                    .toCompetitionRoundDto()
+                    .toCompetitionRoundDto(event.mixedTeamTerm)
             }.map {
                 ApiResponse.Dto(
                     CompetitionExecutionProgressDto(
                         rounds = it,
                         canNotCreateRoundReasons,
-                        isChallengeEvent = isChallengeEvent
+                        isChallengeEvent = event.challengeEvent!!
                     )
                 )
             }

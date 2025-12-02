@@ -323,6 +323,7 @@ export type CompetitionMatchTeamDto = {
     teamNumber: number
     clubId: string
     clubName: string
+    actualClubName?: string
     name?: string
     startNumber: number
     place?: number
@@ -1077,6 +1078,7 @@ export type MatchResultTeamInfo = {
     teamName?: string | null
     teamNumber?: number | null
     clubName?: string | null
+    actualClubName?: string
     place?: number
     failed: boolean
     failedReason?: string
@@ -1276,6 +1278,7 @@ export type ParticipantInfo = {
     firstName: string
     lastName: string
     namedRole?: string | null
+    externalClubName?: string
 }
 
 export type ParticipantQrAssignmentDto = {
@@ -1599,6 +1602,7 @@ export type RunningMatchTeamInfo = {
     teamName?: string | null
     startNumber?: number | null
     clubName?: string | null
+    actualClubName?: string
     currentScore?: number | null
     currentPosition?: number | null
     participants: Array<UpcomingMatchParticipantInfo>
@@ -1804,6 +1808,7 @@ export type UpcomingMatchTeamInfo = {
     teamName?: string | null
     startNumber?: number | null
     clubName?: string | null
+    actualClubName?: string
     participants: Array<UpcomingMatchParticipantInfo>
 }
 

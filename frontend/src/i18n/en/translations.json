@@ -212,6 +212,7 @@
   },
   "club": {
     "club": "Club",
+    "registrant": "Registrant",
     "clubs": "Clubs",
     "participants": "Members",
     "participant": {
@@ -615,6 +616,7 @@
             "short": "No."
           },
           "team": "Team",
+          "registrant": "Registrant",
           "place": "Place",
           "manageRunning": "Manage Running Matches",
           "running": "Running",

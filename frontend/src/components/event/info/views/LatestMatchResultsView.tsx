@@ -152,7 +152,9 @@ export const LatestMatchResultsView: React.FC<LatestMatchResultsViewProps> = ({e
                                                     <Typography
                                                         variant="body2"
                                                         color="text.secondary">
-                                                        {team.clubName || '-'}
+                                                        {team.actualClubName ??
+                                                            team.clubName ??
+                                                            '-'}
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>

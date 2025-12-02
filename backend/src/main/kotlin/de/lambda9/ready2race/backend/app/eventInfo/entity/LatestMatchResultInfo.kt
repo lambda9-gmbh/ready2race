@@ -22,6 +22,7 @@ data class MatchResultTeamInfo(
     val teamName: String?,
     val teamNumber: Int?,
     val clubName: String?,
+    val actualClubName: String?,
     val startNumber: Int,
     val place: Int?,
     val failed: Boolean,
