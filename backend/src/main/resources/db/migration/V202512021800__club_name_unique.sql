@@ -1,0 +1,1 @@
+create unique index club_name_unique on club (name);

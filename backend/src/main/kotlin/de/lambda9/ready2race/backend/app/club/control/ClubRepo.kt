@@ -24,7 +24,9 @@ object ClubRepo {
         record: ClubRecord,
     ): JIO<UUID> = CLUB.insertReturning(record) { ID }
 
-    fun create(records: List<ClubRecord>) = CLUB.insert(records)
+    fun createNoDuplicates(records: List<ClubRecord>) = Jooq.query {
+        insertInto(CLUB).set(records).onConflictDoNothing().execute()
+    }
 
     fun count(
         search: String?,

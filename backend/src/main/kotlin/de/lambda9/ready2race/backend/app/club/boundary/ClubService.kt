@@ -2,7 +2,6 @@ package de.lambda9.ready2race.backend.app.club.boundary
 
 import de.lambda9.ready2race.backend.app.App
 import de.lambda9.ready2race.backend.app.ServiceError
-import de.lambda9.ready2race.backend.app.auth.entity.Privilege
 import de.lambda9.ready2race.backend.app.club.control.ClubRepo
 import de.lambda9.ready2race.backend.app.club.control.clubDto
 import de.lambda9.ready2race.backend.app.club.control.toRecord
@@ -16,7 +15,6 @@ import de.lambda9.ready2race.backend.calls.responses.ApiResponse
 import de.lambda9.ready2race.backend.calls.responses.ApiResponse.Companion.noData
 import de.lambda9.ready2race.backend.calls.responses.ToApiError
 import de.lambda9.ready2race.backend.csv.CSV
-import de.lambda9.ready2race.backend.database.generated.tables.records.AppUserWithPrivilegesRecord
 import de.lambda9.ready2race.backend.database.generated.tables.records.ClubRecord
 import de.lambda9.ready2race.backend.file.File
 import de.lambda9.tailwind.core.KIO
@@ -54,7 +52,7 @@ object ClubService {
             )
         }
 
-        !ClubRepo.create(entries).orDie()
+        !ClubRepo.createNoDuplicates(entries).orDie()
 
         noData
     }
